@@ -69,6 +69,8 @@ Screening on start (no AI calls):
   contract employment are saved as No with a reason. Unknowns stay for review.
   Any location/work arrangement is eligible. Existing review decisions stay.
   Detected ATS / Source is saved even for blocked/failed/partial scans.
+  Parallel runs show each worker's current company and returned-role count,
+  plus writer progress and a run-total after completed Sheets batches.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
   an interrupted company is refetched and replayed without duplicate jobs.
 

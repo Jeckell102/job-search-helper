@@ -108,6 +108,11 @@ class FetchPoolTests(unittest.TestCase):
         self.assertEqual(len(repo.read("Job History")), 12)
         self.assertTrue(all(row["Location"] == "Ohio" for row in repo.read("Job History")))
         self.assertTrue(all(item["stage"] == "complete" for item in state.cycle(cycle)["companies"].values()))
+        self.assertIn("Status | Worker 1:", self.output.getvalue())
+        self.assertIn("roles returned", self.output.getvalue())
+        self.assertIn("Writer: Company", self.output.getvalue())
+        self.assertIn("Run total: 12 items processed", self.output.getvalue())
+        self.assertIn("New job found - Field Applications Engineer", self.output.getvalue())
 
     def test_prefetch_buffer_is_bounded_and_each_company_runs_once(self):
         calls = Counter()

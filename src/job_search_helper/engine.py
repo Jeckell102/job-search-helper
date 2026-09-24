@@ -15,6 +15,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from queue import Empty, SimpleQueue
+from threading import Lock, get_ident
 
 from .ats import Inventory, fetch_inventory, resolve_board
 from .batching import PlanningRepository, PendingState
@@ -245,11 +246,13 @@ class Engine:
         if canonicalize_url(before.get("Official Careers URL", "")) != canonicalize_url(after.get("Official Careers URL", "")):
             raise ValueError("Company careers board changed during the run; saved inventory needs explicit reconciliation")
 
-    def _stage_inventory(self, cycle, company, item, planner, progress_hook=None):
+    def _stage_inventory(self, cycle, company, item, planner, progress_hook=None, status_hook=None):
         jobs = item.get("jobs", [])
         start = item.get("next_job_index", 0)
         started = time.monotonic()
         print(f"{company['Company']}: {len(jobs)} inventory items; resuming at {start}. Saving up to {self.batch_size} at a time.", flush=True)
+        if status_hook is not None:
+            status_hook(f"{company['Company']} saving {start}/{len(jobs)}")
         while start < len(jobs):
             stop = min(start + self.batch_size, len(jobs))
             refresh_started = time.monotonic()
@@ -267,6 +270,8 @@ class Engine:
             timings["requests"] = result.get("requests", 0)
             self._checkpoint()
             print(f"{company['Company']}: {'simulated' if self.dry_run else 'saved'} {stop}/{len(jobs)} inventory items processed; {time.monotonic()-started:.0f}s elapsed.", flush=True)
+            if status_hook is not None:
+                status_hook(f"{company['Company']} saved {stop}/{len(jobs)}", stop - start)
             detail = self._format_batch_timings(timings)
             if detail:
                 print(f"{company['Company']}: batch timing: {detail}.", flush=True)
@@ -769,16 +774,60 @@ class Engine:
         self.state.save_cycle(cycle)
 
         started = SimpleQueue()
+        dashboard_lock = Lock()
+        output_lock = Lock()
+        worker_slots = {}
+        worker_status = {number: "idle" for number in range(1, fetch_workers + 1)}
+        writer_status = ["idle"]
+        writer_processed = [0]
+
+        def show_status():
+            with dashboard_lock:
+                workers = " | ".join(
+                    f"Worker {number}: {worker_status[number]}"
+                    for number in range(1, fetch_workers + 1)
+                )
+                writer = f"{writer_status[0]} | Run total: {writer_processed[0]} items processed"
+            with output_lock:
+                print(f"Status | {workers} | Writer: {writer}", flush=True)
+
+        def worker_slot():
+            thread = get_ident()
+            with dashboard_lock:
+                if thread not in worker_slots:
+                    used = set(worker_slots.values())
+                    worker_slots[thread] = next(number for number in range(1, fetch_workers + 1)
+                                                if number not in used)
+                return worker_slots[thread]
+
+        def set_worker_status(slot, status):
+            with dashboard_lock:
+                worker_status[slot] = status
+            show_status()
+
+        def set_writer_status(status, processed=0):
+            with dashboard_lock:
+                writer_status[0] = status
+                writer_processed[0] += processed
+            show_status()
 
         def fetch_company(snapshot):
             cid = snapshot["Company ID"]
+            slot = worker_slot()
+            set_worker_status(slot, f"{snapshot['Company']} (fetching)")
             started.put(cid)
-            inventory = self.fetcher(
-                str(snapshot.get("ATS / Source", "")),
-                str(snapshot.get("Official Careers URL", "")),
-                cid, snapshot["Company"],
-            )
-            return cid, inventory
+            try:
+                inventory = self.fetcher(
+                    str(snapshot.get("ATS / Source", "")),
+                    str(snapshot.get("Official Careers URL", "")),
+                    cid, snapshot["Company"],
+                )
+                if isinstance(inventory, Inventory):
+                    set_worker_status(slot, f"{snapshot['Company']} ({len(inventory.jobs)} roles returned)")
+                return cid, inventory
+            except Exception:
+                set_worker_status(slot, f"{snapshot['Company']} (fetch failed)")
+                raise
 
         processed = set()
         in_flight = {}
@@ -927,7 +976,9 @@ class Engine:
                     saving_cid = cid
                     try:
                         service_fetchers()
-                        self._stage_inventory(cycle, company, item, planner, progress_hook=service_fetchers)
+                        self._stage_inventory(cycle, company, item, planner,
+                                              progress_hook=service_fetchers,
+                                              status_hook=set_writer_status)
                     finally:
                         saving_cid = None
                     if item["inventory_status"] == "complete":
@@ -939,6 +990,7 @@ class Engine:
                     self._sync_cycle(cycle)
                     self._checkpoint()
                     processed.add(cid)
+            set_writer_status("complete")
             if in_flight:
                 for future in in_flight:
                     future.cancel()

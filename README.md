@@ -170,6 +170,8 @@ The controller preloads company snapshots into a local queue. A fetcher hands it
 
 The default assignment window is `25`; the example above raises it to `100`. It bounds assigned/running/completed-but-unsaved companies, plus the company currently being saved. Its effective minimum is the worker count. The writer replenishes the queue before saves and between batches. Fetchers can pause when the buffer is full, no eligible companies remain, or their own HTTP calls are waiting/retrying. This bounds memory when fetching is faster than writing. Companies sheet statuses are synchronized by the writer and can lag actual fetching while a Sheets call is busy.
 
+With two or more fetch workers, the terminal prints a compact live status whenever work changes. It identifies each worker and its current company, reports how many roles that worker returned, identifies the writer's current company/batch, and shows a run-total of inventory items whose Sheets batch and checkpoint have completed. `New job found - Title at Company` remains the exact-title announcement: only the writer can determine that a fetched posting is new after it checks Job History.
+
 On Ctrl+C, queued assignments are cancelled, running requests are allowed to finish, and unfinished companies are refetched on restart. Completed inventories are released from memory after saving. To adjust Google Sheets pacing for the writer:
 
 ```bash
