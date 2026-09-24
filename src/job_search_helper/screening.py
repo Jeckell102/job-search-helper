@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 
 from .core import plain_text
-from .efficiency import classify_title, parse_annual_base_max_usd
+from .efficiency import classify_title, load_title_review_list, parse_annual_base_max_usd
 
 
 @dataclass(frozen=True)
@@ -21,12 +21,15 @@ def _sentences(text):
 def _employment_exclusion(title, description):
     temporary = r"(?:temporary|temp|seasonal|internship|fixed[- ]term|contract[- ]to[- ]hire)"
     kind = rf"(?:{temporary}|contract(?:or)?)"
-    if re.search(rf"^{kind}\b|[(/,\-]\s*{kind}\s*[)]?$|\b(?:internship|fixed[- ]term|contract[- ]to[- ]hire)\b", title, re.I):
+    prefix = re.match(rf"^{kind}\s+(.+)", title, re.I)
+    qualified_title = prefix and any(pattern.match(prefix.group(1)) for pattern in load_title_review_list())
+    if qualified_title or re.search(rf"[(/,:\-]\s*{kind}\s*[)]?$|\b(?:internship|fixed[- ]term|contract[- ]to[- ]hire)\b", title, re.I):
         return "Employment exclusion: title explicitly identifies a nonpermanent role."
     pattern = (
         rf"\b(?:employment|job|position|contract)\s+type\s*:\s*{kind}\b|"
         rf"\bthis is (?:a|an) {kind} (?:role|position|job)\b|"
-        rf"\b(?:this|the) (?:role|position|job) is (?:a |an )?(?:\d+[- ]month )?{kind}\b"
+        rf"\b(?:this|the) (?:role|position|job) is (?:a |an )?(?:\d+[- ]month )?{kind}"
+        r"(?=\s*(?:[.!?;,]|$)|\s+(?:role|position|job|assignment|employment|opportunity)\b)"
     )
     for sentence in _sentences(description):
         if re.search(pattern, sentence, re.I):

@@ -71,6 +71,14 @@ class PreferenceTests(unittest.TestCase):
         self.assertIsNone(parse_annual_base_max_usd("$100,000 base and commission combined"))
         self.assertIsNone(parse_annual_base_max_usd("Annual base salary EUR 100000"))
 
+    def test_base_label_applies_to_all_location_ranges(self):
+        for compensation in ("Base salary $90k-$110k in Ohio and $130k-$160k in California",
+                             "USD base salary 90000-110000 in Ohio and 130000-160000 in California",
+                             "Base $110k in Ohio; $150k in California; OTE $250k"):
+            with self.subTest(compensation=compensation):
+                self.assertIsNone(self.screen(compensation=compensation).reason)
+        self.assertEqual(parse_annual_base_max_usd("Base $110k in Ohio; $150k in California; OTE $250k"), 150000)
+
     def test_travel_limits_and_unrelated_percentages(self):
         for description in ("Travel up to 50%.", "Travel: 25-50%.", "Travel as needed.",
                             "Travel is optional, up to 75%.", "No travel required. Bonus up to 75%.",
@@ -101,6 +109,9 @@ class PreferenceTests(unittest.TestCase):
             with self.subTest(description=description):
                 self.assertIsNone(self.screen(description=description).reason)
         self.assertIsNone(self.screen(title="Product Manager, Temporary Power").reason)
+        self.assertIsNone(self.screen(title="Temporary Power Product Manager").reason)
+        self.assertIsNone(self.screen(title="Contract Manager").reason)
+        self.assertIsNone(self.screen(description="This role is a contract specialist working with customers.").reason)
 
     def test_saas_product_scope_and_incidental_mentions(self):
         for description in ("You will own our SaaS product.", "You will manage the software-as-a-service platform.",

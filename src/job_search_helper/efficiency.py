@@ -86,13 +86,15 @@ def parse_annual_base_max_usd(text: str) -> float | None:
     number = r"(?:\d{2,3}(?:,\d{3})+(?:\.\d+)?|\d{5,7}(?:\.\d+)?|\d{2,3}(?:\.\d+)?\s*[kK])"
     amount = rf"(?:USD\s*\$?\s*|\$\s*)?({number})"
     amounts = []
-    for part in base_parts or parts:
+    for part in parts:
         # A component containing both base and another pay label is ambiguous.
         if re.search(other_pay, part, re.I):
-            return None
-        if not re.search(r"USD|\$", part, re.I):
-            if not re.search(r"\bUSD\b", value, re.I):
-                continue
+            if re.search(r"\bbase\b", part, re.I):
+                return None
+            continue
+        # Ranges for additional locations can inherit the base/currency label.
+        if not re.search(r"\bUSD\b|\$", value, re.I):
+            continue
         for match in re.finditer(amount, part):
             cleaned = match.group(1).replace(",", "").strip()
             amounts.append(float(cleaned[:-1]) * 1000 if cleaned.lower().endswith("k") else float(cleaned))
