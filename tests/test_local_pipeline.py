@@ -68,7 +68,14 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertLessEqual(len(self.service.batches) - before, 3)
         self.assertEqual(self.engine._dashboard.new_job_count, 6)
         self.assertEqual(self.engine._dashboard.local_job_count, 6)
+        self.assertEqual(self.engine._dashboard.local_queue_count, 0)
+        self.assertEqual(self.engine._dashboard.sync_plan_count, 0)
         self.assertEqual(self.state.cycle(self.cycle)['status'], 'Complete')
+
+    def test_deferred_dashboard_shows_saved_local_queue(self):
+        self.defer()
+        self.assertEqual(self.engine._dashboard.local_queue_count, 6)
+        self.assertEqual(self.engine._dashboard.sync_plan_count, 0)
 
     def test_workers_fetch_past_assignment_window_while_upload_is_blocked(self):
         uploading, all_returned = Event(), Event()

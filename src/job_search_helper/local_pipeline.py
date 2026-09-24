@@ -37,9 +37,16 @@ class LocalPipeline:
         self.last_sync = time.monotonic()
         self.dashboard = None
 
+    def refresh_queue_status(self):
+        if self.dashboard is None:
+            return
+        summary = self.inbox.summary(self.cid)
+        self.dashboard.local_queue(summary['ready'], summary['planned'])
+
     def fail(self, cid, exc, context):
         self.ignored.add(cid)
         self.inbox.block(self.cid, cid)
+        self.refresh_queue_status()
         self.engine._log_company_error(self.cycle, self.companies.get(cid, {'Company': cid}),
                                        self.cycle['companies'][cid], exc, context)
         # Error recording must not stop unrelated company results. The local
@@ -153,6 +160,7 @@ class LocalPipeline:
             item['stage'] = 'inventory'
             self.state.save_cycle(self.cycle)
         self.pending.append(cid)
+        self.refresh_queue_status()
 
     def finish(self, cid, plan):
         self.cycle['companies'][cid].update(plan['final'])
@@ -163,6 +171,7 @@ class LocalPipeline:
             self.inbox.acknowledge(self.cid, cid)
         else:
             self.inbox.block(self.cid, cid)
+        self.refresh_queue_status()
 
     def upload(self, entries):
         if not entries:
@@ -263,6 +272,7 @@ class LocalPipeline:
                     self.finish(cid, plan)
         self.engine._sync_cycle(self.cycle)
         self.last_sync = time.monotonic()
+        self.refresh_queue_status()
 
     def run(self, fetch_workers=5, assignment_window=100, sync_only=False, defer_sync=False, retry_blocked=False):
         if not 1 <= fetch_workers <= 5 or not 1 <= assignment_window <= 100:
@@ -273,6 +283,7 @@ class LocalPipeline:
         self.dashboard = TerminalDashboard(fetch_workers)
         self.engine._dashboard = self.dashboard
         self.dashboard.start()
+        self.refresh_queue_status()
         completed = SimpleQueue()
         snapshots = []
         saved_ids = set(self.inbox.pending(self.cid, include_blocked=True))
@@ -352,6 +363,7 @@ class LocalPipeline:
                 except Exception as exc:
                     result = Inventory('failed', reason=f'Fetch worker failed: {type(exc).__name__}')
                 self.inbox.save(self.cid, cid, inventory_payload(result, company))
+                self.refresh_queue_status()
                 completed.put(cid)
                 self.dashboard.worker_handoff(slot, company['Company'], len(result.jobs))
         pool = ThreadPoolExecutor(max_workers=fetch_workers + 1)
@@ -375,6 +387,7 @@ class LocalPipeline:
                         self.cycle['companies'][cid].update(
                             {k: v for k, v in payload.items() if k != 'jobs'}, stage='inventory', durable_inventory=True)
                         self.state.save_cycle(self.cycle)
+                        self.refresh_queue_status()
                     else:
                         self.stage(cid)
                 if not defer_sync and self.pending:

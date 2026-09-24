@@ -107,6 +107,19 @@ class InventoryInbox:
                 "SELECT company FROM inventories WHERE cycle=?" +
                 ("" if include_blocked else " AND blocked=0") + " ORDER BY rowid", (cycle,))]
 
+    def summary(self, cycle):
+        with self.lock:
+            ready = self.connection.execute(
+                "SELECT count(*) FROM inventories WHERE cycle=? AND blocked=0", (cycle,)
+            ).fetchone()[0]
+            blocked = self.connection.execute(
+                "SELECT count(*) FROM inventories WHERE cycle=? AND blocked=1", (cycle,)
+            ).fetchone()[0]
+            planned = self.connection.execute(
+                "SELECT count(*) FROM sync_plans WHERE cycle=?", (cycle,)
+            ).fetchone()[0]
+        return {"ready": ready, "blocked": blocked, "planned": planned}
+
     def advance(self, cycle, cursors):
         """Only called after an acknowledged atomic Sheets commit."""
         started = time.monotonic()

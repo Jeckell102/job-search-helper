@@ -94,10 +94,12 @@ Screening on start (no AI calls):
   Any location/work arrangement is eligible. Existing review decisions stay.
   Detected ATS / Source is saved even for blocked/failed/partial scans.
   Start opens a terminal dashboard. Each worker keeps a persistent color-coded
-  row with its current company. The writer row is green and shows save progress,
-  duration, locally processed count, and confirmed new-job count. The Workers
-  list records every handoff to the writer. The Jobs list records confirmed new
-  Job History rows, clipping long titles with `...`.
+  row with its current company. "Saved locally" means the worker finished and
+  the durable queue accepted the inventory. The writer row is green and shows
+  save progress, duration, locally processed count, queued local companies,
+  pending sync plans, and confirmed new-job count. The Workers list records
+  every handoff to the writer. The Jobs list records confirmed new Job History
+  rows, clipping long titles with `...`.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
   saved inventories resume from SQLite; unfinished fetches are refetched.
   Keep the whole .state directory until all saved work is synchronized.

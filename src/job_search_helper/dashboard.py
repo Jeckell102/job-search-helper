@@ -56,6 +56,8 @@ class TerminalDashboard:
         self.inventory_count = 0
         self.new_job_count = 0
         self.local_job_count = 0
+        self.local_queue_count = 0
+        self.sync_plan_count = 0
         self.started_at = time.monotonic()
 
     def start(self):
@@ -68,9 +70,15 @@ class TerminalDashboard:
 
     def worker_handoff(self, slot, company, job_count):
         with self.lock:
-            self.worker_state[slot] = {"task": "Ready", "company": company, "detail": f"{job_count} jobs"}
+            self.worker_state[slot] = {"task": "Saved locally", "company": company, "detail": f"{job_count} jobs"}
             if job_count > 0:
                 self.worker_events.appendleft(f"Worker {slot} - {job_count} jobs - {company} - {_stamp()}")
+            self._render_locked()
+
+    def local_queue(self, ready, planned=0):
+        with self.lock:
+            self.local_queue_count = max(0, int(ready or 0))
+            self.sync_plan_count = max(0, int(planned or 0))
             self._render_locked()
 
     def worker_failed(self, slot, company):
@@ -127,7 +135,9 @@ class TerminalDashboard:
         rows = ["\033[2J\033[HJob Search Scraper Dashboard"]
         rows.append(
             f"Run time: {_duration(time.monotonic() - self.started_at)} | "
-            f"Inventory processed: {self.inventory_count} | Processed locally: {self.local_job_count} | New jobs written: {self.new_job_count}"
+            f"Inventory processed: {self.inventory_count} | Processed locally: {self.local_job_count} | "
+            f"Local queue: {self.local_queue_count} companies | Sync plans: {self.sync_plan_count} | "
+            f"New jobs written: {self.new_job_count}"
         )
         rows.append("")
         for slot in range(1, self.workers + 1):
@@ -172,7 +182,9 @@ class TerminalDashboard:
         writer += f" - {self.writer_state['duration']}"
         self.stream.write(
             "Dashboard | " + " | ".join(worker_bits)
-            + f" | {writer} | Inventory processed: {self.inventory_count} | Processed locally: {self.local_job_count} | New jobs written: {self.new_job_count}\n"
+            + f" | {writer} | Inventory processed: {self.inventory_count} | Processed locally: {self.local_job_count}"
+            + f" | Local queue: {self.local_queue_count} companies | Sync plans: {self.sync_plan_count}"
+            + f" | New jobs written: {self.new_job_count}\n"
         )
         if self.worker_events:
             self.stream.write(f"Workers | {self.worker_events[0]}\n")

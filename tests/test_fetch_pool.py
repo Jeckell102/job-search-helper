@@ -268,7 +268,7 @@ class FetchPoolTests(unittest.TestCase):
         dashboard.worker_handoff(1, "No Jobs Co", 0)
         dashboard.worker_handoff(1, "Has Jobs Co", 3)
         text = stream.getvalue()
-        self.assertIn("Worker 1 - Ready - Has Jobs Co - 3 jobs", text)
+        self.assertIn("Worker 1 - Saved locally - Has Jobs Co - 3 jobs", text)
         self.assertIn("Workers | Worker 1 - 3 jobs - Has Jobs Co", text)
         self.assertNotIn("Workers | Worker 1 - 0 jobs - No Jobs Co", text)
 
