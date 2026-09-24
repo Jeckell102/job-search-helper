@@ -16,6 +16,10 @@ Parallel fetchers can retrieve company inventories while one writer controls all
 ./job-search-scraper start --fetch-workers 4 --assignment-window 25
 ```
 
+The controller preloads the local assignment queue. Fetchers return their results to a bounded local buffer and take another company without waiting for Sheets writes. Only the writer touches Sheets or SQLite. The assignment window bounds unsaved company work (plus the company being saved) and is at least the worker count. Fetchers can idle if the buffer is full or eligible work runs out. `Fetch pool` reports fetching, locally queued, and awaiting-save counts separately; Companies sheet status can lag actual activity during a write.
+
+Blocked/failed/partial scans record the actual adapter in `ATS / Source` when known. Unknown discovery leaves the existing source unchanged, and blocked scans do not advance successful-scan dates. Ctrl+C cancels unstarted assignments; unfinished companies resume by refetching without duplicate saved jobs.
+
 To tune Google Sheets pacing for the writer:
 
 ```bash
@@ -40,8 +44,8 @@ Google Sheets is the durable source of truth. `.state` stores only scan/cycle re
 2. Match jobs against Job History by stable identity.
 3. Skip an `In Progress` row so ChatGPT Work owns its review snapshot.
 4. New jobs receive deterministic $0 screening:
-   - obvious excluded title -> `Reviewed / Reject` directly;
-   - clear maximum annual USD base below $120,000 -> `Reviewed / Reject` directly;
+   - blacklisted title -> skipped, with a terminal reason;
+   - clear maximum annual USD base below $120,000, travel above 50%, nonpermanent employment, or explicit SaaS product responsibilities -> `Reviewed / Reject` directly;
    - otherwise -> `Needs Review`.
 5. Materially changed previously reviewed jobs return to `Needs Review`.
 6. Work-readable source fields are written directly into Job History.

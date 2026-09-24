@@ -46,10 +46,12 @@ Options for start:
   --fetch-workers N
       Run N fetch-only workers while this process remains the only Google
       Sheets writer. Allowed: 1-5. Default: 1.
+      A returning worker takes its next local assignment even during a write.
 
   --assignment-window N
-      Read/queue up to N companies locally before refreshing Companies from
-      Google Sheets. Allowed: 1-100. Default: 25.
+      Bound the local queue of assigned companies and completed inventories.
+      Allowed: 1-100. Default: 25; effective minimum is the worker count.
+      Workers pause when that buffer fills or there is no eligible work.
 
   --batch-size N
       Save up to N inventory items per atomic Google Sheets write/checkpoint.
@@ -66,6 +68,8 @@ Screening on start (no AI calls):
   New jobs with clear base pay below $120,000, travel above 50%, or temporary/
   contract employment are saved as No with a reason. Unknowns stay for review.
   Any location/work arrangement is eligible. Existing review decisions stay.
+  Detected ATS / Source is saved even for blocked/failed/partial scans.
+  Fetch pool logs distinguish fetching, locally queued, and awaiting save.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
   an interrupted company is refetched and replayed without duplicate jobs.
 
@@ -119,6 +123,7 @@ def run_start(fetch_workers=1, assignment_window=25, batch_size=DEFAULT_BATCH_SI
         raise ValueError("Sheet request interval must be between 0.5 and 5.0 seconds")
     if not 1 <= batch_size <= MAX_BATCH_SIZE:
         raise ValueError(f"Batch size must be between 1 and {MAX_BATCH_SIZE}")
+    print(f"Configured: {fetch_workers} fetch worker(s), 1 Sheets writer, assignment window {max(assignment_window, fetch_workers)}.", flush=True)
     _load_environment()
     load_title_blacklist()
     load_title_review_list()

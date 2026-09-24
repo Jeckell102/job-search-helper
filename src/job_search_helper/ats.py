@@ -57,6 +57,7 @@ class Inventory:
     jobs: list[dict[str, Any]] = field(default_factory=list)
     reason: str = ""
     source_url: str = ""
+    ats: str = ""
 
 
 @dataclass
@@ -454,21 +455,25 @@ def fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if name == "Paylocity":
         from .paylocity import fetch_paylocity
         result = fetch_paylocity(board, root, company_id, company, transport)
+        result.ats = name
         result.reason = discovery_note + result.reason
         return result
     if name == "ADP":
         from .adp import fetch_adp
         result = fetch_adp(board, root, company_id, company, transport)
+        result.ats = name
         result.reason = discovery_note + result.reason
         return result
     if name == "iCIMS":
         from .icims import fetch_icims
         result = fetch_icims(board, root, company_id, company, transport)
+        result.ats = name
         result.reason = discovery_note + result.reason
         return result
     if name == "Workday":
         from .workday import fetch_workday
         result = fetch_workday(board, root, company_id, company, transport)
+        result.ats = name
         result.reason = discovery_note + result.reason
         return result
     jobs: list[dict] = []
@@ -539,11 +544,11 @@ def fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
         reason = discovery_note + " ".join(dict.fromkeys(issues))
         if skipped:
             reason += f" Skipped postings: {skipped}; diagnostic details printed for the first {min(skipped, 50)}."
-        return Inventory(status, jobs, reason.strip(), source_url)
+        return Inventory(status, jobs, reason.strip(), source_url, ats=name)
     except FetchError as exc:
         status = "blocked" if exc.status == "blocked" else ("partial" if jobs else exc.status)
         reason = discovery_note + exc.reason + (f" Skipped postings before failure: {skipped}." if skipped else "")
-        return Inventory(status, jobs, reason, source_url)
+        return Inventory(status, jobs, reason, source_url, ats=name)
     except (OSError, ValueError, TypeError, AttributeError):
         return Inventory("partial" if jobs else "failed", jobs,
-                         discovery_note + "Unexpected transport or schema failure; inventory not complete.", source_url)
+                         discovery_note + "Unexpected transport or schema failure; inventory not complete.", source_url, ats=name)

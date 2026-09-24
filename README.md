@@ -62,6 +62,8 @@ Discovery requires one unambiguous board. Multiple boards, a configured ATS mism
 
 `Last Scan Result` records the discovered API board and the careers page that linked to it. The configured URL is preserved. Missing URLs, discovery failures, and access blocks have separate diagnostic reasons. `Last Checked` and `Last Successful Scan` still advance only after a complete inventory; a successful scan clears the old `Blocked Reason`. Job-history comparisons use the actual board identity so a changed board cannot establish disappearance from the old board.
 
+The adapter actually used is also recorded in `ATS / Source`, including blocked, failed, and partial scans. Existing annotations naming that adapter (such as parent-board scope) are preserved. If discovery fails before an adapter is identified, the scraper leaves the existing source unchanged instead of guessing. This takes effect on subsequent scans; existing blocked rows are not automatically retried or backfilled.
+
 Existing blocked rows still require an explicit retry with `resume --cycle CYCLE_ID --retry-blocked --apply --exclusive-writer`. Installing discovery alone does not release those manual-review holds. Unsupported, inaccessible, or malformed boards remain incomplete/manual work, never proof that existing jobs closed.
 
 Examples of URL *shapes*, not verified company assignments:
@@ -164,7 +166,11 @@ To fetch multiple company inventories while keeping one Sheets writer:
 ./job-search-scraper start --fetch-workers 4 --assignment-window 100
 ```
 
-The writer queues companies locally before refreshing the Companies tab. The default assignment window is `25`; the example above raises it to `100`. To adjust Google Sheets pacing for the writer:
+The controller preloads company snapshots into a local queue. A fetcher hands its result to the local writer buffer and immediately takes the next queued company, even while the writer is waiting on Google Sheets. Only the writer reads/writes Sheets and checkpoints; workers never access Sheets or SQLite. Assignments exclude all already-assigned company IDs, preventing duplicate concurrent fetches.
+
+The default assignment window is `25`; the example above raises it to `100`. It bounds assigned/running/completed-but-unsaved companies, plus the company currently being saved. Its effective minimum is the worker count. The writer replenishes the queue before saves and between batches. Fetchers can pause when the buffer is full, no eligible companies remain, or their own HTTP calls are waiting/retrying. This bounds memory when fetching is faster than writing. Terminal `Fetch started` / `Fetch finished` lines report actual activity, and `Fetch pool` separates fetching, locally queued, and awaiting-save counts. A completed result awaiting saving is not an active fetcher. Companies sheet statuses are synchronized by the writer and can lag actual fetching while a Sheets call is busy.
+
+On Ctrl+C, queued assignments are cancelled, running requests are allowed to finish, and unfinished companies are refetched on restart. Completed inventories are released from memory after saving. To adjust Google Sheets pacing for the writer:
 
 ```bash
 ./job-search-scraper start --fetch-workers 4 --assignment-window 100 --sheet-request-interval 1.1

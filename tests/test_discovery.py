@@ -221,7 +221,7 @@ class DiscoveryEngineTests(unittest.TestCase):
         self.addCleanup(self.state.close)
         self.inventory = fetch_inventory("Greenhouse", BOARD, "C-1", "Acme",
                                          Transport([response(fixture("greenhouse"))]))
-        self.inventory.jobs[0]["title"] = "Staff Solutions Engineer"
+        self.inventory.jobs[0]["title"] = "Field Solutions Engineer"
         self.engine = Engine(self.repo, self.state, fetcher=lambda *args: self.inventory)
         self.capture = redirect_stdout(io.StringIO())
         self.capture.__enter__()
@@ -241,6 +241,7 @@ class DiscoveryEngineTests(unittest.TestCase):
         self.assertEqual(self.state.cycle(cycle)["companies"]["C-1"]["source_url"], self.inventory.source_url)
         row = self.repo.read("Companies")[0]
         self.assertEqual(row["Blocked Reason"], "")
+        self.assertEqual(row["ATS / Source"], "Greenhouse")
         self.assertTrue(row["Last Checked"])
         self.assertEqual(row["Official Careers URL"], PAGE)
 
