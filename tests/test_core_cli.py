@@ -226,7 +226,7 @@ class CliTests(unittest.TestCase):
     def test_scraper_start_still_runs_start_command(self):
         with patch.object(runner, "run_start", return_value=0) as start:
             self.assertEqual(runner.main(["start"]), 0)
-            start.assert_called_once_with(fetch_workers=1, assignment_window=25, batch_size=100, sheet_request_interval=1.1)
+            start.assert_called_once_with(fetch_workers=5, assignment_window=100, batch_size=200, sheet_request_interval=1.1)
 
     def test_scraper_start_passes_parallel_options(self):
         with patch.object(runner, "run_start", return_value=0) as start:

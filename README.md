@@ -163,24 +163,26 @@ It resumes the newest unfinished local cycle, recovers an unfinished workbook cy
 To fetch multiple company inventories while keeping one Sheets writer:
 
 ```bash
-./job-search-scraper start --fetch-workers 4 --assignment-window 100
+./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
 ```
+
+The scraper defaults to `5` fetch workers, `--assignment-window 100`, and `--batch-size 200`, so plain `./job-search-scraper start` opens the same worker dashboard unless you override those options.
 
 The controller preloads company snapshots into a local queue. A fetcher hands its result to the local writer buffer and immediately takes the next queued company, even while the writer is waiting on Google Sheets. Only the writer reads/writes Sheets and checkpoints; workers never access Sheets or SQLite. Assignments exclude all already-assigned company IDs, preventing duplicate concurrent fetches.
 
-The default assignment window is `25`; the example above raises it to `100`. It bounds assigned/running/completed-but-unsaved companies, plus the company currently being saved. Its effective minimum is the worker count. The writer replenishes the queue before saves and between batches. Fetchers can pause when the buffer is full, no eligible companies remain, or their own HTTP calls are waiting/retrying. This bounds memory when fetching is faster than writing. Companies sheet statuses are synchronized by the writer and can lag actual fetching while a Sheets call is busy.
+The default assignment window is `100`. It bounds assigned/running/completed-but-unsaved companies, plus the company currently being saved. Its effective minimum is the worker count. The writer replenishes the queue before saves and between batches. Fetchers can pause when the buffer is full, no eligible companies remain, or their own HTTP calls are waiting/retrying. This bounds memory when fetching is faster than writing. Companies sheet statuses are synchronized by the writer and can lag actual fetching while a Sheets call is busy.
 
-With two or more fetch workers, the terminal prints a compact live status whenever work changes. It identifies each worker and its current company, reports how many roles that worker returned, identifies the writer's current company/batch, and shows a run-total of inventory items whose Sheets batch and checkpoint have completed. `New job found - Title at Company` remains the exact-title announcement: only the writer can determine that a fetched posting is new after it checks Job History.
+When a run starts, the terminal opens a color-coded dashboard. Each worker keeps a persistent row with its current task and company, and the green writer row shows the company being saved, batch progress, duration, processed inventory count, and confirmed new-job count. The left `Workers` list records every handoff from a worker to the writer, such as `Worker 1 - 47 jobs - Company - 22:10:04`. The right `Jobs` list records confirmed new Job History rows after the writer successfully commits them to Google Sheets. Long job titles are clipped with `...` so the list stays readable.
 
 On Ctrl+C, queued assignments are cancelled, running requests are allowed to finish, and unfinished companies are refetched on restart. Completed inventories are released from memory after saving. To adjust Google Sheets pacing for the writer:
 
 ```bash
-./job-search-scraper start --fetch-workers 4 --assignment-window 100 --sheet-request-interval 1.1
+./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200 --sheet-request-interval 1.1
 ```
 
 Lower values are faster but more likely to hit Google per-user request limits. The allowed range is `0.5` to `5.0` seconds; the default is `1.1`.
 
-Inventory rows are saved to Google Sheets in atomic batches. The scraper defaults to `--batch-size 100`; use a smaller value, such as `--batch-size 25`, if Google rejects a large write because several job descriptions are unusually large. The allowed range is `1` to `200`, with a `2.2 MB` safety threshold for each Sheets write.
+Inventory rows are saved to Google Sheets in atomic batches. The scraper defaults to `--batch-size 200`; use a smaller value, such as `--batch-size 100` or `--batch-size 25`, if Google rejects a large write because several job descriptions are unusually large. The allowed range is `1` to `200`, with a `2.2 MB` safety threshold for each Sheets write.
 
 After each inventory batch, the scraper prints a `batch timing` line that breaks down company refresh, local planning, Google Sheets load, request building, write time, local checkpointing, payload size, and request count.
 

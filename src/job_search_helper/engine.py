@@ -22,6 +22,7 @@ from .batching import PlanningRepository, PendingState
 from .core import (FIT_LABELS, POLICY_VERSION, canonicalize_url, changed_fields,
                    job_key, material_hash, pack_snapshot,
                    plain_text, reconsiderations, unpack_snapshot, validate_decision)
+from .dashboard import TerminalDashboard
 from .efficiency import classify_title, strip_job_boilerplate
 from .screening import screen_posting
 
@@ -161,6 +162,7 @@ class Engine:
             raise ValueError(f"Batch size must be between 1 and {MAX_BATCH_SIZE}")
         self.batch_size = batch_size
         self._notices = None
+        self._dashboard = None
         if dry_run and repo.__class__.__name__ != "MemoryRepository":
             raise ValueError("Dry runs require an isolated MemoryRepository")
 
@@ -172,7 +174,10 @@ class Engine:
     def _report_new_jobs(self, result):
         if not self.dry_run:
             for title, company in result.get("new_jobs", []):
-                print(f"New job found - {title} at {company}", flush=True)
+                if self._dashboard is not None:
+                    self._dashboard.job_written(title, company)
+                else:
+                    print(f"New job found - {title} at {company}", flush=True)
 
     def _notice(self, message):
         if self._notices is None:
@@ -252,7 +257,7 @@ class Engine:
         started = time.monotonic()
         print(f"{company['Company']}: {len(jobs)} inventory items; resuming at {start}. Saving up to {self.batch_size} at a time.", flush=True)
         if status_hook is not None:
-            status_hook(f"{company['Company']} saving {start}/{len(jobs)}")
+            status_hook(company["Company"], start, len(jobs), 0, 0)
         while start < len(jobs):
             stop = min(start + self.batch_size, len(jobs))
             refresh_started = time.monotonic()
@@ -271,7 +276,7 @@ class Engine:
             self._checkpoint()
             print(f"{company['Company']}: {'simulated' if self.dry_run else 'saved'} {stop}/{len(jobs)} inventory items processed; {time.monotonic()-started:.0f}s elapsed.", flush=True)
             if status_hook is not None:
-                status_hook(f"{company['Company']} saved {stop}/{len(jobs)}", stop - start)
+                status_hook(company["Company"], stop, len(jobs), time.monotonic() - started, stop - start)
             detail = self._format_batch_timings(timings)
             if detail:
                 print(f"{company['Company']}: batch timing: {detail}.", flush=True)
@@ -751,8 +756,6 @@ class Engine:
         """
         if not 1 <= fetch_workers <= 5:
             raise ValueError("Fetch workers must be between 1 and 5")
-        if fetch_workers == 1:
-            return self.resume(cycle_id, retry_blocked=retry_blocked)
         if not 1 <= assignment_window <= 100:
             raise ValueError("Assignment window must be between 1 and 100")
 
@@ -775,21 +778,10 @@ class Engine:
 
         started = SimpleQueue()
         dashboard_lock = Lock()
-        output_lock = Lock()
         worker_slots = {}
-        worker_status = {number: "idle" for number in range(1, fetch_workers + 1)}
-        writer_status = ["idle"]
-        writer_processed = [0]
-
-        def show_status():
-            with dashboard_lock:
-                workers = " | ".join(
-                    f"Worker {number}: {worker_status[number]}"
-                    for number in range(1, fetch_workers + 1)
-                )
-                writer = f"{writer_status[0]} | Run total: {writer_processed[0]} items processed"
-            with output_lock:
-                print(f"Status | {workers} | Writer: {writer}", flush=True)
+        dashboard = TerminalDashboard(fetch_workers)
+        self._dashboard = dashboard
+        dashboard.start()
 
         def worker_slot():
             thread = get_ident()
@@ -800,21 +792,10 @@ class Engine:
                                                 if number not in used)
                 return worker_slots[thread]
 
-        def set_worker_status(slot, status):
-            with dashboard_lock:
-                worker_status[slot] = status
-            show_status()
-
-        def set_writer_status(status, processed=0):
-            with dashboard_lock:
-                writer_status[0] = status
-                writer_processed[0] += processed
-            show_status()
-
         def fetch_company(snapshot):
             cid = snapshot["Company ID"]
             slot = worker_slot()
-            set_worker_status(slot, f"{snapshot['Company']} (fetching)")
+            dashboard.worker_fetching(slot, snapshot["Company"])
             started.put(cid)
             try:
                 inventory = self.fetcher(
@@ -823,11 +804,14 @@ class Engine:
                     cid, snapshot["Company"],
                 )
                 if isinstance(inventory, Inventory):
-                    set_worker_status(slot, f"{snapshot['Company']} ({len(inventory.jobs)} roles returned)")
+                    dashboard.worker_handoff(slot, snapshot["Company"], len(inventory.jobs))
                 return cid, inventory
             except Exception:
-                set_worker_status(slot, f"{snapshot['Company']} (fetch failed)")
+                dashboard.worker_failed(slot, snapshot["Company"])
                 raise
+
+        def set_writer_status(company, done, total, elapsed, processed=0):
+            dashboard.writer_progress(company, done, total, elapsed, processed)
 
         processed = set()
         in_flight = {}
@@ -961,6 +945,7 @@ class Engine:
                     if company.get("Claimed By") or company.get("Claim Token"):
                         raise ValueError(f"{cid} has an external claim. Release it through its coordinator before running this single-writer helper.")
                     if item.get("inventory_status") in {"blocked", "failed", "unsupported"}:
+                        dashboard.writer_message("Recording", company["Company"], item.get("inventory_status", ""))
                         item["stage"] = item["inventory_status"]
                         self._commit(self._company_op(company, {"Scan State": "Blocked / Manual Review", "Blocked Reason": item.get("reason", ""),
                             "Automatic Retry?": "No", "Coverage Status": "Incomplete inventory", "Next Action": "Verify official careers URL / inspect manually; retry only on request",
@@ -990,7 +975,7 @@ class Engine:
                     self._sync_cycle(cycle)
                     self._checkpoint()
                     processed.add(cid)
-            set_writer_status("complete")
+            dashboard.writer_message("Complete")
             if in_flight:
                 for future in in_flight:
                     future.cancel()

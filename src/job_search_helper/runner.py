@@ -8,10 +8,13 @@ import sys
 
 from . import cli as helper_cli
 from .cli import PROJECT_ROOT, get_repository, load_environment, project_path, state_path, writer_lock
-from .engine import DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE, Engine, State
+from .engine import MAX_BATCH_SIZE, Engine, State
 from .efficiency import load_title_blacklist, load_title_review_list
 
 FINISHED = {"Complete", "Complete with exceptions"}
+DEFAULT_FETCH_WORKERS = 5
+DEFAULT_ASSIGNMENT_WINDOW = 100
+DEFAULT_SCRAPER_BATCH_SIZE = MAX_BATCH_SIZE
 
 
 def print_help():
@@ -45,17 +48,17 @@ Commands:
 Options for start:
   --fetch-workers N
       Run N fetch-only workers while this process remains the only Google
-      Sheets writer. Allowed: 1-5. Default: 1.
+      Sheets writer. Allowed: 1-5. Default: 5.
       A returning worker takes its next local assignment even during a write.
 
   --assignment-window N
       Bound the local queue of assigned companies and completed inventories.
-      Allowed: 1-100. Default: 25; effective minimum is the worker count.
+      Allowed: 1-100. Default: 100; effective minimum is the worker count.
       Workers pause when that buffer fills or there is no eligible work.
 
   --batch-size N
       Save up to N inventory items per atomic Google Sheets write/checkpoint.
-      Allowed: 1-200. Default: 100.
+      Allowed: 1-200. Default: 200.
 
   --sheet-request-interval SECONDS
       Minimum delay between Google Sheets requests made by the writer.
@@ -69,8 +72,11 @@ Screening on start (no AI calls):
   contract employment are saved as No with a reason. Unknowns stay for review.
   Any location/work arrangement is eligible. Existing review decisions stay.
   Detected ATS / Source is saved even for blocked/failed/partial scans.
-  Parallel runs show each worker's current company and returned-role count,
-  plus writer progress and a run-total after completed Sheets batches.
+  Start opens a terminal dashboard. Each worker keeps a persistent color-coded
+  row with its current company. The writer row is green and shows save progress,
+  duration, processed inventory count, and confirmed new-job count. The Workers
+  list records every handoff to the writer. The Jobs list records confirmed new
+  Job History rows, clipping long titles with `...`.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
   an interrupted company is refetched and replayed without duplicate jobs.
 
@@ -79,7 +85,8 @@ Screening on start (no AI calls):
   -h           Show this command list.
 
 Examples:
-  ./job-search-scraper start --fetch-workers 4 --assignment-window 100 --batch-size 100
+  ./job-search-scraper start
+  ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
   ./job-search-scraper cleanup-blacklist
   ./job-search-scraper cleanup-blacklist --dry-run
   ./job-search-scraper cleanup-titles
@@ -118,7 +125,8 @@ def _load_environment():
         os.environ[variable] = str(project_path(os.environ.get(variable, default)))
 
 
-def run_start(fetch_workers=1, assignment_window=25, batch_size=DEFAULT_BATCH_SIZE, sheet_request_interval=1.1):
+def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
+              batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1):
     print("Starting job scraping", flush=True)
     if not 0.5 <= sheet_request_interval <= 5.0:
         raise ValueError("Sheet request interval must be between 0.5 and 5.0 seconds")
@@ -177,9 +185,9 @@ def main(argv=None):
         return helper_cli.main(argv)
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("command")
-    parser.add_argument("--fetch-workers", type=int, default=1)
-    parser.add_argument("--assignment-window", type=int, default=25)
-    parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+    parser.add_argument("--fetch-workers", type=int, default=DEFAULT_FETCH_WORKERS)
+    parser.add_argument("--assignment-window", type=int, default=DEFAULT_ASSIGNMENT_WINDOW)
+    parser.add_argument("--batch-size", type=int, default=DEFAULT_SCRAPER_BATCH_SIZE)
     parser.add_argument("--sheet-request-interval", type=float, default=1.1)
     try:
         args = parser.parse_args(argv)

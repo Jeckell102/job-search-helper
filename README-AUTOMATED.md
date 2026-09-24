@@ -8,24 +8,24 @@ Normal scraper command:
 ./job-search-scraper start
 ```
 
-The scraper resumes the newest unfinished scan cycle. If none exists, it starts a new full-company scan.
+The scraper resumes the newest unfinished scan cycle. If none exists, it starts a new full-company scan. By default it starts `5` fetch workers, `--assignment-window 100`, `--batch-size 200`, one Google Sheets writer, and the terminal dashboard.
 
 Parallel fetchers can retrieve company inventories while one writer controls all Google Sheets updates:
 
 ```bash
-./job-search-scraper start --fetch-workers 4 --assignment-window 25
+./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
 ```
 
 The controller preloads the local assignment queue. Fetchers return their results to a bounded local buffer and take another company without waiting for Sheets writes. Only the writer touches Sheets or SQLite. The assignment window bounds unsaved company work (plus the company being saved) and is at least the worker count. Fetchers can idle if the buffer is full or eligible work runs out; Companies sheet status can lag actual activity during a write.
 
-Parallel runs print a live `Status` line when a worker starts/finishes a company or the writer completes a batch. It shows each worker's company, returned-role count, the writer's save position, and the run total after completed Sheets batches. Exact new-job titles remain `New job found - Title at Company`, because only the writer can compare a posting with Job History.
+The dashboard gives each worker a persistent color-coded row with its current company. The green writer row shows save progress, duration, and the run total after completed Sheets batches. The left `Workers` list records every worker handoff to the writer; the right `Jobs` list records confirmed new Job History rows after they are written to Google Sheets, clipping long job titles with `...`.
 
 Blocked/failed/partial scans record the actual adapter in `ATS / Source` when known. Unknown discovery leaves the existing source unchanged, and blocked scans do not advance successful-scan dates. Ctrl+C cancels unstarted assignments; unfinished companies resume by refetching without duplicate saved jobs.
 
 To tune Google Sheets pacing for the writer:
 
 ```bash
-./job-search-scraper start --fetch-workers 4 --assignment-window 25 --sheet-request-interval 1.1
+./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200 --sheet-request-interval 1.1
 ```
 
 Use `./job-search-scraper help` to see the current options.
