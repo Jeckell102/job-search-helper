@@ -1,0 +1,233 @@
+software engineer
+software engineering
+software developer
+software development
+application developer
+applications developer
+application programmer
+computer programmer
+web developer
+web engineer
+frontend engineer
+frontend developer
+front end engineer
+front end developer
+backend engineer
+backend developer
+back end engineer
+back end developer
+fullstack engineer
+fullstack developer
+full stack engineer
+full stack developer
+ios engineer
+ios developer
+android engineer
+android developer
+mobile engineer
+mobile developer
+embedded software
+embedded firmware
+firmware engineer
+firmware developer
+firmware development
+devops
+dev ops
+devsecops
+dev sec ops
+site reliability engineer
+site reliability engineering
+SRE
+data scientist
+data science
+data engineer
+data engineering
+machine learning engineer
+machine learning engineering
+ML engineer
+MLOps
+electrical engineer
+electrical engineering
+mechanical engineer
+mechanical engineering
+materials engineer
+materials engineering
+material engineer
+chemical engineer
+chemical engineering
+civil engineer
+civil engineering
+structural engineer
+structural engineering
+aerospace engineer
+aerospace engineering
+hardware engineer
+hardware engineering
+RF engineer
+RF engineering
+systems test engineer
+system test engineer
+test automation
+automation test engineer
+software test engineer
+software test developer
+software development engineer in test
+verification engineer
+validation engineer
+SDET
+accountant
+accounting
+bookkeeper
+bookkeeping
+payroll
+assistant controller
+recruiter
+recruiting coordinator
+talent acquisition
+human resources
+attorney
+legal counsel
+general counsel
+paralegal
+nurse
+nursing
+physician
+surgeon
+intern
+internship
+software architect
+software systems engineer
+software reverse engineer
+software delivery lead
+software verification engineer
+CNO developer
+reverse engineer
+vulnerability researcher
+computer vision engineer
+deep learning engineer
+state estimation engineer
+perception engineer
+signal processing engineer
+signal processing researcher
+research scientist
+ML researcher
+ServiceNow developer
+mixed reality developer
+aerostructures design
+aerodynamicist
+flight controls engineer
+GNC engineer
+thermal engineer
+thermal design
+structural analysis
+structures engineer
+propulsion design engineer
+propulsion mechanical design engineer
+combustion engineer
+naval architect
+marine designer
+marine design manager
+FPGA designer
+FPGA design
+PCB design
+wire harness design engineer
+camera optomechanical engineer
+composites design engineer
+manufacturing engineer
+manufacturing engineering
+engineer manufacturing
+industrial engineer
+metrology engineer
+quality engineer
+quality engineering
+quality inspector
+supplier quality
+CNC programmer
+CNC machine programmer
+machinist
+welder
+fabrication technician
+composites technician
+production technician
+wire harness technician
+materials handler
+material expeditor
+warehouse specialist
+program finance
+strategic finance
+corporate finance
+finance analyst
+finance transformation
+FP&A
+tax manager
+tax analyst
+billing specialist
+equity plan manager
+compensation analyst
+people operations
+people business partner
+people partner
+people relations
+people systems administrator
+talent sourcer
+technical sourcer
+executive sourcer
+talent coordinator
+talent strategist
+recruiting operations
+executive assistant
+administrative business partner
+front desk coordinator
+workplace assistant
+office manager
+corporate counsel
+legal operations
+facility security officer
+information systems security officer
+contractor special security officer
+industrial security specialist
+new grad
+new graduate
+career fair
+general talent pool
+Architecture
+Research
+manufacturing
+supply
+purchasing
+logistics
+corporate
+CAD
+algorithm
+research
+PCB
+PCBA
+tax
+flight
+lab
+ux
+aviation
+acccouont manager
+sales manager
+business development
+C++
+Director of
+Director,
+Sales director
+Developer
+Development
+embedded
+VP
+staff
+senior engineer
+lead engineer
+account execuitive
+electrical
+inventory
+production
+maintenance
+vice president
+intelligence
+QA
+systems administrator
+TS/SCI

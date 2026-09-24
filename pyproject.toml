@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "job-search-helper"
+version = "0.2.0"
+description = "Manual, resumable job-search inventory and assessment helper"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+google = [
+  "google-api-python-client>=2.150,<3",
+  "google-auth-httplib2>=0.2,<1",
+  "google-auth-oauthlib>=1.2,<2",
+]
+
+[project.scripts]
+job-search-helper = "job_search_helper.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
