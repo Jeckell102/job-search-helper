@@ -836,8 +836,16 @@ def _authorize(write=False, interactive=False):
             raise RepositoryError("Saved token scopes do not exactly match this command; reauthenticate with a separate token.")
         credentials = Credentials.from_authorized_user_info(saved, [scope])
     if credentials and credentials.expired and credentials.refresh_token:
-        credentials.refresh(Request())
-        must_save = True
+        try:
+            credentials.refresh(Request())
+            must_save = True
+        except Exception:
+            if not interactive:
+                raise
+            # A revoked/expired refresh token should not block an explicit
+            # reauthentication request. Fall through to a fresh browser grant.
+            credentials = None
+            must_save = False
     if not credentials or not credentials.valid:
         if not interactive:
             raise RepositoryError("No valid token is available; run the explicit authenticate command first.")
