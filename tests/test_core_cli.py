@@ -288,6 +288,26 @@ class CliTests(unittest.TestCase):
             self.assertEqual(runner.main(["repair-careers-urls", "--apply", "--exclusive-writer"]), 0)
             delegated.assert_called_once_with(["repair-careers-urls", "--apply", "--exclusive-writer"])
 
+
+    def test_setup_evidence_tab_migrates_existing_descriptions(self):
+        repo = MemoryRepository({"Job History": [{
+            "Company": "Acme", "Job Title": "Solutions Engineer", "Job Key": "job-1",
+            "Official Job URL": "https://example.com/job", "Source Hash": "abc123def456",
+            "Job Description": "Full description text for review.",
+        }]})
+        with tempfile.TemporaryDirectory() as directory, patch.object(cli, "get_repository", return_value=repo), \
+                patch.object(cli, "state_path", return_value=Path(directory) / "state.db"):
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(cli.main(["setup-evidence-tab", "--apply", "--exclusive-writer"]), 0)
+        history = repo.read("Job History")[0]
+        evidence = repo.read("Job Evidence")[0]
+        self.assertTrue(history["Job Description"].startswith("See Job Evidence tab:"))
+        self.assertEqual(evidence["Job Key"], "job-1")
+        self.assertEqual(evidence["Source Hash"], "abc123def456")
+        self.assertEqual(evidence["Job Description"], "Full description text for review.")
+        self.assertIn("migrated_descriptions", output.getvalue())
+
     def test_start_requires_an_explicit_scope(self):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             cli.parser().parse_args(["start"])

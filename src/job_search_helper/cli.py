@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 
-from .engine import DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE, Engine, State, run_demo
+from .engine import DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE, Engine, State, now, run_demo
 from .cleanup import cleanup_blacklisted_history
 from .repair import repair_careers_urls
 from .repository import GoogleRepository, MemoryRepository, authorize
@@ -204,11 +204,36 @@ def execute_setup_evidence_tab(args: argparse.Namespace) -> None:
         return
     if not args.exclusive_writer:
         raise ValueError("--apply requires --exclusive-writer. Stop other spreadsheet writers before changing workbook structure.")
-    print("APPLY: creating or repairing the Job Evidence tab header.")
+    print("APPLY: creating or repairing the Job Evidence tab and moving existing descriptions out of Job History.")
     database = state_path()
     with writer_lock(database.parent / "writer.lock"):
         repo = get_repository(write=True, interactive=args.authenticate)
-        print_json(repo.ensure_tab("Job Evidence"))
+        setup = repo.ensure_tab("Job Evidence")
+        moved = skipped = 0
+        operations = []
+        stamp = now()
+        for row in repo.read("Job History"):
+            key = str(row.get("Job Key") or "").strip()
+            source_hash = str(row.get("Source Hash") or row.get("Description Hash") or "").strip()
+            description = str(row.get("Job Description") or "")
+            if not key or not source_hash or not description or description.startswith("See Job Evidence tab:"):
+                skipped += 1
+                continue
+            pointer = f"See Job Evidence tab: {key} / {source_hash[:12]}"
+            operations.extend([
+                {"tab": "Job Evidence", "identity": {"Job Key": key, "Source Hash": source_hash},
+                 "append_if_missing": True, "values": {"Company": row.get("Company", ""),
+                 "Job Title": row.get("Job Title", ""), "Official Job URL": row.get("Official Job URL", ""),
+                 "Captured At": stamp, "Job Description": description}},
+                {"tab": "Job History", "identity": {"Job Key": key}, "values": {"Job Description": pointer}},
+            ])
+            moved += 1
+            if len(operations) >= 20:
+                repo.commit(operations)
+                operations = []
+        if operations:
+            repo.commit(operations)
+        print_json({**setup, "migrated_descriptions": moved, "skipped_rows": skipped})
 
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description="Manual, resumable job inventory and reviewed-decision helper.")
