@@ -22,7 +22,7 @@ The dashboard gives each worker a persistent color-coded row with its current co
 
 Company-specific writer errors are logged to `.state/scraper-errors.jsonl`, marked `Blocked / Manual Review` in Companies, and the scraper keeps moving. Use `./job-search-scraper errors` to review recent failures.
 
-Blocked/failed/partial scans record the actual adapter in `ATS / Source` when known. Unknown discovery leaves the existing source unchanged, and blocked scans do not advance successful-scan dates. Ctrl+C cancels unstarted assignments. Completed fetches are retained in SQLite, and restart replays saved inventories without duplicate rows; fetches without saved results are repeated.
+Supported public boards are Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, and Taleo. Dayforce remains manual unless discovery finds a supported board link. Blocked/failed/partial scans record the actual adapter in `ATS / Source` when known. Unknown discovery leaves the existing source unchanged, and blocked scans do not advance successful-scan dates. Ctrl+C cancels unstarted assignments. Completed fetches are retained in SQLite, and restart replays saved inventories without duplicate rows; fetches without saved results are repeated.
 
 To tune Google Sheets pacing for the writer:
 

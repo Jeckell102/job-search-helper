@@ -53,10 +53,10 @@ In the **Companies** tab, select one active company and check these fields:
 | Company ID | Existing stable ID, for example `COMP-0001`; do not renumber after sorting. |
 | Company | Employer name. |
 | Company Status | Active, not Pause or Remove. |
-| ATS / Source | `Greenhouse`, `Lever`, `Ashby`, `Workday`, `iCIMS`, `ADP`, or `Paylocity`, or blank when discovering the board from the careers page. |
+| ATS / Source | `Greenhouse`, `Lever`, `Ashby`, `Workday`, `iCIMS`, `ADP`, `Paylocity`, or `Taleo`, or blank when discovering the board from the careers page. |
 | Official Careers URL | A supported official ATS board URL, or the employer's public HTTPS careers page linking to one. |
 
-The scraper first recognizes direct ATS board URLs. Otherwise, it reads the configured careers page and looks for Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, or Paylocity links, iframe embeds, or script embeds. It follows up to four same-host redirects (including the `www` variant), accepts redirects directly to supported boards, and can inspect a small number of obvious same-site job links such as "Apply Now", "Search Jobs", or "Open Positions". It does not guess board names, execute JavaScript, broadly crawl the site, or fill in missing careers URLs.
+The scraper first recognizes direct ATS board URLs. Otherwise, it reads the configured careers page and looks for Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, or Taleo links, iframe embeds, or script embeds. It follows up to four same-host redirects (including the `www` variant), accepts redirects directly to supported boards, and can inspect a small number of obvious same-site job links such as "Apply Now", "Search Jobs", or "Open Positions". It does not guess board names, execute JavaScript, broadly crawl the site, or fill in missing careers URLs.
 
 Discovery requires one unambiguous board. Multiple boards, a configured ATS mismatch, and sources labeled as shared/parent boards need manual selection or company-specific scoping. Other cross-host redirects require recording the verified destination as Official Careers URL. Private addresses, credentials, non-HTTPS URLs, and custom ports are refused. Discovery reads at most 2 MiB per page and retains TLS verification.
 
@@ -77,6 +77,7 @@ https://TENANT.wd5.myworkdayjobs.com/en-US/CAREERS_SITE
 https://TENANT.wd5.myworkdayjobs.com/CAREERS_SITE/jobs?q=DIVISION
 https://careers-EMPLOYER.icims.com/jobs/search
 https://careers-EMPLOYER.icims.com/jobs/intro
+https://EMPLOYER.taleo.net/careersection/BOARD/jobsearch.ftl
 ```
 
 Only use the URL verified for the specific employer. Do not change company IDs, job keys, or source identity to make a configuration error appear to be a new posting.
@@ -110,6 +111,14 @@ The company ID, career-center ID, language, and optional `userQuery` keyword sea
 Public boards at `https://recruiting.paylocity.com/Recruiting/Jobs/All/COMPANY_UUID` are supported, with an optional company-name suffix and either URL capitalization. The UUID must come from the verified employer board; individual job links cannot establish a company inventory. Direct links and iframes on configured careers pages can also be discovered. Unknown query filters, URL fragments, internal portals, and shared/parent boards require manual review; only `utm_*` tracking parameters are ignored.
 
 The adapter reads the full embedded `window.pageData.Jobs` list as JSON without executing JavaScript, then fetches every public detail page. It preserves full descriptions plus requirements, location, department, published salary text, dates, explicit remote status, and stable posting IDs. The list's shortened description is never treated as the full job. Every detail must confirm its posting ID and company board. A final listing recheck catches changes during the scan, including an empty board gaining jobs. Missing data, duplicates, access denials, and size limits leave the inventory incomplete and cannot close old jobs or advance successful-scan dates. Per-job progress and failing-detail diagnostics appear in the terminal. No applications, logins, cookies, or CAPTCHA bypasses are used.
+
+### Taleo
+
+Standard public Oracle Taleo boards at `https://EMPLOYER.taleo.net/careersection/BOARD/jobsearch.ftl` are supported. Job detail and apply links on the same career section are normalized back to the public job-search board so a company inventory is still scoped by its board, not by one posting. Direct Taleo links and same-site careers pages that point to Taleo can be discovered automatically. Unknown filters, shared/parent board labels, and nonstandard Taleo portals require manual review.
+
+The adapter reads the public search page to find Taleo's portal number, posts the same unfiltered public search request the page uses, then fetches every public detail page. It preserves the public contest number as the stable posting ID, title, location, department column when available, and full visible detail text. A complete scan requires consistent listing totals, unique posting IDs, detail pages that confirm the listing title, and a final first-page recheck when jobs were found. Access denials, human verification, changed pagination, missing details, or malformed pages remain incomplete and cannot close old jobs. No cookies, login, application forms, or one-time authorization bypasses are used.
+
+Dayforce is still a major unsupported family. Its documented JobFeeds API requires authorized access, and its public app endpoints can deny direct read-only calls outside the browser app. Those rows stay blocked/manual-review unless a direct supported ATS link is found or a future browser-rendered adapter is added.
 
 Restart/resume the scraper after installation to load the adapter. Previously blocked companies still require `--retry-blocked`; changing only the sheet's Scan State to Queued does not reset saved local stages.
 
@@ -382,4 +391,5 @@ See `REVIEW.md` for the section-by-section audit of the original script. Provide
 - [Greenhouse Job Board API](https://docs.greenhouse.io/job-board.html)
 - [Lever public Postings API](https://github.com/lever/postings-api)
 - [Ashby public Job Posting API](https://developers.ashbyhq.com/docs/public-job-posting-api)
+- [Oracle Taleo custom career section URLs](https://docs.oracle.com/en/cloud/saas/taleo-enterprise/25a/otccu/c-customcareersectionurls.html)
 - [Apps Script trigger restrictions](https://developers.google.com/apps-script/guides/triggers)

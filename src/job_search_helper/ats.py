@@ -4,6 +4,7 @@ Sources (checked 2026-09-17):
 https://docs.greenhouse.io/job-board.html
 https://github.com/lever/postings-api
 https://developers.ashbyhq.com/docs/public-job-posting-api
+https://docs.oracle.com/en/cloud/saas/taleo-enterprise/25a/otccu/c-customcareersectionurls.html
 
 ``complete`` means the public board inventory was retrieved, not that every
 posting meets the candidate's criteria. No HTTP failure establishes closure.
@@ -48,7 +49,10 @@ def is_icims_host(host: str | None) -> bool:
 
 
 def is_board_host(host: str | None) -> bool:
-    return host in BOARD_HOSTS or is_workday_host(host) or is_icims_host(host)
+    if host in BOARD_HOSTS or is_workday_host(host) or is_icims_host(host):
+        return True
+    from .taleo import is_taleo_host
+    return is_taleo_host(host)
 
 
 @dataclass
@@ -97,7 +101,11 @@ def _safe_api_url(url: str) -> None:
     if parsed.hostname == "recruiting.paylocity.com":
         from .paylocity import safe_portal_path
         paylocity = safe_portal_path(parsed)
-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity)
+    taleo = False
+    from .taleo import is_taleo_host, safe_portal_path as taleo_safe_portal_path
+    if is_taleo_host(parsed.hostname):
+        taleo = taleo_safe_portal_path(parsed)
+    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo)
             or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
 
@@ -150,13 +158,18 @@ class HTTPTransport:
 
     def post(self, url: str, payload: dict) -> HTTPResponse:
         parsed = urlsplit(url)
-        if not is_workday_host(parsed.hostname) or not parsed.path.endswith("/jobs"):
-            raise FetchError("unsupported", "POST is restricted to public Workday listing searches.")
+        from .taleo import is_taleo_host
+        taleo_search = is_taleo_host(parsed.hostname) and parsed.path == "/careersection/rest/jobboard/searchjobs"
+        if not ((is_workday_host(parsed.hostname) and parsed.path.endswith("/jobs")) or taleo_search):
+            raise FetchError("unsupported", "POST is restricted to public Workday and Taleo listing searches.")
         return self._request(url, payload)
 
     def _request(self, url: str, payload: dict | None = None) -> HTTPResponse:
         _safe_api_url(url)
-        expect_html = is_icims_host(urlsplit(url).hostname) or urlsplit(url).hostname == "recruiting.paylocity.com"
+        parsed_url = urlsplit(url)
+        from .taleo import is_taleo_host
+        expect_html = (is_icims_host(parsed_url.hostname) or parsed_url.hostname == "recruiting.paylocity.com"
+                       or (is_taleo_host(parsed_url.hostname) and parsed_url.path != "/careersection/rest/jobboard/searchjobs"))
         body = json.dumps(payload).encode("utf-8") if payload is not None else None
         for attempt in range(3):
             self.sleep(max(0.0, self.interval - (time.monotonic() - self.last_request)))
@@ -165,6 +178,8 @@ class HTTPTransport:
                 "User-Agent": "JobSearchHelper/1.0 (public job-board inventory; read-only)",
                 "Accept": "text/html" if expect_html else "application/json", "Accept-Encoding": "identity",
                 **({"Content-Type": "application/json"} if payload is not None else {}),
+                **({"tz": "GMT-05:00", "tzname": "America/New_York"}
+                   if payload is not None and is_taleo_host(parsed_url.hostname) else {}),
             }, method="POST" if payload is not None else "GET")
             try:
                 with self.opener.open(request, timeout=self.timeout) as response:
@@ -254,6 +269,9 @@ def resolve_board(ats: str, careers_url: str) -> tuple[str, str, str]:
     if host == "recruiting.paylocity.com":
         from .paylocity import resolve_paylocity
         return resolve_paylocity(ats, careers_url)
+    from .taleo import is_taleo_host, resolve_taleo
+    if is_taleo_host(host):
+        return resolve_taleo(ats, careers_url)
     if host == "workforcenow.adp.com":
         from .adp import resolve_adp
         return resolve_adp(ats, careers_url)
@@ -287,7 +305,7 @@ def resolve_board(ats: str, careers_url: str) -> tuple[str, str, str]:
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", board):
         raise ValueError("ATS URL has no valid board token.")
     configured = ats.strip().lower()
-    recognized = [name for name in ("greenhouse", "lever", "ashby", "workday", "icims", "adp", "paylocity") if name in configured]
+    recognized = [name for name in ("greenhouse", "lever", "ashby", "workday", "icims", "adp", "paylocity", "taleo") if name in configured]
     if recognized and name.lower() not in recognized:
         raise ValueError("ATS / Source disagrees with the verified ATS URL.")
     return name, board, root
@@ -455,6 +473,12 @@ def fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if name == "Paylocity":
         from .paylocity import fetch_paylocity
         result = fetch_paylocity(board, root, company_id, company, transport)
+        result.ats = name
+        result.reason = discovery_note + result.reason
+        return result
+    if name == "Taleo":
+        from .taleo import fetch_taleo
+        result = fetch_taleo(board, root, company_id, company, transport)
         result.ats = name
         result.reason = discovery_note + result.reason
         return result

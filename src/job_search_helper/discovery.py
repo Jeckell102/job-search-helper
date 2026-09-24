@@ -163,8 +163,6 @@ def _unsupported_ats_candidates(links, base_url):
         host = urlsplit(url).hostname
         if host == "jobs.dayforcehcm.com" or host.endswith(".dayforcehcm.com"):
             found.add("Dayforce")
-        elif host.endswith(".taleo.net") or host == "taleo.net":
-            found.add("Taleo")
     return found
 
 
@@ -204,7 +202,7 @@ def _select_board(ats, boards):
     if len(boards) > 1:
         raise FetchError("unsupported", "Multiple ATS boards linked by careers page; select the company's board explicitly.")
     if not boards:
-        raise FetchError("unsupported", "No supported ATS link found on careers page; it may use another ATS or require JavaScript. Provide a direct Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, or Paylocity board URL.")
+        raise FetchError("unsupported", "No supported ATS link found on careers page; it may use another ATS or require JavaScript. Provide a direct Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, or Taleo board URL.")
     name, board, root = next(iter(boards))
     try:
         resolve_board(ats, root + board)
@@ -276,4 +274,4 @@ def discover_board(ats, careers_url, transport=None):
     if unsupported:
         names = ", ".join(sorted(unsupported))
         raise FetchError("unsupported", f"Found {names} careers links, but that ATS is not supported yet; leave blocked or add an adapter before automatic scraping.")
-    raise FetchError("unsupported", "No supported ATS link found on careers page or obvious same-site job links; it may use another ATS or require JavaScript. Provide a direct Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, or Paylocity board URL.")
+    raise FetchError("unsupported", "No supported ATS link found on careers page or obvious same-site job links; it may use another ATS or require JavaScript. Provide a direct Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, or Taleo board URL.")

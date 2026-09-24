@@ -99,6 +99,9 @@ Screening on start (no AI calls):
   New jobs with clear base pay below $120,000, travel above 50%, or temporary/
   contract employment are saved as No with a reason. Unknowns stay for review.
   Any location/work arrangement is eligible. Existing review decisions stay.
+  Supported public boards: Greenhouse, Lever, Ashby, Workday, iCIMS,
+  ADP Workforce Now, Paylocity, and Taleo. Dayforce remains manual unless
+  a supported board link is found.
   Detected ATS / Source is saved even for blocked/failed/partial scans.
   Start opens a terminal dashboard. Each worker keeps a persistent color-coded
   row with its current company. "Saved locally" means the worker finished and
