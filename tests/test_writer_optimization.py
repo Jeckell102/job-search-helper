@@ -1,16 +1,9 @@
-import copy
-from contextlib import redirect_stdout
-from io import StringIO
-from pathlib import Path
-import tempfile
-from threading import Event
 import unittest
 from unittest.mock import patch
 
 from job_search_helper.batching import PlanningRepository
-from job_search_helper.repository import GoogleRepository, RepositoryError, SCHEMAS
+from job_search_helper.repository import GoogleRepository, RepositoryError
 from sheets_fixture import RangeSheets
-from test_fetch_pool import company, inventory
 
 
 def op(key, **values):

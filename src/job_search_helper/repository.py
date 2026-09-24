@@ -491,7 +491,8 @@ class GoogleRepository:
         self._committed_partial = False
         self.metrics = {"read_requests": 0, "write_requests": 0, "read_response_bytes": 0,
                         "write_payload_bytes": 0, "read_seconds": 0.0, "write_seconds": 0.0,
-                        "throttle_seconds": 0.0}
+                        "throttle_seconds": 0.0, "prepare_seconds": 0.0,
+                        "build_requests_seconds": 0.0}
 
     def _execute(self, request, action):
         # Scraper and reviewer run as separate processes but share one Google-user
@@ -812,8 +813,11 @@ class GoogleRepository:
         sheets = self._load_commit(operations)
         timings["sheets_load_seconds"] = time.monotonic() - load_started
         prepare_started = time.monotonic()
-        changed, new_rows, result = _prepare(sheets, self.schemas, operations)
-        timings["prepare_seconds"] = time.monotonic() - prepare_started
+        try:
+            changed, new_rows, result = _prepare(sheets, self.schemas, operations)
+        finally:
+            timings["prepare_seconds"] = time.monotonic() - prepare_started
+            self.metrics["prepare_seconds"] += timings["prepare_seconds"]
         build_started = time.monotonic()
         requests = []
         for tab, sheet in sheets.items():
@@ -870,6 +874,7 @@ class GoogleRepository:
                           "rowIndex": block["row"], "columnIndex": block["col"]},
                 "rows": block["rows"], "fields": "userEnteredValue"}})
         timings["build_requests_seconds"] = time.monotonic() - build_started
+        self.metrics["build_requests_seconds"] += timings["build_requests_seconds"]
         if requests:
             payload_started = time.monotonic()
             payload_bytes = len(json.dumps({"requests": requests}, ensure_ascii=True).encode("utf-8"))

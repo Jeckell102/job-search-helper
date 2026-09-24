@@ -277,8 +277,8 @@ class Engine:
             result = action()
         finally:
             self.repo, self.state, self._notices = base_repo, base_state, None
-        timings["plan_seconds"] = time.monotonic() - plan_started
-        self.performance["staging_seconds"] += timings["plan_seconds"]
+            timings["plan_seconds"] = time.monotonic() - plan_started
+            self.performance["staging_seconds"] += timings["plan_seconds"]
         # Fresh row identities, formulas and user fields are revalidated here.
         # A failure or Ctrl+C before acknowledgement leaves the local checkpoint
         # at the preceding batch. Replaying that batch is idempotent.
@@ -991,7 +991,7 @@ class Engine:
 
             while True:
                 rows = self._company_rows()
-                if cycle["all"]:
+                if cycle["all"] and not sync_only:
                     for company in rows:
                         if str(company.get("Company Status", "Active")).strip().casefold() in {"pause", "paused", "remove"}:
                             continue
@@ -1044,6 +1044,9 @@ class Engine:
                         raise ValueError(f"{cid} has an external claim. Release it through its coordinator before running this single-writer helper.")
                     if item.get("inventory_status") in {"blocked", "failed", "unsupported"}:
                         dashboard.writer_message("Recording", company["Company"], item.get("inventory_status", ""))
+                        if item.get("inventory_status") == "failed":
+                            self._log_company_error(cycle, company, item,
+                                RuntimeError(item.get("reason") or "Fetch failed"), "fetching inventory")
                         item["stage"] = item["inventory_status"]
                         if self.inbox is not None:
                             self.inbox.block(cycle_id, cid)

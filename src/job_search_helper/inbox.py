@@ -45,15 +45,18 @@ class InventoryInbox:
     def save(self, cycle, company, payload):
         started = time.monotonic()
         encoded = json.dumps(payload, ensure_ascii=False)
-        with self.lock, self.connection:
-            # Never replace a pending inventory with a refetch: its checkpoint
-            # indexes refer to this exact ordering and content.
-            cursor = self.connection.execute("INSERT OR IGNORE INTO inventories VALUES (?,?,?,0)",
-                                             (cycle, company, encoded))
-            if cursor.rowcount:
-                self.saved += 1
-                self.payload_bytes += len(encoded.encode("utf-8"))
-        self.checkpoint_seconds += time.monotonic() - started
+        with self.lock:
+            try:
+                with self.connection:
+                    # Never replace a pending inventory with a refetch: its
+                    # checkpoint indexes refer to this exact ordering/content.
+                    cursor = self.connection.execute("INSERT OR IGNORE INTO inventories VALUES (?,?,?,0)",
+                                                     (cycle, company, encoded))
+                if cursor.rowcount:
+                    self.saved += 1
+                    self.payload_bytes += len(encoded.encode("utf-8"))
+            finally:
+                self.checkpoint_seconds += time.monotonic() - started
 
     def get(self, cycle, company):
         with self.lock:

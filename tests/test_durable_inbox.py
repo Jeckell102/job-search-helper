@@ -190,6 +190,17 @@ class DurablePipelineTests(unittest.TestCase):
             self.assertTrue(start.call_args.kwargs['defer_sync'])
             self.assertFalse(start.call_args.kwargs['sync_only'])
 
+    def test_fetch_error_is_logged_and_other_companies_continue(self):
+        def fetch(source, url, cid, name):
+            if cid == 'C-0':
+                raise OSError('fixture source failed')
+            return inventory(cid, name, url)
+        self.engine.fetcher = fetch
+        self.engine.resume_parallel(self.cycle, fetch_workers=2)
+        self.assertEqual(len(self.repo.read('Job History')), 3)
+        self.assertIn('fetching inventory', (self.root / 'errors.jsonl').read_text())
+        self.assertTrue(self.inbox.get(self.cycle, 'C-0')[1])
+
 
 if __name__ == '__main__':
     unittest.main()
