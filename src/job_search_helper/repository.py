@@ -728,6 +728,45 @@ class GoogleRepository:
                 records.append((offset + 2, values))
         return records
 
+    def read_cached_columns(self, tab, headers):
+        """Read value columns using layout learned from the planning snapshot."""
+        _tab(tab)
+        if tab not in self._write_layout:
+            return self.read_columns(tab, headers)
+        live_headers = self._write_layout[tab][0]
+        mapping = {header: index for index, header in enumerate(live_headers)}
+        missing = [h for h in headers if h not in mapping]
+        if missing:
+            raise RepositoryError(f"{tab}: missing requested headers: {', '.join(missing)}")
+        row_count = max(2, self._write_layout[tab][1] + 1)
+        escaped = tab.replace(chr(39), chr(39)*2)
+        ranges = []
+        for header in headers:
+            col = _column_name(mapping[header] + 1)
+            ranges.append(f"'{escaped}'!{col}2:{col}{row_count}")
+        result = self._execute(
+            self.service.spreadsheets().values().batchGet(
+                spreadsheetId=self.spreadsheet_id,
+                ranges=ranges,
+                majorDimension="ROWS",
+            ),
+            "read",
+        )
+        columns = []
+        for value_range in result.get("valueRanges", []):
+            raw = value_range.get("values", [])
+            columns.append([row[0] if row else "" for row in raw])
+        while len(columns) < len(headers):
+            columns.append([])
+        max_len = max((len(c) for c in columns), default=0)
+        records = []
+        for offset in range(max_len):
+            values = {header: (columns[i][offset] if offset < len(columns[i]) else "")
+                      for i, header in enumerate(headers)}
+            if any(value != "" for value in values.values()):
+                records.append((offset + 2, values))
+        return records
+
     def read_row(self, tab, row_number):
         """Read one row as plain values; ideal for AI claim validation."""
         _tab(tab)

@@ -4,6 +4,7 @@ import copy
 from io import StringIO
 import json
 from pathlib import Path
+import re
 import tempfile
 from threading import Event
 import unittest
@@ -71,6 +72,16 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(self.engine._dashboard.local_queue_count, 0)
         self.assertEqual(self.engine._dashboard.sync_plan_count, 0)
         self.assertEqual(self.state.cycle(self.cycle)['status'], 'Complete')
+
+    def test_sync_uses_narrow_company_control_refreshes(self):
+        self.defer()
+        pipeline = LocalPipeline(self.engine, self.cycle)
+        before = len(self.service.get_calls)
+        pipeline.run(sync_only=True)
+        ranges = [r for call in self.service.get_calls[before:] for r in call.get('ranges', [])]
+        company_ranges = [r for r in ranges if r.startswith("'Companies'!")]
+        self.assertTrue(company_ranges)
+        self.assertFalse(any(re.search(r"!A1:[A-Z]+[2-9][0-9]*$", r) for r in company_ranges))
 
     def test_deferred_dashboard_shows_saved_local_queue(self):
         self.defer()

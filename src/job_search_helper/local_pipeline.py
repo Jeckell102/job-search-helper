@@ -37,6 +37,30 @@ class LocalPipeline:
         self.last_sync = time.monotonic()
         self.dashboard = None
 
+    def refresh_company_controls(self):
+        headers = [
+            'Company ID', 'Company', 'Company Status', 'Claimed By', 'Claim Token',
+            'Automatic Retry?', 'Scan State', 'Official Careers URL', 'ATS / Source',
+        ]
+        try:
+            read_columns = getattr(self.repo, 'read_cached_columns', self.repo.read_columns)
+            numbered = read_columns('Companies', headers)
+            rows = [row for _, row in numbered if row.get('Company ID')]
+        except AttributeError:
+            rows = [row for row in self.repo.read('Companies') if row.get('Company ID')]
+        refreshed = {}
+        for row in rows:
+            current = self.companies.get(row['Company ID'], {})
+            updated = copy.deepcopy(current)
+            updated.update(row)
+            refreshed.setdefault(row['Company ID'], []).append(updated)
+        self.companies = {
+            cid: matches[0]
+            for cid, matches in refreshed.items()
+            if len(matches) == 1
+        }
+        return refreshed
+
     def refresh_queue_status(self):
         if self.dashboard is None:
             return
@@ -176,10 +200,7 @@ class LocalPipeline:
     def upload(self, entries):
         if not entries:
             return
-        rows = self.repo.read('Companies')
-        by_id = {}
-        for row in rows:
-            by_id.setdefault(row.get('Company ID'), []).append(row)
+        by_id = self.refresh_company_controls()
         valid = []
         for cid, cursor, ops in entries:
             if cid in self.ignored:
