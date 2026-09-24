@@ -235,6 +235,20 @@ Blocked companies are not automatically retried. After you inspect the issue or 
 
 This does not bypass verification, logins, or access controls. It merely authorizes another normal retrieval attempt.
 
+To repair blocked companies whose public careers page has moved to a different supported ATS board, preview the automated repair first:
+
+```bash
+./job-search-scraper repair-careers-urls --dry-run
+```
+
+The repair checks only companies marked `Blocked / Manual Review`. It skips writer/history conflicts, discovers a supported board from the configured careers page, then validates the candidate by fetching a complete inventory with at least one job. Apply the proven fixes only after stopping the scraper and other sheet writers:
+
+```bash
+./job-search-scraper repair-careers-urls --apply --exclusive-writer
+```
+
+A validated repair updates `Official Careers URL`, updates `ATS / Source`, clears the blocked fields, and changes `Scan State` to `Queued` so the next scraper pass can pick it up normally. If the command finds a candidate URL but cannot validate jobs, it leaves the company blocked and records the URL in `Candidate Careers URL` for manual review. The apply command creates that optional header when needed.
+
 ## Clean up previously recorded blacklist matches
 
 The scraper applies `title-blacklist.txt` before adding newly scraped jobs to Job History. To reconcile older Job History rows after changing that file, run:

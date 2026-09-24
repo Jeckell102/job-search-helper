@@ -14,6 +14,7 @@ import tempfile
 
 from .engine import DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE, Engine, State, run_demo
 from .cleanup import cleanup_blacklisted_history
+from .repair import repair_careers_urls
 from .repository import GoogleRepository, MemoryRepository, authorize
 
 
@@ -173,6 +174,23 @@ def execute_cleanup(args: argparse.Namespace) -> None:
         print_json(cleanup_blacklisted_history(repo, apply=True))
 
 
+
+def execute_repair_careers(args: argparse.Namespace) -> None:
+    require_single_writer(args)
+    if not args.apply:
+        print("DRY RUN: checking blocked Companies for valid replacement careers boards; no spreadsheet cells will change.")
+        repo = get_repository(write=False, interactive=args.authenticate)
+        repo.validate_schema()
+        print_json(repair_careers_urls(repo, apply=False))
+        return
+
+    print("APPLY: validating replacement careers boards, queueing proven fixes, and recording unvalidated candidates for review.")
+    database = state_path()
+    with writer_lock(database.parent / "writer.lock"):
+        repo = get_repository(write=True, interactive=args.authenticate)
+        repo.validate_schema()
+        print_json(repair_careers_urls(repo, apply=True))
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description="Manual, resumable job inventory and reviewed-decision helper.")
     commands = result.add_subparsers(dest="command", required=True)
@@ -198,6 +216,16 @@ def parser() -> argparse.ArgumentParser:
     cleanup.add_argument("--exclusive-writer", action="store_true", help="Confirm all other sheet writers are stopped.")
     cleanup.add_argument("--workers", type=int, default=1, help=argparse.SUPPRESS)
     cleanup.add_argument("--authenticate", action="store_true", help="Permit OAuth if credentials are absent.")
+
+    repair = commands.add_parser(
+        "repair-careers-urls",
+        help="Find valid replacement careers boards for blocked companies and queue proven fixes.",
+    )
+    repair.add_argument("--apply", action="store_true", help="Write proven fixes and candidate URLs; off by default.")
+    repair.add_argument("--dry-run", action="store_true", help="Explicitly select the default read-only preview.")
+    repair.add_argument("--exclusive-writer", action="store_true", help="Confirm all other sheet writers are stopped.")
+    repair.add_argument("--workers", type=int, default=1, help=argparse.SUPPRESS)
+    repair.add_argument("--authenticate", action="store_true", help="Permit OAuth if credentials are absent.")
 
     for name, description in (
         ("start", "Start a new, explicitly scoped cycle; dry-run by default."),
@@ -281,6 +309,8 @@ def main(argv: list[str] | None = None) -> int:
             print_json({"reviews": count, "output": str(output)})
         elif args.command in {"cleanup-blacklist", "cleanup-titles"}:
             execute_cleanup(args)
+        elif args.command == "repair-careers-urls":
+            execute_repair_careers(args)
         else:
             execute_work(args)
         return 0

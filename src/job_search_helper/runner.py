@@ -46,6 +46,12 @@ Commands:
       Staff, Principal, and Director. Existing No decisions stay No.
       Stop other sheet writers first. Use --dry-run for a read-only report.
 
+  repair-careers-urls
+      For blocked companies, discover a replacement ATS board, validate it by
+      fetching jobs, update Official Careers URL, and set Scan State to Queued.
+      Unvalidated candidate URLs go to Candidate Careers URL for manual review.
+      Dry-run by default; use --apply --exclusive-writer to write changes.
+
   preflight    Validate access and workbook headers; never change cells.
   status       Read local cycle status without creating or updating state.
   errors       Show recent per-company scraper errors from the local log.
@@ -122,6 +128,8 @@ Examples:
   ./job-search-scraper cleanup-blacklist --dry-run
   ./job-search-scraper cleanup-titles
   ./job-search-scraper cleanup-titles --dry-run
+  ./job-search-scraper repair-careers-urls --dry-run
+  ./job-search-scraper repair-careers-urls --apply --exclusive-writer
 """
     )
 
@@ -274,6 +282,7 @@ def main(argv=None):
     aliases = {
         "--cleanup-blacklist": "cleanup-blacklist",
         "--cleanup-titles": "cleanup-titles",
+        "--repair-careers-urls": "repair-careers-urls",
         "--preflight": "preflight",
         "--status": "status",
         "--errors": "errors",
@@ -291,7 +300,7 @@ def main(argv=None):
         return show_performance()
     if argv[0] == "errors":
         return show_errors()
-    delegated = {"cleanup-blacklist", "cleanup-titles", "preflight", "status", "reviews", "auth", "test", "demo"}
+    delegated = {"cleanup-blacklist", "cleanup-titles", "repair-careers-urls", "preflight", "status", "reviews", "auth", "test", "demo"}
     if argv[0] in delegated:
         if argv[0] in {"cleanup-blacklist", "cleanup-titles"} and "--dry-run" not in argv and "--apply" not in argv:
             argv = [*argv, "--apply", "--exclusive-writer"]

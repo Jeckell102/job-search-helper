@@ -451,6 +451,18 @@ class MemoryRepository:
     def read_many(self, tabs):
         return {tab: self.read(tab) for tab in tabs}
 
+
+    def ensure_columns(self, tab, headers):
+        _tab(tab)
+        sheet = self._sheets[tab]
+        added = []
+        for header in [str(header).strip() for header in headers if str(header).strip()]:
+            if header not in sheet.headers:
+                sheet.headers.append(header)
+                self.schemas[tab] = [*self.schemas[tab], header] if header not in self.schemas[tab] else self.schemas[tab]
+                added.append(header)
+        return added
+
     def commit(self, operations):
         snapshot = copy.deepcopy(self._sheets)
         changed, _, result = _prepare(snapshot, self.schemas, list(operations))
@@ -826,6 +838,39 @@ class GoogleRepository:
             _validate_headers(tab, headers, self.schemas[tab])
             self._header_cache[tab] = (headers, {header: index for index, header in enumerate(headers)})
         return True
+
+
+    def ensure_columns(self, tab, headers):
+        _tab(tab)
+        headers = [str(header).strip() for header in headers if str(header).strip()]
+        if not headers:
+            return []
+        live, mapping = self._headers(tab)
+        missing = [header for header in headers if header not in mapping]
+        if not missing:
+            return []
+        if len(live) + len(missing) > MAX_COLUMNS:
+            raise RepositoryError(f"{tab}: adding columns would exceed the safe column limit.")
+        metadata = self._metadata()
+        found = {s["properties"]["title"]: s for s in metadata.get("sheets", [])}
+        if tab not in found:
+            raise RepositoryError(f"Missing tab: {tab}")
+        sheet_id = found[tab]["properties"]["sheetId"]
+        start_col = len(live)
+        requests = [{"updateCells": {
+            "start": {"sheetId": sheet_id, "rowIndex": 0, "columnIndex": start_col},
+            "rows": [{"values": [{"userEnteredValue": _encoded(header)} for header in missing]}],
+            "fields": "userEnteredValue",
+        }}]
+        payload = {"requests": requests}
+        self.metrics["write_payload_bytes"] += len(json.dumps(payload, ensure_ascii=True).encode("utf-8"))
+        self._execute(self.service.spreadsheets().batchUpdate(
+            spreadsheetId=self.spreadsheet_id, body=payload,
+        ), "write")
+        self._metadata_cache = None
+        self._header_cache.pop(tab, None)
+        self._write_layout.clear()
+        return missing
 
     def commit(self, operations):
         timings = {}

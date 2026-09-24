@@ -217,6 +217,7 @@ class CliTests(unittest.TestCase):
                 self.assertIn("--batch-size N", text)
                 self.assertIn("--sheet-request-interval SECONDS", text)
                 self.assertIn("./job-search-scraper cleanup-blacklist", text)
+                self.assertIn("repair-careers-urls", text)
 
     def test_scraper_unknown_command_points_to_help(self):
         with redirect_stderr(io.StringIO()) as output:
@@ -275,6 +276,17 @@ class CliTests(unittest.TestCase):
         with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
             self.assertEqual(runner.main(["--cleanup-blacklist"]), 0)
             delegated.assert_called_once_with(["cleanup-blacklist", "--apply", "--exclusive-writer"])
+
+
+    def test_scraper_repair_careers_defaults_to_dry_run(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["repair-careers-urls"]), 0)
+            delegated.assert_called_once_with(["repair-careers-urls"])
+
+    def test_scraper_delegates_repair_careers_apply_options(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["repair-careers-urls", "--apply", "--exclusive-writer"]), 0)
+            delegated.assert_called_once_with(["repair-careers-urls", "--apply", "--exclusive-writer"])
 
     def test_start_requires_an_explicit_scope(self):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
