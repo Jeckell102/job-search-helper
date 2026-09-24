@@ -344,8 +344,8 @@ class Engine:
             return {}
         return {"ATS / Source": ats}
 
-    def _history_op(self, key, values, insert=False, append_notes=None):
-        return {"tab": "Job History", "identity": {"Job Key": key}, "values": values,
+    def _history_op(self, key, values, insert=False, append_notes=None, identity=None):
+        return {"tab": "Job History", "identity": identity or {"Job Key": key}, "values": values,
                 "append_if_missing": insert, "append_notes": {"Review Notes": append_notes} if append_notes else {}}
 
     def _company_rows(self):
@@ -501,7 +501,8 @@ class Engine:
             if same_url and not same_key:
                 prior = unpack_snapshot(row.get("Current Snapshot", ""))
                 prior_posting = prior.get("pending") or prior.get("evaluated")
-                if prior_posting and str(prior_posting.get("posting_id", "")) != str(posting.get("posting_id", "")):
+                prior_id = (prior_posting or {}).get("posting_id") or row.get("Requisition ID", "")
+                if prior_id and str(prior_id) != str(posting.get("posting_id", "")):
                     raise ValueError("An official URL was reused by a different posting ID. Manual disambiguation is required; the old posting will not be merged.")
             if same_key or same_url:
                 matches.append(row)
@@ -512,7 +513,10 @@ class Engine:
             old = self.repo.read_row("Job History", row_numbers[id(old)])
         if old and not old.get("Job Key"):
             raise ValueError("Matched legacy row lacks Job Key; backfill explicitly before scanning")
-        return (old.get("Job Key") if old else key), old
+        # Always return the current stable provider identity. A legacy row may
+        # have been found by its unique official URL even when several rows
+        # share the same obsolete key; _stage_posting migrates that row by URL.
+        return key, old
 
     def _opportunity(self, posting, company, aliases=()):
         urls = {canonicalize_url(value) for value in [posting["url"], *aliases] if value}
@@ -575,6 +579,7 @@ class Engine:
 
         values = {
             "Company": company["Company"], "Job Title": posting["title"],
+            "Job Key": key,
             "Official Job URL": posting["url"], "Requisition ID": posting.get("posting_id", ""),
             "Location": posting.get("location", ""), "Last Checked": stamp[:10],
             "Last Seen In Inventory": stamp, "Consecutive Missing Scans": 0,
@@ -645,10 +650,27 @@ class Engine:
         if existing and canonicalize_url(existing["Job URL"]) != canonicalize_url(posting["url"]):
             url_note = f"[source URL updated] Current official posting URL: {posting['url']}. Existing Opportunity link retained to preserve record identity."
 
-        history_op = self._history_op(key, values, insert=True, append_notes=url_note)
+        history_identity = None
+        migrating_legacy_key = bool(old and old.get("Job Key") != key)
+        if migrating_legacy_key:
+            # A legacy scraper could assign the careers-page URL as the key for
+            # every posting on a board. Locate the one row by its distinct job
+            # URL so duplicate legacy keys cannot make planning ambiguous.
+            history_identity = {
+                "Company": old["Company"],
+                "Official Job URL": old["Official Job URL"],
+            }
+            if not old.get("Prior Job Key"):
+                values["Prior Job Key"] = old["Job Key"]
+        history_op = self._history_op(
+            key, values, insert=not migrating_legacy_key,
+            append_notes=url_note, identity=history_identity,
+        )
         history_op["expected"] = {h: (old or {}).get(h, "") for h in (
             "Added to Opportunities?", "Review Status", "Decision", "Reconsideration Count",
             "Description Hash", "Rejection Reason", "Review Notes")}
+        if migrating_legacy_key:
+            history_op["expected"]["Job Key"] = old["Job Key"]
         operations = [history_op]
         if existing:
             operations.append(self._opportunity_op(posting, company, {"Last Checked": stamp[:10]}, note=url_note, existing_url=existing["Job URL"]))

@@ -155,6 +155,11 @@ class LocalPipeline:
                         prior = originals.get(('Job History', number), {})
                         manual = expected.get('Added to Opportunities?', prior.get('Added to Opportunities?', ''))
                         op['expected'] = {'Added to Opportunities?': manual}
+                        # Legacy Job Keys are migrated using the unique job URL.
+                        # Retain this guard so a concurrent identity change is
+                        # replanned instead of overwritten.
+                        if 'Job Key' in expected:
+                            op['expected']['Job Key'] = expected['Job Key']
             final = {k: v for k, v in local_item.items() if k != 'jobs'}
             plan = {'operations': self.planner.operations, 'final': final,
                     'requested_url': payload.get('requested_url', '')}

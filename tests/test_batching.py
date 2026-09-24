@@ -310,6 +310,68 @@ class BatchTests(unittest.TestCase):
         self.assertIn("matched 2 rows", message)
         self.assertIn("Saildrone", message)
 
+    def test_duplicate_legacy_keys_migrate_by_unique_job_url(self):
+        saildrone = company("Saildrone", "COMP-0067")
+        saildrone["Official Careers URL"] = "https://www.saildrone.com/careers/available-jobs"
+        legacy_key = "saildrone|url:https://www.saildrone.com/careers/available-jobs"
+        jobs = [
+            posting(str(identifier), company_id="COMP-0067", company="Saildrone",
+                    url=f"https://www.saildrone.com/careers/available-jobs?gh_jid={identifier}",
+                    title=title)
+            for identifier, title in ((4382651009, "Mission Manager"),
+                                      (4400908009, "Technical Operations Engineer"),
+                                      (4415102009, "Product Manager"))
+        ]
+        repo = MemoryRepository({
+            "Companies": [saildrone],
+            "Job History": [
+                {"Company": "Saildrone", "Job Title": job["title"],
+                 "Job Key": legacy_key, "Requisition ID": job["posting_id"],
+                 "Official Job URL": job["url"]}
+                for job in jobs
+            ],
+        })
+        planner = PlanningRepository(repo)
+        state = State()
+        self.addCleanup(state.close)
+        engine = Engine(planner, state)
+        cycle = {"id": "CYC-LEGACY", "companies": {
+            "COMP-0067": {"source_url": saildrone["Official Careers URL"]}
+        }}
+
+        for job in jobs:
+            engine._stage_posting(cycle, saildrone, job)
+
+        self.assertEqual(len(planner.operations), 3)
+        for operation, job in zip(planner.operations, jobs):
+            self.assertEqual(operation["identity"], {
+                "Company": "Saildrone", "Official Job URL": job["url"]})
+            self.assertEqual(operation["values"]["Prior Job Key"], legacy_key)
+            self.assertEqual(operation["values"]["Job Key"],
+                             f"comp-0067:greenhouse:{job['posting_id']}")
+            self.assertFalse(operation["append_if_missing"])
+
+        repo.commit(planner.operations)
+        rows = repo.read("Job History")
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(len({row["Job Key"] for row in rows}), 3)
+        self.assertEqual({row["Prior Job Key"] for row in rows}, {legacy_key})
+
+    def test_legacy_url_migration_refuses_different_requisition(self):
+        old = posting("OLD", url="https://example.com/careers?gh_jid=shared")
+        repo = MemoryRepository({"Companies": [company()], "Job History": [{
+            "Company": "Acme", "Job Title": old["title"], "Job Key": "legacy",
+            "Requisition ID": "OLD", "Official Job URL": old["url"],
+        }]})
+        engine = Engine(PlanningRepository(repo), State())
+        self.addCleanup(engine.state.close)
+        replacement = posting("NEW", url=old["url"])
+
+        with self.assertRaisesRegex(ValueError, "[Mm]anual disambiguation"):
+            engine._stage_posting({"id": "CYC", "companies": {
+                "C-1": {"source_url": company()["Official Careers URL"]}
+            }}, company(), replacement)
+
 
 class RequestAndFilterTests(unittest.TestCase):
     def test_448_job_google_staging_uses_under_150_requests(self):

@@ -294,6 +294,46 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(row['Added to Opportunities?'], 'No')
         self.assertEqual(row['Review Notes'], 'Manual exclusion')
 
+    def test_retry_blocked_saved_inventory_migrates_duplicate_legacy_keys_without_refetch(self):
+        legacy_key = 'company0|url:https://boards.greenhouse.io/company0'
+        for row, identifier in enumerate(('1', '2', '3'), 1):
+            for header, value in {
+                'Company': 'Company 0',
+                'Job Title': f'Legacy job {identifier}',
+                'Job Key': legacy_key,
+                'Requisition ID': identifier,
+                'Official Job URL': company(0)['Official Careers URL'] + f'/jobs/{identifier}',
+            }.items():
+                self.service.set_cell('Job History', row, header, value)
+
+        self.defer()
+        self.inbox.block(self.cycle, 'C-0')
+        self.engine.resume_local(self.cycle, sync_only=True)
+        self.assertTrue(self.inbox.get(self.cycle, 'C-0')[1])
+
+        restarted = self.restart()
+        migrated_operations = []
+        commit = restarted.repo.commit
+        def capture_migration(operations):
+            migrated_operations.extend(copy.deepcopy([
+                operation for operation in operations
+                if operation['tab'] == 'Job History' and 'Job Key' in operation.get('expected', {})
+            ]))
+            return commit(operations)
+        with patch.object(restarted.repo, 'commit', side_effect=capture_migration):
+            restarted.resume_local(self.cycle, sync_only=True, retry_blocked=True)
+
+        company_rows = [row for row in restarted.repo.read('Job History')
+                        if row['Company'] == 'Company 0']
+        migrated = next(row for row in company_rows if row['Requisition ID'] == '1')
+        self.assertEqual(migrated['Job Key'], 'c-0:greenhouse:1')
+        self.assertEqual(migrated['Prior Job Key'], legacy_key)
+        self.assertEqual(len(company_rows), 3)
+        self.assertNotIn('C-0', restarted.inbox.pending(self.cycle, include_blocked=True))
+        self.assertEqual(self.calls.count('C-0'), 1)
+        self.assertEqual(len(migrated_operations), 1)
+        self.assertEqual(migrated_operations[0]['expected']['Job Key'], legacy_key)
+
     def test_absence_replay_increments_once_and_preserves_review_lock(self):
         from job_search_helper.core import pack_snapshot
         # No fetched job will match this old posting.
