@@ -207,11 +207,21 @@ def execute_setup_evidence_tab(args: argparse.Namespace) -> None:
     print("APPLY: creating or repairing the Job Evidence tab and moving existing descriptions out of Job History.")
     database = state_path()
     with writer_lock(database.parent / "writer.lock"):
-        repo = get_repository(write=True, interactive=args.authenticate)
+        repo = get_repository(write=True, interactive=args.authenticate, min_request_interval=1.1)
         setup = repo.ensure_tab("Job Evidence")
         moved = skipped = 0
         operations = []
         stamp = now()
+        pending_bytes = 0
+        def flush():
+            nonlocal operations, pending_bytes
+            if not operations:
+                return
+            repo.commit(operations)
+            print_json({"event": "evidence_migration_progress", "migrated_descriptions": moved, "skipped_rows": skipped})
+            operations = []
+            pending_bytes = 0
+
         for row in repo.read("Job History"):
             key = str(row.get("Job Key") or "").strip()
             source_hash = str(row.get("Source Hash") or row.get("Description Hash") or "").strip()
@@ -220,19 +230,19 @@ def execute_setup_evidence_tab(args: argparse.Namespace) -> None:
                 skipped += 1
                 continue
             pointer = f"See Job Evidence tab: {key} / {source_hash[:12]}"
-            operations.extend([
+            pair = [
                 {"tab": "Job Evidence", "identity": {"Job Key": key, "Source Hash": source_hash},
                  "append_if_missing": True, "values": {"Company": row.get("Company", ""),
                  "Job Title": row.get("Job Title", ""), "Official Job URL": row.get("Official Job URL", ""),
                  "Captured At": stamp, "Job Description": description}},
                 {"tab": "Job History", "identity": {"Job Key": key}, "values": {"Job Description": pointer}},
-            ])
+            ]
+            operations.extend(pair)
+            pending_bytes += len(description.encode("utf-8"))
             moved += 1
-            if len(operations) >= 20:
-                repo.commit(operations)
-                operations = []
-        if operations:
-            repo.commit(operations)
+            if len(operations) >= 120 or pending_bytes >= 1_200_000:
+                flush()
+        flush()
         print_json({**setup, "migrated_descriptions": moved, "skipped_rows": skipped})
 
 def parser() -> argparse.ArgumentParser:
