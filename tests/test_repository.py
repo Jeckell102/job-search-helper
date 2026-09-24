@@ -216,14 +216,14 @@ class GoogleRepositoryTests(unittest.TestCase):
     def test_ranges_bounded_and_prompt_cells_not_read(self):
         self.repo.read("Job History")
         call = self.service.get_calls[-1]
-        self.assertEqual(call["ranges"], ["'Job History'!A1:Z1000"])
+        self.assertEqual(call["ranges"], ["'Job History'!A1:AF1000"])
         self.assertNotIn("Prompt Library", json.dumps(call))
         for request in self.service.get_calls:
             fields = request["fields"]
             self.assertEqual(fields.count("("), fields.count(")"))
 
     def test_oversized_grid_not_silently_truncated(self):
-        self.service.sheet("Job History")["properties"]["gridProperties"]["rowCount"] = 10001
+        self.service.sheet("Job History")["properties"]["gridProperties"]["rowCount"] = 100001
         with self.assertRaises(RepositoryError):
             self.repo.read("Job History")
 

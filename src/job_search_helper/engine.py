@@ -345,7 +345,14 @@ class Engine:
         key = job_key(company["Company ID"], posting["ats"], posting.get("posting_id", ""), posting["url"])
         url = canonicalize_url(posting["url"])
         matches = []
-        for row in self.repo.read("Job History"):
+        if hasattr(self.repo, "read_columns"):
+            history_rows = [row for _, row in self.repo.read_columns(
+                "Job History",
+                ["Company", "Job Key", "Official Job URL", "Current Snapshot"],
+            )]
+        else:
+            history_rows = self.repo.read("Job History")
+        for row in history_rows:
             if str(row.get("Company", "")).casefold() != str(company["Company"]).casefold():
                 continue
             same_key = row.get("Job Key") == key
