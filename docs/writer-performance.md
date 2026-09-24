@@ -68,6 +68,6 @@ For a before comparison, export baseline `89a91de` into a separate directory and
 
 Stop the existing scraper with Ctrl+C, wait for it to exit, then run `./job-search-scraper start`. The running process retains the old code until restarted. Keep `.state`. Old interrupted work without inbox data is refetched; new saved inventories replay from SQLite.
 
-Use `./job-search-scraper performance` for numeric timing, request, and payload totals saved at normal exit or Ctrl+C. Fix company errors first, then `./job-search-scraper sync --retry-blocked` replays retained inventories. Both commands share the writer lock. Continue to avoid structural sheet edits during a commit: Sheets does not provide a transaction spanning the identity read and the later write.
+Use `./job-search-scraper performance` for numeric timing, request, and payload totals saved at normal exit or Ctrl+C. Fix company errors first, then `./job-search-scraper sync` replays retained inventories, including blocked saved work by default. Both commands share the writer lock. Continue to avoid structural sheet edits during a commit: Sheets does not provide a transaction spanning the identity read and the later write.
 
 API references: [spreadsheets.get ranges and field masks](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets/get) and [UpdateCellsRequest](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets/request#UpdateCellsRequest).

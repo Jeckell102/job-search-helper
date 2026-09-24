@@ -182,10 +182,12 @@ class DurablePipelineTests(unittest.TestCase):
     def test_sync_and_defer_options_are_forwarded(self):
         from job_search_helper import runner
         with patch.object(runner, 'run_start', return_value=0) as start:
-            self.assertEqual(runner.main(['sync', '--retry-blocked', '--batch-size', '25']), 0)
+            self.assertEqual(runner.main(['sync', '--batch-size', '25']), 0)
             self.assertTrue(start.call_args.kwargs['sync_only'])
             self.assertTrue(start.call_args.kwargs['retry_blocked'])
             self.assertEqual(start.call_args.kwargs['batch_size'], 25)
+            self.assertEqual(runner.main(['sync', '--no-retry-blocked']), 0)
+            self.assertFalse(start.call_args.kwargs['retry_blocked'])
             self.assertEqual(runner.main(['start', '--defer-sync']), 0)
             self.assertTrue(start.call_args.kwargs['defer_sync'])
             self.assertFalse(start.call_args.kwargs['sync_only'])

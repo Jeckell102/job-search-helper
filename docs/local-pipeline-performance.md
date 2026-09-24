@@ -34,7 +34,7 @@ The in-memory API copies and validates sheet state on every write; reducing writ
 - `--sync-interval 60` flushes partially filled batches between company planning steps. Full batches and the final batch flush immediately. This does not guarantee a 60-second maximum visibility delay.
 - Before each batch, the writer rereads company pauses, external claims, manual holds and careers URLs. The repository still resolves fresh row identities and checks expected review values, formulas, strict validation, and user-owned fields. No worksheet is replaced wholesale.
 - Frozen operations and their acknowledged cursors survive restarts. Only an acknowledged write advances a cursor. A company payload is deleted after all its operations and its cycle checkpoint succeed. A lost response keeps the exact plan for explicit keyed replay; confirmed validation failures retain the inventory for fresh planning on explicit retry.
-- One company's preflight rejection is isolated from other companies. Fetch and write errors are logged; blocked payloads remain available. `sync --retry-blocked` retries saved work, and `start --retry-blocked` can also refetch failed sources.
+- One company's preflight rejection is isolated from other companies. Fetch and write errors are logged; blocked payloads remain available. `sync` retries saved blocked work by default, and `start` can also refetch failed sources. Use `--no-retry-blocked` to leave blocked work on hold.
 - The dashboard separates locally processed inventory items from confirmed new Sheets rows. Companies in Sheets reflect synchronization progress; use the dashboard for current fetch activity. New company intake is included on the next run.
 
 ## Validation

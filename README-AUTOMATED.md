@@ -24,7 +24,7 @@ Company-specific writer errors are logged to `.state/scraper-errors.jsonl`, mark
 
 Supported public boards are Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, and Taleo. Dayforce remains manual unless discovery finds a supported board link. Blocked/failed/partial scans record the actual adapter in `ATS / Source` when known. Unknown discovery leaves the existing source unchanged, and blocked scans do not advance successful-scan dates. Ctrl+C cancels unstarted assignments. Completed fetches are retained in SQLite, and restart replays saved inventories without duplicate rows; fetches without saved results are repeated.
 
-Optional browser fallback: install `.[browser]` and Chromium with Playwright, then run `./job-search-scraper start --retry-blocked --browser-fallback`. Direct adapters still run first. The fallback opens the public careers page, captures same-site JSON responses, scrapes visible job links/details, and returns normal inventory rows when complete. It does not bypass login, CAPTCHA, or access controls; failures stay manual-review.
+Optional browser fallback: install `.[browser]` and Chromium with Playwright, then run `./job-search-scraper start --browser-fallback`. Direct adapters still run first. The fallback opens the public careers page, captures same-site JSON responses, scrapes visible job links/details, and returns normal inventory rows when complete. It does not bypass login, CAPTCHA, or access controls; failures stay manual-review.
 
 To tune Google Sheets pacing for the writer:
 
@@ -54,7 +54,7 @@ To fetch now and sync job rows later in a separate process invocation:
 ./job-search-scraper performance
 ```
 
-The deferred run still updates company/cycle control records. `sync` does not fetch job boards. After fixing a company write error, use `sync --retry-blocked`; use `start --retry-blocked` for failed fetches. You can also change a blocked company's `Scan State` back to `Queued` in Sheets before starting; startup refreshes company controls and treats that row as an explicit retry signal for the saved local blocked entry. Commands share the exclusive writer lock and should run sequentially. Normal `start` automatically saves locally and syncs while other workers fetch. Request pacing and read backoff are unchanged.
+The deferred run still updates company/cycle control records. `sync` does not fetch job boards. After fixing a company write error, use `sync`; use `start` for failed fetches. Blocked saved work is retried by default; pass `--no-retry-blocked` to skip it. You can also change a blocked company's `Scan State` back to `Queued` in Sheets before starting; startup refreshes company controls and treats that row as an explicit retry signal for the saved local blocked entry. Commands share the exclusive writer lock and should run sequentially. Normal `start` automatically saves locally and syncs while other workers fetch. Request pacing and read backoff are unchanged.
 
 The writer reuses indexed planning data, reads only identity columns/affected rows on subsequent large-tab commits, and groups new rows into bulk writes. User edits, formulas, validation, blacklist rules, and manual exclusions remain protected. [Offline measurements and test results](docs/writer-performance.md) describe the measured improvement; no live speedup is claimed.
 

@@ -228,7 +228,7 @@ class CliTests(unittest.TestCase):
     def test_scraper_start_still_runs_start_command(self):
         with patch.object(runner, "run_start", return_value=0) as start:
             self.assertEqual(runner.main(["start"]), 0)
-            start.assert_called_once_with(fetch_workers=5, assignment_window=100, batch_size=200, sheet_request_interval=1.1, defer_sync=False, sync_only=False, retry_blocked=False, sync_interval=60, browser_fallback=False)
+            start.assert_called_once_with(fetch_workers=5, assignment_window=100, batch_size=200, sheet_request_interval=1.1, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=False)
 
     def test_scraper_start_passes_parallel_options(self):
         with patch.object(runner, "run_start", return_value=0) as start:
@@ -236,7 +236,12 @@ class CliTests(unittest.TestCase):
                 "start", "--fetch-workers", "4", "--assignment-window", "25",
                 "--batch-size", "150", "--sheet-request-interval", "0.8", "--browser-fallback",
             ]), 0)
-            start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8, defer_sync=False, sync_only=False, retry_blocked=False, sync_interval=60, browser_fallback=True)
+            start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True)
+
+    def test_scraper_start_can_disable_blocked_retry(self):
+        with patch.object(runner, "run_start", return_value=0) as start:
+            self.assertEqual(runner.main(["start", "--no-retry-blocked"]), 0)
+            self.assertFalse(start.call_args.kwargs["retry_blocked"])
 
     def test_scraper_errors_command_prints_recent_log(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(

@@ -33,7 +33,7 @@ Commands:
                - Writes to Google Sheets and requires no other sheet writers.
 
   sync         Sync saved SQLite inventories without fetching companies.
-               Use --retry-blocked after resolving a company error.
+               Blocked saved work is retried by default.
   performance  Show timing/request/byte totals from the last run.
 
   cleanup-blacklist
@@ -66,8 +66,9 @@ Commands:
   demo         Run an isolated offline demonstration.
 
 Options for start (batch size, sync interval and request interval also apply to sync):
-  --retry-blocked
-      Explicitly retry blocked saved work; start can also retry failed fetches.
+  --retry-blocked / --no-retry-blocked
+      Retry blocked saved work by default; start can also retry failed fetches.
+      Use --no-retry-blocked to leave blocked work on manual-review hold.
 
   --browser-fallback
       If a direct public-board fetch is blocked/unsupported/failed, open the
@@ -126,7 +127,8 @@ Screening on start (no AI calls):
   saved inventories resume from SQLite; unfinished fetches are refetched.
   Keep the whole .state directory until all saved work is synchronized.
   The local database holds inventories and frozen changes until Sheets confirms
-  them. Failed companies retain work for sync --retry-blocked. Workers use the
+  them. Failed companies retain work for the next sync unless
+  --no-retry-blocked is used. Workers use the
   company list read at startup; uploads recheck current company controls.
 
   help         Show this command list.
@@ -135,7 +137,7 @@ Screening on start (no AI calls):
 
 Examples:
   ./job-search-scraper start
-  ./job-search-scraper start --retry-blocked --browser-fallback
+  ./job-search-scraper start --browser-fallback
   ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
   ./job-search-scraper start --defer-sync
   ./job-search-scraper sync
@@ -184,7 +186,7 @@ def _load_environment():
 
 def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
               batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1,
-              defer_sync=False, sync_only=False, retry_blocked=False, sync_interval=60,
+              defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60,
               browser_fallback=False):
     if not 1 <= sync_interval <= 3600:
         raise ValueError("Sync interval must be between 1 and 3600 seconds")
@@ -224,7 +226,7 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
             if sync_only:
                 cycle_ids = inbox.cycles(include_blocked=retry_blocked)
                 if not cycle_ids:
-                    print("No saved inventories to sync. Blocked entries require --retry-blocked.")
+                    print("No saved inventories to sync.")
                     return 0
             else:
                 pending_cycles = inbox.cycles(include_blocked=retry_blocked)
@@ -333,7 +335,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("command")
     parser.add_argument("--defer-sync", action="store_true")
-    parser.add_argument("--retry-blocked", action="store_true")
+    parser.add_argument("--retry-blocked", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--browser-fallback", action="store_true")
     parser.add_argument("--fetch-workers", type=int, default=DEFAULT_FETCH_WORKERS)
     parser.add_argument("--assignment-window", type=int, default=DEFAULT_ASSIGNMENT_WINDOW)

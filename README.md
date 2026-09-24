@@ -64,7 +64,7 @@ Discovery requires one unambiguous board. Multiple boards, a configured ATS mism
 
 The adapter actually used is also recorded in `ATS / Source`, including blocked, failed, and partial scans. Existing annotations naming that adapter (such as parent-board scope) are preserved. If discovery fails before an adapter is identified, the scraper leaves the existing source unchanged instead of guessing. This takes effect on subsequent scans; existing blocked rows are not automatically retried or backfilled.
 
-Existing blocked rows still require an explicit retry. With `./job-search-scraper start`, changing a blocked company's `Scan State` back to `Queued` in Sheets is recognized at startup and refreshes the local blocked retry list for that company. The older helper command still supports `resume --cycle CYCLE_ID --retry-blocked --apply --exclusive-writer`. Installing discovery alone does not release manual-review holds. Unsupported, inaccessible, or malformed boards remain incomplete/manual work, never proof that existing jobs closed.
+Existing blocked rows are retried by default when you run `./job-search-scraper start` or `./job-search-scraper sync`; use `--no-retry-blocked` if you want to leave them on manual-review hold. With `./job-search-scraper start`, changing a blocked company's `Scan State` back to `Queued` in Sheets is also recognized at startup and refreshes the local blocked retry list for that company. The older helper command still supports `resume --cycle CYCLE_ID --retry-blocked --apply --exclusive-writer`. Installing discovery alone does not release manual-review holds. Unsupported, inaccessible, or malformed boards remain incomplete/manual work, never proof that existing jobs closed.
 
 For sites where the public careers page works in a real browser but direct HTTP/API fetching is blocked, install the optional browser fallback:
 
@@ -76,7 +76,7 @@ For sites where the public careers page works in a real browser but direct HTTP/
 Then explicitly retry blocked companies with:
 
 ```bash
-./job-search-scraper start --retry-blocked --browser-fallback
+./job-search-scraper start --browser-fallback
 ```
 
 The normal adapter still runs first. If it reports blocked/failed/unsupported, a fetch worker opens the careers URL in Chromium, watches same-site JSON responses, and also scrapes visible job links/details from the rendered page. Successful browser results become the same normalized inventory rows the writer already handles. Browser failures, CAPTCHAs, logins, or empty/incomplete pages remain blocked/manual-review and never count as closure evidence.
@@ -103,7 +103,7 @@ Workday support uses public `TENANT.wdN.myworkdayjobs.com` boards, including loc
 
 Keep `q` search terms and Workday facet parameters in the configured URL, especially for divisions on a parent company's board. Filters are checked against the board's published options; unknown or stale filters require manual review. A text search preserves the board's search results but does not independently prove that every match belongs to the division. Sources labeled `shared` or `parent` need an explicit search/filter. Search and filter scope is part of inventory identity, so changing it cannot close jobs from the previous scope.
 
-A scan is complete only when the initial total matches the unique, fully parsed postings. Later-page zero totals are handled as Workday's pagination convention. Missing descriptions, repeated pages, count changes, page limits, HTTP failures and human verification leave the scan incomplete. Multi-page scans recheck the first page for changes. Workday blocks remain visible in `Blocked Reason` / `Last Scan Result`; install support does not bypass access controls. Custom careers sites need a visible Workday link or a verified direct Workday URL. Existing blocked rows need `--retry-blocked` on the next run.
+A scan is complete only when the initial total matches the unique, fully parsed postings. Later-page zero totals are handled as Workday's pagination convention. Missing descriptions, repeated pages, count changes, page limits, HTTP failures and human verification leave the scan incomplete. Multi-page scans recheck the first page for changes. Workday blocks remain visible in `Blocked Reason` / `Last Scan Result`; install support does not bypass access controls. Custom careers sites need a visible Workday link or a verified direct Workday URL. Existing blocked rows are retried by default on the next scraper run.
 
 ### iCIMS portals
 
@@ -119,7 +119,7 @@ ADP support reads public recruitment URLs on `workforcenow.adp.com`, for example
 
 The adapter retrieves every page and each job's full description, locations, requisition number, and structured compensation when published. It preserves the pay period instead of assuming annual salary. It uses ADP's one-based unfiltered pagination, verifies each page's position and total, rejects repeated jobs, and rechecks multi-page inventories for changes. Failures or missing descriptions remain incomplete and cannot close old jobs. Page progress appears in the terminal, and diagnostics identify the failing page or requisition.
 
-The company ID, career-center ID, language, and optional `userQuery` keyword search are part of inventory identity. Keyword search uses ADP's separate search behavior: a result is complete only when every reported match is returned within the size limit. A keyword search does not independently verify division ownership. Other filters are rejected for manual review instead of silently removed. Job-specific and display/tracking parameters (`jobId`, `type`, `selectedMenuKey`, `source`, `hsCtaAttrib`, and `utm_*`) do not change board scope. Generated job links retain the public external job ID. Existing blocked companies still need an explicit `--retry-blocked` run.
+The company ID, career-center ID, language, and optional `userQuery` keyword search are part of inventory identity. Keyword search uses ADP's separate search behavior: a result is complete only when every reported match is returned within the size limit. A keyword search does not independently verify division ownership. Other filters are rejected for manual review instead of silently removed. Job-specific and display/tracking parameters (`jobId`, `type`, `selectedMenuKey`, `source`, `hsCtaAttrib`, and `utm_*`) do not change board scope. Generated job links retain the public external job ID. Existing blocked companies retry on the next scraper run unless `--no-retry-blocked` is used.
 
 ### Paylocity
 
@@ -135,7 +135,7 @@ The adapter reads the public search page to find Taleo's portal number, posts th
 
 Dayforce is still a major unsupported family. Its documented JobFeeds API requires authorized access, and its public app endpoints can deny direct read-only calls outside the browser app. Those rows stay blocked/manual-review unless a direct supported ATS link is found or a future browser-rendered adapter is added.
 
-Restart/resume the scraper after installation to load the adapter. Previously blocked companies still require `--retry-blocked`; changing only the sheet's Scan State to Queued does not reset saved local stages.
+Restart/resume the scraper after installation to load the adapter. Previously blocked companies retry by default; use `--no-retry-blocked` to leave saved local stages blocked.
 
 ## Small live test, with explicit approval for every write
 
@@ -241,7 +241,7 @@ To collect jobs first and run the Sheets synchronization in a separate invocatio
 
 `--defer-sync` reads the planning snapshot and updates startup/end cycle control records, while retaining full fetched inventories without job writes. `sync` never fetches job boards. Previously frozen plans replay exactly; inventories without plans use current screening rules. Each upload checks current company pauses, claims, board URLs and manual holds, and protects existing `Added to Opportunities?` decisions. Both commands use the same exclusive writer lock; run them sequentially.
 
-After resolving a company write error, retry its retained payload with `./job-search-scraper sync --retry-blocked`. For failed fetches without usable inventory, use `./job-search-scraper start --retry-blocked`. `sync` also accepts `--batch-size`, `--sync-interval` and `--sheet-request-interval`. Without explicit retry, blocked inventories remain stored and skipped.
+After resolving a company write error, retry its retained payload with `./job-search-scraper sync`. For failed fetches without usable inventory, use `./job-search-scraper start`. `sync` also accepts `--batch-size`, `--sync-interval` and `--sheet-request-interval`. Use `--no-retry-blocked` only when blocked inventories should remain stored and skipped.
 
 Keep the **whole `.state` directory**, including the inbox and any SQLite WAL files. Unsynced jobs now depend on that local storage. The inbox is restricted to the local account and bound to the spreadsheet ID; changing destinations requires retaining the original inbox with its original destination. Successful company syncs release their inventories and plans. Existing checkpoint databases migrate automatically, and legacy interrupted companies without saved inventory are refetched.
 
