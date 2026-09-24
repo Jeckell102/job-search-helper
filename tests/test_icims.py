@@ -70,6 +70,10 @@ class IcimsTests(unittest.TestCase):
             with self.subTest(url=url):
                 self.assertEqual(resolve_board("iCIMS", url), ("iCIMS", "search", ROOT + "/jobs/"))
 
+    def test_percent_sign_in_job_slug_resolves(self):
+        url = ROOT + "/jobs/11551/network-technician-%28up-to-75%25-conus-oconus-travel%29/job"
+        self.assertEqual(resolve_board("iCIMS", url), ("iCIMS", "search", ROOT + "/jobs/"))
+
     def test_full_descriptions_locations_stable_id_and_salary(self):
         result, t = self.fetch([listing(), detail()])
         self.assertEqual(result.status, "complete", result.reason)

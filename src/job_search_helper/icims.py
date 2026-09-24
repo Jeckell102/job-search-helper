@@ -26,7 +26,8 @@ def _job_id(path):
     if not match:
         raise ValueError("iCIMS posting URL is not a public job detail.")
     slug = unquote(match[2])
-    if slug in {".", ".."} or any(c in slug for c in "/\\?#%") or any(ord(c) < 32 for c in slug):
+    if (slug in {".", ".."} or any(c in slug for c in "/\\?#") or any(ord(c) < 32 for c in slug)
+            or re.search(r"%[0-9A-Fa-f]{2}", slug)):
         raise ValueError("iCIMS posting URL has an invalid path.")
     return match[1]
 
