@@ -37,9 +37,9 @@ v3.3 adds and backfills:
 - Source Hash
 - Salary / Range
 - Work Arrangement
-- Job Description
+- Job Description (pointer only; full text is in Job Evidence)
 
-`Source Hash` is the current scraper evidence hash. When Work completes a substantive review, it copies `Source Hash` to `Description Hash`, making that source version the reviewed baseline.
+The `Job Evidence` tab stores full descriptions by `Job Key` + `Source Hash`. `Source Hash` is the current scraper evidence hash. When Work completes a substantive review, it copies `Source Hash` to `Description Hash`, making that source version the reviewed baseline.
 
 ## Concurrency
 

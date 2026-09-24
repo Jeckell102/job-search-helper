@@ -53,6 +53,10 @@ Commands:
       Unvalidated candidate URLs go to Candidate Careers URL for manual review.
       Dry-run by default; use --apply --exclusive-writer to write changes.
 
+  setup-evidence-tab
+      Create or repair the Job Evidence tab used to store full descriptions
+      outside Job History. Dry-run by default.
+
   preflight    Validate access and workbook headers; never change cells.
   status       Read local cycle status without creating or updating state.
   errors       Show recent per-company scraper errors from the local log.
@@ -136,6 +140,7 @@ Examples:
   ./job-search-scraper cleanup-titles --dry-run
   ./job-search-scraper repair-careers-urls --dry-run
   ./job-search-scraper repair-careers-urls --apply --exclusive-writer
+  ./job-search-scraper setup-evidence-tab --apply --exclusive-writer
 """
     )
 
@@ -306,7 +311,7 @@ def main(argv=None):
         return show_performance()
     if argv[0] == "errors":
         return show_errors()
-    delegated = {"cleanup-blacklist", "cleanup-titles", "repair-careers-urls", "preflight", "status", "reviews", "auth", "test", "demo"}
+    delegated = {"cleanup-blacklist", "cleanup-titles", "repair-careers-urls", "setup-evidence-tab", "preflight", "status", "reviews", "auth", "test", "demo"}
     if argv[0] in delegated:
         if argv[0] in {"cleanup-blacklist", "cleanup-titles"} and "--dry-run" not in argv and "--apply" not in argv:
             argv = [*argv, "--apply", "--exclusive-writer"]

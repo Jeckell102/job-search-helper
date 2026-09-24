@@ -19,7 +19,7 @@ from .repository import GoogleRepository, MemoryRepository, authorize
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-OPERATIONAL_TABS = ("Companies", "Job History", "Opportunities", "Scan Cycles")
+OPERATIONAL_TABS = ("Companies", "Job History", "Job Evidence", "Opportunities", "Scan Cycles")
 
 
 def load_environment(path: Path) -> None:
@@ -191,6 +191,25 @@ def execute_repair_careers(args: argparse.Namespace) -> None:
         repo.validate_schema()
         print_json(repair_careers_urls(repo, apply=True))
 
+
+def execute_setup_evidence_tab(args: argparse.Namespace) -> None:
+    if not args.apply:
+        print("DRY RUN: checking whether the Job Evidence tab exists; no spreadsheet cells will change.")
+        repo = get_repository(write=False, interactive=args.authenticate)
+        try:
+            repo.read_columns("Job Evidence", ["Job Key", "Source Hash"])
+            print_json({"tab": "Job Evidence", "exists": True, "changes": 0})
+        except Exception as exc:
+            print_json({"tab": "Job Evidence", "exists": False, "required_headers": repo.schemas["Job Evidence"], "reason": str(exc)})
+        return
+    if not args.exclusive_writer:
+        raise ValueError("--apply requires --exclusive-writer. Stop other spreadsheet writers before changing workbook structure.")
+    print("APPLY: creating or repairing the Job Evidence tab header.")
+    database = state_path()
+    with writer_lock(database.parent / "writer.lock"):
+        repo = get_repository(write=True, interactive=args.authenticate)
+        print_json(repo.ensure_tab("Job Evidence"))
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description="Manual, resumable job inventory and reviewed-decision helper.")
     commands = result.add_subparsers(dest="command", required=True)
@@ -226,6 +245,12 @@ def parser() -> argparse.ArgumentParser:
     repair.add_argument("--exclusive-writer", action="store_true", help="Confirm all other sheet writers are stopped.")
     repair.add_argument("--workers", type=int, default=1, help=argparse.SUPPRESS)
     repair.add_argument("--authenticate", action="store_true", help="Permit OAuth if credentials are absent.")
+
+    evidence = commands.add_parser("setup-evidence-tab", help="Create or repair the Job Evidence tab used for full descriptions.")
+    evidence.add_argument("--apply", action="store_true", help="Actually create/repair the tab; off by default.")
+    evidence.add_argument("--dry-run", action="store_true", help="Explicitly select the default read-only preview.")
+    evidence.add_argument("--exclusive-writer", action="store_true", help="Confirm all other sheet writers are stopped.")
+    evidence.add_argument("--authenticate", action="store_true", help="Permit OAuth if credentials are absent.")
 
     for name, description in (
         ("start", "Start a new, explicitly scoped cycle; dry-run by default."),
@@ -311,6 +336,8 @@ def main(argv: list[str] | None = None) -> int:
             execute_cleanup(args)
         elif args.command == "repair-careers-urls":
             execute_repair_careers(args)
+        elif args.command == "setup-evidence-tab":
+            execute_setup_evidence_tab(args)
         else:
             execute_work(args)
         return 0

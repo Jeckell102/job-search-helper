@@ -348,6 +348,20 @@ class Engine:
         return {"tab": "Job History", "identity": identity or {"Job Key": key}, "values": values,
                 "append_if_missing": insert, "append_notes": {"Review Notes": append_notes} if append_notes else {}}
 
+    def _evidence_op(self, key, source_hash, company, posting, description, stamp):
+        return {
+            "tab": "Job Evidence",
+            "identity": {"Job Key": key, "Source Hash": source_hash},
+            "values": {
+                "Company": company["Company"],
+                "Job Title": posting["title"],
+                "Official Job URL": posting["url"],
+                "Captured At": stamp,
+                "Job Description": description,
+            },
+            "append_if_missing": True,
+        }
+
     def _company_rows(self):
         rows = self.repo.read("Companies")
         names, ids = set(), set()
@@ -588,7 +602,7 @@ class Engine:
             "Source Hash": current_hash,
             "Salary / Range": posting.get("compensation", ""),
             "Work Arrangement": posting.get("work_arrangement", ""),
-            "Job Description": description,
+            "Job Description": f"See Job Evidence tab: {key} / {current_hash[:12]}",
         }
 
         # Once Work has reviewed the current source hash, normalize the internal
@@ -671,7 +685,7 @@ class Engine:
             "Description Hash", "Rejection Reason", "Review Notes")}
         if migrating_legacy_key:
             history_op["expected"]["Job Key"] = old["Job Key"]
-        operations = [history_op]
+        operations = [history_op, self._evidence_op(key, current_hash, company, posting, description, stamp)]
         if existing:
             operations.append(self._opportunity_op(posting, company, {"Last Checked": stamp[:10]}, note=url_note, existing_url=existing["Job URL"]))
         self._commit(*operations)

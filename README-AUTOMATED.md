@@ -40,6 +40,8 @@ To apply the current title blacklist to existing Job History rows:
 
 Use `./job-search-scraper cleanup-blacklist --dry-run` only when you want a preview.
 
+Google Sheets holds synchronized job records and review decisions. Full descriptions live in the `Job Evidence` tab, keyed by `Job Key` + `Source Hash`; Job History keeps only a short pointer so filtering remains usable. Run `./job-search-scraper setup-evidence-tab --apply --exclusive-writer` once before starting after this schema change.
+
 Google Sheets holds synchronized job records and review decisions. `.state/inventories.sqlite3` durably holds full fetched inventories until their Sheets writes and company checkpoints succeed. Keep `.state`, including SQLite WAL files, to preserve unsynced jobs. Failed company writes retain their payloads.
 
 To fetch now and sync job rows later in a separate process invocation:
@@ -68,6 +70,6 @@ The writer reuses indexed planning data, reads only identity columns/affected ro
 
 ## ChatGPT Work
 
-Use `prompts/WORK-JOB-REVIEWER.txt` in ChatGPT Work with the connected Google Drive Sheet. Work reviews one `Needs Review` row at a time and writes decisions directly back to Job History / Opportunities.
+Use `prompts/WORK-JOB-REVIEWER.txt` in ChatGPT Work with the connected Google Drive Sheet. Work reviews one `Needs Review` row at a time and writes decisions directly back to Job History / Job Evidence / Opportunities.
 
 No API key, OpenAI SDK, local AI queue, or local decision file is used.

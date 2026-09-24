@@ -42,6 +42,10 @@ SCHEMAS = {
         "Review Status", "Review Started At", "Decision", "Fit Level",
         "Source Hash", "Salary / Range", "Work Arrangement", "Job Description",
     ],
+    "Job Evidence": [
+        "Job Key", "Source Hash", "Company", "Job Title", "Official Job URL",
+        "Captured At", "Job Description",
+    ],
     "Scan Cycles": [
         "Cycle ID", "Started At", "Completed At", "Cycle Status", "Started By",
         "Companies in Scope", "Companies Complete", "Companies Partial",
@@ -448,9 +452,16 @@ class MemoryRepository:
             _validate_headers(tab, self._sheets[tab].headers, required)
         return True
 
+    def ensure_tab(self, tab):
+        _tab(tab)
+        if tab not in self._sheets:
+            self._sheets[tab] = _Sheet(list(self.schemas[tab]), sheet_id=len(self._sheets))
+            return {"created": True, "added_headers": list(self.schemas[tab])}
+        added = self.ensure_columns(tab, self.schemas[tab])
+        return {"created": False, "added_headers": added}
+
     def read_many(self, tabs):
         return {tab: self.read(tab) for tab in tabs}
-
 
     def ensure_columns(self, tab, headers):
         _tab(tab)
@@ -839,6 +850,36 @@ class GoogleRepository:
             self._header_cache[tab] = (headers, {header: index for index, header in enumerate(headers)})
         return True
 
+
+    def ensure_tab(self, tab):
+        _tab(tab)
+        metadata = self._metadata()
+        found = {s["properties"]["title"]: s for s in metadata.get("sheets", [])}
+        if tab in found:
+            return {"created": False, "added_headers": self.ensure_columns(tab, self.schemas[tab])}
+        used = {s["properties"].get("sheetId", 0) for s in metadata.get("sheets", [])}
+        sheet_id = max(used or {0}) + 1
+        while sheet_id in used:
+            sheet_id += 1
+        headers = self.schemas[tab]
+        requests = [
+            {"addSheet": {"properties": {"sheetId": sheet_id, "title": tab,
+                "gridProperties": {"rowCount": 1000, "columnCount": max(len(headers), 1)}}}},
+            {"updateCells": {
+                "start": {"sheetId": sheet_id, "rowIndex": 0, "columnIndex": 0},
+                "rows": [{"values": [{"userEnteredValue": _encoded(header)} for header in headers]}],
+                "fields": "userEnteredValue",
+            }},
+        ]
+        payload = {"requests": requests}
+        self.metrics["write_payload_bytes"] += len(json.dumps(payload, ensure_ascii=True).encode("utf-8"))
+        self._execute(self.service.spreadsheets().batchUpdate(
+            spreadsheetId=self.spreadsheet_id, body=payload,
+        ), "write")
+        self._metadata_cache = None
+        self._header_cache.pop(tab, None)
+        self._write_layout.clear()
+        return {"created": True, "added_headers": list(headers)}
 
     def ensure_columns(self, tab, headers):
         _tab(tab)

@@ -260,6 +260,12 @@ A validated repair updates `Official Careers URL`, updates `ATS / Source`, clear
 
 ## Clean up previously recorded blacklist matches
 
+Full job descriptions are stored in the **Job Evidence** tab, keyed by `Job Key` + `Source Hash`, so the main **Job History** tab stays filterable. Job History keeps only a short pointer in `Job Description`; reviewers should read the matching Job Evidence row for full text. Before the first run after this change, create/repair the tab with:
+
+```bash
+./job-search-scraper setup-evidence-tab --apply --exclusive-writer
+```
+
 The scraper applies `title-blacklist.txt` before adding newly scraped jobs to Job History. To reconcile older Job History rows after changing that file, run:
 
 ```bash

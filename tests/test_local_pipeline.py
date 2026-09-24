@@ -404,6 +404,26 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(len(restarted.repo.read('Job History')), 6)
         self.assertIsNone(restarted.inbox.get(self.cycle, 'C-0'))
 
+
+    def test_full_description_is_written_to_evidence_tab_not_history(self):
+        long_description = 'Integrate customer hardware and train operators. ' * 200
+        def fetch(source, url, cid, name):
+            inv = inventory(cid, name, url)
+            inv.jobs[0]['description'] = long_description
+            return inv
+        self.engine.fetcher = fetch
+        self.engine.resume_local(self.cycle, fetch_workers=2, assignment_window=2)
+
+        history = self.repo.read('Job History')
+        evidence = self.repo.read('Job Evidence')
+        self.assertEqual(len(history), 6)
+        self.assertEqual(len(evidence), 6)
+        self.assertTrue(history[0]['Job Description'].startswith('See Job Evidence tab:'))
+        self.assertNotIn('Integrate customer hardware', history[0]['Job Description'])
+        self.assertEqual(evidence[0]['Job Key'], history[0]['Job Key'])
+        self.assertEqual(evidence[0]['Source Hash'], history[0]['Source Hash'])
+        self.assertIn('Integrate customer hardware', evidence[0]['Job Description'])
+
     def test_sync_interval_flushes_partial_batch_while_fetch_is_running(self):
         from job_search_helper.ats import Inventory
         upload_started = Event()

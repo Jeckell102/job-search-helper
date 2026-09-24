@@ -120,7 +120,8 @@ class PlanningRepository:
                 self.rows[tab] = copy.deepcopy(rows)
                 continue
             # Partial authoritative results contain only touched rows.
-            keys = {"Job History": ("Job Key",), "Opportunities": ("Company", "Job URL"),
+            keys = {"Job History": ("Job Key",), "Job Evidence": ("Job Key", "Source Hash"),
+                    "Opportunities": ("Company", "Job URL"),
                     "Companies": ("Company ID",), "Scan Cycles": ("Cycle ID",)}[tab]
             index = IdentityIndex(enumerate(self.rows[tab]))
             for row in rows:

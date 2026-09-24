@@ -68,7 +68,7 @@ Only after the title survives, read these fields from that Job History row:
 - Location
 - Salary / Range
 - Work Arrangement
-- Job Description
+- Job Description, which is now only a short pointer
 - Source Hash
 - Description Hash
 - Decision
@@ -76,8 +76,8 @@ Only after the title survives, read these fields from that Job History row:
 - Reconsideration Count / Status
 - Review Notes only when prior-review context is actually needed
 
-Do not use Current Snapshot for fit analysis.
-If Job Description is blank or contains the truncation marker, open the Official Job URL and use the official posting if accessible. If the necessary evidence still cannot be obtained, use Manual Review / Needs Info rather than guessing.
+Then find the matching row in the Job Evidence tab using both Job Key and Source Hash from Job History, and read Job Evidence → Job Description for the full description. Do not use Current Snapshot for fit analysis.
+If the Job Evidence row is missing, blank, or contains the truncation marker, open the Official Job URL and use the official posting if accessible. If the necessary evidence still cannot be obtained, use Manual Review / Needs Info rather than guessing.
 
 CANDIDATE PROFILE
 25+ years leading field engineering and systems integration across complex hardware, software, communications, RF/IP networks, sensors, video, UAV/ISR, distributed and mission systems. Strongest in customer discovery, solution definition, integration, deployment, troubleshooting, training, escalations, technical leadership, product feedback, and translating customer objectives into working solutions. Built and led an FAE organization and has product-management, technical-enablement, support-process, RMA/reliability, and operations leadership experience. Independent autonomy work included requirements, architecture, component selection, safety logic, ROS 2/Gazebo simulation, and AI-assisted implementation; it remained early-stage simulation, not production autonomous deployment.
