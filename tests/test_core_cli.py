@@ -214,6 +214,7 @@ class CliTests(unittest.TestCase):
                 self.assertIn("start        Start or resume the automated scraper.", text)
                 self.assertIn("--fetch-workers N", text)
                 self.assertIn("--assignment-window N", text)
+                self.assertIn("--batch-size N", text)
                 self.assertIn("--sheet-request-interval SECONDS", text)
                 self.assertIn("./job-search-scraper cleanup-blacklist", text)
 
@@ -225,15 +226,15 @@ class CliTests(unittest.TestCase):
     def test_scraper_start_still_runs_start_command(self):
         with patch.object(runner, "run_start", return_value=0) as start:
             self.assertEqual(runner.main(["start"]), 0)
-            start.assert_called_once_with(fetch_workers=1, assignment_window=25, sheet_request_interval=1.1)
+            start.assert_called_once_with(fetch_workers=1, assignment_window=25, batch_size=100, sheet_request_interval=1.1)
 
     def test_scraper_start_passes_parallel_options(self):
         with patch.object(runner, "run_start", return_value=0) as start:
             self.assertEqual(runner.main([
                 "start", "--fetch-workers", "4", "--assignment-window", "25",
-                "--sheet-request-interval", "0.8",
+                "--batch-size", "150", "--sheet-request-interval", "0.8",
             ]), 0)
-            start.assert_called_once_with(fetch_workers=4, assignment_window=25, sheet_request_interval=0.8)
+            start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8)
 
     def test_scraper_cleanup_blacklist_applies_by_default(self):
         with patch.object(runner.helper_cli, "main", return_value=0) as delegated:

@@ -8,7 +8,7 @@ import sys
 
 from . import cli as helper_cli
 from .cli import PROJECT_ROOT, get_repository, load_environment, project_path, state_path, writer_lock
-from .engine import Engine, State
+from .engine import DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE, Engine, State
 from .efficiency import load_title_blacklist, load_title_review_list
 
 FINISHED = {"Complete", "Complete with exceptions"}
@@ -51,6 +51,10 @@ Options for start:
       Read/queue up to N companies locally before refreshing Companies from
       Google Sheets. Allowed: 1-100. Default: 25.
 
+  --batch-size N
+      Save up to N inventory items per atomic Google Sheets write/checkpoint.
+      Allowed: 1-200. Default: 100.
+
   --sheet-request-interval SECONDS
       Minimum delay between Google Sheets requests made by the writer.
       Allowed: 0.5-5.0. Default: 1.1.
@@ -60,7 +64,7 @@ Options for start:
   -h           Show this command list.
 
 Examples:
-  ./job-search-scraper start --fetch-workers 4 --assignment-window 25
+  ./job-search-scraper start --fetch-workers 4 --assignment-window 100 --batch-size 100
   ./job-search-scraper cleanup-blacklist
   ./job-search-scraper cleanup-blacklist --dry-run
   ./job-search-scraper cleanup-titles
@@ -99,10 +103,12 @@ def _load_environment():
         os.environ[variable] = str(project_path(os.environ.get(variable, default)))
 
 
-def run_start(fetch_workers=1, assignment_window=25, sheet_request_interval=1.1):
+def run_start(fetch_workers=1, assignment_window=25, batch_size=DEFAULT_BATCH_SIZE, sheet_request_interval=1.1):
     print("Starting job scraping", flush=True)
     if not 0.5 <= sheet_request_interval <= 5.0:
         raise ValueError("Sheet request interval must be between 0.5 and 5.0 seconds")
+    if not 1 <= batch_size <= MAX_BATCH_SIZE:
+        raise ValueError(f"Batch size must be between 1 and {MAX_BATCH_SIZE}")
     _load_environment()
     load_title_blacklist()
     load_title_review_list()
@@ -116,7 +122,7 @@ def run_start(fetch_workers=1, assignment_window=25, sheet_request_interval=1.1)
         # Remove any legacy local AI queue. .state is cycle/checkpoint recovery only.
         state.purge_reviews()
         try:
-            engine = Engine(repo, state, dry_run=False, batch_size=25)
+            engine = Engine(repo, state, dry_run=False, batch_size=batch_size)
             cycle_id, _ = resolve_cycle(engine, state, repo)
             engine.resume_parallel(cycle_id, fetch_workers=fetch_workers, assignment_window=assignment_window)
             final = engine.status(cycle_id)
@@ -157,6 +163,7 @@ def main(argv=None):
     parser.add_argument("command")
     parser.add_argument("--fetch-workers", type=int, default=1)
     parser.add_argument("--assignment-window", type=int, default=25)
+    parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--sheet-request-interval", type=float, default=1.1)
     try:
         args = parser.parse_args(argv)
@@ -171,6 +178,7 @@ def main(argv=None):
         return run_start(
             fetch_workers=args.fetch_workers,
             assignment_window=args.assignment_window,
+            batch_size=args.batch_size,
             sheet_request_interval=args.sheet_request_interval,
         )
     except KeyboardInterrupt:

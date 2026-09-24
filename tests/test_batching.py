@@ -352,11 +352,11 @@ class RequestAndFilterTests(unittest.TestCase):
         self.assertEqual(plain_text("Senior Staff Talent Sourcer - G&A"), "Senior Staff Talent Sourcer - G&A")
 
     def test_batch_size_bounds_validated_by_cli(self):
-        for size in ("0", "26", "-1", "word"):
+        for size in ("0", "201", "-1", "word"):
             with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 cli.parser().parse_args(["resume", "--cycle", "test", "--batch-size", size])
-        self.assertEqual(cli.parser().parse_args(["resume", "--cycle", "test"]).batch_size, 25)
-        self.assertEqual(cli.parser().parse_args(["resume", "--cycle", "test", "--batch-size", "5"]).batch_size, 5)
+        self.assertEqual(cli.parser().parse_args(["resume", "--cycle", "test"]).batch_size, 100)
+        self.assertEqual(cli.parser().parse_args(["resume", "--cycle", "test", "--batch-size", "200"]).batch_size, 200)
 
 
 if __name__ == "__main__":

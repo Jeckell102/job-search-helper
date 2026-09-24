@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 
-from .engine import Engine, State, run_demo
+from .engine import DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE, Engine, State, run_demo
 from .cleanup import cleanup_blacklisted_history
 from .repository import GoogleRepository, MemoryRepository, authorize
 
@@ -209,8 +209,8 @@ def parser() -> argparse.ArgumentParser:
         command.add_argument("--dry-run", action="store_true", help="Explicitly select the default dry run.")
         command.add_argument("--exclusive-writer", action="store_true", help="Confirm all other sheet writers are stopped.")
         command.add_argument("--workers", type=int, default=1)
-        command.add_argument("--batch-size", type=int, choices=range(1, 26), default=25,
-                             help="Jobs per atomic write/checkpoint, 1–25 (default: 25).")
+        command.add_argument("--batch-size", type=int, choices=range(1, MAX_BATCH_SIZE + 1), default=DEFAULT_BATCH_SIZE,
+                             help=f"Jobs per atomic write/checkpoint, 1-{MAX_BATCH_SIZE} (default: {DEFAULT_BATCH_SIZE}).")
         command.add_argument("--authenticate", action="store_true", help="Permit OAuth if credentials are absent.")
         if name == "start":
             scope = command.add_mutually_exclusive_group(required=True)

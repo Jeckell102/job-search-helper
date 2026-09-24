@@ -54,6 +54,8 @@ MAX_ROWS = 100_000
 MAX_EXISTING_GRID_ROWS = 100_000
 MAX_COLUMNS = 52
 MAX_CELL_CHARACTERS = 45_000
+MAX_BATCH_UPDATE_BYTES = 2_200_000
+MAX_BATCH_UPDATE_MB_LABEL = "2.2 MB"
 URL_HEADERS = {"Job URL", "Official Job URL", "Official Careers URL", "Website"}
 USER_FIELDS = {"Application Status", "Date Applied", "Date Found"}
 PROTECTED_BACKUP_ID = "1avssxbKDXMrKS0oFHNAfhbQ2HWNz3T_jkn4DSUEmqv0"
@@ -697,8 +699,8 @@ class GoogleRepository:
                 "fields": "userEnteredValue",
             }})
         if requests:
-            if len(json.dumps({"requests": requests}, ensure_ascii=True).encode("utf-8")) > 1_800_000:
-                raise RepositoryError("Planned batch exceeds the 1.8 MB safety threshold. No write attempted; resume with --batch-size 5 (or 1).")
+            if len(json.dumps({"requests": requests}, ensure_ascii=True).encode("utf-8")) > MAX_BATCH_UPDATE_BYTES:
+                raise RepositoryError(f"Planned batch exceeds the {MAX_BATCH_UPDATE_MB_LABEL} safety threshold. No write attempted; resume with --batch-size 25 (or 5).")
             structural = any(set(req) & {"appendDimension", "updateTable", "insertDimension", "deleteDimension"}
                              for req in requests)
             # No automatic retry of writes: after a timeout, rerun the same keyed
@@ -789,8 +791,8 @@ class GoogleRepository:
                 "fields": "userEnteredValue",
             }})
 
-        if len(json.dumps({"requests": requests}, ensure_ascii=True).encode("utf-8")) > 1_800_000:
-            raise RepositoryError("Blacklist cleanup batch exceeds the 1.8 MB safety threshold.")
+        if len(json.dumps({"requests": requests}, ensure_ascii=True).encode("utf-8")) > MAX_BATCH_UPDATE_BYTES:
+            raise RepositoryError(f"Blacklist cleanup batch exceeds the {MAX_BATCH_UPDATE_MB_LABEL} safety threshold.")
         if requests:
             self._execute(self.service.spreadsheets().batchUpdate(
                 spreadsheetId=self.spreadsheet_id, body={"requests": requests},

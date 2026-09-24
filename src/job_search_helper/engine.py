@@ -134,12 +134,16 @@ class State:
                                         (cycle_id, json.dumps(stored, ensure_ascii=False)))
 
 
+DEFAULT_BATCH_SIZE = 100
+MAX_BATCH_SIZE = 200
+
+
 class Engine:
-    def __init__(self, repo, state, dry_run=False, fetcher=fetch_inventory, batch_size=25, checkpoint_hook=None):
+    def __init__(self, repo, state, dry_run=False, fetcher=fetch_inventory, batch_size=DEFAULT_BATCH_SIZE, checkpoint_hook=None):
         self.repo, self.state, self.dry_run, self.fetcher = repo, state, dry_run, fetcher
         self.checkpoint_hook = checkpoint_hook
-        if not 1 <= batch_size <= 25:
-            raise ValueError("Batch size must be between 1 and 25")
+        if not 1 <= batch_size <= MAX_BATCH_SIZE:
+            raise ValueError(f"Batch size must be between 1 and {MAX_BATCH_SIZE}")
         self.batch_size = batch_size
         self._notices = None
         if dry_run and repo.__class__.__name__ != "MemoryRepository":

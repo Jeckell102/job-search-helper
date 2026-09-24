@@ -161,16 +161,18 @@ It resumes the newest unfinished local cycle, recovers an unfinished workbook cy
 To fetch multiple company inventories while keeping one Sheets writer:
 
 ```bash
-./job-search-scraper start --fetch-workers 4 --assignment-window 25
+./job-search-scraper start --fetch-workers 4 --assignment-window 100
 ```
 
-The writer queues up to 25 companies locally before refreshing the Companies tab. To adjust Google Sheets pacing for the writer:
+The writer queues companies locally before refreshing the Companies tab. The default assignment window is `25`; the example above raises it to `100`. To adjust Google Sheets pacing for the writer:
 
 ```bash
-./job-search-scraper start --fetch-workers 4 --assignment-window 25 --sheet-request-interval 1.1
+./job-search-scraper start --fetch-workers 4 --assignment-window 100 --sheet-request-interval 1.1
 ```
 
 Lower values are faster but more likely to hit Google per-user request limits. The allowed range is `0.5` to `5.0` seconds; the default is `1.1`.
+
+Inventory rows are saved to Google Sheets in atomic batches. The scraper defaults to `--batch-size 100`; use a smaller value, such as `--batch-size 25`, if Google rejects a large write because several job descriptions are unusually large. The allowed range is `1` to `200`, with a `2.2 MB` safety threshold for each Sheets write.
 
 Blocked companies are not automatically retried. After you inspect the issue or change its configuration, explicitly request:
 
