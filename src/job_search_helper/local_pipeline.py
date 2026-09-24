@@ -145,15 +145,16 @@ class LocalPipeline:
                 if status == 'complete':
                     self.engine._reconcile_absences(local_cycle, company, payload.get('jobs', []))
                 self.engine._finish_company(local_cycle, company)
-            # Enforce optimistic review-state checks for absence reconciliation
-            # too; these operations may wait on disk before being uploaded.
+            # Preserve the user's manual opportunity decision while allowing the
+            # writer to use narrow commit-time reads. Other fields come from the
+            # local planning snapshot and may be refreshed on the next scan.
             for op in self.planner.operations:
-                if op['tab'] == 'Job History' and 'expected' not in op:
+                if op['tab'] == 'Job History':
+                    expected = op.get('expected', {})
                     for number, row in self.planner.indexes['Job History'].matches(op['identity']):
                         prior = originals.get(('Job History', number), {})
-                        op['expected'] = {h: prior.get(h, '') for h in (
-                            'Review Status', 'Review Notes', 'Added to Opportunities?',
-                            'Current Snapshot', 'Consecutive Missing Scans')}
+                        manual = expected.get('Added to Opportunities?', prior.get('Added to Opportunities?', ''))
+                        op['expected'] = {'Added to Opportunities?': manual}
             final = {k: v for k, v in local_item.items() if k != 'jobs'}
             plan = {'operations': self.planner.operations, 'final': final,
                     'requested_url': payload.get('requested_url', '')}

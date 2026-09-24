@@ -160,7 +160,7 @@ class TerminalDashboard:
         rows.append(f"{'Workers':<{left_width}} Jobs")
         rows.append(f"{'-' * 7:<{left_width}} {'-' * 4}")
         for left, right in self._paired_events():
-            rows.append(f"{_clip(left, left_width - 1):<{left_width}} {_clip(right, 64)}")
+            rows.append(f"{_clip(left, left_width - 1):<{left_width}} {_clip(right, 20)}")
         self.stream.write("\n".join(rows) + "\n")
         self.stream.flush()
 
@@ -189,7 +189,7 @@ class TerminalDashboard:
         if self.worker_events:
             self.stream.write(f"Workers | {self.worker_events[0]}\n")
         if self.job_events:
-            self.stream.write(f"Jobs | {self.job_events[0]}\n")
+            self.stream.write(f"Jobs | {_clip(self.job_events[0], 20)}\n")
         self.stream.flush()
 
     def _paired_events(self):

@@ -604,59 +604,46 @@ class GoogleRepository:
         return loaded
 
     def _load_commit(self, operations):
-        """Fresh identity columns + full affected rows and the append tail.
-
-        The remembered tail is only a conservative allocation floor. It never
-        authorizes overwriting a row. Headers, links and identities are reread
-        every commit, so stale row positions are never trusted.
-        """
+        """Fresh identity columns plus narrow manual-control cells."""
         tabs = sorted({op["tab"] for op in operations})
         if (not set(tabs) & {"Job History", "Opportunities"}
                 or any(tab not in self._write_layout for tab in tabs)):
             return self._load(tabs)
         ranges = []
+        metadata = self._metadata()
+        found = {s["properties"]["title"]: s for s in metadata.get("sheets", [])}
         for tab in tabs:
+            if tab not in found:
+                raise RepositoryError(f"Missing tab: {tab}")
             headers, tail = self._write_layout[tab]
             escaped = tab.replace("'", "''")
-            end = _column_name(len(headers))
             ranges.append(f"'{escaped}'!1:1")
             identities = set().union(*(set(op["identity"]) for op in operations if op["tab"] == tab))
             if tab == "Job History":
-                identities.update({"Company", "Job Key", "Official Job URL"})
-            for header in identities:
+                identities.update({"Company", "Job Key", "Official Job URL", "Added to Opportunities?", "Review Status"})
+            narrow = set(identities)
+            for op in operations:
+                if op["tab"] != tab:
+                    continue
+                narrow.update(op.get("expected", {}))
+                narrow.update(op.get("append_notes", {}))
+            for header in narrow:
                 if header not in headers:
                     return self._load(tabs)
                 col = _column_name(headers.index(header) + 1)
-                ranges.append(f"'{escaped}'!{col}2:{col}")
-            # Open-ended tail read catches manual additions, even without IDs,
-            # and blank cells containing validation or formulas.
-            ranges.append(f"'{escaped}'!A{tail + 2}:{end}")
+                ranges.append(f"'{escaped}'!{col}2:{col}{tail + 1}")
         sheets = self._load(tabs, ranges)
         if any(sheets[t].headers != self._write_layout[t][0] for t in tabs):
             self._write_layout.clear()
             return self._load(tabs)
-        row_ranges = []
         for tab, sheet in sheets.items():
+            props = found[tab]["properties"]
+            grid = props.get("gridProperties", {})
+            sheet.sheet_id = props["sheetId"]
+            sheet.row_count = grid.get("rowCount", sheet.row_count)
+            sheet.column_count = grid.get("columnCount", sheet.column_count)
+            sheet.tables = found[tab].get("tables", [])
             sheet.append_floor = self._write_layout[tab][1]
-            index = IdentityIndex(sheet.records())
-            rows = set()
-            for op in operations:
-                if op["tab"] == tab:
-                    rows.update(r for r, _ in index.matches(op["identity"]))
-            escaped = tab.replace("'", "''")
-            end = _column_name(len(sheet.headers))
-            for row in sorted(rows):
-                row_ranges.append(f"'{escaped}'!A{row + 1}:{end}{row + 1}")
-        if row_ranges:
-            # Include headers so _load can apply the same schema checks.
-            row_ranges += [f"'{t.replace(chr(39), chr(39)*2)}'!1:1" for t in tabs]
-            full_rows = self._load(tabs, row_ranges)
-            for tab, sheet in full_rows.items():
-                if sheet.headers != sheets[tab].headers:
-                    raise RepositoryError("Headers changed during commit planning; retry with a fresh read.")
-                sheets[tab].cells.update(sheet.cells)
-                sheets[tab].tables = sheet.tables
-                sheets[tab].row_count = sheet.row_count
         return sheets
 
     def _headers(self, tab):

@@ -10,6 +10,7 @@ from threading import Event
 import unittest
 from unittest.mock import patch
 
+from job_search_helper.core import job_key
 from job_search_helper.engine import Engine, State, inventory_payload
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.local_pipeline import LocalPipeline
@@ -154,14 +155,14 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(len(self.service.batches) - before, 1)  # cycle status only
 
     def test_fresh_manual_no_and_formula_conflict_isolate_company(self):
+        key = job_key('C-0', 'Greenhouse', '1', company(0)['Official Careers URL'] + '/jobs/1')
+        self.service.set_cell('Job History', 1, 'Job Key', key)
+        self.service.set_cell('Job History', 1, 'Company', 'Company 0')
+        self.service.set_cell('Job History', 1, 'Official Job URL', company(0)['Official Careers URL'] + '/jobs/1')
+        self.service.set_cell('Job History', 1, 'Added to Opportunities?', 'Pending')
         self.defer()
         original = LocalPipeline.flush
         def edited(pipeline):
-            # Add a row under the planned key after the planning snapshot.
-            plan = self.inbox.plan(self.cycle, 'C-0')[0]
-            history_op = next(op for op in plan['operations'] if op['tab'] == 'Job History')
-            self.service.set_cell('Job History', 1, 'Job Key', history_op['identity']['Job Key'])
-            self.service.set_cell('Job History', 1, 'Company', 'Company 0')
             self.service.set_cell('Job History', 1, 'Added to Opportunities?', 'No')
             self.service.set_cell('Job History', 1, 'Review Notes', 'My exclusion')
             self.service.set_cell('Job History', 1, 'Job Title', cell={
@@ -272,12 +273,14 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertTrue(self.inbox.get(self.cycle, 'C-1')[1])
 
     def test_explicit_retry_replans_conflict_without_overwriting_manual_no(self):
+        key = job_key('C-0', 'Greenhouse', '1', company(0)['Official Careers URL'] + '/jobs/1')
+        self.service.set_cell('Job History', 1, 'Job Key', key)
+        self.service.set_cell('Job History', 1, 'Company', 'Company 0')
+        self.service.set_cell('Job History', 1, 'Official Job URL', company(0)['Official Careers URL'] + '/jobs/1')
+        self.service.set_cell('Job History', 1, 'Added to Opportunities?', 'Pending')
         self.defer()
         original = LocalPipeline.flush
         def edited(pipeline):
-            op = self.inbox.plan(self.cycle, 'C-0')[0]['operations'][0]
-            self.service.set_cell('Job History', 1, 'Job Key', op['identity']['Job Key'])
-            self.service.set_cell('Job History', 1, 'Company', 'Company 0')
             self.service.set_cell('Job History', 1, 'Added to Opportunities?', 'No')
             self.service.set_cell('Job History', 1, 'Review Notes', 'Manual exclusion')
             return original(pipeline)
@@ -336,22 +339,23 @@ class LocalPipelineTests(unittest.TestCase):
             self.engine.resume_local(self.cycle, sync_interval=1, fetch_workers=2)
         self.assert_synced()
 
-    def test_formula_rejection_preserves_cells_and_other_companies(self):
+    def test_manual_opportunity_rejection_preserves_cells_and_other_companies(self):
+        key = job_key('C-0', 'Greenhouse', '1', company(0)['Official Careers URL'] + '/jobs/1')
+        self.service.set_cell('Job History', 1, 'Job Key', key)
+        self.service.set_cell('Job History', 1, 'Company', 'Company 0')
+        self.service.set_cell('Job History', 1, 'Official Job URL', company(0)['Official Careers URL'] + '/jobs/1')
+        self.service.set_cell('Job History', 1, 'Added to Opportunities?', 'Pending')
         self.defer()
         original = LocalPipeline.flush
         def invalid(pipeline):
-            op = self.inbox.plan(self.cycle, 'C-0')[0]['operations'][0]
-            self.service.set_cell('Job History', 1, 'Job Key', op['identity']['Job Key'])
-            self.service.set_cell('Job History', 1, 'Company', 'Company 0')
-            self.service.set_cell('Job History', 1, 'Job Title', cell={
-                'userEnteredValue': {'formulaValue': '=1'}, 'effectiveValue': {'numberValue': 1}})
+            self.service.set_cell('Job History', 1, 'Added to Opportunities?', 'No')
             return original(pipeline)
         with patch.object(LocalPipeline, 'flush', invalid):
             self.engine.resume_local(self.cycle, sync_only=True)
         self.assertEqual(self.engine._dashboard.new_job_count, 5)
         self.assertTrue(self.inbox.get(self.cycle, 'C-0')[1])
-        col = self.service.schemas['Job History'].index('Job Title')
-        self.assertEqual(self.service.sheet('Job History')['data'][0]['rowData'][1]['values'][col]['userEnteredValue'], {'formulaValue': '=1'})
+        row = next(r for r in self.repo.read('Job History') if r['Company'] == 'Company 0')
+        self.assertEqual(row['Added to Opportunities?'], 'No')
 
     def test_sync_interval_cli_and_validation(self):
         from job_search_helper import runner

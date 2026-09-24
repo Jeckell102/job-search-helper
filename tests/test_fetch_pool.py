@@ -115,7 +115,7 @@ class FetchPoolTests(unittest.TestCase):
         self.assertIn("Writer - Saving - Company", text)
         self.assertIn("Inventory processed: 12", text)
         self.assertIn("New jobs written: 12", text)
-        self.assertIn("Jobs | Field Applications Engineer at Company", text)
+        self.assertIn("Jobs | Field Application...", text)
 
     def test_prefetch_buffer_is_bounded_and_each_company_runs_once(self):
         calls = Counter()
@@ -271,6 +271,14 @@ class FetchPoolTests(unittest.TestCase):
         self.assertIn("Worker 1 - Saved locally - Has Jobs Co - 3 jobs", text)
         self.assertIn("Workers | Worker 1 - 3 jobs - Has Jobs Co", text)
         self.assertNotIn("Workers | Worker 1 - 0 jobs - No Jobs Co", text)
+
+    def test_dashboard_jobs_column_clips_long_entries(self):
+        stream = StringIO()
+        dashboard = TerminalDashboard(1, stream=stream)
+        dashboard.job_written("Very Long Field Applications Engineer Role", "Long Company")
+        text = stream.getvalue()
+        self.assertIn("Very Long Field A...", text)
+        self.assertNotIn("Very Long Field Applications", text)
 
 
 class ATSIdentityTests(unittest.TestCase):

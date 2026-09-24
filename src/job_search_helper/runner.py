@@ -99,7 +99,7 @@ Screening on start (no AI calls):
   save progress, duration, locally processed count, queued local companies,
   pending sync plans, and confirmed new-job count. The Workers list records
   every handoff to the writer. The Jobs list records confirmed new Job History
-  rows, clipping long titles with `...`.
+  rows, clipping job entries to 20 characters with `...`.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
   saved inventories resume from SQLite; unfinished fetches are refetched.
   Keep the whole .state directory until all saved work is synchronized.
