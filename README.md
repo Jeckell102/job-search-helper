@@ -148,6 +148,30 @@ Validate decisions without writing, then apply the same file:
 
 Reuse the **same** cycle ID after an interruption. `start` deliberately creates a new cycle; it is not a synonym for resume. A completed cycle does not automatically launch another full sweep. Explicitly starting with `--all` is supported, but should wait until the small test has been verified.
 
+## Automated scraper command
+
+For normal operation, use the scraper wrapper:
+
+```bash
+./job-search-scraper start
+```
+
+It resumes the newest unfinished local cycle, recovers an unfinished workbook cycle if needed, or starts a new full-company scan. The process remains the only Google Sheets writer. Fetch workers never read or write Google Sheets; they only retrieve company inventories and return full job data to the writer.
+
+To fetch multiple company inventories while keeping one Sheets writer:
+
+```bash
+./job-search-scraper start --fetch-workers 4 --assignment-window 25
+```
+
+The writer queues up to 25 companies locally before refreshing the Companies tab. To adjust Google Sheets pacing for the writer:
+
+```bash
+./job-search-scraper start --fetch-workers 4 --assignment-window 25 --sheet-request-interval 1.1
+```
+
+Lower values are faster but more likely to hit Google per-user request limits. The allowed range is `0.5` to `5.0` seconds; the default is `1.1`.
+
 Blocked companies are not automatically retried. After you inspect the issue or change its configuration, explicitly request:
 
 ```bash

@@ -10,6 +10,20 @@ Normal scraper command:
 
 The scraper resumes the newest unfinished scan cycle. If none exists, it starts a new full-company scan.
 
+Parallel fetchers can retrieve company inventories while one writer controls all Google Sheets updates:
+
+```bash
+./job-search-scraper start --fetch-workers 4 --assignment-window 25
+```
+
+To tune Google Sheets pacing for the writer:
+
+```bash
+./job-search-scraper start --fetch-workers 4 --assignment-window 25 --sheet-request-interval 1.1
+```
+
+Use `./job-search-scraper help` to see the current options.
+
 Google Sheets is the durable source of truth. `.state` stores only scan/cycle recovery data.
 
 ## Scraper path
