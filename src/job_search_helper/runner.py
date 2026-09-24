@@ -59,6 +59,16 @@ Options for start:
       Minimum delay between Google Sheets requests made by the writer.
       Allowed: 0.5-5.0. Default: 1.1.
 
+Screening on start (no AI calls):
+  Existing title blacklist plus SaaS exclusions always win.
+  title-review-list.txt highlights preferred roles; unmatched titles still
+  go to AI review. Hardware/mixed products are preferred, not required.
+  New jobs with clear base pay below $120,000, travel above 50%, or temporary/
+  contract employment are saved as No with a reason. Unknowns stay for review.
+  Any location/work arrangement is eligible. Existing review decisions stay.
+  Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
+  an interrupted company is refetched and replayed without duplicate jobs.
+
   help         Show this command list.
   --help       Show this command list.
   -h           Show this command list.

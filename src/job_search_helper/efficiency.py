@@ -70,25 +70,33 @@ def parse_annual_base_max_usd(text: str) -> float | None:
     if not text:
         return None
     value = " ".join(str(text).split())
-    if re.search(r"(?:/hour|/hr|per\s+hour|hourly)", value, re.I):
+    if re.search(r"(?:/hour|/hr|per\s+(?:hour|month|week)|hourly|monthly|weekly)", value, re.I):
         return None
-    if re.search(r"\bOTE\b", value, re.I) and not re.search(r"\bbase\b", value, re.I):
+    if re.search(r"\b(?:EUR|GBP|CAD|AUD|NZD|SGD|HKD|INR|JPY|CHF)\b|[€£]|\b(?:C|A|NZ|S|HK)\$", value, re.I):
         return None
-    if re.search(r"\b(?:EUR|GBP|CAD|AUD)\b|[€£]", value, re.I):
+    # Split pay components before reading amounts: OTE and bonus cannot raise
+    # an explicitly lower base salary above the user's floor.
+    other_pay = r"\b(?:OTE|on[- ]target earnings|total (?:compensation|rewards|cash)|bonus|commission|equity|stock|incentive)\b"
+    if re.search(other_pay, value, re.I) and re.search(r"\b(?:combined|including|inclusive|consists|comprised)\b", value, re.I):
         return None
-
-    amounts = re.findall(
-        r"\$\s*([0-9]{2,3}(?:,[0-9]{3})+|[0-9]{2,3}(?:\.\d+)?\s*[kK])",
-        value,
-    )
-    parsed: list[float] = []
-    for amount in amounts:
-        cleaned = amount.replace(",", "").strip()
-        if cleaned.lower().endswith("k"):
-            parsed.append(float(cleaned[:-1]) * 1000)
-        else:
-            parsed.append(float(cleaned))
-    return max(parsed) if parsed else None
+    parts = re.split(r"[;\n]|\s*\+\s*|\bplus\b|\band\b|,(?!\d)|(?<=[.!?])\s+", value, flags=re.I)
+    base_parts = [part for part in parts if re.search(r"\bbase(?:\s+(?:salary|pay))?\b", part, re.I)]
+    if not base_parts and re.search(other_pay, value, re.I):
+        return None
+    number = r"(?:\d{2,3}(?:,\d{3})+(?:\.\d+)?|\d{5,7}(?:\.\d+)?|\d{2,3}(?:\.\d+)?\s*[kK])"
+    amount = rf"(?:USD\s*\$?\s*|\$\s*)?({number})"
+    amounts = []
+    for part in base_parts or parts:
+        # A component containing both base and another pay label is ambiguous.
+        if re.search(other_pay, part, re.I):
+            return None
+        if not re.search(r"USD|\$", part, re.I):
+            if not re.search(r"\bUSD\b", value, re.I):
+                continue
+        for match in re.finditer(amount, part):
+            cleaned = match.group(1).replace(",", "").strip()
+            amounts.append(float(cleaned[:-1]) * 1000 if cleaned.lower().endswith("k") else float(cleaned))
+    return max(amounts) if amounts else None
 
 
 # Only unmistakable trailing legal/corporate boilerplate is removed. The

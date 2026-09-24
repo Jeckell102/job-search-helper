@@ -205,7 +205,7 @@ This command changes only `Added to Opportunities?` to `No`. It does not delete 
 Two editable files control title screening:
 
 - `title-blacklist.txt`: excluded roles and seniority levels. All existing exclusions remain in effect. Staff, Principal, and Director are excluded even when the function otherwise matches.
-- `title-review-list.txt`: potentially relevant functions such as Solutions Engineer, Field Applications Engineer, Integration Engineer, and Technical Program Manager. Matching this list means the description deserves review, not automatic acceptance.
+- `title-review-list.txt`: preferred applications, product, customer-facing technical, field support, and field service roles. Matching this list is a review hint, not automatic acceptance or an allowlist. Jobs outside the shortlist still go to AI review unless an exclusion applies.
 
 Exclusions always take priority. Unmatched titles remain uncertain. Phrases match whole words, ignore case, and allow punctuation between words; `regex:` entries support deliberate regular expressions. Restart a running scraper after editing either list.
 
@@ -219,17 +219,35 @@ Stop the scraper and other sheet writers first. This applies immediately, just l
 
 Both cleanup commands use the same rules and report excluded, potentially good, and uncertain title counts. The report lists potentially good and uncertain rows that are not already `No`. Only excluded titles can be changed, and only the `Added to Opportunities?` cell is updated. Existing `No` decisions are never promoted, active reviews and unresolved identities are skipped, and other fields and Opportunities rows are preserved. No model calls or AI tokens are used. Future scrapes use the same exclusions before inserting jobs.
 
+## Scraper preferences and restarting
+
+The existing blacklist is preserved, with `saas` and `software as a service` added. It still overrides the preferred list, including the existing literal `senior engineer` and `lead engineer` entries. Senior and Lead are not blanket exclusions; for example, Senior Product Manager and Lead Field Applications Engineer remain eligible when no other rule matches.
+
+New jobs also receive conservative, local Python screening:
+
+- Annual USD **base** salary must reach $120,000. A range ending at $120,000 qualifies for review. Bonus, commission, equity, and OTE do not count. Missing, hourly, foreign-currency, or unclear compensation stays eligible for AI review. Clearly labeled salary evidence in descriptions is checked too.
+- Travel up to 50% is acceptable; explicit travel above 50% is excluded. Unknown or ambiguous travel stays for review.
+- Only permanent jobs qualify. Explicit contract, temporary, fixed-term, contract-to-hire, internship, and seasonal employment is excluded; unspecified employment stays for review. Working with customer contracts is not contract employment.
+- Prefer hardware and mixed hardware/software products. Explicit SaaS product responsibilities are excluded, but incidental SaaS tool use, integrations, or experience requirements do not exclude a job. Other uncertain product types stay for AI review.
+- All locations, relocation, onsite, hybrid, and remote arrangements are eligible.
+
+Preferred titles include Field Application(s) Engineer, Application(s) Engineer, Product/Customer Applications Engineer, Product Manager (including Assistant, Associate, and Technical), Product Owner, Product Line Manager, Solutions Engineer, Sales/Pre-Sales Engineer, Customer Engineer, Product Engineer, Product/Technical Product Specialist, Field Support, and Field Service. **Unmatched titles are retained for AI review**, with a note explaining that they fall outside the preferred shortlist. No missing preference is treated as an automatic rejection.
+
+Blacklist matches are skipped before insertion and reported in the terminal. Other clear exclusions on new jobs are saved to Job History as `No` / `Reviewed` / `Reject`, with the evidence and Rejection Reason retained. Existing jobs keep the existing reassessment workflow: manual No decisions and review notes are preserved, and In Progress rows are untouched. This change does not retroactively sweep existing jobs. The title cleanup commands remain title-only; they do not apply travel, employment, or description rules.
+
+You can leave an existing scrape running during a code update. To load the new rules, press Ctrl+C once, wait for the process to exit, then run `./job-search-scraper start` with your preferred worker/batch options. Stopping just after a `saved ... inventory items processed` message avoids interrupting that write. An interrupted company is refetched and replayed against stable job identities; already saved jobs are not duplicated. Completed companies remain completed in the resumed cycle and receive the new rules on the next full scan. Keep `.state`; do not start a second writer. Fetch workers may take time to finish outstanding requests before the interrupted process exits.
+
 ## Assessment objective for the reviewing AI
 
 Use these preferences as authoritative over wording in old resume samples:
 
 - Apply the title exclusions first. Staff, Principal, and Director roles are outside scope, including otherwise relevant functions.
 - Favor higher recall for credible **Strong**, **Possible**, and **Stretch** roles. Evaluate actual responsibilities, autonomy, customer influence, and leadership scope, not a management title alone.
-- Target customer technical discovery, solution definition, field deployment, system integration, troubleshooting, training, technical leadership, and the feedback path between customers and engineering/product teams. Technical product marketing, product roles, operations, and Field roles remain eligible when the work matches.
+- Prefer the applications, product, customer-facing technical, field support, and field service roles listed above, especially hardware and mixed products. Keep other nonblacklisted titles for full responsibility review; the shortlist is not an allowlist. Exclude explicitly SaaS-focused roles, explicit nonpermanent employment, and travel requirements above 50%. Unknowns stay for review.
 - Reject mandatory security-clearance requirements, including obtaining and maintaining a clearance. Distinguish merely preferred clearance from a requirement.
 - Reject jobs requiring this candidate to author software, firmware, scripts, algorithms, or test-automation frameworks. The candidate can operate tools, make minor or AI-assisted modifications, use APIs/webhooks, troubleshoot, and define objectives and logic for engineers. Primary systems-test/test-automation jobs are not targets. An occasional practical acceptance check in a field role is not automatically a coding job.
 - Reject a stated **maximum annual USD base salary** below **$120,000**. Prefer compensation nearer **$180,000**. A range crossing the floor can qualify with a concern. Missing base salary remains `verify`, not evidence that the floor is met. Do not treat equity, bonus, OTE, hourly totals, or non-USD compensation as confirmed USD base salary.
-- Relocation is broadly possible. Less-preferred locations require a stronger pay/opportunity case; do not invent a blanket state exclusion or fixed premium. Surface travel, shift, rotation, and on-call concerns in the narrative.
+- Any location, relocation, onsite, hybrid, or remote arrangement is eligible. Do not invent geographic exclusions or a pay premium. Surface travel, shift, rotation, and on-call concerns in the narrative.
 - Use the approved Resume Samples and current, evidence-backed candidate profile for experience and resume selection. If that information is not available in the review session, ask for it rather than inventing skills or credentials. Resume selection follows role qualification, not employer industry alone.
 - Keep one useful narrative explaining fit, supporting experience, gaps, salary/location concerns, recommended resume where supported, and meaningful changes. Preserve the user's personal notes and all application decisions.
 - Never equate passing a title filter with passing a fit assessment. If hard-blocker evidence is unresolved, return `needs_info`; do not mark the blocker false without evidence.

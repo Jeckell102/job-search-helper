@@ -1,5 +1,7 @@
 # Excluded titles and seniority levels. These always override the review list.
 # Existing exclusions are preserved; restart the scraper after editing.
+saas
+software as a service
 director
 systems engineer
 system engineer

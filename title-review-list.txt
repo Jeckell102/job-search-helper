@@ -1,48 +1,31 @@
-# Potentially relevant functions; these still need description review.
+# Preferred functions; this is NOT an allowlist. Unmatched titles still reach AI.
+# Matching a phrase is a review hint, never automatic acceptance.
 # title-blacklist.txt ALWAYS wins, including Staff, Principal, and Director.
 # One phrase per line. Case and punctuation are ignored; whole words match.
 # Use regex: only for deliberate regular expressions.
 solutions engineer
 solution engineer
-solutions engineering
-solution engineering
-solutions architect
-solution architect
 field applications engineer
 field application engineer
-field applications engineering
-field application engineering
 applications engineer
 application engineer
-field engineer
-field engineering
-systems integration
-system integration
-integration engineer
-integration engineering
+product applications engineer
+product application engineer
+customer applications engineer
+customer application engineer
 sales engineer
-sales engineering
+pre sales engineer
+presales engineer
 customer engineer
-customer engineering
-deployment engineer
-deployment manager
-deployment lead
-deployment specialist
-technical account manager
-product support manager
-product support lead
-product support engineer
-technical support manager
-technical support lead
-technical support engineer
-technical training
-technical trainer
-field operations
+product manager
+assistant product manager
+associate product manager
 technical product manager
-technical product marketing manager
-product marketing manager
-technical program manager
-implementation engineer
-implementation manager
-customer success engineer
-technical customer success manager
+product owner
+product line manager
+associate product line manager
+product engineer
+product specialist
+technical product specialist
+field support
+field service

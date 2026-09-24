@@ -22,14 +22,15 @@ class TitleScreeningTests(unittest.TestCase):
                 self.assertTrue(excluded_title(title))
 
     def test_review_list_and_unknown_titles_do_not_imply_acceptance(self):
-        for title in ("Solutions Engineer", "Field-Applications Engineer", "Systems Integration Engineer",
-                      "Technical Program Manager", "Technical Account Manager",
-                      "Implementation Manager", "Technical Product Marketing Manager"):
+        for title in ("Solutions Engineer", "Field-Applications Engineer", "Associate Product Manager",
+                      "Field Service Engineer", "Field Support Engineer", "Technical Product Manager"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "review")
                 self.assertFalse(excluded_title(title))
         for title in ("", "Operations Manager", "Program Manager", "Support Engineer",
-                      "Staffing Specialist", "Directorate Liaison", "Principalship Coordinator"):
+                      "Staffing Specialist", "Directorate Liaison", "Principalship Coordinator",
+                      "Systems Integration Engineer", "Technical Program Manager", "Technical Account Manager",
+                      "Implementation Manager", "Technical Product Marketing Manager"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "ambiguous")
 
@@ -66,8 +67,8 @@ class TitleScreeningTests(unittest.TestCase):
         self.assertEqual(repo.read("Job History"), before)
         self.assertEqual(preview["spreadsheet_changes"], 0)
         self.assertEqual(preview["blacklisted_titles"], 6)
-        self.assertEqual(preview["potentially_good_titles"], 2)
-        self.assertEqual(preview["uncertain_titles"], 1)
+        self.assertEqual(preview["potentially_good_titles"], 1)
+        self.assertEqual(preview["uncertain_titles"], 2)
         self.assertEqual(len(preview["potentially_good_not_already_no"]), 1)
         self.assertEqual(preview["locked_in_progress"], 1)
         self.assertEqual(preview["unresolved_identity"], 2)

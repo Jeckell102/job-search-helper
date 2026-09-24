@@ -19,7 +19,8 @@ from .batching import PlanningRepository, PendingState
 from .core import (FIT_LABELS, POLICY_VERSION, canonicalize_url, changed_fields,
                    job_key, material_hash, pack_snapshot,
                    plain_text, reconsiderations, unpack_snapshot, validate_decision)
-from .efficiency import classify_title, parse_annual_base_max_usd, strip_job_boilerplate
+from .efficiency import classify_title, strip_job_boilerplate
+from .screening import screen_posting
 
 
 def now() -> str:
@@ -447,6 +448,7 @@ class Engine:
         # Skip before history lookup, description processing, or any write.
         # Keep the full inventory unchanged for checkpoints and absence checks.
         if classify_title(posting.get("title", "")) == "reject":
+            self._notice(f"Filtered - {posting.get('title', '')} at {company['Company']}: title blacklist match.")
             return
         key, old = self._history(posting, company)
         if old and reconsiderations(old) >= 2:
@@ -501,13 +503,9 @@ class Engine:
         # the Work queue. Changed previously reviewed postings always return to
         # Needs Review so an earlier decision is not silently replaced.
         if not old:
-            base_max = parse_annual_base_max_usd(posting.get("compensation", ""))
-            auto_reason = None
-            if base_max is not None and base_max < 120_000:
-                auto_reason = (
-                    f"Compensation exclusion: stated maximum annual base is "
-                    f"${base_max:,.0f}, below the $120,000 floor."
-                )
+            screening = screen_posting(posting)
+            auto_reason = screening.reason
+            values["Review Notes"] = screening.review_note
 
             if auto_reason:
                 snapshot["evaluated"] = copy.deepcopy(posting)
@@ -528,6 +526,7 @@ class Engine:
                     "Rejection Reason": auto_reason, "Last Evaluated": stamp,
                     "Description Hash": current_hash,
                 })
+                self._notice(f"Filtered - {posting['title']} at {company['Company']}: {auto_reason}")
             else:
                 values.update({
                     "First Seen": stamp[:10], "Added to Opportunities?": "Pending",
