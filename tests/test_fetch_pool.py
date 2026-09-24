@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from job_search_helper.ats import Inventory, fetch_inventory
+from job_search_helper.dashboard import TerminalDashboard
 from job_search_helper.engine import Engine, State
 from job_search_helper.repository import MemoryRepository
 from test_ats import Transport, response
@@ -260,6 +261,16 @@ class FetchPoolTests(unittest.TestCase):
         self.assertEqual(state.cycle(cycle)["companies"]["C-1"]["stage"], "complete")
         self.assertEqual(state.cycle(cycle)["companies"]["C-2"]["stage"], "complete")
         self.assertEqual(len(repo.read("Job History")), 2)
+
+    def test_dashboard_running_list_skips_zero_job_handoffs(self):
+        stream = StringIO()
+        dashboard = TerminalDashboard(1, stream=stream)
+        dashboard.worker_handoff(1, "No Jobs Co", 0)
+        dashboard.worker_handoff(1, "Has Jobs Co", 3)
+        text = stream.getvalue()
+        self.assertIn("Worker 1 - Ready - Has Jobs Co - 3 jobs", text)
+        self.assertIn("Workers | Worker 1 - 3 jobs - Has Jobs Co", text)
+        self.assertNotIn("Workers | Worker 1 - 0 jobs - No Jobs Co", text)
 
 
 class ATSIdentityTests(unittest.TestCase):

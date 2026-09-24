@@ -68,7 +68,8 @@ class TerminalDashboard:
     def worker_handoff(self, slot, company, job_count):
         with self.lock:
             self.worker_state[slot] = {"task": "Ready", "company": company, "detail": f"{job_count} jobs"}
-            self.worker_events.appendleft(f"Worker {slot} - {job_count} jobs - {company} - {_stamp()}")
+            if job_count > 0:
+                self.worker_events.appendleft(f"Worker {slot} - {job_count} jobs - {company} - {_stamp()}")
             self._render_locked()
 
     def worker_failed(self, slot, company):
