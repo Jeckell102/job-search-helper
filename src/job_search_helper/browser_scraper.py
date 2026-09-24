@@ -12,6 +12,8 @@ from .core import canonicalize_url, plain_text
 MAX_BROWSER_JOBS = 250
 JOB_HINT = re.compile(r"\b(job|career|position|opening|role|requisition|req)\b", re.I)
 DETAIL_HINT = re.compile(r"\b(responsibilities|requirements|qualifications|salary|compensation|about the role|what you.ll do)\b", re.I)
+NO_OPENINGS = re.compile(r"\b(no open positions|no current openings|no jobs were found|check back soon)\b", re.I)
+GENERIC_LINK_TITLES = {"career", "careers", "job", "jobs", "open positions", "current openings", "join our team"}
 TITLE_KEYS = ("title", "jobTitle", "name", "positionTitle", "postingTitle")
 URL_KEYS = ("url", "jobUrl", "applyUrl", "postingUrl", "externalUrl", "jobDetailUrl")
 ID_KEYS = ("id", "jobId", "postingId", "reqId", "requisitionId", "referenceNumber")
@@ -121,6 +123,8 @@ def _looks_like_job(text: str, href: str) -> bool:
     combined = f"{text} {href}"
     if not JOB_HINT.search(combined):
         return False
+    if plain_text(text).casefold() in GENERIC_LINK_TITLES:
+        return False
     lowered = combined.casefold()
     return not any(skip in lowered for skip in ("privacy", "terms", "benefits", "linkedin.com/company"))
 
@@ -134,12 +138,21 @@ def _extract_links(page, base_url: str) -> list[dict]:
     )
     seen = set()
     links = []
+    try:
+        base_key = canonicalize_url(base_url)
+    except ValueError:
+        base_key = base_url
     for anchor in anchors:
         href = urljoin(base_url, str(anchor.get("href") or ""))
         text = str(anchor.get("text") or "")
         if not href.startswith("http") or not _same_site(base_url, href) or not _looks_like_job(text, href):
             continue
-        key = canonicalize_url(href)
+        try:
+            key = canonicalize_url(href)
+        except ValueError:
+            continue
+        if key == base_key:
+            continue
         if key in seen:
             continue
         seen.add(key)
@@ -206,6 +219,8 @@ def fetch_browser_inventory(ats: str, careers_url: str, company_id: str, company
                 page.goto(careers_url, wait_until="networkidle", timeout=timeout_ms)
                 listing_text = _page_text(page)
                 jobs.extend(json_jobs[:MAX_BROWSER_JOBS])
+                if not jobs and NO_OPENINGS.search(listing_text):
+                    return Inventory("partial", reason="Browser fallback found a reachable careers page with no open positions shown; inventory completeness unknown.", source_url=careers_url, ats=ats or "Browser")
                 seen_urls = {job["url"] for job in jobs}
                 links = _extract_links(page, careers_url)
                 for link in links:

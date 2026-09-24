@@ -3,7 +3,23 @@ import builtins
 from unittest.mock import patch
 
 from job_search_helper.ats import Inventory
-from job_search_helper.browser_scraper import jobs_from_json_payload, with_browser_fallback
+from job_search_helper.browser_scraper import _extract_links, jobs_from_json_payload, with_browser_fallback
+
+
+class FakeLocator:
+    def __init__(self, anchors):
+        self.anchors = anchors
+
+    def evaluate_all(self, _script):
+        return self.anchors
+
+
+class FakePage:
+    def __init__(self, anchors):
+        self.anchors = anchors
+
+    def locator(self, _selector):
+        return FakeLocator(self.anchors)
 
 
 class BrowserFallbackTests(unittest.TestCase):
@@ -54,6 +70,13 @@ class BrowserFallbackTests(unittest.TestCase):
         self.assertEqual(jobs[0]["posting_id"], "123")
         self.assertEqual(jobs[0]["url"], "https://example.com/careers/jobs/123")
         self.assertIn("Lead deployments", jobs[0]["description"])
+
+    def test_rendered_link_scraper_ignores_self_careers_link(self):
+        links = _extract_links(FakePage([
+            {"text": "Career", "href": "https://www.foretellix.com/career/"},
+            {"text": "Field Engineer", "href": "https://www.foretellix.com/career/field-engineer"},
+        ]), "https://www.foretellix.com/career/")
+        self.assertEqual(links, [{"url": "https://www.foretellix.com/career/field-engineer", "title": "Field Engineer"}])
 
 
 if __name__ == "__main__":
