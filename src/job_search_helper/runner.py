@@ -47,8 +47,9 @@ Commands:
       Stop other sheet writers first. Use --dry-run for a read-only report.
 
   repair-careers-urls
-      For blocked companies, discover a replacement ATS board, validate it by
-      fetching jobs, update Official Careers URL, and set Scan State to Queued.
+      For blocked companies, discover a replacement ATS board from the careers
+      page or an obvious same-site jobs/apply link, validate it by fetching
+      jobs, update Official Careers URL, and set Scan State to Queued.
       Unvalidated candidate URLs go to Candidate Careers URL for manual review.
       Dry-run by default; use --apply --exclusive-writer to write changes.
 

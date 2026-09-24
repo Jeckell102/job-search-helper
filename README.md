@@ -56,7 +56,7 @@ In the **Companies** tab, select one active company and check these fields:
 | ATS / Source | `Greenhouse`, `Lever`, `Ashby`, `Workday`, `iCIMS`, `ADP`, or `Paylocity`, or blank when discovering the board from the careers page. |
 | Official Careers URL | A supported official ATS board URL, or the employer's public HTTPS careers page linking to one. |
 
-The scraper first recognizes direct ATS board URLs. Otherwise, it reads the configured careers page and looks for Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, or Paylocity links, iframe embeds, or script embeds. It follows up to four same-host redirects (including the `www` variant), and accepts redirects directly to supported boards. It does not guess board names, execute JavaScript, crawl other page links, or fill in missing careers URLs.
+The scraper first recognizes direct ATS board URLs. Otherwise, it reads the configured careers page and looks for Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, or Paylocity links, iframe embeds, or script embeds. It follows up to four same-host redirects (including the `www` variant), accepts redirects directly to supported boards, and can inspect a small number of obvious same-site job links such as "Apply Now", "Search Jobs", or "Open Positions". It does not guess board names, execute JavaScript, broadly crawl the site, or fill in missing careers URLs.
 
 Discovery requires one unambiguous board. Multiple boards, a configured ATS mismatch, and sources labeled as shared/parent boards need manual selection or company-specific scoping. Other cross-host redirects require recording the verified destination as Official Careers URL. Private addresses, credentials, non-HTTPS URLs, and custom ports are refused. Discovery reads at most 2 MiB per page and retains TLS verification.
 
@@ -241,7 +241,7 @@ To repair blocked companies whose public careers page has moved to a different s
 ./job-search-scraper repair-careers-urls --dry-run
 ```
 
-The repair checks only companies marked `Blocked / Manual Review`. It skips writer/history conflicts, discovers a supported board from the configured careers page, then validates the candidate by fetching a complete inventory with at least one job. Apply the proven fixes only after stopping the scraper and other sheet writers:
+The repair checks only companies marked `Blocked / Manual Review`. It skips writer/history conflicts, discovers a supported board from the configured careers page or an obvious same-site jobs/apply link, then validates the candidate by fetching a complete inventory with at least one job. Apply the proven fixes only after stopping the scraper and other sheet writers:
 
 ```bash
 ./job-search-scraper repair-careers-urls --apply --exclusive-writer
@@ -363,7 +363,7 @@ The current Opportunities dropdown uses legacy fit labels. The helper retains co
 
 **No autonomous AI assessment.** This implementation provides a queue and validates explicit imported decisions. There is no dormant Gemini extraction routine described as if it evaluates fit. Future model integration needs explicit configuration, privacy boundaries, cost limits, structured outputs, and its own tests.
 
-**Three supported public ATS families, with careers-page discovery.** Other hiring systems remain manual work. Discovery finds explicit supported links on the configured page; it is not a universal crawler or browser renderer. The initial provider checks are evidence of current API compatibility, not a guarantee against future ATS changes.
+**Supported public ATS families, with careers-page discovery.** Other hiring systems remain manual work. Discovery finds explicit supported links on the configured page and a bounded set of obvious same-site job/apply pages; it is not a universal crawler or browser renderer. The initial provider checks are evidence of current API compatibility, not a guarantee against future ATS changes.
 
 **Conservative identity migration.** Existing legacy History keys are retained when the official URL matches. If the same posting ID moves to another URL, the helper keeps its existing Opportunity identity and appends the current official URL to Notes. If an employer reuses one URL for a genuinely different posting ID, the helper stops for manual disambiguation rather than merging the postings. A future hidden Opportunity Job Key column can remove that limitation, but this installer does not silently change your workbook schema.
 

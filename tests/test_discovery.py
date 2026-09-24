@@ -77,11 +77,36 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(pages.urls, [PAGE, PAGE + "/"])
         self.assertTrue(api.urls[0].startswith("https://api.lever.co/"))
 
-    def test_careers_page_without_board_does_not_guess_or_crawl(self):
-        result, pages, api = self.fetch([html('<a href="/jobs">Jobs</a>')])
+    def test_follows_obvious_same_site_jobs_cta_to_board(self):
+        result, pages, api = self.fetch([
+            html('<a class="button" href="/careers/apply-today">Apply Now</a>'),
+            html(f'<a href="{BOARD}">View jobs</a>'),
+        ], [response(fixture("greenhouse"))])
+        self.assertEqual(result.status, "complete")
+        self.assertEqual(pages.urls, [PAGE, "https://acme.example/careers/apply-today"])
+        self.assertEqual(api.urls, [BOARD + "/jobs?content=true"])
+
+    def test_careers_page_without_board_or_obvious_cta_does_not_guess(self):
+        result, pages, api = self.fetch([html('<a href="/about">About Acme</a>')])
         self.assertEqual(result.status, "unsupported")
         self.assertIn("No supported ATS link", result.reason)
         self.assertEqual(pages.urls, [PAGE])
+        self.assertFalse(api.urls)
+
+    def test_bounded_cta_discovery_ignores_other_hosts(self):
+        result, pages, api = self.fetch([html('<a href="https://other.example/jobs">Jobs</a>')])
+        self.assertEqual(result.status, "unsupported")
+        self.assertEqual(pages.urls, [PAGE])
+        self.assertFalse(api.urls)
+
+    def test_known_unsupported_ats_gets_specific_diagnostic_after_cta_follow(self):
+        result, pages, api = self.fetch([
+            html('<a href="/careers/apply-today">Apply Now</a>'),
+            html('<a href="https://jobs.dayforcehcm.com/en-US/acme/CANDIDATEPORTAL/jobs/123">Project Manager</a>'),
+        ])
+        self.assertEqual(result.status, "unsupported")
+        self.assertIn("Dayforce", result.reason)
+        self.assertEqual(pages.urls, [PAGE, "https://acme.example/careers/apply-today"])
         self.assertFalse(api.urls)
 
     def test_plain_text_and_lookalike_host_do_not_establish_board(self):
