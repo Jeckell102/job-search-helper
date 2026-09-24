@@ -1,0 +1,48 @@
+# Potentially relevant functions; these still need description review.
+# title-blacklist.txt ALWAYS wins, including Staff, Principal, and Director.
+# One phrase per line. Case and punctuation are ignored; whole words match.
+# Use regex: only for deliberate regular expressions.
+solutions engineer
+solution engineer
+solutions engineering
+solution engineering
+solutions architect
+solution architect
+field applications engineer
+field application engineer
+field applications engineering
+field application engineering
+applications engineer
+application engineer
+field engineer
+field engineering
+systems integration
+system integration
+integration engineer
+integration engineering
+sales engineer
+sales engineering
+customer engineer
+customer engineering
+deployment engineer
+deployment manager
+deployment lead
+deployment specialist
+technical account manager
+product support manager
+product support lead
+product support engineer
+technical support manager
+technical support lead
+technical support engineer
+technical training
+technical trainer
+field operations
+technical product manager
+technical product marketing manager
+product marketing manager
+technical program manager
+implementation engineer
+implementation manager
+customer success engineer
+technical customer success manager

@@ -196,10 +196,30 @@ This is an apply command. Stop the scraper and other sheet writers first. To pre
 
 This command changes only `Added to Opportunities?` to `No`. It does not delete Job History rows or Opportunities, and it preserves all other fields. Rows already set to `No` are idempotent. Rows with `Review Status` set to `In Progress`, or rows without a unique stable identity, are reported and skipped. The blacklist is loaded fresh each time the command starts.
 
+## Screen saved job titles without AI
+
+Two editable files control title screening:
+
+- `title-blacklist.txt`: excluded roles and seniority levels. All existing exclusions remain in effect. Staff, Principal, and Director are excluded even when the function otherwise matches.
+- `title-review-list.txt`: potentially relevant functions such as Solutions Engineer, Field Applications Engineer, Integration Engineer, and Technical Program Manager. Matching this list means the description deserves review, not automatic acceptance.
+
+Exclusions always take priority. Unmatched titles remain uncertain. Phrases match whole words, ignore case, and allow punctuation between words; `regex:` entries support deliberate regular expressions. Restart a running scraper after editing either list.
+
+To screen existing Job History rows and set excluded titles to `No`:
+
+```bash
+./job-search-scraper cleanup-titles
+```
+
+Stop the scraper and other sheet writers first. This applies immediately, just like `cleanup-blacklist`; no separate apply step is required. For an optional read-only report, use `./job-search-scraper cleanup-titles --dry-run`.
+
+Both cleanup commands use the same rules and report excluded, potentially good, and uncertain title counts. The report lists potentially good and uncertain rows that are not already `No`. Only excluded titles can be changed, and only the `Added to Opportunities?` cell is updated. Existing `No` decisions are never promoted, active reviews and unresolved identities are skipped, and other fields and Opportunities rows are preserved. No model calls or AI tokens are used. Future scrapes use the same exclusions before inserting jobs.
+
 ## Assessment objective for the reviewing AI
 
 Use these preferences as authoritative over wording in old resume samples:
 
+- Apply the title exclusions first. Staff, Principal, and Director roles are outside scope, including otherwise relevant functions.
 - Favor higher recall for credible **Strong**, **Possible**, and **Stretch** roles. Evaluate actual responsibilities, autonomy, customer influence, and leadership scope, not a management title alone.
 - Target customer technical discovery, solution definition, field deployment, system integration, troubleshooting, training, technical leadership, and the feedback path between customers and engineering/product teams. Technical product marketing, product roles, operations, and Field roles remain eligible when the work matches.
 - Reject mandatory security-clearance requirements, including obtaining and maintaining a clearance. Distinguish merely preferred clearance from a requirement.

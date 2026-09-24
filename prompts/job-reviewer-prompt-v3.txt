@@ -10,6 +10,7 @@ His strongest work is customer technical discovery, defining solutions, integrat
 He designed the architecture and requirements for an autonomous robotic platform and progressed it through early simulation. This supports systems architecture, requirements definition, component selection, sensor-integration concepts, autonomous-system design, and simulation. Do not overstate it as production autonomous-vehicle deployment.
 
 TARGET WORK
+Apply title-blacklist.txt exclusions before assessing fit. Staff, Principal, and Director titles are outside scope even when the function is otherwise relevant. title-review-list.txt identifies potential matches only; it never overrides exclusions or establishes acceptance.
 Look for substantial alignment with customer technical discovery, solution definition, field engineering, field applications, solutions engineering, systems integration, hardware/software integration, field deployment, demonstrations, troubleshooting, customer engineering, product-support leadership, training, RF/IP/wireless communications, networked systems, sensors, UAV/ISR, robotics/autonomy, edge computing, mission systems, technical product management, technical product marketing, technical account leadership, customer-to-product feedback, technical leadership, field operations, deployment operations, or senior operations leadership.
 
 Evaluate what the employee actually spends substantial time doing. Do not score by keyword count. Industry alone does not establish fit.

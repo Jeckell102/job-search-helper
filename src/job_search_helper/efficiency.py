@@ -8,34 +8,26 @@ from typing import Literal
 
 TitleAction = Literal["reject", "review", "ambiguous"]
 
-# Relevant functions can skip the title model and go straight to full review.
-TARGET_TITLE_PATTERNS = (
-    r"\bsolutions?\s+engineer(?:ing)?\b",
-    r"\bfield\s+applications?\s+engineer(?:ing)?\b",
-    r"\bfield\s+application\s+engineer(?:ing)?\b",
-    r"\bfield\s+engineer(?:ing)?\b",
-    r"\bsystems?\s+integration\b",
-    r"\bintegration\s+engineer(?:ing)?\b",
-    r"\bsales\s+engineer(?:ing)?\b",
-    r"\bcustomer\s+engineer(?:ing)?\b",
-    r"\bsolutions?\s+architect\b",
-    r"\bfield\s+operations\b",
-    r"\bdeployment\s+(?:engineer|manager|lead|specialist)\b",
-    r"\btechnical\s+support\s+(?:manager|lead|director)\b",
-    r"\bproduct\s+support\s+(?:manager|lead|director)\b",
-    r"\btechnical\s+training\b",
-)
-
 # The user-maintained file is loaded once per process; restart after editing.
 BLACKLIST_PATH = Path(__file__).resolve().parents[2] / "title-blacklist.txt"
+REVIEW_LIST_PATH = BLACKLIST_PATH.with_name("title-review-list.txt")
 
 
 @lru_cache(maxsize=1)
 def load_title_blacklist():
+    return _load_title_patterns(BLACKLIST_PATH)
+
+
+@lru_cache(maxsize=1)
+def load_title_review_list():
+    return _load_title_patterns(REVIEW_LIST_PATH)
+
+
+def _load_title_patterns(path):
     try:
-        lines = BLACKLIST_PATH.read_text(encoding="utf-8-sig").splitlines()
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
     except OSError as exc:
-        raise ValueError(f"Cannot read title blacklist: {BLACKLIST_PATH}. Restore it before starting.") from exc
+        raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
     patterns = []
     for number, line in enumerate(lines, 1):
         entry = line.strip()
@@ -44,16 +36,16 @@ def load_title_blacklist():
         if entry.startswith("regex:"):
             pattern = entry[len("regex:"):].strip()
             if not pattern:
-                raise ValueError(f"Empty regex in {BLACKLIST_PATH.name}, line {number}.")
+                raise ValueError(f"Empty regex in {path.name}, line {number}.")
         else:
             words = re.findall(r"[^\W_]+", entry, re.UNICODE)
             if not words:
-                raise ValueError(f"No words in {BLACKLIST_PATH.name}, line {number}.")
+                raise ValueError(f"No words in {path.name}, line {number}.")
             pattern = r"(?<!\w)" + r"[\W_]+".join(re.escape(word) for word in words) + r"(?!\w)"
         try:
             patterns.append(re.compile(pattern, re.I))
         except re.error as exc:
-            raise ValueError(f"Invalid regex in {BLACKLIST_PATH.name}, line {number}: {exc}") from exc
+            raise ValueError(f"Invalid regex in {path.name}, line {number}: {exc}") from exc
     return tuple(patterns)
 
 
@@ -64,7 +56,7 @@ def classify_title(title: str) -> TitleAction:
         return "ambiguous"
     if any(pattern.search(value) for pattern in load_title_blacklist()):
         return "reject"
-    if any(re.search(pattern, value, re.I) for pattern in TARGET_TITLE_PATTERNS):
+    if any(pattern.search(value) for pattern in load_title_review_list()):
         return "review"
     return "ambiguous"
 

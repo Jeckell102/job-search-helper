@@ -1,3 +1,18 @@
+# Excluded titles and seniority levels. These always override the review list.
+# Existing exclusions are preserved; restart the scraper after editing.
+director
+systems engineer
+system engineer
+financial analyst
+financial controller
+receptionist
+administrative assistant
+warehouse associate
+material handler
+co-op
+entry level
+graphic designer
+graphic design
 software engineer
 software engineering
 software developer

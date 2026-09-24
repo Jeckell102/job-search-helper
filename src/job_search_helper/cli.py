@@ -165,7 +165,7 @@ def execute_cleanup(args: argparse.Namespace) -> None:
         print_json(cleanup_blacklisted_history(repo, apply=False))
         return
 
-    print("APPLY: setting Added to Opportunities? to No for current blacklist matches.")
+    print("APPLY: setting Added to Opportunities? to No for excluded titles; reporting potential matches and uncertain titles.")
     database = state_path()
     with writer_lock(database.parent / "writer.lock"):
         repo = get_repository(write=True, interactive=args.authenticate)
@@ -190,6 +190,7 @@ def parser() -> argparse.ArgumentParser:
     reviews.add_argument("--output", required=True)
     cleanup = commands.add_parser(
         "cleanup-blacklist",
+        aliases=["cleanup-titles"],
         help="Set Job History Added to Opportunities? to No for titles matching title-blacklist.txt.",
     )
     cleanup.add_argument("--apply", action="store_true", help="Actually commit the cell changes; off by default.")
@@ -278,7 +279,7 @@ def main(argv: list[str] | None = None) -> int:
             finally:
                 state.close()
             print_json({"reviews": count, "output": str(output)})
-        elif args.command == "cleanup-blacklist":
+        elif args.command in {"cleanup-blacklist", "cleanup-titles"}:
             execute_cleanup(args)
         else:
             execute_work(args)

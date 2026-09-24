@@ -10,8 +10,10 @@ import zlib
 from html.parser import HTMLParser
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from .efficiency import classify_title
+
 POLICY_VERSION = "2026-09-17-v2"
-TITLE_FILTER_VERSION = "2026-09-17-v3"
+TITLE_FILTER_VERSION = "2026-09-23-v4"
 FIT_LABELS = {"Strong": "Strong Potential Fit", "Possible": "Potential Fit", "Stretch": "Potential Fit"}
 TRACKING = {"gh_src", "lever-source", "lever-via", "fbclid", "gclid"}
 
@@ -83,57 +85,9 @@ def changed_fields(old: dict | None, new: dict) -> list[str]:
             if plain_text(old.get(key, "")).casefold() != plain_text(new.get(key, "")).casefold()]
 
 
-# Title-only screening is deliberately assertive for role families that are
-# clearly outside the target profile, but relevant engineering functions must
-# survive even when they contain words such as "Staff" or "Engineer".
-TITLE_REVIEW_OVERRIDES = (
-    r"\bsolutions?\s+engineer(?:ing)?\b",
-    r"\bfield\s+applications?\s+engineer(?:ing)?\b",
-    r"\bfield\s+engineer(?:ing)?\b",
-    r"\bsystems?\s+integration\b",
-    r"\bintegration\s+engineer(?:ing)?\b",
-    r"\bsales\s+engineer(?:ing)?\b",
-    r"\bcustomer\s+engineer(?:ing)?\b",
-    r"\bproduct\s+support\s+engineer(?:ing)?\b",
-    r"\btechnical\s+support\s+engineer(?:ing)?\b",
-    r"\bdeployment\s+engineer(?:ing)?\b",
-)
-
-TITLE_EXCLUSIONS = (
-    # Clearly unrelated professional families.
-    r"\b(attorney|legal counsel|general counsel|paralegal|accountant|accounting|bookkeeper|bookkeeping|payroll|recruiter|talent acquisition|human resources|nurse|nursing|physician|surgeon|janitor|janitorial|custodial|copywriter|copywriting)\b",
-    r"\b(tax accountant|tax preparer|tax manager|financial auditor|internal auditor|financial controller|graphic design|graphic designer)\b",
-
-    # Software/data development.
-    r"\b(software|firmware)\s+(engineer|developer|development)\b",
-    r"\b(front[ -]?end|back[ -]?end|full[ -]?stack|ios|android|mobile)\s+(engineer|developer)\b",
-    r"\b(data scientist|data science|data engineer|machine learning engineer|ml engineer)\b",
-
-    # Test-centric engineering.
-    r"\b(systems?\s+test\s+engineer|test\s+automation|automation\s+test\s+engineer|sdet|verification\s+engineer|validation\s+engineer)\b",
-
-    r"\bsystems?\s+engineer(?:ing)?\b",
-
-    # Generic high-level line-engineering titles. Relevant function overrides
-    # above are checked first, so "Staff Solutions Engineer" survives.
-    r"\b(?:(?:sr\.?|senior)\s+)?(?:staff|principal)\s+engineer\b",
-
-    # Discipline-specific design/development engineering.
-    r"\b(?:electrical|mechanical|materials?|chemical|civil|structural|aerospace|hardware|rf|manufacturing|process|quality)\s+engineer\b",
-
-    # Administrative / hourly-production / early-career families.
-    r"\b(facilities|facility|office)\s+(coordinator|assistant|associate)\b",
-    r"\b(administrative assistant|executive assistant|receptionist|talent sourcer|technical sourcer|recruiting coordinator|recruitment coordinator)\b",
-    r"\b(warehouse associate|warehouse clerk|material handler|forklift operator|stockroom clerk|production technician|assembly technician|machinist)\b",
-    r"\b(intern|internship|co-op)\b",
-)
-
-
 def excluded_title(title: str) -> bool:
-    value = title or ""
-    if any(re.search(pattern, value, re.I) for pattern in TITLE_REVIEW_OVERRIDES):
-        return False
-    return any(re.search(pattern, value, re.I) for pattern in TITLE_EXCLUSIONS)
+    """Use the same user-maintained exclusions as scraping and cleanup."""
+    return classify_title(title) == "reject"
 
 
 def reconsiderations(row: dict | None) -> int:

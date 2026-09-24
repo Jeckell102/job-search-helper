@@ -13,7 +13,7 @@ def company():
     return {"Company":"Demo Co","Company ID":"COMP-1","Company Status":"Active","ATS / Source":"Greenhouse","Official Careers URL":"https://boards.greenhouse.io/demo"}
 
 
-def posting(title="Staff Solutions Engineer", description="VERSION ONE"):
+def posting(title="Solutions Engineer", description="VERSION ONE"):
     return {"company_id":"COMP-1","company":"Demo Co","ats":"Greenhouse","posting_id":"1","req_id":"1","url":"https://boards.greenhouse.io/demo/jobs/1","title":title,"location":"Remote","work_arrangement":"Remote","compensation":"$150,000-$190,000","description":description,"department":"Solutions","created_at":"","updated_at":"1","is_listed":True}
 
 
@@ -29,7 +29,7 @@ class DirectSheetWorkflowTests(unittest.TestCase):
         self.assertTrue(excluded_title("Systems Engineer"))
         self.assertTrue(excluded_title("Senior Staff Engineer, Survivability Materials"))
         self.assertTrue(excluded_title("Electrical Engineer"))
-        self.assertFalse(excluded_title("Staff Solutions Engineer"))
+        self.assertTrue(excluded_title("Staff Solutions Engineer"))
         self.assertFalse(excluded_title("Field Applications Engineer"))
 
     def test_new_job_goes_to_sheet_review_queue(self):

@@ -12,7 +12,7 @@ def company():
     }
 
 
-def posting(title="Staff Solutions Engineer", salary="$150,000-$190,000", description="Deploy and integrate systems."):
+def posting(title="Solutions Engineer", salary="$150,000-$190,000", description="Deploy and integrate systems."):
     return {
         "company_id": "COMP-1", "company": "Demo Co", "ats": "Greenhouse",
         "posting_id": "1", "req_id": "1", "url": "https://boards.greenhouse.io/demo/jobs/1",
@@ -30,14 +30,15 @@ class V33ProWorkTests(unittest.TestCase):
         engine = Engine(repo, state)
         return c, repo, state, engine
 
-    def test_obvious_title_reject_is_completed_without_ai(self):
+    def test_excluded_titles_are_skipped_before_insertion(self):
         c, repo, state, engine = self.make()
-        engine._stage_posting({"id": "CYC"}, c, posting(title="Systems Engineer"))
-        row = repo.read("Job History")[0]
-        self.assertEqual(row["Review Status"], "Reviewed")
-        self.assertEqual(row["Decision"], "Reject")
-        self.assertEqual(row["Added to Opportunities?"], "No")
-        self.assertEqual(row["Description Hash"], row["Source Hash"])
+        for title in ("Systems Engineer", "Staff Solutions Engineer", "Principal Field Applications Engineer",
+                      "Director of Field Engineering", "Technical Support Director"):
+            with self.subTest(title=title):
+                engine._stage_posting({"id": "CYC"}, c, posting(title=title))
+                self.assertEqual(repo.read("Job History"), [])
+                self.assertEqual(repo.read("Opportunities"), [])
+                self.assertEqual(state.reviews("CYC"), [])
         state.close()
 
     def test_below_floor_salary_reject_is_completed_without_ai(self):

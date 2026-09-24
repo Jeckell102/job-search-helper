@@ -55,7 +55,7 @@ class AutomatedWorkflowTests(unittest.TestCase):
         self.assertEqual(decision["policy_version"], POLICY_VERSION)
 
     def test_target_staff_solutions_engineer_survives_title_screen(self):
-        self.assertFalse(excluded_title("Staff Solutions Engineer"))
+        self.assertTrue(excluded_title("Staff Solutions Engineer"))
         self.assertFalse(excluded_title("Senior Field Applications Engineer"))
         self.assertFalse(excluded_title("Manager, Field Engineering"))
 

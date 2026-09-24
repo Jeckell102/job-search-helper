@@ -9,7 +9,7 @@ import sys
 from . import cli as helper_cli
 from .cli import PROJECT_ROOT, get_repository, load_environment, project_path, state_path, writer_lock
 from .engine import Engine, State
-from .efficiency import load_title_blacklist
+from .efficiency import load_title_blacklist, load_title_review_list
 
 FINISHED = {"Complete", "Complete with exceptions"}
 
@@ -28,6 +28,12 @@ Commands:
   cleanup-blacklist
       Set Job History "Added to Opportunities?" to No for current
       title-blacklist.txt matches.
+
+  cleanup-titles
+      Apply the same exclusions and report potentially good and uncertain
+      titles using title-review-list.txt. Exclusions always win, including
+      Staff, Principal, and Director. Existing No decisions stay No.
+      Stop other sheet writers first. Use --dry-run for a read-only report.
 
   preflight    Validate access and workbook headers; never change cells.
   status       Read local cycle status without creating or updating state.
@@ -57,6 +63,8 @@ Examples:
   ./job-search-scraper start --fetch-workers 4 --assignment-window 25
   ./job-search-scraper cleanup-blacklist
   ./job-search-scraper cleanup-blacklist --dry-run
+  ./job-search-scraper cleanup-titles
+  ./job-search-scraper cleanup-titles --dry-run
 """
     )
 
@@ -97,6 +105,7 @@ def run_start(fetch_workers=1, assignment_window=25, sheet_request_interval=1.1)
         raise ValueError("Sheet request interval must be between 0.5 and 5.0 seconds")
     _load_environment()
     load_title_blacklist()
+    load_title_review_list()
     database = state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with writer_lock(database.parent / "writer.lock"):
@@ -126,6 +135,7 @@ def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     aliases = {
         "--cleanup-blacklist": "cleanup-blacklist",
+        "--cleanup-titles": "cleanup-titles",
         "--preflight": "preflight",
         "--status": "status",
         "--reviews": "reviews",
@@ -138,9 +148,9 @@ def main(argv=None):
     if argv in ([], ["help"], ["--help"], ["-h"]):
         print_help()
         return 0
-    delegated = {"cleanup-blacklist", "preflight", "status", "reviews", "auth", "test", "demo"}
+    delegated = {"cleanup-blacklist", "cleanup-titles", "preflight", "status", "reviews", "auth", "test", "demo"}
     if argv[0] in delegated:
-        if argv[0] == "cleanup-blacklist" and "--dry-run" not in argv and "--apply" not in argv:
+        if argv[0] in {"cleanup-blacklist", "cleanup-titles"} and "--dry-run" not in argv and "--apply" not in argv:
             argv = [*argv, "--apply", "--exclusive-writer"]
         return helper_cli.main(argv)
     parser = argparse.ArgumentParser(add_help=False)

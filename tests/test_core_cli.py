@@ -82,10 +82,10 @@ class CoreTests(unittest.TestCase):
                 job_key(*args)
 
     def test_ambiguous_titles_remain_for_review(self):
-        for title in ("Product Marketing Manager", "Field Applications Engineer", "Staff Solutions Engineer",
-                      "Manager, Field Engineering", "Mobile Communications Specialist", "Maintenance Operations Lead",
+        for title in ("Product Marketing Manager", "Field Applications Engineer", "Solutions Engineer",
+                      "Manager, Field Engineering", "Mobile Communications Specialist",
                       "Quality Audit Program Manager", "Medical Device Field Specialist", "Mission Controller",
-                      "Systems Engineer", "Technical Support Manager"):
+                      "Systems Integration Engineer", "Technical Support Manager"):
             with self.subTest(title=title):
                 self.assertFalse(excluded_title(title))
 
@@ -94,6 +94,13 @@ class CoreTests(unittest.TestCase):
                       "Field Test Automation Engineer", "Talent Acquisition Program Manager", "Graphic Designer",
                       "Senior Staff Engineer, Survivability Materials", "Staff Engineer", "Electrical Engineer",
                       "Mechanical Engineer", "Materials Engineer"):
+            with self.subTest(title=title):
+                self.assertTrue(excluded_title(title))
+
+    def test_user_seniority_exclusions_override_relevant_functions(self):
+        for title in ("Staff Solutions Engineer", "Principal Field Applications Engineer",
+                      "Director, Field Engineering", "Technical Support Director",
+                      "Systems Engineer", "Maintenance Operations Lead"):
             with self.subTest(title=title):
                 self.assertTrue(excluded_title(title))
 

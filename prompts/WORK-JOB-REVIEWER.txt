@@ -23,7 +23,7 @@ Make the first relevance decision from Job Title only. Do not read Job Descripti
 
 Reject from the title when it clearly identifies an excluded family, including:
 - Systems Engineer
-- generic Staff Engineer / Senior Staff Engineer / Principal Engineer without a relevant target-function qualifier
+- any title containing Staff, Principal, or Director, even with a relevant target-function qualifier
 - Electrical Engineer
 - Mechanical Engineer
 - Materials Engineer
@@ -33,7 +33,7 @@ Reject from the title when it clearly identifies an excluded family, including:
 - systems-test, test-automation, verification, validation, or SDET roles
 - accounting, payroll, HR/recruiting, legal, clinical/medical, internship/co-op roles
 
-Do NOT reject a relevant target function simply because the title contains “Staff” or “Engineer”. Titles such as Staff Solutions Engineer, Field Applications Engineer, Field Engineer/Field Engineering, Integration Engineer, Solutions Architect, Sales Engineer, Customer Engineer, deployment, technical support leadership, product support leadership, and technical training should advance.
+Apply title-blacklist.txt exclusions first; these always override title-review-list.txt. Staff, Principal, and Director are intentional exclusions even in otherwise relevant functions. Eligible titles such as Solutions Engineer, Field Applications Engineer, Field Engineer/Field Engineering, Integration Engineer, Solutions Architect, Sales Engineer, Customer Engineer, deployment, technical support management, product support management, and technical training should advance only when no exclusion matches.
 
 For ambiguous titles such as Technical Program Manager, Product Marketing Manager, Product Manager, Technical Account Manager, Customer Success, Operations leadership, Mission Operations, implementation, support, training, or similar titles, advance to full responsibility review rather than rejecting from title alone.
 

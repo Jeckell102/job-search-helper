@@ -4,7 +4,7 @@ You receive exactly one job title and nothing else. Decide only whether the titl
 
 Reject titles that clearly describe line/design engineering or unrelated professional work, including generic Staff Engineer or Senior Staff Engineer, Electrical Engineer, Mechanical Engineer, Materials Engineer, Systems Engineer, Software/Firmware Engineer, Systems Test Engineer, Test Automation, Data Scientist/Data Engineer/ML Engineer, accounting/finance, HR/recruiting, legal, clinical/medical, and explicit intern/junior roles.
 
-Do NOT reject merely because a title contains Engineer when the function is relevant. Titles such as Staff Solutions Engineer, Solutions Engineer, Field Applications Engineer, Field Engineer, Manager Field Engineering, Integration Engineer, Sales Engineer, Customer Engineer, Product Support, Technical Support, Technical Program Manager, Product Marketing, Training, Deployment, Field Operations, and similar customer-facing/integration/leadership functions should advance.
+Apply title-blacklist.txt exclusions first; these always override title-review-list.txt. Reject Staff, Principal, and Director titles even when the function is relevant. Otherwise, eligible titles such as Solutions Engineer, Field Applications Engineer, Field Engineer, Manager Field Engineering, Integration Engineer, Sales Engineer, Customer Engineer, Product Support, Technical Support, Technical Program Manager, Product Marketing, Training, Deployment, and Field Operations should advance when no exclusion matches.
 
 When the title is ambiguous, choose review. False negatives are more costly than sending one extra job to full review.
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter
 
 from .core import canonicalize_url
-from .efficiency import classify_title, load_title_blacklist
+from .efficiency import classify_title, load_title_blacklist, load_title_review_list
 
 
 FIELDS = (
@@ -43,16 +43,24 @@ def plan_blacklist_cleanup(repo):
     applying a decision made from stale row data.
     """
     load_title_blacklist()
+    load_title_review_list()
     rows = repo.read_columns("Job History", list(FIELDS))
     key_counts = Counter(_job_key(row.get("Job Key")) for _, row in rows if _job_key(row.get("Job Key")))
     url_counts = Counter(_url(row.get("Official Job URL")) for _, row in rows if _url(row.get("Official Job URL")))
     pair_counts = Counter(_company_title(row) for _, row in rows)
     operations, proposed, locked, unresolved = [], [], [], []
     blacklisted = already_no = 0
+    title_groups = Counter()
+    potentially_good, needs_review = [], []
 
     for row_number, row in rows:
         title = _value(row.get("Job Title"))
-        if classify_title(title) != "reject":
+        action = classify_title(title)
+        title_groups[action] += 1
+        if action != "reject":
+            if _value(row.get("Added to Opportunities?")).casefold() != "no":
+                item = {"row": row_number, "company": _value(row.get("Company")), "title": title}
+                (potentially_good if action == "review" else needs_review).append(item)
             continue
         blacklisted += 1
         added = _value(row.get("Added to Opportunities?"))
@@ -87,6 +95,10 @@ def plan_blacklist_cleanup(repo):
     summary = {
         "rows_scanned": len(rows),
         "blacklisted_titles": blacklisted,
+        "potentially_good_titles": title_groups["review"],
+        "uncertain_titles": title_groups["ambiguous"],
+        "potentially_good_not_already_no": potentially_good,
+        "uncertain_not_already_no": needs_review,
         "already_no": already_no,
         "proposed_updates": len(operations),
         "locked_in_progress": len(locked),
