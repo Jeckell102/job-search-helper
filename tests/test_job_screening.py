@@ -60,6 +60,10 @@ class PreferenceTests(unittest.TestCase):
         self.assertIn("Compensation exclusion", self.screen(description="Annual base salary is $90k-$110k.").reason)
         self.assertIn("Compensation exclusion", self.screen(compensation="OTE $180k", description="Annual base salary is $90k-$110k.").reason)
         self.assertIsNone(self.screen(description="US annual base salary is $90k-$110k. CA annual base salary is $130k-$160k.").reason)
+        self.assertIsNone(self.screen(description=(
+            "Estimated Starting Salary Range: USD $75,650.00/Yr. - "
+            "USD $126,050.00/Yr. Salary depends on experience."
+        )).reason)
         self.assertIsNone(self.screen(description="Our equipment costs $100,000.").reason)
         self.assertIsNone(self.screen(description="Salary range is CAD $90,000-$110,000.").reason)
         self.assertIsNone(self.screen(compensation="See location-specific ranges", description="Annual base salary is $90k-$110k.").reason)

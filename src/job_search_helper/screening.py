@@ -15,6 +15,16 @@ class Screening:
 
 
 def _sentences(text):
+    # Compensation statements commonly format a range as
+    # "$75,650.00/Yr. - $126,050.00/Yr.".  The period after the first unit is
+    # an abbreviation, not a sentence boundary; splitting there hides the
+    # maximum from the conservative salary parser.
+    text = re.sub(
+        r"(/(?:yr|year|hr|hour|mo|month|wk|week))\.(?=\s*[-\u2013\u2014])",
+        r"\1",
+        text,
+        flags=re.I,
+    )
     return re.split(r"(?<=[.!?;])\s+|\n+", text)
 
 

@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlsplit
 from job_search_helper.ats import FetchError, HTTPTransport, Inventory, _safe_api_url, fetch_inventory, resolve_board
 from job_search_helper.engine import Engine, State, _inventory_source
 from job_search_helper.repository import MemoryRepository
+from job_search_helper.screening import screen_posting
 from test_ats import Transport, response
 from test_discovery import html
 
@@ -84,6 +85,22 @@ class IcimsTests(unittest.TestCase):
         self.assertIn("180000", row["compensation"])
         self.assertEqual(row["url"], job_url())
         self.assertEqual(parse_qs(urlsplit(t.urls[0]).query)["in_iframe"], ["1"])
+
+    def test_salary_range_with_yr_abbreviation_keeps_crossing_range(self):
+        salary = (
+            "<p>Salary Statement</p><p>Estimated Starting Salary Range: "
+            "USD $75,650.00/Yr. - USD $126,050.00/Yr. "
+            "Salary to be determined by experience.</p>"
+        )
+        result, _ = self.fetch([
+            listing(),
+            detail(
+                description=salary + "<p>Lead customer integrations.</p>",
+                baseSalary={"currency": "USD", "value": 75650, "unitText": "YEAR"},
+            ),
+        ])
+        self.assertEqual(result.status, "complete")
+        self.assertIsNone(screen_posting(result.jobs[0]).reason)
 
     def test_paginates_all_advertised_pages_and_rechecks_first(self):
         first = listing((1, 2), pages=2)
