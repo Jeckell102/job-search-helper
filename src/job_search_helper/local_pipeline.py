@@ -310,17 +310,23 @@ class LocalPipeline:
         self.dashboard = TerminalDashboard(fetch_workers)
         self.engine._dashboard = self.dashboard
         self.dashboard.start()
+        self.refresh_company_controls()
         self.refresh_queue_status()
         completed = SimpleQueue()
         snapshots = []
         saved_ids = set(self.inbox.pending(self.cid, include_blocked=True))
         for cid, item in self.cycle['companies'].items():
+            company = self.companies.get(cid)
+            sheet_queued = company is not None and str(company.get('Scan State', '')).strip().casefold() == 'queued'
             saved = self.inbox.get(self.cid, cid) if cid in saved_ids else None
             if saved:
                 payload, blocked = saved
-                if blocked and not retry_blocked:
+                failed_fetch_payload = (not payload.get('jobs')
+                                        and payload.get('inventory_status') in {'failed', 'blocked', 'unsupported'})
+                sheet_retry = sheet_queued and (item.get('stage') in {'blocked', 'failed', 'unsupported'} or failed_fetch_payload)
+                if blocked and not (retry_blocked or sheet_retry):
                     continue
-                if retry_blocked and not sync_only and not payload.get('jobs') and payload.get('inventory_status') in {'failed', 'blocked', 'unsupported'}:
+                if (retry_blocked or sheet_retry) and not sync_only and failed_fetch_payload:
                     self.inbox.acknowledge(self.cid, cid)
                     saved = None
                     item['stage'] = 'queued'
@@ -329,6 +335,8 @@ class LocalPipeline:
                     item['stage'] = 'inventory'
                     completed.put(cid)
                     continue
+            if sheet_queued and item.get('stage') in {'blocked', 'failed', 'unsupported'}:
+                item['stage'] = 'queued'
             if item['stage'] == 'inventory':
                 item['stage'] = 'queued'  # Legacy interruption without a saved inventory.
             if sync_only or item['stage'] in {'complete', 'partial'}:

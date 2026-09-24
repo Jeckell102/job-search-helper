@@ -64,7 +64,7 @@ Discovery requires one unambiguous board. Multiple boards, a configured ATS mism
 
 The adapter actually used is also recorded in `ATS / Source`, including blocked, failed, and partial scans. Existing annotations naming that adapter (such as parent-board scope) are preserved. If discovery fails before an adapter is identified, the scraper leaves the existing source unchanged instead of guessing. This takes effect on subsequent scans; existing blocked rows are not automatically retried or backfilled.
 
-Existing blocked rows still require an explicit retry with `resume --cycle CYCLE_ID --retry-blocked --apply --exclusive-writer`. Installing discovery alone does not release those manual-review holds. Unsupported, inaccessible, or malformed boards remain incomplete/manual work, never proof that existing jobs closed.
+Existing blocked rows still require an explicit retry. With `./job-search-scraper start`, changing a blocked company's `Scan State` back to `Queued` in Sheets is recognized at startup and refreshes the local blocked retry list for that company. The older helper command still supports `resume --cycle CYCLE_ID --retry-blocked --apply --exclusive-writer`. Installing discovery alone does not release manual-review holds. Unsupported, inaccessible, or malformed boards remain incomplete/manual work, never proof that existing jobs closed.
 
 Examples of URL *shapes*, not verified company assignments:
 

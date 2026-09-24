@@ -110,6 +110,8 @@ Screening on start (no AI calls):
   pending sync plans, and confirmed new-job count. The Workers list records
   every handoff to the writer. The Jobs list records confirmed new Job History
   rows, clipping job entries to 20 characters with `...`.
+  Changing a blocked company in Sheets back to Queued is recognized on
+  startup and refreshes the local blocked retry list for that company.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
   saved inventories resume from SQLite; unfinished fetches are refetched.
   Keep the whole .state directory until all saved work is synchronized.

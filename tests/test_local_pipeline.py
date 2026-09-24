@@ -362,6 +362,48 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(self.repo.read('Job History'), [])
         self.assertTrue(all(item['stage'] == 'queued' for item in self.state.cycle(self.cycle)['companies'].values()))
 
+
+    def test_sheet_queued_retries_locally_blocked_fetch_without_retry_flag(self):
+        from job_search_helper.ats import Inventory
+
+        attempts = []
+        def fetch(source, url, cid, name):
+            attempts.append(cid)
+            if cid == 'C-0' and attempts.count('C-0') == 1:
+                return Inventory('blocked', reason='one-time browser check')
+            return inventory(cid, name, url)
+
+        self.engine.fetcher = fetch
+        self.engine.resume_local(self.cycle, fetch_workers=2, assignment_window=2)
+        self.assertTrue(self.inbox.get(self.cycle, 'C-0')[1])
+        self.assertEqual(attempts.count('C-0'), 1)
+
+        self.service.set_cell('Companies', 1, 'Scan State', 'Queued')
+        self.service.set_cell('Companies', 1, 'Automatic Retry?', '')
+        restarted = self.restart()
+        retry_attempts = []
+        def retry_fetch(source, url, cid, name):
+            retry_attempts.append(cid)
+            return inventory(cid, name, url)
+        restarted.fetcher = retry_fetch
+        restarted.resume_local(self.cycle, fetch_workers=2, assignment_window=2)
+
+        self.assertIn('C-0', retry_attempts)
+        self.assertIsNone(restarted.inbox.get(self.cycle, 'C-0'))
+        self.assertEqual(len(restarted.repo.read('Job History')), 6)
+
+    def test_sheet_queued_unblocks_saved_write_payload_without_refetch(self):
+        self.defer()
+        self.inbox.block(self.cycle, 'C-0')
+        cycle = self.state.cycle(self.cycle)
+        cycle['companies']['C-0']['stage'] = 'failed'
+        self.state.save_cycle(cycle)
+        self.service.set_cell('Companies', 1, 'Scan State', 'Queued')
+        restarted = self.restart()
+        restarted.resume_local(self.cycle, sync_only=True)
+        self.assertEqual(len(restarted.repo.read('Job History')), 6)
+        self.assertIsNone(restarted.inbox.get(self.cycle, 'C-0'))
+
     def test_sync_interval_flushes_partial_batch_while_fetch_is_running(self):
         from job_search_helper.ats import Inventory
         upload_started = Event()
