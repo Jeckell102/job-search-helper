@@ -6,6 +6,22 @@ import copy
 from .repository import SCHEMAS, RepositoryError, _equivalent
 
 
+def _identity_label(identity):
+    return ", ".join(f"{key}={value!r}" for key, value in identity.items())
+
+
+def _match_label(row):
+    parts = []
+    for key in ("Company", "Company ID", "Job Title", "Job Key", "Official Job URL", "Job URL"):
+        value = row.get(key)
+        if value:
+            text = str(value)
+            if len(text) > 90:
+                text = text[:87] + "..."
+            parts.append(f"{key}={text!r}")
+    return "; ".join(parts) or "populated row"
+
+
 class PlanningRepository:
     """Cache lookups, collect operations, and never perform writes itself.
 
@@ -53,7 +69,11 @@ class PlanningRepository:
             matches = [r for r in self.rows[tab]
                        if all(_equivalent(h, r.get(h, ""), v) for h, v in identity.items())]
             if len(matches) > 1:
-                raise RepositoryError("Ambiguous cached identity; refusing to guess")
+                sample = " | ".join(_match_label(row) for row in matches[:3])
+                raise RepositoryError(
+                    f"Ambiguous cached identity in {tab} for {_identity_label(identity)}; "
+                    f"matched {len(matches)} rows: {sample}. Refusing to guess."
+                )
             if not matches:
                 if not op.get("append_if_missing"):
                     raise RepositoryError("Expected row no longer exists")

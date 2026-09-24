@@ -141,6 +141,7 @@ class State:
 
 DEFAULT_BATCH_SIZE = 100
 MAX_BATCH_SIZE = 200
+DEFAULT_ERROR_LOG = Path(".state/scraper-errors.jsonl")
 
 
 @contextmanager
@@ -155,9 +156,11 @@ def _fetch_pool(workers):
 
 
 class Engine:
-    def __init__(self, repo, state, dry_run=False, fetcher=fetch_inventory, batch_size=DEFAULT_BATCH_SIZE, checkpoint_hook=None):
+    def __init__(self, repo, state, dry_run=False, fetcher=fetch_inventory, batch_size=DEFAULT_BATCH_SIZE,
+                 checkpoint_hook=None, error_log_path=DEFAULT_ERROR_LOG):
         self.repo, self.state, self.dry_run, self.fetcher = repo, state, dry_run, fetcher
         self.checkpoint_hook = checkpoint_hook
+        self.error_log_path = Path(error_log_path) if error_log_path else None
         if not 1 <= batch_size <= MAX_BATCH_SIZE:
             raise ValueError(f"Batch size must be between 1 and {MAX_BATCH_SIZE}")
         self.batch_size = batch_size
@@ -188,6 +191,27 @@ class Engine:
     def _checkpoint(self):
         if self.checkpoint_hook is not None:
             self.checkpoint_hook()
+
+    def _log_company_error(self, cycle, company, item, exc, context):
+        message = str(exc)
+        item.update(stage="failed", reason=message[:900])
+        item.pop("jobs", None)
+        self.state.save_cycle(cycle)
+        entry = {
+            "at": now(),
+            "cycle_id": cycle.get("id", ""),
+            "company_id": company.get("Company ID", ""),
+            "company": company.get("Company", ""),
+            "context": context,
+            "error_type": type(exc).__name__,
+            "error": message,
+        }
+        if self.error_log_path is not None and not self.dry_run:
+            self.error_log_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            with self.error_log_path.open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            self.error_log_path.chmod(0o600)
+        print(f"ERROR: {company.get('Company', 'Company')}: {message}", flush=True)
 
     @staticmethod
     def _format_batch_timings(timings):
@@ -964,13 +988,22 @@ class Engine:
                         self._stage_inventory(cycle, company, item, planner,
                                               progress_hook=service_fetchers,
                                               status_hook=set_writer_status)
+                        if item["inventory_status"] == "complete":
+                            self._reconcile_absences(cycle, company, item.get("jobs", []))
+                        item["staging_complete"] = True
+                        self.state.save_cycle(cycle)
+                        self._finish_company(cycle, company)
+                    except Exception as exc:
+                        self._log_company_error(cycle, company, item, exc, "saving inventory")
+                        dashboard.writer_message("Error", company["Company"], type(exc).__name__)
+                        self._commit(self._company_op(company, {"Scan State": "Blocked / Manual Review",
+                            "Blocked Reason": str(exc)[:900], "Automatic Retry?": "No",
+                            "Coverage Status": "Incomplete inventory",
+                            "Next Action": "Review .state/scraper-errors.jsonl, fix the sheet/source issue, then retry blocked companies",
+                            **self._ats_update(company, item.get("ats", "")),
+                            "Last Scan Result": "failed", "Record Updated": now()}))
                     finally:
                         saving_cid = None
-                    if item["inventory_status"] == "complete":
-                        self._reconcile_absences(cycle, company, item.get("jobs", []))
-                    item["staging_complete"] = True
-                    self.state.save_cycle(cycle)
-                    self._finish_company(cycle, company)
                     item.pop("jobs", None)
                     self._sync_cycle(cycle)
                     self._checkpoint()

@@ -20,6 +20,8 @@ The controller preloads the local assignment queue. Fetchers return their result
 
 The dashboard gives each worker a persistent color-coded row with its current company. The green writer row shows save progress, duration, and the run total after completed Sheets batches. The left `Workers` list records every worker handoff to the writer; the right `Jobs` list records confirmed new Job History rows after they are written to Google Sheets, clipping long job titles with `...`.
 
+Company-specific writer errors are logged to `.state/scraper-errors.jsonl`, marked `Blocked / Manual Review` in Companies, and the scraper keeps moving. Use `./job-search-scraper errors` to review recent failures.
+
 Blocked/failed/partial scans record the actual adapter in `ATS / Source` when known. Unknown discovery leaves the existing source unchanged, and blocked scans do not advance successful-scan dates. Ctrl+C cancels unstarted assignments; unfinished companies resume by refetching without duplicate saved jobs.
 
 To tune Google Sheets pacing for the writer:

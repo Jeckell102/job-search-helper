@@ -296,6 +296,20 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(row["Notes"], "Just entered\n\nScanner update")
         self.assertEqual(planner.read("Opportunities")[0], row)
 
+    def test_cached_identity_error_names_tab_and_identity(self):
+        repo = MemoryRepository({"Job History": [
+            {"Company": "Saildrone", "Job Title": "One", "Job Key": "duplicate"},
+            {"Company": "Saildrone", "Job Title": "Two", "Job Key": "duplicate"},
+        ]})
+        planner = PlanningRepository(repo)
+        with self.assertRaisesRegex(RepositoryError, "Ambiguous cached identity in Job History") as ctx:
+            planner.commit([{"tab": "Job History", "identity": {"Job Key": "duplicate"},
+                             "values": {"Last Checked": "2026-09-24"}}])
+        message = str(ctx.exception)
+        self.assertIn("Job Key='duplicate'", message)
+        self.assertIn("matched 2 rows", message)
+        self.assertIn("Saildrone", message)
+
 
 class RequestAndFilterTests(unittest.TestCase):
     def test_448_job_google_staging_uses_under_150_requests(self):

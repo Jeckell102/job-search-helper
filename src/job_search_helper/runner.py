@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sqlite3
 import sys
+from collections import deque
 
 from . import cli as helper_cli
 from .cli import PROJECT_ROOT, get_repository, load_environment, project_path, state_path, writer_lock
@@ -40,6 +42,7 @@ Commands:
 
   preflight    Validate access and workbook headers; never change cells.
   status       Read local cycle status without creating or updating state.
+  errors       Show recent per-company scraper errors from the local log.
   reviews      Export the saved pending review queue to a local file.
   auth         Obtain Google OAuth credentials; no spreadsheet writes.
   test         Run the offline unittest suite.
@@ -88,6 +91,7 @@ Examples:
   ./job-search-scraper start
   ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
   ./job-search-scraper cleanup-blacklist
+  ./job-search-scraper errors
   ./job-search-scraper cleanup-blacklist --dry-run
   ./job-search-scraper cleanup-titles
   ./job-search-scraper cleanup-titles --dry-run
@@ -161,6 +165,37 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
             state.close()
 
 
+def show_errors(limit=25):
+    path = project_path(".state/scraper-errors.jsonl")
+    if not path.exists():
+        print("No scraper error log found.")
+        return 0
+    rows = deque(maxlen=limit)
+    with path.open(encoding="utf-8") as stream:
+        for line in stream:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                rows.append({"at": "", "company": "", "context": "", "error": line})
+    if not rows:
+        print("No scraper errors recorded.")
+        return 0
+    print(f"Recent scraper errors ({len(rows)} shown):")
+    for row in rows:
+        at = row.get("at", "")
+        company = row.get("company", "") or row.get("company_id", "") or "Unknown company"
+        context = row.get("context", "")
+        error_type = row.get("error_type", "Error")
+        error = str(row.get("error", "")).replace("\n", " ")
+        if len(error) > 240:
+            error = error[:237] + "..."
+        print(f"- {at} | {company} | {context} | {error_type}: {error}")
+    return 0
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     aliases = {
@@ -168,6 +203,7 @@ def main(argv=None):
         "--cleanup-titles": "cleanup-titles",
         "--preflight": "preflight",
         "--status": "status",
+        "--errors": "errors",
         "--reviews": "reviews",
         "--auth": "auth",
         "--test": "test",
@@ -178,6 +214,8 @@ def main(argv=None):
     if argv in ([], ["help"], ["--help"], ["-h"]):
         print_help()
         return 0
+    if argv[0] == "errors":
+        return show_errors()
     delegated = {"cleanup-blacklist", "cleanup-titles", "preflight", "status", "reviews", "auth", "test", "demo"}
     if argv[0] in delegated:
         if argv[0] in {"cleanup-blacklist", "cleanup-titles"} and "--dry-run" not in argv and "--apply" not in argv:

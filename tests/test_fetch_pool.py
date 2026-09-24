@@ -238,6 +238,29 @@ class FetchPoolTests(unittest.TestCase):
         self.assertEqual(rows[1]["Last Scan Result"], "failed")
         self.assertEqual(state.cycle(cycle)["companies"]["C-2"]["stage"], "complete")
 
+    def test_writer_company_error_is_logged_and_run_continues(self):
+        repo, state, engine, cycle = self.make(3, lambda source, url, cid, name: inventory(cid, name, url))
+        engine.error_log_path = None
+        original_stage = engine._stage_inventory
+        failed = set()
+
+        def stage(current, company_row, *args, **kwargs):
+            if company_row["Company ID"] == "C-0" and "C-0" not in failed:
+                failed.add("C-0")
+                raise ValueError("duplicate legacy key")
+            return original_stage(current, company_row, *args, **kwargs)
+
+        with patch.object(engine, "_stage_inventory", side_effect=stage):
+            engine.resume_parallel(cycle, fetch_workers=4, assignment_window=25)
+
+        companies = {row["Company ID"]: row for row in repo.read("Companies")}
+        self.assertEqual(companies["C-0"]["Scan State"], "Blocked / Manual Review")
+        self.assertIn("duplicate legacy key", companies["C-0"]["Blocked Reason"])
+        self.assertEqual(state.cycle(cycle)["companies"]["C-0"]["stage"], "failed")
+        self.assertEqual(state.cycle(cycle)["companies"]["C-1"]["stage"], "complete")
+        self.assertEqual(state.cycle(cycle)["companies"]["C-2"]["stage"], "complete")
+        self.assertEqual(len(repo.read("Job History")), 2)
+
 
 class ATSIdentityTests(unittest.TestCase):
     def test_direct_adapter_keeps_identity_on_access_failure(self):

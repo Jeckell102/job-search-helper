@@ -174,6 +174,12 @@ The default assignment window is `100`. It bounds assigned/running/completed-but
 
 When a run starts, the terminal opens a color-coded dashboard. Each worker keeps a persistent row with its current task and company, and the green writer row shows the company being saved, batch progress, duration, processed inventory count, and confirmed new-job count. The left `Workers` list records every handoff from a worker to the writer, such as `Worker 1 - 47 jobs - Company - 22:10:04`. The right `Jobs` list records confirmed new Job History rows after the writer successfully commits them to Google Sheets. Long job titles are clipped with `...` so the list stays readable.
 
+If one company hits a writer-side scraper error, the run logs that company to `.state/scraper-errors.jsonl`, marks it `Blocked / Manual Review` in Companies, and continues with the remaining companies. Review recent errors with:
+
+```bash
+./job-search-scraper errors
+```
+
 On Ctrl+C, queued assignments are cancelled, running requests are allowed to finish, and unfinished companies are refetched on restart. Completed inventories are released from memory after saving. To adjust Google Sheets pacing for the writer:
 
 ```bash

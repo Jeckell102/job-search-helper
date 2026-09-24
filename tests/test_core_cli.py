@@ -236,6 +236,26 @@ class CliTests(unittest.TestCase):
             ]), 0)
             start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8)
 
+    def test_scraper_errors_command_prints_recent_log(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(
+            runner, "project_path", side_effect=lambda value: Path(directory) / value
+        ):
+            log = Path(directory) / ".state" / "scraper-errors.jsonl"
+            log.parent.mkdir()
+            log.write_text(json.dumps({
+                "at": "2026-09-24T01:00:00+00:00",
+                "company": "Saildrone",
+                "context": "saving inventory",
+                "error_type": "ValueError",
+                "error": "duplicate legacy key",
+            }) + "\n", encoding="utf-8")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(runner.main(["errors"]), 0)
+            text = output.getvalue()
+            self.assertIn("Saildrone", text)
+            self.assertIn("duplicate legacy key", text)
+
     def test_scraper_cleanup_blacklist_applies_by_default(self):
         with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
             self.assertEqual(runner.main(["cleanup-blacklist"]), 0)
