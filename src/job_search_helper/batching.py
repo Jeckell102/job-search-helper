@@ -26,8 +26,8 @@ class PlanningRepository:
     """Cache lookups, collect operations, and never perform writes itself.
 
     Values here are planning data only. The underlying repository freshly reads
-    all affected tabs and validates formulas, identities and user-owned cells
-    immediately before its single atomic batchUpdate.
+    affected identities, destination rows and append tails, validating formulas
+    and user-owned cells immediately before its single atomic batchUpdate.
     """
     def __init__(self, repository):
         self.base = repository

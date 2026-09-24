@@ -747,7 +747,15 @@ class GoogleRepository:
         return [values for _, values in sheet.records()]
 
     def read_many(self, tabs):
-        return {tab: [values for _, values in sheet.records()] for tab, sheet in self._load(tabs).items()}
+        rows = {}
+        for tab, sheet in self._load(tabs).items():
+            records = sheet.records()
+            rows[tab] = [values for _, values in records]
+            # The initial planning snapshot already established this tail.
+            # Reuse only layout information; the next write rereads identities
+            # and the tail, never trusting cached contents as write authority.
+            self._write_layout[tab] = (list(sheet.headers), max([0, *[r for r, _ in records]]))
+        return rows
 
     def validate_schema(self):
         """Validate operational headers without downloading entire tabs."""

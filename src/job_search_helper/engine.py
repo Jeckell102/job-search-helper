@@ -61,10 +61,18 @@ def _compact_evaluation_history(snapshot: dict) -> None:
     snapshot["evaluations"] = compact[-3:]
 
 
+def inventory_payload(inventory, company):
+    return {"jobs": inventory.jobs, "inventory_status": inventory.status,
+            "reason": inventory.reason, "source_url": inventory.source_url, "ats": inventory.ats,
+            "fetched_at": now(), "requested_url": company.get("Official Careers URL", company.get("requested_url", ""))}
+
+
 class State:
     def __init__(self, db_path=":memory:", readonly=False):
         self.readonly = readonly
         self.path = str(db_path)
+        self.checkpoint_seconds = 0.0
+        self.checkpoint_bytes = 0
         if readonly:
             uri = Path(db_path).resolve().as_uri() + "?mode=ro"
             self.connection = sqlite3.connect(uri, uri=True, timeout=5)
@@ -98,14 +106,18 @@ class State:
         return [json.loads(row[0]) for row in self.connection.execute("SELECT data FROM cycles ORDER BY rowid")]
 
     def save_cycle(self, cycle):
-        # Local state is control/checkpoint data only. Never persist scraped job
-        # descriptions or AI decisions locally; those live in Google Sheets.
+        # Large inventories live in the durable inbox, separately from compact
+        # control checkpoints so saving progress does not rewrite descriptions.
+        started = time.monotonic()
         stored = copy.deepcopy(cycle)
         for item in stored.get("companies", {}).values():
             item.pop("jobs", None)
+        encoded = json.dumps(stored, ensure_ascii=False)
         with self.connection:
             self.connection.execute("INSERT INTO cycles VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data",
-                                    (stored["id"], json.dumps(stored, ensure_ascii=False)))
+                                    (stored["id"], encoded))
+        self.checkpoint_seconds += time.monotonic() - started
+        self.checkpoint_bytes += len(encoded.encode("utf-8"))
 
     def purge_reviews(self):
         if self.readonly:
@@ -127,6 +139,7 @@ class State:
 
     def apply_buffer(self, updates, cycles):
         """One local transaction AFTER an acknowledged spreadsheet batch."""
+        started = time.monotonic()
         with self.connection:
             for (cycle_id, key), (data, status) in updates.items():
                 self.connection.execute("INSERT INTO reviews VALUES (?,?,?,?) ON CONFLICT(cycle,key) DO UPDATE SET data=excluded.data,status=excluded.status",
@@ -137,6 +150,8 @@ class State:
                     item.pop("jobs", None)
                 self.connection.execute("INSERT INTO cycles VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data",
                                         (cycle_id, json.dumps(stored, ensure_ascii=False)))
+                self.checkpoint_bytes += len(json.dumps(stored, ensure_ascii=False).encode("utf-8"))
+        self.checkpoint_seconds += time.monotonic() - started
 
 
 DEFAULT_BATCH_SIZE = 100
@@ -157,8 +172,10 @@ def _fetch_pool(workers):
 
 class Engine:
     def __init__(self, repo, state, dry_run=False, fetcher=fetch_inventory, batch_size=DEFAULT_BATCH_SIZE,
-                 checkpoint_hook=None, error_log_path=DEFAULT_ERROR_LOG):
+                 checkpoint_hook=None, error_log_path=DEFAULT_ERROR_LOG, inbox=None):
         self.repo, self.state, self.dry_run, self.fetcher = repo, state, dry_run, fetcher
+        self.inbox = inbox
+        self.performance = {"staging_seconds": 0.0, "checkpoint_seconds": 0.0}
         self.checkpoint_hook = checkpoint_hook
         self.error_log_path = Path(error_log_path) if error_log_path else None
         if not 1 <= batch_size <= MAX_BATCH_SIZE:
@@ -228,6 +245,9 @@ class Engine:
             ("sheets_write_seconds", "sheets_write"),
             ("committed_rows_seconds", "cache_rows"),
             ("local_state_seconds", "local_state"),
+            ("read_seconds", "read_api"),
+            ("write_seconds", "write_api"),
+            ("throttle_seconds", "throttle"),
         )
         parts = []
         for key, label in labels:
@@ -240,6 +260,9 @@ class Engine:
         requests = timings.get("requests")
         if isinstance(requests, int):
             parts.append(f"requests={requests}")
+        for key in ("read_requests", "write_requests", "read_response_bytes", "write_payload_bytes"):
+            if key in timings:
+                parts.append(f"{key}={timings[key]}")
         return ", ".join(parts)
 
     def _planned_batch(self, planner, action):
@@ -255,6 +278,7 @@ class Engine:
         finally:
             self.repo, self.state, self._notices = base_repo, base_state, None
         timings["plan_seconds"] = time.monotonic() - plan_started
+        self.performance["staging_seconds"] += timings["plan_seconds"]
         # Fresh row identities, formulas and user fields are revalidated here.
         # A failure or Ctrl+C before acknowledgement leaves the local checkpoint
         # at the preceding batch. Replaying that batch is idempotent.
@@ -264,6 +288,7 @@ class Engine:
         flush_started = time.monotonic()
         pending.flush()
         timings["local_state_seconds"] = time.monotonic() - flush_started
+        self.performance["checkpoint_seconds"] += timings["local_state_seconds"]
         planner.accept_commit()
         for message in notices:
             print(message, flush=True)
@@ -451,11 +476,14 @@ class Engine:
         key = job_key(company["Company ID"], posting["ats"], posting.get("posting_id", ""), posting["url"])
         url = canonicalize_url(posting["url"])
         matches = []
-        if hasattr(self.repo, "read_columns"):
-            history_rows = [row for _, row in self.repo.read_columns(
-                "Job History",
-                ["Company", "Job Key", "Official Job URL", "Current Snapshot"],
-            )]
+        row_numbers = {}
+        if hasattr(self.repo, "history_candidates"):
+            history_rows = self.repo.history_candidates(company["Company"], key, url)
+        elif hasattr(self.repo, "read_columns"):
+            numbered = self.repo.read_columns("Job History",
+                ["Company", "Job Key", "Official Job URL", "Current Snapshot"])
+            history_rows = [row for _, row in numbered]
+            row_numbers = {id(row): number for number, row in numbered}
         else:
             history_rows = self.repo.read("Job History")
         for row in history_rows:
@@ -474,13 +502,17 @@ class Engine:
         if len(matches) > 1:
             raise ValueError("Ambiguous history identity; reconcile duplicate rows before continuing")
         old = matches[0] if matches else None
+        if old is not None and id(old) in row_numbers:
+            old = self.repo.read_row("Job History", row_numbers[id(old)])
         if old and not old.get("Job Key"):
             raise ValueError("Matched legacy row lacks Job Key; backfill explicitly before scanning")
         return (old.get("Job Key") if old else key), old
 
     def _opportunity(self, posting, company, aliases=()):
         urls = {canonicalize_url(value) for value in [posting["url"], *aliases] if value}
-        if hasattr(self.repo, "read_columns"):
+        if hasattr(self.repo, "opportunity_candidates"):
+            candidates = self.repo.opportunity_candidates(company["Company"], urls)
+        elif hasattr(self.repo, "read_columns"):
             candidates = [values for _, values in self.repo.read_columns(
                 "Opportunities", ["Company", "Job URL"]
             )]
@@ -607,7 +639,11 @@ class Engine:
         if existing and canonicalize_url(existing["Job URL"]) != canonicalize_url(posting["url"]):
             url_note = f"[source URL updated] Current official posting URL: {posting['url']}. Existing Opportunity link retained to preserve record identity."
 
-        operations = [self._history_op(key, values, insert=True, append_notes=url_note)]
+        history_op = self._history_op(key, values, insert=True, append_notes=url_note)
+        history_op["expected"] = {h: (old or {}).get(h, "") for h in (
+            "Added to Opportunities?", "Review Status", "Decision", "Reconsideration Count",
+            "Description Hash", "Rejection Reason", "Review Notes")}
+        operations = [history_op]
         if existing:
             operations.append(self._opportunity_op(posting, company, {"Last Checked": stamp[:10]}, note=url_note, existing_url=existing["Job URL"]))
         self._commit(*operations)
@@ -771,13 +807,18 @@ class Engine:
         self._checkpoint()
         return self.status(cycle_id)
 
-    def resume_parallel(self, cycle_id, retry_blocked=False, fetch_workers=1, assignment_window=25):
+    def resume_parallel(self, cycle_id, retry_blocked=False, fetch_workers=1, assignment_window=25,
+                        sync_only=False, defer_sync=False):
         """Resume with multiple fetch-only workers and a single sheet writer.
 
         Worker threads receive an immutable company snapshot and return an
-        Inventory. This main thread remains the only code path allowed to read
-        or write Google Sheets and SQLite state.
+        Inventory durably saved in the SQLite inbox. Only this thread accesses
+        Sheets and cycle checkpoints; producer threads only append inbox data.
         """
+        if defer_sync and self.inbox is None:
+            raise ValueError("Deferred sync requires a durable inventory inbox")
+        if defer_sync and sync_only:
+            raise ValueError("Deferred fetching and sync-only cannot be combined")
         if not 1 <= fetch_workers <= 5:
             raise ValueError("Fetch workers must be between 1 and 5")
         if not 1 <= assignment_window <= 100:
@@ -785,6 +826,24 @@ class Engine:
 
         self.repo.validate_schema()
         cycle = self.state.cycle(cycle_id) or self._recover(cycle_id)
+        if self.inbox is not None:
+            for cid, item in cycle["companies"].items():
+                saved = self.inbox.get(cycle_id, cid)
+                if saved and item.get("stage") in {"complete", "partial"}:
+                    self.inbox.acknowledge(cycle_id, cid)
+                elif saved:
+                    payload, blocked = saved
+                    if (retry_blocked and not sync_only and not payload.get("jobs")
+                            and payload.get("inventory_status") in {"failed", "blocked", "unsupported"}):
+                        self.inbox.acknowledge(cycle_id, cid)
+                        item["stage"] = "queued"
+                        cycle["status"] = "In Progress"
+                        continue
+                    if not blocked or retry_blocked:
+                        progress = item.get("next_job_index", 0) if item.get("stage") == "inventory" else 0
+                        payload.pop("jobs", None)
+                        item.update(payload, stage="inventory", next_job_index=progress, durable_inventory=True)
+                        cycle["status"] = "In Progress"
         if cycle["status"] in {"Complete", "Complete with exceptions"} and not retry_blocked:
             return self.status(cycle_id)
         if retry_blocked:
@@ -794,7 +853,7 @@ class Engine:
                     item.pop("jobs", None)
             cycle.pop("completed_at", None)
         for item in cycle["companies"].values():
-            if item.get("stage") == "inventory" and not item.get("jobs"):
+            if item.get("stage") == "inventory" and not item.get("jobs") and not item.get("durable_inventory"):
                 item["stage"] = "queued"
                 item.pop("next_job_index", None)
                 item.pop("staging_complete", None)
@@ -827,12 +886,17 @@ class Engine:
                     str(snapshot.get("Official Careers URL", "")),
                     cid, snapshot["Company"],
                 )
-                if isinstance(inventory, Inventory):
-                    dashboard.worker_handoff(slot, snapshot["Company"], len(inventory.jobs))
-                return cid, inventory
-            except Exception:
+                if not isinstance(inventory, Inventory):
+                    inventory = Inventory("failed", reason="Fetch worker returned an invalid inventory result")
+            except Exception as exc:
                 dashboard.worker_failed(slot, snapshot["Company"])
-                raise
+                inventory = Inventory("failed", reason=f"Fetch worker failed: {type(exc).__name__}")
+            # Outside the fetch exception handler: durability failures must not
+            # replace a successfully fetched inventory with an error payload.
+            if self.inbox is not None:
+                self.inbox.save(cycle_id, cid, inventory_payload(inventory, snapshot))
+            dashboard.worker_handoff(slot, snapshot["Company"], len(inventory.jobs))
+            return cid, inventory
 
         def set_writer_status(company, done, total, elapsed, processed=0):
             dashboard.writer_progress(company, done, total, elapsed, processed)
@@ -840,6 +904,7 @@ class Engine:
         processed = set()
         in_flight = {}
         saving_cid = None
+        planner = None
         window_size = max(assignment_window, fetch_workers)
         with _fetch_pool(fetch_workers) as executor:
             def collect_finished():
@@ -852,12 +917,17 @@ class Engine:
                         result_cid, inventory = future.result()
                         if result_cid != cid or not isinstance(inventory, Inventory):
                             inventory = Inventory("failed", reason="Fetch worker returned an invalid inventory result")
+                    except (sqlite3.Error, OSError):
+                        raise  # Local durability failed; keep the previous checkpoint.
                     except Exception as exc:
                         inventory = Inventory("failed", reason=f"Fetch worker failed: {type(exc).__name__}")
-                    item.update(jobs=inventory.jobs, inventory_status=inventory.status, reason=inventory.reason,
-                                source_url=inventory.source_url, ats=inventory.ats, fetched_at=now(), stage="inventory",
-                                staging_complete=False, next_job_index=0)
+                    saved = self.inbox.get(cycle_id, cid) if self.inbox is not None else None
+                    payload = saved[0] if saved else inventory_payload(inventory, item)
+                    item.update(payload, stage="inventory", staging_complete=False, next_job_index=0)
                     self.state.save_cycle(cycle)
+                    if self.inbox is not None:
+                        item.pop("jobs", None)
+                        item["durable_inventory"] = True
 
             def record_started():
                 operations = []
@@ -872,12 +942,14 @@ class Engine:
                     self._commit(*operations)
 
             def refill(rows=None):
+                if sync_only:
+                    return
                 # Futures are keyed by Future, not company ID. Exclude their
                 # values so one company can never occupy two worker slots.
                 assigned_ids = set(in_flight.values())
                 queued = [(cid, item) for cid, item in cycle["companies"].items()
                           if cid not in processed and cid not in assigned_ids and item.get("stage") == "queued"]
-                ready_count = sum(item.get("stage") == "inventory" and cid != saving_cid
+                ready_count = 0 if defer_sync else sum(item.get("stage") == "inventory" and cid != saving_cid
                                   for cid, item in cycle["companies"].items())
                 # Preload local assignments. The executor hands a returning
                 # worker its next company without waiting for any Sheets call.
@@ -935,13 +1007,13 @@ class Engine:
                             self._commit(self._company_op(company, values))
 
                 service_fetchers(rows)
-                inventory_ready = [cid for cid, item in cycle["companies"].items()
+                inventory_ready = [] if defer_sync else [cid for cid, item in cycle["companies"].items()
                                    if cid not in processed and item.get("stage") == "inventory"]
                 if not inventory_ready:
                     if in_flight:
                         wait(in_flight, return_when=FIRST_COMPLETED)
                         continue
-                    if any(cid not in processed and item.get("stage") == "queued"
+                    if not sync_only and any(cid not in processed and item.get("stage") == "queued"
                            for cid, item in cycle["companies"].items()):
                         continue
                     break
@@ -962,6 +1034,8 @@ class Engine:
                         continue
                     if str(company.get("Company Status", "Active")).strip().casefold() in {"pause", "paused", "remove"}:
                         item.update(stage="paused", reason="User paused or removed this company")
+                        if self.inbox is not None:
+                            self.inbox.block(cycle_id, cid)
                         item.pop("jobs", None)
                         self.state.save_cycle(cycle)
                         processed.add(cid)
@@ -971,6 +1045,8 @@ class Engine:
                     if item.get("inventory_status") in {"blocked", "failed", "unsupported"}:
                         dashboard.writer_message("Recording", company["Company"], item.get("inventory_status", ""))
                         item["stage"] = item["inventory_status"]
+                        if self.inbox is not None:
+                            self.inbox.block(cycle_id, cid)
                         self._commit(self._company_op(company, {"Scan State": "Blocked / Manual Review", "Blocked Reason": item.get("reason", ""),
                             "Automatic Retry?": "No", "Coverage Status": "Incomplete inventory", "Next Action": "Verify official careers URL / inspect manually; retry only on request",
                             **self._ats_update(company, item.get("ats", "")),
@@ -980,10 +1056,16 @@ class Engine:
                         self._sync_cycle(cycle)
                         processed.add(cid)
                         continue
-                    planner = PlanningRepository(self.repo)
-                    self._verify_same_board({"Official Careers URL": item.get("requested_url", company["Official Careers URL"])}, company)
                     saving_cid = cid
                     try:
+                        if self.inbox is not None:
+                            saved = self.inbox.get(cycle_id, cid)
+                            if saved is None:
+                                raise ValueError("Saved inventory is missing; refusing to advance its checkpoint")
+                            item["jobs"] = saved[0].get("jobs", [])
+                        if planner is None:
+                            planner = PlanningRepository(self.repo)
+                        self._verify_same_board({"Official Careers URL": item.get("requested_url", company["Official Careers URL"])}, company)
                         service_fetchers()
                         self._stage_inventory(cycle, company, item, planner,
                                               progress_hook=service_fetchers,
@@ -993,22 +1075,30 @@ class Engine:
                         item["staging_complete"] = True
                         self.state.save_cycle(cycle)
                         self._finish_company(cycle, company)
+                        if self.inbox is not None:
+                            self.inbox.acknowledge(cycle_id, cid)
                     except Exception as exc:
+                        planner = None
+                        if self.inbox is not None:
+                            self.inbox.block(cycle_id, cid)
                         self._log_company_error(cycle, company, item, exc, "saving inventory")
                         dashboard.writer_message("Error", company["Company"], type(exc).__name__)
-                        self._commit(self._company_op(company, {"Scan State": "Blocked / Manual Review",
-                            "Blocked Reason": str(exc)[:900], "Automatic Retry?": "No",
-                            "Coverage Status": "Incomplete inventory",
-                            "Next Action": "Review .state/scraper-errors.jsonl, fix the sheet/source issue, then retry blocked companies",
-                            **self._ats_update(company, item.get("ats", "")),
-                            "Last Scan Result": "failed", "Record Updated": now()}))
+                        try:
+                            self._commit(self._company_op(company, {"Scan State": "Blocked / Manual Review",
+                                "Blocked Reason": str(exc)[:900], "Automatic Retry?": "No",
+                                "Coverage Status": "Incomplete inventory",
+                                "Next Action": "Review .state/scraper-errors.jsonl, fix the sheet/source issue, then retry blocked companies",
+                                **self._ats_update(company, item.get("ats", "")),
+                                "Last Scan Result": "failed", "Record Updated": now()}))
+                        except Exception as status_error:
+                            self._log_company_error(cycle, company, item, status_error, "recording company error")
                     finally:
                         saving_cid = None
                     item.pop("jobs", None)
                     self._sync_cycle(cycle)
                     self._checkpoint()
                     processed.add(cid)
-            dashboard.writer_message("Complete")
+            dashboard.writer_message("Saved locally" if defer_sync else "Complete")
             if in_flight:
                 for future in in_flight:
                     future.cancel()

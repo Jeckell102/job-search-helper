@@ -6,11 +6,13 @@ import json
 import os
 import sqlite3
 import sys
+import time
 from collections import deque
 
 from . import cli as helper_cli
 from .cli import PROJECT_ROOT, get_repository, load_environment, project_path, state_path, writer_lock
 from .engine import MAX_BATCH_SIZE, Engine, State
+from .inbox import InventoryInbox
 from .efficiency import load_title_blacklist, load_title_review_list
 
 FINISHED = {"Complete", "Complete with exceptions"}
@@ -30,6 +32,10 @@ Commands:
                - Otherwise starts a new full-company scan.
                - Writes to Google Sheets and requires no other sheet writers.
 
+  sync         Sync saved SQLite inventories without fetching companies.
+               Use --retry-blocked after resolving a company error.
+  performance  Show timing/request/byte totals from the last run.
+
   cleanup-blacklist
       Set Job History "Added to Opportunities?" to No for current
       title-blacklist.txt matches.
@@ -48,7 +54,14 @@ Commands:
   test         Run the offline unittest suite.
   demo         Run an isolated offline demonstration.
 
-Options for start:
+Options for start (batch size and request interval also apply to sync):
+  --retry-blocked
+      Explicitly retry blocked saved work; start can also retry failed fetches.
+
+  --defer-sync
+      Save full inventories in SQLite for a later ./job-search-scraper sync.
+      Company/cycle control records still synchronize to Sheets.
+
   --fetch-workers N
       Run N fetch-only workers while this process remains the only Google
       Sheets writer. Allowed: 1-5. Default: 5.
@@ -60,7 +73,7 @@ Options for start:
       Workers pause when that buffer fills or there is no eligible work.
 
   --batch-size N
-      Save up to N inventory items per atomic Google Sheets write/checkpoint.
+      Sync up to N locally saved inventory items per atomic Sheets write.
       Allowed: 1-200. Default: 200.
 
   --sheet-request-interval SECONDS
@@ -81,7 +94,8 @@ Screening on start (no AI calls):
   list records every handoff to the writer. The Jobs list records confirmed new
   Job History rows, clipping long titles with `...`.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
-  an interrupted company is refetched and replayed without duplicate jobs.
+  saved inventories resume from SQLite; unfinished fetches are refetched.
+  Keep .state/inventories.sqlite3 until all saved inventories are synchronized.
 
   help         Show this command list.
   --help       Show this command list.
@@ -90,6 +104,9 @@ Screening on start (no AI calls):
 Examples:
   ./job-search-scraper start
   ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
+  ./job-search-scraper start --defer-sync
+  ./job-search-scraper sync
+  ./job-search-scraper performance
   ./job-search-scraper cleanup-blacklist
   ./job-search-scraper errors
   ./job-search-scraper cleanup-blacklist --dry-run
@@ -130,8 +147,10 @@ def _load_environment():
 
 
 def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
-              batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1):
-    print("Starting job scraping", flush=True)
+              batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1,
+              defer_sync=False, sync_only=False, retry_blocked=False):
+    run_started = time.monotonic()
+    print("Syncing saved inventories" if sync_only else "Starting job scraping", flush=True)
     if not 0.5 <= sheet_request_interval <= 5.0:
         raise ValueError("Sheet request interval must be between 0.5 and 5.0 seconds")
     if not 1 <= batch_size <= MAX_BATCH_SIZE:
@@ -147,13 +166,32 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         repo.validate_schema()
         state = State(str(database))
         os.chmod(database, 0o600)
-        # Remove any legacy local AI queue. .state is cycle/checkpoint recovery only.
         state.purge_reviews()
         try:
-            engine = Engine(repo, state, dry_run=False, batch_size=batch_size)
-            cycle_id, _ = resolve_cycle(engine, state, repo)
-            engine.resume_parallel(cycle_id, fetch_workers=fetch_workers, assignment_window=assignment_window)
+            inbox = InventoryInbox(database.parent / "inventories.sqlite3", repo.spreadsheet_id)
+        except BaseException:
+            state.close()
+            raise
+        engine = Engine(repo, state, dry_run=False, batch_size=batch_size, inbox=inbox)
+        try:
+            if sync_only:
+                cycle_ids = inbox.cycles(include_blocked=retry_blocked)
+                if not cycle_ids:
+                    print("No saved inventories to sync. Blocked entries require --retry-blocked.")
+                    return 0
+            else:
+                pending_cycles = inbox.cycles(include_blocked=retry_blocked)
+                if pending_cycles:
+                    cycle_ids = pending_cycles
+                else:
+                    cycle_id, _ = resolve_cycle(engine, state, repo)
+                    cycle_ids = [cycle_id]
+            for cycle_id in cycle_ids:
+                engine.resume_parallel(cycle_id, fetch_workers=fetch_workers, assignment_window=assignment_window,
+                                       sync_only=sync_only, defer_sync=defer_sync, retry_blocked=retry_blocked)
             final = engine.status(cycle_id)
+            if defer_sync:
+                print("Inventories saved locally. Run ./job-search-scraper sync to write the jobs to Sheets.", flush=True)
             print(
                 f"Finished scrape {cycle_id}: {final['status']} | "
                 f"needs_review_or_in_progress={final['pending_reviews']} | "
@@ -162,7 +200,27 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
             )
             return 0
         finally:
-            state.close()
+            performance = {**getattr(repo, "metrics", {}), **engine.performance,
+                           "checkpoint_seconds": state.checkpoint_seconds + inbox.checkpoint_seconds,
+                           "checkpoint_payload_bytes": state.checkpoint_bytes + inbox.payload_bytes,
+                           "inventories_saved": inbox.saved,
+                           "elapsed_seconds": time.monotonic() - run_started}
+            metrics_path = database.parent / "scraper-performance.json"
+            try:
+                # Counts/timings only; no URLs, descriptions, request bodies or tokens.
+                with metrics_path.open("w", encoding="utf-8") as stream:
+                    json.dump(performance, stream, indent=2)
+                metrics_path.chmod(0o600)
+                print("Performance: " + json.dumps(performance, sort_keys=True), flush=True)
+            finally:
+                inbox.close()
+                state.close()
+
+
+def show_performance():
+    path = state_path().parent / "scraper-performance.json"
+    print(path.read_text() if path.exists() else "No performance measurements saved yet.")
+    return 0
 
 
 def show_errors(limit=25):
@@ -214,6 +272,8 @@ def main(argv=None):
     if argv in ([], ["help"], ["--help"], ["-h"]):
         print_help()
         return 0
+    if argv[0] == "performance":
+        return show_performance()
     if argv[0] == "errors":
         return show_errors()
     delegated = {"cleanup-blacklist", "cleanup-titles", "preflight", "status", "reviews", "auth", "test", "demo"}
@@ -223,6 +283,8 @@ def main(argv=None):
         return helper_cli.main(argv)
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("command")
+    parser.add_argument("--defer-sync", action="store_true")
+    parser.add_argument("--retry-blocked", action="store_true")
     parser.add_argument("--fetch-workers", type=int, default=DEFAULT_FETCH_WORKERS)
     parser.add_argument("--assignment-window", type=int, default=DEFAULT_ASSIGNMENT_WINDOW)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_SCRAPER_BATCH_SIZE)
@@ -232,9 +294,12 @@ def main(argv=None):
     except SystemExit:
         print("Run ./job-search-scraper help for available commands.", file=sys.stderr)
         return 2
-    if args.command != "start":
+    if args.command not in {"start", "sync"}:
         print("ERROR: unknown command.", file=sys.stderr)
         print("Run ./job-search-scraper help for available commands.", file=sys.stderr)
+        return 2
+    if args.command == "sync" and args.defer_sync:
+        print("ERROR: --defer-sync applies to start only.", file=sys.stderr)
         return 2
     try:
         return run_start(
@@ -242,6 +307,7 @@ def main(argv=None):
             assignment_window=args.assignment_window,
             batch_size=args.batch_size,
             sheet_request_interval=args.sheet_request_interval,
+            defer_sync=args.defer_sync, sync_only=args.command == "sync", retry_blocked=args.retry_blocked,
         )
     except KeyboardInterrupt:
         print("Stopped. Run ./job-search-scraper start to continue.", file=sys.stderr)
