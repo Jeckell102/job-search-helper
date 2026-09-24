@@ -54,13 +54,13 @@ Commands:
   test         Run the offline unittest suite.
   demo         Run an isolated offline demonstration.
 
-Options for start (batch size and request interval also apply to sync):
+Options for start (batch size, sync interval and request interval also apply to sync):
   --retry-blocked
       Explicitly retry blocked saved work; start can also retry failed fetches.
 
   --defer-sync
       Save full inventories in SQLite for a later ./job-search-scraper sync.
-      Company/cycle control records still synchronize to Sheets.
+      Company/cycle control records synchronize at startup/end; jobs wait for sync.
 
   --fetch-workers N
       Run N fetch-only workers while this process remains the only Google
@@ -68,13 +68,18 @@ Options for start (batch size and request interval also apply to sync):
       A returning worker takes its next local assignment even during a write.
 
   --assignment-window N
-      Bound the local queue of assigned companies and completed inventories.
-      Allowed: 1-100. Default: 100; effective minimum is the worker count.
-      Workers pause when that buffer fills or there is no eligible work.
+      Bound queued fetch assignments. Allowed: 1-100. Default: 100;
+      effective minimum is the worker count. Completed results accumulate
+      durably on disk and do not prevent workers taking new assignments.
 
   --batch-size N
-      Sync up to N locally saved inventory items per atomic Sheets write.
+      Sync up to N planned changes across companies per atomic Sheets write.
       Allowed: 1-200. Default: 200.
+
+  --sync-interval SECONDS
+      Upload a partly filled local batch after this interval, checked between
+      company planning steps. Allowed: 1-3600. Default: 60. Full batches and
+      the last batch upload immediately. Applies to start and sync.
 
   --sheet-request-interval SECONDS
       Minimum delay between Google Sheets requests made by the writer.
@@ -90,12 +95,15 @@ Screening on start (no AI calls):
   Detected ATS / Source is saved even for blocked/failed/partial scans.
   Start opens a terminal dashboard. Each worker keeps a persistent color-coded
   row with its current company. The writer row is green and shows save progress,
-  duration, processed inventory count, and confirmed new-job count. The Workers
+  duration, locally processed count, and confirmed new-job count. The Workers
   list records every handoff to the writer. The Jobs list records confirmed new
   Job History rows, clipping long titles with `...`.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
   saved inventories resume from SQLite; unfinished fetches are refetched.
-  Keep .state/inventories.sqlite3 until all saved inventories are synchronized.
+  Keep the whole .state directory until all saved work is synchronized.
+  The local database holds inventories and frozen changes until Sheets confirms
+  them. Failed companies retain work for sync --retry-blocked. Workers use the
+  company list read at startup; uploads recheck current company controls.
 
   help         Show this command list.
   --help       Show this command list.
@@ -148,7 +156,11 @@ def _load_environment():
 
 def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
               batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1,
-              defer_sync=False, sync_only=False, retry_blocked=False):
+              defer_sync=False, sync_only=False, retry_blocked=False, sync_interval=60):
+    if not 1 <= sync_interval <= 3600:
+        raise ValueError("Sync interval must be between 1 and 3600 seconds")
+    if not 1 <= fetch_workers <= 5 or not 1 <= assignment_window <= 100:
+        raise ValueError("Fetch workers must be 1-5 and assignment window 1-100")
     run_started = time.monotonic()
     print("Syncing saved inventories" if sync_only else "Starting job scraping", flush=True)
     if not 0.5 <= sheet_request_interval <= 5.0:
@@ -187,8 +199,9 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                     cycle_id, _ = resolve_cycle(engine, state, repo)
                     cycle_ids = [cycle_id]
             for cycle_id in cycle_ids:
-                engine.resume_parallel(cycle_id, fetch_workers=fetch_workers, assignment_window=assignment_window,
-                                       sync_only=sync_only, defer_sync=defer_sync, retry_blocked=retry_blocked)
+                engine.resume_local(cycle_id, fetch_workers=fetch_workers, assignment_window=assignment_window,
+                                    sync_interval=sync_interval,
+                                    sync_only=sync_only, defer_sync=defer_sync, retry_blocked=retry_blocked)
             final = engine.status(cycle_id)
             if defer_sync:
                 print("Inventories saved locally. Run ./job-search-scraper sync to write the jobs to Sheets.", flush=True)
@@ -289,6 +302,7 @@ def main(argv=None):
     parser.add_argument("--assignment-window", type=int, default=DEFAULT_ASSIGNMENT_WINDOW)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_SCRAPER_BATCH_SIZE)
     parser.add_argument("--sheet-request-interval", type=float, default=1.1)
+    parser.add_argument("--sync-interval", type=float, default=60)
     try:
         args = parser.parse_args(argv)
     except SystemExit:
@@ -308,6 +322,7 @@ def main(argv=None):
             batch_size=args.batch_size,
             sheet_request_interval=args.sheet_request_interval,
             defer_sync=args.defer_sync, sync_only=args.command == "sync", retry_blocked=args.retry_blocked,
+            sync_interval=args.sync_interval,
         )
     except KeyboardInterrupt:
         print("Stopped. Run ./job-search-scraper start to continue.", file=sys.stderr)

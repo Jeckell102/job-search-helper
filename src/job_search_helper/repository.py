@@ -65,6 +65,10 @@ class RepositoryError(RuntimeError):
     """A schema, identity, permission, or preservation precondition failed."""
 
 
+class UncertainWriteError(RepositoryError):
+    """A write may have landed; preserve its exact keyed plan for explicit replay."""
+
+
 def _tab(tab):
     if tab not in ALLOWED_TABS:
         raise RepositoryError(f"Tab is not operationally allowlisted: {tab!r}")
@@ -470,7 +474,8 @@ def _execute(request, action):
         suffix = (" No successful write is confirmed; resume the same keyed decision."
                   if action == "write" else " No spreadsheet changes were requested by this read.")
         # API errors may contain requested cell content. Do not echo that body.
-        raise RepositoryError(f"Google Sheets {action} failed ({type(exc).__name__})." + suffix) from exc
+        raise (UncertainWriteError if action == "write" else RepositoryError)(
+            f"Google Sheets {action} failed ({type(exc).__name__})." + suffix) from exc
 
 
 class GoogleRepository:
@@ -526,7 +531,8 @@ class GoogleRepository:
             self._header_cache.clear()
             suffix = (" No successful write is confirmed; resume the same keyed decision."
                       if action == "write" else " No spreadsheet changes were requested by this read.")
-            raise RepositoryError(f"Google Sheets {action} failed ({type(exc).__name__})." + suffix) from exc
+            raise (UncertainWriteError if action == "write" else RepositoryError)(
+                f"Google Sheets {action} failed ({type(exc).__name__})." + suffix) from exc
         finally:
             self.metrics[action + "_seconds"] += time.monotonic() - started
 

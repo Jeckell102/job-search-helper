@@ -55,6 +55,7 @@ class TerminalDashboard:
         self.job_events = deque(maxlen=max_rows)
         self.inventory_count = 0
         self.new_job_count = 0
+        self.local_job_count = 0
         self.started_at = time.monotonic()
 
     def start(self):
@@ -76,6 +77,11 @@ class TerminalDashboard:
         with self.lock:
             self.worker_state[slot] = {"task": "Failed", "company": company, "detail": ""}
             self.worker_events.appendleft(f"Worker {slot} - failed - {company} - {_stamp()}")
+            self._render_locked()
+
+    def locally_processed(self, count):
+        with self.lock:
+            self.local_job_count += count
             self._render_locked()
 
     def writer_progress(self, company, done, total, elapsed, processed=0):
@@ -121,7 +127,7 @@ class TerminalDashboard:
         rows = ["\033[2J\033[HJob Search Scraper Dashboard"]
         rows.append(
             f"Run time: {_duration(time.monotonic() - self.started_at)} | "
-            f"Inventory processed: {self.inventory_count} | New jobs written: {self.new_job_count}"
+            f"Inventory processed: {self.inventory_count} | Processed locally: {self.local_job_count} | New jobs written: {self.new_job_count}"
         )
         rows.append("")
         for slot in range(1, self.workers + 1):
@@ -166,7 +172,7 @@ class TerminalDashboard:
         writer += f" - {self.writer_state['duration']}"
         self.stream.write(
             "Dashboard | " + " | ".join(worker_bits)
-            + f" | {writer} | Inventory processed: {self.inventory_count} | New jobs written: {self.new_job_count}\n"
+            + f" | {writer} | Inventory processed: {self.inventory_count} | Processed locally: {self.local_job_count} | New jobs written: {self.new_job_count}\n"
         )
         if self.worker_events:
             self.stream.write(f"Workers | {self.worker_events[0]}\n")

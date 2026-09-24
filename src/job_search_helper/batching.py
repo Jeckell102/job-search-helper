@@ -29,9 +29,9 @@ class PlanningRepository:
     affected identities, destination rows and append tails, validating formulas
     and user-owned cells immediately before its single atomic batchUpdate.
     """
-    def __init__(self, repository):
+    def __init__(self, repository, rows=None):
         self.base = repository
-        self.rows = repository.read_many(SCHEMAS)
+        self.rows = repository.read_many(SCHEMAS) if rows is None else rows
         self.operations = []
         self._reindex()
 

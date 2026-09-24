@@ -36,6 +36,9 @@ class InventoryInbox:
                 self.connection.execute("""CREATE TABLE IF NOT EXISTS inventories (
                     cycle TEXT, company TEXT, payload TEXT NOT NULL, blocked INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY(cycle, company))""")
+                self.connection.execute("""CREATE TABLE IF NOT EXISTS sync_plans (
+                    cycle TEXT, company TEXT, payload TEXT NOT NULL, cursor INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY(cycle, company))""")
         except BaseException:
             self.connection.close()
             raise
@@ -72,10 +75,57 @@ class InventoryInbox:
     def acknowledge(self, cycle, company):
         with self.lock, self.connection:
             self.connection.execute("DELETE FROM inventories WHERE cycle=? AND company=?", (cycle, company))
+            self.connection.execute("DELETE FROM sync_plans WHERE cycle=? AND company=?", (cycle, company))
 
     def block(self, cycle, company):
         with self.lock, self.connection:
             self.connection.execute("UPDATE inventories SET blocked=1 WHERE cycle=? AND company=?", (cycle, company))
+
+    def save_plan(self, cycle, company, plan):
+        """Freeze keyed operations before a Sheets request; never replace a replay."""
+        started = time.monotonic()
+        encoded = json.dumps(plan, ensure_ascii=False)
+        with self.lock, self.connection:
+            if not self.connection.execute(
+                    "SELECT 1 FROM inventories WHERE cycle=? AND company=?", (cycle, company)).fetchone():
+                raise ValueError("Cannot plan without a durable inventory")
+            cursor = self.connection.execute("INSERT OR IGNORE INTO sync_plans VALUES (?,?,?,0)",
+                                             (cycle, company, encoded))
+            if cursor.rowcount:
+                self.payload_bytes += len(encoded.encode("utf-8"))
+        self.checkpoint_seconds += time.monotonic() - started
+
+    def plan(self, cycle, company):
+        with self.lock:
+            row = self.connection.execute("SELECT payload,cursor FROM sync_plans WHERE cycle=? AND company=?",
+                                          (cycle, company)).fetchone()
+        return (json.loads(row[0]), row[1]) if row else None
+
+    def pending(self, cycle, include_blocked=False):
+        with self.lock:
+            return [row[0] for row in self.connection.execute(
+                "SELECT company FROM inventories WHERE cycle=?" +
+                ("" if include_blocked else " AND blocked=0") + " ORDER BY rowid", (cycle,))]
+
+    def advance(self, cycle, cursors):
+        """Only called after an acknowledged atomic Sheets commit."""
+        started = time.monotonic()
+        with self.lock, self.connection:
+            for company, cursor in cursors.items():
+                self.connection.execute("UPDATE sync_plans SET cursor=? WHERE cycle=? AND company=?",
+                                        (cursor, cycle, company))
+        self.checkpoint_seconds += time.monotonic() - started
+
+    def discard_plan(self, cycle, company):
+        # Only for a confirmed preflight rejection, never an uncertain write.
+        # The original inventory remains durable for a fresh explicit retry.
+        with self.lock, self.connection:
+            self.connection.execute("DELETE FROM sync_plans WHERE cycle=? AND company=?", (cycle, company))
+
+    def unblock(self, cycle, company):
+        with self.lock, self.connection:
+            self.connection.execute("UPDATE inventories SET blocked=0 WHERE cycle=? AND company=?",
+                                    (cycle, company))
 
     def close(self):
         self.connection.close()

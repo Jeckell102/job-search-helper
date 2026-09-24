@@ -409,6 +409,7 @@ class Engine:
         self.state.save_cycle(cycle)
         self._sync_cycle(cycle)
         # Persist membership before fetching; reconstructible if local cache is lost.
+        membership = []
         for company in rows:
             if company.get("Company ID") in scope:
                 values = {"Active Cycle ID": cycle["id"], "Record Updated": now()}
@@ -416,7 +417,12 @@ class Engine:
                 # Complete marker into the new cycle's membership.
                 if company.get("Scan State") != "Blocked / Manual Review":
                     values["Scan State"] = "Queued"
-                self._commit(self._company_op(company, values))
+                membership.append(self._company_op(company, values))
+                if len(membership) >= self.batch_size:
+                    self._commit(*membership)
+                    membership = []
+        if membership:
+            self._commit(*membership)
         return cycle["id"]
 
     def _recover(self, cycle_id):
@@ -806,6 +812,10 @@ class Engine:
         self._sync_cycle(cycle)
         self._checkpoint()
         return self.status(cycle_id)
+
+    def resume_local(self, cycle_id, sync_interval=60, **options):
+        from .local_pipeline import LocalPipeline
+        return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
 
     def resume_parallel(self, cycle_id, retry_blocked=False, fetch_workers=1, assignment_window=25,
                         sync_only=False, defer_sync=False):
