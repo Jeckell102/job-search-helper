@@ -40,6 +40,17 @@ class TargetedWriterTests(unittest.TestCase):
         self.assertEqual(result['timings']['read_requests'], 1)
         self.assertEqual(result['timings']['write_requests'], 1)
 
+    def test_planner_initializes_from_narrow_identity_columns(self):
+        service, repo = self.make(100)
+        service.get_calls.clear()
+        planner = PlanningRepository(repo)
+        ranges = [r for call in service.get_calls for r in call.get('ranges', [])]
+        self.assertIn("'Job History'!K2:K1000", ranges)
+        self.assertIn("'Job History'!F2:F1000", ranges)
+        self.assertNotIn("'Job History'!X2:X1000", ranges)
+        self.assertNotIn("'Job History'!A1:AF1000", ranges)
+        self.assertEqual(len(planner.rows['Job History']), 100)
+
     def test_append_uses_cached_tail_without_scanning_manual_orphan_rows(self):
         service, repo = self.make(1)
         repo.commit([op('0', **{'Review Notes': 'warm'})])

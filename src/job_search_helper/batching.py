@@ -31,9 +31,42 @@ class PlanningRepository:
     """
     def __init__(self, repository, rows=None):
         self.base = repository
-        self.rows = repository.read_many(SCHEMAS) if rows is None else rows
+        self.rows = self._load_planning_rows(repository) if rows is None else rows
         self.operations = []
         self._reindex()
+
+    @staticmethod
+    def _blank_row(tab, values):
+        row = {header: "" for header in SCHEMAS[tab]}
+        row.update(values)
+        return row
+
+    @classmethod
+    def _read_column_rows(cls, repository, tab, headers):
+        return [cls._blank_row(tab, values) for _, values in repository.read_columns(tab, headers)]
+
+    @classmethod
+    def _load_planning_rows(cls, repository):
+        """Load only columns needed to classify scraped SQLite inventories.
+
+        Commit remains authoritative: the real repository rereads identities,
+        protected review fields and append tails immediately before writing.
+        """
+        if not hasattr(repository, "read_cached_columns"):
+            return repository.read_many(SCHEMAS)
+        return {
+            "Companies": repository.read("Companies"),
+            "Job History": cls._read_column_rows(repository, "Job History", [
+                "Company", "Job Key", "Official Job URL", "Requisition ID",
+                "Current Snapshot", "Added to Opportunities?", "Review Status",
+                "Decision", "Reconsideration Count", "Description Hash",
+                "Rejection Reason", "Review Notes", "Job Status",
+                "Consecutive Missing Scans", "Prior Job Key",
+            ]),
+            "Job Evidence": cls._read_column_rows(repository, "Job Evidence", ["Job Key", "Source Hash"]),
+            "Opportunities": cls._read_column_rows(repository, "Opportunities", ["Company", "Job URL"]),
+            "Scan Cycles": cls._read_column_rows(repository, "Scan Cycles", ["Cycle ID"]),
+        }
 
     def _reindex(self):
         self.indexes = {tab: IdentityIndex(enumerate(rows)) for tab, rows in self.rows.items()}
