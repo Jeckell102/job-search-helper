@@ -66,6 +66,21 @@ The adapter actually used is also recorded in `ATS / Source`, including blocked,
 
 Existing blocked rows still require an explicit retry. With `./job-search-scraper start`, changing a blocked company's `Scan State` back to `Queued` in Sheets is recognized at startup and refreshes the local blocked retry list for that company. The older helper command still supports `resume --cycle CYCLE_ID --retry-blocked --apply --exclusive-writer`. Installing discovery alone does not release manual-review holds. Unsupported, inaccessible, or malformed boards remain incomplete/manual work, never proof that existing jobs closed.
 
+For sites where the public careers page works in a real browser but direct HTTP/API fetching is blocked, install the optional browser fallback:
+
+```bash
+.venv/bin/python -m pip install '.[browser]'
+.venv/bin/python -m playwright install chromium
+```
+
+Then explicitly retry blocked companies with:
+
+```bash
+./job-search-scraper start --retry-blocked --browser-fallback
+```
+
+The normal adapter still runs first. If it reports blocked/failed/unsupported, a fetch worker opens the careers URL in Chromium, watches same-site JSON responses, and also scrapes visible job links/details from the rendered page. Successful browser results become the same normalized inventory rows the writer already handles. Browser failures, CAPTCHAs, logins, or empty/incomplete pages remain blocked/manual-review and never count as closure evidence.
+
 Examples of URL *shapes*, not verified company assignments:
 
 ```text

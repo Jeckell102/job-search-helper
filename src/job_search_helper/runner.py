@@ -69,6 +69,12 @@ Options for start (batch size, sync interval and request interval also apply to 
   --retry-blocked
       Explicitly retry blocked saved work; start can also retry failed fetches.
 
+  --browser-fallback
+      If a direct public-board fetch is blocked/unsupported/failed, open the
+      careers page in a local Chromium browser and try to scrape visible job
+      postings. Requires optional Playwright setup. Browser failure is treated
+      as incomplete/manual review, never as evidence of closure.
+
   --defer-sync
       Save full inventories in SQLite for a later ./job-search-scraper sync.
       Company/cycle control records synchronize at startup/end; jobs wait for sync.
@@ -129,6 +135,7 @@ Screening on start (no AI calls):
 
 Examples:
   ./job-search-scraper start
+  ./job-search-scraper start --retry-blocked --browser-fallback
   ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
   ./job-search-scraper start --defer-sync
   ./job-search-scraper sync
@@ -177,7 +184,8 @@ def _load_environment():
 
 def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
               batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1,
-              defer_sync=False, sync_only=False, retry_blocked=False, sync_interval=60):
+              defer_sync=False, sync_only=False, retry_blocked=False, sync_interval=60,
+              browser_fallback=False):
     if not 1 <= sync_interval <= 3600:
         raise ValueError("Sync interval must be between 1 and 3600 seconds")
     if not 1 <= fetch_workers <= 5 or not 1 <= assignment_window <= 100:
@@ -205,7 +213,13 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         except BaseException:
             state.close()
             raise
-        engine = Engine(repo, state, dry_run=False, batch_size=batch_size, inbox=inbox)
+        fetcher = None
+        if browser_fallback:
+            from .browser_scraper import with_browser_fallback
+            from .ats import fetch_inventory
+            fetcher = with_browser_fallback(fetch_inventory)
+        engine = Engine(repo, state, dry_run=False, batch_size=batch_size, inbox=inbox,
+                        **({"fetcher": fetcher} if fetcher else {}))
         try:
             if sync_only:
                 cycle_ids = inbox.cycles(include_blocked=retry_blocked)
@@ -320,6 +334,7 @@ def main(argv=None):
     parser.add_argument("command")
     parser.add_argument("--defer-sync", action="store_true")
     parser.add_argument("--retry-blocked", action="store_true")
+    parser.add_argument("--browser-fallback", action="store_true")
     parser.add_argument("--fetch-workers", type=int, default=DEFAULT_FETCH_WORKERS)
     parser.add_argument("--assignment-window", type=int, default=DEFAULT_ASSIGNMENT_WINDOW)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_SCRAPER_BATCH_SIZE)
@@ -344,7 +359,7 @@ def main(argv=None):
             batch_size=args.batch_size,
             sheet_request_interval=args.sheet_request_interval,
             defer_sync=args.defer_sync, sync_only=args.command == "sync", retry_blocked=args.retry_blocked,
-            sync_interval=args.sync_interval,
+            sync_interval=args.sync_interval, browser_fallback=args.browser_fallback,
         )
     except KeyboardInterrupt:
         print("Stopped. Run ./job-search-scraper start to continue.", file=sys.stderr)

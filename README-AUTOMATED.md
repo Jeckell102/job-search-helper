@@ -24,6 +24,8 @@ Company-specific writer errors are logged to `.state/scraper-errors.jsonl`, mark
 
 Supported public boards are Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, and Taleo. Dayforce remains manual unless discovery finds a supported board link. Blocked/failed/partial scans record the actual adapter in `ATS / Source` when known. Unknown discovery leaves the existing source unchanged, and blocked scans do not advance successful-scan dates. Ctrl+C cancels unstarted assignments. Completed fetches are retained in SQLite, and restart replays saved inventories without duplicate rows; fetches without saved results are repeated.
 
+Optional browser fallback: install `.[browser]` and Chromium with Playwright, then run `./job-search-scraper start --retry-blocked --browser-fallback`. Direct adapters still run first. The fallback opens the public careers page, captures same-site JSON responses, scrapes visible job links/details, and returns normal inventory rows when complete. It does not bypass login, CAPTCHA, or access controls; failures stay manual-review.
+
 To tune Google Sheets pacing for the writer:
 
 ```bash
