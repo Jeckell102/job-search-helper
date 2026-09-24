@@ -658,6 +658,8 @@ class GoogleRepository:
         return True
 
     def commit(self, operations):
+        timings = {}
+        commit_started = time.monotonic()
         if self.spreadsheet_id == PROTECTED_BACKUP_ID:
             raise RepositoryError("Refusing to write the protected Job Search Master - Original backup.")
         operations = list(operations)
@@ -668,8 +670,13 @@ class GoogleRepository:
             if not isinstance(operation, dict):
                 raise RepositoryError("Each operation must be a mapping.")
             _tab(operation.get("tab"))
+        load_started = time.monotonic()
         sheets = self._load([op["tab"] for op in operations])
+        timings["sheets_load_seconds"] = time.monotonic() - load_started
+        prepare_started = time.monotonic()
         changed, new_rows, result = _prepare(sheets, self.schemas, operations)
+        timings["prepare_seconds"] = time.monotonic() - prepare_started
+        build_started = time.monotonic()
         requests = []
         for tab, sheet in sheets.items():
             appended = [row for name, row in new_rows if name == tab]
@@ -698,22 +705,32 @@ class GoogleRepository:
                 "rows": [{"values": [{"userEnteredValue": value}]}],
                 "fields": "userEnteredValue",
             }})
+        timings["build_requests_seconds"] = time.monotonic() - build_started
         if requests:
-            if len(json.dumps({"requests": requests}, ensure_ascii=True).encode("utf-8")) > MAX_BATCH_UPDATE_BYTES:
+            payload_started = time.monotonic()
+            payload_bytes = len(json.dumps({"requests": requests}, ensure_ascii=True).encode("utf-8"))
+            timings["payload_seconds"] = time.monotonic() - payload_started
+            timings["payload_bytes"] = payload_bytes
+            if payload_bytes > MAX_BATCH_UPDATE_BYTES:
                 raise RepositoryError(f"Planned batch exceeds the {MAX_BATCH_UPDATE_MB_LABEL} safety threshold. No write attempted; resume with --batch-size 25 (or 5).")
             structural = any(set(req) & {"appendDimension", "updateTable", "insertDimension", "deleteDimension"}
                              for req in requests)
             # No automatic retry of writes: after a timeout, rerun the same keyed
             # decision so it is resolved against the authoritative fresh sheet.
+            write_started = time.monotonic()
             self._execute(self.service.spreadsheets().batchUpdate(
                 spreadsheetId=self.spreadsheet_id, body={"requests": requests},
             ), "write")
+            timings["sheets_write_seconds"] = time.monotonic() - write_started
             if structural:
                 self._metadata_cache = None
                 self._header_cache = {}
         self._header_cache = {}
+        committed_started = time.monotonic()
         self._committed_rows = {tab: [values for _, values in sheet.records()] for tab, sheet in sheets.items()}
-        return {**result, "requests": len(requests)}
+        timings["committed_rows_seconds"] = time.monotonic() - committed_started
+        timings["commit_total_seconds"] = time.monotonic() - commit_started
+        return {**result, "requests": len(requests), "timings": timings}
 
     def commit_existing_job_history_flags(self, operations):
         """Update only existing Job History opportunity flags by verified row.

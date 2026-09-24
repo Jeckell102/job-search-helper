@@ -174,6 +174,8 @@ Lower values are faster but more likely to hit Google per-user request limits. T
 
 Inventory rows are saved to Google Sheets in atomic batches. The scraper defaults to `--batch-size 100`; use a smaller value, such as `--batch-size 25`, if Google rejects a large write because several job descriptions are unusually large. The allowed range is `1` to `200`, with a `2.2 MB` safety threshold for each Sheets write.
 
+After each inventory batch, the scraper prints a `batch timing` line that breaks down company refresh, local planning, Google Sheets load, request building, write time, local checkpointing, payload size, and request count.
+
 Blocked companies are not automatically retried. After you inspect the issue or change its configuration, explicitly request:
 
 ```bash

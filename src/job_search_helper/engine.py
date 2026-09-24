@@ -169,25 +169,61 @@ class Engine:
         if self.checkpoint_hook is not None:
             self.checkpoint_hook()
 
+    @staticmethod
+    def _format_batch_timings(timings):
+        if not timings:
+            return ""
+        labels = (
+            ("refresh_company_seconds", "refresh"),
+            ("plan_seconds", "plan"),
+            ("commit_total_seconds", "commit"),
+            ("sheets_load_seconds", "sheets_load"),
+            ("prepare_seconds", "prepare"),
+            ("build_requests_seconds", "build_requests"),
+            ("payload_seconds", "payload"),
+            ("sheets_write_seconds", "sheets_write"),
+            ("committed_rows_seconds", "cache_rows"),
+            ("local_state_seconds", "local_state"),
+        )
+        parts = []
+        for key, label in labels:
+            value = timings.get(key)
+            if isinstance(value, (int, float)):
+                parts.append(f"{label}={value:.1f}s")
+        payload = timings.get("payload_bytes")
+        if isinstance(payload, int):
+            parts.append(f"payload={payload / 1_000_000:.2f}MB")
+        requests = timings.get("requests")
+        if isinstance(requests, int):
+            parts.append(f"requests={requests}")
+        return ", ".join(parts)
+
     def _planned_batch(self, planner, action):
+        timings = {}
         base_repo, base_state = self.repo, self.state
         pending = PendingState(base_state)
         planner.begin()
         notices = []
         self.repo, self.state, self._notices = planner, pending, notices
+        plan_started = time.monotonic()
         try:
             result = action()
         finally:
             self.repo, self.state, self._notices = base_repo, base_state, None
+        timings["plan_seconds"] = time.monotonic() - plan_started
         # Fresh row identities, formulas and user fields are revalidated here.
         # A failure or Ctrl+C before acknowledgement leaves the local checkpoint
         # at the preceding batch. Replaying that batch is idempotent.
         result = base_repo.commit(planner.operations)
+        timings.update(result.get("timings", {}))
         self._report_new_jobs(result)
+        flush_started = time.monotonic()
         pending.flush()
+        timings["local_state_seconds"] = time.monotonic() - flush_started
         planner.accept_commit()
         for message in notices:
             print(message, flush=True)
+        result["timings"] = timings
         return result
 
     @staticmethod
@@ -202,16 +238,24 @@ class Engine:
         print(f"{company['Company']}: {len(jobs)} inventory items; resuming at {start}. Saving up to {self.batch_size} at a time.", flush=True)
         while start < len(jobs):
             stop = min(start + self.batch_size, len(jobs))
+            refresh_started = time.monotonic()
             current = planner.refresh_company(company["Company ID"])
+            refresh_seconds = time.monotonic() - refresh_started
             self._verify_same_board(company, current)
             def stage():
                 for posting in jobs[start:stop]:
                     self._stage_posting(cycle, current, posting)
                 item["next_job_index"] = stop
                 self.state.save_cycle(cycle)
-            self._planned_batch(planner, stage)
+            result = self._planned_batch(planner, stage)
+            timings = result.get("timings", {})
+            timings["refresh_company_seconds"] = refresh_seconds
+            timings["requests"] = result.get("requests", 0)
             self._checkpoint()
             print(f"{company['Company']}: {'simulated' if self.dry_run else 'saved'} {stop}/{len(jobs)} inventory items processed; {time.monotonic()-started:.0f}s elapsed.", flush=True)
+            detail = self._format_batch_timings(timings)
+            if detail:
+                print(f"{company['Company']}: batch timing: {detail}.", flush=True)
             start = stop
 
     def _company_op(self, company, values):
