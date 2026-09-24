@@ -208,7 +208,7 @@ class CliTests(unittest.TestCase):
                 self.assertIn("--fetch-workers N", text)
                 self.assertIn("--assignment-window N", text)
                 self.assertIn("--sheet-request-interval SECONDS", text)
-                self.assertIn("./job-search-helper cleanup-blacklist", text)
+                self.assertIn("./job-search-scraper cleanup-blacklist", text)
 
     def test_scraper_unknown_command_points_to_help(self):
         with redirect_stderr(io.StringIO()) as output:
@@ -227,6 +227,26 @@ class CliTests(unittest.TestCase):
                 "--sheet-request-interval", "0.8",
             ]), 0)
             start.assert_called_once_with(fetch_workers=4, assignment_window=25, sheet_request_interval=0.8)
+
+    def test_scraper_cleanup_blacklist_applies_by_default(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["cleanup-blacklist"]), 0)
+            delegated.assert_called_once_with(["cleanup-blacklist", "--apply", "--exclusive-writer"])
+
+    def test_scraper_cleanup_blacklist_preserves_explicit_dry_run(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["cleanup-blacklist", "--dry-run"]), 0)
+            delegated.assert_called_once_with(["cleanup-blacklist", "--dry-run"])
+
+    def test_scraper_delegates_cleanup_blacklist_apply_options(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["cleanup-blacklist", "--apply", "--exclusive-writer"]), 0)
+            delegated.assert_called_once_with(["cleanup-blacklist", "--apply", "--exclusive-writer"])
+
+    def test_scraper_accepts_cleanup_flag_alias(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["--cleanup-blacklist"]), 0)
+            delegated.assert_called_once_with(["cleanup-blacklist", "--apply", "--exclusive-writer"])
 
     def test_start_requires_an_explicit_scope(self):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):

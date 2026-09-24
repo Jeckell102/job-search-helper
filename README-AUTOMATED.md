@@ -24,6 +24,14 @@ To tune Google Sheets pacing for the writer:
 
 Use `./job-search-scraper help` to see the current options.
 
+To apply the current title blacklist to existing Job History rows:
+
+```bash
+./job-search-scraper cleanup-blacklist
+```
+
+Use `./job-search-scraper cleanup-blacklist --dry-run` only when you want a preview.
+
 Google Sheets is the durable source of truth. `.state` stores only scan/cycle recovery data.
 
 ## Scraper path

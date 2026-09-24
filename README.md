@@ -182,16 +182,16 @@ This does not bypass verification, logins, or access controls. It merely authori
 
 ## Clean up previously recorded blacklist matches
 
-The scraper applies `title-blacklist.txt` before adding newly scraped jobs to Job History. To reconcile older Job History rows after changing that file, preview the cleanup first:
+The scraper applies `title-blacklist.txt` before adding newly scraped jobs to Job History. To reconcile older Job History rows after changing that file, run:
 
 ```bash
-./job-search-helper cleanup-blacklist
+./job-search-scraper cleanup-blacklist
 ```
 
-The preview reads only the Job History identity, title, opportunity flag, and review-status columns. It reports every proposed match but makes no changes. To apply the preview after stopping the scraper and other sheet writers:
+This is an apply command. Stop the scraper and other sheet writers first. To preview without changes:
 
 ```bash
-./job-search-helper cleanup-blacklist --apply --exclusive-writer
+./job-search-scraper cleanup-blacklist --dry-run
 ```
 
 This command changes only `Added to Opportunities?` to `No`. It does not delete Job History rows or Opportunities, and it preserves all other fields. Rows already set to `No` are idempotent. Rows with `Review Status` set to `In Progress`, or rows without a unique stable identity, are reported and skipped. The blacklist is loaded fresh each time the command starts.

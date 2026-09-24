@@ -6,6 +6,7 @@ import os
 import sqlite3
 import sys
 
+from . import cli as helper_cli
 from .cli import PROJECT_ROOT, get_repository, load_environment, project_path, state_path, writer_lock
 from .engine import Engine, State
 from .efficiency import load_title_blacklist
@@ -24,6 +25,17 @@ Commands:
                - Otherwise starts a new full-company scan.
                - Writes to Google Sheets and requires no other sheet writers.
 
+  cleanup-blacklist
+      Set Job History "Added to Opportunities?" to No for current
+      title-blacklist.txt matches.
+
+  preflight    Validate access and workbook headers; never change cells.
+  status       Read local cycle status without creating or updating state.
+  reviews      Export the saved pending review queue to a local file.
+  auth         Obtain Google OAuth credentials; no spreadsheet writes.
+  test         Run the offline unittest suite.
+  demo         Run an isolated offline demonstration.
+
 Options for start:
   --fetch-workers N
       Run N fetch-only workers while this process remains the only Google
@@ -41,24 +53,10 @@ Options for start:
   --help       Show this command list.
   -h           Show this command list.
 
-Related helper commands:
-  ./job-search-helper preflight
-      Validate Google Sheets access and workbook headers without changing cells.
-
-  ./job-search-helper status [--cycle CYCLE_ID]
-      Read saved local cycle status without creating or updating state.
-
-  ./job-search-helper cleanup-blacklist [--apply --exclusive-writer]
-      Set Job History "Added to Opportunities?" to No for current title-blacklist.txt matches.
-
-  ./job-search-helper reviews --cycle CYCLE_ID --output FILE
-      Export the saved pending review queue to a local JSONL file.
-
-  ./job-search-helper auth [--write]
-      Refresh Google OAuth credentials without spreadsheet writes.
-
-  ./job-search-helper test
-      Run the offline unittest suite.
+Examples:
+  ./job-search-scraper start --fetch-workers 4 --assignment-window 25
+  ./job-search-scraper cleanup-blacklist
+  ./job-search-scraper cleanup-blacklist --dry-run
 """
     )
 
@@ -126,9 +124,25 @@ def run_start(fetch_workers=1, assignment_window=25, sheet_request_interval=1.1)
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
+    aliases = {
+        "--cleanup-blacklist": "cleanup-blacklist",
+        "--preflight": "preflight",
+        "--status": "status",
+        "--reviews": "reviews",
+        "--auth": "auth",
+        "--test": "test",
+        "--demo": "demo",
+    }
+    if argv and argv[0] in aliases:
+        argv[0] = aliases[argv[0]]
     if argv in ([], ["help"], ["--help"], ["-h"]):
         print_help()
         return 0
+    delegated = {"cleanup-blacklist", "preflight", "status", "reviews", "auth", "test", "demo"}
+    if argv[0] in delegated:
+        if argv[0] == "cleanup-blacklist" and "--dry-run" not in argv and "--apply" not in argv:
+            argv = [*argv, "--apply", "--exclusive-writer"]
+        return helper_cli.main(argv)
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("command")
     parser.add_argument("--fetch-workers", type=int, default=1)
