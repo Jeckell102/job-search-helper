@@ -736,6 +736,8 @@ class GoogleRepository:
                       for i, header in enumerate(headers)}
             if any(value != "" for value in values.values()):
                 records.append((offset + 2, values))
+        if records:
+            self._write_layout[tab] = (list(live_headers), max(row_number - 1 for row_number, _ in records))
         return records
 
     def read_cached_columns(self, tab, headers):

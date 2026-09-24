@@ -209,6 +209,9 @@ def execute_setup_evidence_tab(args: argparse.Namespace) -> None:
     with writer_lock(database.parent / "writer.lock"):
         repo = get_repository(write=True, interactive=args.authenticate, min_request_interval=1.1)
         setup = repo.ensure_tab("Job Evidence")
+        # Prime narrow commit layouts. Without this, each batch would reload the
+        # full Job Evidence tab after it starts filling with long descriptions.
+        repo.read_columns("Job Evidence", ["Job Key", "Source Hash"])
         moved = skipped = 0
         operations = []
         stamp = now()
@@ -222,7 +225,8 @@ def execute_setup_evidence_tab(args: argparse.Namespace) -> None:
             operations = []
             pending_bytes = 0
 
-        for row in repo.read("Job History"):
+        history_rows = repo.read_many(["Job History"])["Job History"]
+        for row in history_rows:
             key = str(row.get("Job Key") or "").strip()
             source_hash = str(row.get("Source Hash") or row.get("Description Hash") or "").strip()
             description = str(row.get("Job Description") or "")
