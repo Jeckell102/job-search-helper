@@ -1,0 +1,136 @@
+{
+  "baseline_commit": "89a91de",
+  "method": "Three sequential runs per version, range-aware offline API, fixed record timestamps, 600 existing rows and 3 companies x 200 new jobs; no network latency or throttle sleeping. After includes SQLite inventory storage. Median run selected by elapsed time.",
+  "before": {
+    "runs": [
+      {
+        "build_requests_seconds": 0.13979811299941503,
+        "checkpoint_seconds": 0.09770935800406733,
+        "elapsed_seconds": 30.34381245899931,
+        "prepare_seconds": 25.34887646299103,
+        "read_requests": 44,
+        "read_response_bytes": 32965158,
+        "reading_seconds": 1.3326842790011142,
+        "staging_seconds": 1.1749002940268838,
+        "throttle_seconds": 0.0,
+        "update_entries": 13851,
+        "write_payload_bytes": 3644231,
+        "write_requests": 13,
+        "writing_seconds": 1.847298693999619
+      },
+      {
+        "build_requests_seconds": 0.1588524650032923,
+        "checkpoint_seconds": 0.09872674100915901,
+        "elapsed_seconds": 31.39711092699872,
+        "prepare_seconds": 26.336118283004907,
+        "read_requests": 44,
+        "read_response_bytes": 32965158,
+        "reading_seconds": 1.3429273849906167,
+        "staging_seconds": 1.140998871953343,
+        "throttle_seconds": 0.0,
+        "update_entries": 13851,
+        "write_payload_bytes": 3644231,
+        "write_requests": 13,
+        "writing_seconds": 1.9059888959927775
+      },
+      {
+        "build_requests_seconds": 0.15591296600541682,
+        "checkpoint_seconds": 0.08940755400180933,
+        "elapsed_seconds": 32.195842873999936,
+        "prepare_seconds": 26.825094199008163,
+        "read_requests": 44,
+        "read_response_bytes": 32965158,
+        "reading_seconds": 1.4023041529944749,
+        "staging_seconds": 1.3324647899753472,
+        "throttle_seconds": 0.0,
+        "update_entries": 13851,
+        "write_payload_bytes": 3644231,
+        "write_requests": 13,
+        "writing_seconds": 1.9769129300002533
+      }
+    ],
+    "median_run": {
+      "build_requests_seconds": 0.1588524650032923,
+      "checkpoint_seconds": 0.09872674100915901,
+      "elapsed_seconds": 31.39711092699872,
+      "prepare_seconds": 26.336118283004907,
+      "read_requests": 44,
+      "read_response_bytes": 32965158,
+      "reading_seconds": 1.3429273849906167,
+      "staging_seconds": 1.140998871953343,
+      "throttle_seconds": 0.0,
+      "update_entries": 13851,
+      "write_payload_bytes": 3644231,
+      "write_requests": 13,
+      "writing_seconds": 1.9059888959927775
+    }
+  },
+  "after": {
+    "runs": [
+      {
+        "build_requests_seconds": 0.045135828007914824,
+        "checkpoint_seconds": 0.1211366999996244,
+        "elapsed_seconds": 3.6009253169977455,
+        "inventory_payload_bytes": 850239,
+        "prepare_seconds": 0.1981188299942005,
+        "read_requests": 42,
+        "read_response_bytes": 5983838,
+        "reading_seconds": 0.7826454260139144,
+        "staging_seconds": 0.5192788589956763,
+        "throttle_seconds": 0.0,
+        "update_entries": 57,
+        "write_payload_bytes": 1863522,
+        "write_requests": 13,
+        "writing_seconds": 1.9064323290040193
+      },
+      {
+        "build_requests_seconds": 0.04079542301042238,
+        "checkpoint_seconds": 0.11620715999379172,
+        "elapsed_seconds": 3.634687188998214,
+        "inventory_payload_bytes": 850239,
+        "prepare_seconds": 0.20200080100767082,
+        "read_requests": 42,
+        "read_response_bytes": 5983838,
+        "reading_seconds": 0.799692093005433,
+        "staging_seconds": 0.532580601004156,
+        "throttle_seconds": 0.0,
+        "update_entries": 57,
+        "write_payload_bytes": 1863522,
+        "write_requests": 13,
+        "writing_seconds": 1.9205413950039656
+      },
+      {
+        "build_requests_seconds": 0.045262441995873814,
+        "checkpoint_seconds": 0.11771150599452085,
+        "elapsed_seconds": 3.660588613998698,
+        "inventory_payload_bytes": 850239,
+        "prepare_seconds": 0.19732469600057811,
+        "read_requests": 42,
+        "read_response_bytes": 5983838,
+        "reading_seconds": 0.7784116420007194,
+        "staging_seconds": 0.545904603011877,
+        "throttle_seconds": 0.0,
+        "update_entries": 57,
+        "write_payload_bytes": 1863522,
+        "write_requests": 13,
+        "writing_seconds": 1.9447453629982192
+      }
+    ],
+    "median_run": {
+      "build_requests_seconds": 0.04079542301042238,
+      "checkpoint_seconds": 0.11620715999379172,
+      "elapsed_seconds": 3.634687188998214,
+      "inventory_payload_bytes": 850239,
+      "prepare_seconds": 0.20200080100767082,
+      "read_requests": 42,
+      "read_response_bytes": 5983838,
+      "reading_seconds": 0.799692093005433,
+      "staging_seconds": 0.532580601004156,
+      "throttle_seconds": 0.0,
+      "update_entries": 57,
+      "write_payload_bytes": 1863522,
+      "write_requests": 13,
+      "writing_seconds": 1.9205413950039656
+    }
+  }
+}

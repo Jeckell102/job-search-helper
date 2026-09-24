@@ -168,7 +168,7 @@ To fetch multiple company inventories while keeping one Sheets writer:
 
 The scraper defaults to `5` fetch workers, `--assignment-window 100`, and `--batch-size 200`, so plain `./job-search-scraper start` opens the same worker dashboard unless you override those options.
 
-The controller preloads company snapshots into a local queue. A fetcher hands its result to the local writer buffer and immediately takes the next queued company, even while the writer is waiting on Google Sheets. Only the writer reads/writes Sheets and checkpoints; workers never access Sheets or SQLite. Assignments exclude all already-assigned company IDs, preventing duplicate concurrent fetches.
+The controller preloads company snapshots into a local queue. A fetcher hands its result to the local writer buffer and immediately takes the next queued company, even while the writer is waiting on Google Sheets. Each fetcher saves its complete result into `.state/inventories.sqlite3` before taking its next assignment. Only the controller reads/writes Sheets and cycle checkpoints; fetchers never access Sheets. Assignments exclude all already-assigned company IDs, preventing duplicate concurrent fetches.
 
 The default assignment window is `100`. It bounds assigned/running/completed-but-unsaved companies, plus the company currently being saved. Its effective minimum is the worker count. The writer replenishes the queue before saves and between batches. Fetchers can pause when the buffer is full, no eligible companies remain, or their own HTTP calls are waiting/retrying. This bounds memory when fetching is faster than writing. Companies sheet statuses are synchronized by the writer and can lag actual fetching while a Sheets call is busy.
 
@@ -180,7 +180,7 @@ If one company hits a writer-side scraper error, the run logs that company to `.
 ./job-search-scraper errors
 ```
 
-On Ctrl+C, queued assignments are cancelled, running requests are allowed to finish, and unfinished companies are refetched on restart. Completed inventories are released from memory after saving. To adjust Google Sheets pacing for the writer:
+On Ctrl+C, queued assignments are cancelled and running fetches finish into the durable SQLite inbox. Restart replays saved inventories from their last acknowledged batch; only fetches without saved results need repeating. Completed inventories are removed from the inbox only after the company write and checkpoint succeed. Failed companies retain their inventories for explicit retry. To adjust Google Sheets pacing for the writer:
 
 ```bash
 ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200 --sheet-request-interval 1.1
@@ -190,7 +190,36 @@ Lower values are faster but more likely to hit Google per-user request limits. T
 
 Inventory rows are saved to Google Sheets in atomic batches. The scraper defaults to `--batch-size 200`; use a smaller value, such as `--batch-size 100` or `--batch-size 25`, if Google rejects a large write because several job descriptions are unusually large. The allowed range is `1` to `200`, with a `2.2 MB` safety threshold for each Sheets write.
 
-After each inventory batch, the scraper prints a `batch timing` line that breaks down company refresh, local planning, Google Sheets load, request building, write time, local checkpointing, payload size, and request count.
+After each inventory batch, the scraper prints a `batch timing` line. `read_api` and `write_api` measure API execution separately from `throttle` waits; read execution includes the client's existing retry/backoff time. `read_requests`/`write_requests` count logical API calls (internal read retries are not separately counted). `requests` counts entries inside the atomic write, not HTTP calls. Response and write sizes are uncompressed JSON bytes, not wire/compressed sizes. Planning, validation/preparation, request construction, and checkpoint timing are also reported. These nested timings are not all additive.
+
+At completion or Ctrl+C, totals are saved beside the state database in `scraper-performance.json` (counts/timings only). View the last run with:
+
+```bash
+./job-search-scraper performance
+```
+
+### SQLite first, Sheets sync
+
+Normal `start` now saves fetched inventories durably before the controller syncs them, so worker handoffs and new local assignments can continue while Sheets is busy. Defaults remain 5 fetch workers, assignment window 100, write batch 200, and request interval 1.1 seconds. The dashboard's saved-job count still means **confirmed new Sheets rows**, not merely local inventory items.
+
+To collect jobs first and run the Sheets synchronization in a separate invocation:
+
+```bash
+./job-search-scraper start --defer-sync
+./job-search-scraper sync
+```
+
+`--defer-sync` still reads Companies and updates company/cycle control records in Sheets; it defers job writes. The in-memory assignment window remains bounded, while completed inventories can accumulate on disk for the full cycle. `sync` never fetches job boards. It uses the saved payload and current screening rules, checks current company pauses and claims, and applies the same formula/validation/user-field protections. Both commands use the same exclusive writer lock; run them sequentially.
+
+After resolving a company write error, retry its retained payload with `./job-search-scraper sync --retry-blocked`. For failed fetches without usable inventory, use `./job-search-scraper start --retry-blocked`. `sync` also accepts `--batch-size` and `--sheet-request-interval`. Without explicit retry, blocked inventories remain stored and skipped.
+
+Keep the **whole `.state` directory**, including the inbox and any SQLite WAL files. Unsynced jobs now depend on that local storage. The inbox is restricted to the local account and bound to the spreadsheet ID; changing destinations requires retaining the original inbox with its original destination. Successful company syncs release their payloads. Existing checkpoint databases migrate automatically, and legacy interrupted companies without saved inventory are refetched.
+
+The writer loads the planning snapshot once per run and indexes Job History identities in memory. It updates that cache after confirmed writes. Subsequent large-tab commits reread identity columns and only the affected full rows plus the append tail. Small control tabs still use a single fresh read. Fresh review-state checks prevent cached decisions from overwriting intervening user edits. Formula cells, strict dropdowns, rich URL identities, user-owned application fields, and personal notes retain their checks.
+
+New rows use grouped, explicitly addressed blocks inside the same atomic `batchUpdate`; updates use only contiguous changed cells. Explicit destinations allow validation before writing. The writer does not blindly retry a positional append after a timeout: restart resolves stable identities from Sheets, then replays the saved inventory. An ambiguous response or checkpoint interruption therefore cannot append the same keyed job again. Continue to avoid sorting/inserting/deleting sheet rows during a commit; the API does not offer a transaction spanning read and write.
+
+See [the offline benchmark and verification results](docs/writer-performance.md) for measured improvements and limits.
 
 Blocked companies are not automatically retried. After you inspect the issue or change its configuration, explicitly request:
 
@@ -251,7 +280,7 @@ Preferred titles include Field Application(s) Engineer, Application(s) Engineer,
 
 Blacklist matches are skipped before insertion and reported in the terminal. Other clear exclusions on new jobs are saved to Job History as `No` / `Reviewed` / `Reject`, with the evidence and Rejection Reason retained. Existing jobs keep the existing reassessment workflow: manual No decisions and review notes are preserved, and In Progress rows are untouched. This change does not retroactively sweep existing jobs. The title cleanup commands remain title-only; they do not apply travel, employment, or description rules.
 
-You can leave an existing scrape running during a code update. To load the new rules, press Ctrl+C once, wait for the process to exit, then run `./job-search-scraper start` with your preferred worker/batch options. Stopping just after a `saved ... inventory items processed` message avoids interrupting that write. An interrupted company is refetched and replayed against stable job identities; already saved jobs are not duplicated. Completed companies remain completed in the resumed cycle and receive the new rules on the next full scan. Keep `.state`; do not start a second writer. Fetch workers may take time to finish outstanding requests before the interrupted process exits.
+You can leave an existing scrape running during a code update. To load the new rules, press Ctrl+C once, wait for the process to exit, then run `./job-search-scraper start` with your preferred worker/batch options. Stopping just after a `saved ... inventory items processed` message avoids interrupting that write. Saved inventories resume from SQLite and replay against stable job identities; legacy interruptions without saved inventories are refetched. Already saved jobs are not duplicated. Completed companies remain completed in the resumed cycle and receive the new rules on the next full scan. Keep `.state`; do not start a second writer. Fetch workers may take time to finish outstanding requests before the interrupted process exits.
 
 ## Assessment objective for the reviewing AI
 
