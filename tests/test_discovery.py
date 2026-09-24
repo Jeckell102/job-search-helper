@@ -88,14 +88,14 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_careers_page_without_board_or_obvious_cta_does_not_guess(self):
         result, pages, api = self.fetch([html('<a href="/about">About Acme</a>')])
-        self.assertEqual(result.status, "unsupported")
+        self.assertEqual(result.status, "partial")
         self.assertIn("No supported ATS link", result.reason)
         self.assertEqual(pages.urls, [PAGE])
         self.assertFalse(api.urls)
 
     def test_bounded_cta_discovery_ignores_other_hosts(self):
         result, pages, api = self.fetch([html('<a href="https://other.example/jobs">Jobs</a>')])
-        self.assertEqual(result.status, "unsupported")
+        self.assertEqual(result.status, "partial")
         self.assertEqual(pages.urls, [PAGE])
         self.assertFalse(api.urls)
 
@@ -112,7 +112,7 @@ class DiscoveryTests(unittest.TestCase):
     def test_plain_text_and_lookalike_host_do_not_establish_board(self):
         result, _, api = self.fetch([html('https://jobs.lever.co/acme'
             '<a href="https://jobs.lever.co.evil.example/acme">Jobs</a>')])
-        self.assertEqual(result.status, "unsupported")
+        self.assertEqual(result.status, "partial")
         self.assertFalse(api.urls)
 
     def test_multiple_boards_are_not_assigned_to_company(self):
@@ -189,7 +189,7 @@ class DiscoveryTests(unittest.TestCase):
     def test_size_limit_and_non_html(self):
         for page in (html("x" * (MAX_HTML_BYTES + 1)), response({"link": BOARD})):
             result, _, api = self.fetch([page])
-            self.assertEqual(result.status, "unsupported")
+            self.assertIn(result.status, {"partial", "unsupported"})
             self.assertFalse(api.urls)
 
     def test_api_partial_and_blocked_keep_discovery_evidence(self):

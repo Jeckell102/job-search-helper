@@ -70,8 +70,8 @@ Options for start (batch size, sync interval and request interval also apply to 
       Retry blocked saved work by default; start can also retry failed fetches.
       Use --no-retry-blocked to leave blocked work on manual-review hold.
 
-  --browser-fallback
-      If a direct public-board fetch is blocked/unsupported/failed, open the
+  --browser-fallback / --no-browser-fallback
+      Enabled by default. If a direct public-board fetch is blocked/unsupported/failed, open the
       careers page in a local Chromium browser and try to scrape visible job
       postings. Requires optional Playwright setup. Browser failure is treated
       as incomplete/manual review, never as evidence of closure.
@@ -137,7 +137,7 @@ Screening on start (no AI calls):
 
 Examples:
   ./job-search-scraper start
-  ./job-search-scraper start --browser-fallback
+  ./job-search-scraper start
   ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
   ./job-search-scraper start --defer-sync
   ./job-search-scraper sync
@@ -187,7 +187,7 @@ def _load_environment():
 def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
               batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1,
               defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60,
-              browser_fallback=False):
+              browser_fallback=True):
     if not 1 <= sync_interval <= 3600:
         raise ValueError("Sync interval must be between 1 and 3600 seconds")
     if not 1 <= fetch_workers <= 5 or not 1 <= assignment_window <= 100:
@@ -336,7 +336,7 @@ def main(argv=None):
     parser.add_argument("command")
     parser.add_argument("--defer-sync", action="store_true")
     parser.add_argument("--retry-blocked", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--browser-fallback", action="store_true")
+    parser.add_argument("--browser-fallback", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--fetch-workers", type=int, default=DEFAULT_FETCH_WORKERS)
     parser.add_argument("--assignment-window", type=int, default=DEFAULT_ASSIGNMENT_WINDOW)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_SCRAPER_BATCH_SIZE)

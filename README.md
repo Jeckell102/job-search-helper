@@ -73,13 +73,13 @@ For sites where the public careers page works in a real browser but direct HTTP/
 .venv/bin/python -m playwright install chromium
 ```
 
-Then explicitly retry blocked companies with:
+The fallback is enabled by default for `start`. After installing it, retry blocked companies with:
 
 ```bash
-./job-search-scraper start --browser-fallback
+./job-search-scraper start
 ```
 
-The normal adapter still runs first. If it reports blocked/failed/unsupported, a fetch worker opens the careers URL in Chromium, watches same-site JSON responses, and also scrapes visible job links/details from the rendered page. Successful browser results become the same normalized inventory rows the writer already handles. Browser failures, CAPTCHAs, logins, or empty/incomplete pages remain blocked/manual-review and never count as closure evidence.
+The normal adapter still runs first. If it reports blocked/failed/unsupported, a fetch worker opens the careers URL in Chromium, watches same-site JSON responses, and also scrapes visible job links/details from the rendered page. Successful browser results become the same normalized inventory rows the writer already handles. Browser failures, CAPTCHAs, logins, or empty/incomplete pages remain incomplete/manual-review and never count as closure evidence. Use `--no-browser-fallback` if you want the older direct-adapter-only behavior.
 
 Examples of URL *shapes*, not verified company assignments:
 

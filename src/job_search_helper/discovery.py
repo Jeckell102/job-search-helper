@@ -270,8 +270,8 @@ def discover_board(ats, careers_url, transport=None):
             if candidate not in visited and all(candidate != item[0] for item in queue):
                 queue.append((candidate, 0))
     if queue:
-        raise FetchError("unsupported", "No supported ATS link found within the bounded careers-page discovery limit; provide the direct board URL.")
+        raise FetchError("partial", "No supported ATS link found within the bounded careers-page discovery limit; the careers page is reachable but inventory completeness is unknown.")
     if unsupported:
         names = ", ".join(sorted(unsupported))
         raise FetchError("unsupported", f"Found {names} careers links, but that ATS is not supported yet; leave blocked or add an adapter before automatic scraping.")
-    raise FetchError("unsupported", "No supported ATS link found on careers page or obvious same-site job links; it may use another ATS or require JavaScript. Provide a direct Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, or Taleo board URL.")
+    raise FetchError("partial", "No supported ATS link found on careers page or obvious same-site job links; the careers page is reachable but may use another ATS or require JavaScript, so inventory completeness is unknown.")
