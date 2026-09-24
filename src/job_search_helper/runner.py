@@ -33,6 +33,10 @@ Options for start:
       Read/queue up to N companies locally before refreshing Companies from
       Google Sheets. Allowed: 1-100. Default: 25.
 
+  --sheet-request-interval SECONDS
+      Minimum delay between Google Sheets requests made by the writer.
+      Allowed: 0.5-5.0. Default: 1.1.
+
   help         Show this command list.
   --help       Show this command list.
   -h           Show this command list.
@@ -89,14 +93,16 @@ def _load_environment():
         os.environ[variable] = str(project_path(os.environ.get(variable, default)))
 
 
-def run_start(fetch_workers=1, assignment_window=25):
+def run_start(fetch_workers=1, assignment_window=25, sheet_request_interval=1.1):
     print("Starting job scraping", flush=True)
+    if not 0.5 <= sheet_request_interval <= 5.0:
+        raise ValueError("Sheet request interval must be between 0.5 and 5.0 seconds")
     _load_environment()
     load_title_blacklist()
     database = state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with writer_lock(database.parent / "writer.lock"):
-        repo = get_repository(write=True, interactive=False)
+        repo = get_repository(write=True, interactive=False, min_request_interval=sheet_request_interval)
         repo.validate_schema()
         state = State(str(database))
         os.chmod(database, 0o600)
@@ -127,6 +133,7 @@ def main(argv=None):
     parser.add_argument("command")
     parser.add_argument("--fetch-workers", type=int, default=1)
     parser.add_argument("--assignment-window", type=int, default=25)
+    parser.add_argument("--sheet-request-interval", type=float, default=1.1)
     try:
         args = parser.parse_args(argv)
     except SystemExit:
@@ -137,7 +144,11 @@ def main(argv=None):
         print("Run ./job-search-scraper help for available commands.", file=sys.stderr)
         return 2
     try:
-        return run_start(fetch_workers=args.fetch_workers, assignment_window=args.assignment_window)
+        return run_start(
+            fetch_workers=args.fetch_workers,
+            assignment_window=args.assignment_window,
+            sheet_request_interval=args.sheet_request_interval,
+        )
     except KeyboardInterrupt:
         print("Stopped. Run ./job-search-scraper start to continue.", file=sys.stderr)
         return 130

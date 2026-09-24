@@ -51,14 +51,16 @@ def state_path() -> Path:
     return project_path(os.environ.get("STATE_DB_FILE", ".state/state.db"))
 
 
-def get_repository(write: bool = False, interactive: bool = False) -> GoogleRepository:
+def get_repository(write: bool = False, interactive: bool = False, min_request_interval: float | None = None) -> GoogleRepository:
     spreadsheet_id = os.environ.get("SPREADSHEET_ID", "").strip()
     if not spreadsheet_id or not re.fullmatch(r"[A-Za-z0-9_-]+", spreadsheet_id):
         raise ValueError("Set SPREADSHEET_ID to the working spreadsheet ID in .env.")
     if write and spreadsheet_id == "1avssxbKDXMrKS0oFHNAfhbQ2HWNz3T_jkn4DSUEmqv0":
         raise ValueError("Refusing to write to Job Search Master - Original. Configure the working copy instead.")
     service = authorize(write=write, interactive=interactive)
-    return GoogleRepository(service, spreadsheet_id)
+    if min_request_interval is None:
+        return GoogleRepository(service, spreadsheet_id)
+    return GoogleRepository(service, spreadsheet_id, min_request_interval=min_request_interval)
 
 
 def detached_repository(repo: GoogleRepository) -> MemoryRepository:

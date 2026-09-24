@@ -207,6 +207,7 @@ class CliTests(unittest.TestCase):
                 self.assertIn("start        Start or resume the automated scraper.", text)
                 self.assertIn("--fetch-workers N", text)
                 self.assertIn("--assignment-window N", text)
+                self.assertIn("--sheet-request-interval SECONDS", text)
                 self.assertIn("./job-search-helper cleanup-blacklist", text)
 
     def test_scraper_unknown_command_points_to_help(self):
@@ -217,12 +218,15 @@ class CliTests(unittest.TestCase):
     def test_scraper_start_still_runs_start_command(self):
         with patch.object(runner, "run_start", return_value=0) as start:
             self.assertEqual(runner.main(["start"]), 0)
-            start.assert_called_once_with(fetch_workers=1, assignment_window=25)
+            start.assert_called_once_with(fetch_workers=1, assignment_window=25, sheet_request_interval=1.1)
 
     def test_scraper_start_passes_parallel_options(self):
         with patch.object(runner, "run_start", return_value=0) as start:
-            self.assertEqual(runner.main(["start", "--fetch-workers", "4", "--assignment-window", "25"]), 0)
-            start.assert_called_once_with(fetch_workers=4, assignment_window=25)
+            self.assertEqual(runner.main([
+                "start", "--fetch-workers", "4", "--assignment-window", "25",
+                "--sheet-request-interval", "0.8",
+            ]), 0)
+            start.assert_called_once_with(fetch_workers=4, assignment_window=25, sheet_request_interval=0.8)
 
     def test_start_requires_an_explicit_scope(self):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
