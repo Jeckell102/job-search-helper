@@ -152,6 +152,7 @@ class _Sheet:
     row_count: int = 1000
     column_count: int = 26
     tables: list[dict] = field(default_factory=list)
+    append_floor: int = 0
 
     def records(self):
         records = []
@@ -212,12 +213,49 @@ def _validate_dropdown(rule, value, tab, header):
         raise RepositoryError(f"{tab}.{header}: strict {kind} validation needs manual confirmation.")
 
 
+def _identity_key(header, value):
+    if header in {"Company", "Company ID"}:
+        return str(value).strip().casefold()
+    if header in URL_HEADERS:
+        return _url(value)
+    return str(value).strip()
+
+
+class IdentityIndex:
+    """Indexed candidate selection with the same normalization as _equivalent."""
+    def __init__(self, records):
+        self.rows = dict(records)
+        self.columns = {}
+
+    def matches(self, identity):
+        candidates = None
+        for header, value in identity.items():
+            if header not in self.columns:
+                index = {}
+                for row, values in self.rows.items():
+                    index.setdefault(_identity_key(header, values.get(header, "")), set()).add(row)
+                self.columns[header] = index
+            ids = self.columns[header].get(_identity_key(header, value), set())
+            candidates = ids.copy() if candidates is None else candidates & ids
+        return [(r, self.rows[r]) for r in sorted(candidates or ())]
+
+    def put(self, row, values):
+        old = self.rows.get(row)
+        for header, index in self.columns.items():
+            if old is not None:
+                index.get(_identity_key(header, old.get(header, "")), set()).discard(row)
+            index.setdefault(_identity_key(header, values.get(header, "")), set()).add(row)
+        self.rows[row] = values
+
+
 def _prepare(sheets, schemas, operations):
     """Mutate only a private snapshot; return exact, validated cell edits."""
+    indexes = {tab: IdentityIndex(sheet.records()) for tab, sheet in sheets.items()}
+    tails = {tab: max([sheet.append_floor, 0, *indexes[tab].rows]) for tab, sheet in sheets.items()}
     changed = {}
     inserted = updated = 0
     new_rows = set()
-    allowed_keys = {"tab", "identity", "values", "on_insert", "append_if_missing", "append_notes"}
+    allowed_keys = {"tab", "identity", "values", "on_insert", "append_if_missing", "append_notes", "expected"}
     for operation in operations:
         if not isinstance(operation, dict) or set(operation) - allowed_keys:
             raise RepositoryError("Unexpected operation field or invalid operation object.")
@@ -233,7 +271,7 @@ def _prepare(sheets, schemas, operations):
         ):
             raise RepositoryError("Every operation requires a nonempty, nonblank identity.")
         mappings = [identity]
-        for key in ("values", "on_insert", "append_notes"):
+        for key in ("values", "on_insert", "append_notes", "expected"):
             value = operation.get(key, {})
             if not isinstance(value, dict):
                 raise RepositoryError(f"{key} must be a mapping.")
@@ -248,15 +286,21 @@ def _prepare(sheets, schemas, operations):
         for header, value in operation.get("values", {}).items():
             if header in identity and not _equivalent(header, value, identity[header]):
                 raise RepositoryError("A commit cannot change its own identity.")
-        matches = [(r, values) for r, values in sheet.records()
-                   if all(_equivalent(h, values[h], v) for h, v in identity.items())]
+        matches = indexes[tab].matches(identity)
         if len(matches) > 1:
             raise RepositoryError(f"{tab}: identity matches multiple rows; refusing to guess.")
         is_new = not matches
         if is_new:
+            if tab == "Job History":
+                proposed = {**operation.get("on_insert", {}), **identity, **operation.get("values", {})}
+                if proposed.get("Company") and proposed.get("Official Job URL"):
+                    aliases = indexes[tab].matches({h: proposed[h] for h in ("Company", "Official Job URL")})
+                    if aliases:
+                        raise RepositoryError("Job History: official URL already has another identity; replan before inserting.")
             if not operation.get("append_if_missing", False):
                 raise RepositoryError(f"{tab}: identity does not exist; append is not authorized.")
-            row = max([0] + [r for r, _ in sheet.records()]) + 1
+            row = tails[tab] + 1
+            tails[tab] = row
             if row >= MAX_ROWS:
                 raise RepositoryError("Maximum safe row bound reached.")
             old_values = {h: "" for h in sheet.headers}
@@ -266,6 +310,14 @@ def _prepare(sheets, schemas, operations):
             inserted += 1
         else:
             row, old_values = matches[0]
+            expected = operation.get("expected", {})
+            if any(not _equivalent(h, old_values.get(h, ""), v) for h, v in expected.items()):
+                # An acknowledged-but-not-checkpointed batch can be replayed.
+                # Accept only if all intended values already landed; otherwise
+                # preserve intervening review/user edits and require replanning.
+                if not all(_equivalent(h, old_values.get(h, ""), v)
+                           for h, v in operation.get("values", {}).items()):
+                    raise RepositoryError(f"{tab}: review fields changed since planning; replan from fresh rows.")
             values = dict(operation.get("values", {}))
             # Job-level review lock. If AI has claimed this Job History row,
             # scraper/source updates are ignored for this pass. AI claim refresh
@@ -312,6 +364,8 @@ def _prepare(sheets, schemas, operations):
             replacement.pop("textFormatRuns", None)
             sheet.cells[(row, col)] = replacement
             changed[(tab, row, col)] = encoded
+        current = {h: _value(sheet.cells.get((row, c), {}), h) for c, h in enumerate(sheet.headers)}
+        indexes[tab].put(row, current)
     # Report only rows actually inserted against the authoritative fresh read.
     # Callers receive this metadata only after the write succeeds.
     new_jobs = []
@@ -433,6 +487,11 @@ class GoogleRepository:
         self._committed_rows = {}
         self._metadata_cache = None
         self._header_cache = {}
+        self._write_layout = {}
+        self._committed_partial = False
+        self.metrics = {"read_requests": 0, "write_requests": 0, "read_response_bytes": 0,
+                        "write_payload_bytes": 0, "read_seconds": 0.0, "write_seconds": 0.0,
+                        "throttle_seconds": 0.0}
 
     def _execute(self, request, action):
         # Scraper and reviewer run as separate processes but share one Google-user
@@ -441,22 +500,34 @@ class GoogleRepository:
         # safely by googleapiclient on 429/5xx responses; writes are never
         # automatically retried because a lost write response can be ambiguous.
         delay = max(0.0, self._next_request_at - time.monotonic())
+        wait_started = time.monotonic()
         if delay:
             time.sleep(delay)
+        self.metrics["throttle_seconds"] += time.monotonic() - wait_started
         self._next_request_at = time.monotonic() + self.min_request_interval
+        self.metrics[action + "_requests"] += 1
+        started = time.monotonic()
         try:
             if action == "read":
                 try:
-                    return request.execute(num_retries=5)
+                    response = request.execute(num_retries=5)
                 except TypeError:
-                    # Lightweight test doubles and older clients may not expose
-                    # num_retries; fall back without changing production behavior.
-                    return request.execute()
-            return request.execute()
+                    response = request.execute()
+                self.metrics["read_response_bytes"] += len(json.dumps(response, ensure_ascii=True).encode("utf-8"))
+            else:
+                response = request.execute()
+            return response
         except Exception as exc:
+            # Discard layout on ambiguous failures. The next attempt starts
+            # from authoritative identities, including remotely applied rows.
+            self._write_layout.clear()
+            self._metadata_cache = None
+            self._header_cache.clear()
             suffix = (" No successful write is confirmed; resume the same keyed decision."
                       if action == "write" else " No spreadsheet changes were requested by this read.")
             raise RepositoryError(f"Google Sheets {action} failed ({type(exc).__name__})." + suffix) from exc
+        finally:
+            self.metrics[action + "_seconds"] += time.monotonic() - started
 
     def _metadata(self):
         if self._metadata_cache is None:
@@ -466,7 +537,7 @@ class GoogleRepository:
             ), "read")
         return self._metadata_cache
 
-    def _load(self, tabs):
+    def _load(self, tabs, ranges_override=None):
         tabs = sorted(set(tabs))
         for tab in tabs:
             _tab(tab)
@@ -484,7 +555,7 @@ class GoogleRepository:
         if not ranges:
             return {}
         data = self._execute(self.service.spreadsheets().get(
-            spreadsheetId=self.spreadsheet_id, ranges=ranges, includeGridData=True,
+            spreadsheetId=self.spreadsheet_id, ranges=ranges_override or ranges, includeGridData=True,
             fields=("sheets(properties(sheetId,title,gridProperties),tables,"
                     "data(startRow,startColumn,rowData(values(userEnteredValue,effectiveValue,"
                     "formattedValue,hyperlink,textFormatRuns,dataValidation))))"),
@@ -496,6 +567,8 @@ class GoogleRepository:
             if tab not in tabs:
                 continue
             grid = props.get("gridProperties", found[tab]["properties"]["gridProperties"])
+            if not (0 < grid.get("rowCount", 0) <= MAX_ROWS and 0 < grid.get("columnCount", 0) <= MAX_COLUMNS):
+                raise RepositoryError(f"{tab}: grid exceeds safe bounds.")
             sheet = _Sheet([], sheet_id=props["sheetId"], row_count=grid["rowCount"],
                            column_count=grid["columnCount"],
                            tables=raw.get("tables", found[tab].get("tables", [])))
@@ -522,6 +595,62 @@ class GoogleRepository:
         if set(loaded) != set(tabs):
             raise RepositoryError("The server omitted a requested sheet; no write is safe.")
         return loaded
+
+    def _load_commit(self, operations):
+        """Fresh identity columns + full affected rows and the append tail.
+
+        The remembered tail is only a conservative allocation floor. It never
+        authorizes overwriting a row. Headers, links and identities are reread
+        every commit, so stale row positions are never trusted.
+        """
+        tabs = sorted({op["tab"] for op in operations})
+        if (not set(tabs) & {"Job History", "Opportunities"}
+                or any(tab not in self._write_layout for tab in tabs)):
+            return self._load(tabs)
+        ranges = []
+        for tab in tabs:
+            headers, tail = self._write_layout[tab]
+            escaped = tab.replace("'", "''")
+            end = _column_name(len(headers))
+            ranges.append(f"'{escaped}'!1:1")
+            identities = set().union(*(set(op["identity"]) for op in operations if op["tab"] == tab))
+            if tab == "Job History":
+                identities.update({"Company", "Job Key", "Official Job URL"})
+            for header in identities:
+                if header not in headers:
+                    return self._load(tabs)
+                col = _column_name(headers.index(header) + 1)
+                ranges.append(f"'{escaped}'!{col}2:{col}")
+            # Open-ended tail read catches manual additions, even without IDs,
+            # and blank cells containing validation or formulas.
+            ranges.append(f"'{escaped}'!A{tail + 2}:{end}")
+        sheets = self._load(tabs, ranges)
+        if any(sheets[t].headers != self._write_layout[t][0] for t in tabs):
+            self._write_layout.clear()
+            return self._load(tabs)
+        row_ranges = []
+        for tab, sheet in sheets.items():
+            sheet.append_floor = self._write_layout[tab][1]
+            index = IdentityIndex(sheet.records())
+            rows = set()
+            for op in operations:
+                if op["tab"] == tab:
+                    rows.update(r for r, _ in index.matches(op["identity"]))
+            escaped = tab.replace("'", "''")
+            end = _column_name(len(sheet.headers))
+            for row in sorted(rows):
+                row_ranges.append(f"'{escaped}'!A{row + 1}:{end}{row + 1}")
+        if row_ranges:
+            # Include headers so _load can apply the same schema checks.
+            row_ranges += [f"'{t.replace(chr(39), chr(39)*2)}'!1:1" for t in tabs]
+            full_rows = self._load(tabs, row_ranges)
+            for tab, sheet in full_rows.items():
+                if sheet.headers != sheets[tab].headers:
+                    raise RepositoryError("Headers changed during commit planning; retry with a fresh read.")
+                sheets[tab].cells.update(sheet.cells)
+                sheets[tab].tables = sheet.tables
+                sheets[tab].row_count = sheet.row_count
+        return sheets
 
     def _headers(self, tab):
         _tab(tab)
@@ -671,7 +800,8 @@ class GoogleRepository:
                 raise RepositoryError("Each operation must be a mapping.")
             _tab(operation.get("tab"))
         load_started = time.monotonic()
-        sheets = self._load([op["tab"] for op in operations])
+        metrics_before = dict(self.metrics)
+        sheets = self._load_commit(operations)
         timings["sheets_load_seconds"] = time.monotonic() - load_started
         prepare_started = time.monotonic()
         changed, new_rows, result = _prepare(sheets, self.schemas, operations)
@@ -699,12 +829,38 @@ class GoogleRepository:
                     expanded = {**bounds, "endRowIndex": required_rows}
                     requests.append({"updateTable": {"table": {"tableId": table["tableId"],
                         "range": expanded}, "fields": "range"}})
+        # Existing rows: contiguous changed spans only (never blank holes).
+        # New rows: rectangular blocks of just populated spans, batched across
+        # consecutive rows with identical columns. Explicit addresses allow
+        # validation at the exact destination and keyed replay after timeouts.
+        spans = {}
         for (tab, row, col), value in sorted(changed.items()):
+            spans.setdefault((tab, row), []).append((col, value))
+        blocks = []
+        for (tab, row), cells in spans.items():
+            groups = []
+            for col, value in cells:
+                if not groups or col != groups[-1][-1][0] + 1:
+                    groups.append([])
+                groups[-1].append((col, value))
+            for group in groups:
+                col = group[0][0]
+                values = [{"userEnteredValue": value} for _, value in group]
+                # Merge inserts vertically; updates retain precise changed spans.
+                previous = next((b for b in reversed(blocks)
+                    if (tab, row) in new_rows and b["new"] and b["tab"] == tab
+                    and b["col"] == col and b["row"] + len(b["rows"]) == row
+                    and len(b["rows"][0]["values"]) == len(values)), None)
+                if previous is not None:
+                    previous["rows"].append({"values": values})
+                else:
+                    blocks.append({"tab": tab, "row": row, "col": col,
+                                   "new": (tab, row) in new_rows, "rows": [{"values": values}]})
+        for block in blocks:
             requests.append({"updateCells": {
-                "start": {"sheetId": sheets[tab].sheet_id, "rowIndex": row, "columnIndex": col},
-                "rows": [{"values": [{"userEnteredValue": value}]}],
-                "fields": "userEnteredValue",
-            }})
+                "start": {"sheetId": sheets[block["tab"]].sheet_id,
+                          "rowIndex": block["row"], "columnIndex": block["col"]},
+                "rows": block["rows"], "fields": "userEnteredValue"}})
         timings["build_requests_seconds"] = time.monotonic() - build_started
         if requests:
             payload_started = time.monotonic()
@@ -717,6 +873,7 @@ class GoogleRepository:
                              for req in requests)
             # No automatic retry of writes: after a timeout, rerun the same keyed
             # decision so it is resolved against the authoritative fresh sheet.
+            self.metrics["write_payload_bytes"] += payload_bytes
             write_started = time.monotonic()
             self._execute(self.service.spreadsheets().batchUpdate(
                 spreadsheetId=self.spreadsheet_id, body={"requests": requests},
@@ -727,7 +884,18 @@ class GoogleRepository:
                 self._header_cache = {}
         self._header_cache = {}
         committed_started = time.monotonic()
-        self._committed_rows = {tab: [values for _, values in sheet.records()] for tab, sheet in sheets.items()}
+        self._committed_partial = True
+        self._committed_rows = {}
+        for tab, sheet in sheets.items():
+            records = sheet.records()
+            self._write_layout[tab] = (list(sheet.headers), max([sheet.append_floor, 0, *[r for r, _ in records]]))
+            index = IdentityIndex(records)
+            touched = {}
+            for op in operations:
+                if op["tab"] == tab:
+                    touched.update(index.matches(op["identity"]))
+            self._committed_rows[tab] = list(touched.values())
+        timings.update({key: self.metrics[key] - metrics_before[key] for key in self.metrics})
         timings["committed_rows_seconds"] = time.monotonic() - committed_started
         timings["commit_total_seconds"] = time.monotonic() - commit_started
         return {**result, "requests": len(requests), "timings": timings}

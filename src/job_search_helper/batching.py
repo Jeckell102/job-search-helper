@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 
-from .repository import SCHEMAS, RepositoryError, _equivalent
+from .repository import SCHEMAS, RepositoryError, _equivalent, IdentityIndex
 
 
 def _identity_label(identity):
@@ -33,6 +33,23 @@ class PlanningRepository:
         self.base = repository
         self.rows = repository.read_many(SCHEMAS)
         self.operations = []
+        self._reindex()
+
+    def _reindex(self):
+        self.indexes = {tab: IdentityIndex(enumerate(rows)) for tab, rows in self.rows.items()}
+
+    def history_candidates(self, company, key, url):
+        index = self.indexes["Job History"]
+        candidates = dict(index.matches({"Company": company, "Job Key": key}))
+        candidates.update(index.matches({"Company": company, "Official Job URL": url}))
+        return list(candidates.values())
+
+    def opportunity_candidates(self, company, urls):
+        index = self.indexes["Opportunities"]
+        candidates = {}
+        for url in urls:
+            candidates.update(index.matches({"Company": company, "Job URL": url}))
+        return list(candidates.values())
 
     def begin(self):
         self.operations = []
@@ -66,8 +83,8 @@ class PlanningRepository:
             if tab not in SCHEMAS:
                 raise RepositoryError("Unapproved planning tab")
             identity = op["identity"]
-            matches = [r for r in self.rows[tab]
-                       if all(_equivalent(h, r.get(h, ""), v) for h, v in identity.items())]
+            indexed = self.indexes[tab].matches(identity)
+            matches = [r for _, r in indexed]
             if len(matches) > 1:
                 sample = " | ".join(_match_label(row) for row in matches[:3])
                 raise RepositoryError(
@@ -80,14 +97,18 @@ class PlanningRepository:
                 row = {h: "" for h in SCHEMAS[tab]}
                 row.update(op.get("on_insert", {}))
                 row.update(identity)
+                rownum = len(self.rows[tab])
                 self.rows[tab].append(row)
             else:
-                row = matches[0]
+                rownum, original = indexed[0]
+                row = copy.deepcopy(original)
+                self.rows[tab][rownum] = row
             row.update(op.get("values", {}))
             for header, note in op.get("append_notes", {}).items():
                 previous = str(row.get(header) or "")
                 if note not in previous:
                     row[header] = previous + ("\n\n" if previous else "") + note
+            self.indexes[tab].put(rownum, row)
             self.operations.append(copy.deepcopy(op))
         return {"staged": len(operations)}
 
@@ -95,8 +116,22 @@ class PlanningRepository:
         # Reuse the fresh authoritative rows already obtained by commit. This
         # includes manual edits that occurred after the initial lookup read.
         for tab, rows in self.base._committed_rows.items():
-            self.rows[tab] = copy.deepcopy(rows)
+            if not getattr(self.base, "_committed_partial", False):
+                self.rows[tab] = copy.deepcopy(rows)
+                continue
+            # Partial authoritative results contain only touched rows.
+            keys = {"Job History": ("Job Key",), "Opportunities": ("Company", "Job URL"),
+                    "Companies": ("Company ID",), "Scan Cycles": ("Cycle ID",)}[tab]
+            index = IdentityIndex(enumerate(self.rows[tab]))
+            for row in rows:
+                identity = {key: row[key] for key in keys}
+                matches = index.matches(identity)
+                if len(matches) == 1:
+                    self.rows[tab][matches[0][0]] = copy.deepcopy(row)
+                elif not matches:
+                    self.rows[tab].append(copy.deepcopy(row))
         self.operations = []
+        self._reindex()
 
 
 class PendingState:
