@@ -40,14 +40,14 @@ class RepairCareersUrlsTests(unittest.TestCase):
             return ("Greenhouse", "acme", "https://boards-api.greenhouse.io/v1/boards/"), url
 
         def fetcher(ats, url, company_id, company_name):
-            self.assertEqual(url, "https://boards-api.greenhouse.io/v1/boards/acme")
-            return Inventory("complete", jobs=[{"title": "Program Manager"}], source_url=url, ats="Greenhouse")
+            self.assertEqual(url, "https://acme.example/careers")
+            return Inventory("complete", jobs=[{"title": "Program Manager"}], source_url="https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true", ats="Greenhouse")
 
         result = repair_careers_urls(repo, fetcher=fetcher, discoverer=discoverer)
         self.assertEqual(result["validated_updates"], 1)
         self.assertEqual(result["spreadsheet_changes"], 0)
         self.assertEqual(repo.read("Companies")[0]["Scan State"], "Blocked / Manual Review")
-        self.assertEqual(result["findings"][0]["proposed_url"], "https://boards-api.greenhouse.io/v1/boards/acme")
+        self.assertEqual(result["findings"][0]["proposed_url"], "https://acme.example/careers")
 
     def test_apply_updates_validated_url_and_requeues_company(self):
         repo = self.repo([company()])
@@ -61,7 +61,7 @@ class RepairCareersUrlsTests(unittest.TestCase):
         result = repair_careers_urls(repo, apply=True, fetcher=fetcher, discoverer=discoverer)
         self.assertEqual(result["spreadsheet_changes"], 1)
         row = repo.read("Companies")[0]
-        self.assertEqual(row["Official Careers URL"], "https://api.lever.co/v0/postings/acme")
+        self.assertEqual(row["Official Careers URL"], "https://acme.example/careers")
         self.assertEqual(row["ATS / Source"], "Lever")
         self.assertEqual(row["Scan State"], "Queued")
         self.assertEqual(row["Blocked Reason"], "")
@@ -82,7 +82,7 @@ class RepairCareersUrlsTests(unittest.TestCase):
         self.assertEqual(result["validated_updates"], 0)
         self.assertEqual(result["manual_review_candidates"], 1)
         row = repo.read("Companies")[0]
-        self.assertEqual(row[CANDIDATE_COLUMN], "https://boards-api.greenhouse.io/v1/boards/acme")
+        self.assertEqual(row[CANDIDATE_COLUMN], "https://acme.example/careers")
         self.assertEqual(row["Scan State"], "Blocked / Manual Review")
         self.assertIn("Review candidate careers URL", row["Next Action"])
 

@@ -111,8 +111,13 @@ def inspect_company(
         try:
             (name, board, root), evidence_url = discoverer(ats, page_url, transport)
             proposed_ats = name
-            proposed_url = _board_url(name, board, root, "")
-            discovery_reason = f"discovered from {evidence_url}"
+            # The configured public careers page may be perfectly valid even
+            # though the scraper fetches an ATS API endpoint behind it. Keep
+            # that human URL as the saved careers URL when discovery succeeds
+            # from the current page; the normal scraper can rediscover the
+            # board on future runs.
+            proposed_url = current_url
+            discovery_reason = f"discovered {root}{board} from {evidence_url}"
         except FetchError as exc:
             return RepairFinding("skip", company_id, company_name, current_url, reason=exc.reason)
         except (OSError, ValueError, TypeError, AttributeError) as exc:
