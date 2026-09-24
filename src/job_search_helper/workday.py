@@ -192,8 +192,9 @@ def fetch_workday(board, root, company_id, company, transport):
             if page == 0:
                 first_paths = page_paths
             payload["offset"] += len(entries)
-            print(json.dumps({"event": "inventory_page", "provider": "Workday", "company_id": company_id,
-                              "page": page + 1, "postings_fetched": len(jobs), "expected": expected}), file=sys.stderr)
+            # Keep large-board progress readable in an interactive run.
+            if (page + 1) % 5 == 0 or payload["offset"] == expected:
+                print(f"{company}: Workday fetched {len(jobs)}/{expected} jobs.", flush=True)
             if payload["offset"] == expected:
                 break
         else:

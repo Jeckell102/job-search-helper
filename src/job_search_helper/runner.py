@@ -69,7 +69,6 @@ Screening on start (no AI calls):
   contract employment are saved as No with a reason. Unknowns stay for review.
   Any location/work arrangement is eligible. Existing review decisions stay.
   Detected ATS / Source is saved even for blocked/failed/partial scans.
-  Fetch pool logs distinguish fetching, locally queued, and awaiting save.
   Restart after rule changes. Ctrl+C then start resumes the unfinished cycle;
   an interrupted company is refetched and replayed without duplicate jobs.
 

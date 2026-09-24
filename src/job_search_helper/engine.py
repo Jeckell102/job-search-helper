@@ -15,7 +15,6 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from queue import Empty, SimpleQueue
-from threading import Lock
 
 from .ats import Inventory, fetch_inventory, resolve_board
 from .batching import PlanningRepository, PendingState
@@ -770,28 +769,16 @@ class Engine:
         self.state.save_cycle(cycle)
 
         started = SimpleQueue()
-        activity_lock = Lock()
-        fetching = set()
 
         def fetch_company(snapshot):
             cid = snapshot["Company ID"]
-            with activity_lock:
-                fetching.add(cid)
-                active = len(fetching)
             started.put(cid)
-            print(f"Fetch started: {snapshot['Company']} | {active}/{fetch_workers} fetching", flush=True)
-            try:
-                inventory = self.fetcher(
-                    str(snapshot.get("ATS / Source", "")),
-                    str(snapshot.get("Official Careers URL", "")),
-                    cid, snapshot["Company"],
-                )
-                if isinstance(inventory, Inventory):
-                    print(f"Fetch finished: {snapshot['Company']} | {inventory.ats or 'ATS undetermined'} | {inventory.status}; handed to writer buffer", flush=True)
-                return cid, inventory
-            finally:
-                with activity_lock:
-                    fetching.discard(cid)
+            inventory = self.fetcher(
+                str(snapshot.get("ATS / Source", "")),
+                str(snapshot.get("Official Careers URL", "")),
+                cid, snapshot["Company"],
+            )
+            return cid, inventory
 
         processed = set()
         in_flight = {}
@@ -872,15 +859,6 @@ class Engine:
                 collect_finished()
                 record_started()
                 refill(rows)
-                with activity_lock:
-                    active_ids = set(fetching)
-                active = len(active_ids)
-                queued = sum(not future.done() and cid not in active_ids for future, cid in in_flight.items())
-                waiting = sum(item.get("stage") == "inventory" and cid != saving_cid
-                              for cid, item in cycle["companies"].items())
-                waiting += sum(future.done() for future in in_flight)
-                writer = cycle["companies"][saving_cid]["company"] if saving_cid else "idle"
-                print(f"Fetch pool: {active}/{fetch_workers} fetching; {queued} locally queued; {waiting} awaiting save; writer={writer}.", flush=True)
 
             while True:
                 rows = self._company_rows()

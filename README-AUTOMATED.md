@@ -16,7 +16,7 @@ Parallel fetchers can retrieve company inventories while one writer controls all
 ./job-search-scraper start --fetch-workers 4 --assignment-window 25
 ```
 
-The controller preloads the local assignment queue. Fetchers return their results to a bounded local buffer and take another company without waiting for Sheets writes. Only the writer touches Sheets or SQLite. The assignment window bounds unsaved company work (plus the company being saved) and is at least the worker count. Fetchers can idle if the buffer is full or eligible work runs out. `Fetch pool` reports fetching, locally queued, and awaiting-save counts separately; Companies sheet status can lag actual activity during a write.
+The controller preloads the local assignment queue. Fetchers return their results to a bounded local buffer and take another company without waiting for Sheets writes. Only the writer touches Sheets or SQLite. The assignment window bounds unsaved company work (plus the company being saved) and is at least the worker count. Fetchers can idle if the buffer is full or eligible work runs out; Companies sheet status can lag actual activity during a write.
 
 Blocked/failed/partial scans record the actual adapter in `ATS / Source` when known. Unknown discovery leaves the existing source unchanged, and blocked scans do not advance successful-scan dates. Ctrl+C cancels unstarted assignments; unfinished companies resume by refetching without duplicate saved jobs.
 
