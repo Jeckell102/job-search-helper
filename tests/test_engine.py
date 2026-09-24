@@ -98,6 +98,15 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(len(self.pending(cycle)), 1)
         self.assertEqual(self.engine.status(cycle)["status"], "Awaiting Review")
 
+    def test_parallel_fetch_workers_keep_writer_owned_job_fields(self):
+        cycle = self.engine.start_cycle(["C-1"])
+        self.engine.resume_parallel(cycle, fetch_workers=2, assignment_window=25)
+        row = self.history()
+        self.assertEqual(row["Location"], "Ohio")
+        self.assertEqual(row["Official Job URL"], "https://boards.greenhouse.io/acme/jobs/123")
+        self.assertEqual(row["Job Title"], "Field Solutions Engineer")
+        self.assertEqual(self.fetch_count, 1)
+
     def test_accept_creates_not_reviewed_and_blank_applied_date(self):
         cycle = self.accept_initial()
         row = self.repo.read("Opportunities")[0]

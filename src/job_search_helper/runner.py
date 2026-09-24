@@ -1,6 +1,7 @@
 """One-command scraper coordinator. AI review is performed separately in ChatGPT Work."""
 from __future__ import annotations
 
+import argparse
 import os
 import sqlite3
 import sys
@@ -22,6 +23,15 @@ Commands:
                - Otherwise recovers an unfinished workbook cycle.
                - Otherwise starts a new full-company scan.
                - Writes to Google Sheets and requires no other sheet writers.
+
+Options for start:
+  --fetch-workers N
+      Run N fetch-only workers while this process remains the only Google
+      Sheets writer. Allowed: 1-5. Default: 1.
+
+  --assignment-window N
+      Read/queue up to N companies locally before refreshing Companies from
+      Google Sheets. Allowed: 1-100. Default: 25.
 
   help         Show this command list.
   --help       Show this command list.
@@ -79,7 +89,7 @@ def _load_environment():
         os.environ[variable] = str(project_path(os.environ.get(variable, default)))
 
 
-def run_start():
+def run_start(fetch_workers=1, assignment_window=25):
     print("Starting job scraping", flush=True)
     _load_environment()
     load_title_blacklist()
@@ -95,7 +105,7 @@ def run_start():
         try:
             engine = Engine(repo, state, dry_run=False, batch_size=25)
             cycle_id, _ = resolve_cycle(engine, state, repo)
-            engine.resume(cycle_id)
+            engine.resume_parallel(cycle_id, fetch_workers=fetch_workers, assignment_window=assignment_window)
             final = engine.status(cycle_id)
             print(
                 f"Finished scrape {cycle_id}: {final['status']} | "
@@ -113,12 +123,21 @@ def main(argv=None):
     if argv in ([], ["help"], ["--help"], ["-h"]):
         print_help()
         return 0
-    if argv != ["start"]:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("command")
+    parser.add_argument("--fetch-workers", type=int, default=1)
+    parser.add_argument("--assignment-window", type=int, default=25)
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit:
+        print("Run ./job-search-scraper help for available commands.", file=sys.stderr)
+        return 2
+    if args.command != "start":
         print("ERROR: unknown command.", file=sys.stderr)
         print("Run ./job-search-scraper help for available commands.", file=sys.stderr)
         return 2
     try:
-        return run_start()
+        return run_start(fetch_workers=args.fetch_workers, assignment_window=args.assignment_window)
     except KeyboardInterrupt:
         print("Stopped. Run ./job-search-scraper start to continue.", file=sys.stderr)
         return 130

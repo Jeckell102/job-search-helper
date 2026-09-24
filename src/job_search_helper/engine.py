@@ -5,6 +5,7 @@ the workbook; a known cycle can be reconstructed without repeating decisions.
 """
 from __future__ import annotations
 
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import copy
 import json
 import sqlite3
@@ -653,6 +654,172 @@ class Engine:
             self._finish_company(cycle, company)
             self._sync_cycle(cycle)
             self._checkpoint()
+        self._sync_cycle(cycle)
+        self._checkpoint()
+        return self.status(cycle_id)
+
+    def resume_parallel(self, cycle_id, retry_blocked=False, fetch_workers=1, assignment_window=25):
+        """Resume with multiple fetch-only workers and a single sheet writer.
+
+        Worker threads receive an immutable company snapshot and return an
+        Inventory. This main thread remains the only code path allowed to read
+        or write Google Sheets and SQLite state.
+        """
+        if fetch_workers <= 1:
+            return self.resume(cycle_id, retry_blocked=retry_blocked)
+        if not 2 <= fetch_workers <= 5:
+            raise ValueError("Fetch workers must be between 1 and 5")
+        if not 1 <= assignment_window <= 100:
+            raise ValueError("Assignment window must be between 1 and 100")
+
+        self.repo.validate_schema()
+        cycle = self.state.cycle(cycle_id) or self._recover(cycle_id)
+        if cycle["status"] in {"Complete", "Complete with exceptions"} and not retry_blocked:
+            return self.status(cycle_id)
+        if retry_blocked:
+            for item in cycle["companies"].values():
+                if item["stage"] in {"blocked", "failed", "unsupported", "partial"}:
+                    item["stage"] = "queued"
+                    item.pop("jobs", None)
+            cycle.pop("completed_at", None)
+        for item in cycle["companies"].values():
+            if item.get("stage") == "inventory" and not item.get("jobs"):
+                item["stage"] = "queued"
+                item.pop("next_job_index", None)
+                item.pop("staging_complete", None)
+        self.state.save_cycle(cycle)
+
+        def fetch_company(snapshot):
+            inventory = self.fetcher(
+                str(snapshot.get("ATS / Source", "")),
+                str(snapshot.get("Official Careers URL", "")),
+                snapshot["Company ID"],
+                snapshot["Company"],
+            )
+            return snapshot["Company ID"], inventory
+
+        processed = set()
+        in_flight = {}
+        with ThreadPoolExecutor(max_workers=fetch_workers) as executor:
+            while True:
+                rows = self._company_rows()
+                by_id = {row.get("Company ID"): row for row in rows if row.get("Company ID")}
+                if cycle["all"]:
+                    for company in rows:
+                        if str(company.get("Company Status", "Active")).strip().casefold() in {"pause", "paused", "remove"}:
+                            continue
+                        self._assign_company_id(company)
+                        cid = company.get("Company ID")
+                        if cid and cid not in cycle["companies"] and not company.get("Last Successful Scan") and str(company.get("Company Status", "Active")).strip().casefold() not in {"pause", "paused", "remove"}:
+                            cycle["companies"][cid] = {"company": company["Company"], "stage": "queued"}
+                            self.state.save_cycle(cycle)
+                            self._sync_cycle(cycle)
+                            values = {"Active Cycle ID": cycle_id, "Record Updated": now()}
+                            if company.get("Scan State") != "Blocked / Manual Review":
+                                values["Scan State"] = "Queued"
+                            self._commit(self._company_op(company, values))
+
+                window = [
+                    (cid, item) for cid, item in cycle["companies"].items()
+                    if cid not in processed and item.get("stage") in {"queued", "inventory"}
+                ][:assignment_window]
+                queued_in_window = [(cid, item) for cid, item in window if item.get("stage") == "queued" and cid not in in_flight]
+
+                while queued_in_window and len(in_flight) < fetch_workers:
+                    cid, item = queued_in_window.pop(0)
+                    company = by_id.get(cid)
+                    if not company:
+                        item.update(stage="failed", reason="Company removed from workbook; scope retained for audit")
+                        self.state.save_cycle(cycle)
+                        processed.add(cid)
+                        continue
+                    if str(company.get("Company Status", "Active")).strip().casefold() in {"pause", "paused", "remove"}:
+                        item.update(stage="paused", reason="User paused or removed this company")
+                        self.state.save_cycle(cycle)
+                        processed.add(cid)
+                        continue
+                    if company.get("Claimed By") or company.get("Claim Token"):
+                        raise ValueError(f"{cid} has an external claim. Release it through its coordinator before running this single-writer helper.")
+                    if str(company.get("Automatic Retry?", "")).strip().casefold() == "no" and company.get("Scan State") == "Blocked / Manual Review" and not retry_blocked:
+                        item.update(stage="blocked", reason="Manual-review hold; explicit --retry-blocked required")
+                        self.state.save_cycle(cycle)
+                        processed.add(cid)
+                        continue
+                    self._commit(self._company_op(company, {"Active Cycle ID": cycle_id, "Scan State": "In Progress", "Record Updated": now()}))
+                    snapshot = copy.deepcopy(company)
+                    future = executor.submit(fetch_company, snapshot)
+                    in_flight[future] = cid
+
+                inventory_ready = [cid for cid, item in window if item.get("stage") == "inventory"]
+                if not in_flight and not inventory_ready:
+                    if not window:
+                        break
+                    continue
+
+                completed = set()
+                if in_flight:
+                    done, _ = wait(in_flight, timeout=0 if inventory_ready else None, return_when=FIRST_COMPLETED)
+                    for future in done:
+                        cid = in_flight.pop(future)
+                        item = cycle["companies"][cid]
+                        try:
+                            result_cid, inventory = future.result()
+                        except Exception as exc:
+                            item.update(stage="failed", reason=f"Fetch worker failed: {type(exc).__name__}")
+                            self.state.save_cycle(cycle)
+                            completed.add(cid)
+                            continue
+                        if result_cid != cid or not isinstance(inventory, Inventory):
+                            item.update(stage="failed", reason="Fetch worker returned an invalid inventory result")
+                            self.state.save_cycle(cycle)
+                            completed.add(cid)
+                            continue
+                        item.update(jobs=inventory.jobs, inventory_status=inventory.status, reason=inventory.reason,
+                                    source_url=inventory.source_url, fetched_at=now(), stage="inventory",
+                                    staging_complete=False, next_job_index=0)
+                        self.state.save_cycle(cycle)
+                        completed.add(cid)
+
+                for cid in inventory_ready + list(completed):
+                    item = cycle["companies"].get(cid)
+                    if not item or item.get("stage") != "inventory":
+                        processed.add(cid)
+                        continue
+                    company = next((r for r in self._company_rows() if r.get("Company ID") == cid), None)
+                    if not company:
+                        item.update(stage="failed", reason="Company removed from workbook; scope retained for audit")
+                        self.state.save_cycle(cycle)
+                        processed.add(cid)
+                        continue
+                    if str(company.get("Company Status", "Active")).strip().casefold() in {"pause", "paused", "remove"}:
+                        item.update(stage="paused", reason="User paused or removed this company")
+                        self.state.save_cycle(cycle)
+                        processed.add(cid)
+                        continue
+                    if company.get("Claimed By") or company.get("Claim Token"):
+                        raise ValueError(f"{cid} has an external claim. Release it through its coordinator before running this single-writer helper.")
+                    if item.get("inventory_status") in {"blocked", "failed", "unsupported"}:
+                        item["stage"] = item["inventory_status"]
+                        self._commit(self._company_op(company, {"Scan State": "Blocked / Manual Review", "Blocked Reason": item.get("reason", ""),
+                            "Automatic Retry?": "No", "Coverage Status": "Incomplete inventory", "Next Action": "Verify official careers URL / inspect manually; retry only on request",
+                            "Last Scan Result": item["inventory_status"], "Record Updated": now()}))
+                        self.state.save_cycle(cycle)
+                        self._sync_cycle(cycle)
+                        processed.add(cid)
+                        continue
+                    planner = PlanningRepository(self.repo)
+                    self._stage_inventory(cycle, company, item, planner)
+                    if item["inventory_status"] == "complete":
+                        self._reconcile_absences(cycle, company, item.get("jobs", []))
+                    item["staging_complete"] = True
+                    self.state.save_cycle(cycle)
+                    self._finish_company(cycle, company)
+                    self._sync_cycle(cycle)
+                    self._checkpoint()
+                    processed.add(cid)
+            if in_flight:
+                for future in in_flight:
+                    future.cancel()
         self._sync_cycle(cycle)
         self._checkpoint()
         return self.status(cycle_id)
