@@ -1,0 +1,46 @@
+# Personal workspaces and generated output
+/workspace/
+/data/
+/config/
+/exports/
+/backups/
+/logs/
+/private/
+/profile.toml
+/settings.toml
+/companies.csv
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.scan.lock
+*.log
+
+# Credentials and legacy working files
+.env
+.env.*
+.secrets/
+.state/
+.updates/
+credentials*.json
+client_secret*.json
+token*.json
+*.pem
+*.key
+title-blacklist.txt
+title-review-list.txt
+
+# Python and local builds
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+*.zip
+*.tar.gz
+.DS_Store

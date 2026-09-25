@@ -1,0 +1,14 @@
+{
+  "jobs": [{
+    "id": 123,
+    "internal_job_id": 777,
+    "requisition_id": "REQ-9",
+    "title": "Field Applications Engineer",
+    "location": {"name": "Cleveland, OH"},
+    "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/123",
+    "content": "&lt;p&gt;Integrate systems and train customers.&lt;/p&gt;&lt;p&gt;Must be able to travel.&lt;/p&gt;",
+    "departments": [{"name": "Engineering"}],
+    "updated_at": "2026-09-17T00:00:00Z"
+  }],
+  "meta": {"total": 1}
+}

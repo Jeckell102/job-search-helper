@@ -1,0 +1,16 @@
+# Neutral example: no screening rules are enabled and no personal defaults apply.
+# Pass a profile explicitly with local policy/screen --profile PATH.
+schema_version = 1
+
+[titles]
+exclude = []
+prefer = []
+
+[locations]
+work_arrangements = [] # Allowed values: remote, hybrid, onsite.
+
+# To enable salary screening, supply all three keys below with your own minimum.
+# [salary]
+# minimum = YOUR_ANNUAL_BASE_MINIMUM
+# currency = "USD"
+# period = "annual"

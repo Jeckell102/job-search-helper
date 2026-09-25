@@ -1,0 +1,12 @@
+# Optional settings for the local workflow. Relative paths use --workspace.
+[storage]
+database = "data/job-search-helper.sqlite3"
+
+# Local scans support one worker, three HTTP attempts, and official adapters only.
+[scan]
+workers = 1
+timeout_seconds = 25.0
+host_interval_seconds = 0.4
+retry_attempts = 3
+missing_threshold = 2
+browser_enabled = false

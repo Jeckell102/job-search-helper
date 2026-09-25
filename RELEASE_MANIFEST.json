@@ -1,0 +1,259 @@
+{
+  "version": "0.2.0",
+  "created_at": "2026-09-25 22:00:47 UTC",
+  "license": "MIT",
+  "history_included": false,
+  "scope": "Explicitly selected public source, neutral examples, synthetic tests, and documentation",
+  "audit": "Allowlist, dependency boundary, symlink refusal, and credential-pattern checks passed",
+  "limitations": "Pattern checks are not a comprehensive security audit; offline verification is required separately",
+  "files": {
+    "README.md": {
+      "sha256": "5034aa8d1f1c409d162256c4e08bbc623a9bc6466c237039e21ba982b29b3a37",
+      "bytes": 3785
+    },
+    "LICENSE": {
+      "sha256": "93736d3cd43e026d8711de7548122fd3068e12f7d35df8871fea66057e4221e7",
+      "bytes": 1087
+    },
+    "CONTRIBUTING.md": {
+      "sha256": "00f47a2f3ae500601ecb5353ba58c14098d1b610d78668f6670545bd0149ea3b",
+      "bytes": 1863
+    },
+    "pyproject.toml": {
+      "sha256": "e1848a276a845c9ea3fa3c784080a36f7023964c09cc174a4a42366a7e7839b4",
+      "bytes": 775
+    },
+    ".gitignore": {
+      "sha256": "17caa1a082a86f5843cd9193e2d5283dc740a6c83edb0f3f63a12d9c4ae7c783",
+      "bytes": 536
+    },
+    "docs/user-guide.md": {
+      "sha256": "03c7b8a49705370f2eef1ca3789a81f1c0373f796415f8cd36d115882d7afc8d",
+      "bytes": 8860
+    },
+    ".github/workflows/tests.yml": {
+      "sha256": "53fa8752d58137b052d67e0e370bf15d7164b36be6be07be372f2df43ddb1f91",
+      "bytes": 562
+    },
+    "src/job_search_helper/__init__.py": {
+      "sha256": "a4af08c2d7b1a6a57b93e54c7e32ee72ff642434f76f514e0368e54b9725d067",
+      "bytes": 75
+    },
+    "src/job_search_helper/adp.py": {
+      "sha256": "57dc5ac866b802fa9d1dfdf51132f06bd7e25d97a3073a45b8e9fde8f8c8af1a",
+      "bytes": 12389
+    },
+    "src/job_search_helper/assessment_service.py": {
+      "sha256": "f86966fb9353193a417f8f1be2bba1bbafdf2297e35b541e3e89af19fd918ec7",
+      "bytes": 7353
+    },
+    "src/job_search_helper/ats.py": {
+      "sha256": "b9471ae812a76d28a5d1e035a05601333def97c96c5f06750033e99a4589ba7c",
+      "bytes": 29290
+    },
+    "src/job_search_helper/catalog_commands.py": {
+      "sha256": "0fe1c296fd6e99c6abda20c590b343b6e5e2f64b44143a546202f0207bd4ad73",
+      "bytes": 11958
+    },
+    "src/job_search_helper/catalog_export.py": {
+      "sha256": "0da22ce1366b8ff79bdc717c3442d9f389be83ac679145b2878776bcc1e0a698",
+      "bytes": 16416
+    },
+    "src/job_search_helper/catalog_queries.py": {
+      "sha256": "d06181d7aafd7833bb79f7c2f78cb6b9797f736829f1aa2b2e263bbfde3f08cd",
+      "bytes": 5271
+    },
+    "src/job_search_helper/company_import.py": {
+      "sha256": "918f3f37114b56e8571b8d2b5f78d99cb2fc0c4ae02afc7fbbb1399c0722bb22",
+      "bytes": 16342
+    },
+    "src/job_search_helper/compensation.py": {
+      "sha256": "2764c58665a590e6f803abf965335bee573ed206a1964d7fc639c6a37e931440",
+      "bytes": 2192
+    },
+    "src/job_search_helper/config.py": {
+      "sha256": "50d59ffc7628354a3ab6c8cd96f85242069dfe1ce2db20ede22646c44bdb7c93",
+      "bytes": 3702
+    },
+    "src/job_search_helper/csv_format.py": {
+      "sha256": "074ef688caf983a076832f0268f15f965e18f4fb35180b84e91c277398f42f0f",
+      "bytes": 3117
+    },
+    "src/job_search_helper/database.py": {
+      "sha256": "866f9edfce632d0d1d2ed975a9b1f1dd4e9433a031989e016ad47657b566b526",
+      "bytes": 10519
+    },
+    "src/job_search_helper/dates.py": {
+      "sha256": "470c66eef6b0e91b6fe0ebaa802f1666c0a45df9854bc0186a0487465314a8d1",
+      "bytes": 1549
+    },
+    "src/job_search_helper/discovery.py": {
+      "sha256": "ccc249d74897973af3bd412151efb6ed2926a84183a663041ab605b77e2c4b79",
+      "bytes": 12410
+    },
+    "src/job_search_helper/export_publish.py": {
+      "sha256": "2327f0090fd4b224e91d75feb2059fa44888e17f3112c9ee1d9022b5f2f42b77",
+      "bytes": 1267
+    },
+    "src/job_search_helper/icims.py": {
+      "sha256": "363fbd504baff689257fa806e8db301b6b175a3cf0ac41e0e6739b839f4183cb",
+      "bytes": 16058
+    },
+    "src/job_search_helper/local_cli.py": {
+      "sha256": "957b872a8e0bf5f21b44f8e861b78950d36771d8b325f5214eb60374137f8865",
+      "bytes": 903
+    },
+    "src/job_search_helper/local_commands.py": {
+      "sha256": "56254e604b17c565893474ee31bdc536676faf8ab707c094ca19511afaddf9e5",
+      "bytes": 8499
+    },
+    "src/job_search_helper/local_scanner.py": {
+      "sha256": "09fda8448550adf8e82002bd709a49b69b3ddf88173f46cd43fba788e148c1c5",
+      "bytes": 3248
+    },
+    "src/job_search_helper/local_screening.py": {
+      "sha256": "6183ead92b5d933c79590bc93586f530cb596a34d8e2d1abf51615f8b36d09b0",
+      "bytes": 4965
+    },
+    "src/job_search_helper/models.py": {
+      "sha256": "07ae53d5df85cedc4b4375a240f9f3090302eed13c4c752548f993ec27432a7a",
+      "bytes": 5924
+    },
+    "src/job_search_helper/paylocity.py": {
+      "sha256": "310c82f1505b17a987bbf9be9bde670b6080979e8ab5dea554035a5db836fe80",
+      "bytes": 12303
+    },
+    "src/job_search_helper/policy.py": {
+      "sha256": "fd3ca0fd2065dd3498ea6e14d748319d806f0c2e9bf8153fb6cf6913b4967634",
+      "bytes": 4042
+    },
+    "src/job_search_helper/posting.py": {
+      "sha256": "66684ecf6d716ec9051457a03cdf14cbe58875d3b711507daaef747993d79376",
+      "bytes": 3100
+    },
+    "src/job_search_helper/repositories.py": {
+      "sha256": "b60a2ec8b14c55c8112de1c18dd7cfe99c558fa224dbe10ab09817d8336410c3",
+      "bytes": 12948
+    },
+    "src/job_search_helper/scan_lock.py": {
+      "sha256": "d731c0d1a5fb45d141c7bfd7b42448cb81fe5700bf95055cbafe46643a8809c5",
+      "bytes": 1206
+    },
+    "src/job_search_helper/scan_service.py": {
+      "sha256": "6cf9932f8a5a886ea9d994bd1afad5ad6ec35bb4cbe69f3af69e75ee82e84f83",
+      "bytes": 23022
+    },
+    "src/job_search_helper/screening_commands.py": {
+      "sha256": "47a3a66310ea25adc3596135bd138849d8512682047b64b485cd5cc850fea617",
+      "bytes": 4745
+    },
+    "src/job_search_helper/taleo.py": {
+      "sha256": "13a44a01c4d5c091f7955382f7fba41a1af58f962829ca50f822bcfed90fa261",
+      "bytes": 17154
+    },
+    "src/job_search_helper/taleo_careers.py": {
+      "sha256": "50b3212a5d72f296338eb4af1b23ee4e05c10a8a6536eac617bd5e09cf83ac8f",
+      "bytes": 13136
+    },
+    "src/job_search_helper/workday.py": {
+      "sha256": "397fbe4c6e07665e8da42eb1e61aa89a9f08ab792cf75ff5a97d94de54380ee5",
+      "bytes": 11448
+    },
+    "src/job_search_helper/migrations/__init__.py": {
+      "sha256": "bb3e8a8950b7cd001fe4d67ebdc04bb1aac6cd9ec58d2d0eb423ed9cfa276516",
+      "bytes": 79
+    },
+    "src/job_search_helper/migrations/001_foundation.sql": {
+      "sha256": "c98f4254215cf0529285dd0f33d6bcedc09f68f4d329e459505a1968901b05a6",
+      "bytes": 8115
+    },
+    "src/job_search_helper/migrations/002_scan_ingestion.sql": {
+      "sha256": "0f0d7d6a0763c62c47244ea5b1414b832a8d114c5b1d727b258adbbbf4b44724",
+      "bytes": 4994
+    },
+    "src/job_search_helper/migrations/003_local_screening.sql": {
+      "sha256": "623bda5aeb21a26520c8936539210290c225824ed1bd8ecd5a7fa3dc89408f47",
+      "bytes": 2011
+    },
+    "tests/test_ats.py": {
+      "sha256": "55967ae5803af738ff692271c906e7c1b6247c260ced714bd6fc3cd54d148b13",
+      "bytes": 11466
+    },
+    "tests/test_local_config.py": {
+      "sha256": "f0e3593106e04e6fbce1ce8bdcb68dcc738fbba09572c70dae57eaac86f3d7a1",
+      "bytes": 3065
+    },
+    "tests/test_local_models.py": {
+      "sha256": "3a3340fa64434806d802bc4fb3554dbc3eab67589f2e268c5674942753b209e7",
+      "bytes": 5570
+    },
+    "tests/test_local_database.py": {
+      "sha256": "f00a97f780405ccf8f82ee729e2992edae853509f3b58568d0f5e2b007632147",
+      "bytes": 12213
+    },
+    "tests/test_local_repositories.py": {
+      "sha256": "c9972e82f63e2bd497bb9fea77b4b4032b9e3a7e590777c7e164e05f354d3232",
+      "bytes": 9805
+    },
+    "tests/test_local_commands.py": {
+      "sha256": "87d70bee6115703177134e95bb6fa9aed626f4679bcac507670a47df8c68a42f",
+      "bytes": 6889
+    },
+    "tests/test_source_dates.py": {
+      "sha256": "7f731d04d90b0ba5acde808cbda960e582f7e7780080a1c4a6020f8463048ff9",
+      "bytes": 1656
+    },
+    "tests/test_local_scans.py": {
+      "sha256": "a2ce38b27d8bb113665aaa7129b7fa6380843a0e96ce896e094325a2724176ae",
+      "bytes": 20764
+    },
+    "tests/test_company_import.py": {
+      "sha256": "6145cdfc9cd54dbd026ac003737a04e1d17286d4e02e8e2a6b2d8dbca4746387",
+      "bytes": 15836
+    },
+    "tests/test_catalog_commands.py": {
+      "sha256": "e19b272b76373a0da8376dd5192b2fb026ec1e95e175ee1428a83e17b9cf7eb0",
+      "bytes": 14083
+    },
+    "tests/test_catalog_exports.py": {
+      "sha256": "bcd81881dbd99708e7a784ebf2c9a117b544071df1a7a717e5dcbe371c3d2a5e",
+      "bytes": 22650
+    },
+    "tests/test_local_screening.py": {
+      "sha256": "5b0e82cf2ba591c1168b438cf7c256cab394c4b94daf6769c6745518b1956f0a",
+      "bytes": 27136
+    },
+    "tests/test_public_runtime.py": {
+      "sha256": "8916071c01975d33d5ee4d7fa79a8639b606b79e0b1d9a446e547a9f18af3a6d",
+      "bytes": 2958
+    },
+    "tests/check_local_install.py": {
+      "sha256": "fe4e0023069ccb730a4c673afbeb3b06339bf18ca3a045e36f6956f16bd1d38b",
+      "bytes": 10611
+    },
+    "tests/fixtures/greenhouse.json": {
+      "sha256": "c072ed18d56ddcb75fbd489981d23bdc98b0bb1e780f605622f8434027f7cf7e",
+      "bytes": 482
+    },
+    "tests/fixtures/lever.json": {
+      "sha256": "7bf4fc0ce04f8b46e9dd7422b1d9886c831a7087cdea1e5df5b6b31ab6ffbe41",
+      "bytes": 685
+    },
+    "tests/fixtures/ashby.json": {
+      "sha256": "46f7e83fecc88fab0a00ae16cae7106dc6612d8433b9fe86bcf730e137a8b229",
+      "bytes": 830
+    },
+    "examples/companies.csv.example": {
+      "sha256": "5e4f8667dc58f5dfdc2049455ad630691c34c4a0e8a0741e20cedcbff9398532",
+      "bytes": 232
+    },
+    "examples/settings.toml.example": {
+      "sha256": "5fc877db58b0032f1483126081218935fa5898f14693a182b68dcacc0c9c474a",
+      "bytes": 349
+    },
+    "examples/profile.toml.example": {
+      "sha256": "83f469e5a09ed937011f063aada70abb0185b01bd93039c44f79d337bb0fc09e",
+      "bytes": 452
+    }
+  }
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "lev-123",
+    "text": "Field Solutions Engineer",
+    "categories": {"location": "Ohio", "allLocations": ["Ohio", "Remote"], "department": "Solutions", "team": "Field"},
+    "descriptionPlain": "Work closely with customers.",
+    "lists": [{"text": "Requirements", "content": "<li>API integration</li><li>No programming required</li>"}],
+    "additionalPlain": "Travel up to 50%.",
+    "salaryRange": {"currency": "USD", "interval": "per-year-salary", "min": 140000, "max": 180000},
+    "salaryDescriptionPlain": "Base salary excludes equity.",
+    "workplaceType": "remote",
+    "hostedUrl": "https://jobs.lever.co/acme/lev-123",
+    "createdAt": 1700000000000
+  }
+]

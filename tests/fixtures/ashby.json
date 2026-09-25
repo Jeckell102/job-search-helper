@@ -1,0 +1,26 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "title": "Senior Customer Solutions Engineer",
+      "location": "Denver, CO",
+      "secondaryLocations": [{"location": "Ohio"}],
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Remote",
+      "descriptionPlain": "Lead customer integration and train operators.",
+      "department": "Engineering",
+      "team": "Solutions",
+      "publishedAt": "2026-09-16T12:00:00Z",
+      "jobUrl": "https://jobs.ashbyhq.com/acme/ash-123",
+      "compensation": {"scrapeableCompensationSalarySummary": "$140,000–$180,000"}
+    },
+    {
+      "id": "ash-hidden",
+      "title": "Unlisted Existing Posting",
+      "descriptionHtml": "<p>Only available via direct link.</p>",
+      "isListed": false,
+      "jobUrl": "https://jobs.ashbyhq.com/acme/ash-hidden"
+    }
+  ]
+}
