@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "created_at": "2026-09-25 22:00:47 UTC",
+  "created_at": "2026-09-25 22:26:59 UTC",
   "license": "MIT",
   "history_included": false,
   "scope": "Explicitly selected public source, neutral examples, synthetic tests, and documentation",
@@ -8,32 +8,68 @@
   "limitations": "Pattern checks are not a comprehensive security audit; offline verification is required separately",
   "files": {
     "README.md": {
-      "sha256": "5034aa8d1f1c409d162256c4e08bbc623a9bc6466c237039e21ba982b29b3a37",
-      "bytes": 3785
+      "sha256": "7948e2188835de389ba5b9f37ee8a51566561d7fce2be875e66287105ab02a0a",
+      "bytes": 7202
     },
     "LICENSE": {
       "sha256": "93736d3cd43e026d8711de7548122fd3068e12f7d35df8871fea66057e4221e7",
       "bytes": 1087
     },
     "CONTRIBUTING.md": {
-      "sha256": "00f47a2f3ae500601ecb5353ba58c14098d1b610d78668f6670545bd0149ea3b",
-      "bytes": 1863
+      "sha256": "91963e0bef16ba0060d386eb144d9d1a8d4ee8414505d584685db724fa31ab40",
+      "bytes": 5061
     },
     "pyproject.toml": {
-      "sha256": "e1848a276a845c9ea3fa3c784080a36f7023964c09cc174a4a42366a7e7839b4",
-      "bytes": 775
+      "sha256": "585c1254249cc0021fd688dba1b9bb1c88c1ab2991cd52eb7d5c87ea09046f4e",
+      "bytes": 1141
     },
     ".gitignore": {
       "sha256": "17caa1a082a86f5843cd9193e2d5283dc740a6c83edb0f3f63a12d9c4ae7c783",
       "bytes": 536
     },
+    "ROADMAP.md": {
+      "sha256": "30d6653ab6d5a69170acaa5ce65e242131404963b63148524800dc8bbdc4a6ca",
+      "bytes": 3484
+    },
+    "SUPPORT.md": {
+      "sha256": "bfb67ee229e048cc06499446486d2119255463ff4dc37bfe7800559c61f289db",
+      "bytes": 1806
+    },
+    "SECURITY.md": {
+      "sha256": "60d22c934ca9d852591a1ebd8ed67c3307e5141344ee1f50190f89635bc4688e",
+      "bytes": 1600
+    },
+    "CODE_OF_CONDUCT.md": {
+      "sha256": "f8dc10e5b2776ad6cf69c7bc312d85834e0b03c30466147d72b980fa6b9f5dd5",
+      "bytes": 1532
+    },
     "docs/user-guide.md": {
       "sha256": "03c7b8a49705370f2eef1ca3789a81f1c0373f796415f8cd36d115882d7afc8d",
       "bytes": 8860
     },
+    "docs/architecture.md": {
+      "sha256": "c6063f328c32ce0b8ed4c705050fd840014713747f579f86ced070c2c486049e",
+      "bytes": 5244
+    },
     ".github/workflows/tests.yml": {
       "sha256": "53fa8752d58137b052d67e0e370bf15d7164b36be6be07be372f2df43ddb1f91",
       "bytes": 562
+    },
+    ".github/ISSUE_TEMPLATE/bug_report.md": {
+      "sha256": "7da6a1d6312ba7a34b0f94c1eabe852c2c9cbac6a23ba47eb941c0bb66e3ba4b",
+      "bytes": 858
+    },
+    ".github/ISSUE_TEMPLATE/feature_request.md": {
+      "sha256": "fcba2ecda256fa456338efdf62a48060508c694b63c646a17f14761d026a6202",
+      "bytes": 737
+    },
+    ".github/ISSUE_TEMPLATE/question.md": {
+      "sha256": "fb0c994e9ee3c436718867153b815731a060e22280bb50ebe2bee20a916ee514",
+      "bytes": 468
+    },
+    ".github/PULL_REQUEST_TEMPLATE.md": {
+      "sha256": "215b4f890c25e573d09065978c1ac2f922820dd61430a315db34169c8754c0e3",
+      "bytes": 834
     },
     "src/job_search_helper/__init__.py": {
       "sha256": "a4af08c2d7b1a6a57b93e54c7e32ee72ff642434f76f514e0368e54b9725d067",

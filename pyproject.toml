@@ -10,6 +10,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.11"
 dependencies = []
+keywords = ["job-search", "job-tracker", "sqlite", "cli", "ats"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -18,6 +19,12 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Operating System :: POSIX :: Linux",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Jeckell102/job-search-helper"
+Documentation = "https://github.com/Jeckell102/job-search-helper/blob/main/docs/user-guide.md"
+Repository = "https://github.com/Jeckell102/job-search-helper"
+Issues = "https://github.com/Jeckell102/job-search-helper/issues"
 
 [project.scripts]
 job-search-helper = "job_search_helper.local_cli:main"
