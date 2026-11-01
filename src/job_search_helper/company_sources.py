@@ -1252,6 +1252,13 @@ REPAIRS.update({
 
 
 REPAIRS.update({
+    'COMP-0141': {
+        'company': 'Digi International',
+        'ats': 'UKG / UltiPro',
+        'expected_url': 'https://www.digi.com/company/careers',
+        'url': 'https://recruiting2.ultipro.com/DIG1008DIGI/JobBoard/bf7d79dc-5bb9-447e-be77-bc5713185792',
+        'evidence': 'Official Digi International careers page links Current Job Listings at careers.digi.com, which resolves to Digi\'s employer-scoped UKG Pro board.'
+    },
     'COMP-0512': {'company': 'Tarana Wireless', 'ats': 'JazzHR',
                   'expected_url': 'https://taranawireless.com/careers/',
                   'url': 'https://taranawireless.applytojob.com/',
