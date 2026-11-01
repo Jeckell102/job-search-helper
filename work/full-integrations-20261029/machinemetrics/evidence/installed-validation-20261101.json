@@ -1,0 +1,32 @@
+{
+  "company_id": "COMP-0278",
+  "company": "MachineMetrics",
+  "validated_at": "2026-11-01",
+  "official_source": "https://www.machinemetrics.com/careers/",
+  "source_ats": "MachineMetrics careers",
+  "source_finding": "The official careers page publishes featured roles and sends applicants to external Indeed/LinkedIn listings; the previously pinned Greenhouse board returned HTTP 404.",
+  "adapter": "src/job_search_helper/machinemetrics.py",
+  "focused_tests": {
+    "passed": 2,
+    "failed": 0
+  },
+  "installed_rereads": [
+    {
+      "pass": 1,
+      "status": "failed",
+      "jobs": 0,
+      "reason": "Careers page network/timeout failure; board discovery did not complete."
+    },
+    {
+      "pass": 2,
+      "status": "failed",
+      "jobs": 0,
+      "reason": "Careers page network/timeout failure; board discovery did not complete."
+    }
+  ],
+  "stable_installed_job_count": null,
+  "completion": "blocked",
+  "count_complete": false,
+  "blocker": "Installed terminal could not reach the official MachineMetrics careers page on either reread, so a stable inventory could not be established.",
+  "shared_ledgers_edited": false
+}
