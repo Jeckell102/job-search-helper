@@ -1,0 +1,24 @@
+{
+  "company_id": "COMP-0331",
+  "company": "MAK Technologies",
+  "source_url": "https://mak.applytojob.com/apply",
+  "official_careers_url": "https://www.mak.com/connect/careers",
+  "adapter": "src/job_search_helper/mak.py",
+  "validation": {
+    "pipeline": "installed normal pipeline",
+    "rereads": 2,
+    "statuses": ["complete", "complete"],
+    "job_counts": [5, 5],
+    "titles": [
+      "3D Artist",
+      "Principal Software Engineer",
+      "Senior Software Engineer",
+      "Senior Software Engineer - Naval Simulation",
+      "Software Quality Assurance Engineer"
+    ],
+    "stable_inventory": true,
+    "full_descriptions": true
+  },
+  "tests": "14 passed: tests/test_mak.py and tests/test_shared_boards.py",
+  "shared_completion_ledgers_edited": false
+}
