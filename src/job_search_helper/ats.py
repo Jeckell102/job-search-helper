@@ -778,6 +778,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0492" and company.casefold() == "southwest antennas":
         from .southwest_antennas import fetch_southwest_antennas
         return fetch_southwest_antennas(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0401" and company.casefold() == "polytron":
+        from .polytron import fetch_polytron
+        return fetch_polytron(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
