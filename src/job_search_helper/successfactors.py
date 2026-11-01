@@ -12,6 +12,7 @@ from .ats import FetchError, Inventory, _base, text
 from .discovery import CareersTransport
 
 ABACO_SOURCE = "https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc"
+KOMATSU_SOURCE = "https://komatsu.jobs/viewalljobs/"
 SITES = {
     ABACO_SOURCE: "jobs.ametek.com",
     "https://careers.qorvo.com/search/?locale=en_US": "careers.qorvo.com",
@@ -23,8 +24,11 @@ SITES = {
     "https://jobs.deere.com/successfactors/search/?q=&locationsearch=": "jobs.deere.com",
     "https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc": "jobs.deere.com",
     "https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc": "jobs.teradyne.com",
+    KOMATSU_SOURCE: "komatsu.jobs",
+    "https://jobs.sick.com/usa?locale=en_US": "jobs.sick.com",
 }
 PAGE_SIZE, MAX_PAGES = 25, 100
+KOMATSU_PAGE_SIZE = 50
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 
 
@@ -97,6 +101,9 @@ def _listing(client, source, start):
     if source == ABACO_SOURCE:
         parsed=urlsplit(source)
         url=urlunsplit((parsed.scheme, parsed.netloc, parsed.path + (str(start) + '/' if start else ''), parsed.query, ''))
+    elif source == KOMATSU_SOURCE:
+        parsed = urlsplit(source)
+        url = urlunsplit((parsed.scheme, parsed.netloc, parsed.path + (str(start) + '/' if start else ''), '', ''))
     elif source == "https://careers.leonardodrs.com/go/All-Jobs/8131200/":
         url = source + ("" if start == 0 else str(start) + "/") + "?q=&sortColumn=referencedate&sortDirection=desc"
     elif source == "https://careers.thalesdsi.com/search/?q=":
@@ -118,8 +125,10 @@ def _listing(client, source, start):
             seen.add(ident.group(1)); entries.append((ident.group(1),title,url))
     expected_count=last-first+1
     if len(entries) != expected_count: raise FetchError("partial", "SuccessFactors listing range disagrees with posting links.")
-    if source not in {"https://careers.thalesdsi.com/search/?q=", ABACO_SOURCE} and len(entries) != min(PAGE_SIZE,max(0,total-start)):
+    if source not in {"https://careers.thalesdsi.com/search/?q=", ABACO_SOURCE, KOMATSU_SOURCE} and len(entries) != min(PAGE_SIZE,max(0,total-start)):
         raise FetchError("partial", "SuccessFactors listing page size disagrees with published total.")
+    if source == KOMATSU_SOURCE and len(entries) != min(KOMATSU_PAGE_SIZE, max(0, total-start)):
+        raise FetchError("partial", "Komatsu listing page size disagrees with published total.")
     return total,entries,last
 
 
@@ -227,7 +236,7 @@ def fetch_successfactors(url, company_id, company, transport=None):
                                            or job_titles.get(ident) != title
                                            for ident, title, detail_url in check_first):
                 raise FetchError("partial", "Leonardo DRS first listing page changed during the scan.")
-        elif url in {"https://careers.thalesdsi.com/search/?q=", ABACO_SOURCE}:
+        elif url in {"https://careers.thalesdsi.com/search/?q=", ABACO_SOURCE, KOMATSU_SOURCE}:
             for page_start, (saved_total, saved_entries, saved_next) in page_snapshots.items():
                 check_total, check_entries, check_next = _listing(client, url, page_start)
                 if (check_total, check_entries, check_next) != (saved_total, saved_entries, saved_next):

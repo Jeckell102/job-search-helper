@@ -32,7 +32,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 API_HOSTS = frozenset({
     "boards-api.greenhouse.io", "api.lever.co", "api.eu.lever.co", "api.ashbyhq.com",
     "l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com", "myjobs.adp.com", "my.adp.com",
-    "jobsatseptentrio.hire.trakstar.com",
+    "jobsatseptentrio.hire.trakstar.com", "komatsu.jobs",
 })
 # This Oracle tenant returns 406 when the public JSON endpoints receive an
 # explicit JSON media type.  Its own public board works with wildcard content
@@ -219,6 +219,7 @@ def _safe_api_url(url: str) -> None:
     radd = (parsed.hostname == "radd-co.com" and (parsed.path == "/sitemap.xml" or bool(re.fullmatch(r"/open-roles/[A-Za-z0-9-]+", parsed.path))) and not parsed.query and not parsed.fragment)
     exyn = parsed.hostname == "www.exyn.com" and parsed.path == "/about/careers" and not parsed.query and not parsed.fragment
     csod_search = (parsed.hostname == "us.api.csod.com" and parsed.path == "/rec-job-search/external/jobs" and not parsed.query and not parsed.fragment)
+    sick_search = (parsed.hostname == "jobs.sick.com" and parsed.path == "/services/recruiting/v1/jobs" and not parsed.query and not parsed.fragment)
     csod_detail = (parsed.hostname == "ducommun.csod.com" and bool(re.fullmatch(r"/services/x/job-requisition/v2/requisitions/[0-9]+/jobDetails", parsed.path)) and parse_qs(parsed.query) == {"cultureId": ["1"]})
     dsi = parsed.hostname in {"dsiinnovations.com", "www.dsiinnovations.com"} and parsed.path == "/employment-opportunities/" and not parsed.query and not parsed.fragment
     ericsson_query = parse_qs(parsed.query, keep_blank_values=True)
@@ -236,7 +237,7 @@ def _safe_api_url(url: str) -> None:
                    and set(parse_qs(parsed.query)) == {"state"}
                    and len(parse_qs(parsed.query).get("state", [])) == 1
                    and parse_qs(parsed.query).get("state", [""])[0])
-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search)
+    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search and not sick_search)
             or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
     if parsed.hostname in {"l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com"} and not (ublox_algolia or ublox_detail):
@@ -320,12 +321,16 @@ class HTTPTransport:
                            and parsed.path in {"/api/geo/esa/jobposting/search", "/api/geo/multitech/jobposting/search"}
                            and not parsed.query)
         csod_search = (parsed.hostname == "us.api.csod.com" and parsed.path == "/rec-job-search/external/jobs" and not parsed.query)
+        komatsu_search = (parsed.hostname == "komatsu.jobs" and parsed.path == "/services/recruiting/v1/jobs" and not parsed.query
+                          and payload == {"keywords": "", "locale": "en_US", "location": "", "pageNumber": payload.get("pageNumber"), "sortBy": "recent"}
+                          and isinstance(payload.get("pageNumber"), int) and 0 <= payload["pageNumber"] < 100)
         digitalrecruiters_search = False
         if parsed.hostname == "api.digitalrecruiters.com":
             from .digitalrecruiters import safe_api_path, API_PATH as DIGITALRECRUITERS_PATH
             digitalrecruiters_search = (safe_api_path(parsed) and parsed.path == DIGITALRECRUITERS_PATH
                                         and payload == {"filters": {}} and not headers)
-        if not ((is_workday_host(parsed.hostname) and parsed.path.endswith("/jobs")) or taleo_search or ukg_search or ublox_search or kratos_search or dayforce_search or digitalrecruiters_search or csod_search):
+        sick_search = (parsed.hostname == "jobs.sick.com" and parsed.path == "/services/recruiting/v1/jobs" and not parsed.query)
+        if not ((is_workday_host(parsed.hostname) and parsed.path.endswith("/jobs")) or taleo_search or ukg_search or ublox_search or kratos_search or dayforce_search or digitalrecruiters_search or csod_search or komatsu_search or sick_search):
             raise FetchError("unsupported", "POST is restricted to verified public job listing searches.")
         return self._request(url, payload, headers=headers)
 
@@ -805,6 +810,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0248" and company.casefold() == "dematic":
         from .dematic import fetch_dematic
         return fetch_dematic(careers_url, company_id, company, transport or HTTPTransport())
+    if company_id == "COMP-0240" and company.casefold() == "komatsu":
+        from .komatsu import fetch_komatsu
+        return fetch_komatsu(careers_url, company_id, company, transport or discovery_transport or HTTPTransport())
     if company_id == "COMP-0097" and company.casefold() == "general dynamics land systems":
         from .gd_land_systems import fetch_gd_land_systems
         return fetch_gd_land_systems(careers_url, company_id, company, transport or HTTPTransport())
@@ -856,6 +864,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0200" and company.casefold() == "symbotic":
         from .symbotic import fetch_symbotic
         return fetch_symbotic(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0272" and company.casefold() == "sick":
+        from .sick import fetch_sick
+        return fetch_sick(careers_url, company_id, company, transport or HTTPTransport())
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
@@ -982,7 +993,7 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if careers_url == 'https://www.comrod.com/about/careers/':
         from .comrod import fetch_comrod
         return fetch_comrod(careers_url, company_id, company, discovery_transport)
-    if careers_url in {'https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=', 'https://careers.belden.com/search/?q=', 'https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.leonardodrs.com/go/All-Jobs/8131200/', 'https://careers.thalesdsi.com/search/?q=', 'https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.deere.com/successfactors/search/?q=&locationsearch=', 'https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc'}:
+    if careers_url in {'https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=', 'https://careers.belden.com/search/?q=', 'https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.leonardodrs.com/go/All-Jobs/8131200/', 'https://careers.thalesdsi.com/search/?q=', 'https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.deere.com/successfactors/search/?q=&locationsearch=', 'https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://komatsu.jobs/viewalljobs/'}:
         from .successfactors import fetch_successfactors
         return fetch_successfactors(careers_url, company_id, company, discovery_transport)
     if careers_url in {'https://sjobs.brassring.com/TGNewUI/Search/Home/Home?partnerid=25539&siteid=5310', 'https://sjobs.brassring.com/TGNewUI/Search/Home/Home?partnerid=25539&siteid=5313'}:

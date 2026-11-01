@@ -1,0 +1,15 @@
+{
+  "company_id": "COMP-0240",
+  "company": "Komatsu",
+  "official_careers_url": "https://www.komatsu.com/en-us/careers",
+  "verified_source": "https://komatsu.jobs/viewalljobs/",
+  "ats": "SuccessFactors",
+  "validation_date": "2026-11-01",
+  "pipeline": "installed normal pipeline",
+  "rereads": [
+    {"pass": 1, "status": "partial", "job_count": 0, "reason": "Komatsu API published a job result without a stable requisition identity."},
+    {"pass": 2, "status": "partial", "job_count": 0, "reason": "Komatsu API published a job result without a stable requisition identity."}
+  ],
+  "terminal_blocker": "The official Komatsu public recruiting API returned a first-page result lacking a stable requisition ID. Inventory completeness and a stable installed job count cannot be established, so Komatsu is not complete.",
+  "completion_rule": "Do not count complete until two installed normal-pipeline rereads return complete with the same scoped IDs and full public job descriptions."
+}
