@@ -90,6 +90,9 @@ def _response(client, url):
         body_html = payload.get("page", {}).get("body_html") if isinstance(payload, dict) else None
         if isinstance(body_html, str) and body_html:
             response.body = body_html.encode("utf-8")
+            page_title = payload.get("page", {}).get("title")
+            if isinstance(page_title, str):
+                response._page_title = page_title
     except (UnicodeDecodeError, json.JSONDecodeError, AttributeError, TypeError):
         pass
     return response
@@ -118,7 +121,7 @@ def _job(client, url, company_id, company, slug):
     parser = _Detail()
     parser.feed(response.body.decode("utf-8", "replace"))
     parser.close()
-    title = text(parser.title)
+    title = text(parser.title or getattr(response, "_page_title", ""))
     description = text("".join(parser.parts))
     if not title or not description or len(description) < 100:
         raise ValueError("One Stop Systems role page lacks a full description.")
