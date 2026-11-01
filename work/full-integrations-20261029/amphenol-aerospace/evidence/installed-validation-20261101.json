@@ -1,0 +1,38 @@
+{
+  "company_id": "COMP-0490",
+  "company": "Amphenol Aerospace",
+  "source_url": "https://amphenol-aerospace.acquiretm.com/home.aspx",
+  "ats": "AcquireTM",
+  "validation_date": "2026-11-01",
+  "status": "blocked",
+  "counted_complete": false,
+  "focused_tests": {
+    "command": "PYTHONPATH=src python -m pytest -q tests/test_acquiretm.py",
+    "result": "5 passed"
+  },
+  "installed_rereads": [
+    {
+      "attempt": 1,
+      "status": "partial",
+      "jobs": 0,
+      "reason": "AcquireTM total changed or pagination repeated.",
+      "elapsed_seconds": 22.0
+    },
+    {
+      "attempt": 2,
+      "status": "partial",
+      "jobs": 0,
+      "reason": "AcquireTM total changed or pagination repeated.",
+      "elapsed_seconds": 9.0
+    }
+  ],
+  "diagnostic_observation": {
+    "advertised_count": 41,
+    "page_1_listings": 25,
+    "page_2_listings": 16,
+    "distinct_ids": 41,
+    "note": "A direct diagnostic observed a coherent 41-ID cohort, but the installed normal pipeline did not reproduce a stable two-pass reconciliation. The adapter correctly refuses to mark complete."
+  },
+  "blocker": "AcquireTM ASP.NET pagination is transient under live access; strict normal-pipeline rereads fail the total/pagination reconciliation guard, so a stable installed inventory cannot be proven.",
+  "completion_rule": "Do not count complete until two installed normal-pipeline rereads return complete with the same current scoped IDs and full JSON-LD job bodies."
+}

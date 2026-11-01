@@ -1476,3 +1476,15 @@ REPAIRS.update({'COMP-0510': {
     'url': 'https://fa-eqzh-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/Avient',
     'evidence': 'Official Avient careers page links the Avient Oracle Candidate Experience site CX_1; two public listing passes verified 212 stable requisitions.'
 }})
+
+# Amphenol Aerospace COMP-0490: the official careers page resolves to this
+# employer-specific AcquireTM board.  Keep the unfiltered board pinned because
+# filtered views omit part of the published cohort.
+REPAIRS.update({'COMP-0490': {
+    'company': 'Amphenol Aerospace',
+    'ats': 'AcquireTM',
+    'expected_url': 'https://amphenol-aerospace.acquiretm.com/home.aspx',
+    'expected_urls': ['https://www.amphenol-aerospace.com/'],
+    'url': 'https://amphenol-aerospace.acquiretm.com/home.aspx',
+    'evidence': 'Official Amphenol Aerospace careers source; employer-scoped AcquireTM board with ASP.NET pagination and JSON-LD job details.',
+}})

@@ -28,3 +28,14 @@ class AcquireTests(unittest.TestCase):
    with self.assertRaises(FetchError):posting(body(),e,'c','Amphenol')
    j[k]=old
  def test_scope(self):self.assertEqual(fetch_acquiretm(SOURCE+'?filter=1','c','Amphenol').status,'unsupported')
+
+ def test_current_detail_json_ld_preserves_html_body(self):
+  body = '<script type="application/ld+json">' + json.dumps({
+   '@type': 'JobPosting', 'title': 'Engineer 2265',
+   'identifier': {'value': '2265'},
+   'url': SOURCE.replace('home.aspx', 'job_details_clean.aspx?ID=2265'),
+   'description': '<p>Responsibilities and qualifications.</p>',
+  }) + '</script>'
+  e = {'id': '2265', 'title': 'Engineer 2265', 'url': SOURCE.replace('home.aspx', 'job_details_clean.aspx?ID=2265')}
+  result = posting(body, e, 'COMP-0490', 'Amphenol Aerospace')
+  self.assertIn('Responsibilities and qualifications.', result['description'])
