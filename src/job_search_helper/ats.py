@@ -763,6 +763,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0330" and company.casefold() == "tdk trusted positioning":
         from .tdk_trusted_positioning import fetch_tdk_trusted_positioning
         return fetch_tdk_trusted_positioning(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0403" and company.casefold() == "south shore controls":
+        from .south_shore_controls import fetch_south_shore_controls
+        return fetch_south_shore_controls(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
