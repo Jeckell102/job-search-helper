@@ -1272,7 +1272,7 @@ REPAIRS.update({
     'COMP-0295': {'company': 'Getac', 'ats': 'Browser', 'expected_url': 'https://www.getac.com/us/company/careers/', 'url': 'https://www.getac.com/us/company/careers/', 'evidence': 'Official Getac US careers page.'},
     'COMP-0296': {'company': 'Panasonic Connect', 'ats': 'Jibe', 'expected_url': 'https://careers.na.panasonic.com/connect', 'url': 'https://careers.na.panasonic.com/connect', 'evidence': 'Official Panasonic Connect career center exposes a public Jibe API with employer tags for PCONA and PSG.'},
     'COMP-0301': {'company': 'JMP Quick Technology', 'ats': 'iCIMS', 'expected_url': 'https://jmp.com/careers/', 'url': 'https://jmp-sas.icims.com/jobs/search?ss=1', 'evidence': 'JMP careers page links the public JMP SAS iCIMS board; live adapter validation retrieved two complete postings.'},
-    'COMP-0302': {'company': 'Deployable Technologies', 'ats': 'Browser', 'expected_url': 'https://deployabletech.com/careers/', 'url': 'https://deployabletech.com/careers/', 'evidence': 'Official Deployable Technologies careers page.'},
+    'COMP-0302': {'company': 'Deployable Technologies', 'ats': 'Deployable Technologies careers', 'expected_url': 'https://deployabletechnologies.com/careers/', 'expected_urls': ['https://deployabletechnologies.com/careers'], 'url': 'https://deployabletechnologies.com/careers/', 'evidence': 'Official Deployable Technologies Job Manager inventory; expired records are excluded and active records require full details.'},
     'COMP-0303': {'company': 'Norseman Defense Technologies', 'ats': 'LinkedIn Jobs', 'expected_url': 'https://www.linkedin.com/company/norseman-defense-technologies/jobs/', 'url': 'https://www.linkedin.com/company/norseman-defense-technologies/jobs/', 'evidence': 'Employer LinkedIn jobs page; LinkedIn requires browser access.'},
     'COMP-0304': {'company': 'Cornet Technology, Inc.', 'ats': 'Browser', 'expected_url': 'https://www.cornet.com/careers/', 'url': 'https://www.cornet.com/careers/', 'evidence': 'Official Cornet Technology careers page.'},
     'COMP-0307': {'company': 'iGov', 'ats': 'isolved', 'expected_url': 'https://www.igov.com/careers/', 'url': 'https://igov.isolvedhire.com/iframe/mobile', 'evidence': 'Official iGov careers page embeds the isolved public jobs board; it currently states there are no job openings.'},
@@ -1329,7 +1329,7 @@ REPAIRS.update({
                                     'https://www.bonsairobotics.ai/careers/'],
                   'url': 'https://ats.rippling.com/bonsairoboticsmain/jobs',
                   'evidence': 'Official Bonsai Robotics careers page and company-specific Rippling tenant bonsairoboticsmain.'},
-    'COMP-0275': {'company': 'ClearBlade', 'ats': 'Browser', 'expected_url': 'https://www.clearblade.com/careers', 'url': 'https://www.clearblade.com/careers', 'evidence': 'Official ClearBlade careers page.'},
+    'COMP-0275': {'company': 'ClearBlade', 'ats': 'ClearBlade careers', 'expected_url': 'https://www.clearblade.com/company/careers', 'expected_urls': ['https://www.clearblade.com/careers', 'https://www.clearblade.com/company/careers'], 'url': 'https://www.clearblade.com/company/careers', 'evidence': 'Official ClearBlade Webflow careers page with employer-scoped published role cards.'},
     'COMP-0277': {'company': 'Losant', 'ats': 'Browser', 'expected_url': 'https://www.losant.com/careers', 'url': 'https://www.losant.com/careers', 'evidence': 'Official Losant careers page.'},
 })
 
