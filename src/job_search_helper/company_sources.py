@@ -6,7 +6,13 @@ source bypasses the repair. Public employer evidence is recorded with each
 entry so this small company-specific registry can be audited and retired.
 """
 
-REPAIRS = {'COMP-0279': {'ats': 'Greenhouse',
+REPAIRS = {'COMP-0440': {'ats': 'Cornerstone careers',
+               'company': 'Ducommun',
+               'evidence': 'Official Ducommun Cornerstone career site',
+               'expected_url': 'https://www.ducommun.com/careers/CareersHome.aspx/',
+               'expected_urls': ['https://www.ducommun.com/careers/CareersHome.aspx'],
+               'url': 'https://www.ducommun.com/careers/CareersHome.aspx/'},
+ 'COMP-0279': {'ats': 'Greenhouse',
                'company': 'Tulip Interfaces',
                'evidence': 'https://tulip.co/careers/job-posting/?gh_jid=7493003003',
                'expected_url': 'https://tulip.co/careers/',
@@ -1362,7 +1368,7 @@ REPAIRS.update({
     'COMP-0449': {'company': 'IERUS Technologies', 'ats': 'Browser', 'expected_url': 'https://ierustech.com/careers/open-positions/', 'url': 'https://ierustech.com/careers/open-positions/', 'evidence': 'Official IERUS Technologies open-positions page; ATS not exposed in the public HTML.'},
     'COMP-0453': {'company': 'Tactical Edge', 'ats': 'Browser', 'expected_url': 'https://www.tacticaledge.us/careers/', 'url': 'https://www.tacticaledge.us/careers/', 'evidence': 'Official Tactical Edge careers page; ATS not exposed in the public HTML.'},
     'COMP-0461': {'company': 'JANUS Research Group', 'ats': 'ClearCompany', 'expected_url': 'https://www.janusresearch.com/careers', 'expected_urls': ['https://www.janusresearch.com/careers', 'https://janus.hrmdirect.com/employment/index.php', 'https://janus.hrmdirect.com/employment/job-openings.php?search=true'], 'url': 'https://careers-api.clearcompany.com/v1/8d0c3966-d20e-442b-31ea-4299ad6de662', 'evidence': 'Official JANUS careers page links to the HRDirect/ClearCompany board; verified ClearCompany API returns 23 JANUS Research Group postings.'},
-    'COMP-0467': {'company': 'DTC, a Codan Company', 'ats': 'Browser', 'expected_url': 'https://www.dtccodan.com/about/careers/', 'url': 'https://www.dtccodan.com/about/careers/', 'evidence': 'Official DTC/Codan careers page; ATS not exposed in the public HTML.'},
+    'COMP-0467': {'company': 'DTC, a Codan Company', 'ats': 'DTC, a Codan Company careers', 'expected_url': 'https://www.dtccodan.com/about/careers/', 'url': 'https://careers.codan.com.au/search/?q=DTC', 'evidence': 'Official DTC/Codan careers page links the Codan public board; the DTC keyword-scoped board returns employer-scoped postings with full public details.'},
     'COMP-0469': {'company': 'Mutualink', 'ats': 'Browser', 'expected_url': '', 'url': 'https://www.mutualink.net/careers/', 'evidence': 'Official Mutualink careers page; browser-only inventory.'},
     'COMP-0475': {'company': 'Mission Critical Partners', 'ats': 'BrightMove', 'expected_url': 'https://www.missioncriticalpartners.com/careers', 'url': 'https://j.brt.mv/ax.do?refresh=true&portalGK=39203', 'evidence': 'Official Mission Critical Partners careers page links its employer-scoped BrightMove portal; the public inventory reports four jobs with stable public detail URLs.'},
     'COMP-0477': {'company': 'Wabtec', 'ats': 'SmartRecruiters Attrax', 'expected_url': 'https://careers.wabtec.com/', 'url': 'https://careers.wabtec.com/jobs', 'evidence': 'Official Wabtec careers portal is powered by SmartRecruiters Attrax and exposes a paginated public inventory.'},

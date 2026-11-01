@@ -213,8 +213,10 @@ def _safe_api_url(url: str) -> None:
                and not parsed.query and not parsed.fragment)
     radd = (parsed.hostname == "radd-co.com" and (parsed.path == "/sitemap.xml" or bool(re.fullmatch(r"/open-roles/[A-Za-z0-9-]+", parsed.path))) and not parsed.query and not parsed.fragment)
     exyn = parsed.hostname == "www.exyn.com" and parsed.path == "/about/careers" and not parsed.query and not parsed.fragment
+    csod_search = (parsed.hostname == "us.api.csod.com" and parsed.path == "/rec-job-search/external/jobs" and not parsed.query and not parsed.fragment)
+    csod_detail = (parsed.hostname == "ducommun.csod.com" and bool(re.fullmatch(r"/services/x/job-requisition/v2/requisitions/[0-9]+/jobDetails", parsed.path)) and parse_qs(parsed.query) == {"cultureId": ["1"]})
     dsi = parsed.hostname in {"dsiinnovations.com", "www.dsiinnovations.com"} and parsed.path == "/employment-opportunities/" and not parsed.query and not parsed.fragment
-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi)
+    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail)
             or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
     if parsed.hostname in {"l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com"} and not (ublox_algolia or ublox_detail):
@@ -297,12 +299,13 @@ class HTTPTransport:
         dayforce_search = (parsed.hostname == "jobs.dayforcehcm.com"
                            and parsed.path in {"/api/geo/esa/jobposting/search", "/api/geo/multitech/jobposting/search"}
                            and not parsed.query)
+        csod_search = (parsed.hostname == "us.api.csod.com" and parsed.path == "/rec-job-search/external/jobs" and not parsed.query)
         digitalrecruiters_search = False
         if parsed.hostname == "api.digitalrecruiters.com":
             from .digitalrecruiters import safe_api_path, API_PATH as DIGITALRECRUITERS_PATH
             digitalrecruiters_search = (safe_api_path(parsed) and parsed.path == DIGITALRECRUITERS_PATH
                                         and payload == {"filters": {}} and not headers)
-        if not ((is_workday_host(parsed.hostname) and parsed.path.endswith("/jobs")) or taleo_search or ukg_search or ublox_search or kratos_search or dayforce_search or digitalrecruiters_search):
+        if not ((is_workday_host(parsed.hostname) and parsed.path.endswith("/jobs")) or taleo_search or ukg_search or ublox_search or kratos_search or dayforce_search or digitalrecruiters_search or csod_search):
             raise FetchError("unsupported", "POST is restricted to verified public job listing searches.")
         return self._request(url, payload, headers=headers)
 
@@ -797,6 +800,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0473" and company.casefold() == "centralsquare technologies":
         from .centralsquare import fetch_centralsquare
         return fetch_centralsquare(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0440" and company.casefold() == "ducommun":
+        from .ducommun import fetch_ducommun
+        return fetch_ducommun(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
@@ -868,6 +874,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0391" and company.casefold() == "dsi innovations":
         from .dsi_innovations import fetch_dsi_innovations
         return fetch_dsi_innovations(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0467" and company.casefold() == "dtc, a codan company":
+        from .dtc_codan import fetch_dtc_codan
+        return fetch_dtc_codan(careers_url, company_id, company, discovery_transport or transport)
     if company_id == "COMP-0344" and company.casefold() == "mass virtual":
         from .massvirtual import fetch_massvirtual
         return fetch_massvirtual(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())
