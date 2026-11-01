@@ -1,0 +1,104 @@
+{
+  "Id": "9fb656f2-f3a2-4bf3-ab09-57f2ddcfe4fd",
+  "Title": "Digital Marketing Specialist",
+  "Featured": false,
+  "FullTime": true,
+  "HoursPerWeek": null,
+  "JobCategoryName": "Marketing",
+  "Locations": [
+    {
+      "Id": "642f3a2f-fada-5aee-8892-b55cb62b1ead",
+      "LocalizedName": "Akron",
+      "LocalizedLocationId": null,
+      "LocalizedDescription": "Akron",
+      "Address": {
+        "Line1": "388 South Main Street",
+        "Line2": "Suite 330",
+        "City": "Akron",
+        "State": {
+          "Name": "Ohio",
+          "Code": "OH"
+        },
+        "PostalCode": "44311",
+        "Country": {
+          "Id": "861259ae-1484-4c6c-85e5-6fa6ee90d67c",
+          "Name": "United States",
+          "Code": "USA"
+        }
+      },
+      "DisplayName": false,
+      "DisplayLocationId": false,
+      "DisplayDescription": true,
+      "DisplayAddress": true,
+      "DisplayStreetAddress": true,
+      "Coordinates": {
+        "Longitude": -81.523291087487,
+        "Latitude": 41.075133877376
+      },
+      "Shapes": null,
+      "SourceOfTruth": 1,
+      "IsAvailableForOpportunities": true
+    }
+  ],
+  "PostedDate": "2026-08-03T19:41:40.99Z",
+  "UpdatedDate": "2026-08-05T15:29:17.833Z",
+  "RequisitionNumber": "DIGIT001559",
+  "Description": "<p>The Digital Marketing role will plan and execute multi-channel digital marketing campaigns to build brand awareness, generate demand, and support pipeline growth. This position will manage day-to-day execution across paid, organic, AI search, and content channels, working cross-functionally with sales and product marketing to increase engagement and lead generation. <strong>This&nbsp;hybrid&nbsp;role&nbsp;is&nbsp;located&nbsp;in&nbsp;Akron,&nbsp;Ohio.&nbsp;Consideration&nbsp;will&nbsp;be&nbsp;given&nbsp;only&nbsp;to&nbsp;candidates&nbsp;who&nbsp;are&nbsp;local&nbsp;to&nbsp;the&nbsp;area&nbsp;and&nbsp;authorized&nbsp;to&nbsp;work&nbsp;in&nbsp;the&nbsp;United&nbsp;States.</strong></p>\n<h3>RESPONSIBILITIES<span>&nbsp;</span></h3>\n<ul>\n<li>Plan and execute multi-channel digital marketing campaigns across email, social, paid search, organic social.</li>\n<li>Assist to manage company website content updates, landing pages, and on-page SEO and AI search optimization.</li>\n<li>Analyze campaign performance metrics and provide regular reporting to marketing leadership.</li>\n<li>Help to manage paid advertising budgets and optimize campaigns for cost-per-lead and ROI targets.</li>\n<li>Conduct keyword research and implement on-page and off-page SEO best practices.</li>\n<li>Administer marketing automation platform workflows (e.g., Salesforce, Pardot, Lead Forensics, etc.).</li>\n<li>Support email marketing programs, including list segmentation, automation workflows, and A/B testing.</li>\n<li>Coordinate with design and content teams to produce marketing collateral, graphics, and video assets.</li>\n<li>Support the development and scheduling of content for social media channels to grow brand engagement.</li>\n<li>Collaborate with the marketing managers and sales to align digital campaigns with lead generation and pipeline goals.</li>\n<li>Monitor industry trends and competitor digital strategies to inform recommendations.</li>\n<li>Prepare ad-hoc campaign analyses and reports as needed.</li>\n</ul>\n<h3>REQUIREMENTS</h3>\n<ul>\n<li>Strong analytical skills with experience using tools like Google Analytics, Google Data Studio, Google Search Console, and Google Tag Manager</li>\n<li>Experience with digital advertising platforms, specifically Google Ads, LinkedIn Advertising, Meta Business Suite, StackAdapt, etc.</li>\n<li>Working knowledge of SEO tools, best practices, trends, and strategy, including keyword research, competitive analysis, etc.</li>\n<li>Experience with Generative Engine Optimization (GEO), Answer Engine Optimization (AEO), related tools, and optimization strategies</li>\n<li>Attention to detail</li>\n<li>Time management skills and ability to prioritize multiple projects simultaneously</li>\n<li>Experience with Microsoft software programs (Excel, Word, PowerPoint, Outlook)</li>\n<li>Familiarity with creative tools (e.g. Adobe, Photoshop, Illustrator)</li>\n<li>Familiarity with marketing automation and CRM platforms (e.g., Salesforce, Pardot)</li>\n<li>Excellent communication skills, both written and oral</li>\n<li>Exceptional interpersonal skills and proven ability to collaborate with all levels of staff and operate with a high degree of independence and initiative</li>\n</ul>\n<h3>EDUCATION/EXPERIENCE</h3>\n<ul>\n<li>Bachelor&rsquo;s degree in Marketing, Communications, or relevant field</li>\n<li>2-3 year's experience in digital marketing or a related role</li>\n</ul>\n<p><span>&nbsp;</span></p>",
+  "EqualOpportunityEmployerDescription": "Equal Opportunity Employer<br>\r\nThis employer is required to notify all applicants of their rights pursuant to federal employment laws.\r\nFor further information, please review the <a href='https://www.eeoc.gov/poster' target='_blank'>Know Your Rights</a> notice from the Department of Labor.",
+  "PayTransparencyPolicyStatement": null,
+  "MatchScore": 1.0,
+  "HasApplied": false,
+  "ApplicationJobBoardName": null,
+  "ApplicationJobBoardId": null,
+  "DateApplied": null,
+  "Salaried": false,
+  "CompensationAmount": null,
+  "PublishingStatus": 1,
+  "Links": [],
+  "BehaviorCriteria": [],
+  "MotivationCriteria": [],
+  "EducationCriteria": [
+    {
+      "Required": true,
+      "Related": false,
+      "DegreeId": "9a49f506-64b5-4a4b-ac7f-4e167a44e282",
+      "DegreeName": "Bachelors",
+      "MajorId": "00000000-0000-0000-0000-000000000000",
+      "MajorName": null
+    }
+  ],
+  "LicenseAndCertificationCriteria": [],
+  "SkillCriteria": [],
+  "WorkExperienceCriteria": [],
+  "JobBoardMemberships": [
+    {
+      "JobBoardId": "50df57fc-52d9-4dd4-990a-35afe9a37d34",
+      "PublishedInternal": true,
+      "PublishedExternal": true,
+      "ExternalPostedDate": "2026-10-06T18:50:44.114Z",
+      "InternalPostedDate": "2026-10-06T18:50:44.114Z"
+    }
+  ],
+  "AssessmentUri": null,
+  "AssessmentStatus": null,
+  "OpportunityIsClosed": false,
+  "TravelRequired": null,
+  "TravelDescription": null,
+  "SupervisorName": null,
+  "Assessments": [],
+  "ApplicationId": null,
+  "CompensationAnnualMinimum": null,
+  "CompensationAnnualMaximum": null,
+  "CompensationHourlyMinimum": null,
+  "CompensationHourlyMaximum": null,
+  "CompensationCurrencyCode": null,
+  "CompensationCurrency": null,
+  "JobLocationType": 0,
+  "PayRangeVisible": false,
+  "PayRange": {
+    "PayRangeMinimum": null,
+    "PayRangeMaximum": null
+  },
+  "PayRangeCurrencyCode": "USD",
+  "OpportunityType": 0
+}

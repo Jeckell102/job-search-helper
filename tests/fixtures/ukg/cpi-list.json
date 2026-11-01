@@ -1,0 +1,1570 @@
+{
+  "opportunities": [
+    {
+      "Id": "1cbff8dd-29bf-4fbe-a6aa-45c5e4d09450",
+      "Featured": true,
+      "Title": "Inventory Analyst",
+      "RequisitionNumber": "INVEN002314",
+      "FullTime": true,
+      "JobCategoryName": "PC/Planning",
+      "Locations": [
+        {
+          "Id": "9a52d433-f709-5f33-a59f-e65a51152d98",
+          "LocalizedName": "CPI Antenna Technologies - TX - Kilgore",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX - Kilgore - 2600",
+          "Address": {
+            "Line1": "2600 N Longview St",
+            "Line2": null,
+            "City": "Kilgore",
+            "PostalCode": "75662",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.40495821353793,
+            "Longitude": -94.85447239984612
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T16:26:25.713Z",
+      "BriefDescription": "The successful candidate will be someone who doesn't just report inventory problems, they investigate why they are happening and help prevent them from happening again. This position requires someone who can work with data, understand manufacturing processes, communicate with multiple departments, and take ownership of inventory accuracy from the system to the shop floor.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "a780bc71-3938-4016-bb14-6e178c6d4266",
+      "Featured": false,
+      "Title": "Receiving Inspector",
+      "RequisitionNumber": "RECEI002320",
+      "FullTime": true,
+      "JobCategoryName": "Quality & Inspection",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T14:54:29.927Z",
+      "BriefDescription": "Receiving Inspector",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "c1cad10e-92bb-4ba9-888b-a86868e490cb",
+      "Featured": false,
+      "Title": "Senior JDE Functional Analyst (remote-US)",
+      "RequisitionNumber": "SENIO002295",
+      "FullTime": true,
+      "JobCategoryName": "Information Technology",
+      "Locations": [
+        {
+          "Id": "3f7eae67-1e3d-401a-888f-66fc61e70e0b",
+          "LocalizedName": "Remote",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": "1000 Klein Road",
+            "Line2": null,
+            "City": "Plano",
+            "PostalCode": "75074",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": false,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 33.011319987947,
+            "Longitude": -96.668071987418
+          }
+        }
+      ],
+      "PostedDate": "2026-09-28T21:17:37.666Z",
+      "BriefDescription": "We are seeking an experienced Senior JDE Functional Analyst with a strong background in JDE Finance and Distribution modules to join our dynamic team. The ideal candidate will have expertise in analyzing business needs, translating them into functional requirements, and ensuring the successful implementation and optimization of JD Edwards (JDE) ERP solutions. This role involves collaborating with cross-functional teams to improve business processes, ensure seamless integration, and drive efficiency in Finance and Distribution areas.\n\nU.S. Citizenship is required. Candidates requiring employment authorization through an EAD, visa, or other non-citizen work authorization are not eligible for consideration.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "6fa71e58-b1fd-45b6-a90c-b6dde483b357",
+      "Featured": false,
+      "Title": "AI Automation and Integration Lead",
+      "RequisitionNumber": "AIAUT002310",
+      "FullTime": true,
+      "JobCategoryName": "Information Technology",
+      "Locations": [
+        {
+          "Id": "65667b49-c4e1-5cb2-8674-c6992e4f4aab",
+          "LocalizedName": "CPI Antenna Technologies - TX - Plano",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX - Plano - 1000",
+          "Address": {
+            "Line1": "1000 Klein Rd",
+            "Line2": null,
+            "City": "Plano",
+            "PostalCode": "75074",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 33.01128051073442,
+            "Longitude": -96.66936808214685
+          }
+        },
+        {
+          "Id": "3f7eae67-1e3d-401a-888f-66fc61e70e0b",
+          "LocalizedName": "Remote",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": "1000 Klein Road",
+            "Line2": null,
+            "City": "Plano",
+            "PostalCode": "75074",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": false,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 33.011319987947,
+            "Longitude": -96.668071987418
+          }
+        }
+      ],
+      "PostedDate": "2026-09-25T22:38:17.511Z",
+      "BriefDescription": "The AI Automation and Integration Lead is a hands-on individual contributor and cross-functional process leader who connects enterprise data, modernizes workflows, and delivers secure AI-enabled solutions. Partnering with Business Development, IT, Security, data owners, and other stakeholders, this role translates business needs into reliable integrations, governed automations, and measurable improvements.\n\nCombine your experience in hands-on enterprise integration, process leadership, AI engineering, and security-by-design to establish technical standards and guide solutions from architecture through adoption.\n\nU.S. Citizenship is required. Candidates requiring employment authorization through an EAD, visa, or other non-citizen work authorization are not eligible for consideration.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "b46da737-ec53-405c-ad7b-da88b331abe8",
+      "Featured": false,
+      "Title": "Controls Engineer II / Electrical Engineer II",
+      "RequisitionNumber": "CONTR002298",
+      "FullTime": true,
+      "JobCategoryName": "Engineering",
+      "Locations": [
+        {
+          "Id": "65667b49-c4e1-5cb2-8674-c6992e4f4aab",
+          "LocalizedName": "CPI Antenna Technologies - TX - Plano",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX - Plano - 1000",
+          "Address": {
+            "Line1": "1000 Klein Rd",
+            "Line2": null,
+            "City": "Plano",
+            "PostalCode": "75074",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 33.01128051073442,
+            "Longitude": -96.66936808214685
+          }
+        }
+      ],
+      "PostedDate": "2026-09-24T17:55:01.586Z",
+      "BriefDescription": "As a Controls Engineer II, you\u2019ll support the design, development, testing, and integration of control systems for advanced ground station antennas and Optical Telescopes. Develop expertise in satellite communications and precision motion-control systems while solving real-world engineering challenges alongside experienced engineers in the areas of embedded systems, motors, servo drives, and antenna tracking systems while \n\nThis position requires U.S. citizenship due to specific government contract requirements and/or the need to obtain or maintain a U.S. government security clearance. Candidates who do not meet these requirements, including lawful permanent residents, EAD holders, and foreign nationals with temporary work authorization, are not eligible for consideration.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "9ac2b82c-e266-4a62-acd5-1a07267330fd",
+      "Featured": false,
+      "Title": "Stockroom Attendant & Shipping Receiving Clerk",
+      "RequisitionNumber": "STOCK002235",
+      "FullTime": true,
+      "JobCategoryName": "PC/Planning",
+      "Locations": [
+        {
+          "Id": "0a826ce6-685a-5aae-a83b-624a322a397b",
+          "LocalizedName": "CPI Composite Structures, Radant Technologies Ops",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "MA - Hudson - 4",
+          "Address": {
+            "Line1": "4 Robert Bonnazzoli Ave",
+            "Line2": null,
+            "City": "Hudson",
+            "PostalCode": "01749",
+            "State": {
+              "Code": "MA",
+              "Name": "Massachusetts"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 42.38985482888073,
+            "Longitude": -71.55191708024923
+          }
+        }
+      ],
+      "PostedDate": "2026-09-23T14:25:18.159Z",
+      "BriefDescription": "ON SITE IN HUDSON, MASSACHUSETTS\n\nWe are looking to hire an on-site STOCKROOM ATTENDANT & SHIPPING/RECEIVING CLERK to join our Planning organization at our Hudson, Massachusetts, facility. This individual will contribute to the successful operation within our manufacturing environment. We are looking for someone who is familiar with manufacturing operations that include material handling, as well as shipping to ensure continued customer satisfaction, someone who has technical experience, and someone who can track scheduling/deliveries, so they ship/arrive on time and within budget.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "bedebd40-ca30-49be-a946-f4b16f303e99",
+      "Featured": false,
+      "Title": "Lead Customer Order Coordinator",
+      "RequisitionNumber": "CUSTO002309",
+      "FullTime": true,
+      "JobCategoryName": "Customer Service",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-09-17T19:57:47.153Z",
+      "BriefDescription": "Lead Customer Order Coordinator",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "5163fd17-8929-48f3-91e4-7fbf481ab34b",
+      "Featured": false,
+      "Title": "Sr. System Engineer - Active Directory Infrastructure",
+      "RequisitionNumber": "SRSYS002311",
+      "FullTime": true,
+      "JobCategoryName": "Information Technology",
+      "Locations": [
+        {
+          "Id": "3f7eae67-1e3d-401a-888f-66fc61e70e0b",
+          "LocalizedName": "Remote",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": "1000 Klein Road",
+            "Line2": null,
+            "City": "Plano",
+            "PostalCode": "75074",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": false,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 33.011319987947,
+            "Longitude": -96.668071987418
+          }
+        }
+      ],
+      "PostedDate": "2026-09-17T13:17:03.812Z",
+      "BriefDescription": "CPI is seeking a Senior Systems Engineer \u2013 Active Directory & Infrastructure to join our infrastructure team in a hands-on senior role as the primary technical owner for Microsoft Active Directory Domain Services (AD DS), Group Policy, hybrid identity, and Windows patching.\n\nBring your deep experience with enterprise Active Directory and Windows environments to lead efforts involving AD consolidation, directory and Group Policy cleanup and maintenance, security hardening, lifecycle management, and patching. \n\nU.S. Citizenship is required. Candidates requiring employment authorization through an EAD, visa, or other non-citizen work authorization are not eligible for consideration.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "82fb0405-ab20-49f6-8bd0-5173c505469e",
+      "Featured": false,
+      "Title": "Assembler IV",
+      "RequisitionNumber": "ASSEM002299",
+      "FullTime": true,
+      "JobCategoryName": "Production - Direct",
+      "Locations": [
+        {
+          "Id": "241db15f-d86e-5d78-81df-7b56f2b2e6f6",
+          "LocalizedName": "CPI Antenna Technologies, Orbital Systems",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX - Irving - 3807",
+          "Address": {
+            "Line1": "3807 Carbon Road",
+            "Line2": null,
+            "City": "Irving",
+            "PostalCode": "75038",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.87792830107074,
+            "Longitude": -96.9987910365551
+          }
+        }
+      ],
+      "PostedDate": "2026-09-15T16:50:10.376Z",
+      "BriefDescription": "YOUR DAY TO DAY: \nAs our Assembler IV, you'll perform a variety of electronic, mechanical, or composite assembly tasks in support of our SATCOM Antenna business. You've got demonstrated skills of a fully experienced and versatile assembler with the ability to produce a consistent high production level and high quality of product.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "91d1593b-47eb-4949-848e-87f89aa541f5",
+      "Featured": false,
+      "Title": "Senior Regulatory Compliance Engineer",
+      "RequisitionNumber": "REGUL002305",
+      "FullTime": true,
+      "JobCategoryName": "Engineering",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-09-10T18:37:32.844Z",
+      "BriefDescription": "Senior Regulatory Compliance Engineer",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "2fbd775d-9d49-4038-b0a2-50ee82e2d7ab",
+      "Featured": false,
+      "Title": "Assembler II",
+      "RequisitionNumber": "ASSEM002307",
+      "FullTime": true,
+      "JobCategoryName": "Production - Direct",
+      "Locations": [
+        {
+          "Id": "e2c5ae68-a138-4487-a77a-36b7707c0e50",
+          "LocalizedName": "CPI Composite Structures, AdamWorks Operations",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": "7367 S Revere Pkwy",
+            "Line2": "Bldg 1a",
+            "City": "Centennial",
+            "PostalCode": "80112",
+            "State": {
+              "Code": "CO",
+              "Name": "Colorado"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 39.58270415802812,
+            "Longitude": -104.84006017668571
+          }
+        }
+      ],
+      "PostedDate": "2026-09-10T18:33:38.818Z",
+      "BriefDescription": "CPI AdamWorks in Centennial, Colorado, has a need for an entry-level manufacturing technician in our Paint and Assembly Departments.  We design and build composite structures for aircraft, defense, and space and would love you to join our team!",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "f0963a84-158f-456c-bcd9-281babd885d3",
+      "Featured": false,
+      "Title": "Composites Engineer",
+      "RequisitionNumber": "COMPO002301",
+      "FullTime": true,
+      "JobCategoryName": "Engineering",
+      "Locations": [
+        {
+          "Id": "0a826ce6-685a-5aae-a83b-624a322a397b",
+          "LocalizedName": "CPI Composite Structures, Radant Technologies Ops",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "MA - Hudson - 4",
+          "Address": {
+            "Line1": "4 Robert Bonnazzoli Ave",
+            "Line2": null,
+            "City": "Hudson",
+            "PostalCode": "01749",
+            "State": {
+              "Code": "MA",
+              "Name": "Massachusetts"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 42.38985482888073,
+            "Longitude": -71.55191708024923
+          }
+        }
+      ],
+      "PostedDate": "2026-09-03T16:36:34.794Z",
+      "BriefDescription": "The Composites Engineer will provide engineering support for the design, test, and manufacture of radomes, antenna reflectors, and other related composite products for aircraft, ship, submarine, and ground-based applications.  They will also provide project support of composite structures in development and production program.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "7ba30d38-83c9-4ccd-ab14-81d26a780c78",
+      "Featured": false,
+      "Title": "Controls Engineer I / Electrical Engineer I",
+      "RequisitionNumber": "CONTR002297",
+      "FullTime": true,
+      "JobCategoryName": "Engineering",
+      "Locations": [
+        {
+          "Id": "65667b49-c4e1-5cb2-8674-c6992e4f4aab",
+          "LocalizedName": "CPI Antenna Technologies - TX - Plano",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX - Plano - 1000",
+          "Address": {
+            "Line1": "1000 Klein Rd",
+            "Line2": null,
+            "City": "Plano",
+            "PostalCode": "75074",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 33.01128051073442,
+            "Longitude": -96.66936808214685
+          }
+        }
+      ],
+      "PostedDate": "2026-09-02T20:55:13.193Z",
+      "BriefDescription": "As a Controls Engineer I, you\u2019ll support the design, development, testing, and integration of control systems for advanced ground station antennas and Optical Telescopes. Working alongside experienced electrical, controls, mechanical, software, and systems engineers, you\u2019ll gain hands-on experience with motion control, embedded systems, motors, servo drives, and antenna tracking systems.\n\nThis is an opportunity for a recent Electrical Engineering graduate to apply classroom knowledge to real-world engineering challenges while developing expertise in satellite communications and precision motion-control systems.\n\nThis position requires U.S. citizenship due to government contract and facility security requirements. Candidates who are not U.S. citizens are not eligible for consideration.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "50e142fe-647e-4eb4-a730-7f0671bf81fd",
+      "Featured": false,
+      "Title": "Mechanical Assembler I",
+      "RequisitionNumber": "MECHA002277",
+      "FullTime": true,
+      "JobCategoryName": "Production - Direct",
+      "Locations": [
+        {
+          "Id": "241db15f-d86e-5d78-81df-7b56f2b2e6f6",
+          "LocalizedName": "CPI Antenna Technologies, Orbital Systems",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX - Irving - 3807",
+          "Address": {
+            "Line1": "3807 Carbon Road",
+            "Line2": null,
+            "City": "Irving",
+            "PostalCode": "75038",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.87792830107074,
+            "Longitude": -96.9987910365551
+          }
+        }
+      ],
+      "PostedDate": "2026-08-21T11:59:42.783Z",
+      "BriefDescription": "YOUR DAY TO DAY: \nTo perform routine electronic, mechanical, or composite assembly tasks under a moderate amount of supervision. \nMachine & Equipment used:\nSoldering irons, soldering aids, , skill saws, and other applicable hand tools, component bending tools, torches, vacuum equipment, RF induction heating equipment, cold test equipment, spot welding, laser welding and heliarc welding equipment, brazing equipment, measuring calipers, voltmeters, electronic multi-meter, heat guns, glue guns, tie wrap guns, crimpers, crimping machines, etc.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "c910c87a-eb71-4d04-bc2c-44c87397558b",
+      "Featured": false,
+      "Title": "Commercial & Defense Sales Manager \u2013 Power Electronics",
+      "RequisitionNumber": "COMME002282",
+      "FullTime": true,
+      "JobCategoryName": "Sales/Marketing",
+      "Locations": [
+        {
+          "Id": "2e9f86aa-26e8-45b8-9a3d-430a2db79104",
+          "LocalizedName": "Remote",
+          "LocalizedLocationId": "Rem-StateCollege",
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": "60 Decibel Rd",
+            "Line2": null,
+            "City": "State College",
+            "PostalCode": "16801",
+            "State": {
+              "Code": "PA",
+              "Name": "Pennsylvania"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": false,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 40.829148614234,
+            "Longitude": -77.799485930148
+          }
+        }
+      ],
+      "PostedDate": "2026-08-20T19:42:40.937Z",
+      "BriefDescription": "The Commercial & Defense Sales Manager is a customer-facing, orders-driven role responsible for driving growth across commercial and defense markets through new business acquisition, strategic account expansion, and complex opportunity capture. This position requires a disciplined hunter who can create demand, shape opportunities, and convert customer engagement into booked orders, 50% from Commercial Markets, and 50% from defense-related pursuits involving Tier 1 integrators, prime contractors, and mission-critical platforms.\n\nThe role focuses on selling high-reliability power electronics solutions, including power conversion, high-voltage systems, RF power technologies, and mission-critical subsystems supporting industrial, communications, aerospace, and defense applications.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "20706b62-07e1-41ca-ab2a-fe8769252a90",
+      "Featured": false,
+      "Title": "Vice President/Director, Business Development - Antenna Technologies",
+      "RequisitionNumber": "VICEP002273",
+      "FullTime": true,
+      "JobCategoryName": "Sales/Marketing",
+      "Locations": [
+        {
+          "Id": "3f7eae67-1e3d-401a-888f-66fc61e70e0b",
+          "LocalizedName": "Remote",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": "1000 Klein Road",
+            "Line2": null,
+            "City": "Plano",
+            "PostalCode": "75074",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": false,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 33.011319987947,
+            "Longitude": -96.668071987418
+          }
+        }
+      ],
+      "PostedDate": "2026-08-20T19:05:04.284Z",
+      "BriefDescription": "Communications & Power Industries (CPI), a U.S.-based leader in SATCOM Antenna systems is seeking a results-driven executive to lead Business Development and Strategic Growth across its Antenna Technologies businesses. This executive will define capture strategies, expand market share across defense and space programs, and directly shape customer engagement around domain experience in space operations, satellite communications, and ground infrastructure.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "6e056fbd-6535-41cf-ab22-a43e5bfa36a7",
+      "Featured": false,
+      "Title": "Senior Financial Analyst \u2013 Operations Finance",
+      "RequisitionNumber": "SENIO002278",
+      "FullTime": true,
+      "JobCategoryName": "Finance (General & Cost)",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-08-18T21:25:34.192Z",
+      "BriefDescription": "Senior Financial Analyst \u2013 Operations Finance",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "b60732a4-9db3-4d28-949f-138253825d43",
+      "Featured": false,
+      "Title": "Director of Business Development - Government/Commercial",
+      "RequisitionNumber": "DIREC002271",
+      "FullTime": true,
+      "JobCategoryName": "Sales/Marketing",
+      "Locations": [
+        {
+          "Id": "3f7eae67-1e3d-401a-888f-66fc61e70e0b",
+          "LocalizedName": "Remote",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": "1000 Klein Road",
+            "Line2": null,
+            "City": "Plano",
+            "PostalCode": "75074",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": false,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 33.011319987947,
+            "Longitude": -96.668071987418
+          }
+        }
+      ],
+      "PostedDate": "2026-08-17T17:07:23.72Z",
+      "BriefDescription": "We are seeking a motivated, driven, and analytical Business Development Director to lead the pursuit of new business opportunities within Government strategic and commercial end-user sectors. This role is responsible for expanding key account market presence and building strategic partnerships that drive growth. Leveraging experience in space operations, satellite communications, and ground infrastructure, the Director will lead capture efforts and close deals in close collaboration with engineering, contracts, operations, supply chain, proposals, and executive leadership. Reporting to the Vice President of Antenna Technologies for BD/Sales, this role works with senior leadership to develop and execute winning business development strategies aligned with the company's growth objectives.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "fe70237f-6b88-41f8-8fbf-34ba684ae784",
+      "Featured": false,
+      "Title": "Technician",
+      "RequisitionNumber": "TECHN002257",
+      "FullTime": true,
+      "JobCategoryName": "Production - Direct",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-08-08T19:22:36.246Z",
+      "BriefDescription": "Technician",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "63d3358c-392b-41b8-86e6-6c0b5b59dc07",
+      "Featured": false,
+      "Title": "Manufacturing Engineer - New Product Introduction (NPI)",
+      "RequisitionNumber": "MANUF002146",
+      "FullTime": true,
+      "JobCategoryName": "Manufacturing",
+      "Locations": [
+        {
+          "Id": "9a52d433-f709-5f33-a59f-e65a51152d98",
+          "LocalizedName": "CPI Antenna Technologies - TX - Kilgore",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX - Kilgore - 2600",
+          "Address": {
+            "Line1": "2600 N Longview St",
+            "Line2": null,
+            "City": "Kilgore",
+            "PostalCode": "75662",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.40495821353793,
+            "Longitude": -94.85447239984612
+          }
+        }
+      ],
+      "PostedDate": "2026-08-03T20:49:24.737Z",
+      "BriefDescription": "We are seeking a driven, execution-focused New Product Introduction (NPI) Engineer to bridge product design and manufacturability early in development. This role accelerates time-to-market, reduces cost variance, and ensures a smooth transition from concept and prototype builds into full-scale production.\nThe NPI Engineer operates at the intersection of design engineering and manufacturing, owning product industrialization. This role translates design intent into scalable manufacturing processes, identifies risks, drives cost alignment, and ensures production readiness.\n\nThis is a hands-on role requiring cross-functional leadership, technical depth, and the ability to independently drive projects from concept through production launch.\n\n**MUST BE A U.S. CITIZEN **",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "3c51be8c-88a1-4e35-b5a0-03e629d0f0e4",
+      "Featured": true,
+      "Title": "Program Manager",
+      "RequisitionNumber": "PROGR002224",
+      "FullTime": true,
+      "JobCategoryName": "Administration",
+      "Locations": [
+        {
+          "Id": "0a826ce6-685a-5aae-a83b-624a322a397b",
+          "LocalizedName": "CPI Composite Structures, Radant Technologies Ops",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "MA - Hudson - 4",
+          "Address": {
+            "Line1": "4 Robert Bonnazzoli Ave",
+            "Line2": null,
+            "City": "Hudson",
+            "PostalCode": "01749",
+            "State": {
+              "Code": "MA",
+              "Name": "Massachusetts"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 42.38985482888073,
+            "Longitude": -71.55191708024923
+          }
+        }
+      ],
+      "PostedDate": "2026-07-28T18:51:02.452Z",
+      "BriefDescription": "We are currently seeking a Program Manager to join our dynamic team in Massachusetts. This individual will oversee the successful execution of programs involving the development and manufacturing of radomes and composite components, ensuring customer satisfaction, meeting technical requirements, and delivering on time and within budget.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "594758d9-a89f-4b7d-b544-01db15cfa2f0",
+      "Featured": false,
+      "Title": "Senior Manager, Logistics, Customs & Trade Compliance",
+      "RequisitionNumber": "SENIO002262",
+      "FullTime": true,
+      "JobCategoryName": "PC/Planning",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-07-18T20:52:54.297Z",
+      "BriefDescription": "Senior Manager, Logistics, Customs & Trade Compliance",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "d1617a7b-9e95-46fb-ba0b-8b1fc7b93235",
+      "Featured": false,
+      "Title": "Manager, Technical Services",
+      "RequisitionNumber": "MANAG002255",
+      "FullTime": true,
+      "JobCategoryName": "Production - Indirect",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-07-15T12:38:29.318Z",
+      "BriefDescription": "Manager, Technical Services",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "21190362-cb2f-4402-9093-068b01287fc0",
+      "Featured": false,
+      "Title": "Applications Engineer",
+      "RequisitionNumber": "APPLI002256",
+      "FullTime": true,
+      "JobCategoryName": "Engineering",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-07-14T15:44:40.08Z",
+      "BriefDescription": "Applications Engineer",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "eb92d251-0452-42b2-ac9d-183199ea134a",
+      "Featured": false,
+      "Title": "Cable Assembler",
+      "RequisitionNumber": "CABLE002239",
+      "FullTime": true,
+      "JobCategoryName": "Production - Direct",
+      "Locations": [
+        {
+          "Id": "241db15f-d86e-5d78-81df-7b56f2b2e6f6",
+          "LocalizedName": "CPI Antenna Technologies, Orbital Systems",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX - Irving - 3807",
+          "Address": {
+            "Line1": "3807 Carbon Road",
+            "Line2": null,
+            "City": "Irving",
+            "PostalCode": "75038",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.87792830107074,
+            "Longitude": -96.9987910365551
+          }
+        }
+      ],
+      "PostedDate": "2026-07-08T13:46:06.263Z",
+      "BriefDescription": "Principally responsible for the assembly of cables and modules in accordance with exacting design specifications. \n\u2022\tCoaxial cables (many different size and connectors, flex and solid center conductors)\n\u2022\tIndustrial automation connectors (panel connectors and ferrules, drive connectors, motor connectors, cutting and terminating equipment)\n\u2022\tMS connectors (all kinds of variations and sealing operations)\n\u2022\tCommercial electronics connectors (mini and micro fit on medium speed termination equipment) \n\u2022\tHi flex cable assemblies (WL Gore / LEONI cores and PTFE sleeves with heat-shrink and special clamps)\n\nWill also aid in the testing of fully assembled cables and modules.  Verify and inspect all components produced in the cable lab.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "a9798794-aa08-40bb-a537-cbcfc90a708e",
+      "Featured": false,
+      "Title": "Physicist / Engineering Physicist",
+      "RequisitionNumber": "PHYSI002212",
+      "FullTime": true,
+      "JobCategoryName": "Engineering",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-05-19T20:21:05.671Z",
+      "BriefDescription": "Physicist / Engineering Physicist",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "5218291b-7414-406a-b682-0fe034b59d97",
+      "Featured": false,
+      "Title": "Clean Room Manufacturing Assembly Technician",
+      "RequisitionNumber": "MANUF002210",
+      "FullTime": true,
+      "JobCategoryName": "Production - Direct",
+      "Locations": [
+        {
+          "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+          "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "ON - Georgetown HQ - 45",
+          "Address": {
+            "Line1": "45 River Drive",
+            "Line2": null,
+            "City": "Georgetown",
+            "PostalCode": "L7G2J4",
+            "State": {
+              "Code": "ON",
+              "Name": "Ontario"
+            },
+            "Country": {
+              "Code": "CAN",
+              "Name": "Canada"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 43.65963708287968,
+            "Longitude": -79.91403058888429
+          }
+        }
+      ],
+      "PostedDate": "2026-05-19T15:59:59.886Z",
+      "BriefDescription": "Clean Room Manufacturing Assembly Technician",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    }
+  ],
+  "totalCount": 27,
+  "locations": [
+    {
+      "PhysicalLocation": {
+        "Id": "d1afe665-c383-5c64-93a6-31d94fea21e8",
+        "LocalizedName": "CPI Power Electronics - Canada - ON - Georgetown",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "ON - Georgetown HQ - 45",
+        "Address": {
+          "Line1": "45 River Drive",
+          "Line2": null,
+          "City": "Georgetown",
+          "PostalCode": "L7G2J4",
+          "State": {
+            "Code": "ON",
+            "Name": "Ontario"
+          },
+          "Country": {
+            "Code": "CAN",
+            "Name": "Canada"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": true,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 43.65963708287968,
+          "Longitude": -79.91403058888429
+        }
+      },
+      "Count": 10
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "65667b49-c4e1-5cb2-8674-c6992e4f4aab",
+        "LocalizedName": "CPI Antenna Technologies - TX - Plano",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "TX - Plano - 1000",
+        "Address": {
+          "Line1": "1000 Klein Rd",
+          "Line2": null,
+          "City": "Plano",
+          "PostalCode": "75074",
+          "State": {
+            "Code": "TX",
+            "Name": "Texas"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": true,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 33.01128051073442,
+          "Longitude": -96.66936808214685
+        }
+      },
+      "Count": 3
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "3f7eae67-1e3d-401a-888f-66fc61e70e0b",
+        "LocalizedName": "Remote",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": null,
+        "Address": {
+          "Line1": "1000 Klein Road",
+          "Line2": null,
+          "City": "Plano",
+          "PostalCode": "75074",
+          "State": {
+            "Code": "TX",
+            "Name": "Texas"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": false,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 0,
+        "Coordinates": {
+          "Latitude": 33.011319987947,
+          "Longitude": -96.668071987418
+        }
+      },
+      "Count": 5
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "e2c5ae68-a138-4487-a77a-36b7707c0e50",
+        "LocalizedName": "CPI Composite Structures, AdamWorks Operations",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": null,
+        "Address": {
+          "Line1": "7367 S Revere Pkwy",
+          "Line2": "Bldg 1a",
+          "City": "Centennial",
+          "PostalCode": "80112",
+          "State": {
+            "Code": "CO",
+            "Name": "Colorado"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": true,
+        "DisplayDescription": false,
+        "SourceOfTruth": 0,
+        "Coordinates": {
+          "Latitude": 39.58270415802812,
+          "Longitude": -104.84006017668571
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "9a52d433-f709-5f33-a59f-e65a51152d98",
+        "LocalizedName": "CPI Antenna Technologies - TX - Kilgore",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "TX - Kilgore - 2600",
+        "Address": {
+          "Line1": "2600 N Longview St",
+          "Line2": null,
+          "City": "Kilgore",
+          "PostalCode": "75662",
+          "State": {
+            "Code": "TX",
+            "Name": "Texas"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": true,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 32.40495821353793,
+          "Longitude": -94.85447239984612
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "2e9f86aa-26e8-45b8-9a3d-430a2db79104",
+        "LocalizedName": "Remote",
+        "LocalizedLocationId": "Rem-StateCollege",
+        "LocalizedDescription": null,
+        "Address": {
+          "Line1": "60 Decibel Rd",
+          "Line2": null,
+          "City": "State College",
+          "PostalCode": "16801",
+          "State": {
+            "Code": "PA",
+            "Name": "Pennsylvania"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": false,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 0,
+        "Coordinates": {
+          "Latitude": 40.829148614234,
+          "Longitude": -77.799485930148
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "241db15f-d86e-5d78-81df-7b56f2b2e6f6",
+        "LocalizedName": "CPI Antenna Technologies, Orbital Systems",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "TX - Irving - 3807",
+        "Address": {
+          "Line1": "3807 Carbon Road",
+          "Line2": null,
+          "City": "Irving",
+          "PostalCode": "75038",
+          "State": {
+            "Code": "TX",
+            "Name": "Texas"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": true,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 32.87792830107074,
+          "Longitude": -96.9987910365551
+        }
+      },
+      "Count": 3
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "0a826ce6-685a-5aae-a83b-624a322a397b",
+        "LocalizedName": "CPI Composite Structures, Radant Technologies Ops",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "MA - Hudson - 4",
+        "Address": {
+          "Line1": "4 Robert Bonnazzoli Ave",
+          "Line2": null,
+          "City": "Hudson",
+          "PostalCode": "01749",
+          "State": {
+            "Code": "MA",
+            "Name": "Massachusetts"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": true,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 42.38985482888073,
+          "Longitude": -71.55191708024923
+        }
+      },
+      "Count": 3
+    }
+  ]
+}

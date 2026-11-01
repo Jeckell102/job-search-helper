@@ -1,0 +1,192 @@
+{
+  "url": "https://careers.mitre.org/us/en/search-results",
+  "app": {
+    "refNum": "MITRUS",
+    "baseUrl": "https://careers.mitre.org/us/en/",
+    "siteType": "external",
+    "locale": "en_us"
+  },
+  "ddo": {
+    "eagerLoadRefineSearch": {
+      "status": 200,
+      "hits": 10,
+      "totalHits": 348,
+      "data": {
+        "jobs": [
+          {
+            "siteType": "external",
+            "reqId": "R116852",
+            "jobId": "R116852",
+            "title": "IC Full Stack Engineer",
+            "jobSeqNo": "MITRUSR116852EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "department": "N921 Strategic Technology and Economic Foresight",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R117141",
+            "jobId": "R117141",
+            "title": "Electronic Warfare Systems Engineer",
+            "jobSeqNo": "MITRUSR117141EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "department": "L653 Multi-Domain Sensing and Electromagnetic Systems",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R117056",
+            "jobId": "R117056",
+            "title": "Principal Cost Analyst",
+            "jobSeqNo": "MITRUSR117056EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "department": "L583 Acquisition Affordability & Business Analytics",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Federal & State Acquisition"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R116936",
+            "jobId": "R116936",
+            "title": "Lead Software Engineer (Intelligence Center)",
+            "jobSeqNo": "MITRUSR116936EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "department": "L593 Agentic Software Engineering",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R117389",
+            "jobId": "R117389",
+            "title": "Technical Evaluation Framework Lead (Intelligence Center)",
+            "jobSeqNo": "MITRUSR117389EXTERNALENUS",
+            "postedDate": "2026-08-31T00:00:00.000+0000",
+            "department": "N923 Mission Operations",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R117271",
+            "jobId": "R117271",
+            "title": "AI/ML Research Engineer",
+            "jobSeqNo": "MITRUSR117271EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "department": "N973 National Security",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R117085",
+            "jobId": "R117085",
+            "title": "NLCC Communications Engineer",
+            "jobSeqNo": "MITRUSR117085EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "department": "N226 DISA/CIO",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R116595",
+            "jobId": "R116595",
+            "title": "NLCC Communications Engineer",
+            "jobSeqNo": "MITRUSR116595EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "department": "N226 DISA/CIO",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R117391",
+            "jobId": "R117391",
+            "title": "Modeling and Simulation Engineer",
+            "jobSeqNo": "MITRUSR117391EXTERNALENUS",
+            "postedDate": "2026-08-31T00:00:00.000+0000",
+            "department": "N214 Soldier & Weapons Systems",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R117138",
+            "jobId": "R117138",
+            "title": "IC AI Analyst (Intelligence Center)",
+            "jobSeqNo": "MITRUSR117138EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "department": "N922 Influence and Integration",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering"
+          }
+        ],
+        "keywords": ""
+      },
+      "eid": {
+        "searchType": "allJobs",
+        "query": ""
+      }
+    }
+  },
+  "params": {
+    "from": "0"
+  },
+  "detail": {
+    "url": "https://careers.mitre.org/us/en/job/R116852",
+    "ddo": {
+      "jobDetail": {
+        "status": 200,
+        "data": {
+          "job": {
+            "jobUpdatedDate": "2026-09-02T13:11:01.198+0000",
+            "siteType": "external",
+            "reqId": "R116852",
+            "jobStatus": "Open",
+            "workLocationType": "Onsite",
+            "jobId": "R116852",
+            "refNum": "MITRUS",
+            "description": "At MITRE, your passion fuels work that impacts our nation and improves lives. This is where your skills strengthen national security, cybersecurity, health, transportation, and citizen services. We\u2019re a nonprofit engineering, applied research, and advanced technology organization working in the public interest.  With objectivity and integrity at our core, we lead federally funded research and development centers for U.S. government agencies \u2013 collaborating with industry and academia to deliver integrated, high-impact solutions that advance our nation\u2019s health, security, and prosperity.  Our people tackle the toughest technical challenges, supported by competitive benefits, meaningful career development, and a culture of innovation, collaboration, and technical excellence. Choose MITRE for a career with purpose \u2014 and help shape the future.<p></p><h3></h3><p>The Strategic Technology &amp; Economic Foresight Department (N921) within MITRE\u2019s National Intelligence Division delivers advanced analytic and technical capabilities in direct support of the Intelligence Community (IC). N921 integrates emerging technology expertise, economic security analysis, mission engineering, and prototype development to help the IC anticipate strategic disruption, evaluate enterprise risk, and modernize Intelligence Community capabilities.</p><p></p><p>Our work spans secure prototype development, mission-focused application engineering, technology evaluation, and cross-IC integration. We operate at the intersection of policy, technology, and operations, enabling national-level decision-makers to understand emerging threats and deploy scalable, secure, and mission-aligned solutions.</p><p></p><p><b>Roles &amp; Responsibilities:</b><br />\u00a0</p><p>MITRE is seeking a Lead IC Full Stack Engineer to support high-priority IC initiatives requiring secure, scalable, and mission-driven application development. This role requires an active TS/SCI with a Polygraph.</p><p></p><p>The selected candidate will serve as a technical subject matter expert responsible for designing, developing, and deploying full stack applications within highly sensitive Intelligence Community environments. This position supports enterprise-level IC challenges related to technology modernization, data integration, analytic enablement, and secure collaboration. Responsibilities include:</p><ul><li>Serve as technical lead and architectural authority for secure, full stack application development supporting IC mission priorities.</li><li>Translate complex enterprise-level requirements into scalable system designs and implementation roadmaps.</li><li>Lead the design and development of secure front-end and back-end architectures within classified environments.</li><li>Oversee integration of data services, APIs, and analytic workflows across multiple systems and security domains.</li><li>Guide SecDevOps implementation, CI/CD pipelines, and Infrastructure-as-Code practices to ensure secure, repeatable development and deployment.</li><li>Establish and enforce coding standards, architecture patterns, and security best practices.</li><li>Mentor and develop junior and mid-level engineers, fostering technical rigor and collaborative problem solving.</li><li>Present architectural approaches, technical tradeoffs, and recommendations to senior sponsor leadership and cross-IC stakeholders.</li><li>Support transition planning and long-term sustainment strategies in coordination with government and commercial partners.</li></ul><p></p><p>The primary responsibilities of this position must be carried out in person in McLean, Virginia or Bethesda, Maryland. The successful candidate will establish regular presence at MITRE and sponsor locations and may be required to travel within the National Capital Region.</p><p></p><p><b>Basic Qualifications:</b></p><ul><li>Typically requires a minimum of 10 years of related experience with a Bachelor\u2019s degree; or 8 years and a Master\u2019s degree; or 5 years and a PhD</li><li>Bachelor\u2019s degree in Computer Science, Software Engineering, or related technical field.</li><li>Active TS/SCI clearance with a Polygraph (required at time of hire).</li><li>U.S. Citizenship required</li><li>Demonstrated experience as a Full Stack Developer or similar engineering role in secure environments.</li><li>Proficiency in front-end and back-end languages such as JavaScript, TypeScript, Python, or Go.</li><li>Proficiency writing SQL queries and understanding database schema design and ETL concepts.</li><li>Experience working in Linux-based environments, including command line and shell scripting..</li><li>Experience working in a cloud-based infrastructure, especially Amazon AWS (C2E on classified fabric)</li><li>Experience with source control, code review practices, and collaborative development workflows.</li><li>This position has an on-site requirement of 5 days a week on-site.</li></ul><p></p><p><b>Preferred Qualifications: </b></p><ul><li>Experience serving as technical lead or developer for Intelligence Community programs.</li><li>Experience designing enterprise-level systems spanning multiple security domains.</li><li>Experience implementing SecDevOps pipelines in classified environments.</li><li>Familiarity with AWS-managed services and cloud-native architectures in secure environments.</li><li>Experience integrating data visualization, workflow automation, and analytic tools.</li><li>Experience planning and executing transition of prototype systems to operational sustainment environments.</li><li>Advanced degree in a relevant field.</li></ul><p></p><p style=\"text-align:inherit\"></p><p style=\"text-align:left\"><b>This requisition requires the candidate to have a minimum of the following clearance(s):</b></p>Top Secret/SCI/Polygraph<p style=\"text-align:inherit\"></p><p style=\"text-align:left\"><b>This requisition requires the hired candidate to have or obtain, within one year from the date of hire, the following clearance(s):</b></p>Top Secret/SCI/Polygraph<p style=\"text-align:inherit\"></p><p style=\"text-align:left\"><b>Salary compensation range and midpoint:</b></p>$173,200 - $216,500 - $259,800 Annual<p style=\"text-align:inherit\"></p><p style=\"text-align:left\"><b>Work Location Type:</b></p>Onsite<p></p><p><b>Commitment to Non-Discrimination</b></p><p>All qualified applicants will receive consideration for employment without regard to disability, status as a protected veteran or any other status protected by applicable federal, state, local or international law.</p><p></p><p>MITRE intends to maintain a website that is fully accessible to all individuals. If you are unable to search or apply for jobs and would like to request a reasonable accommodation for any part of MITRE\u2019s employment process, please email <a href=\"mailto:recruitinghelp&#64;mitre.org?subject&#61;Employment%20Process%20Accommodation%20Request\" target=\"_blank\"><span><u><span><span>recruitinghelp&#64;mitre.org</span></span></u></span></a> for general support and <a href=\"mailto:collegerecruiting&#64;mitre.org?subject&#61;Employment%20Process%20Accommodation%20Request\" target=\"_blank\"><span><u><span><span>collegerecruiting&#64;mitre.org</span></span></u></span></a> for intern positions. This service is for individuals requiring reasonable accommodation requests. Please note that vendor solicitations will not receive a reply.</p><p></p><p>Benefits information may be found <a href=\"https://careers.mitre.org/us/en/benefits\" target=\"_blank\"><span><u>here</u></span></a>.</p><p></p>Copyright \u00a9 1997-2026, The MITRE Corporation. All rights reserved. MITRE is a registered trademark of The MITRE Corporation. Material on this site may be copied and distributed with permission only.",
+            "title": "IC Full Stack Engineer",
+            "jobSeqNo": "MITRUSR116852EXTERNALENUS",
+            "postedDate": "2026-08-28T00:00:00.000+0000",
+            "postingStatus": "OPEN",
+            "department": "N921 Strategic Technology and Economic Foresight",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering",
+            "multi_location": [
+              {
+                "location": "McLean, Virginia, United States of America"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

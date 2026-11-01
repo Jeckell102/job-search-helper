@@ -86,6 +86,48 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(pages.urls, [PAGE, "https://acme.example/careers/apply-today"])
         self.assertEqual(api.urls, [BOARD + "/jobs?content=true"])
 
+    def test_follows_explicit_employer_careers_subdomains(self):
+        for origin, target in [
+            ("https://gov2x.com/careers/", "https://careers.gov2x.com/jobs"),
+            ("https://www.akima.com/careers/", "https://careers.akima.com/jobs"),
+            ("https://www.tracesystems.com/why-trace/", "https://careers.tracesystems.com/jobs"),
+        ]:
+            with self.subTest(origin=origin):
+                result, pages, api = self.fetch([
+                    html(f'<a href="{target}">Search jobs</a>'),
+                    html(f'<a href="{BOARD}">View jobs</a>'),
+                ], [response(fixture("greenhouse"))], url=origin)
+                self.assertEqual(result.status, "complete")
+                self.assertEqual(pages.urls, [origin, target])
+
+    def test_subdomain_discovery_rejects_lookalikes_and_account_hosts(self):
+        for target in ["https://careers.acme.example.evil.example/jobs",
+                       "https://careers.other.example/jobs",
+                       "https://accounts.acme.example/jobs"]:
+            with self.subTest(target=target):
+                result, pages, api = self.fetch([html(f'<a href="{target}">Jobs</a>')])
+                self.assertEqual(pages.urls, [PAGE])
+                self.assertFalse(api.urls)
+
+    def test_canonical_redirect_convergence_does_not_hide_later_board(self):
+        result, pages, api = self.fetch([
+            html('<a href="/careers/">Careers</a><a href="/jobs">Open jobs</a>'),
+            html('',301,Location=PAGE),
+            html(f'<a href="{BOARD}">Open jobs</a>'),
+        ],[response(fixture("greenhouse"))])
+        self.assertEqual(result.status,'complete',result.reason)
+        self.assertEqual(pages.urls,[PAGE,PAGE+'/', 'https://acme.example/jobs'])
+
+    def test_separate_redirect_chains_can_share_canonical_destination(self):
+        result, pages, api = self.fetch([
+            html('<a href="/careers/info">Careers</a><a href="/careers/info/">Careers info</a><a href="/jobs">Jobs</a>'),
+            html('<p>Career information</p>'),
+            html('',301,Location='/careers/info'),
+            html(f'<a href="{BOARD}">Open jobs</a>'),
+        ],[response(fixture("greenhouse"))])
+        self.assertEqual(result.status,'complete',result.reason)
+        self.assertEqual(len(pages.urls),4)
+
     def test_careers_page_without_board_or_obvious_cta_does_not_guess(self):
         result, pages, api = self.fetch([html('<a href="/about">About Acme</a>')])
         self.assertEqual(result.status, "partial")
@@ -102,7 +144,7 @@ class DiscoveryTests(unittest.TestCase):
     def test_known_unsupported_ats_gets_specific_diagnostic_after_cta_follow(self):
         result, pages, api = self.fetch([
             html('<a href="/careers/apply-today">Apply Now</a>'),
-            html('<a href="https://jobs.dayforcehcm.com/en-US/acme/CANDIDATEPORTAL/jobs/123">Project Manager</a>'),
+            html('<a href="https://us231.dayforcehcm.com/CandidatePortal/en-US/acme">Project Manager</a>'),
         ])
         self.assertEqual(result.status, "unsupported")
         self.assertIn("Dayforce", result.reason)

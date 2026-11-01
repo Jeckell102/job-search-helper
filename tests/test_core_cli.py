@@ -97,12 +97,13 @@ class CoreTests(unittest.TestCase):
             with self.subTest(title=title):
                 self.assertTrue(excluded_title(title))
 
-    def test_user_seniority_exclusions_override_relevant_functions(self):
-        for title in ("Staff Solutions Engineer", "Principal Field Applications Engineer",
-                      "Director, Field Engineering", "Technical Support Director",
-                      "Systems Engineer", "Maintenance Operations Lead"):
+    def test_current_title_exclusions_do_not_reject_seniority_alone(self):
+        for title in ("Principal Field Applications Engineer", "Systems Engineer", "Maintenance Operations Lead"):
             with self.subTest(title=title):
                 self.assertTrue(excluded_title(title))
+        for title in ("Staff Solutions Engineer", "Director, Field Engineering", "Technical Support Director"):
+            with self.subTest(title=title):
+                self.assertFalse(excluded_title(title))
 
     def test_html_normalization_removes_script_style(self):
         self.assertEqual(plain_text("<p>Hello&nbsp;world</p><script>ignore()</script><style>x{}</style><p>Team</p>"), "Hello world Team")
@@ -211,7 +212,7 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(runner.main(args), 0)
                 text = output.getvalue()
                 self.assertIn("Usage: ./job-search-scraper <command>", text)
-                self.assertIn("start        Start or resume the automated scraper.", text)
+                self.assertIn("start        Start a fresh scan of all currently active companies.", text)
                 self.assertIn("--fetch-workers N", text)
                 self.assertIn("--assignment-window N", text)
                 self.assertIn("--batch-size N", text)
@@ -228,7 +229,7 @@ class CliTests(unittest.TestCase):
     def test_scraper_start_still_runs_start_command(self):
         with patch.object(runner, "run_start", return_value=0) as start:
             self.assertEqual(runner.main(["start"]), 0)
-            start.assert_called_once_with(fetch_workers=5, assignment_window=100, batch_size=200, sheet_request_interval=1.1, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True)
+            start.assert_called_once_with(fetch_workers=5, assignment_window=100, batch_size=200, sheet_request_interval=1.1, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True, resume=False)
 
     def test_scraper_start_passes_parallel_options(self):
         with patch.object(runner, "run_start", return_value=0) as start:
@@ -236,7 +237,7 @@ class CliTests(unittest.TestCase):
                 "start", "--fetch-workers", "4", "--assignment-window", "25",
                 "--batch-size", "150", "--sheet-request-interval", "0.8", "--browser-fallback",
             ]), 0)
-            start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True)
+            start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True, resume=False)
 
     def test_scraper_start_can_disable_blocked_retry(self):
         with patch.object(runner, "run_start", return_value=0) as start:

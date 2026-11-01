@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec "$ROOT/job-search-scraper" "$@"
+export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+PYTHON="$ROOT/.venv/bin/python"
+exec "$PYTHON" -m job_search_helper.review_runtime "$@"

@@ -13,24 +13,30 @@ from job_search_helper.repository import MemoryRepository
 
 
 class TitleScreeningTests(unittest.TestCase):
-    def test_exclusions_win_over_relevant_function_with_case_and_punctuation(self):
-        for title in ("STAFF Solutions Engineer", "Principal: Field Applications Engineer",
-                      "Director of Field Engineering", "Solutions Engineering Director",
-                      "Associate Director, Technical Training", "Software Engineer / Solutions Engineer"):
+    def test_exclusions_win_only_for_current_hard_title_rules(self):
+        for title in ("Principal: Field Applications Engineer", "Software Engineer / Solutions Engineer",
+                      "Systems Engineer - Mission Integration"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "reject")
                 self.assertTrue(excluded_title(title))
+        for title in ("STAFF Solutions Engineer", "Director of Field Engineering",
+                      "Solutions Engineering Director", "Associate Director, Technical Training",
+                      "Field Test Engineer, Maritime", "Applications Engineer, Learning & Development"):
+            with self.subTest(title=title):
+                self.assertNotEqual(classify_title(title), "reject")
+                self.assertFalse(excluded_title(title))
 
     def test_review_list_and_unknown_titles_do_not_imply_acceptance(self):
         for title in ("Solutions Engineer", "Field-Applications Engineer", "Associate Product Manager",
-                      "Field Service Engineer", "Field Support Engineer", "Technical Product Manager"):
+                      "Field Service Engineer", "Field Support Engineer", "Technical Product Manager",
+                      "Staff Field Solutions Engineer", "Director of Field Engineering",
+                      "Technical Program Manager", "Technical Account Manager", "Network Deployment Engineer"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "review")
                 self.assertFalse(excluded_title(title))
         for title in ("", "Operations Manager", "Program Manager", "Support Engineer",
                       "Staffing Specialist", "Directorate Liaison", "Principalship Coordinator",
-                      "Systems Integration Engineer", "Technical Program Manager", "Technical Account Manager",
-                      "Implementation Manager", "Technical Product Marketing Manager"):
+                      "Systems Integration Engineer", "Implementation Manager", "Technical Product Marketing Manager"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "ambiguous")
 
@@ -50,9 +56,9 @@ class TitleScreeningTests(unittest.TestCase):
                 _load_title_patterns(path)
 
     def test_cleanup_preserves_manual_no_and_only_updates_identifiable_unlocked_exclusions(self):
-        titles = ["Staff Solutions Engineer", "Principal Field Applications Engineer",
-                  "Technical Support Director", "Solutions Engineer", "Operations Manager",
-                  "Technical Program Manager", "Director of Field Engineering",
+        titles = ["Software Engineer", "Principal Field Applications Engineer",
+                  "Systems Engineer", "Staff Solutions Engineer", "Director of Field Engineering",
+                  "Technical Program Manager", "Software Engineer / Solutions Engineer",
                   "Principal Customer Engineer", "Principal Customer Engineer"]
         rows = [{"Company": "Acme", "Job Title": title, "Job Key": str(index),
                  "Added to Opportunities?": "Yes", "Review Notes": "keep me"}
@@ -67,9 +73,9 @@ class TitleScreeningTests(unittest.TestCase):
         self.assertEqual(repo.read("Job History"), before)
         self.assertEqual(preview["spreadsheet_changes"], 0)
         self.assertEqual(preview["blacklisted_titles"], 6)
-        self.assertEqual(preview["potentially_good_titles"], 1)
-        self.assertEqual(preview["uncertain_titles"], 2)
-        self.assertEqual(len(preview["potentially_good_not_already_no"]), 1)
+        self.assertEqual(preview["potentially_good_titles"], 3)
+        self.assertEqual(preview["uncertain_titles"], 0)
+        self.assertEqual(len(preview["potentially_good_not_already_no"]), 2)
         self.assertEqual(preview["locked_in_progress"], 1)
         self.assertEqual(preview["unresolved_identity"], 2)
         applied = cleanup_blacklisted_history(repo, apply=True)
@@ -101,7 +107,7 @@ class TitleScreeningTests(unittest.TestCase):
             runner.main(["--help"])
         self.assertIn("cleanup-titles", output.getvalue())
         self.assertIn("title-review-list.txt", output.getvalue())
-        self.assertIn("Staff, Principal, and Director", output.getvalue())
+        self.assertIn("seniority", output.getvalue().lower())
 
 
 if __name__ == "__main__":

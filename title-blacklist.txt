@@ -1,8 +1,8 @@
-# Excluded titles and seniority levels. These always override the review list.
-# Existing exclusions are preserved; restart the scraper after editing.
+# Hard title exclusions. Use these only when the title alone is enough to reject.
+# Seniority alone is not an exclusion; relevant Staff/ roles may proceed to review.
+# These always override the review list. Restart the scraper after editing.
 saas
 software as a service
-director
 systems engineer
 system engineer
 financial analyst
@@ -82,8 +82,6 @@ hardware engineer
 hardware engineering
 RF engineer
 RF engineering
-systems test engineer
-system test engineer
 test automation
 automation test engineer
 software test engineer
@@ -221,25 +219,18 @@ PCB
 PCBA
 tax
 flight
-lab
 ux
 aviation
 acccouont manager
 sales manager
-business development
 C++
-Director of
-Director,
 Sales director
 Developer
-Development
 embedded
 VP
-staff
 senior engineer
 lead engineer
 account execuitive
-electrical
 inventory
 production
 maintenance
@@ -260,12 +251,10 @@ buyer
 capture
 network engineer
 financial
-accounts
 AI engineer
 councel
 privacy
 Facilities
-test engineer
 data analyst
 analyst
 procurement
@@ -277,3 +266,78 @@ Structural
 DSP
 hvac
 Assembler
+business development
+岡
+崎
+イ
+ベ
+ン
+ト
+金
+時
+開
+始
+フ
+ジ
+カ
+ル
+実
+装
+で
+製
+造
+業
+を
+変
+え
+る
+人
+材
+不
+足
+時
+代
+の
+モ
+づ
+く
+り
+戦
+略
+総
+務
+ス
+タ
+ッ
+英
+語
+を
+活
+か
+せ
+る
+準
+備
+中
+ユ
+ニ
+コ
+ー
+位
+software
+account manager
+cybersecurity
+cyber
+electrician
+estate
+Specialist
+Operative
+Locomotive
+sales engineer
+Project manager
+Account Executive
+ML
+HR
+salesforce
+inside sales
+contract

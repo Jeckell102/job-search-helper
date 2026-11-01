@@ -74,6 +74,15 @@ class IcimsTests(unittest.TestCase):
         url = ROOT + "/jobs/11551/network-technician-%28up-to-75%25-conus-oconus-travel%29/job"
         self.assertEqual(resolve_board("iCIMS", url), ("iCIMS", "search", ROOT + "/jobs/"))
 
+    def test_encoded_tab_in_public_slug_preserves_numeric_identity(self):
+        from job_search_helper.icims import _detail_url
+        url = ROOT + "/jobs/167354/training%09curriculum-manager/job"
+        self.assertEqual(_detail_url(url, BOARD), ("167354", url))
+        for slug in ("training\tcurriculum", "training%0acurriculum", "training%2fcurriculum"):
+            with self.subTest(slug=slug), self.assertRaises(ValueError):
+                from job_search_helper.icims import _job_id
+                _job_id("/jobs/167354/" + slug + "/job")
+
     def test_full_descriptions_locations_stable_id_and_salary(self):
         result, t = self.fetch([listing(), detail()])
         self.assertEqual(result.status, "complete", result.reason)

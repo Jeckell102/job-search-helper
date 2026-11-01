@@ -272,6 +272,16 @@ class FetchPoolTests(unittest.TestCase):
         self.assertIn("Workers | Worker 1 - 3 jobs - Has Jobs Co", text)
         self.assertNotIn("Workers | Worker 1 - 0 jobs - No Jobs Co", text)
 
+    def test_dashboard_distinguishes_partial_from_complete_handoffs(self):
+        stream = StringIO()
+        dashboard = TerminalDashboard(1, stream=stream)
+        dashboard.worker_handoff(1, 'Saab, Inc.', 1, status='partial', pending_urls=3)
+        self.assertIn('partial; 3 links unresolved', stream.getvalue())
+        dashboard.worker_handoff(1, 'Saab, Inc.', 82, status='complete')
+        self.assertIn('complete - 82 jobs - Saab, Inc.', dashboard.worker_events[0])
+        dashboard.worker_handoff(1, 'Blocked Co', 0, status='blocked')
+        self.assertIn('blocked - 0 jobs - Blocked Co', dashboard.worker_events[0])
+
     def test_dashboard_jobs_column_clips_long_entries(self):
         stream = StringIO()
         dashboard = TerminalDashboard(1, stream=stream)

@@ -1,0 +1,168 @@
+{
+  "url": "https://careers.uk.leonardo.com/gb/en/search-results",
+  "app": {
+    "refNum": "LSOLSBGB",
+    "baseUrl": "https://careers.uk.leonardo.com/gb/en/",
+    "siteType": "external",
+    "locale": "en_gb"
+  },
+  "ddo": {
+    "eagerLoadRefineSearch": {
+      "status": 200,
+      "hits": 10,
+      "totalHits": 259,
+      "data": {
+        "jobs": [
+          {
+            "siteType": "external",
+            "reqId": "R0026699",
+            "hybridWork": "",
+            "jobId": "R0026699",
+            "title": "Network Engineer - NSX",
+            "jobSeqNo": "LSOLSBGBR0026699EXTERNALENGB",
+            "postedDate": "2026-06-24T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0027117",
+            "hybridWork": "",
+            "jobId": "R0027117",
+            "title": "Lead Systems Engineer (DA)",
+            "jobSeqNo": "LSOLSBGBR0027117EXTERNALENGB",
+            "postedDate": "2026-08-05T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0027406",
+            "hybridWork": "",
+            "jobId": "R0027406",
+            "title": "IT Implementation Specialist - Manufacturing",
+            "jobSeqNo": "LSOLSBGBR0027406EXTERNALENGB",
+            "postedDate": "2026-06-05T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0029228",
+            "hybridWork": "",
+            "jobId": "R0029228",
+            "title": "Principal Test Systems Engineer",
+            "jobSeqNo": "LSOLSBGBR0029228EXTERNALENGB",
+            "postedDate": "2026-08-05T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0031381",
+            "hybridWork": "",
+            "jobId": "R0031381",
+            "title": "MK0 Lead Systems Engineer",
+            "jobSeqNo": "LSOLSBGBR0031381EXTERNALENGB",
+            "postedDate": "2026-07-14T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0028547",
+            "hybridWork": "",
+            "jobId": "R0028547",
+            "title": "Senior or Principal RF/Microwave Engineer",
+            "jobSeqNo": "LSOLSBGBR0028547EXTERNALENGB",
+            "postedDate": "2026-06-05T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0030840",
+            "hybridWork": "",
+            "jobId": "R0030840",
+            "title": "Project Engineering Lead",
+            "jobSeqNo": "LSOLSBGBR0030840EXTERNALENGB",
+            "postedDate": "2026-06-30T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0032058",
+            "hybridWork": "",
+            "jobId": "R0032058",
+            "title": "Requirements Management Systems Engineer",
+            "jobSeqNo": "LSOLSBGBR0032058EXTERNALENGB",
+            "postedDate": "2026-08-03T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0030104",
+            "hybridWork": "",
+            "jobId": "R0030104",
+            "title": "Software Architect",
+            "jobSeqNo": "LSOLSBGBR0030104EXTERNALENGB",
+            "postedDate": "2026-08-04T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          },
+          {
+            "siteType": "external",
+            "reqId": "R0031014",
+            "hybridWork": "",
+            "jobId": "R0031014",
+            "title": "GCAP Lead Systems Engineer",
+            "jobSeqNo": "LSOLSBGBR0031014EXTERNALENGB",
+            "postedDate": "2026-06-29T00:00:00.000+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering"
+          }
+        ],
+        "keywords": ""
+      },
+      "eid": {
+        "searchType": "allJobs",
+        "query": ""
+      }
+    }
+  },
+  "params": {
+    "from": "0"
+  }
+}

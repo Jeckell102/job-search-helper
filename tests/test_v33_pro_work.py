@@ -32,14 +32,21 @@ class V33ProWorkTests(unittest.TestCase):
 
     def test_excluded_titles_are_skipped_before_insertion(self):
         c, repo, state, engine = self.make()
-        for title in ("Systems Engineer", "Staff Solutions Engineer", "Principal Field Applications Engineer",
-                      "Director of Field Engineering", "Technical Support Director"):
+        for title in ("Systems Engineer", "Principal Field Applications Engineer"):
             with self.subTest(title=title):
                 engine._stage_posting({"id": "CYC"}, c, posting(title=title))
                 self.assertEqual(repo.read("Job History"), [])
                 self.assertEqual(repo.read("Opportunities"), [])
                 self.assertEqual(state.reviews("CYC"), [])
         state.close()
+
+    def test_staff_and_director_target_roles_reach_review(self):
+        for title in ("Staff Solutions Engineer", "Director of Field Engineering", "Technical Support Director"):
+            c, repo, state, engine = self.make()
+            with self.subTest(title=title):
+                engine._stage_posting({"id": "CYC"}, c, posting(title=title))
+                self.assertEqual(repo.read("Job History")[0]["Review Status"], "Needs Review")
+            state.close()
 
     def test_below_floor_salary_reject_is_completed_without_ai(self):
         c, repo, state, engine = self.make()

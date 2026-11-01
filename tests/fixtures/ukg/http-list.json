@@ -1,0 +1,3959 @@
+{
+  "opportunities": [
+    {
+      "Id": "93a511fe-6cad-46d6-bf8d-d4867aa8bc87",
+      "Featured": false,
+      "Title": "Drafting Lead",
+      "RequisitionNumber": "DRAFT010136",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "497b12f7-c247-5634-85ca-e19a61d91773",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "AL08 - Madison",
+          "Address": {
+            "Line1": "26641 Distribution Boulevard NW",
+            "Line2": null,
+            "City": "Madison",
+            "PostalCode": "35756",
+            "State": {
+              "Code": "AL",
+              "Name": "Alabama"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 34.6800661,
+            "Longitude": -86.8082056
+          }
+        }
+      ],
+      "PostedDate": "2026-10-07T23:53:30.242Z",
+      "BriefDescription": "Come and join our dynamic group of Drafters and Designers at the Prototype, Manufacturing and Integration (PMI) Division of Applied Research Associates (ARA), Inc. We have an exciting opportunity for a full-time Drafting Lead in the Madison, AL location. The Drafting Lead develops design drawings according to engineering sketches and proposal specifications using standard and specialized computer aided design (CAD) techniques and skills.  Makes final drawing, checking dimension of parts, materials to be used, relation of one part to another, and relation of various parts to whole structure or project.  Checks drawings for final approval to ensure conformance to design criteria, ARA standards, and ANSI standards.  #Drafter #CAD",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "beb63742-eabe-4f14-8e7c-753a65dd195c",
+      "Featured": false,
+      "Title": "Mechanical Engineer 2",
+      "RequisitionNumber": "MECHA010113",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "497b12f7-c247-5634-85ca-e19a61d91773",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "AL08 - Madison",
+          "Address": {
+            "Line1": "26641 Distribution Boulevard NW",
+            "Line2": null,
+            "City": "Madison",
+            "PostalCode": "35756",
+            "State": {
+              "Code": "AL",
+              "Name": "Alabama"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 34.6800661,
+            "Longitude": -86.8082056
+          }
+        }
+      ],
+      "PostedDate": "2026-10-07T23:53:17.033Z",
+      "BriefDescription": "Come and join our dynamic group of Mechanical Engineers at the Prototype, Manufacturing and Integration (PMI) division of Applied Research Associates (ARA), Inc. We have an exciting opportunity for a full-time Mechanical Engineer 2 in the Madison, AL location. The ideal candidate must be proficient with SOLIDWORKS Computer Aided Design (CAD) software and provide engineering design and prototype build support for testing and customer demonstration.  Optimize efficiency, safety, quality of all systems, accuracy, and cost effectiveness to meet critical deadlines.  Will design, model, and validate parts and assemblies of varying levels of complexity utilizing SOLIDWORKS software to include sheet metal, weldments, simulation, surfaces, and drawings.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "5b4ea9f8-a9d0-43f9-a44f-d6198b2b76e0",
+      "Featured": false,
+      "Title": "Mechanical Engineer 2",
+      "RequisitionNumber": "MECHA010066",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "497b12f7-c247-5634-85ca-e19a61d91773",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "AL08 - Madison",
+          "Address": {
+            "Line1": "26641 Distribution Boulevard NW",
+            "Line2": null,
+            "City": "Madison",
+            "PostalCode": "35756",
+            "State": {
+              "Code": "AL",
+              "Name": "Alabama"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 34.6800661,
+            "Longitude": -86.8082056
+          }
+        }
+      ],
+      "PostedDate": "2026-10-07T23:53:03.57Z",
+      "BriefDescription": "Come and join our dynamic group of Mechanical Engineers at the Prototype, Manufacturing and Integration (PMI) division of Applied Research Associates (ARA), Inc. We have an exciting opportunity for a full-time Mechanical Engineer 2 in the Madison, AL location. The ideal candidate must be proficient with SOLIDWORKS Computer Aided Design (CAD) software and provide engineering design and prototype build support for testing and customer demonstration.  Optimize efficiency, safety, quality of all systems, accuracy, and cost effectiveness to meet critical deadlines.  Will design, model, and validate parts and assemblies of varying levels of complexity utilizing SOLIDWORKS software to include sheet metal, weldments, simulation, surfaces, and drawings.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "66c5d0cc-1a3c-4a1a-a978-58f2b61f4015",
+      "Featured": false,
+      "Title": "Software Cloud Engineer - Senior",
+      "RequisitionNumber": "SOFTW010099",
+      "FullTime": true,
+      "JobCategoryName": "Systems Development",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-10-07T13:48:09.252Z",
+      "BriefDescription": "At ARA, we strive to hire valuable colleagues with not only the right skills, but who also demonstrate our core values of passion, freedom, service and growth.\n\nYou will be working on a team that is building a software driven cloud solution. You will work with a multi-disciplinary collaborative team of engineers and security specialists to design and implement secure cloud-based software solutions. You will be part of our employee-owned international research and engineering company. ARA is recognized for providing technically superior solutions to complex and challenging problems in the physical sciences, and you will be on this team.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "c71223d5-5538-4c23-b3c3-d57cc2932253",
+      "Featured": false,
+      "Title": "Tier 2 Cloud Support",
+      "RequisitionNumber": "TIER2010148",
+      "FullTime": true,
+      "JobCategoryName": "Data Warehouse/Mining",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        },
+        {
+          "Id": "0a1209ce-c4f1-588f-aba8-97548340b196",
+          "LocalizedName": "TX10 - San Antonio",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX10 - San Antonio",
+          "Address": {
+            "Line1": null,
+            "Line2": null,
+            "City": "San Antonio",
+            "PostalCode": null,
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 29.424582309739563,
+            "Longitude": -98.49460637538195
+          }
+        }
+      ],
+      "PostedDate": "2026-10-07T11:37:24.149Z",
+      "BriefDescription": "At ARA, we strive to hire valuable colleagues with not only the right skills, but who also demonstrate our core values of passion, freedom, service and growth. \n\nIf you are looking for a career as a Tier 2 Cloud Support agent and you are interested in designing, developing, and rapidly deploying solutions to problems of national importance, then our Raleigh, NC division of ARA has an exciting opportunity worth considering. Not only will you solve challenging core problems, you\u2019ll also be able to grow your career in an exciting environment that promotes teamwork and cross-training in a wide range of related disciplines.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "59762de9-a812-42f5-8d76-9f0dc00498a3",
+      "Featured": false,
+      "Title": "Staff Project Management Support Analyst",
+      "RequisitionNumber": "STAFF010147",
+      "FullTime": true,
+      "JobCategoryName": "Administrative Programs",
+      "Locations": [
+        {
+          "Id": "432cc33b-f900-52f8-a71f-ddbc0373af10",
+          "LocalizedName": "IL01 - Champaign",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "IL01 - Champaign",
+          "Address": {
+            "Line1": "100 Trade Centre Drive",
+            "Line2": "Ste 200",
+            "City": "Champaign",
+            "PostalCode": "61820",
+            "State": {
+              "Code": "IL",
+              "Name": "Illinois"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 40.09760315565368,
+            "Longitude": -88.24584025403126
+          }
+        }
+      ],
+      "PostedDate": "2026-10-07T11:27:10.423Z",
+      "BriefDescription": "ARA\u2019s Transportation & Infrastructure Sector is seeking a detail oriented, customer focused project management support analyst to join our project support team. This role supports a diverse portfolio of projects serving federal agencies, state and local government customers, and commercial clients, each with unique financial and contractual requirements. We are looking for a motivated individual who thrives in collaborative environments and is committed to delivering high quality, timely support.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "8f6cd6d6-05ba-4890-b7eb-fed105cf9c0f",
+      "Featured": false,
+      "Title": "Missile Maintenance Support",
+      "RequisitionNumber": "MISSI010140",
+      "FullTime": true,
+      "JobCategoryName": "Programs & Operations",
+      "Locations": [
+        {
+          "Id": "8ca045b2-6518-5cd4-83f8-66b233a12391",
+          "LocalizedName": "LA02 - Barksdale AFB",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "LA02 - Barksdale AFB",
+          "Address": {
+            "Line1": "AFGSC/A51  841 Fairchild Dr.",
+            "Line2": "Building 5541 Rm 12-19",
+            "City": "Barksdale AFB",
+            "PostalCode": "71110",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.498720604488376,
+            "Longitude": -93.6801244853842
+          }
+        }
+      ],
+      "PostedDate": "2026-10-05T15:09:28.661Z",
+      "BriefDescription": "The Mission Concepts and Capabilities Division of Applied Research Associates (ARA), Inc., Missile Maintenance Support to support Air Force Global Strike Command (AFGSC/A4) at Barksdale AFB, LA. This is an opportunity for an experienced ICBM logistics, maintenance, or staff professional to apply your operational expertise to ICBM modernization, sustainment, and future strategic weapons systems. The ideal candidate brings extensive planning, analyses, studies, problem resolution, training and associated systems engineering necessary to develop, produce, deploy, operate, maintain security, and test and evaluate missile, basing, reentry and launch vehicle systems and technology.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "fc1fd8bd-5533-4411-9a1b-1881c117fd16",
+      "Featured": false,
+      "Title": "Senior Data Scientist",
+      "RequisitionNumber": "SENIO009943",
+      "FullTime": true,
+      "JobCategoryName": "Systems Development",
+      "Locations": [
+        {
+          "Id": "ca3406e8-207f-590f-a38b-ab351a7f5cef",
+          "LocalizedName": "VA01 - Alexandria",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA01 - Alexandria",
+          "Address": {
+            "Line1": "2760 Eisenhower Avenue",
+            "Line2": "Ste 308",
+            "City": "Alexandria",
+            "PostalCode": "223144576",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.80240264224199,
+            "Longitude": -77.08069272301366
+          }
+        }
+      ],
+      "PostedDate": "2026-10-05T13:51:40.516Z",
+      "BriefDescription": "The Capabilities, Analysis and Development (CAD) division of Applied Research Associates, Inc. (ARA) has an outstanding opportunity for a Senior Data Scientist to support a multi disciplinary team providing data analysis and visualization support across the Department of Homeland Security (DHS) mission space. You will support data-driven decision making by analyzing data, developing basic models, creating visualizations, and generating actionable insights as part of a multi-disciplinary team delivering analytical and software solutions for national security missions. This role is ideal for early-career data scientists passionate about solving real operational problems and building prototypes in an agile environment.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "594a067b-1e97-434e-a66a-11d197efc7c0",
+      "Featured": false,
+      "Title": "Journeyman Data Scientist",
+      "RequisitionNumber": "JOURN009942",
+      "FullTime": true,
+      "JobCategoryName": "Systems Development",
+      "Locations": [
+        {
+          "Id": "ca3406e8-207f-590f-a38b-ab351a7f5cef",
+          "LocalizedName": "VA01 - Alexandria",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA01 - Alexandria",
+          "Address": {
+            "Line1": "2760 Eisenhower Avenue",
+            "Line2": "Ste 308",
+            "City": "Alexandria",
+            "PostalCode": "223144576",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.80240264224199,
+            "Longitude": -77.08069272301366
+          }
+        }
+      ],
+      "PostedDate": "2026-10-05T13:23:19.878Z",
+      "BriefDescription": "The Capabilities, Analysis and Development (CAD) division of Applied Research Associates, Inc. (ARA) has an outstanding opportunity for a Journeyman Data Scientist to support a multi disciplinary team providing data analysis and visualization support across the Department of Homeland Security (DHS) mission space. You will support data-driven decision making by analyzing data, developing basic models, creating visualizations, and generating actionable insights as part of a multi-disciplinary team delivering analytical and software solutions for national security missions. This role is ideal for early-career data scientists passionate about solving real operational problems and building prototypes in an agile environment.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "81e81e46-3c1f-49f2-af70-0c3d503cda82",
+      "Featured": false,
+      "Title": "Staff Mechanical Technician 1",
+      "RequisitionNumber": "STAFF010143",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "8bc97e4d-5c8d-58db-b338-62a953263a44",
+          "LocalizedName": "CO01 - Littleton",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "CO01 - Littleton",
+          "Address": {
+            "Line1": "7921 Shaffer Parkway",
+            "Line2": null,
+            "City": "Littleton",
+            "PostalCode": "80127",
+            "State": {
+              "Code": "CO",
+              "Name": "Colorado"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 39.57303605580932,
+            "Longitude": -105.13135735753407
+          }
+        }
+      ],
+      "PostedDate": "2026-10-02T20:12:03.786Z",
+      "BriefDescription": "***Because of our work with the defense community, applicants must be U.S. citizens.***\n\nAre you looking for a career in an industry focused on designing, developing, and rapidly deploying solutions to problems of national importance? Applied Research Associates (ARA) is seeking a highly capable Staff Mechanical Technician 1 to join a multidisciplinary team advancing mission critical technologies for U.S. Government and defense customers.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "e9626f39-26f2-45e0-b97e-1cf9ed4393e0",
+      "Featured": false,
+      "Title": "Senior Electrical Engineer",
+      "RequisitionNumber": "SENIO010142",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-10-02T20:05:07.477Z",
+      "BriefDescription": "At ARA we are driven by a passion for developing innovative solutions to challenging problems of national importance. Our culture rewards autonomy and initiative and we foster a stable environment where personal and professional growth are prioritized.\n\nFor this position we are looking for highly skilled electrical engineers to develop cutting-edge technology for the United States Department of Defense within our Military Embedded Systems and Applications group. As part of our team, you will help develop custom hardware and firmware solutions supporting a variety of applications, including augmented reality technology and other small, low-power, wearable computers and sensors used by the US Army and others.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "c19ccbb9-54ac-44f2-9719-3c52d32a9e3b",
+      "Featured": false,
+      "Title": "Mid-Level Electrical Engineer",
+      "RequisitionNumber": "MIDLE010141",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-10-02T20:00:52.538Z",
+      "BriefDescription": "At ARA we are driven by a passion for developing innovative solutions to challenging problems of national importance. Our culture rewards autonomy and initiative and we foster a stable environment where personal and professional growth are prioritized.\n\nFor this position we are looking for highly skilled electrical engineers to develop cutting-edge technology for the United States Department of Defense within our Military Embedded Systems and Applications group. As part of our team, you will help develop custom hardware and firmware solutions supporting a variety of applications, including augmented reality technology and other small, low-power, wearable computers and sensors used by the US Army and others.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "41fbb9d5-19ed-47b2-8a22-064d3c36f931",
+      "Featured": false,
+      "Title": "On-site International Technical Program Lead",
+      "RequisitionNumber": "ONSIT010139",
+      "FullTime": true,
+      "JobCategoryName": "Scientific/Analytical",
+      "Locations": [
+        {
+          "Id": "57f8a6a0-37ed-52de-8d14-76859331e62d",
+          "LocalizedName": "VA16 - Reston",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA16 - Reston",
+          "Address": {
+            "Line1": "Contact CAD for more information",
+            "Line2": null,
+            "City": "Reston",
+            "PostalCode": "20191",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.9352474,
+            "Longitude": -77.3477414
+          }
+        }
+      ],
+      "PostedDate": "2026-10-02T11:55:04.385Z",
+      "BriefDescription": "Are you motivated by technical mission work, international travel, and leading complex government programs? Applied Research Associates, Inc. is seeking an On-site International Technical Program Lead to support technical assessments and work directly with other program managers, Government staff, and partner-nations on planning and execution of technical programs. This role begins as an understudy to the current lead and transitions to full program leadership.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "dbee93a8-5c04-46a2-a151-5392fc01c2d2",
+      "Featured": false,
+      "Title": "Senior Mechanical Engineer",
+      "RequisitionNumber": "SENIO010029",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "4ef34fba-49ae-5422-834e-72f47e4f160b",
+          "LocalizedName": "VA02 - Arlington",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA02 - Arlington",
+          "Address": {
+            "Line1": "801 North Quincy Street",
+            "Line2": "Ste 700",
+            "City": "Arlington",
+            "PostalCode": "22203",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.880121596317,
+            "Longitude": -77.10755477869019
+          }
+        },
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-10-01T17:15:12.321Z",
+      "BriefDescription": "ARA is seeking a Senior Mechanical Engineer to support the design of equipment, tooling, and equipment interfaces for energetics chemical manufacturing systems and unmanned systems (UxS) programs supporting U.S. Government customers. This role spans a broad range of mechanical design applications, from process equipment and facility integration to mobile/field hardware platforms. The ideal candidate is an expert in SolidWorks and AutoCAD, capable of taking concepts through detailed design and producing release-quality drawings for manufacturing and assembly.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "9c791af2-5771-49a7-a779-b008dac7ffd6",
+      "Featured": false,
+      "Title": "Entry-Level Accounting Assistant - Part Time",
+      "RequisitionNumber": "ENTRY010138",
+      "FullTime": false,
+      "JobCategoryName": "Finance & Accounting",
+      "Locations": [
+        {
+          "Id": "432cc33b-f900-52f8-a71f-ddbc0373af10",
+          "LocalizedName": "IL01 - Champaign",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "IL01 - Champaign",
+          "Address": {
+            "Line1": "100 Trade Centre Drive",
+            "Line2": "Ste 200",
+            "City": "Champaign",
+            "PostalCode": "61820",
+            "State": {
+              "Code": "IL",
+              "Name": "Illinois"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 40.09760315565368,
+            "Longitude": -88.24584025403126
+          }
+        }
+      ],
+      "PostedDate": "2026-10-01T14:48:42.738Z",
+      "BriefDescription": "The ARA Transportation Division is seeking a passionate and career-minded entry-level accounting assistant who is committed to customer service, organization, and a strong attention to detail. This is a part-time position (approximately 30 hours per week), on-site in our office in Champaign, IL.  \n\nPlease submit your resume and cover letter in a single PDF file.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "7549a31c-c6d1-4a99-a559-623408468dcc",
+      "Featured": false,
+      "Title": "Staff Ground Team Operations Subject Matter Expert",
+      "RequisitionNumber": "STAFF010137",
+      "FullTime": true,
+      "JobCategoryName": "Technical Analysis",
+      "Locations": [
+        {
+          "Id": "520be425-6d58-5af7-9c7f-b5135634d288",
+          "LocalizedName": "NC06 - Fort Bragg",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC06 - Fort Bragg",
+          "Address": {
+            "Line1": "Contact ISR for more information",
+            "Line2": null,
+            "City": "Fort Bragg",
+            "PostalCode": "28307",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.1451244,
+            "Longitude": -78.9928413
+          }
+        }
+      ],
+      "PostedDate": "2026-10-01T14:40:16.835Z",
+      "BriefDescription": "ARA is seeking a Staff GTO SME who shall serve as the DoD Red Team\u2019s Division Chief ambassador to the department\u2019s supporting partner organizations. The DoD Red Team GTO serves as an on-site GTO to DoD Red Team Partners to ensure assessments are conducted in accordance with established procedures. The GTO provides support in all aspects of assessments operations and training. This includes briefing ground teams on assessment details; outlining the assessing rules of engagement; meeting all assessment reporting requirements; and integrating and supporting partners in preparation for assessment operations. This position is geographically aligned with 3rd Special Forces Group (A) at Fort Bragg, NC. 100% on site presence is required.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "4aa61ca2-ade1-4c6f-86ad-a6da89388d21",
+      "Featured": false,
+      "Title": "IT Purchasing Administrator",
+      "RequisitionNumber": "ITPUR010074",
+      "FullTime": true,
+      "JobCategoryName": "Contracts & Purchasing",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T20:50:44.661Z",
+      "BriefDescription": "Join our team of IT professionals providing support to a large group of software developers and engineers. Our IT support staff are valued members of the team tasked with work that is critical to the success of our projects.\n\nApplied Research Associates, Inc. (ARA) is seeking professionals for an exciting opportunity as a Procurement Specialist with our IT Department.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "21bad4bc-fba2-4eca-a423-ba05b7caa243",
+      "Featured": true,
+      "Title": "Lead Engineering Technician",
+      "RequisitionNumber": "LEADE010134",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "912cbfc8-2621-540b-9255-6d7b81bcde0a",
+          "LocalizedName": "FL01 - Panama City",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "FL01 - Panama City",
+          "Address": {
+            "Line1": "430 West 5th Street",
+            "Line2": "Ste 700",
+            "City": "Panama City",
+            "PostalCode": "32401",
+            "State": {
+              "Code": "FL",
+              "Name": "Florida"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.15709670831001,
+            "Longitude": -85.66521071445457
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T16:59:50.167Z",
+      "BriefDescription": "We are seeking an experienced, hands-on Lead Engineering Technician to work closely with engineers and scientists in the construction, safe operation, maintenance, and troubleshooting of pilot-scale process units. This role is ideal for a mechanically skilled technician who can translate engineering direction into well-built, reliable equipment using 1/4-inch tubing, compression fittings, pumps, heaters, heat exchangers, instrumentation, and process controls.\n\nThe successful candidate will lead by example, work safely around high-pressure and high-temperature systems, listen carefully, follow instructions precisely, and maintain a positive, team-oriented attitude. Strong judgment, attention to detail, and pride in high-quality workmanship are essential.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "88decbe3-bc51-4031-84a6-ef1c8dec7d64",
+      "Featured": false,
+      "Title": "Senior CWMD Research Analyst",
+      "RequisitionNumber": "SENIO010132",
+      "FullTime": true,
+      "JobCategoryName": "Technical Analysis",
+      "Locations": [
+        {
+          "Id": "57f8a6a0-37ed-52de-8d14-76859331e62d",
+          "LocalizedName": "VA16 - Reston",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA16 - Reston",
+          "Address": {
+            "Line1": "Contact CAD for more information",
+            "Line2": null,
+            "City": "Reston",
+            "PostalCode": "20191",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.9352474,
+            "Longitude": -77.3477414
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T15:26:26.656Z",
+      "BriefDescription": "The Capabilities, Analysis and Development (CAD) division of Applied Research Associates, Inc. (ARA) has an outstanding opportunity for a Senior CWMD Research Analyst  to provide analysis support to our government client through on-site work. You must also have native level language capabilities in Farsi (read, write, speak, translate). Duties will include taking open-source, unstructured or structured data and distilling the information into a cohesive analytical product. Your expertise will support cross-functional teams and government leadership and include actionable, insightful recommendations based on data driven analysis and interpretation.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "0a4c3758-bd3b-4289-a478-1d7bb19794b7",
+      "Featured": false,
+      "Title": "Environmental Chemist/Hydrologist",
+      "RequisitionNumber": "ENVIR010130",
+      "FullTime": true,
+      "JobCategoryName": "Scientific/Analytical",
+      "Locations": [
+        {
+          "Id": "af8eb017-4beb-595e-8653-9474bb4f6948",
+          "LocalizedName": "VA19 - Fort Belvoir",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA19 - Fort Belvoir",
+          "Address": {
+            "Line1": "Contact CAD for more information",
+            "Line2": null,
+            "City": "Fort Belvoir",
+            "PostalCode": "22060",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.699268,
+            "Longitude": -77.142327
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T13:23:17.885Z",
+      "BriefDescription": "The Missons, Concepts and Capabilities (MCC) division of Applied Research Associates, Inc. (ARA) is looking for an Environmental Chemist/Hydrologist. This position provides operational, research and development, and training support along with subject matter expert advice and decision support to the Defense Threat Reduction Agency (DTRA) as part of its 24/7/365 Technical Reachback Support program. The ideal candidate will apply subject matter expertise and problem-solving skills to develop, integrate, test, verify, validate, and apply CBRNE software/scenarios based on experiments and predicted phenomena using theoretical and computational methods.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "a4576c7d-2ef0-4f8b-8ab6-e3a0b9b017df",
+      "Featured": false,
+      "Title": "Graduate Software Developer Intern",
+      "RequisitionNumber": "GRADU010123",
+      "FullTime": false,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T11:19:40.575Z",
+      "BriefDescription": "Applied Research Associates, Inc. (ARA) is actively seeking a highly qualified Graduate Software Developer Intern to develop solutions for the Intelligence and Defense communities. The intern will join a collaborative team of engineers and scientists developing physics-based modeling and simulation software, AI/ML applications, and web applications.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "ad2fb9e1-cef2-4a0e-9c9f-cddbdf26ed2c",
+      "Featured": false,
+      "Title": "Undergraduate Software Developer Intern",
+      "RequisitionNumber": "UNDER010122",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T11:15:45.681Z",
+      "BriefDescription": "Applied Research Associates, Inc. (ARA) is actively seeking a highly qualified Undergraduate Software Developer Intern to develop solutions for the Intelligence and Defense communities. The intern will join a collaborative team of engineers and scientists developing physics-based modeling and simulation software, AI/ML applications, and web applications.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "043134fb-bd02-417f-82df-f1169a035d58",
+      "Featured": false,
+      "Title": "Undergraduate Engineer Intern",
+      "RequisitionNumber": "UNDER010121",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T11:11:02.431Z",
+      "BriefDescription": "Applied Research Associates, Inc. (ARA) is actively seeking a highly qualified Undergraduate Engineer Intern to develop solutions for the Intelligence and Defense communities. The intern will join a collaborative team of engineers and scientists developing physics-based modeling and simulation software, AI/ML applications, and web applications.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "b027af2b-b652-4b20-af25-3bf1cb2e83f6",
+      "Featured": false,
+      "Title": "Graduate Engineer Intern",
+      "RequisitionNumber": "GRADU010120",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-30T11:05:20.297Z",
+      "BriefDescription": "Applied Research Associates, Inc. (ARA) is actively seeking a highly qualified Graduate Engineer Intern to develop solutions for the Intelligence and Defense communities. The intern will join a collaborative team of engineers and scientists developing physics-based modeling and simulation software, AI/ML applications, and web applications.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "d016dec9-8666-438d-a459-d18ff2a7f2e2",
+      "Featured": false,
+      "Title": "Open-Source Analyst (Active Secret Clearance Required)",
+      "RequisitionNumber": "OPENS010133",
+      "FullTime": true,
+      "JobCategoryName": "Information Technology",
+      "Locations": [
+        {
+          "Id": "27cf1949-087a-53d7-8085-f107e080b80a",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "AL09 - Redstone Arsenal",
+          "Address": {
+            "Line1": "Contact PMI for more information",
+            "Line2": null,
+            "City": "Huntsville",
+            "PostalCode": "35898",
+            "State": {
+              "Code": "AL",
+              "Name": "Alabama"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 34.670081,
+            "Longitude": -86.630251
+          }
+        }
+      ],
+      "PostedDate": "2026-09-29T20:08:54.278Z",
+      "BriefDescription": "Are you skilled in intelligence and information analysis, data analysis, and extracting essential data from the nonessential?\n\nSeeking a skilled Open-Source Analyst who will conduct data-driven strategies to shape the future of our business facing products across measurement and optimization. By applying your data science and analytical skills, you will help identify and solve the customer\u2019s biggest challenges. You'll find and work with available web, social media, open source, and publicly available content. The successful candidate will be intimately familiar with intelligence and information analysis, data research, ubiquitous technical surveillance (UTS), Advertising Technology (AdTech) environment as well as how to explore, defend against and exploit it.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "68ca59de-b933-4a00-898b-c447b1c2d463",
+      "Featured": false,
+      "Title": "Principal Robotics Engineer",
+      "RequisitionNumber": "PRINC010127",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "0b04629a-395d-559f-a705-ce39efc11bd5",
+          "LocalizedName": "TX14 - San Antonio",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX14 - San Antonio",
+          "Address": {
+            "Line1": "1380 Pantheon Way",
+            "Line2": "Suite 290",
+            "City": "San Antonio",
+            "PostalCode": "78232",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 29.59701381422107,
+            "Longitude": -98.47420520843208
+          }
+        }
+      ],
+      "PostedDate": "2026-09-29T16:51:56.103Z",
+      "BriefDescription": "ARA's Engineering Science Division is seeking a highly skilled and innovative principal robotics engineer to join our team. The ideal candidate will have a strong foundation in C++ development coupled with experience in robotics. This role involves developing robust C++ software for virtual simulation. \n\nThis is an on-site position located in San Antonio, TX.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "6bba8f6f-ce49-4341-9e21-64068f8ae141",
+      "Featured": false,
+      "Title": "Senior Robotics Engineer",
+      "RequisitionNumber": "SENIO010126",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "0b04629a-395d-559f-a705-ce39efc11bd5",
+          "LocalizedName": "TX14 - San Antonio",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX14 - San Antonio",
+          "Address": {
+            "Line1": "1380 Pantheon Way",
+            "Line2": "Suite 290",
+            "City": "San Antonio",
+            "PostalCode": "78232",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 29.59701381422107,
+            "Longitude": -98.47420520843208
+          }
+        }
+      ],
+      "PostedDate": "2026-09-29T16:48:42.994Z",
+      "BriefDescription": "ARA's Engineering Science Division is seeking a highly skilled and innovative senior robotics engineer to join our team. The ideal candidate will have a strong foundation in C++ development, coupled with experience in robotics. This role involves developing robust C++ software for virtual simulation. \n\nThis is an on-site position located in San Antonio, TX.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "73d25cc4-734e-43f6-871b-56eb451d8f48",
+      "Featured": false,
+      "Title": "WMD Analyst (Nuclear Enterprise Defense)",
+      "RequisitionNumber": "WMDAN010131",
+      "FullTime": true,
+      "JobCategoryName": "Technical Analysis",
+      "Locations": [
+        {
+          "Id": "57f8a6a0-37ed-52de-8d14-76859331e62d",
+          "LocalizedName": "VA16 - Reston",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA16 - Reston",
+          "Address": {
+            "Line1": "Contact CAD for more information",
+            "Line2": null,
+            "City": "Reston",
+            "PostalCode": "20191",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.9352474,
+            "Longitude": -77.3477414
+          }
+        }
+      ],
+      "PostedDate": "2026-09-29T16:19:45.983Z",
+      "BriefDescription": "The Capabilities, Analysis and Development (CAD) division of Applied Research Associates, Inc. (ARA) has an outstanding opportunity for a WMD Analyst (Nuclear Enterprise Defense) with experience identifying, monitoring, and assessing foreign threats to the U.S. nuclear enterprise and its information systems, networks, and/or critical infrastructure. This person will contribute to Defense Intelligence Enterprise deliverables, including but not limited to foundational assessments, warning reports, technical briefings, and other analytic documents. The position collaborates with the Intelligence Community, Defense Department, national labs, and academia to address nuclear enterprise-related threat issues.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "513ab1ec-2ba0-4731-b463-6bdd69292053",
+      "Featured": false,
+      "Title": "Staff Mechanical Engineer",
+      "RequisitionNumber": "STAFF010125",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "0b04629a-395d-559f-a705-ce39efc11bd5",
+          "LocalizedName": "TX14 - San Antonio",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX14 - San Antonio",
+          "Address": {
+            "Line1": "1380 Pantheon Way",
+            "Line2": "Suite 290",
+            "City": "San Antonio",
+            "PostalCode": "78232",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 29.59701381422107,
+            "Longitude": -98.47420520843208
+          }
+        }
+      ],
+      "PostedDate": "2026-09-29T16:12:25.45Z",
+      "BriefDescription": "ARA's Engineering Science Division is seeking a highly skilled and multidisciplinary mechanical engineer to join our team. The ideal candidate will be equally strong in mechanical engineering and modern C++ software development, with hands-on experience designing, prototyping, modeling, and simulating advanced robotic and mechatronic systems. This role involves building sophisticated mechanical components and integrated systems, while also developing the software that drives, simulates, and validates them. Candidates must be comfortable working across hardware and software boundaries, creating tightly coupled designs that span CAD modeling, physical prototyping, embedded programming, and high performance real time C++ development.\n\nThis is an on-site position located in San Antonio, TX.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "3497c83d-e17c-4fcd-a8ed-53f7c80e4d81",
+      "Featured": false,
+      "Title": "Staff Pavement Engineer",
+      "RequisitionNumber": "STAFF010128",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "8a50f9b6-fdf0-5442-81a6-d124f7aee86b",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "TX19 - Austin",
+          "Address": {
+            "Line1": "2217 West Braker Lane",
+            "Line2": null,
+            "City": "Austin",
+            "PostalCode": "78758",
+            "State": {
+              "Code": "TX",
+              "Name": "Texas"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.392328569872234,
+            "Longitude": -97.71237157446113
+          }
+        }
+      ],
+      "PostedDate": "2026-09-29T15:58:11.7Z",
+      "BriefDescription": "ARA\u2019s Transportation Division is seeking staff civil engineers with a passion for pavement behavior and materials to support pavement evaluation and structural analysis projects, with an emphasis on pavement design and deflection data analysis from various devices. At ARA, you will be part of a team that delivers decision-making information to our clients. \n\nThis is a full-time position on-site in our office in Austin, TX.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "c39fd5aa-ebf0-4a2b-9f20-5e197c8464a7",
+      "Featured": false,
+      "Title": "Senior Computational Electromagnetics Scientist",
+      "RequisitionNumber": "SENIO010112",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "7ae20231-bc8d-5388-b18c-feaec03026c4",
+          "LocalizedName": "OH05 - Dayton",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "OH05 - Dayton",
+          "Address": {
+            "Line1": "7735 Paragon Road",
+            "Line2": null,
+            "City": "Dayton",
+            "PostalCode": "45459",
+            "State": {
+              "Code": "OH",
+              "Name": "Ohio"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 39.63108779386984,
+            "Longitude": -84.18122555506392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-28T20:30:57.101Z",
+      "BriefDescription": "Applied Research Associates, Inc. (ARA) is seeking a Senior Computational Electromagnetics (CEM) Scientist to lead cutting edge computational research within our Applied Electromagnetics Division (AED). This role is central to driving innovation across ARA\u2019s growing CEM portfolio and building the next generation of high impact electromagnetic modeling capabilities. Ideal applicants will live near or be willing to relocate to Applied Research Associate\u2019s office in Dayton OH.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "15b93ef8-6046-4643-b631-f034e0579054",
+      "Featured": false,
+      "Title": "Senior EM Analyst",
+      "RequisitionNumber": "SENIO010111",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "7ae20231-bc8d-5388-b18c-feaec03026c4",
+          "LocalizedName": "OH05 - Dayton",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "OH05 - Dayton",
+          "Address": {
+            "Line1": "7735 Paragon Road",
+            "Line2": null,
+            "City": "Dayton",
+            "PostalCode": "45459",
+            "State": {
+              "Code": "OH",
+              "Name": "Ohio"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 39.63108779386984,
+            "Longitude": -84.18122555506392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-28T20:24:55.678Z",
+      "BriefDescription": "Applied Research Associates, Inc. (ARA) is seeking a driven and talented Senior EM Analyst, to conduct research in the modeling of and simulation of advanced and complex systems spanning the fields of electromagnetics, acoustics and physics.  This position will be located at Applied Research Associate's office in Dayton, OH. This role is central to driving innovation across ARA\u2019s growing EM portfolio and building the next generation of high impact electromagnetic analysis and design capabilities. Ideal applicants will live near or be willing to relocate to Applied Research Associate\u2019s office in Dayton OH.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "a3234a0d-1684-4561-96c4-8c6775f91e44",
+      "Featured": false,
+      "Title": "Alternate Information Systems Security Manager (ISSM)",
+      "RequisitionNumber": "ALTER010119",
+      "FullTime": true,
+      "JobCategoryName": "Information Technology",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-28T17:19:26.558Z",
+      "BriefDescription": "Applied Research Associates (ARA), Inc. has an immediate need for an early-career Information Systems Security Manager (ISSM) in Raleigh, NC. This role will provide day-to-day cybersecurity oversight for multiple classified information systems, with primary emphasis on a SIPRNet environment connected to the DoDIN and associated contractual cybersecurity requirements. The position is focused on maintaining secure, authorized, and inspection-ready operations across assigned DCSA/DoW environments. The Alternate ISSM will support RMF/ATO maintenance, eMASS administration, continuous monitoring, vulnerability and audit compliance, assessment readiness, and coordination technical stakeholders while reporting to the Senior ISSM/Cybersecurity Team Manager.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "7a72c316-97b1-4e8e-aeaf-057c7cd196aa",
+      "Featured": false,
+      "Title": "Junior Information System Security Engineer (ISSE)",
+      "RequisitionNumber": "JUNIO010117",
+      "FullTime": true,
+      "JobCategoryName": "Systems Development",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-28T17:05:54.218Z",
+      "BriefDescription": "Applied Research Associates (ARA), Inc. is seeking a Junior Information Systems Security Engineer (ISSE) in Raleigh, NC to support the implementation, testing, documentation, and maintenance of technical security controls across classified Windows, Linux, network, and security-platform environments. Working with senior cybersecurity personnel, the ISSE will gain hands-on experience with Splunk, ACAS/Tenable, Microsoft Defender, STIG/SCAP compliance, vulnerability remediation, automation, and RMF evidence while supporting secure and inspection-ready mission operations.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "1e389d73-79c1-41eb-8524-fd374de636fe",
+      "Featured": false,
+      "Title": "Senior AI Systems Engineer",
+      "RequisitionNumber": "SENIO010118",
+      "FullTime": true,
+      "JobCategoryName": "Technical Analysis",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        },
+        {
+          "Id": "5d0d5729-7fd5-51a6-b523-e703a053a9c9",
+          "LocalizedName": "NM01 - Albuquerque",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NM01 - Albuquerque",
+          "Address": {
+            "Line1": "4300 San Mateo Blvd.",
+            "Line2": "Ste A220",
+            "City": "Albuquerque",
+            "PostalCode": "87110",
+            "State": {
+              "Code": "NM",
+              "Name": "New Mexico"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.129690498350946,
+            "Longitude": -106.58632690240441
+          }
+        }
+      ],
+      "PostedDate": "2026-09-25T21:00:19.956Z",
+      "BriefDescription": "We are seeking an experienced and motivated AI Systems Engineer to design, deploy, and sustain the infrastructure, platforms, and operational workflows that enable secure, reliable, and scalable use of artificial intelligence across the organization. This role focuses on production implementation of AI capabilities, including AI platform integration, machine learning operations, GPU-enabled infrastructure, and enterprise application support in a dynamic, cross-divisional environment.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "63ac9aa4-3edf-4647-ae53-b33e5c83a4c9",
+      "Featured": false,
+      "Title": "Senior Autonomy Engineer",
+      "RequisitionNumber": "SENIO009915",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "4490a955-7b17-506d-9fa7-f421202f48de",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "PA04 - Warrendale",
+          "Address": {
+            "Line1": "555 Keystone Drive",
+            "Line2": null,
+            "City": "Warrendale",
+            "PostalCode": "15086",
+            "State": {
+              "Code": "PA",
+              "Name": "Pennsylvania"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 40.669033979377,
+            "Longitude": -80.108968978798
+          }
+        }
+      ],
+      "PostedDate": "2026-09-25T15:28:20.921Z",
+      "BriefDescription": "We are seeking a Senior Autonomy Engineer to lead the design, development, and integration of autonomy capabilities across unmanned ground vehicle platforms. This role requires strong technical depth, hands\u2011on robotics experience, and the ability to work across multiple subsystems including perception, planning, controls, and embedded software. This position is a hybrid role, requiring three days per week onsite at our Warrendale, PA office.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "08976614-b23f-40c0-9564-2ade4d040e90",
+      "Featured": false,
+      "Title": "Financial Analyst",
+      "RequisitionNumber": "FINAN010096",
+      "FullTime": true,
+      "JobCategoryName": "Programs & Operations",
+      "Locations": [
+        {
+          "Id": "0f492b03-6a19-5a1b-8510-1192cabce654",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA15 - Falls Church",
+          "Address": {
+            "Line1": "Contact MCC for more information",
+            "Line2": null,
+            "City": "Falls Church",
+            "PostalCode": "22041",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.8483712,
+            "Longitude": -77.1342967
+          }
+        },
+        {
+          "Id": "4e15fa39-e8b7-55b5-bd16-beb3748fadf5",
+          "LocalizedName": "VA10 - Arlington",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA10 - Arlington",
+          "Address": {
+            "Line1": "1400 Crystal Drive",
+            "Line2": "Suite 850",
+            "City": "Arlington",
+            "PostalCode": "22202",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.861015638737,
+            "Longitude": -77.049739443255
+          }
+        }
+      ],
+      "PostedDate": "2026-09-25T14:57:05.277Z",
+      "BriefDescription": "The Mission Concepts and Capabilities (MCC) Division of Applied Research Associates, Inc. (ARA) is hiring two Financial Analysts to work fulltime on-site in the Arlington or Falls Church, VA area. The potential candidate will provide support to the Office of the Undersecretary of War for Acquisition and Sustainment, Office of the Director of Business Operations by providing expertise for all Planning, Programming, Budgeting, and Execution (PPBE) activities.  The ideal candidates will assist in the day-to-day tracking of budget execution, maintaining spend plans, and ensuring funds are obligated efficiently. This role requires a strong foundation in financial tracking and the ability to draft clear, professional updates and justifications for leadership regarding funding status.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "5ceb56cf-45d5-4f18-9422-44363b277bf4",
+      "Featured": false,
+      "Title": "Senior Geotechnical Engineer 1",
+      "RequisitionNumber": "SENIO010028",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "5d0d5729-7fd5-51a6-b523-e703a053a9c9",
+          "LocalizedName": "NM01 - Albuquerque",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NM01 - Albuquerque",
+          "Address": {
+            "Line1": "4300 San Mateo Blvd.",
+            "Line2": "Ste A220",
+            "City": "Albuquerque",
+            "PostalCode": "87110",
+            "State": {
+              "Code": "NM",
+              "Name": "New Mexico"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.129690498350946,
+            "Longitude": -106.58632690240441
+          }
+        }
+      ],
+      "PostedDate": "2026-09-24T19:22:49.485Z",
+      "BriefDescription": "Applied Research Associates, Inc. (ARA), Test Technology Division has an exciting opportunity for a technically versatile, enthusiastic person with a strong background in Geotechnical/Geologic Engineering, Engineering Geology, Geophysics, or Mining Engineering. We are looking for an established researcher to provide project management, leadership, and execution in weapon effects testing and other geotechnical/geophysical fields relevant to the US government.  If you have a passion for science, engineering, and applying your expertise to technologies that safeguard our nation from threats, then we may have the job for you!",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "6eaa18bb-e7b9-4654-920b-797ee4a98ba6",
+      "Featured": false,
+      "Title": "On-site International Technical Program Lead",
+      "RequisitionNumber": "ONSIT010100",
+      "FullTime": true,
+      "JobCategoryName": "Scientific/Analytical",
+      "Locations": [
+        {
+          "Id": "57f8a6a0-37ed-52de-8d14-76859331e62d",
+          "LocalizedName": "VA16 - Reston",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA16 - Reston",
+          "Address": {
+            "Line1": "Contact CAD for more information",
+            "Line2": null,
+            "City": "Reston",
+            "PostalCode": "20191",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.9352474,
+            "Longitude": -77.3477414
+          }
+        }
+      ],
+      "PostedDate": "2026-09-24T18:23:58.999Z",
+      "BriefDescription": "Are you motivated by technical mission work, international travel, and leading complex government programs? Applied Research Associates, Inc. is seeking an On-site International Technical Program Lead to support technical assessments and work directly with other program managers, Government staff, and partner-nations on planning and execution of technical programs. This role begins as an understudy to the current lead and transitions to full program leadership.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "4835212b-5684-4083-ad02-12e039aa4d5d",
+      "Featured": false,
+      "Title": "Systems Administrator",
+      "RequisitionNumber": "SYSTE010110",
+      "FullTime": true,
+      "JobCategoryName": "Information Technology",
+      "Locations": [
+        {
+          "Id": "5d0d5729-7fd5-51a6-b523-e703a053a9c9",
+          "LocalizedName": "NM01 - Albuquerque",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NM01 - Albuquerque",
+          "Address": {
+            "Line1": "4300 San Mateo Blvd.",
+            "Line2": "Ste A220",
+            "City": "Albuquerque",
+            "PostalCode": "87110",
+            "State": {
+              "Code": "NM",
+              "Name": "New Mexico"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.129690498350946,
+            "Longitude": -106.58632690240441
+          }
+        }
+      ],
+      "PostedDate": "2026-09-24T00:01:18.434Z",
+      "BriefDescription": "Applied Research Associates (ARA) Southwest Division (SWD) is seeking a Systems Administrator to play a critical role in protecting and maintaining classified information systems that support mission-focused work. In this hands on position, you\u2019ll partner with the ISSM/ISSO to manage system security, compliance, and day-to-day operations in accordance with NISPOM, DCSA, and RMF requirements. You\u2019ll help maintain system authorization, strengthen security posture, and ensure assigned systems remain compliant and operational.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "22fc8cd0-da6a-4120-9722-3399bf92170f",
+      "Featured": false,
+      "Title": "Manufacturing Technical Intern",
+      "RequisitionNumber": "MANUF010106",
+      "FullTime": false,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "7eb489ea-a062-58dc-9610-d3102ff02b6e",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "WA05 - Spokane",
+          "Address": {
+            "Line1": "A 5807 W Thorpe Rd",
+            "Line2": null,
+            "City": "Spokane",
+            "PostalCode": "99224",
+            "State": {
+              "Code": "WA",
+              "Name": "Washington"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 47.615623449728,
+            "Longitude": -117.494595440801
+          }
+        }
+      ],
+      "PostedDate": "2026-09-23T23:52:15.217Z",
+      "BriefDescription": "The Southwest Division (SWD) of Applied Research Associates, Inc. (ARA) is seeking a Manufacturing Technical Intern to join our team in Spokane, WA. In this role you will support advanced manufacturing development, including hands-on participation in a broad range of manufacturing processes related to the production of metallic alloys. This technical and hands-on position ensures quality and efficiency in all professional activities, while following environmental, health and safety policies/procedures.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "9ae6a625-d57f-49ff-92b7-2f6e732f45ad",
+      "Featured": false,
+      "Title": "Die-Casting Engineer 2",
+      "RequisitionNumber": "DIECA010087",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "7eb489ea-a062-58dc-9610-d3102ff02b6e",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "WA05 - Spokane",
+          "Address": {
+            "Line1": "A 5807 W Thorpe Rd",
+            "Line2": null,
+            "City": "Spokane",
+            "PostalCode": "99224",
+            "State": {
+              "Code": "WA",
+              "Name": "Washington"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 47.615623449728,
+            "Longitude": -117.494595440801
+          }
+        }
+      ],
+      "PostedDate": "2026-09-23T23:44:36.457Z",
+      "BriefDescription": "The Southwest Division (SWD) of Applied Research Associates, Inc. (ARA) is seeking an experienced Die-Casting Engineer to join our team in Spokane, WA. This position supports advanced manufacturing development, including the hands-on design and execution of a broad range of die-casting processes of metallic alloys. This highly technical and hands-on position ensures quality and efficiency in all professional activities, while following environmental, health and safety policies/procedures.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "e9e99eeb-97d3-48ca-9d88-3c28e500bb35",
+      "Featured": false,
+      "Title": "Scientific Computing Software Developer",
+      "RequisitionNumber": "COMPU010105",
+      "FullTime": true,
+      "JobCategoryName": "Scientific/Analytical",
+      "Locations": [
+        {
+          "Id": "ca3406e8-207f-590f-a38b-ab351a7f5cef",
+          "LocalizedName": "VA01 - Alexandria",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA01 - Alexandria",
+          "Address": {
+            "Line1": "2760 Eisenhower Avenue",
+            "Line2": "Ste 308",
+            "City": "Alexandria",
+            "PostalCode": "223144576",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.80240264224199,
+            "Longitude": -77.08069272301366
+          }
+        }
+      ],
+      "PostedDate": "2026-09-23T16:49:46.323Z",
+      "BriefDescription": "The Missions, Concepts and Capabilities (MCC) division of Applied Research Associates, Inc. (ARA) is seeking a Scientific Computing Software Developer  to join a multi-disciplinary team of engineers and scientists developing and utilizing weapons effects modeling and simulation tools. The ideal candidate has interests in computational methodologies such as computational structural mechanics, shock physics, or fluid dynamics and an interest in developing secure, memory safe software. Tasks include refactoring existing codes to memory safe paradigms and developing enhancements to existing codes used for weapons effects predictions for a Department of War customer.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "76e9ba0b-a405-47e1-ad33-0bd9c53041fa",
+      "Featured": false,
+      "Title": "Staff Network Engineer",
+      "RequisitionNumber": "STAFF010104",
+      "FullTime": true,
+      "JobCategoryName": "Network & Telecomm Services",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-23T16:48:42.235Z",
+      "BriefDescription": "Applied Research Associates (ARA), Inc. is seeking an experienced Network Engineer to design, operate, secure, and sustain classified and mission-supporting network infrastructure within the Integrated Mission Systems Sector in Raleigh, NC. The engineer will support Cisco switching and routing, Cisco and Palo Alto firewalls, integration with Splunk and Forescout, vulnerability remediation, configuration management and documentation of the above. This position requires an active DoD Secret clearance with eligibility for Top Secret and close coordination with system administrators, cybersecurity personnel, program teams, and Government stakeholders.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": null,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "bcbbe24a-1d81-42ff-9cfd-3aeafe96be0a",
+      "Featured": false,
+      "Title": "Senior Scientific Computing Software Developer",
+      "RequisitionNumber": "SENIO010107",
+      "FullTime": true,
+      "JobCategoryName": "Scientific/Analytical",
+      "Locations": [
+        {
+          "Id": "ca3406e8-207f-590f-a38b-ab351a7f5cef",
+          "LocalizedName": "VA01 - Alexandria",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "VA01 - Alexandria",
+          "Address": {
+            "Line1": "2760 Eisenhower Avenue",
+            "Line2": "Ste 308",
+            "City": "Alexandria",
+            "PostalCode": "223144576",
+            "State": {
+              "Code": "VA",
+              "Name": "Virginia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.80240264224199,
+            "Longitude": -77.08069272301366
+          }
+        }
+      ],
+      "PostedDate": "2026-09-23T16:44:48.912Z",
+      "BriefDescription": "The Mission, Concepts and Capabilities (MCC) division of Applied Research Associates, Inc. (ARA) is seeking a Senior Scientific Computing Software Developer to join a multi-disciplinary team of engineers and scientists developing and utilizing weapons effects modeling and simulation tools. The ideal candidate has interests in computational methodologies such as computational structural mechanics, shock physics, or fluid dynamics and an interest in developing secure, memory safe software. Tasks include refactoring existing codes to memory safe paradigms and developing enhancements to existing codes used for weapons effects predictions for a Department of War customer.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "fdce50f2-f6d4-42c6-849b-7db73f6855ba",
+      "Featured": false,
+      "Title": "Principal Cyber Security Analyst",
+      "RequisitionNumber": "PRINC010102",
+      "FullTime": true,
+      "JobCategoryName": "Technical Analysis",
+      "Locations": [
+        {
+          "Id": "a326b267-e8bb-59eb-9217-c8cace3b1886",
+          "LocalizedName": "DC07 - Washington DC",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "DC07 - Washington DC",
+          "Address": {
+            "Line1": null,
+            "Line2": null,
+            "City": "Washington DC",
+            "PostalCode": null,
+            "State": {
+              "Code": "DC",
+              "Name": "District of Columbia"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 38.89037258424956,
+            "Longitude": -77.03195678464395
+          }
+        }
+      ],
+      "PostedDate": "2026-09-23T14:46:15.587Z",
+      "BriefDescription": "The Principal Cyber Engineer serves primarily as a technical Subject Matter Expert (SME) for cyber development efforts. This engineer has a strong understanding of the requirements capture process and the full lifecycle of technical cyber development initiatives. Execution of these responsibilities requires the ability to develop effective solutions by synthesizing mission strategy, industry standards, processes, emerging technologies, and creative approaches to achieve program objectives.\nThe successful candidate will join a multi-disciplinary, distributed team and will integrate existing products, industry-standard architectural methodologies, and emerging technologies to address complex IT and cyber challenges for our customers.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "56413c04-ec06-44b9-a087-cc4d8d111bf6",
+      "Featured": false,
+      "Title": "ICBM Training Program Analyst",
+      "RequisitionNumber": "ICBMD010057",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "8ca045b2-6518-5cd4-83f8-66b233a12391",
+          "LocalizedName": "LA02 - Barksdale AFB",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "LA02 - Barksdale AFB",
+          "Address": {
+            "Line1": "AFGSC/A51  841 Fairchild Dr.",
+            "Line2": "Building 5541 Rm 12-19",
+            "City": "Barksdale AFB",
+            "PostalCode": "71110",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.498720604488376,
+            "Longitude": -93.6801244853842
+          }
+        }
+      ],
+      "PostedDate": "2026-09-22T19:04:31.03Z",
+      "BriefDescription": "The Mission Concepts and Capabilities Division of Applied Research Associates (ARA), Inc., ICBM Training Program Analyst to support Air Force Global Strike Command (AFGSC/A10) at Barksdale AFB, LA.\nThis is an opportunity for an experienced ICBM operations, maintenance, training, or staff professional to apply your operational expertise to ICBM modernization, sustainment, training requirements, and future strategic weapons systems. The ideal candidate brings extensive ICBM experience along with Air Force staff-level experience and understands how operational and maintenance requirements translate into training programs, training systems, trainers, and acquisition requirements.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "02cdc95e-729e-4fd9-9b86-56c59471742d",
+      "Featured": false,
+      "Title": "Research Engineer-Data & Analytics",
+      "RequisitionNumber": "RESEA010101",
+      "FullTime": true,
+      "JobCategoryName": "Systems Development",
+      "Locations": [
+        {
+          "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+          "LocalizedName": "NC01 - Raleigh",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "NC01 - Raleigh",
+          "Address": {
+            "Line1": "8537 Six Forks Rd.",
+            "Line2": "Suite 200",
+            "City": "Raleigh",
+            "PostalCode": "27615",
+            "State": {
+              "Code": "NC",
+              "Name": "North Carolina"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 35.89650795451449,
+            "Longitude": -78.65003026429392
+          }
+        }
+      ],
+      "PostedDate": "2026-09-22T19:04:12.643Z",
+      "BriefDescription": "Applied Research Associates, Inc. (ARA) is actively seeking a highly qualified engineer/scientist for the development of data analytic tools and techniques for the Intelligence and Defense communities. Application areas involve data analytics, machine learning, probabilistic modeling, intelligent systems, and software systems supporting these methods. The engineer/scientist will join a multi-disciplinary collaborative team of engineers and scientists.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "9d5ea1e3-ba27-4705-bc85-5d09623dea14",
+      "Featured": false,
+      "Title": "Staff Software QA Specialist 1",
+      "RequisitionNumber": "STAFF010094",
+      "FullTime": true,
+      "JobCategoryName": "Systems Development",
+      "Locations": [
+        {
+          "Id": "101d828c-708c-51a0-a758-098fbc90d287",
+          "LocalizedName": "LA03 - Baton Rouge",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "LA03 - Baton Rouge",
+          "Address": {
+            "Line1": "8550 United Plaza Blvd",
+            "Line2": "Ste 901",
+            "City": "Baton Rouge",
+            "PostalCode": "70801",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.411799703916,
+            "Longitude": -91.096797301945
+          }
+        }
+      ],
+      "PostedDate": "2026-09-17T00:27:57.644Z",
+      "BriefDescription": "***Because of our work with the defense community, applicants must be U.S. citizens.***\n\nARA is seeking a Staff Software QA Specialist 1 to be part of our team in Baton Rouge, Louisiana. We are a 100% employee-owned scientific research and engineering company dedicated to solving critical national problems to improve our safety, security, and way of life. You will work with other developers and engineers to design and implement quality assurance solutions for a wide range of applications. As a member of our development team, you will work in an agile environment focused on delivering high-quality software to our clients.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "bdbeeabf-bf21-41d9-9034-d01be04c59f6",
+      "Featured": false,
+      "Title": "Software Quality Assurance Intern",
+      "RequisitionNumber": "SOFTW010093",
+      "FullTime": true,
+      "JobCategoryName": "Engineering Support Services",
+      "Locations": [
+        {
+          "Id": "101d828c-708c-51a0-a758-098fbc90d287",
+          "LocalizedName": "LA03 - Baton Rouge",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "LA03 - Baton Rouge",
+          "Address": {
+            "Line1": "8550 United Plaza Blvd",
+            "Line2": "Ste 901",
+            "City": "Baton Rouge",
+            "PostalCode": "70801",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.411799703916,
+            "Longitude": -91.096797301945
+          }
+        }
+      ],
+      "PostedDate": "2026-09-17T00:17:49.821Z",
+      "BriefDescription": "***Because of our work with the defense community, applicants must be U.S. citizens.***\n\nARA is seeking a Software Quality Assurance Intern to be part of our team in Baton Rouge, Louisiana. We are a 100% employee-owned scientific research and engineering company dedicated to solving critical national problems to improve our safety, security, and way of life. You will work with other developers and engineers to design and implement quality assurance solutions for a wide range of applications. As a member of our development team, you will work in an agile environment focused on delivering high-quality software to our clients.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    }
+  ],
+  "totalCount": 116,
+  "locations": [
+    {
+      "PhysicalLocation": {
+        "Id": "7ae20231-bc8d-5388-b18c-feaec03026c4",
+        "LocalizedName": "OH05 - Dayton",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "OH05 - Dayton",
+        "Address": {
+          "Line1": "7735 Paragon Road",
+          "Line2": null,
+          "City": "Dayton",
+          "PostalCode": "45459",
+          "State": {
+            "Code": "OH",
+            "Name": "Ohio"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 39.63108779386984,
+          "Longitude": -84.18122555506392
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "8bc97e4d-5c8d-58db-b338-62a953263a44",
+        "LocalizedName": "CO01 - Littleton",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "CO01 - Littleton",
+        "Address": {
+          "Line1": "7921 Shaffer Parkway",
+          "Line2": null,
+          "City": "Littleton",
+          "PostalCode": "80127",
+          "State": {
+            "Code": "CO",
+            "Name": "Colorado"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 39.57303605580932,
+          "Longitude": -105.13135735753407
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "f02e6468-3e83-5e12-817e-5b621e95dc60",
+        "LocalizedName": "SD02 - Rapid City",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "SD02 - Rapid City",
+        "Address": {
+          "Line1": "3301 Cambell Street",
+          "Line2": "Suite B",
+          "City": "Rapid City",
+          "PostalCode": "57701",
+          "State": {
+            "Code": "SD",
+            "Name": "South Dakota"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 44.05271809224345,
+          "Longitude": -103.19207268907401
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "45a1d8ab-5795-5847-b2e3-b268e1c96b53",
+        "LocalizedName": "MS02 - Vicksburg",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "MS02 - Vicksburg",
+        "Address": {
+          "Line1": "119 Monument Place",
+          "Line2": null,
+          "City": "Vicksburg",
+          "PostalCode": "39180",
+          "State": {
+            "Code": "MS",
+            "Name": "Mississippi"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 32.32383366805812,
+          "Longitude": -90.87639045663327
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "ca3406e8-207f-590f-a38b-ab351a7f5cef",
+        "LocalizedName": "VA01 - Alexandria",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "VA01 - Alexandria",
+        "Address": {
+          "Line1": "2760 Eisenhower Avenue",
+          "Line2": "Ste 308",
+          "City": "Alexandria",
+          "PostalCode": "223144576",
+          "State": {
+            "Code": "VA",
+            "Name": "Virginia"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.80240264224199,
+          "Longitude": -77.08069272301366
+        }
+      },
+      "Count": 5
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "af8eb017-4beb-595e-8653-9474bb4f6948",
+        "LocalizedName": "VA19 - Fort Belvoir",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "VA19 - Fort Belvoir",
+        "Address": {
+          "Line1": "Contact CAD for more information",
+          "Line2": null,
+          "City": "Fort Belvoir",
+          "PostalCode": "22060",
+          "State": {
+            "Code": "VA",
+            "Name": "Virginia"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.699268,
+          "Longitude": -77.142327
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "22ace267-01b4-5438-8320-02300e38f7a9",
+        "LocalizedName": "NM05 - Kirtland AFB",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "NM05 - Kirtland AFB",
+        "Address": {
+          "Line1": "3751 F Wyoming Blvd SE",
+          "Line2": "Bldg 20749",
+          "City": "Kirtland AFB",
+          "PostalCode": "87117",
+          "State": {
+            "Code": "NM",
+            "Name": "New Mexico"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 35.04606811223281,
+          "Longitude": -106.55058614709336
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "57f8a6a0-37ed-52de-8d14-76859331e62d",
+        "LocalizedName": "VA16 - Reston",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "VA16 - Reston",
+        "Address": {
+          "Line1": "Contact CAD for more information",
+          "Line2": null,
+          "City": "Reston",
+          "PostalCode": "20191",
+          "State": {
+            "Code": "VA",
+            "Name": "Virginia"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.9352474,
+          "Longitude": -77.3477414
+        }
+      },
+      "Count": 4
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "96360fa6-24dd-5ca8-a1d2-c386d6613225",
+        "LocalizedName": "AL03 - Redstone Arsenal",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "AL03 - Redstone Arsenal",
+        "Address": {
+          "Line1": "Contact ESD for more information",
+          "Line2": null,
+          "City": "Redstone Arsenal",
+          "PostalCode": "35898",
+          "State": {
+            "Code": "AL",
+            "Name": "Alabama"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 34.670081,
+          "Longitude": -86.630251
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "bc8be2f6-0d9f-5fb7-b720-bd79585eab97",
+        "LocalizedName": "FL02 - Niceville",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "FL02 - Niceville",
+        "Address": {
+          "Line1": "956 John Sims Parkway",
+          "Line2": null,
+          "City": "Niceville",
+          "PostalCode": "32578",
+          "State": {
+            "Code": "FL",
+            "Name": "Florida"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 30.51785565196538,
+          "Longitude": -86.4994115277896
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "64c84f6f-311f-538b-b538-f9eb766d66e5",
+        "LocalizedName": "NM13 - Moriarty",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "NM13 - Moriarty",
+        "Address": {
+          "Line1": "3595 E Martinez Rd",
+          "Line2": null,
+          "City": "Moriarty",
+          "PostalCode": "87035",
+          "State": {
+            "Code": "NM",
+            "Name": "New Mexico"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 34.996969799975,
+          "Longitude": -105.954578903483
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "660b73c8-3df1-59f2-a1af-e60a2864e8c2",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "SC05 - Greenville",
+        "Address": {
+          "Line1": "5751 Augusta Road",
+          "Line2": null,
+          "City": "Greenville",
+          "PostalCode": "29605",
+          "State": {
+            "Code": "SC",
+            "Name": "South Carolina"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 34.77706759521871,
+          "Longitude": -82.37896192723548
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "497b12f7-c247-5634-85ca-e19a61d91773",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "AL08 - Madison",
+        "Address": {
+          "Line1": "26641 Distribution Boulevard NW",
+          "Line2": null,
+          "City": "Madison",
+          "PostalCode": "35756",
+          "State": {
+            "Code": "AL",
+            "Name": "Alabama"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 34.6800661,
+          "Longitude": -86.8082056
+        }
+      },
+      "Count": 4
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "4e15fa39-e8b7-55b5-bd16-beb3748fadf5",
+        "LocalizedName": "VA10 - Arlington",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "VA10 - Arlington",
+        "Address": {
+          "Line1": "1400 Crystal Drive",
+          "Line2": "Suite 850",
+          "City": "Arlington",
+          "PostalCode": "22202",
+          "State": {
+            "Code": "VA",
+            "Name": "Virginia"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.861015638737,
+          "Longitude": -77.049739443255
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "9033f5bc-5190-574b-a1e7-f7997b975bf7",
+        "LocalizedName": "NC01 - Raleigh",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "NC01 - Raleigh",
+        "Address": {
+          "Line1": "8537 Six Forks Rd.",
+          "Line2": "Suite 200",
+          "City": "Raleigh",
+          "PostalCode": "27615",
+          "State": {
+            "Code": "NC",
+            "Name": "North Carolina"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 35.89650795451449,
+          "Longitude": -78.65003026429392
+        }
+      },
+      "Count": 22
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "f98c721f-1ccb-5eb2-8317-bd64bbff4c49",
+        "LocalizedName": "NM08 - Holloman AFB",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "NM08 - Holloman AFB",
+        "Address": {
+          "Line1": "Contact MCC for more information",
+          "Line2": null,
+          "City": "Holloman AFB",
+          "PostalCode": "88330",
+          "State": {
+            "Code": "NM",
+            "Name": "New Mexico"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 32.8369491,
+          "Longitude": -106.0775323
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "a326b267-e8bb-59eb-9217-c8cace3b1886",
+        "LocalizedName": "DC07 - Washington DC",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "DC07 - Washington DC",
+        "Address": {
+          "Line1": null,
+          "Line2": null,
+          "City": "Washington DC",
+          "PostalCode": null,
+          "State": {
+            "Code": "DC",
+            "Name": "District of Columbia"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.89037258424956,
+          "Longitude": -77.03195678464395
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "7be35369-78ca-549e-8795-af705d5bb631",
+        "LocalizedName": "CO06 - Lafayette",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "CO06 - Lafayette",
+        "Address": {
+          "Line1": "1724 Majestic Drive",
+          "Line2": "Suite 100",
+          "City": "Lafayette",
+          "PostalCode": "80026",
+          "State": {
+            "Code": "CO",
+            "Name": "Colorado"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 39.98165236445013,
+          "Longitude": -105.0690444281882
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "6dfa9179-d0e8-57f7-a987-3db9b2756321",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "PA02 - Warrendale",
+        "Address": {
+          "Line1": "555 Keystone Drive",
+          "Line2": null,
+          "City": "Warrendale",
+          "PostalCode": "15086",
+          "State": {
+            "Code": "PA",
+            "Name": "Pennsylvania"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 40.667101420292134,
+          "Longitude": -80.11228808795457
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "8ca045b2-6518-5cd4-83f8-66b233a12391",
+        "LocalizedName": "LA02 - Barksdale AFB",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "LA02 - Barksdale AFB",
+        "Address": {
+          "Line1": "AFGSC/A51  841 Fairchild Dr.",
+          "Line2": "Building 5541 Rm 12-19",
+          "City": "Barksdale AFB",
+          "PostalCode": "71110",
+          "State": {
+            "Code": "LA",
+            "Name": "Louisiana"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 32.498720604488376,
+          "Longitude": -93.6801244853842
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "82155ecc-c3de-5fbe-894c-8ade062cf6b1",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "TX22 - Southlake",
+        "Address": {
+          "Line1": "550 Reserve St",
+          "Line2": "Suite 190",
+          "City": "Southlake",
+          "PostalCode": "76092",
+          "State": {
+            "Code": "TX",
+            "Name": "Texas"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 32.947614715876,
+          "Longitude": -97.130441990276
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "42d93c10-063a-4015-9702-51d707b12ffa",
+        "LocalizedName": "United States",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": null,
+        "Address": {
+          "Line1": null,
+          "Line2": null,
+          "City": null,
+          "PostalCode": null,
+          "State": null,
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 0,
+        "Coordinates": {
+          "Latitude": 39.398703156,
+          "Longitude": -99.41461919
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "432cc33b-f900-52f8-a71f-ddbc0373af10",
+        "LocalizedName": "IL01 - Champaign",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "IL01 - Champaign",
+        "Address": {
+          "Line1": "100 Trade Centre Drive",
+          "Line2": "Ste 200",
+          "City": "Champaign",
+          "PostalCode": "61820",
+          "State": {
+            "Code": "IL",
+            "Name": "Illinois"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 40.09760315565368,
+          "Longitude": -88.24584025403126
+        }
+      },
+      "Count": 3
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "4ef34fba-49ae-5422-834e-72f47e4f160b",
+        "LocalizedName": "VA02 - Arlington",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "VA02 - Arlington",
+        "Address": {
+          "Line1": "801 North Quincy Street",
+          "Line2": "Ste 700",
+          "City": "Arlington",
+          "PostalCode": "22203",
+          "State": {
+            "Code": "VA",
+            "Name": "Virginia"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.880121596317,
+          "Longitude": -77.10755477869019
+        }
+      },
+      "Count": 4
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "7eb489ea-a062-58dc-9610-d3102ff02b6e",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "WA05 - Spokane",
+        "Address": {
+          "Line1": "A 5807 W Thorpe Rd",
+          "Line2": null,
+          "City": "Spokane",
+          "PostalCode": "99224",
+          "State": {
+            "Code": "WA",
+            "Name": "Washington"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 47.615623449728,
+          "Longitude": -117.494595440801
+        }
+      },
+      "Count": 7
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "5422f3f9-314a-546f-abfe-c0908a129119",
+        "LocalizedName": "WI01 - Madison",
+        "LocalizedLocationId": "WI01",
+        "LocalizedDescription": "WI01 - Madison",
+        "Address": {
+          "Line1": "6314 Odana Road",
+          "Line2": null,
+          "City": "Madison",
+          "PostalCode": "537191108",
+          "State": {
+            "Code": "WI",
+            "Name": "Wisconsin"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 43.05414261464236,
+          "Longitude": -89.48909059841382
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "66a1cb85-3a96-50a6-9a00-b7eab0f53cb4",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "FL51 - Shalimar",
+        "Address": {
+          "Line1": "6 Eleventh Ave",
+          "Line2": "Suites F3 and F4",
+          "City": "Shalimar",
+          "PostalCode": "32579",
+          "State": {
+            "Code": "FL",
+            "Name": "Florida"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 30.446858983695,
+          "Longitude": -86.577704011732
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "8a50f9b6-fdf0-5442-81a6-d124f7aee86b",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "TX19 - Austin",
+        "Address": {
+          "Line1": "2217 West Braker Lane",
+          "Line2": null,
+          "City": "Austin",
+          "PostalCode": "78758",
+          "State": {
+            "Code": "TX",
+            "Name": "Texas"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 30.392328569872234,
+          "Longitude": -97.71237157446113
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "0a1209ce-c4f1-588f-aba8-97548340b196",
+        "LocalizedName": "TX10 - San Antonio",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "TX10 - San Antonio",
+        "Address": {
+          "Line1": null,
+          "Line2": null,
+          "City": "San Antonio",
+          "PostalCode": null,
+          "State": {
+            "Code": "TX",
+            "Name": "Texas"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 29.424582309739563,
+          "Longitude": -98.49460637538195
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "0f492b03-6a19-5a1b-8510-1192cabce654",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "VA15 - Falls Church",
+        "Address": {
+          "Line1": "Contact MCC for more information",
+          "Line2": null,
+          "City": "Falls Church",
+          "PostalCode": "22041",
+          "State": {
+            "Code": "VA",
+            "Name": "Virginia"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.8483712,
+          "Longitude": -77.1342967
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "20d7be2d-fd27-5a88-81ee-40847a52452a",
+        "LocalizedName": "CA02 - Los Altos",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "CA02 - Los Altos",
+        "Address": {
+          "Line1": "95 1st Street, Suite 100",
+          "Line2": null,
+          "City": "Los Altos",
+          "PostalCode": "94022",
+          "State": {
+            "Code": "CA",
+            "Name": "California"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 37.38035010073072,
+          "Longitude": -122.11965472118891
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "77b15e8a-0ff6-5119-8f65-972f32180c58",
+        "LocalizedName": "NC05 - Southern Pines",
+        "LocalizedLocationId": "NC05",
+        "LocalizedDescription": "NC05 - Southern Pines",
+        "Address": {
+          "Line1": "11 Village Club Court",
+          "Line2": "Second Floor",
+          "City": "Pinehurst",
+          "PostalCode": "28374",
+          "State": {
+            "Code": "NC",
+            "Name": "North Carolina"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 35.1987203985331,
+          "Longitude": -79.47273739346483
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "0b04629a-395d-559f-a705-ce39efc11bd5",
+        "LocalizedName": "TX14 - San Antonio",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "TX14 - San Antonio",
+        "Address": {
+          "Line1": "1380 Pantheon Way",
+          "Line2": "Suite 290",
+          "City": "San Antonio",
+          "PostalCode": "78232",
+          "State": {
+            "Code": "TX",
+            "Name": "Texas"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 29.59701381422107,
+          "Longitude": -98.47420520843208
+        }
+      },
+      "Count": 3
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "dd07d20d-bd1a-4640-983d-bf643a0e73f5",
+        "LocalizedName": "NE - Omaha",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": null,
+        "Address": {
+          "Line1": null,
+          "Line2": null,
+          "City": "Omaha",
+          "PostalCode": null,
+          "State": {
+            "Code": "NE",
+            "Name": "Nebraska"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 0,
+        "Coordinates": {
+          "Latitude": 41.258652,
+          "Longitude": -95.937195
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "5d0d5729-7fd5-51a6-b523-e703a053a9c9",
+        "LocalizedName": "NM01 - Albuquerque",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "NM01 - Albuquerque",
+        "Address": {
+          "Line1": "4300 San Mateo Blvd.",
+          "Line2": "Ste A220",
+          "City": "Albuquerque",
+          "PostalCode": "87110",
+          "State": {
+            "Code": "NM",
+            "Name": "New Mexico"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 35.129690498350946,
+          "Longitude": -106.58632690240441
+        }
+      },
+      "Count": 13
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "f3ebe2f0-b14d-50e3-885a-4a6a6d420eb2",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "VA43 - Alexandria",
+        "Address": {
+          "Line1": "6361 Walker Lane",
+          "Line2": "Suite C-120",
+          "City": "Alexandria",
+          "PostalCode": "22310",
+          "State": {
+            "Code": "VA",
+            "Name": "Virginia"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.768751001343,
+          "Longitude": -77.157906981724
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "13210029-d8e7-5f67-8cae-9c93073a6d20",
+        "LocalizedName": "CA11 - Cypress",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "CA11 - Cypress",
+        "Address": {
+          "Line1": "10833 Valley View",
+          "Line2": "Suite 250",
+          "City": "Cypress",
+          "PostalCode": "90630",
+          "State": {
+            "Code": "CA",
+            "Name": "California"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 33.80470127408835,
+          "Longitude": -118.02845186696956
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "27cf1949-087a-53d7-8085-f107e080b80a",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "AL09 - Redstone Arsenal",
+        "Address": {
+          "Line1": "Contact PMI for more information",
+          "Line2": null,
+          "City": "Huntsville",
+          "PostalCode": "35898",
+          "State": {
+            "Code": "AL",
+            "Name": "Alabama"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 34.670081,
+          "Longitude": -86.630251
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "52631695-dc99-5c27-8ec9-6f173cdb2a5e",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "MD13 - Indian Head",
+        "Address": {
+          "Line1": "Naval Surface Warfare Center",
+          "Line2": "3767 Strauss Ave #113",
+          "City": "Indian Head",
+          "PostalCode": "20640",
+          "State": {
+            "Code": "MD",
+            "Name": "Maryland"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 38.544466569101,
+          "Longitude": -77.239975592642
+        }
+      },
+      "Count": 7
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "05433be5-ff2e-5b01-a0bf-64641c8cb82c",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "OK04 - McAlester",
+        "Address": {
+          "Line1": "McAlester Army Ammunition Plant",
+          "Line2": "1 C Tree Rd building 4",
+          "City": "McAlester",
+          "PostalCode": "74501",
+          "State": {
+            "Code": "OK",
+            "Name": "Oklahoma"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 34.9602731,
+          "Longitude": -95.7645356
+        }
+      },
+      "Count": 2
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "4490a955-7b17-506d-9fa7-f421202f48de",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "PA04 - Warrendale",
+        "Address": {
+          "Line1": "555 Keystone Drive",
+          "Line2": null,
+          "City": "Warrendale",
+          "PostalCode": "15086",
+          "State": {
+            "Code": "PA",
+            "Name": "Pennsylvania"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 40.669033979377,
+          "Longitude": -80.108968978798
+        }
+      },
+      "Count": 4
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "101d828c-708c-51a0-a758-098fbc90d287",
+        "LocalizedName": "LA03 - Baton Rouge",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "LA03 - Baton Rouge",
+        "Address": {
+          "Line1": "8550 United Plaza Blvd",
+          "Line2": "Ste 901",
+          "City": "Baton Rouge",
+          "PostalCode": "70801",
+          "State": {
+            "Code": "LA",
+            "Name": "Louisiana"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 30.411799703916,
+          "Longitude": -91.096797301945
+        }
+      },
+      "Count": 4
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "309d84c3-200c-5efb-94b6-1672a0f0129f",
+        "LocalizedName": "NJ02 -Egg Harbor Township",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "NJ02 -Egg Harbor Township",
+        "Address": {
+          "Line1": "NARTP Building 3",
+          "Line2": "600 Aviation Research Blvd Suite 201",
+          "City": "Egg Harbor Township",
+          "PostalCode": "08234",
+          "State": {
+            "Code": "NJ",
+            "Name": "New Jersey"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 39.3964835,
+          "Longitude": -74.5917115
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "912cbfc8-2621-540b-9255-6d7b81bcde0a",
+        "LocalizedName": "FL01 - Panama City",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "FL01 - Panama City",
+        "Address": {
+          "Line1": "430 West 5th Street",
+          "Line2": "Ste 700",
+          "City": "Panama City",
+          "PostalCode": "32401",
+          "State": {
+            "Code": "FL",
+            "Name": "Florida"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 30.15709670831001,
+          "Longitude": -85.66521071445457
+        }
+      },
+      "Count": 6
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "520be425-6d58-5af7-9c7f-b5135634d288",
+        "LocalizedName": "NC06 - Fort Bragg",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "NC06 - Fort Bragg",
+        "Address": {
+          "Line1": "Contact ISR for more information",
+          "Line2": null,
+          "City": "Fort Bragg",
+          "PostalCode": "28307",
+          "State": {
+            "Code": "NC",
+            "Name": "North Carolina"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 35.1451244,
+          "Longitude": -78.9928413
+        }
+      },
+      "Count": 1
+    }
+  ]
+}

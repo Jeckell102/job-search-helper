@@ -12,6 +12,9 @@ import sqlite3
 from threading import RLock
 import time
 
+from .title_audit import TITLE_AUDIT_SCHEMA, remember_title_audit
+from .browser_progress import SCHEMA as BROWSER_PROGRESS_SCHEMA
+
 
 class InventoryInbox:
     def __init__(self, path, spreadsheet_id):
@@ -36,6 +39,8 @@ class InventoryInbox:
                 self.connection.execute("""CREATE TABLE IF NOT EXISTS inventories (
                     cycle TEXT, company TEXT, payload TEXT NOT NULL, blocked INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY(cycle, company))""")
+                self.connection.execute(TITLE_AUDIT_SCHEMA)
+                self.connection.execute(BROWSER_PROGRESS_SCHEMA)
                 self.connection.execute("""CREATE TABLE IF NOT EXISTS sync_plans (
                     cycle TEXT, company TEXT, payload TEXT NOT NULL, cursor INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY(cycle, company))""")
@@ -55,6 +60,8 @@ class InventoryInbox:
                     # checkpoint indexes refer to this exact ordering/content.
                     cursor = self.connection.execute("INSERT OR IGNORE INTO inventories VALUES (?,?,?,0)",
                                                      (cycle, company, encoded))
+                    if cursor.rowcount:
+                        remember_title_audit(self.connection, company, payload)
                 if cursor.rowcount:
                     self.saved += 1
                     self.payload_bytes += len(encoded.encode("utf-8"))

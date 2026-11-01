@@ -10,7 +10,7 @@ from html.parser import HTMLParser
 import json
 import re
 import sys
-from urllib.parse import parse_qsl, urlencode, urlsplit
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit
 
 from .ats import FetchError, HTTPResponse, Inventory, _base, _challenge, _json, _safe_api_url, text
 
@@ -258,6 +258,31 @@ def _detail_description(parser: _Page, title: str) -> str:
     return result.strip()
 
 
+def _snapshot_description(parser: _Page, title: str, contest: str, job_id: str) -> str:
+    """Read the verified Moxa Taleo requisition model, including qualifications.
+
+    The visible document is an empty UI shell. Its initialHistory model has
+    paired display/raw HTML fields, preceded by exact requisition identities.
+    """
+    histories = [item.get("value", "") for item in parser.inputs
+                 if (item.get("id") or item.get("name") or "").casefold() == "initialhistory"]
+    if len(histories) != 1:
+        raise FetchError("partial", "Taleo detail lacks one complete requisition snapshot.")
+    parts = [unquote(value).replace("\\:", ":") for value in histories[0].split("!|!")]
+    if (len(parts) < 18 or parts[2] != "descRequisition" or not job_id
+            or parts[5] != job_id or parts[13] != contest or text(parts[12]) != title
+            or text(unquote(_meta(parser, "og:title"))) != title):
+        raise FetchError("partial", "Taleo detail snapshot does not confirm requisition ID and title.")
+    blocks = parts[14:18]
+    if (blocks[0] != blocks[1] or blocks[2] != blocks[3]
+            or any(not block.startswith("!*!") for block in blocks)):
+        raise FetchError("partial", "Taleo detail description/qualification fields are incomplete or inconsistent.")
+    bodies = [text(block[3:]) for block in (blocks[0], blocks[2])]
+    if not all(bodies):
+        raise FetchError("partial", "Taleo detail lacks full description or qualifications.")
+    return "\n\n".join(bodies)
+
+
 def _posting(item: dict, detail: _Page, code: str, lang: str, root: str, company_id: str, company: str) -> dict:
     if not isinstance(item, dict):
         raise FetchError("partial", "Taleo listing contains a malformed posting.")
@@ -271,9 +296,12 @@ def _posting(item: dict, detail: _Page, code: str, lang: str, root: str, company
     meta_title = text(_meta(detail, "og:title")).split("|", 1)[0].strip()
     if not title:
         title = meta_title
-    if title and title.casefold() not in detail_body.casefold() and title.casefold() not in meta_title.casefold():
-        raise FetchError("partial", "Taleo detail page did not confirm the listing title.")
-    description = _detail_description(detail, title)
+    if urlsplit(root).hostname == "tas-moxa.taleo.net":
+        description = _snapshot_description(detail, title, contest, job_id)
+    else:
+        if title and title.casefold() not in detail_body.casefold() and title.casefold() not in meta_title.casefold():
+            raise FetchError("partial", "Taleo detail page did not confirm the listing title.")
+        description = _detail_description(detail, title)
     row = _base({"id": contest}, "Taleo", company_id, company)
     row.update(
         req_id=contest,
@@ -313,9 +341,17 @@ def fetch_taleo(board: str, root: str, company_id: str, company: str, transport)
         jobs, seen, issues = [], set(), []
         first_ids = None
         total = None
+        snapshots = {}
+        strict = parsed.hostname == "tas-moxa.taleo.net"
         for page_no in range(1, MAX_PAGES + 1):
             data = _json(search_url, transport, _search_payload(page_no))
             entries, total, page_size = _entries(data, page_no)
+            if strict:
+                if snapshots and (total, page_size) != (snapshots[1][1], snapshots[1][2]):
+                    raise FetchError("partial", "Taleo listing changed during pagination.")
+                if len(entries) != min(page_size, max(0, total - (page_no - 1) * page_size)):
+                    raise FetchError("partial", "Taleo listing page is truncated or inconsistent with its total.")
+                snapshots[page_no] = (entries, total, page_size)
             if page_no == 1:
                 first_ids = _ids(entries)
             if not entries:
@@ -348,7 +384,13 @@ def fetch_taleo(board: str, root: str, company_id: str, company: str, transport)
             raise FetchError("partial", "Taleo returned no listing data.")
         if len(seen) != total:
             issues.append(f"Taleo returned {len(seen)} unique postings out of reported total {total}.")
-        if total > 0 and not issues:
+        if not issues and strict:
+            for page_no, saved in snapshots.items():
+                check = _json(search_url, transport, _search_payload(page_no))
+                if _entries(check, page_no) != saved:
+                    issues.append("Taleo board changed during the scan; retry for a complete inventory.")
+                    break
+        elif total > 0 and not issues:
             check = _json(search_url, transport, _search_payload(1))
             check_entries, check_total, _ = _entries(check, 1)
             if check_total != total or _ids(check_entries) != first_ids:

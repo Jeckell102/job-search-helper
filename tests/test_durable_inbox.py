@@ -171,7 +171,7 @@ class DurablePipelineTests(unittest.TestCase):
             destination = __import__('sqlite3').connect(self.root / 'inventories.sqlite3')
             self.inbox.connection.backup(destination)
             destination.close()
-            self.assertEqual(runner.run_start(sync_only=True), 0)
+            self.assertEqual(runner.run_start(sync_only=True, browser_fallback=False), 0)
         self.assertEqual(len(repo.read('Job History')), 4)
         metrics = json.loads((self.root / 'scraper-performance.json').read_text())
         self.assertTrue(all(isinstance(v, (int, float)) for v in metrics.values()))

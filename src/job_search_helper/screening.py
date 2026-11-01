@@ -90,11 +90,11 @@ def _saas_exclusion(description):
     return None
 
 
-def screen_posting(posting):
+def screen_posting(posting, *, skip_title_filter=False):
     title = str(posting.get("title") or "")
     description = plain_text(posting.get("description", ""))
     title_action = classify_title(title)
-    if title_action == "reject":
+    if title_action == "reject" and not skip_title_filter:
         return Screening("Title exclusion: matches title-blacklist.txt.", "")
     note = (
         "Preferred title shortlist match; still requires AI review."

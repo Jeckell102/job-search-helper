@@ -1,0 +1,102 @@
+{
+  "Id": "8c541d69-b27a-4c37-872d-066b76658249",
+  "Title": "Principal / Senior Staff Software Engineer ( 5G PHY )",
+  "Featured": false,
+  "FullTime": true,
+  "HoursPerWeek": null,
+  "JobCategoryName": "Web & Software Development",
+  "Locations": [
+    {
+      "Id": "8e07e25b-25e8-50ce-9e94-23dcf262fdab",
+      "LocalizedName": null,
+      "LocalizedLocationId": null,
+      "LocalizedDescription": "San Diego",
+      "Address": {
+        "Line1": "9450 Carroll Park Drive",
+        "Line2": null,
+        "City": "San Diego",
+        "State": {
+          "Name": "California",
+          "Code": "CA"
+        },
+        "PostalCode": "92121",
+        "Country": {
+          "Id": "ceb81c89-666e-4333-bac0-5d56472da9d0",
+          "Name": "United States",
+          "Code": "USA"
+        }
+      },
+      "DisplayName": false,
+      "DisplayLocationId": false,
+      "DisplayDescription": false,
+      "DisplayAddress": true,
+      "DisplayStreetAddress": false,
+      "Coordinates": {
+        "Longitude": -117.17411494228652,
+        "Latitude": 32.88708081827463
+      },
+      "Shapes": null,
+      "SourceOfTruth": 1,
+      "IsAvailableForOpportunities": true
+    }
+  ],
+  "PostedDate": "2026-08-20T22:28:12.179Z",
+  "UpdatedDate": "2026-10-02T20:27:15.772Z",
+  "RequisitionNumber": "PRINC001669",
+  "Description": "<p>Globalstar (NASDAQ: GSAT) is a leading provider of mobile satellite and terrestrial connectivity solutions with a comprehensive connectivity ecosystem, including XCOM RAN, its software-defined private wireless platform purpose-built for mission-critical network communications.</p>\n<p>XCOM RAN delivers a next-generation Radio Access Network platform designed to deliver secure, high-performance private wireless connectivity for enterprises and government organizations. &nbsp;XCOM RAN has an advanced software-defined architecture and enables the creation of wide-area &ldquo;Supercells&rdquo; that eliminate handoffs and optimize throughput. The solution is engineered for mission-critical environments where reliability, scalability, and low-latency performance are essential, from smart logistics and industrial automation to defense, emergency response, and more.</p>\n<p><strong>What you will be doing at XCOM RAN by Globalstar</strong></p>\n<p>As a <strong>Principal / </strong><strong>Senior Staff Software Engineer</strong>, you will lead a high performing team of software and engineers developing the next generation of high throughput 5G NR wireless systems.&nbsp; This will included architecting, designing, developing, and coding major system features.&nbsp; You will guide and mentor the software team, innovate and improve software development processes, and work with cross function engineering teams.&nbsp; Also, you will work with systems design and test teams to integrate and validate novel 3GPP wireless technology concepts.</p>\n<p><strong>What you will bring to Globalstar</strong></p>\n<ul>\n<li>Bachelor&rsquo;s degree or higher in Computer Science, Computer Engineering, or closely related field</li>\n<li>10+ years of recent and hands-on software development experience with C and/or Modern C++</li>\n<li>7+ years of experience software and algorithm development for PHY ( L1 ) 5G or LTE wireless systems</li>\n<li>7+ years of experience taking complex software from concept to finished custom ready products</li>\n<li>5+ years of experience developing software for real-time Linux systems</li>\n</ul>\n<p><strong>It&rsquo;s a bonus if you have:</strong></p>\n<ul>\n<li>Master's or higher in Computer Science, Computer Engineering, or closely related field</li>\n<li>Networking concepts, protocol, and networking tools (e.g., Wireshark, tcpdump)</li>\n<li>Debugging techniques for real-time software applications</li>\n<li>Kernel debugging including core dump analysis</li>\n<li>Optimizing software performance</li>\n</ul>\n<p>&nbsp;</p>\n<p><strong>Physical Requirements:</strong></p>\n<ul>\n<li>Prolonged periods of sitting at a desk and working on a computer</li>\n</ul>\n<p><strong>Marginal Functions:</strong></p>\n<p>A review of this job description may have omitted some of the marginal functions of the position that are incidental to the performance of the job duties and responsibilities.&nbsp; This job description, in no way, states or implies that these are the only duties and/or responsibilities to be performed by the employee in this position.&nbsp; The employee in this position will be required to follow any other job-related instructions and to perform any other job-related duties requested by his/her supervisor.</p>\n<p><strong>Skills and Competencies:</strong></p>\n<ul>\n<li>Excellent verbal and written communication skills, including the ability to interact clearly and concisely with all departments and levels of management</li>\n<li>Excellent organizational skills with attention-to-detail</li>\n<li>Ability to meet multiple deadlines in a fast-paced environment</li>\n<li>Ability to effectively manage time and prioritize tasks</li>\n<li>Ability to act with integrity, professionalism, and confidentiality</li>\n<li>Proficiency with Microsoft Office</li>\n<li>Familiarity with NetSuite</li>\n<li>Strong problem-solving skills, especially under time constraints</li>\n<li>Ability to identify and seek needed information</li>\n</ul>\n<p><strong>What Globalstar offers:</strong></p>\n<ul>\n<li>Work/Life Balance:&nbsp; Paid Time Off, Paid Holidays</li>\n<li>Financial Benefits:&nbsp; 401(k) Plan with Company Match, Employee Stock Purchase Program, Voluntary and Company Paid Group Life Insurance, Short- and Long-Term Disability Insurance, Medical FSA, Dependent Care, Competitive Salaries</li>\n<li>Health &amp; Wellness:&nbsp; Health Insurance, Dental Insurance, Vision Insurance, Employee Assistance Program, Comprehensive and Interactive Wellness Program</li>\n</ul>\n<p>&nbsp;</p>",
+  "EqualOpportunityEmployerDescription": "Equal Opportunity Employer/Protected Veterans/Individuals with Disabilities<br>\r\nThis employer is required to notify all applicants of their rights pursuant to federal employment laws.\r\nFor further information, please review the <a href='https://www.eeoc.gov/poster' target='_blank'>Know Your Rights</a> notice from the Department of Labor.",
+  "PayTransparencyPolicyStatement": null,
+  "MatchScore": 1.0,
+  "HasApplied": false,
+  "ApplicationJobBoardName": null,
+  "ApplicationJobBoardId": null,
+  "DateApplied": null,
+  "Salaried": true,
+  "CompensationAmount": null,
+  "PublishingStatus": 1,
+  "Links": [],
+  "BehaviorCriteria": [],
+  "MotivationCriteria": [],
+  "EducationCriteria": [],
+  "LicenseAndCertificationCriteria": [],
+  "SkillCriteria": [],
+  "WorkExperienceCriteria": [],
+  "JobBoardMemberships": [
+    {
+      "JobBoardId": "53ba2abe-62b0-600f-6a2c-ab8d24e36ac9",
+      "PublishedInternal": true,
+      "PublishedExternal": false,
+      "ExternalPostedDate": null,
+      "InternalPostedDate": "2026-10-02T20:27:24.905Z"
+    },
+    {
+      "JobBoardId": "52af5eb1-89ea-91b3-206f-25b4ade73869",
+      "PublishedInternal": false,
+      "PublishedExternal": true,
+      "ExternalPostedDate": "2026-10-02T20:27:24.905Z",
+      "InternalPostedDate": null
+    }
+  ],
+  "AssessmentUri": null,
+  "AssessmentStatus": null,
+  "OpportunityIsClosed": false,
+  "TravelRequired": null,
+  "TravelDescription": null,
+  "SupervisorName": null,
+  "Assessments": [],
+  "ApplicationId": null,
+  "CompensationAnnualMinimum": null,
+  "CompensationAnnualMaximum": null,
+  "CompensationHourlyMinimum": null,
+  "CompensationHourlyMaximum": null,
+  "CompensationCurrencyCode": null,
+  "CompensationCurrency": null,
+  "JobLocationType": 1,
+  "PayRangeVisible": false,
+  "PayRange": {
+    "PayRangeMinimum": "200000.00",
+    "PayRangeMaximum": "230000.00"
+  },
+  "PayRangeCurrencyCode": "USD",
+  "OpportunityType": 0
+}

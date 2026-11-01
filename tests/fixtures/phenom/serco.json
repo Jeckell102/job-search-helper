@@ -1,0 +1,212 @@
+{
+  "url": "https://careers.serco-na.com/us/en/search-results",
+  "app": {
+    "refNum": "SUPSUAUS",
+    "baseUrl": "https://careers.serco-na.com/us/en/",
+    "siteType": "external",
+    "locale": "en_us"
+  },
+  "ddo": {
+    "eagerLoadRefineSearch": {
+      "status": 200,
+      "hits": 10,
+      "totalHits": 512,
+      "data": {
+        "jobs": [
+          {
+            "reqId": "34711",
+            "title": "ANG F-16 MTC/MTT-G Simulator Facility Mission Support - Joint Base Andrews, MD",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "34711",
+            "jobSeqNo": "SUPSUAUS34711EXTERNALENUS",
+            "postedDate": "2026-08-05T12:37:55.000+0000",
+            "category": "Engineering"
+          },
+          {
+            "reqId": "12600",
+            "title": "Surface Ship Production Lead",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "12600",
+            "jobSeqNo": "SUPSUAUS12600EXTERNALENUS",
+            "postedDate": "2026-10-07T20:40:49.394+0000",
+            "category": "Other"
+          },
+          {
+            "reqId": "35351",
+            "title": "Senior Marine Electrician (Norfolk, VA)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "35351",
+            "jobSeqNo": "SUPSUAUS35351EXTERNALENUS",
+            "postedDate": "2026-09-18T15:56:57.000+0000",
+            "category": "Engineering/Ship Construction"
+          },
+          {
+            "reqId": "35356",
+            "title": "Advanced Mechanical Assembler (Norfolk, VA)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "35356",
+            "jobSeqNo": "SUPSUAUS35356EXTERNALENUS",
+            "postedDate": "2026-09-18T15:59:33.000+0000",
+            "category": "Production/Skilled Trade/Warehouse"
+          },
+          {
+            "reqId": "35501",
+            "title": "Air Traffic Control Specialist - Bellingham, WA (BLI)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "35501",
+            "jobSeqNo": "SUPSUAUS35501EXTERNALENUS",
+            "postedDate": "2026-09-28T17:53:20.000+0000",
+            "category": "Aviation"
+          },
+          {
+            "reqId": "34487",
+            "title": "Senior Electrical/Electronics Engineering Technician - Portsmouth, NH",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "34487",
+            "jobSeqNo": "SUPSUAUS34487EXTERNALENUS",
+            "postedDate": "2026-07-15T19:49:36.000+0000",
+            "category": "Navy"
+          },
+          {
+            "reqId": "34590",
+            "title": "Personnel Employment Assistant II",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "34590",
+            "jobSeqNo": "SUPSUAUS34590EXTERNALENUS",
+            "postedDate": "2026-07-23T17:14:40.000+0000",
+            "category": "Customer Service"
+          },
+          {
+            "reqId": "35032",
+            "title": "Senior Program Analyst - Washington, D.C.",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "35032",
+            "jobSeqNo": "SUPSUAUS35032EXTERNALENUS",
+            "postedDate": "2026-08-28T12:36:46.000+0000",
+            "category": "Engineering/Ship Construction"
+          },
+          {
+            "reqId": "34155",
+            "title": "Driver Examiner I- Part-Time-Perm-Dryden",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "34155",
+            "jobSeqNo": "SUPSUAUS34155EXTERNALENUS",
+            "postedDate": "2026-08-06T15:18:21.000+0000",
+            "category": "Customer Service"
+          },
+          {
+            "reqId": "35549",
+            "title": "Intermediate Management Analyst 1",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "siteType": "external",
+            "jobId": "35549",
+            "jobSeqNo": "SUPSUAUS35549EXTERNALENUS",
+            "postedDate": "2026-09-29T13:17:57.000+0000",
+            "category": "Business Systems/Analysis"
+          }
+        ],
+        "keywords": ""
+      },
+      "eid": {
+        "searchType": "allJobs",
+        "query": ""
+      }
+    }
+  },
+  "params": {
+    "from": "0"
+  },
+  "detail": {
+    "url": "https://careers.serco-na.com/us/en/job/34711",
+    "ddo": {
+      "jobDetail": {
+        "status": 200,
+        "data": {
+          "job": {
+            "salary": "$120194.94-$200324.21",
+            "jobUpdatedDate": "2026-10-07T20:40:50.543+0000",
+            "siteType": "external",
+            "reqId": "34711",
+            "jobId": "34711",
+            "refNum": "SUPSUAUS",
+            "description": "<h3>Position Description & Qualifications</h3><br><p><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">Serco is excited to support the\u00a0Air Force Modeling and Simulation Support Services\u00a0(AFMS3) contract. The primary purpose of this contract is to ensure that the Department of the Air Force (DAF), Department of Defense (DoD), and External Partner Agencies maintain cutting-edge Modeling and Simulation (M&amp;S) capabilities that are secure, interoperable, and efficient. The contractor will provide comprehensive support and innovative solutions that enable the continuous evolution and enhancement of M&amp;S systems, ensuring that the DAF and DoD can effectively prepare for and execute their missions with the highest level of readiness and lethality.</span></p><p style=\"text-align: center;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><strong>Must have an active U.S. Department of War (DoW) Secret security clearance.\u00a0</strong></span></p><p><br><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">Daily Schedules will consist of two simulator periods per day for local unit availability. Each simulator period will allow enough time to accomplish a mission briefing, mission execution (1 hour minimum per Ready Aircrew Program requirements), plus a full debrief. All aspect of mission execution to include start and stop times of simulator periods, mission type and scenario, and required mission materials will be coordinated with the host unit. In addition, a third period will be required to provide networked DMO (Distributed Mission Operations) in support of the DTOC (Distributed Training Operations Center) in Des Moines, Iowa.</span></p><p>\u00a0</p><p><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">In this role, you will:</span></p><ul><li><span data-teams=\"true\">Manage all aspects of simulator console operations along with threat scenario development. </span></li><li><span data-teams=\"true\">Conduct simulator periods for local unit availability.</span></li><li><span data-teams=\"true\">Support mission briefing, mission execution, and a full debrief. </span></li><li><span data-teams=\"true\">Coordinate all aspects of mission execution and required mission materials with the host unit.</span></li></ul><p style=\"text-align: center;\">\u00a0</p><p><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">To be successful in this role you will have:</span></p><ul><li style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">An active DoW Secret Security Clearance.</span><ul><li style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">A U.S. citizenship</span></li></ul></li><li style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">The possibility to telecommute (Part-time)</span></li><li style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">A Bachelor\u2019s degree (or additional years of relevant experience in technical, engineering, cybersecurity, or program management fields in lieu of degree)</span></li><li style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">12 years of experience</span></li><li style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">Prior experience supporting AFMS, or other DoD M&amp;S programs is strongly desired</span></li><li style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">The ability to travel 10%</span></li><li style=\"font-family: tahoma, arial, helvetica, sans-serif;\"><span style=\"font-family: tahoma, arial, helvetica, sans-serif;\">Provides operational insight and assists in the development and prioritization of requirements, strategy development, capability assessments, analysis of alternatives, documentation development and analysis. Makes recommendations and implements opportunities to mitigate risk.</span></li></ul><br><h3>Company Overview</h3>\n<br>\n<p>Serco Inc. (Serco) is the Americas division of Serco Group, plc. In North America, Serco\u2019s 9,000+ employees strive to make an impact every day across 100+ sites in the areas of Defense, Citizen Services, and Transportation. We help our clients deliver vital services more efficiently while increasing the satisfaction of their end customers. Serco serves every branch of the U.S. military, numerous U.S. Federal civilian agencies, the Intelligence Community, the Canadian government, state, provincial and local governments, and commercial clients. While your place may look a little different depending on your role, we know you will find yours here. Wherever you work and whatever you do, we invite you to discover your place in our world. Serco is a place you can count on and where you can make an impact because every contribution matters.\n<br><br>\nTo review Serco benefits please visit: <a href=\"https://careers.serco-na.com/us/en/what-we-offer\" target=\"_blank\" rel=\"noopener noreferrer\">https://careers.serco-na.com/us/en/what-we-offer</a>. If you require an accommodation with the application process please email: <a href=\"mailto:careers@serco-na.com\">careers@serco-na.com</a> or call the HR Service Desk at 800-628-6458, option 1. Please note, due to EEOC/OFCCP compliance, Serco is unable to accept resumes by email.\n<br><br>\nCandidates may be asked to present proof of identity during the selection process. If requested, this will require presentation of a government-issued I.D. (with photo) with name and address that match the information entered on the application. Serco will not take possession of or retain/store the information provided as proof of identity. For more information on how Serco uses your information, please see our Applicant Privacy Policy and Notice.\n<br><br>\nSerco does not accept unsolicited resumes through or from search firms or staffing agencies without being a contracted approved vendor. All unsolicited resumes will be considered the property of Serco and will not be obligated to pay a placement or contract fee. If you are interested in becoming an approved vendor at Serco, please email <a href=\"mailto:Agencies@serco-na.com\">Agencies@serco-na.com</a>.\n<br><br>\nSerco is an equal opportunity employer. We evaluate qualified applicants without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, disability, veteran status, and other legally protected characteristics.</p>\n<br>\n<h3>Pay Transparency</h3>\n<br>\n<p>Our Total Rewards package includes competitive pay, performance-based incentives, and benefits that promote well-being and work-life balance\u2014so you can thrive both professionally and personally. Eligible employees also gain access to a wide range of benefits from comprehensive health coverage and health savings accounts to retirement plans, life and disability insurance, and time-off programs that support work-life balance. Program availability may vary based on factors such as contract type, location, hire date, and applicable collective bargaining agreements.\n    <br><br>\nSalary range: The range for this position can be found at the top of this posting. This range is provided as a general guideline and represents a good faith estimate across all experience levels. Actual base salary will be determined by a variety of factors, including but not limited to, the scope of the role, relevant experience, job-related knowledge, education and training, key skills, and geographic market considerations. For roles available in multiple states, the range may vary to reflect differences in local labor markets. In addition to base salary, eligible positions may include other forms of compensation such as annual bonuses or long-term incentive opportunities.\nBenefits \u2013 Comprehensible benefits for full-time employees (part-time employees receive a limited package tailored to their role):\n<br><br>\n<ul>\n<li>Medical, dental, and vision insurance</li>\n<li>Robust vacation and sick leave benefits, and flexible work arrangements where permitted by role or contract</li>\n<li>401(k) plan that includes employer matching funds</li>\n<li>Tuition reimbursement program</li>\n<li>Life insurance and disability coverage</li>\n<li>Optional coverages that can be purchased, including pet insurance, home and auto insurance, additional life and accident insurance, critical illness insurance, group legal, ID theft protection</li>\n<li>Birth, adoption, parental leave benefits</li>\n<li>Employee Assistance Plan</li>\n</ul>\n<br><br>\n<p>\nTo review all Serco benefits please visit: <a href=\"https://careers.serco-na.com/us/en/about-us\" target=\"_blank\" rel=\"noopener noreferrer\">https://careers.serco-na.com/us/en/about-us</a>.\n<br><br>\nSerco complies with all applicable state and local leave laws, including providing time off under the Colorado Healthy Families and Workplaces Act for eligible Colorado residents, in alignment with our policies and benefit plans. The application window for this position is for no more than 60 days. We encourage candidates to apply promptly after the posting date, as the position may close earlier if filled or if the application volume exceeds expectations. Please submit applications exclusively through Serco\u2019s external (or internal) career site. If an applicant has any concerns with job posting compliance, please send an email to: <a href=\"mailto:careers@serco-na.com\">careers@serco-na.com</a>.</p>",
+            "title": "ANG F-16 MTC/MTT-G Simulator Facility Mission Support - Joint Base Andrews, MD",
+            "jobSeqNo": "SUPSUAUS34711EXTERNALENUS",
+            "postedDate": "2026-08-05T12:37:55.000+0000",
+            "postingStatus": "Approved",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering",
+            "multi_location": [
+              {
+                "location": "Andrews AFB, Maryland, US, 20762"
+              },
+              {
+                "location": "Alexandria, Virginia, US, 22311"
+              },
+              {
+                "location": "Washington, District of Columbia, US, 20005"
+              },
+              {
+                "location": "Anacostia Annex, District of Columbia, US, 20373"
+              },
+              {
+                "location": "Bethesda, Maryland, US, 20889"
+              },
+              {
+                "location": "Arlington, Washington, US, 98223"
+              },
+              {
+                "location": "Indian Head, Maryland, US, 20640"
+              },
+              {
+                "location": "Pax River, Maryland, US, 20670"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,2035 @@
+{
+  "count": 42,
+  "jobRequisitions": [
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "25-163",
+      "jobTitle": "Senior Engineer Software (Embedded)",
+      "reqId": "5001121396900",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-318",
+      "jobTitle": "Temporary Engineering Recruiter",
+      "reqId": "5001230221406",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-254",
+      "jobTitle": "Senior Electrical Engineer",
+      "reqId": "5001213375800",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-326",
+      "jobTitle": "Production Manager - Machine Shop and Assembly Operations",
+      "reqId": "5001231458400",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-345",
+      "jobTitle": "Environmental Technician I",
+      "reqId": "5001234737600",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-348",
+      "jobTitle": "Global Account Manager - Boeing",
+      "reqId": "5001234930900",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-312",
+      "jobTitle": "Technician III",
+      "reqId": "5001229203900",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-310",
+      "jobTitle": "Senior Electrical Engineer",
+      "reqId": "5001229086400",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-309",
+      "jobTitle": "Technical Trainer II",
+      "reqId": "5001228442206",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-194",
+      "jobTitle": "Software Verification Engineer (DO-178C)",
+      "reqId": "5001193252300",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-244",
+      "jobTitle": "Senior Systems Engineer",
+      "reqId": "5001210286600",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-247",
+      "jobTitle": "Senior Accountant & Analyst - Manufacturing",
+      "reqId": "5001210916900",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-322",
+      "jobTitle": "Manufacturing Engineer II",
+      "reqId": "5001231050400",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947206",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Brownsville",
+            "postalCode": "78521",
+            "lineOne": "5964 South Padre Island Highway\nSuite B",
+            "countrySubdivisionLevel1": {
+              "codeValue": "TX",
+              "longName": "Texas"
+            }
+          },
+          "nameCode": {
+            "codeValue": "60410",
+            "longName": "Kearfott - Brownsville"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-320",
+      "jobTitle": "Warehouse Clerk, Temporary",
+      "reqId": "5001230510800",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-342",
+      "jobTitle": "Proposal Manager",
+      "reqId": "5001234660100",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-276",
+      "jobTitle": "Embedded Software Verification Engineer",
+      "reqId": "5001221768700",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-339",
+      "jobTitle": "Sr. Quality Engineer (APQP)",
+      "reqId": "5001234300600",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-231",
+      "jobTitle": "Project Scheduler",
+      "reqId": "5001206323600",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-267",
+      "jobTitle": "Electrical/Components Engineer",
+      "reqId": "5001217299400",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-284",
+      "jobTitle": "Systems Engineer II",
+      "reqId": "5001222930400",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-340",
+      "jobTitle": "Group Lead - Materials",
+      "reqId": "5001234477100",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-214",
+      "jobTitle": "Manager, Business Development - Airborne Systems",
+      "reqId": "5001200371900",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-112",
+      "jobTitle": "Airworthiness & Certification Engineer",
+      "reqId": "5001174545100",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-277",
+      "jobTitle": "Software Quality Assurance Engineer",
+      "reqId": "5001221780300",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-317",
+      "jobTitle": "Sr. Engineering Project Manager",
+      "reqId": "5001229676600",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947206",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Brownsville",
+            "postalCode": "78521",
+            "lineOne": "5964 South Padre Island Highway\nSuite B",
+            "countrySubdivisionLevel1": {
+              "codeValue": "TX",
+              "longName": "Texas"
+            }
+          },
+          "nameCode": {
+            "codeValue": "60410",
+            "longName": "Kearfott - Brownsville"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-341",
+      "jobTitle": "Maintenance Helper, Temporary",
+      "reqId": "5001234647600",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-305",
+      "jobTitle": "ENGINEERING INTERN",
+      "reqId": "5001227239800",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-294",
+      "jobTitle": "Senior Program Manager",
+      "reqId": "5001225602700",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-332",
+      "jobTitle": "Systems Safety Engineer",
+      "reqId": "5001231972800",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-335",
+      "jobTitle": "Senior Electrical Engineer",
+      "reqId": "5001233776900",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-327",
+      "jobTitle": "Cost Analyst I",
+      "reqId": "5001231683300",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-330",
+      "jobTitle": "Mechanical Design Engineer (Electronics Packaging)",
+      "reqId": "5001231946400",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-325",
+      "jobTitle": "Test Equipment Engineer",
+      "reqId": "5001231363600",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-324",
+      "jobTitle": "Industry 4.0 Solutions Architect & Implementation Engineer",
+      "reqId": "5001231205906",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-331",
+      "jobTitle": "Mechanical Engineering Analyst",
+      "reqId": "5001231951500",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-316",
+      "jobTitle": "Senior Systems Engineer",
+      "reqId": "5001229641000",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-336",
+      "jobTitle": "Senior Mechanical Engineer",
+      "reqId": "5001233778900",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-219",
+      "jobTitle": "Staff Embedded Software Engineer",
+      "reqId": "5001202571700",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-220",
+      "jobTitle": "Contracts Administrator",
+      "reqId": "5001202617600",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-337",
+      "jobTitle": "QA Engineering Tech I (Outline/Shipping Inspection)",
+      "reqId": "5001234228700",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947306",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Pine Brook",
+            "postalCode": "07058",
+            "lineOne": "19 Chapin Road\nBuilding C",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NJ",
+              "longName": "New Jersey"
+            }
+          },
+          "nameCode": {
+            "codeValue": "50401",
+            "longName": "Kearfott GND"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-328",
+      "jobTitle": "Test Engineering CO-OP (Spring 2027)",
+      "reqId": "5001231792800",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000032",
+      "canApply": true
+    },
+    {
+      "organizationalUnits": [],
+      "workLocations": [],
+      "postingLocations": [],
+      "requisitionLocations": [
+        {
+          "itemID": "5000416947406",
+          "address": {
+            "country": {
+              "codeValue": "USA",
+              "longName": "United States"
+            },
+            "cityName": "Black Mountain",
+            "postalCode": "28711",
+            "lineOne": "2858 US HWY 70",
+            "countrySubdivisionLevel1": {
+              "codeValue": "NC",
+              "longName": "North Carolina"
+            },
+            "geoCoordinate": {
+              "latitude": 35.605042,
+              "longitude": -82.276717
+            }
+          },
+          "nameCode": {
+            "codeValue": "60400",
+            "longName": "Kearfott MSD"
+          },
+          "aliasNames": [
+            {
+              "nameValue": "",
+              "typeCode": {
+                "codeValue": ""
+              }
+            }
+          ],
+          "postingIndicator": false,
+          "primaryIndicator": true
+        }
+      ],
+      "careerSiteDomains": [
+        "kearfott"
+      ],
+      "clientRequisitionID": "26-338",
+      "jobTitle": "QA Engineering Tech I (Machine Shop/CMM Inspection)",
+      "reqId": "5001234261200",
+      "easyApplyEnabled": false,
+      "type": "Normal",
+      "gridControl": "00000034",
+      "canApply": true
+    }
+  ]
+}

@@ -12,6 +12,12 @@ from .ats import FetchError, HTTPResponse, Inventory, _base, _challenge, _safe_a
 
 MAX_PAGES = 200
 MAX_HTML_BYTES = 2 * 1024 * 1024
+PERATON_COMPANY_ID = "COMP-0004"
+PERATON_HOST = "careers-peraton.icims.com"
+# Peraton's public board is large and changes while it is being read. Bound
+# this exception so a widespread detail outage cannot be disguised as a few
+# ordinary posting closures.
+MAX_PERATON_RETIRED_DETAILS = 3
 FILTERS = frozenset({"searchKeyword", "searchRelation", "searchCategory", "searchPositionType",
                      "searchLocation", "searchCompany", "searchZip", "searchRadius"})
 DISPLAY_PARAMS = frozenset({"in_iframe", "ss", "pr", "mobile", "needsRedirect", "bga", "width",
@@ -25,8 +31,12 @@ def _job_id(path):
     match = re.fullmatch(r"/jobs/([0-9]+)/([^/]+)/job/?", path)
     if not match:
         raise ValueError("iCIMS posting URL is not a public job detail.")
+    # Public iCIMS title slugs can contain an encoded tab (%09). Keep it
+    # encoded in requests; the numeric path component defines job identity.
     slug = unquote(match[2])
-    if (slug in {".", ".."} or any(c in slug for c in "/\\?#") or any(ord(c) < 32 for c in slug)
+    if (any(ord(c) < 32 for c in match[2])
+            or slug in {".", ".."} or any(c in slug for c in "/\\?#")
+            or any(ord(c) < 32 and c != "\t" for c in slug)
             or re.search(r"%[0-9A-Fa-f]{2}", slug)):
         raise ValueError("iCIMS posting URL has an invalid path.")
     return match[1]
@@ -273,11 +283,19 @@ def _posting(parser, ident, url, company_id, company):
     return row
 
 
+def _peraton_retired_detail(company_id, root, error):
+    """True only for the audited Peraton board's individual 404 churn case."""
+    return (company_id == PERATON_COMPANY_ID
+            and urlsplit(root).hostname == PERATON_HOST
+            and error.status == "failed"
+            and "iCIMS HTTP 404" in error.reason)
+
+
 def fetch_icims(board, root, company_id, company, transport):
     source = root + board
     query = dict(parse_qsl(urlsplit(source).query))
     endpoint = source.split("?", 1)[0]
-    jobs, seen = [], set()
+    jobs, seen, retired_details = [], set(), []
     expected_pages, first_entries = None, []
     context = "iCIMS listing"
     try:
@@ -294,7 +312,17 @@ def fetch_icims(board, root, company_id, company, transport):
                     raise FetchError("partial", "iCIMS repeated a posting or results page.")
                 seen.add(ident)
                 context = "iCIMS job detail " + url
-                jobs.append(_posting(_html(url + "?in_iframe=1", transport), ident, url, company_id, company))
+                try:
+                    jobs.append(_posting(_html(url + "?in_iframe=1", transport), ident, url, company_id, company))
+                except FetchError as error:
+                    if (_peraton_retired_detail(company_id, root, error)
+                            and len(retired_details) < MAX_PERATON_RETIRED_DETAILS):
+                        retired_details.append(url)
+                        print(json.dumps({"event": "inventory_detail_skipped", "provider": "iCIMS",
+                                          "company_id": company_id, "posting_id": ident,
+                                          "reason": "public detail returned HTTP 404 during scan"}), file=sys.stderr)
+                        continue
+                    raise
             print(json.dumps({"event": "inventory_page", "provider": "iCIMS", "company_id": company_id,
                               "page": page + 1, "pages": total, "postings_fetched": len(jobs)}), file=sys.stderr)
             if page + 1 >= total:
@@ -307,7 +335,12 @@ def fetch_icims(board, root, company_id, company, transport):
             total, entries = _listing(_html(url, transport), source, 1)
             if total != expected_pages or entries != first_entries:
                 raise FetchError("partial", "iCIMS board changed during the scan; retry for a complete inventory.")
-        return Inventory("complete", jobs, f"iCIMS: retrieved {len(jobs)} full postings across {expected_pages} results pages.", source)
+        reason = f"iCIMS: retrieved {len(jobs)} full postings across {expected_pages} results pages."
+        if retired_details:
+            reason += (f" Peraton skipped {len(retired_details)} listing detail(s) that returned HTTP 404 "
+                       f"during this scan; inventory is incomplete and must not be used for closure reconciliation.")
+            return Inventory("partial", jobs, reason, source)
+        return Inventory("complete", jobs, reason, source)
     except FetchError as error:
         status = "blocked" if error.status == "blocked" else ("partial" if jobs else error.status)
         return Inventory(status, jobs, context + ": " + error.reason, source)

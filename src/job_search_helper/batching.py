@@ -2,8 +2,17 @@
 from __future__ import annotations
 
 import copy
+import uuid
 
+from .core import canonicalize_url
 from .repository import SCHEMAS, RepositoryError, _equivalent, IdentityIndex
+
+
+def _safe_canonical_url(value):
+    try:
+        return canonicalize_url(value)
+    except ValueError:
+        return ""
 
 
 def _identity_label(identity):
@@ -31,6 +40,8 @@ class PlanningRepository:
     """
     def __init__(self, repository, rows=None):
         self.base = repository
+        self.is_local = getattr(repository, 'is_local', False)
+        self.schemas = getattr(repository, 'schemas', SCHEMAS)
         self.rows = self._load_planning_rows(repository) if rows is None else rows
         self.operations = []
         self._reindex()
@@ -57,14 +68,15 @@ class PlanningRepository:
         return {
             "Companies": repository.read("Companies"),
             "Job History": cls._read_column_rows(repository, "Job History", [
-                "Company", "Job Key", "Official Job URL", "Requisition ID",
+                "Company", "Job Key", "Official Job URL", "Requisition ID", "Job Title",
                 "Current Snapshot", "Added to Opportunities?", "Review Status",
-                "Decision", "Reconsideration Count", "Description Hash",
+                "Decision", "Reconsideration Count", "Description Hash", "Source Hash",
                 "Rejection Reason", "Review Notes", "Job Status",
                 "Consecutive Missing Scans", "Prior Job Key",
             ]),
             "Job Evidence": cls._read_column_rows(repository, "Job Evidence", ["Job Key", "Source Hash"]),
-            "Opportunities": cls._read_column_rows(repository, "Opportunities", ["Company", "Job URL"]),
+            "Opportunities": cls._read_column_rows(repository, "Opportunities", ["Company", "Job URL"] +
+                (['Opportunity ID'] if 'Opportunity ID' in repository.schemas['Opportunities'] else [])),
             "Scan Cycles": cls._read_column_rows(repository, "Scan Cycles", ["Cycle ID"]),
         }
 
@@ -74,7 +86,9 @@ class PlanningRepository:
     def history_candidates(self, company, key, url):
         index = self.indexes["Job History"]
         candidates = dict(index.matches({"Company": company, "Job Key": key}))
-        candidates.update(index.matches({"Company": company, "Official Job URL": url}))
+        for number, row in index.matches({"Company": company}):
+            if row.get("Official Job URL") and _safe_canonical_url(row["Official Job URL"]) == url:
+                candidates[number] = row
         return list(candidates.values())
 
     def opportunity_candidates(self, company, urls):
@@ -91,6 +105,16 @@ class PlanningRepository:
         if tab not in SCHEMAS:
             raise RepositoryError("Tab is not operationally allowlisted")
         return self.rows[tab]
+
+    def read_columns(self, tab, headers):
+        """Expose cached numbered values for read-only engine helpers."""
+        if tab not in SCHEMAS:
+            raise RepositoryError("Tab is not operationally allowlisted")
+        unknown = set(headers) - set(SCHEMAS[tab])
+        if unknown:
+            raise RepositoryError("Unknown column requested: " + ", ".join(sorted(unknown)))
+        return [(number, {header: row.get(header, "") for header in headers})
+                for number, row in enumerate(self.rows[tab])]
 
     def validate_schema(self):
         return True  # read_many has validated the authoritative schema.
@@ -112,12 +136,18 @@ class PlanningRepository:
         # Simulate only record values. Validation/format protection belongs to
         # the real fresh-read commit, not this cached approximation.
         for op in operations:
+            op = copy.deepcopy(op)
             tab = op["tab"]
             if tab not in SCHEMAS:
                 raise RepositoryError("Unapproved planning tab")
             identity = op["identity"]
             indexed = self.indexes[tab].matches(identity)
             matches = [r for _, r in indexed]
+            if (tab == 'Opportunities' and self.is_local and len(matches) > 1
+                    and all(r.get('Opportunity ID') for r in matches)):
+                self.commit([dict(copy.deepcopy(op), identity={'Opportunity ID': row['Opportunity ID']})
+                             for row in matches])
+                continue
             if len(matches) > 1:
                 sample = " | ".join(_match_label(row) for row in matches[:3])
                 raise RepositoryError(
@@ -127,6 +157,9 @@ class PlanningRepository:
             if not matches:
                 if not op.get("append_if_missing"):
                     raise RepositoryError("Expected row no longer exists")
+                if (tab == 'Opportunities' and self.is_local
+                        and 'Opportunity ID' in self.schemas['Opportunities']):
+                    op.setdefault('on_insert', {}).setdefault('Opportunity ID', 'OPP-' + uuid.uuid4().hex)
                 row = {h: "" for h in SCHEMAS[tab]}
                 row.update(op.get("on_insert", {}))
                 row.update(identity)
@@ -158,7 +191,9 @@ class PlanningRepository:
                     "Companies": ("Company ID",), "Scan Cycles": ("Cycle ID",)}[tab]
             index = IdentityIndex(enumerate(self.rows[tab]))
             for row in rows:
-                identity = {key: row[key] for key in keys}
+                identity = ({'Opportunity ID': row['Opportunity ID']}
+                            if tab == 'Opportunities' and row.get('Opportunity ID')
+                            else {key: row[key] for key in keys})
                 matches = index.matches(identity)
                 if len(matches) == 1:
                     self.rows[tab][matches[0][0]] = copy.deepcopy(row)

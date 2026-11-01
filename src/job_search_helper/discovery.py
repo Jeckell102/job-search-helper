@@ -64,10 +64,12 @@ def _public_addresses(host):
 class CareersTransport:
     """Fetch public HTML without cookies, proxies, automatic redirects or credentials."""
 
-    def __init__(self, timeout=15, interval=0.4, sleep=time.sleep):
+    def __init__(self, timeout=15, interval=0.4, sleep=time.sleep, accept=None, max_bytes=MAX_HTML_BYTES):
         self.timeout = timeout
         self.interval = interval
         self.sleep = sleep
+        self.accept = accept or "text/html,application/xhtml+xml"
+        self.max_bytes = max_bytes
         self.last_request = 0.0
         self.context = ssl.create_default_context()
 
@@ -91,11 +93,11 @@ class CareersTransport:
                         target += "?" + parsed.query
                     connection.request("GET", target, headers={
                         "User-Agent": "JobSearchHelper/1.0 (public careers-board discovery; read-only)",
-                        "Accept": "text/html,application/xhtml+xml", "Accept-Encoding": "identity",
+                        "Accept": self.accept, "Accept-Encoding": "identity",
                     })
                     response = connection.getresponse()
-                    body = response.read(MAX_HTML_BYTES + 1)
-                    if len(body) > MAX_HTML_BYTES:
+                    body = response.read(self.max_bytes + 1)
+                    if len(body) > self.max_bytes:
                         raise FetchError("unsupported", "Careers page exceeds the discovery size limit; provide its ATS board URL.")
                     return HTTPResponse(response.status, body, dict(response.getheaders()))
                 except ssl.SSLError:
@@ -175,6 +177,17 @@ def _same_public_host(left, right):
     return left_host == right_host
 
 
+
+def _careers_subdomain(origin_url, target_url):
+    """Follow explicit jobs links to a dedicated subdomain of this employer."""
+    try:
+        origin = urlsplit(public_careers_url(origin_url)).hostname.removeprefix("www.")
+        target = urlsplit(public_careers_url(target_url)).hostname
+    except FetchError:
+        return False
+    return target in {prefix + "." + origin for prefix in ("careers", "jobs", "talent", "searchcareers")}
+
+
 def _cta_candidates(parser, origin_url):
     candidates = []
     seen = set()
@@ -183,7 +196,7 @@ def _cta_candidates(parser, origin_url):
             url = public_careers_url(urljoin(parser.base_url, link["href"]))
         except FetchError:
             continue
-        if url in seen or url == parser.page_url or not _same_public_host(origin_url, url):
+        if url in seen or url == parser.page_url or not (_same_public_host(origin_url, url) or _careers_subdomain(origin_url, url)):
             continue
         parsed = urlsplit(url)
         haystack = " ".join((
@@ -202,8 +215,10 @@ def _select_board(ats, boards):
     if len(boards) > 1:
         raise FetchError("unsupported", "Multiple ATS boards linked by careers page; select the company's board explicitly.")
     if not boards:
-        raise FetchError("unsupported", "No supported ATS link found on careers page; it may use another ATS or require JavaScript. Provide a direct Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, or Taleo board URL.")
+        raise FetchError("unsupported", "No supported ATS link found on careers page; it may use another ATS or require JavaScript. Provide a direct Greenhouse, Lever, Ashby, Workday, iCIMS, ADP Workforce Now, Paylocity, Taleo, or BambooHR board URL.")
     name, board, root = next(iter(boards))
+    if name in {"Jibe", "TalentBrew"}:
+        return name, board, root
     try:
         resolve_board(ats, root + board)
     except (ValueError, TypeError):
@@ -216,12 +231,12 @@ def discover_board(ats, careers_url, transport=None):
         raise FetchError("unsupported", "Shared/parent board requires an explicit company scope; automatic discovery cannot assign all parent-company jobs.")
     transport = transport or CareersTransport()
     origin_url = public_careers_url(careers_url)
-    queue = [(origin_url, 0)]
+    queue = [(origin_url, 0, frozenset())]
     visited = set()
     boards = {}
     unsupported = set()
     while queue and len(visited) < MAX_DISCOVERY_PAGES:
-        url, redirects = queue.pop(0)
+        url, redirects, redirect_chain = queue.pop(0)
         if url in visited:
             continue
         visited.add(url)
@@ -240,13 +255,17 @@ def discover_board(ats, careers_url, transport=None):
             if candidates:
                 board = _select_board(ats, candidates)
                 return board, url
-            if target in visited:
+            if target in redirect_chain or target == url:
                 raise FetchError("failed", "Careers redirect loop; verify Official Careers URL.")
+            if target in visited:
+                # A separate navigation link can converge on an already-read
+                # canonical page. Skip that branch, not the rest of discovery.
+                continue
             if not _same_public_host(url, target):
                 raise FetchError("unsupported", "Careers page redirects to another host without a supported board URL; verify and record its destination.")
             if redirects >= MAX_REDIRECTS:
                 raise FetchError("failed", "Careers redirect limit reached; verify Official Careers URL.")
-            queue.insert(0, (target, redirects + 1))
+            queue.insert(0, (target, redirects + 1, redirect_chain | {url}))
             continue
         if not 200 <= response.status < 300:
             raise FetchError("failed", f"Careers page HTTP {response.status}; board discovery did not complete.")
@@ -258,6 +277,11 @@ def discover_board(ats, careers_url, transport=None):
         parser = _BoardLinks(url)
         parser.feed(response.body.decode("utf-8", "replace"))
         parser.close()
+        from .shared_boards import embedded_boards
+        embedded = embedded_boards(response.body.decode("utf-8", "replace"), url)
+        if embedded:
+            selected = _select_board(ats, {(b.name, b.path, b.root) for b in embedded})
+            return selected, url
         unsupported.update(_unsupported_ats_candidates(parser.links, parser.base_url))
         for board in _board_candidates(parser.links, parser.base_url):
             boards[board] = url
@@ -268,7 +292,7 @@ def discover_board(ats, careers_url, transport=None):
             return board, boards[board]
         for candidate in _cta_candidates(parser, origin_url):
             if candidate not in visited and all(candidate != item[0] for item in queue):
-                queue.append((candidate, 0))
+                queue.append((candidate, 0, frozenset()))
     if queue:
         raise FetchError("partial", "No supported ATS link found within the bounded careers-page discovery limit; the careers page is reachable but inventory completeness is unknown.")
     if unsupported:

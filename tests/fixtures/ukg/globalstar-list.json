@@ -1,0 +1,442 @@
+{
+  "opportunities": [
+    {
+      "Id": "8c541d69-b27a-4c37-872d-066b76658249",
+      "Featured": false,
+      "Title": "Principal / Senior Staff Software Engineer ( 5G PHY )",
+      "RequisitionNumber": "PRINC001669",
+      "FullTime": true,
+      "JobCategoryName": "Web & Software Development",
+      "Locations": [
+        {
+          "Id": "8e07e25b-25e8-50ce-9e94-23dcf262fdab",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "San Diego",
+          "Address": {
+            "Line1": "9450 Carroll Park Drive",
+            "Line2": null,
+            "City": "San Diego",
+            "PostalCode": "92121",
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.88708081827463,
+            "Longitude": -117.17411494228652
+          }
+        }
+      ],
+      "PostedDate": "2026-10-02T20:27:24.905Z",
+      "BriefDescription": "As a Principal / Senior Staff Software Engineer, you will lead a high performing team of software and engineers developing the next generation of high throughput 5G NR wireless systems.\u00a0 This will included architecting, designing, developing, and coding major system features.\u00a0 You will guide and mentor the software team, innovate and improve software development processes, and work with cross function engineering teams.\u00a0 Also, you will work with systems design and test teams to integrate and validate novel 3GPP wireless technology concepts.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "de818e2c-51bb-4d49-8b9c-19130f19018d",
+      "Featured": false,
+      "Title": "Senior Spacecraft Systems Engineer for Data Handling Subsystems",
+      "RequisitionNumber": "SENIO001662",
+      "FullTime": true,
+      "JobCategoryName": "Satellite Engineering",
+      "Locations": [
+        {
+          "Id": "9d3291fc-fa01-4e6b-a9c4-08c3a96aa7c7",
+          "LocalizedName": "Milpitas",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": null,
+            "Line2": null,
+            "City": "Milpitas",
+            "PostalCode": null,
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 37.432830804180064,
+            "Longitude": -121.89712990422797
+          }
+        }
+      ],
+      "PostedDate": "2026-09-24T23:36:10.621Z",
+      "BriefDescription": "As a Senior Spacecraft Systems Engineer for the Data Handling Subsystems, you will lead the design, management, support, and test of LEO Satellite systems for data routing and telemetry.  You will be working with a collaborative team on existing and new LEO satellites constellations.\n\nThis position requires access to technologies and technical data subject to the Export Administration Regulations (EAR). All applicants must be a 'U.S. person' as defined by 15 C.F.R. \u00a7 772.1 (a U.S. citizen, permanent resident alien, or protected individual).",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "99bfbbfa-ebc7-4008-8ffd-b7187de0bd63",
+      "Featured": false,
+      "Title": "Senior Systems Satellite Engineer",
+      "RequisitionNumber": "SENIO001444",
+      "FullTime": true,
+      "JobCategoryName": "Systems Engineering",
+      "Locations": [
+        {
+          "Id": "9d3291fc-fa01-4e6b-a9c4-08c3a96aa7c7",
+          "LocalizedName": "Milpitas",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": null,
+            "Line2": null,
+            "City": "Milpitas",
+            "PostalCode": null,
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 37.432830804180064,
+            "Longitude": -121.89712990422797
+          }
+        }
+      ],
+      "PostedDate": "2026-09-24T23:35:09.112Z",
+      "BriefDescription": "Are you an experienced Senior Systems Satellite Engineer looking for a new opportunity with a global company?  Do you want to be part of a team that is keeping people around the world connected?  If you answered yes to these questions, then this is YOUR opportunity.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "14c3f758-ab39-4118-a6e5-97443a677835",
+      "Featured": false,
+      "Title": "Senior Mission Analyst",
+      "RequisitionNumber": "MISSI001633",
+      "FullTime": true,
+      "JobCategoryName": "Satellite Engineering",
+      "Locations": [
+        {
+          "Id": "9d3291fc-fa01-4e6b-a9c4-08c3a96aa7c7",
+          "LocalizedName": "Milpitas",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": null,
+            "Line2": null,
+            "City": "Milpitas",
+            "PostalCode": null,
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 37.432830804180064,
+            "Longitude": -121.89712990422797
+          }
+        },
+        {
+          "Id": "224eedbe-d79e-51ef-b556-a588cf299a3a",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Head Office",
+          "Address": {
+            "Line1": "1351 Holiday Square Blvd",
+            "Line2": null,
+            "City": "Covington",
+            "PostalCode": "70433",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": true,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.431295482105043,
+            "Longitude": -90.088531476176
+          }
+        }
+      ],
+      "PostedDate": "2026-09-24T23:31:06.05Z",
+      "BriefDescription": "As a\u00a0Senior Mission Analyst,\u00a0you will\u00a0perform daily orbit\u00a0determination\u00a0calculations\u00a0and\u00a0support\u00a0orbit raising operations,\u00a0for\u00a0both old and\u00a0new Low Earth Orbiting\u00a0satellites. Several new satellites are\u00a0scheduled for launch\u00a0this\u00a0and next year, and you\u00a0will be part of the team\u00a0supporting the establishment and maintenance of this constellation.\n\nThis position requires access to technologies and technical data subject to the Export Administration Regulations (EAR). All applicants must be a 'U.S. person' as defined by 15 C.F.R. \u00a7 772.1 (a U.S. citizen, permanent resident alien, or protected individual).",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "04d4135a-e89b-4fdf-87c1-0f5bdbaedb3f",
+      "Featured": false,
+      "Title": "Regulatory Representative",
+      "RequisitionNumber": "REGUL001677",
+      "FullTime": true,
+      "JobCategoryName": "Legal, Regulatory Affairs",
+      "Locations": [
+        {
+          "Id": "224eedbe-d79e-51ef-b556-a588cf299a3a",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Head Office",
+          "Address": {
+            "Line1": "1351 Holiday Square Blvd",
+            "Line2": null,
+            "City": "Covington",
+            "PostalCode": "70433",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": true,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.431295482105043,
+            "Longitude": -90.088531476176
+          }
+        }
+      ],
+      "PostedDate": "2026-09-16T21:35:03.147Z",
+      "BriefDescription": "Globalstar is hiring a Regulatory Representative\nAre you an experienced Regulatory Representative in the DC area looking for a new opportunity with a global company?  Do you want to be part of a team that is keeping people around the world connected?  If you answered yes to these questions, then this is YOUR opportunity.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "738b7c6a-7690-4273-8812-b90485ee96cc",
+      "Featured": false,
+      "Title": "Electronics Engineering Technician",
+      "RequisitionNumber": "ELECT001655",
+      "FullTime": true,
+      "JobCategoryName": "Quality Assurance",
+      "Locations": [
+        {
+          "Id": "224eedbe-d79e-51ef-b556-a588cf299a3a",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Head Office",
+          "Address": {
+            "Line1": "1351 Holiday Square Blvd",
+            "Line2": null,
+            "City": "Covington",
+            "PostalCode": "70433",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": true,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.431295482105043,
+            "Longitude": -90.088531476176
+          }
+        }
+      ],
+      "PostedDate": "2026-07-17T13:36:32.42Z",
+      "BriefDescription": "Globalstar is hiring an Electronics Engineering Technician \nAre you an experienced Electronics Engineering Technician looking for a new opportunity with a global company?  Do you want to be part of a team that is keeping people around the world connected?  If you answered yes to these questions, then this is YOUR opportunity.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "bb7f02dd-2a3b-4d50-8f97-46401f9c276b",
+      "Featured": false,
+      "Title": "Product Assurance Engineer",
+      "RequisitionNumber": "PRODU001656",
+      "FullTime": true,
+      "JobCategoryName": "Product Engineering",
+      "Locations": [
+        {
+          "Id": "224eedbe-d79e-51ef-b556-a588cf299a3a",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Head Office",
+          "Address": {
+            "Line1": "1351 Holiday Square Blvd",
+            "Line2": null,
+            "City": "Covington",
+            "PostalCode": "70433",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": true,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.431295482105043,
+            "Longitude": -90.088531476176
+          }
+        }
+      ],
+      "PostedDate": "2026-07-17T13:34:48.098Z",
+      "BriefDescription": "Globalstar is hiring a Product Assurance Engineer\nAre you an experienced Product Assurance Engineer looking for a new opportunity with a global company?  Do you want to be part of a team that is keeping people around the world connected?  If you answered yes to these questions, then this is YOUR opportunity.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "2662d53b-fbf7-47da-855e-358550201720",
+      "Featured": false,
+      "Title": "Gateway QA Specialist",
+      "RequisitionNumber": "GWQAS001628",
+      "FullTime": true,
+      "JobCategoryName": "Gateway Operations",
+      "Locations": [
+        {
+          "Id": "224eedbe-d79e-51ef-b556-a588cf299a3a",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Head Office",
+          "Address": {
+            "Line1": "1351 Holiday Square Blvd",
+            "Line2": null,
+            "City": "Covington",
+            "PostalCode": "70433",
+            "State": {
+              "Code": "LA",
+              "Name": "Louisiana"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": true,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 30.431295482105043,
+            "Longitude": -90.088531476176
+          }
+        },
+        {
+          "Id": "8e07e25b-25e8-50ce-9e94-23dcf262fdab",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "San Diego",
+          "Address": {
+            "Line1": "9450 Carroll Park Drive",
+            "Line2": null,
+            "City": "San Diego",
+            "PostalCode": "92121",
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.88708081827463,
+            "Longitude": -117.17411494228652
+          }
+        }
+      ],
+      "PostedDate": "2026-04-15T19:34:22.016Z",
+      "BriefDescription": "Globalstar is hiring a Gateway Quality Analyst Specialist\nAre you an experienced Gateway Quality Analyst Specialist looking for a new opportunity with a global company?  Do you want to be part of a team that is keeping people around the world connected?  If you answered yes to these questions, then this is YOUR opportunity.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    }
+  ],
+  "totalCount": 8,
+  "locations": []
+}

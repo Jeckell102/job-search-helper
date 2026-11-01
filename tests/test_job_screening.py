@@ -23,27 +23,37 @@ class PreferenceTests(unittest.TestCase):
             "Product Owner", "Product Line Manager", "Solutions Engineer", "Pre-Sales Engineer",
             "Sales Engineer", "Customer Engineer", "Product Engineer", "Product Specialist",
             "Technical Product Specialist", "Field Support Engineer", "Field Service Engineer",
-            "Senior Product Manager", "Lead Field Applications Engineer",
+            "Senior Product Manager", "Lead Field Applications Engineer", "Technical Program Manager",
+            "Technical Project Manager", "Staff Field Solutions Engineer", "Network Deployment Engineer",
         )
         for title in preferred:
             with self.subTest(title=title):
                 result = self.screen(title=title)
                 self.assertIsNone(result.reason)
                 self.assertIn("shortlist match", result.review_note)
-        for title in ("Technical Program Manager", "Integration Engineer", "Operations Manager",
+        for title in ("Integration Engineer", "Operations Manager",
                       "Product Marketing Manager", "Support Engineer", "Unusual Customer Role"):
             with self.subTest(title=title):
                 result = self.screen(title=title)
                 self.assertIsNone(result.reason)
                 self.assertIn("retained for AI", result.review_note)
 
-    def test_existing_blacklist_still_wins_and_saas_is_added(self):
-        for title in ("Staff Product Manager", "Principal Applications Engineer", "Director of Product",
-                      "SaaS Product Manager", "Product Manager, Software-as-a-Service",
-                      "Senior Engineer, Field Service", "Lead Engineer, Field Support",
-                      "Product Manager, Development", "Product Manager, Research"):
+    def test_existing_hard_blacklist_still_wins_and_saas_is_added(self):
+        for title in ("Principal Applications Engineer", "SaaS Product Manager",
+                      "Product Manager, Software-as-a-Service", "Senior Engineer, Field Service",
+                      "Lead Engineer, Field Support", "Product Manager, Research",
+                      "Software Engineer / Solutions Engineer", "Systems Engineer - Mission Integration"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "reject")
+
+    def test_recovered_opportunity_title_families_are_not_blacklisted(self):
+        for title in ("Staff Product Manager", "Staff Field Solutions Engineer", "Director of Product",
+                      "Director of Field Engineering", "Product Manager, Development",
+                      "Senior Field Engineer - Electrical/Mechanical Integration",
+                      "Field Test Engineer, Maritime", "Senior System Test Engineer",
+                      "Applications Engineer, Learning & Development", "Senior Business Development Engineer"):
+            with self.subTest(title=title):
+                self.assertNotEqual(classify_title(title), "reject")
 
     def test_salary_floor_is_inclusive_and_missing_pay_survives(self):
         for compensation in ("", "$120,000 annual base", "$95,000 - $120,000", "$110k - 160k",
@@ -145,11 +155,11 @@ class ScreeningIntegrationTests(unittest.TestCase):
         return self.repo.read("Job History")
 
     def test_ambiguous_job_reaches_ai_with_all_evidence(self):
-        row = self.stage(title="Technical Program Manager", description="Unusual but potentially relevant work.")[0]
+        row = self.stage(title="Implementation Manager", description="Unusual but potentially relevant work.")[0]
         self.assertEqual(row["Review Status"], "Needs Review")
         self.assertEqual(row["Added to Opportunities?"], "Pending")
         self.assertIn("retained for AI", row["Review Notes"])
-        self.assertEqual(row["Job Description"], "Unusual but potentially relevant work.")
+        self.assertTrue(row["Job Description"].startswith("See Job Evidence tab:"))
 
     def test_explicit_exclusion_is_auditable_and_idempotent(self):
         row = self.stage(description="Travel up to 75%.")[0]

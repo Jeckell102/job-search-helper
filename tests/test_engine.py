@@ -13,6 +13,7 @@ from unittest.mock import patch
 from job_search_helper.ats import Inventory
 from job_search_helper.core import POLICY_VERSION, job_key, material_hash, pack_snapshot, unpack_snapshot
 from job_search_helper.engine import Engine, State
+from job_search_helper.batching import PlanningRepository
 from job_search_helper.repository import MemoryRepository, RepositoryError
 
 
@@ -161,6 +162,12 @@ class EngineAcceptanceTests(unittest.TestCase):
             self.assertEqual(self.engine.status(cycle)["status"], "Complete with exceptions")
         self.assertEqual(self.history(), original)
 
+    def test_partial_scan_clears_stale_block_reason(self):
+        self.user_edit("Companies", 0, **{"Blocked Reason": "Old blocked failure"})
+        self.inventory = Inventory("partial", [posting()], "Incomplete page")
+        self.begin()
+        self.assertEqual(self.repo.read("Companies")[0]["Blocked Reason"], "")
+
     def test_blocked_scan_never_closes_or_updates_verification(self):
         self.accept_initial()
         original = self.history()
@@ -268,6 +275,22 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.import_values(cycle, self.decision(cycle))
         self.assertEqual(self.history()["Reconsideration Count"], 0)
         self.assertEqual(len(self.repo.read("Job History")), 1)
+
+    def test_malformed_existing_history_url_does_not_block_company_scan(self):
+        self.repo = MemoryRepository({"Companies": [company()], "Job History": [{
+            "Company": "Acme", "Job Title": "Old Imported Row", "Job Key": "old-bad-url",
+            "Official Job URL": "not a URL", "Reconsideration Count": 0,
+            "Current Snapshot": pack_snapshot({
+                "v": 1, "evaluations": [], "inventory_source": company()["Official Careers URL"],
+            }),
+        }]})
+        self.engine.repo = self.repo
+
+        cycle = self.begin()
+
+        rows = self.repo.read("Job History")
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(self.engine.status(cycle)["companies"]["C-1"]["stage"], "complete")
 
     def test_remote_commit_local_checkpoint_crash_recovery_no_duplicate(self):
         cycle = self.begin()
@@ -469,6 +492,145 @@ class EngineAcceptanceTests(unittest.TestCase):
             self.engine.resume(cycle)
         self.assertEqual(self.repo.read("Job History"), history_before)
         self.assertEqual(self.repo.read("Opportunities"), opportunities_before)
+
+    def test_leonardo_legacy_requisition_key_migrates_only_verified_same_url(self):
+        source = "https://careers.leonardodrs.com/job/Bridgeton-Field-Service-Manager-MO-63044/1428159000/"
+        leonardo = company("Leonardo DRS", "COMP-0081")
+        legacy_posting = posting("1428159000", company_id="COMP-0081", company="Leonardo DRS",
+                                 ats="SuccessFactors", req_id="115435", url=source,
+                                 title="Field Service Manager",
+                                 description="Job ID: 115435\nField Service Manager responsibilities and qualifications.")
+        legacy = {
+            "Company": "Leonardo DRS",
+            "Job Title": "Field Service Manager — 115435",
+            "Job Key": "leonardo drs|req:115435", "Requisition ID": "115435",
+            "Official Job URL": source,
+            "Added to Opportunities?": "Yes", "Review Status": "Manual Review",
+            "Source Hash": material_hash(legacy_posting),
+        }
+        self.repo = MemoryRepository({"Companies": [leonardo], "Job History": [legacy], "Opportunities": []})
+        self.inventory = Inventory("complete", [legacy_posting], "Leonardo DRS captured board")
+        self.engine = Engine(self.repo, self.state, fetcher=self.fetch)
+        cycle = self.engine.start_cycle(["COMP-0081"])
+        self.engine.resume(cycle)
+        rows = self.repo.read("Job History")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["Job Key"], "comp-0081:successfactors:1428159000")
+        self.assertEqual(rows[0]["Prior Job Key"], "leonardo drs|req:115435")
+        self.assertEqual(rows[0]["Added to Opportunities?"], "Yes")
+        self.assertEqual(rows[0]["Review Status"], "Manual Review")
+
+    def test_leonardo_legacy_migration_changed_source_reopens_review_preserving_user_fields(self):
+        source = "https://careers.leonardodrs.com/job/Bridgeton-Field-Service-Manager-MO-63044/1428159000/"
+        leonardo = company("Leonardo DRS", "COMP-0081")
+        posting_now = posting("1428159000", company_id="COMP-0081", company="Leonardo DRS",
+                              ats="SuccessFactors", req_id="115435", url=source,
+                              title="Field Service Manager",
+                              description="Job ID: 115435\nUpdated responsibilities and qualifications.")
+        legacy = {
+            "Company": "Leonardo DRS", "Job Title": "Field Service Manager — 115435",
+            "Job Key": "leonardo drs|req:115435", "Requisition ID": "115435",
+            "Official Job URL": source, "Added to Opportunities?": "Yes",
+            "Review Status": "Manual Review", "Source Hash": "old-source-hash",
+        }
+        self.repo = MemoryRepository({"Companies": [leonardo], "Job History": [legacy], "Opportunities": []})
+        self.inventory = Inventory("complete", [posting_now], "Leonardo DRS captured board")
+        self.engine = Engine(self.repo, self.state, fetcher=self.fetch)
+        cycle = self.engine.start_cycle(["COMP-0081"])
+        self.engine.resume(cycle)
+        row = self.repo.read("Job History")[0]
+        self.assertEqual(row["Job Key"], "comp-0081:successfactors:1428159000")
+        self.assertEqual(row["Prior Job Key"], "leonardo drs|req:115435")
+        self.assertEqual(row["Added to Opportunities?"], "Yes")
+        self.assertEqual(row["Review Status"], "Needs Review")
+
+    def test_local_planning_cache_loads_legacy_title_and_requisition_columns(self):
+        source = "https://careers.leonardodrs.com/job/Bridgeton-Field-Service-Manager-MO-63044/1428159000/"
+        leonardo = company("Leonardo DRS", "COMP-0081")
+        legacy = {
+            "Company": "Leonardo DRS", "Job Title": "Field Service Manager — 115435",
+            "Job Key": "leonardo drs|req:115435", "Requisition ID": "115435",
+            "Official Job URL": source, "Current Snapshot": "",
+        }
+        base = MemoryRepository({"Companies": [leonardo], "Job History": [legacy], "Opportunities": []})
+
+        class CachedRepository:
+            schemas = base.schemas
+            is_local = True
+            def read_cached_columns(self, *_args, **_kwargs):
+                return None
+            def read(self, tab):
+                return base.read(tab)
+            def read_columns(self, tab, headers):
+                return base.read_columns(tab, headers)
+
+        planning = PlanningRepository(CachedRepository())
+        row = planning.rows["Job History"][0]
+        self.assertEqual(row["Job Title"], "Field Service Manager — 115435")
+        self.assertEqual(row["Requisition ID"], "115435")
+
+    def test_same_url_different_verified_provider_ids_stays_manual_disambiguation(self):
+        source = "https://careers.leonardodrs.com/job/Bridgeton-Field-Service-Manager-MO-63044/1428159000/"
+        leonardo = company("Leonardo DRS", "COMP-0081")
+        current = posting("1428159000", company_id="COMP-0081", company="Leonardo DRS",
+                          ats="SuccessFactors", req_id="115435", url=source,
+                          title="Field Service Manager")
+        prior = posting("9999999", company_id="COMP-0081", company="Leonardo DRS",
+                        ats="SuccessFactors", req_id="9999999", url=source,
+                        title="Field Service Manager")
+        row = {
+            "Company": "Leonardo DRS", "Job Key": "comp-0081:successfactors:9999999",
+            "Requisition ID": "9999999", "Official Job URL": source,
+            "Current Snapshot": pack_snapshot({
+                "v": 1, "evaluated": prior, "pending": None, "evaluations": [],
+            }),
+        }
+        repo = MemoryRepository({"Companies": [leonardo], "Job History": [row], "Opportunities": []})
+        engine = Engine(repo, self.state, fetcher=self.fetch)
+        with self.assertRaisesRegex(ValueError, "Manual disambiguation|identity"):
+            engine._history(current, leonardo)
+
+    def test_legacy_requisition_migration_rejects_title_or_snapshot_identity_mismatch(self):
+        source = "https://careers.leonardodrs.com/job/Bridgeton-Field-Service-Manager-MO-63044/1428159000/"
+        leonardo = company("Leonardo DRS", "COMP-0081")
+        current = posting("1428159000", company_id="COMP-0081", company="Leonardo DRS",
+                          ats="SuccessFactors", req_id="115435", url=source,
+                          title="Field Service Manager")
+        for label, old_title, old_snapshot in (
+            ("title", "Unrelated Manager", ""),
+            ("snapshot", "Field Service Manager — 115435", pack_snapshot({
+                "v": 1, "evaluated": posting("9999999", company_id="COMP-0081", company="Leonardo DRS",
+                                                ats="SuccessFactors", req_id="115435", url=source,
+                                                title="Field Service Manager"),
+                "pending": None, "evaluations": [],
+            })),
+        ):
+            with self.subTest(label=label):
+                row = {"Company": "Leonardo DRS", "Job Title": old_title,
+                       "Job Key": "leonardo drs|req:115435", "Requisition ID": "115435",
+                       "Official Job URL": source, "Current Snapshot": old_snapshot}
+                repo = MemoryRepository({"Companies": [leonardo], "Job History": [row], "Opportunities": []})
+                engine = Engine(repo, self.state, fetcher=self.fetch)
+                with self.assertRaisesRegex(ValueError, "Manual disambiguation|identity"):
+                    engine._history(current, leonardo)
+
+    def test_leonardo_legacy_requisition_migration_rejects_wrong_namespace_req_or_provider_collision(self):
+        source = "https://careers.leonardodrs.com/job/Bridgeton-Field-Service-Manager-MO-63044/1428159000/"
+        leonardo = company("Leonardo DRS", "COMP-0081")
+        current = posting("1428159000", company_id="COMP-0081", company="Leonardo DRS",
+                          ats="SuccessFactors", req_id="115435", url=source,
+                          title="Field Service Manager — 115435")
+        for old_key, old_req in (("other drs|req:115435", "115435"),
+                                 ("leonardo drs|req:999999", "999999"),
+                                 ("comp-0081:successfactors:115435", "115435")):
+            with self.subTest(old_key=old_key):
+                row = {"Company": "Leonardo DRS", "Job Key": old_key,
+                       "Requisition ID": old_req, "Official Job URL": source,
+                       "Current Snapshot": ""}
+                repo = MemoryRepository({"Companies": [leonardo], "Job History": [row], "Opportunities": []})
+                engine = Engine(repo, self.state, fetcher=self.fetch)
+                with self.assertRaisesRegex(ValueError, "Manual disambiguation|identity"):
+                    engine._history(current, leonardo)
 
     def test_inventory_from_different_board_does_not_close_prior_board_jobs(self):
         self.accept_initial()

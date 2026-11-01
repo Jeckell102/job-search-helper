@@ -68,11 +68,23 @@ class TerminalDashboard:
             self.worker_state[slot] = {"task": "Fetching", "company": company, "detail": ""}
             self._render_locked()
 
-    def worker_handoff(self, slot, company, job_count):
+    def worker_handoff(self, slot, company, job_count, *, status=None,
+                       pending_urls=0, discovery_incomplete=False):
+        outcome = ''
+        if status is not None:
+            outcome = 'complete' if status == 'complete' and not (pending_urls or discovery_incomplete) else status
+            if pending_urls or discovery_incomplete:
+                outcome = 'partial'
+            if pending_urls:
+                outcome += f'; {pending_urls} links unresolved'
+            if discovery_incomplete:
+                outcome += '; listing unfinished'
+        detail = f"{job_count} jobs" + (f"; {outcome}" if outcome else '')
         with self.lock:
-            self.worker_state[slot] = {"task": "Saved locally", "company": company, "detail": f"{job_count} jobs"}
-            if job_count > 0:
-                self.worker_events.appendleft(f"Worker {slot} - {job_count} jobs - {company} - {_stamp()}")
+            self.worker_state[slot] = {"task": "Saved locally", "company": company, "detail": detail}
+            if job_count > 0 or (status is not None and status != 'complete'):
+                label = f"{outcome.split(';', 1)[0]} - " if outcome else ''
+                self.worker_events.appendleft(f"Worker {slot} - {label}{job_count} jobs - {company} - {_stamp()}")
             self._render_locked()
 
     def local_queue(self, ready, planned=0):

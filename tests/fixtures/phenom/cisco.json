@@ -1,0 +1,362 @@
+{
+  "url": "https://careers.cisco.com/global/en/search-results",
+  "app": {
+    "refNum": "CISCISGLOBAL",
+    "baseUrl": "https://careers.cisco.com/global/en/",
+    "siteType": "external",
+    "locale": "en_global"
+  },
+  "ddo": {
+    "eagerLoadRefineSearch": {
+      "status": 200,
+      "hits": 10,
+      "totalHits": 1368,
+      "data": {
+        "jobs": [
+          {
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2023799",
+            "jobId": "2023799",
+            "title": "Senior Software Engineer (Remote)",
+            "jobSeqNo": "CISCISGLOBAL2023799EXTERNALENGLOBAL",
+            "postedDate": "2026-09-24T00:00:00.000+0000",
+            "department": "Supervisory Organization 0007900 (Alessandro Boch)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Product and Engineering"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Hybrid",
+            "reqId": "2024708",
+            "jobId": "2024708",
+            "title": "Software Engineering Technical Leader (Remote)",
+            "jobSeqNo": "CISCISGLOBAL2024708EXTERNALENGLOBAL",
+            "postedDate": "2026-09-30T00:00:00.000+0000",
+            "department": "Supervisory Organization 1853956 (Aaron Hall)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Product and Engineering"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2023298",
+            "jobId": "2023298",
+            "title": "Director, Pricing Strategy and Monetization (Remote)",
+            "jobSeqNo": "CISCISGLOBAL2023298EXTERNALENGLOBAL",
+            "postedDate": "2026-09-30T00:00:00.000+0000",
+            "department": "Supervisory Organization 1358364 (Parichit Sahay)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Business Development and Strategy"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2024007",
+            "jobId": "2024007",
+            "title": "Sr. Product Marketing Manager, Smart Cameras",
+            "jobSeqNo": "CISCISGLOBAL2024007EXTERNALENGLOBAL",
+            "postedDate": "2026-09-28T00:00:00.000+0000",
+            "department": "Supervisory Organization 1870093 (Josh van Tonder)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Marketing and Communications"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2020255",
+            "jobId": "2020255",
+            "title": "Principal Software Engineer (Security & Policy Platform) (Remote)",
+            "jobSeqNo": "CISCISGLOBAL2020255EXTERNALENGLOBAL",
+            "postedDate": "2026-09-22T00:00:00.000+0000",
+            "department": "Supervisory Organization 1879044 (Karin Lundberg)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Product and Engineering"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2021211",
+            "jobId": "2021211",
+            "title": "Distinguished Software Engineer  (Remote)",
+            "jobSeqNo": "CISCISGLOBAL2021211EXTERNALENGLOBAL",
+            "postedDate": "2026-08-13T00:00:00.000+0000",
+            "department": "Supervisory Organization 1879044 (Karin Lundberg)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Product and Engineering"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2023134",
+            "jobId": "2023134",
+            "title": "Engineering Product Manager - Mobility",
+            "jobSeqNo": "CISCISGLOBAL2023134EXTERNALENGLOBAL",
+            "postedDate": "2026-10-06T00:00:00.000+0000",
+            "department": "Supervisory Organization 0023718 (Vamsi Kuppur)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Product and Engineering"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2025915",
+            "jobId": "2025915",
+            "title": "Industrial IOT Account Executive - Central East Region",
+            "jobSeqNo": "CISCISGLOBAL2025915EXTERNALENGLOBAL",
+            "postedDate": "2026-09-23T00:00:00.000+0000",
+            "department": "Supervisory Organization 0000916 (Anastasia Mills)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Sales"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Hybrid",
+            "reqId": "2027934",
+            "jobId": "2027934",
+            "title": "Sales Development Representative II  (Full Time) United States Splunk",
+            "jobSeqNo": "CISCISGLOBAL2027934EXTERNALENGLOBAL",
+            "postedDate": "2026-10-06T00:00:00.000+0000",
+            "department": "",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Other"
+          },
+          {
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2024016",
+            "jobId": "2024016",
+            "title": "Technical Product Marketing Manager, Cisco Wireless",
+            "jobSeqNo": "CISCISGLOBAL2024016EXTERNALENGLOBAL",
+            "postedDate": "2026-09-28T00:00:00.000+0000",
+            "department": "Supervisory Organization 1870093 (Josh van Tonder)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Marketing and Communications"
+          }
+        ],
+        "keywords": ""
+      },
+      "eid": {
+        "searchType": "allJobs",
+        "query": ""
+      }
+    }
+  },
+  "params": {
+    "from": "0"
+  },
+  "detail": {
+    "url": "https://careers.cisco.com/global/en/job/2023799",
+    "ddo": {
+      "jobDetail": {
+        "status": 200,
+        "data": {
+          "job": {
+            "jobUpdatedDate": "2026-10-06T18:09:36.486+0000",
+            "siteType": "external",
+            "RemoteType": "Remote",
+            "reqId": "2023799",
+            "jobId": "2023799",
+            "refNum": "CISCISGLOBAL",
+            "description": "The application window is expected to close on: 11/29/2026<p><span style=\"color:#000000\"><span style=\"font-size:medium\">This is a fully remote role and can be based anywhere in the United States.</span></span></p><br /><h2><span style=\"color:#000000\">Meet the Team</span></h2><br /><p><span style=\"color:#000000\"><span style=\"font-size:medium\">Isovalent, now part of Cisco, is the company founded by the creators of Cilium and eBPF. Cisco Isovalent is building the next generation of products for securing workloads and AI infrastructure using advanced technologies across Linux and Windows.</span></span></p><p><span style=\"color:#000000\"><span style=\"font-size:medium\">Our software agent team builds high-performance, secure, and lightweight software agents that run across traditional and modern workloads in on-premises and cloud environments. These agents collect rich information about workloads and system activity, provide network and runtime visibility, enforce security policies, and help protect containerized and endpoint environments.</span></span></p><p><span style=\"color:#000000\"><span style=\"font-size:medium\">As part of the Windows agent engineering team, you will focus on extending these security capabilities to Windows environments. You will work closely with senior engineers, architects, and cross-functional teams to develop system-level security capabilities while contributing to a cross-platform product spanning Windows and Linux.</span></span></p><br /><h2><span style=\"color:#000000\">Your Impact</span></h2><br /><p><span style=\"color:#000000\"><span style=\"font-size:medium\">As a Software Engineer on the software agent team, you will develop and enhance runtime security features for a Windows-based endpoint agent. You will use systems programming, Windows platform APIs, operating system fundamentals, and networking concepts to build reliable and efficient security capabilities that operate close to the underlying operating system.</span></span></p><p><span style=\"color:#000000\"><span style=\"font-size:medium\">You will investigate Windows platform behavior and interactions between user-mode and kernel-mode components while designing and implementing endpoint security and system-monitoring functionality. You will participate in architecture and design discussions with senior engineers and architects, troubleshoot complex implementation issues, and optimize software for performance and reliability.</span></span></p><p><span style=\"color:#000000\"><span style=\"font-size:medium\">Because our products operate across platforms, you will also collaborate with engineers developing related capabilities across Linux and other environments. The features you develop will contribute to Cisco Isovalent&#39;s ability to provide security, visibility, and protection across modern enterprise, data center, and cloud workloads.</span></span></p><br /><h2><span style=\"color:#000000\">Key Responsibilities:</span></h2><br /><ul><li style=\"color:black !important\"><span style=\"color:#000000\">Develop and enhance runtime security features for a Windows-based endpoint agent.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Design and implement systems-level endpoint security and monitoring capabilities using Go, C, and C&#43;&#43;.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Participate in architecture, design, and implementation discussions with senior engineers and architects.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Develop software using Windows system programming interfaces, including Win32 APIs, File I/O, and Winsock.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Investigate Windows platform behavior, APIs, and interactions between user-mode and kernel-mode components.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Develop multi-threaded and multi-process applications and system-level software.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Debug and resolve complex implementation issues and perform code reviews to improve software quality.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Analyze and optimize feature performance to ensure efficient endpoint operation.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Collaborate with cross-functional teams to understand runtime security requirements and translate them into reliable software solutions.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Contribute to cross-platform security capabilities spanning Windows and Linux environments.</span></li></ul><br /><h2><span style=\"color:#000000\">Minimum Qualifications:</span></h2><br /><ul><li style=\"color:black !important\"><span style=\"color:#000000\">Bachelor&#39;s degree with 5&#43; years of software development experience, or a Master&#39;s degree with 4&#43; years of software development experience</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience with systems programming using C, or C&#43;&#43;, including multi-threaded and multi-process application development.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">2 &#43; year\u2019s experience with operating system fundamentals, including threads, processes, file systems, networking, and inter-process communication.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience with Windows system programming, including Win32 APIs, File I/O, Winsock, and familiarity with API hooking concepts.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience debugging and troubleshooting complex software systems.</span></li></ul><br /><h2><span style=\"color:#000000\">Preferred Qualifications:</span></h2><h2><br /></h2><ul><li style=\"color:black !important\"><span style=\"color:#000000\">Understanding of Windows kernel concepts and how user-mode and kernel-mode components interact.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience developing endpoint security, cybersecurity, or system-monitoring software.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience with Windows kernel programming, driver development, or low-level Windows internals.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Familiarity with malware detection techniques, endpoint protection technologies, or security monitoring concepts.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience with network programming and security-related protocols.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience implementing complex systems-level software features in production environments.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience analyzing and optimizing performance for systems-level or endpoint software.</span></li><li style=\"color:black !important\"><span style=\"color:#000000\">Experience collaborating with senior engineers and architects on software architecture and technical design decisions.</span></li></ul><p>#LN-RN1</p><p></p><h1>Why Cisco?\u00a0</h1><p>At Cisco, we\u2019re revolutionizing how data and infrastructure connect and protect organizations in the AI era \u2013 and beyond. We\u2019ve been innovating fearlessly for 40 years to create solutions that power how humans and technology work together across the physical and digital worlds. These solutions provide customers with unparalleled security, visibility, and insights across the entire digital footprint.</p><p>Fueled by the depth and breadth of our technology, we experiment and create meaningful solutions. Add to that our worldwide network of doers and experts, and you\u2019ll see that the opportunities to grow and build are limitless. We work as a team, collaborating with empathy to make really big things happen on a global scale. Because our solutions are everywhere, our impact is everywhere.\u00a0</p><p>We are Cisco, and our power starts with you.\u00a0</p><p></p><h1>Message to applicants applying to work in the U.S. and/or Canada:</h1><p></p>The starting salary range posted for this position is $167,700.00 to $245,200.00 and reflects the projected salary range for new hires in this position in U.S. and/or Canada locations, not including incentive compensation*, equity, or benefits.<p></p><p>Individual pay is determined by the candidate&#39;s hiring location, market conditions, job-related skillset, experience, qualifications, education, certifications, and/or training. The full salary range for certain locations is listed below. For locations not listed below, the recruiter can share more details about compensation for the role in your location during the hiring process.</p><p></p><p>U.S. employees are offered benefits, subject to Cisco\u2019s plan eligibility rules, which include medical, dental and vision insurance, a 401(k) plan with a Cisco matching contribution, paid parental leave, short and long-term disability coverage, and basic life insurance. Please see the Cisco careers site to discover more benefits and perks.\u00a0 Employees may be eligible to receive grants of Cisco restricted stock units, which vest following continued employment with Cisco for defined periods of time.</p><p></p><p>U.S. employees are eligible for paid time away as described below, subject to Cisco\u2019s policies:</p><ul><li><p>10 paid holidays per full calendar year, plus 1 floating holiday for non-exempt employees</p></li><li><p>1 paid day off for employee\u2019s birthday, paid year-end holiday shutdown, and 4 paid days off for personal wellness determined by Cisco</p></li><li><p>Non-exempt employees** receive 16 days of paid vacation time per full calendar year, accrued at rate of 4.92 hours per pay period for full-time employees</p></li><li><p>Exempt employees participate in Cisco\u2019s flexible vacation time off program, which has no defined limit on how much vacation time eligible employees may use (subject to availability and some business limitations)</p></li><li><p>80 hours of sick time off provided on hire date and each January 1st thereafter, and up to 80 hours of\u00a0unused sick time\u00a0carried forward\u00a0from one calendar year\u00a0to the next</p></li><li><p>Additional paid time away may be requested to deal with critical or emergency issues for family members</p></li><li><p>Optional 10 paid days per full calendar year to volunteer</p></li></ul><p></p><p>For non-sales roles, employees are also eligible to earn annual bonuses subject to Cisco\u2019s policies.</p><p></p><p>Employees on sales plans earn performance-based incentive pay on top of their base salary, which is split between quota and non-quota components, subject to the applicable Cisco plan. For quota-based incentive pay, Cisco typically pays as follows:</p><ul><li><p>.75% of incentive target for each 1% of revenue attainment up to 50% of quota;</p></li><li><p>1.5% of incentive target for each 1% of attainment between 50% and 75%;</p></li><li><p>1% of incentive target for each 1% of attainment between 75% and 100%; and</p></li><li><p>Once performance exceeds 100% attainment, incentive rates are at or above 1% for each 1% of attainment with no cap on incentive compensation.</p></li></ul><p></p><p>For non-quota-based sales performance elements such as strategic sales objectives, Cisco may pay 0% up to 125% of target. Cisco sales plans do not have a minimum threshold of performance for sales incentive compensation to be paid.</p><p></p><p>The applicable full salary ranges for this position, by specific state, are listed below:</p><p></p><p>New York City Metro Area:</p>$167,700.00 - $282,000.00<p></p><p>Non-Metro New York state &amp; Washington state:</p>$149,100.00 - $250,900.00<p></p><p>* For quota-based sales roles on Cisco\u2019s sales plan, the ranges provided in this posting include base pay and sales target incentive compensation combined.</p><p>** Employees in Illinois, whether exempt or non-exempt, will participate in a unique time off program to meet local requirements.</p>",
+            "title": "Senior Software Engineer (Remote)",
+            "jobSeqNo": "CISCISGLOBAL2023799EXTERNALENGLOBAL",
+            "postedDate": "2026-09-24T00:00:00.000+0000",
+            "postingStatus": "OPEN",
+            "department": "Supervisory Organization 0007900 (Alessandro Boch)",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Product and Engineering",
+            "multi_location": [
+              {
+                "location": "San Jose, California, United States of America"
+              },
+              {
+                "location": "Birmingham, Alabama, United States of America"
+              },
+              {
+                "location": "Juneau, Alaska, United States of America"
+              },
+              {
+                "location": "Phoenix, Arizona, United States of America"
+              },
+              {
+                "location": "Little Rock, Arkansas, United States of America"
+              },
+              {
+                "location": "San Jose, California, United States of America"
+              },
+              {
+                "location": "Denver, Colorado, United States of America"
+              },
+              {
+                "location": "Hartford, Connecticut, United States of America"
+              },
+              {
+                "location": "Dover, Delaware, United States of America"
+              },
+              {
+                "location": "Miami, Florida, United States of America"
+              },
+              {
+                "location": "Atlanta, Georgia, United States of America"
+              },
+              {
+                "location": "Honolulu, Hawaii, United States of America"
+              },
+              {
+                "location": "Boise, Idaho, United States of America"
+              },
+              {
+                "location": "Chicago, Illinois, United States of America"
+              },
+              {
+                "location": "Indianapolis, Indiana, United States of America"
+              },
+              {
+                "location": "West Des Moines, Iowa, United States of America"
+              },
+              {
+                "location": "Topeka, Kansas, United States of America"
+              },
+              {
+                "location": "Frankfort, Kentucky, United States of America"
+              },
+              {
+                "location": "Baton Rouge, Louisiana, United States of America"
+              },
+              {
+                "location": "Augusta, Maine, United States of America"
+              },
+              {
+                "location": "Annapolis Junction, Maryland, United States of America"
+              },
+              {
+                "location": "Boston, Massachusetts, United States of America"
+              },
+              {
+                "location": "Ann Arbor, Michigan, United States of America"
+              },
+              {
+                "location": "Minneapolis, Minnesota, United States of America"
+              },
+              {
+                "location": "Jackson, Mississippi, United States of America"
+              },
+              {
+                "location": "Clayton, Missouri, United States of America"
+              },
+              {
+                "location": "Helena, Montana, United States of America"
+              },
+              {
+                "location": "Lincoln, Nebraska, United States of America"
+              },
+              {
+                "location": "Reno, Nevada, United States of America"
+              },
+              {
+                "location": "Concord, New Hampshire, United States of America"
+              },
+              {
+                "location": "Trenton, New Jersey, United States of America"
+              },
+              {
+                "location": "Santa Fe, New Mexico, United States of America"
+              },
+              {
+                "location": "New York, New York, United States of America"
+              },
+              {
+                "location": "Research Triangle Park, North Carolina, United States of America"
+              },
+              {
+                "location": "Bismark, North Dakota, United States of America"
+              },
+              {
+                "location": "Richfield, Ohio, United States of America"
+              },
+              {
+                "location": "Oklahoma City, Oklahoma, United States of America"
+              },
+              {
+                "location": "Portland, Oregon, United States of America"
+              },
+              {
+                "location": "Philadelphia, Pennsylvania, United States of America"
+              },
+              {
+                "location": "Providence, Rhode Island, United States of America"
+              },
+              {
+                "location": "Columbia, South Carolina, United States of America"
+              },
+              {
+                "location": "Pierre, South Dakota, United States of America"
+              },
+              {
+                "location": "Nashville, Tennessee, United States of America"
+              },
+              {
+                "location": "Austin, Texas, United States of America"
+              },
+              {
+                "location": "Salt Lake City, Utah, United States of America"
+              },
+              {
+                "location": "Montpelier, Vermont, United States of America"
+              },
+              {
+                "location": "Herndon, Virginia, United States of America"
+              },
+              {
+                "location": "Olympus, Washington, United States of America"
+              },
+              {
+                "location": "Charleston, West Virginia, United States of America"
+              },
+              {
+                "location": "Appleton, Wisconsin, United States of America"
+              },
+              {
+                "location": "Cheyenne, Wyoming, United States of America"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

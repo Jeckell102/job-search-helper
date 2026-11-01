@@ -8,7 +8,9 @@ from __future__ import annotations
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from contextlib import contextmanager
 import copy
+import hashlib
 import json
+import re
 import sqlite3
 import time
 import uuid
@@ -16,8 +18,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from queue import Empty, SimpleQueue
 from threading import Lock, get_ident
+from urllib.parse import urlencode, urlsplit
 
-from .ats import Inventory, fetch_inventory, resolve_board
+from .ats import Inventory, fetch_inventory, resolve_board, lever_location_scope
 from .batching import PlanningRepository, PendingState
 from .core import (FIT_LABELS, POLICY_VERSION, canonicalize_url, changed_fields,
                    job_key, material_hash, pack_snapshot,
@@ -30,13 +33,30 @@ from .screening import screen_posting
 def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
+def _manual_opportunity_status(row):
+    """Never replace a user's final Yes/No when deferring an older review."""
+    added = str(row.get("Added to Opportunities?", "")).strip().casefold()
+    return {"Added to Opportunities?": "Manual Review"} if added in {"", "pending", "manual review"} else {}
+
+def _review_guards(row):
+    return {field: row.get(field, "") for field in
+            ("Added to Opportunities?", "Review Status", "Review Started At", "Source Hash")}
+
 
 def _inventory_source(url):
     try:
-        _, board, root = resolve_board("", url)
-        return root + board
+        name, board, root = resolve_board("", url)
+        location = lever_location_scope(url) if name == "Lever" else ""
+        return root + board + ("?" + urlencode({"location": location.casefold()}) if location else "")
     except (ValueError, TypeError):
         return canonicalize_url(url)
+
+
+def _safe_canonical_url(url):
+    try:
+        return canonicalize_url(url)
+    except ValueError:
+        return ""
 
 
 def _cycle_inventory_source(cycle, company):
@@ -64,6 +84,8 @@ def _compact_evaluation_history(snapshot: dict) -> None:
 def inventory_payload(inventory, company):
     return {"jobs": inventory.jobs, "inventory_status": inventory.status,
             "reason": inventory.reason, "source_url": inventory.source_url, "ats": inventory.ats,
+            "browser_pending_urls": inventory.browser_pending_urls,
+            "browser_discovery_incomplete": inventory.browser_discovery_incomplete,
             "fetched_at": now(), "requested_url": company.get("Official Careers URL", company.get("requested_url", ""))}
 
 
@@ -156,6 +178,7 @@ class State:
 
 DEFAULT_BATCH_SIZE = 100
 MAX_BATCH_SIZE = 200
+MAX_FETCH_WORKERS = 50
 DEFAULT_ERROR_LOG = Path(".state/scraper-errors.jsonl")
 
 
@@ -388,19 +411,26 @@ class Engine:
                       "append_notes": {"Notes": "Date Added populated on first helper detection; original entry date was not recorded."} if not company.get("Date Added") else {}})
         company.update(values)
 
-    def start_cycle(self, company_ids=None):
+    def start_cycle(self, company_ids=None, *, new_scan_request=None):
+        from .scan_request import superseded_cycle_ids
         self.repo.validate_schema()
-        if any(c["status"] not in {"Complete", "Complete with exceptions"} for c in self.state.cycles()):
+        local_cycles = self.state.cycles()
+        superseded = superseded_cycle_ids(local_cycles)
+        unfinished_local = [c['id'] for c in local_cycles if c['id'] not in superseded
+                            and c['status'] not in {'Complete', 'Complete with exceptions'}]
+        if unfinished_local and new_scan_request is None:
             raise ValueError("An unfinished local cycle exists. Resume it before starting another.")
         # Also reject a remote unfinished cycle after a local cache loss.
         if hasattr(self.repo, "read_columns"):
             remote_cycles = [row for _, row in self.repo.read_columns(
-                "Scan Cycles", ["Cycle ID", "Cycle Status"]
+                "Scan Cycles", ["Cycle ID", "Cycle Status", "Notes"]
             )]
         else:
             remote_cycles = self.repo.read("Scan Cycles")
-        if any(r.get("Cycle Status") not in {"Complete", "Complete with exceptions", "", None}
-               for r in remote_cycles):
+        superseded |= superseded_cycle_ids(remote_cycles)
+        unfinished_remote = [r['Cycle ID'] for r in remote_cycles if r.get('Cycle ID') not in superseded
+                             and r.get('Cycle Status') not in {'Complete', 'Complete with exceptions', '', None}]
+        if unfinished_remote and new_scan_request is None:
             raise ValueError("An unfinished workbook cycle exists. Resume its Cycle ID.")
         rows = self._company_rows()
         selected = set(company_ids or [])
@@ -420,6 +450,13 @@ class Engine:
             raise ValueError("No active companies selected")
         cycle = {"id": "CYC-" + uuid.uuid4().hex[:12].upper(), "started_at": now(), "status": "In Progress",
                  "all": not bool(selected), "companies": scope}
+        if new_scan_request is not None:
+            last = set(new_scan_request.get('start_last', []))
+            cycle['companies'] = dict(sorted(scope.items(), key=lambda pair: pair[0] in last))
+            cycle.update(start_request_id=new_scan_request['request_id'],
+                         supersedes=sorted(set(unfinished_local + unfinished_remote)),
+                         start_last=list(new_scan_request.get('start_last', [])),
+                         comparison_baseline_id=new_scan_request.get('comparison_baseline_id'))
         self.state.save_cycle(cycle)
         self._sync_cycle(cycle)
         # Persist membership before fetching; reconstructible if local cache is lost.
@@ -461,6 +498,11 @@ class Engine:
                 scope[cid] = {"company": by_id[cid]["Company"], "stage": "queued"}
         cycle = {"id": cycle_id, "started_at": row.get("Started At") or now(), "status": row.get("Cycle Status"),
                  "all": bool(control.get("all", False)), "companies": scope}
+        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id')
+                      if key in control})
+        last = set(cycle.get('start_last', []))
+        if last:
+            cycle['companies'] = dict(sorted(scope.items(), key=lambda pair: pair[0] in last))
         if not scope and cycle["status"] not in {"Complete", "Complete with exceptions"}:
             raise ValueError("Cannot reconstruct cycle scope; restore the local state backup")
         self.state.save_cycle(cycle)
@@ -482,7 +524,9 @@ class Engine:
         values = {"Cycle Status": status, "Companies in Scope": len(stages), "Companies Complete": complete,
                   "Companies Partial": partial, "Companies Blocked": blocked, "Companies Remaining": remaining,
                   "Last Checkpoint At": now(), "Notes": json.dumps({"all": cycle["all"], "company_ids": list(cycle["companies"]),
-                    "helper_version": 1, "mode": "single writer; no model calls"}, separators=(",", ":"))}
+                    "helper_version": 1, "mode": "single writer; no model calls",
+                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id')
+                       if key in cycle}}, separators=(",", ":"))}
         if status in {"Complete", "Complete with exceptions"}:
             values["Completed At"] = cycle.setdefault("completed_at", now())
         else:
@@ -501,7 +545,7 @@ class Engine:
             history_rows = self.repo.history_candidates(company["Company"], key, url)
         elif hasattr(self.repo, "read_columns"):
             numbered = self.repo.read_columns("Job History",
-                ["Company", "Job Key", "Official Job URL", "Current Snapshot"])
+                ["Company", "Job Key", "Official Job URL", "Current Snapshot", "Requisition ID", "Job Title"])
             history_rows = [row for _, row in numbered]
             row_numbers = {id(row): number for number, row in numbered}
         else:
@@ -511,12 +555,43 @@ class Engine:
                 continue
             same_key = row.get("Job Key") == key
             old_url = row.get("Official Job URL", "")
-            same_url = bool(old_url) and canonicalize_url(old_url) == url
+            same_url = bool(old_url) and _safe_canonical_url(old_url) == url
             if same_url and not same_key:
                 prior = unpack_snapshot(row.get("Current Snapshot", ""))
                 prior_posting = prior.get("pending") or prior.get("evaluated")
                 prior_id = (prior_posting or {}).get("posting_id") or row.get("Requisition ID", "")
-                if prior_id and str(prior_id) != str(posting.get("posting_id", "")):
+                # Browser IDs encode only this URL, not an employer-issued
+                # identity. Upgrading that exact synthetic ID to a real board
+                # ID uses the existing legacy-key migration below. Never relax
+                # the check for two different provider IDs or unrelated hashes.
+                browser_id = "browser-" + hashlib.sha256(url.encode()).hexdigest()[:24]
+                upgrading_browser_id = bool(
+                    prior_posting and prior_id == browser_id
+                    and _safe_canonical_url(prior_posting.get("url", "")) == url
+                    and str(posting.get("posting_id", ""))
+                    and not str(posting["posting_id"]).startswith("browser-")
+                    and all(str((prior.get(stage) or {}).get("posting_id") or "")
+                            in {"", browser_id, str(posting["posting_id"])}
+                            for stage in ("pending", "evaluated"))
+                )
+                legacy_req = str(row.get('Requisition ID', '')).strip()
+                provider_id = str(posting.get('posting_id', '')).strip()
+                title = str(posting.get('title', '')).strip()
+                # Older manually seeded rows used a requisition namespace,
+                # distinct from the public Jobs2Web posting ID. Promote only
+                # that exact legacy shape with corroborating official source
+                # metadata; real provider-ID collisions still fail closed.
+                upgrading_requisition_key = bool(
+                    not prior.get('pending') and not prior.get('evaluated')
+                    and re.fullmatch(r'\d{1,24}', legacy_req)
+                    and row.get('Job Key') == str(company['Company']).strip().casefold() + '|req:' + legacy_req
+                    and str(posting.get('ats', '')).casefold() == 'successfactors'
+                    and str(posting.get('req_id', '')).strip() == legacy_req
+                    and re.fullmatch(r'\d{4,24}', provider_id)
+                    and re.fullmatch(r'/job/[^/]+/' + re.escape(provider_id) + r'/?', urlsplit(url).path)
+                    and title and str(row.get('Job Title', '')).strip() in {title, title + ' — ' + legacy_req}
+                )
+                if prior_id and str(prior_id) != str(posting.get("posting_id", "")) and not (upgrading_browser_id or upgrading_requisition_key):
                     raise ValueError("An official URL was reused by a different posting ID. Manual disambiguation is required; the old posting will not be merged.")
             if same_key or same_url:
                 matches.append(row)
@@ -546,6 +621,13 @@ class Engine:
                    if str(r.get("Company", "")).casefold() == company["Company"].casefold()
                    and r.get("Job URL") and canonicalize_url(r["Job URL"]) in urls]
         if len(matches) > 1:
+            if (getattr(self.repo, 'is_local', False)
+                    and 'Opportunity ID' in self.repo.schemas['Opportunities']
+                    and len({canonicalize_url(r['Job URL']) for r in matches}) == 1):
+                # This represents the shared posting URL, not a chosen
+                # application. The local repository scopes source updates to
+                # each permanent application ID and preserves user fields.
+                return {'Job URL': matches[0]['Job URL']}
             raise ValueError("Ambiguous opportunity URL; refusing to choose a duplicate row")
         return matches[0] if matches else None
 
@@ -556,6 +638,86 @@ class Engine:
                               "Salary / Range": posting.get("compensation", ""), "Work Arrangement": posting.get("work_arrangement", ""),
                               "Application Status": "Not Reviewed", "Date Applied": "", "Date Found": now()[:10]},
                 "append_notes": {"Notes": note} if note else {}}
+
+    def sync_manual_opportunities(self):
+        """Create missing Opportunities for Job History rows manually set to Yes."""
+        headers = [
+            "Company", "Job Title", "Added to Opportunities?", "Official Job URL",
+            "Location", "Last Checked", "Fit Level", "Salary / Range", "Work Arrangement",
+        ]
+        if hasattr(self.repo, "read_columns"):
+            history = [row for _, row in self.repo.read_columns("Job History", headers)]
+            opportunities = [row for _, row in self.repo.read_columns(
+                "Opportunities", ["Company", "Job URL"]
+            )]
+        else:
+            history = self.repo.read("Job History")
+            opportunities = self.repo.read("Opportunities")
+
+        existing = set()
+        duplicates = set()
+        for row in opportunities:
+            identity = (
+                str(row.get("Company", "")).strip().casefold(),
+                _safe_canonical_url(row.get("Job URL", "")),
+            )
+            if not all(identity):
+                continue
+            if identity in existing:
+                duplicates.add(identity)
+            existing.add(identity)
+
+        operations = []
+        planned = set()
+        skipped = 0
+        for row in history:
+            if str(row.get("Added to Opportunities?", "")).strip().casefold() != "yes":
+                continue
+            company_name = str(row.get("Company", "")).strip()
+            title = str(row.get("Job Title", "")).strip()
+            url = str(row.get("Official Job URL", "")).strip()
+            canonical_url = _safe_canonical_url(url)
+            if not company_name or not title or not canonical_url:
+                skipped += 1
+                continue
+            identity = (company_name.casefold(), canonical_url)
+            if identity in planned:
+                continue
+            if identity in duplicates:
+                if getattr(self.repo, 'is_local', False):
+                    # Both application records already exist. A Yes selection
+                    # does not authorize choosing, merging, or creating a third.
+                    skipped += 1
+                    continue
+                raise ValueError("Ambiguous opportunity URL; reconcile duplicate rows before continuing")
+            posting = {
+                "title": title, "url": url, "location": row.get("Location", ""),
+                "compensation": row.get("Salary / Range", ""),
+                "work_arrangement": row.get("Work Arrangement", ""),
+            }
+            company = {"Company": company_name}
+            if identity in existing:
+                continue
+            values = {
+                "Job Title": title, "Last Checked": row.get("Last Checked", ""),
+                "Location": row.get("Location", ""),
+                "Salary / Range": row.get("Salary / Range", ""),
+                "Work Arrangement": row.get("Work Arrangement", ""),
+            }
+            fit = str(row.get("Fit Level", "")).strip().casefold()
+            fit_label = next((label for key, label in FIT_LABELS.items() if key.casefold() == fit), "")
+            if fit_label:
+                values["Fit Review"] = fit_label
+            operations.append(self._opportunity_op(
+                posting, company, values, create=True,
+                note="[manual selection] Added from Job History after Added to Opportunities? was set to Yes.",
+            ))
+            planned.add(identity)
+            existing.add(identity)
+
+        if operations:
+            self.repo.commit(operations)
+        return {"added": len(operations), "skipped": skipped}
 
     def _stage_posting(self, cycle, company, posting):
         # Skip before history lookup, description processing, or any write.
@@ -578,6 +740,11 @@ class Engine:
         snapshot = unpack_snapshot((old or {}).get("Current Snapshot", ""))
         snapshot["inventory_source"] = _cycle_inventory_source(cycle, company)
         current_hash = material_hash(posting)
+        manual_review = bool(old and (
+            str(old.get("Added to Opportunities?", "")).strip().casefold() == "manual review"
+            or old.get("Review Status") == "Manual Review"
+        ))
+        changed_manual_source = bool(manual_review and old.get("Source Hash") and old["Source Hash"] != current_hash)
         reviewed_hash = str((old or {}).get("Description Hash", "") or "")
         unchanged = bool(
             old
@@ -648,12 +815,18 @@ class Engine:
                     "Review Status": "Needs Review", "Review Started At": "",
                     "Decision": "", "Fit Level": "",
                 })
+        elif manual_review and not changed_manual_source:
+            # Repeated sightings do not turn a completed manual review back
+            # into unreviewed work. A changed source still gets reassessed.
+            values["Review Status"] = "Manual Review"
         elif not unchanged:
             values.update({
                 "Review Status": "Needs Review", "Review Started At": "",
                 "Decision": "", "Fit Level": "", "Rejection Reason": "",
                 "Material Change Summary": "Official source content changed; reassessment required.",
             })
+            if changed_manual_source and str(old.get("Added to Opportunities?", "")).strip().casefold() == "manual review":
+                values["Added to Opportunities?"] = "Pending"
 
         existing = self._opportunity(posting, company, [snapshot.get("opportunity_url"), (old or {}).get("Official Job URL")])
         if existing:
@@ -682,7 +855,7 @@ class Engine:
         )
         history_op["expected"] = {h: (old or {}).get(h, "") for h in (
             "Added to Opportunities?", "Review Status", "Decision", "Reconsideration Count",
-            "Description Hash", "Rejection Reason", "Review Notes")}
+            "Description Hash", "Source Hash", "Rejection Reason", "Review Notes")}
         if migrating_legacy_key:
             history_op["expected"]["Job Key"] = old["Job Key"]
         operations = [history_op, self._evidence_op(key, current_hash, company, posting, description, stamp)]
@@ -698,16 +871,28 @@ class Engine:
             history_rows = [row for _, row in self.repo.read_columns(
                 "Job History",
                 ["Company", "Job Key", "Official Job URL", "Current Snapshot",
-                 "Reconsideration Count", "Job Status", "Consecutive Missing Scans"],
+                 "Reconsideration Count", "Job Status", "Consecutive Missing Scans",
+                 "Job Title", "Source Hash", "Added to Opportunities?", "Review Status",
+                 "Review Started At", "Review Notes"],
             )]
         else:
             history_rows = self.repo.read("Job History")
+        from .closed_jobs import close_pending_operation, opportunity_identities
+        opportunities = opportunity_identities(self.repo)
         for row in history_rows:
             if str(row.get("Company", "")).casefold() != company["Company"].casefold() or not row.get("Job Key"):
                 continue
-            if reconsiderations(row) >= 2 or row.get("Job Status") == "Closed":
+            if str(row.get("Job Status", "")).strip().casefold() == "closed":
+                cleanup = close_pending_operation(row, opportunities)
+                if cleanup:
+                    operations.append(cleanup)
+                    if len(operations) >= self.batch_size:
+                        self._commit(*operations)
+                        operations = []
                 continue
-            if row["Job Key"] in seen_keys or (row.get("Official Job URL") and canonicalize_url(row["Official Job URL"]) in seen_urls):
+            if reconsiderations(row) >= 2:
+                continue
+            if row["Job Key"] in seen_keys or (row.get("Official Job URL") and _safe_canonical_url(row["Official Job URL"]) in seen_urls):
                 continue
             snapshot = unpack_snapshot(row.get("Current Snapshot", ""))
             if _inventory_source(snapshot.get("inventory_source", "")) != _cycle_inventory_source(cycle, company):
@@ -724,10 +909,16 @@ class Engine:
             snapshot["last_missing_cycle"] = cycle["id"]
             note = ("Inferred removed after two consecutive complete official inventories; not directly verified closed."
                     if missing >= 2 else "Not Found – Verify: absent from one complete official inventory.")
-            operations.append(self._history_op(row["Job Key"], {
+            closure = close_pending_operation(row, opportunities, closing=True) if missing >= 2 else None
+            operation = self._history_op(row["Job Key"], {
                 "Consecutive Missing Scans": missing, "Job Status": "Closed" if missing >= 2 else "Unable to verify",
                 "Current Snapshot": pack_snapshot(snapshot), "Record Updated": now(), "Material Change Summary": note},
-                append_notes=f"[{cycle['id']} inventory absence] {note}"))
+                append_notes=f"[{cycle['id']} inventory absence] {note}")
+            if closure:
+                operation["expected"] = closure["expected"]
+                operation["values"].update(closure["values"])
+                operation["append_notes"]["Review Notes"] += "\n\n" + closure["append_notes"]["Review Notes"]
+            operations.append(operation)
             if len(operations) >= self.batch_size:
                 self._commit(*operations)
                 operations = []
@@ -748,14 +939,18 @@ class Engine:
         else:
             item["stage"] = "partial"
             scan, action = "Partial", "Inventory incomplete; manual review needed; no closure inference"
+        if item.get("browser_pending_urls") or item.get("browser_discovery_incomplete"):
+            item["stage"] = "partial"
+            scan = "Partial"
+            action = "Browser fetch incomplete; start a fresh scan or use start --resume for saved discovery and unresolved job URLs"
         values = {"Scan State": scan, "Active Cycle ID": cycle["id"], "Next Action": action,
                   "Coverage Status": "Complete official inventory" if source_status == "complete" else "Incomplete inventory",
-                  "Last Inventory Count": len(item.get("jobs", [])), "Last Scan Result": item.get("reason", ""), "Record Updated": now()}
+                  "Last Inventory Count": len(item.get("jobs", [])), "Last Scan Result": item.get("reason", ""),
+                  "Blocked Reason": "", "Record Updated": now()}
         values.update(self._ats_update(company, item.get("ats", "")))
         if item["stage"] == "complete":
             values["Last Successful Scan"] = item.get("fetched_at", now())
             values["Last Checked"] = item.get("fetched_at", now())[:10]
-            values["Blocked Reason"] = ""
         self._commit(self._company_op(company, values))
         self.state.save_cycle(cycle)
 
@@ -865,8 +1060,8 @@ class Engine:
             raise ValueError("Deferred sync requires a durable inventory inbox")
         if defer_sync and sync_only:
             raise ValueError("Deferred fetching and sync-only cannot be combined")
-        if not 1 <= fetch_workers <= 5:
-            raise ValueError("Fetch workers must be between 1 and 5")
+        if not 1 <= fetch_workers <= MAX_FETCH_WORKERS:
+            raise ValueError(f"Fetch workers must be between 1 and {MAX_FETCH_WORKERS}")
         if not 1 <= assignment_window <= 100:
             raise ValueError("Assignment window must be between 1 and 100")
 
@@ -1219,6 +1414,8 @@ class Engine:
             actual_key, old = self._history(posting, company)
             if actual_key != key or not old:
                 raise ValueError("History identity changed; resume and inspect before importing")
+            if str(old.get("Added to Opportunities?", "")).strip().casefold() == "manual review" and decision.get("decision") != "needs_info":
+                raise ValueError("Manual review choice prevents automatic decision import")
             snapshot = unpack_snapshot(old.get("Current Snapshot", ""))
             if not snapshot.get("pending"):
                 # Network response may have been lost after an atomic remote commit.
@@ -1233,11 +1430,15 @@ class Engine:
             if reconsiderations(old) >= 2:
                 raise ValueError("Posting is frozen after two reconsiderations; automatic import refused")
             if decision["decision"] == "needs_info":
-                self._commit(self._history_op(
+                operation = self._history_op(
                     key,
-                    {"Record Updated": now(), "Material Change Summary": "Manual review required"},
+                    {"Record Updated": now(), "Material Change Summary": "Manual review required",
+                     **_manual_opportunity_status(old), "Review Status": "Manual Review",
+                     "Review Started At": "", "Decision": "Needs Info", "Fit Level": ""},
                     append_notes=f"[needs-info {review['description_hash'][:12]}] {decision['narrative']}",
-                ))
+                )
+                operation["expected"] = _review_guards(old)
+                self._commit(operation)
                 self.state.put_review(cycle_id, key, review, "deferred")
                 continue
             previous = snapshot.get("evaluated")
@@ -1332,12 +1533,12 @@ class Engine:
     def claim_next_review(self, stale_minutes=30):
         """Claim exactly one Job History row for AI review.
 
-        Queue scans fetch only Job Key/Review Status/Review Started At. The full
+        Queue scans fetch identity and review controls. The full
         row is fetched only after one candidate is selected.
         """
         if hasattr(self.repo, "read_columns"):
             queue = self.repo.read_columns(
-                "Job History", ["Job Key", "Review Status", "Review Started At"]
+                "Job History", ["Job Key", "Review Status", "Review Started At", "Added to Opportunities?"]
             )
         else:
             queue = [(index + 2, row) for index, row in enumerate(self.repo.read("Job History"))]
@@ -1346,6 +1547,8 @@ class Engine:
         candidate = None
         self.last_review_queue_pending = False
         for row_number, row in queue:
+            if str(row.get("Added to Opportunities?", "")).strip().casefold() == "manual review":
+                continue
             status = row.get("Review Status", "")
             if status in {"Needs Review", "In Progress"}:
                 self.last_review_queue_pending = True
@@ -1371,24 +1574,29 @@ class Engine:
         key = old.get("Job Key")
         if not key or key != queue_row.get("Job Key"):
             return None
-        if old.get("Review Status") not in {"Needs Review", "In Progress"}:
+        if old.get("Review Status") not in {"Needs Review", "In Progress"} or str(old.get("Added to Opportunities?", "")).strip().casefold() == "manual review":
             return None
 
         snapshot = unpack_snapshot(old.get("Current Snapshot", ""))
         pending = snapshot.get("pending")
         if not pending:
-            self.repo.commit([self._history_op(key, {
+            operation = self._history_op(key, {
                 "Review Status": "Manual Review", "Review Started At": "",
+                **_manual_opportunity_status(old),
                 "Decision": "Needs Info", "Record Updated": now(),
                 "Material Change Summary": "Missing pending source snapshot for AI review",
-            }, append_notes="[review] Missing pending source snapshot; manual review required.")])
+            }, append_notes="[review] Missing pending source snapshot; manual review required.")
+            operation["expected"] = _review_guards(old)
+            self.repo.commit([operation])
             return None
 
         stamp = now()
-        self.repo.commit([self._history_op(
+        operation = self._history_op(
             key,
             {"Review Status": "In Progress", "Review Started At": stamp, "Record Updated": stamp},
-        )])
+        )
+        operation["expected"] = _review_guards(old)
+        self.repo.commit([operation])
         claimed = dict(old)
         claimed.update({"Review Status": "In Progress", "Review Started At": stamp, "Record Updated": stamp})
         return {
@@ -1424,6 +1632,10 @@ class Engine:
             raise ValueError("Claimed Job History row no longer exists")
         if old.get("Review Status") != "In Progress" or old.get("Review Started At") != claim["review_started_at"]:
             raise ValueError("Review claim changed before decision commit")
+        if old.get("Added to Opportunities?", "") != claim["old_row"].get("Added to Opportunities?", ""):
+            raise ValueError("Manual opportunity choice changed before decision commit")
+        if str(old.get("Added to Opportunities?", "")).strip().casefold() == "manual review":
+            raise ValueError("Manual review choice changed before decision commit")
         snapshot = unpack_snapshot(old.get("Current Snapshot", ""))
         pending = snapshot.get("pending")
         if not pending or material_hash(pending) != claim["description_hash"]:
@@ -1437,12 +1649,15 @@ class Engine:
 
         stamp = now()
         if decision["decision"] == "needs_info":
-            self.repo.commit([self._history_op(key, {
+            operation = self._history_op(key, {
                 "Review Status": "Manual Review", "Review Started At": "",
+                **_manual_opportunity_status(old),
                 "Decision": "Needs Info", "Fit Level": "", "Last Evaluated": stamp,
                 "Record Updated": stamp, "Material Change Summary": "Manual review required",
                 "Rejection Reason": decision["narrative"],
-            }, append_notes=f"[needs-info {claim['description_hash'][:12]}] {decision['narrative']}")])
+            }, append_notes=f"[needs-info {claim['description_hash'][:12]}] {decision['narrative']}")
+            operation["expected"] = _review_guards(old)
+            self.repo.commit([operation])
             return "manual_review"
 
         previous = snapshot.get("evaluated")
@@ -1508,6 +1723,7 @@ class Engine:
             "Fit Level": decision.get("fit_level") or "",
         }
         operations = [self._history_op(key, values, append_notes=note)]
+        operations[0]["expected"] = _review_guards(old)
         if accepted or existing:
             opportunity_values = {
                 "Job Title": pending["title"], "Last Checked": old.get("Last Checked", ""),

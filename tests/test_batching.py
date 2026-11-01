@@ -43,6 +43,10 @@ class StatefulSheets(FakeSheets):
                                     values.append({})
                                 values[j]["userEnteredValue"] = copy.deepcopy(cell["userEnteredValue"])
                                 values[j]["effectiveValue"] = copy.deepcopy(cell["userEnteredValue"])
+                    elif "setBasicFilter" in request:
+                        value = request["setBasicFilter"]["filter"]
+                        sheet = next(s for s in saved if s["properties"]["sheetId"] == value["range"]["sheetId"])
+                        sheet["basicFilter"] = copy.deepcopy(value)
                     elif "appendDimension" in request:
                         update = request["appendDimension"]
                         sheet = next(s for s in saved if s["properties"]["sheetId"] == update["sheetId"])

@@ -1,0 +1,322 @@
+{
+  "url": "https://jobs.baesystems.com/global/en/search-results",
+  "app": {
+    "refNum": "BAE1US",
+    "baseUrl": "https://jobs.baesystems.com/global/en/",
+    "siteType": "external",
+    "locale": "en_global"
+  },
+  "ddo": {
+    "eagerLoadRefineSearch": {
+      "status": 200,
+      "hits": 20,
+      "totalHits": 1922,
+      "data": {
+        "jobs": [
+          {
+            "siteType": "external",
+            "reqId": "126798BR",
+            "jobId": "126798BR",
+            "title": "Counsel, IT & Data Law",
+            "jobSeqNo": "BAE1US126798BREXTERNAL",
+            "postedDate": "2026-09-17T02:03:45.086+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Other Professionals"
+          },
+          {
+            "siteType": "external",
+            "reqId": "128081BR",
+            "jobId": "128081BR",
+            "title": "Director II, IT Service Owner - ERP & Finance Services",
+            "jobSeqNo": "BAE1US128081BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "127802BR",
+            "jobId": "127802BR",
+            "title": "AI / ML Solutions Engineer",
+            "jobSeqNo": "BAE1US127802BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "128080BR",
+            "jobId": "128080BR",
+            "title": "Director II, IT Service Owner - HR & Communication Services",
+            "jobSeqNo": "BAE1US128080BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "128167BR",
+            "jobId": "128167BR",
+            "title": "Data Engineer",
+            "jobSeqNo": "BAE1US128167BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "126856BR",
+            "jobId": "126856BR",
+            "title": "UNIX DevOps Cloud Engineer",
+            "jobSeqNo": "BAE1US126856BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "126869BR",
+            "jobId": "126869BR",
+            "title": "Systems Admin SR",
+            "jobSeqNo": "BAE1US126869BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "126857BR",
+            "jobId": "126857BR",
+            "title": "Field Service Tech IV",
+            "jobSeqNo": "BAE1US126857BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "127206BR",
+            "jobId": "127206BR",
+            "title": "Lead Azure Integration Engineer",
+            "jobSeqNo": "BAE1US127206BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "127265BR",
+            "jobId": "127265BR",
+            "title": "Windows DevOps Cloud Engineer",
+            "jobSeqNo": "BAE1US127265BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "126558BR",
+            "jobId": "126558BR",
+            "title": "Senior Global IT Category Manager",
+            "jobSeqNo": "BAE1US126558BREXTERNAL",
+            "postedDate": "2026-09-17T02:03:45.086+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Supply Chain & Logistics"
+          },
+          {
+            "siteType": "external",
+            "reqId": "127642BR",
+            "jobId": "127642BR",
+            "title": "DevOps Cloud Engineer",
+            "jobSeqNo": "BAE1US127642BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "128111BR",
+            "jobId": "128111BR",
+            "title": "Sr. Principal Procurement Systems Analyst [REMOTE JOB]",
+            "jobSeqNo": "BAE1US128111BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Supply Chain & Logistics"
+          },
+          {
+            "siteType": "external",
+            "reqId": "128085BR",
+            "jobId": "128085BR",
+            "title": "Director I, IT Service Owner - Software Development & Integrations",
+            "jobSeqNo": "BAE1US128085BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "128086BR",
+            "jobId": "128086BR",
+            "title": "Director I, IT Service Owner - Data & AI Platforms",
+            "jobSeqNo": "BAE1US128086BREXTERNAL",
+            "postedDate": "2026-09-17T08:04:26.352+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "129773BR",
+            "jobId": "129773BR",
+            "title": "Field Service Tech IV",
+            "jobSeqNo": "BAE1US129773BREXTERNAL",
+            "postedDate": "2026-09-23T23:03:16.919+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          },
+          {
+            "siteType": "external",
+            "reqId": "128642BR",
+            "jobId": "128642BR",
+            "title": "Process Automation Specialist",
+            "jobSeqNo": "BAE1US128642BREXTERNAL",
+            "postedDate": "2026-09-23T23:03:16.633+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Finance & Accounting"
+          },
+          {
+            "siteType": "external",
+            "reqId": "129416BR",
+            "jobId": "129416BR",
+            "title": "Finance Customer Care Rep II",
+            "jobSeqNo": "BAE1US129416BREXTERNAL",
+            "postedDate": "2026-09-23T23:03:16.919+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Finance & Accounting"
+          },
+          {
+            "siteType": "external",
+            "reqId": "128858BR",
+            "jobId": "128858BR",
+            "title": "Senior Manager, Digital PMO Enablement",
+            "jobSeqNo": "BAE1US128858BREXTERNAL",
+            "postedDate": "2026-09-23T23:03:16.633+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Project & Program Management"
+          },
+          {
+            "siteType": "external",
+            "reqId": "126858BR",
+            "jobId": "126858BR",
+            "title": "Field Service Tech IV",
+            "jobSeqNo": "BAE1US126858BREXTERNAL",
+            "postedDate": "2026-09-24T19:03:31.828+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Engineering & Technology"
+          }
+        ],
+        "keywords": ""
+      },
+      "eid": {
+        "searchType": "allJobs",
+        "query": ""
+      }
+    }
+  },
+  "params": {
+    "from": "0"
+  },
+  "detail": {
+    "url": "https://jobs.baesystems.com/global/en/job/126798BR",
+    "ddo": {
+      "jobDetail": {
+        "status": 200,
+        "data": {
+          "job": {
+            "jobUpdatedDate": "2026-09-17T02:03:47.097+0000",
+            "siteType": "external",
+            "reqId": "126798BR",
+            "preferredSkillsEducation": "<ul><li>Experience as in-house counsel</li><li>Experience in the aerospace and defense industry</li><li>Project management certification or professional experience.</li><li>Knowledge of privacy frameworks (e.g., GDPR, CCRA, CPRA) as applied to vendor data processing and cloud security.</li><li>Experience supporting senior executive leadership in a corporate legal environment.</li></ul><strong>The Successful Candidate Will Be Able To:</strong><ul><li>Communicate complex technical and legal information effectively to both technical and non-technical stakeholders.</li><li>Build and maintain strong, trust-based relationships with internal stakeholders and external vendors.</li><li>Prioritize competing initiatives and handle multiple high-priority projects simultaneously.</li><li>Balance the demands of a major enterprise M365 G5 deployment with ongoing IT procurement and transactional legal responsibilities.</li></ul>",
+            "payRange": "260743 - 153377 USD per year",
+            "requiredSkillsEducation": "<ul><li>Juris Doctor (JD) degree from an accredited law school and active membership in good standing with a state bar.</li><li>Minimum five (5) years\u2019 experience as a licensed attorney.</li><li>Proven experience practicing law with a focus on technology transactions, IT procurement, or data governance.</li><li>Strong proficiency in interpreting and negotiating Enterprise Agreements (EA) and Cloud Service Provider (CSP) terms.</li><li>Experience drafting AI governance frameworks or managing the legal risks associated with Large Language Models (LLMs).</li><li>Advanced proficiency with the Microsoft 365 suite and an understanding of its enterprise capabilities.  Direct experience supporting enterprise-wide M365 deployments \u2014 specifically providing legal guidance on governance, retention, DLP, and business process transformation \u2014 Is strongly preferred.</li><li>Proven track record of collaborating with IT departments to implement technology solutions and optimize operational processes.</li><li>Working knowledge of change management principles to facilitate the seamless implementation of new legal processes and technologies.</li><li>Ability to operate effectively under senior legal leadership, translating high-level strategic direction into actionable legal work products and guidance for cross-functional teams while managing competing priorities in a fast-paced environment.</li></ul>",
+            "jobId": "126798BR",
+            "refNum": "BAE1US",
+            "description": "</br><b>Job Description </b></br><strong>Job Summary</strong><br>What\u2019s a career like at BAE Systems? Remarkable. Are you interested in having enterprise-wide impact, exposure to new ideas and opportunities, and the autonomy to make a difference? If so, our Counsel, IT & Data Law role is a tremendous opportunity for an enterprising individual.<br><br>The Counsel, IT & Data Law advises on matters of cybersecurity, data, and artificial intelligence (AI) law.  Reporting to and supporting the VP, Associate General Counsel for IT & Data Law, you will serve as a key legal resource supporting the hands-on legal effort for the enterprise\u2011wide Microsoft 365 (M365) G5 deployment, including the substantial business\u2011process, governance, and policy changes associated with M365 G5 implementation\u2014such as data loss prevention (DLP) rules, records\u2011retention modernization, and related cross\u2011functional process redesign.  You will also support the IT and Supply Chain organizations regarding the licensing and procurement of software, cloud services, and IT hardware, filling a critical resource gap in the IT and Data law team\u2019s expanding day-to-day workload, where current resources are no longer sufficient to support ongoing IT procurement and transactional demands.<br><br>You will be part of an enthusiastic and highly productive team where each employee can develop their skills by working on challenging projects. We also offer flexible working arrangements, tuition assistance, and a 6% match with immediate vesting on 401(k) contributions.<br><br><strong>Key Responsibilities<br>1. Optimizing M365 and AI Implementation</strong><ul><li>Partner with the BAE Systems internal M365 team to facilitate G5 implementation from a compliance perspective, providing the tactical legal analysis necessary to enable strategic decision-making for rapid enterprise adoption.</li><li>Perform the hands-on legal work to align enhanced data governance, retention, classification, and information protection capabilities within M365 G5 with applicable legal mandates and corporate policy requirements.</li><li>Support the development of governance frameworks for AI application deployment to protect proprietary data and intellectual property while ensuring adherence to export controls.</li><li>Facilitate stakeholder engagement and change management activities to support integration of M365 G5 and AI tools across business units.</li><li>Develop training and guidance for legal and business stakeholders to increase operational efficiency through M365 G5 ecosystem tools.</li><li>Monitor the evolving landscape of software, cloud, and AI law to ensure BAE Systems remains compliant and competitive.</li></ul><strong>2. Negotiation of IT Agreements</strong><ul><li>Draft, review, and negotiate complex technology agreements, including software licenses, cloud service agreements, AI-specific contracts, and IT hardware procurement.</li><li>Execute the legal strategy for enterprise-wide software licensing and cloud services agreements to mitigate risk and ensure favorable commercial terms.</li><li>Assist in the development and implementation of standardized terms and conditions for the procurement of Artificial Intelligence (AI) tools.</li><li>Collaborate with the IT organization and Supply Chain to optimize and streamline the IT acquisition lifecycle.</li><li>Provide transactional legal support necessary to sustain daily IT and Data Law operations while managing enterprise-level M365 licensing and configuration procurement.</li></ul><div><strong>3. Advising the IT Organization</strong><ul><li>Provide targeted legal analysis and guidance on the intersection of software licensing, cloud architecture, and data controls.</li><li>Develop and maintain internal policies and guidance documents regarding the acceptable use of AI and data handling within cloud environments.</li><li>Advise stakeholders on the legal safeguards necessary to prevent data misuse, leakage, or unauthorized exploitation by cloud and AI vendors during cloud migrations and digital transformation initiatives.</li><li>Draft the detailed legal requirements for M365-driven business process changes \u2013 including DLP workflows and records retention practices \u2013 to ensure alignment with enterprise policies with new M365 capabilities.</li><li>Verify that all IT procurement efforts align with corporate governance and federal government contracting requirements (FAR/DFARS).</li><li>Participate in IT strategic planning sessions to provide real-time legal analysis on emerging technology initiatives and procurement roadmaps.</li></ul></div></br></br><b>Required Education, Experience, & Skills </b></br><ul><li>Juris Doctor (JD) degree from an accredited law school and active membership in good standing with a state bar.</li><li>Minimum five (5) years\u2019 experience as a licensed attorney.</li><li>Proven experience practicing law with a focus on technology transactions, IT procurement, or data governance.</li><li>Strong proficiency in interpreting and negotiating Enterprise Agreements (EA) and Cloud Service Provider (CSP) terms.</li><li>Experience drafting AI governance frameworks or managing the legal risks associated with Large Language Models (LLMs).</li><li>Advanced proficiency with the Microsoft 365 suite and an understanding of its enterprise capabilities.  Direct experience supporting enterprise-wide M365 deployments \u2014 specifically providing legal guidance on governance, retention, DLP, and business process transformation \u2014 Is strongly preferred.</li><li>Proven track record of collaborating with IT departments to implement technology solutions and optimize operational processes.</li><li>Working knowledge of change management principles to facilitate the seamless implementation of new legal processes and technologies.</li><li>Ability to operate effectively under senior legal leadership, translating high-level strategic direction into actionable legal work products and guidance for cross-functional teams while managing competing priorities in a fast-paced environment.</li></ul></br></br><b>Preferred Education, Experience, & Skills </b></br><ul><li>Experience as in-house counsel</li><li>Experience in the aerospace and defense industry</li><li>Project management certification or professional experience.</li><li>Knowledge of privacy frameworks (e.g., GDPR, CCRA, CPRA) as applied to vendor data processing and cloud security.</li><li>Experience supporting senior executive leadership in a corporate legal environment.</li></ul><strong>The Successful Candidate Will Be Able To:</strong><ul><li>Communicate complex technical and legal information effectively to both technical and non-technical stakeholders.</li><li>Build and maintain strong, trust-based relationships with internal stakeholders and external vendors.</li><li>Prioritize competing initiatives and handle multiple high-priority projects simultaneously.</li><li>Balance the demands of a major enterprise M365 G5 deployment with ongoing IT procurement and transactional legal responsibilities.</li></ul><br><br><b>Pay Information</b><br>Full-Time Salary Range: $153377 - $260743<br><br>Please note: This range is based on our market pay structures. However, individual salaries are determined by a variety of factors including, but not limited to: business considerations, local market conditions, and internal equity, as well as candidate qualifications, such as skills, education, and experience. <br><br>Employee Benefits: At BAE Systems, we support our employees in all aspects of their life, including their health and financial well-being. Regular employees scheduled to work 20+ hours per week are offered: health, dental, and vision insurance; health savings accounts; a 401(k) savings plan; disability coverage; and life and accident insurance. We also have an employee assistance program, a legal plan, and other perks including discounts on things like home, auto, and pet insurance. Our leave programs include paid time off, paid holidays, as well as other types of leave, including paid parental, military, bereavement, and any applicable federal and state sick leave. Employees may participate in the company recognition program to receive monetary or non-monetary recognition awards. Other incentives may be available based on position level and/or job specifics.<br></br></br><b>About BAE Systems, Inc.</b></br>BAE Systems, Inc. is a defense, aerospace, and security company headquartered in Falls Church, Virginia, with more than 40,000 employees worldwide. We serve, supply, and protect those who protect us. As one of the most geographically diverse international defense companies, we deliver a full range of products and services spanning air, land, maritime, space, and cyber, including advanced electronics, intelligence solutions, and dedicated customer support.<br /><br />Our culture is performance-driven and values-led, built on curiosity, creativity, and collaboration. Purpose isn&#39;t a tagline here. It&#39;s what drives us. We&#39;re developing breakthrough technologies that defend national security and make a lasting impact on our communities and our planet. When you join BAE Systems, you&#39;re not just building a career. You&#39;re contributing to a mission that truly matters.<br /><br />This position will be posted for at least 5 calendar days. The posting will remain active until the position is filled, or a qualified pool of candidates is identified.",
+            "title": "Counsel, IT & Data Law",
+            "jobSeqNo": "BAE1US126798BREXTERNAL",
+            "postedDate": "2026-09-17T02:03:45.086+0000",
+            "jobVisibility": [
+              "external",
+              "internal"
+            ],
+            "category": "Other Professionals",
+            "multi_location": [
+              {
+                "location": "Falls Church, Virginia, United States"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,9 +13,9 @@ class EfficiencyV32Tests(unittest.TestCase):
         self.assertEqual(classify_title("Systems Engineer"), "reject")
         self.assertEqual(classify_title("Senior Staff Engineer, Survivability Materials"), "reject")
         self.assertEqual(classify_title("Electrical Engineer"), "reject")
-        self.assertEqual(classify_title("Staff Solutions Engineer"), "reject")
+        self.assertEqual(classify_title("Staff Solutions Engineer"), "review")
         self.assertEqual(classify_title("Field Applications Engineer"), "review")
-        self.assertEqual(classify_title("Technical Program Manager"), "ambiguous")
+        self.assertEqual(classify_title("Technical Program Manager"), "review")
 
     def test_salary_parser_is_conservative(self):
         self.assertEqual(parse_annual_base_max_usd("Base salary $120,000 - $165,000"), 165000)

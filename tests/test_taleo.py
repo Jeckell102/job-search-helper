@@ -1,6 +1,8 @@
 from contextlib import redirect_stderr
 from io import StringIO
 import json
+from html import escape as html_escape
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
@@ -52,6 +54,31 @@ def detail(title="A&P Mobile Service Technician", contest="345210"):
     """)
 
 
+def scoped_careers_page(items, total, page=0, pages=2):
+    cards = []
+    for contest, title in items:
+        cards.append(f"""
+        <div class="career-reference-wrapper">
+          <div class="career-reference__title"><a class="career-reference__title-link"
+            href="https://textron.taleo.net/careersection/textron/jobdetail.ftl?job={contest}">{title}</a></div>
+          <div class="career-reference__city">Hunt Valley,</div>
+          <div class="career-reference__state">Maryland,</div>
+          <div class="career-reference__country">United States</div>
+          <div class="career-reference__date">Posted Date: September 23, 2026</div>
+          <div class="career-reference__reference-number">Reference Number: {contest}</div>
+          <div class="accordion__content__inner"><p>{title} responsibilities and qualifications.</p></div>
+        </div>
+        """)
+    pagination = "".join(
+        f'<a href="https://www.textronsystems.com/careers/apply-today?page={number}">Page {number + 1}</a>'
+        for number in range(pages)
+    )
+    return html(f"""
+      <html><body><h4>{total} job(s) match your search criteria</h4>
+      {''.join(cards)}{pagination}<span>Current page {page + 1}</span></body></html>
+    """)
+
+
 class Transport:
     def __init__(self, responses):
         self.responses = iter(responses)
@@ -72,6 +99,80 @@ class Transport:
             raise result
         return result
 
+
+class MoxaCaptureTransport:
+    """Replay the captured Moxa board, search JSON, and all 12 details."""
+    def __init__(self, *, mutate=None):
+        fixture = Path(__file__).parent / "fixtures" / "moxa" / "models.json"
+        models = json.loads(fixture.read_text())
+        portal = models["portal"]
+        self.models = models
+        self.board = (f"<script>var portalNo = '{portal['portal']}'; "
+                      f"var urlCode = '{portal['career_section']}'; "
+                      f"var lang = '{portal['lang']}';</script>").encode()
+        self.search = models["listing"]
+        self.details = {}
+        for contest, model in models["details"].items():
+            history = html_escape("!|!".join(model["initial_history"]), quote=True)
+            self.details[contest] = (
+                f'<meta property="og:title" content="{html_escape(model["meta_title"], quote=True)}">'
+                f'<input id="initialHistory" value="{history}">'
+            ).encode()
+        self.mutate = mutate
+        self.urls = []
+        self.posts = []
+
+    def get(self, url):
+        self.urls.append(url)
+        if "jobdetail.ftl" in url:
+            contest = parse_qs(urlsplit(url).query)["job"][0]
+            body = self.details[contest]
+            if self.mutate:
+                body = self.mutate("detail", contest, body)
+            return HTTPResponse(200, body, {"Content-Type": "text/html"})
+        return HTTPResponse(200, self.board, {"Content-Type": "text/html"})
+
+    def post(self, url, payload):
+        self.posts.append((url, payload))
+        data = json.loads(json.dumps(self.search))
+        if self.mutate:
+            data = self.mutate("search", "", data)
+        return HTTPResponse(200, json.dumps(data).encode(), {"Content-Type": "application/json"})
+
+
+class MoxaPagedTransport(MoxaCaptureTransport):
+    """Synthetic 26-job extension used only to exercise the second page gate."""
+    def __init__(self, *, final_change=False):
+        super().__init__()
+        base = list(self.search["requisitionList"])
+        template = self.models["details"]["260078"]
+        for index in range(13, 27):
+            contest, title, job_id = f"SYN{index:03d}", f"Synthetic Moxa Role {index}", f"900{index:06d}"
+            item = json.loads(json.dumps(base[(index - 13) % len(base)]))
+            item["contestNo"], item["jobId"], item["column"][0] = contest, job_id, title
+            base.append(item)
+            parts = list(template["initial_history"])
+            parts[5], parts[12], parts[13] = job_id, title, contest
+            self.models["details"][contest] = {"meta_title": title, "initial_history": parts}
+            history = html_escape("!|!".join(parts), quote=True)
+            self.details[contest] = (
+                f'<meta property="og:title" content="{html_escape(title, quote=True)}">'
+                f'<input id="initialHistory" value="{history}">'
+            ).encode()
+        self.pages = [base[:25], base[25:]]
+        self.page_calls = {}
+        self.final_change = final_change
+
+    def post(self, url, payload):
+        page = int(payload["pageNo"])
+        self.page_calls[page] = self.page_calls.get(page, 0) + 1
+        entries = list(self.pages[page - 1])
+        if self.final_change and page == 2 and self.page_calls[page] > 1:
+            entries = [self.pages[0][-1]]
+        data = {"requisitionList": entries,
+                "pagingData": {"totalCount": 26, "pageSize": 25, "currentPageNo": page}}
+        self.posts.append((url, payload))
+        return HTTPResponse(200, json.dumps(data).encode(), {"Content-Type": "application/json"})
 
 class TaleoTests(unittest.TestCase):
     def setUp(self):
@@ -130,6 +231,86 @@ class TaleoTests(unittest.TestCase):
         result, _ = self.fetch([search_page(), listing(), html("detail unavailable")])
         self.assertEqual(result.status, "partial")
 
+    def test_moxa_listing_260084_with_mismatched_detail_title_stays_partial(self):
+        """The captured Moxa listing must not pass with a different detail title."""
+        moxa_board = "https://tas-moxa.taleo.net/careersection/mx_ext/jobsearch.ftl?lang=en"
+        responses = [
+            search_page(portal="8115020123", code="mx_ext"),
+            listing([entry("260084", "Captured Moxa listing title")], total=1),
+            detail("Different detail title", "260084"),
+            listing([entry("260084", "Captured Moxa listing title")], total=1),
+        ]
+        transport = Transport(responses)
+        result = fetch_inventory("Oracle / Taleo", moxa_board, "COMP-0147", "Moxa", transport)
+        self.assertEqual(result.status, "partial")
+        self.assertTrue(any("posting" in message.casefold() or "title" in message.casefold()
+                            for message in (result.reason,)))
+
+    def test_moxa_captured_board_retrieves_all_12_and_decodes_ampersand_title(self):
+        transport = MoxaCaptureTransport()
+        result = fetch_inventory(
+            "Oracle / Taleo",
+            "https://tas-moxa.taleo.net/careersection/mx_ext/jobsearch.ftl?lang=en",
+            "COMP-0147", "Moxa", transport)
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual(len(result.jobs), 12)
+        self.assertEqual({job["posting_id"] for job in result.jobs}, {
+            "260078", "26006N", "26006X", "26008D", "26007R", "260084",
+            "260057", "26006W", "26006B", "26007L", "260076", "260011"})
+        ampersand = next(job for job in result.jobs if job["posting_id"] == "260084")
+        self.assertEqual(ampersand["title"], "Channel Sales Manager - Industrial Automation & Networking, Northeast")
+        self.assertTrue(ampersand["description"])
+        self.assertNotIn("Apply for this position online", ampersand["description"])
+        self.assertGreaterEqual(len(transport.posts), 2)
+
+    def test_moxa_captured_listing_title_mismatch_stays_partial(self):
+        def mutate(kind, contest, data):
+            if kind == "search":
+                for item in data["requisitionList"]:
+                    if item.get("contestNo") == "260084":
+                        item["column"][0] = "Wrong title for captured detail"
+            return data
+        result = fetch_inventory(
+            "Oracle / Taleo",
+            "https://tas-moxa.taleo.net/careersection/mx_ext/jobsearch.ftl?lang=en",
+            "COMP-0147", "Moxa", MoxaCaptureTransport(mutate=mutate))
+        self.assertEqual(result.status, "partial")
+
+    def test_moxa_26_job_second_page_and_final_recheck(self):
+        source = "https://tas-moxa.taleo.net/careersection/mx_ext/jobsearch.ftl?lang=en"
+        stable = MoxaPagedTransport()
+        result = fetch_inventory("Oracle / Taleo", source, "COMP-0147", "Moxa", stable)
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual(len(result.jobs), 26)
+        self.assertGreaterEqual(stable.page_calls[1], 2)
+        self.assertGreaterEqual(stable.page_calls[2], 2)
+
+        changed = MoxaPagedTransport(final_change=True)
+        result = fetch_inventory("Oracle / Taleo", source, "COMP-0147", "Moxa", changed)
+        self.assertEqual(result.status, "partial")
+
+    def test_moxa_snapshot_identity_and_full_qualification_fields_are_required(self):
+        source = "https://tas-moxa.taleo.net/careersection/mx_ext/jobsearch.ftl?lang=en"
+        for change in ("internal_id", "contest", "title", "missing_qualifications", "inconsistent_pair"):
+            with self.subTest(change=change):
+                transport = MoxaCaptureTransport()
+                model = transport.models["details"]["260084"]
+                parts = list(model["initial_history"])
+                if change == "internal_id": parts[5] = "999999"
+                elif change == "contest": parts[13] = "OTHER"
+                elif change == "title": parts[12] = "Other title"
+                elif change == "missing_qualifications": parts[16] = parts[17] = "!*!"
+                else: parts[17] += " unexpected change"
+                history = html_escape("!|!".join(parts), quote=True)
+                transport.details["260084"] = (
+                    f'<meta property="og:title" content="{html_escape(model["meta_title"], quote=True)}">'
+                    f'<input id="initialHistory" value="{history}">'
+                ).encode()
+                result = fetch_inventory("Oracle / Taleo", source, "COMP-0147", "Moxa", transport)
+                self.assertEqual(result.status, "partial")
+                self.assertEqual(len(result.jobs), 11)
+                self.assertNotIn("260084", {job["posting_id"] for job in result.jobs})
+
     def test_denials_and_bad_shapes_do_not_complete(self):
         for responses, expected in (([html("denied", status=403)], "blocked"), ([search_page(), HTTPResponse(500, b"no")], "failed"), ([search_page(), HTTPResponse(200, b"{}")], "partial")):
             with self.subTest(expected=expected):
@@ -164,6 +345,21 @@ class TaleoTests(unittest.TestCase):
         self.assertEqual(result.status, "complete", result.reason)
         self.assertIn("Discovered Taleo", result.reason)
         self.assertEqual(pages.urls, ["https://acme.example/careers"])
+
+    def test_textron_systems_scoped_page_wins_over_shared_parent_board(self):
+        url = "https://www.textronsystems.com/careers/apply-today"
+        pages = Transport([
+            scoped_careers_page([("111", "Systems Engineer")], 2),
+            scoped_careers_page([("222", "Program Manager")], 2, page=1),
+            scoped_careers_page([("111", "Systems Engineer")], 2),
+        ])
+        result = fetch_inventory("Taleo", url, "COMP-0088", "Textron Systems", discovery_transport=pages)
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual([job["posting_id"] for job in result.jobs], ["111", "222"])
+        self.assertEqual(result.source_url, url)
+        self.assertEqual(result.ats, "Taleo")
+        self.assertFalse(pages.posts)
+        self.assertEqual(pages.urls, [url, url + "?page=1", url])
 
 
 if __name__ == "__main__":

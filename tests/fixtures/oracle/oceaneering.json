@@ -1,0 +1,23 @@
+{
+  "fixture_type": "synthetic contract fixture; live captures are the oceaneering-*.json files",
+  "site_number": "CX_3001",
+  "published_total": 274,
+  "listing_sample": {
+    "Id": "11836",
+    "Title": "Outside Machinist II - $5,000 Sign on Bonus (Bremerton, WA)",
+    "PrimaryLocation": "Bremerton, WA, United States"
+  },
+  "detail_sample": {
+    "Id": "11836",
+    "Title": "Outside Machinist II - $5,000 Sign on Bonus (Bremerton, WA)",
+    "RequisitionId": "11836",
+    "ExternalDescriptionStr": "Outside Machinists at Oceaneering's Marine Services Division support submarine maintenance and repair.",
+    "ExternalResponsibilitiesStr": "Set up, align, and operate portable machining tools; complete required documentation.",
+    "ExternalQualificationsStr": "High School Diploma/GED or equivalent; must currently possess a Secret security clearance.",
+    "PrimaryLocation": "Bremerton, WA, United States",
+    "otherWorkLocations": [],
+    "secondaryLocations": [],
+    "Department": "Manufacturing",
+    "ExternalPostedStartDate": "2026-01-01"
+  }
+}
