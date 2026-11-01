@@ -754,6 +754,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0227" and company.casefold() == "foretellix":
         from .foretellix import fetch_foretellix
         return fetch_foretellix(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0277" and company.casefold() == "losant":
+        from .losant import fetch_losant
+        return fetch_losant(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
