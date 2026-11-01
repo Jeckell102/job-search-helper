@@ -20,35 +20,31 @@ class _Page(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.sections = []
-        self._section = None
-        self._depth = 0
+        self._active = []
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag == "section":
-            if self._section is None:
-                self._section = {"depth": 1, "parts": [], "links": []}
-            else:
-                self._section["depth"] += 1
+            section = {"parts": [], "links": []}
+            self._active.append(section)
             return
-        if self._section is None:
+        if not self._active:
             return
         if tag in {"div", "p", "li", "br", "h1", "h2", "h3", "h4", "strong"}:
-            self._section["parts"].append(" ")
+            for section in self._active:
+                section["parts"].append(" ")
         if tag == "a" and attrs.get("href"):
-            self._section["links"].append(attrs["href"])
+            for section in self._active:
+                section["links"].append(attrs["href"])
 
     def handle_data(self, data):
-        if self._section is not None:
-            self._section["parts"].append(data)
+        for section in self._active:
+            section["parts"].append(data)
 
     def handle_endtag(self, tag):
-        if self._section is None or tag != "section":
+        if tag != "section" or not self._active:
             return
-        self._section["depth"] -= 1
-        if self._section["depth"] == 0:
-            self.sections.append(self._section)
-            self._section = None
+        self.sections.append(self._active.pop())
 
 
 def _verified_source(url, company_id, company):
