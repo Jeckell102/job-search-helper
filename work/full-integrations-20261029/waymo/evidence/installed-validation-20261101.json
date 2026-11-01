@@ -1,0 +1,24 @@
+{
+  "company_id": "COMP-0517",
+  "company": "Waymo",
+  "status": "complete",
+  "counted_complete": true,
+  "requested_careers_url": "https://careers.withwaymo.com/",
+  "official_source": "https://boards-api.greenhouse.io/v1/boards/waymo/jobs?content=true",
+  "ats": "Greenhouse",
+  "installed_normal_pipeline": {
+    "rereads": [
+      {"attempt": 1, "status": "complete", "jobs": 372, "descriptions": 372},
+      {"attempt": 2, "status": "complete", "jobs": 372, "descriptions": 372}
+    ],
+    "stable_job_count": 372
+  },
+  "focused_tests": {
+    "command": "PYTHONPATH=src python -m pytest -q tests/test_waymo.py",
+    "passed": 3,
+    "failed": 0
+  },
+  "commit_pending": true,
+  "shared_completion_ledgers": "not edited",
+  "validated_at": "2026-11-01"
+}

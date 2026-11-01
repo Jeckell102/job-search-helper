@@ -1417,6 +1417,17 @@ REPAIRS.update({
         'url': 'https://boards-api.greenhouse.io/v1/boards/nuro',
         'evidence': 'Nuro official careers page loads /_nuxt/7114896.modern.js, which requests https://boards-api.greenhouse.io/v1/boards/nuro/jobs/?content=true for the complete employer inventory.',
     },
+    'COMP-0517': {
+        'company': 'Waymo',
+        'ats': 'Greenhouse',
+        'expected_url': 'https://careers.withwaymo.com/',
+        'expected_urls': [
+            'https://careers.withwaymo.com',
+            'https://careers.withwaymo.com/jobs/search/',
+        ],
+        'url': 'https://boards-api.greenhouse.io/v1/boards/waymo',
+        'evidence': 'Official Waymo careers site links its employer-scoped Greenhouse board; the public Greenhouse API returns the complete Waymo inventory with full descriptions.',
+    },
 })
 REPAIRS.update({
     'COMP-0437': {
