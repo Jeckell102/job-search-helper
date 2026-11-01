@@ -1,0 +1,13 @@
+{
+  "company_id": "COMP-0248",
+  "company": "Dematic",
+  "status": "complete",
+  "live_count": 355,
+  "stable_reread": "installed normal pipeline completed; Workday listing cohort validated",
+  "source_url": "https://kiongroup.wd3.myworkdayjobs.com/wday/cxs/kiongroup/KION_SCS",
+  "ats": "Workday",
+  "tests": "34 passed: Dematic focused tests plus shared Workday regression suite",
+  "commit": "4f8d205",
+  "shared_completion_ledgers": "not edited",
+  "validated_at": "2026-11-01"
+}
