@@ -176,6 +176,11 @@ def _safe_api_url(url: str) -> None:
                              and parse_qs(parsed.query) == {"categories": ["23"], "per_page": ["100"], "page": [parsed.query.split("page=")[-1]]}
                              and parsed.query.startswith("categories=23&per_page=100&page=")
                              and parsed.query[len("categories=23&per_page=100&page="):].isdigit()))
+    wordpress_careers = wordpress_careers or (
+        parsed.hostname == "quantum-systems.com" and parsed.path == "/us/wp-json/wp/v2/posts"
+        and parse_qs(parsed.query) == {"categories": ["75"], "per_page": ["100"], "page": [parsed.query.split("page=")[-1]]}
+        and parsed.query.startswith("categories=75&per_page=100&page=")
+        and parsed.query[len("categories=75&per_page=100&page="):].isdigit())
     xtend_detail = (parsed.hostname == "xtend.me" and parsed.path.startswith("/careers/") and not parsed.query and not parsed.fragment)
     psi_search = (parsed.hostname == "www.psicorp.com" and parsed.path == "/wp-admin/admin-ajax.php" and not parsed.query)
     kratos_search = (parsed.hostname == "apps3.pereless.com" and parsed.path == "/templates/magnetolive/api/" and parsed.query == "action=getJobs")
@@ -740,6 +745,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0437" and company.casefold() == "garmin":
         from .garmin import fetch_garmin
         return fetch_garmin(careers_url, company_id, company, transport or html_transport)
+    if company_id == "COMP-0174" and company.casefold() == "quantum systems usa":
+        from .quantum_systems import fetch_quantum_systems
+        return fetch_quantum_systems(careers_url, company_id, company, transport or html_transport)
     if careers_url.rstrip("/") == "https://grexdefense.com/careers":
         from .grex_defense import fetch_grex_defense
         return fetch_grex_defense(careers_url, company_id, company, html_transport)

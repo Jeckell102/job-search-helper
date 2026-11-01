@@ -1399,6 +1399,17 @@ def repair_source(ats, url, company_id, company):
 
 
 REPAIRS.update({
+    'COMP-0174': {
+        'company': 'Quantum Systems USA',
+        'ats': 'Quantum Systems USA careers',
+        'expected_url': 'https://quantum-systems.com/career-at-quantum-systems/',
+        'expected_urls': [
+            'https://quantum-systems.com/careers/',
+            'https://quantum-systems.com/us/jobs-quantum-usa/',
+        ],
+        'url': 'https://quantum-systems.com/us/jobs-quantum-usa/',
+        'evidence': 'Official Quantum Systems USA jobs page; its public WordPress API category 75 exposes the employer-scoped USA job posts.',
+    },
     'COMP-0518': {
         'company': 'Nuro', 'ats': 'Greenhouse',
         'expected_url': 'https://www.nuro.ai/careers',
