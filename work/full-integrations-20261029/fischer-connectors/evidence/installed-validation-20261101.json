@@ -1,0 +1,44 @@
+{
+  "company_id": "COMP-0491",
+  "company": "Fischer Connectors",
+  "official_careers_source": "https://fischerconnectors.com/en/about-us/join-us/job-openings/",
+  "ats_source": "Fischer Connectors careers",
+  "validation": "installed_normal_pipeline",
+  "installed_rereads": [
+    {
+      "pass": 1,
+      "status": "complete",
+      "job_count": 7,
+      "posting_ids": [
+        "https://fischerconnectors.com/en/job-opening/chefe-equipa-producao/",
+        "https://fischerconnectors.com/en/job-opening/master-planner-2/",
+        "https://fischerconnectors.com/en/job-opening/sap-successfactors-product-owner/",
+        "https://fischerconnectors.com/en/job-opening/mechanical-product-designer-conextivity-group/",
+        "https://fischerconnectors.com/en/job-opening/import-export-logisitics-specialist/",
+        "https://fischerconnectors.com/en/job-opening/sap-fi-co-2/",
+        "https://fischerconnectors.com/en/job-opening/sd-mm-vm-pp/"
+      ],
+      "full_descriptions": true,
+      "result": "Fischer Connectors: retrieved 7 full postings and rechecked the openings page."
+    },
+    {
+      "pass": 2,
+      "status": "complete",
+      "job_count": 7,
+      "posting_ids": [
+        "https://fischerconnectors.com/en/job-opening/chefe-equipa-producao/",
+        "https://fischerconnectors.com/en/job-opening/master-planner-2/",
+        "https://fischerconnectors.com/en/job-opening/sap-successfactors-product-owner/",
+        "https://fischerconnectors.com/en/job-opening/mechanical-product-designer-conextivity-group/",
+        "https://fischerconnectors.com/en/job-opening/import-export-logisitics-specialist/",
+        "https://fischerconnectors.com/en/job-opening/sap-fi-co-2/",
+        "https://fischerconnectors.com/en/job-opening/sd-mm-vm-pp/"
+      ],
+      "full_descriptions": true,
+      "result": "Fischer Connectors: retrieved 7 full postings and rechecked the openings page."
+    }
+  ],
+  "stable_installed_job_count": 7,
+  "focused_tests": "3 passed",
+  "notes": "The first-party page exposes seven Fischer Connectors job-detail links. The adapter fails closed on wrong company/source scope, blocked or non-200 pages, missing detail content, and a changed listing between rereads. No shared completion ledgers were edited."
+}

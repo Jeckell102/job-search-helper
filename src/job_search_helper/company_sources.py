@@ -837,6 +837,22 @@ REPAIRS['COMP-0143']['expected_urls'] = [
 REPAIRS['COMP-0284']['expected_urls'] = ['https://www.onlogic.com/about/careers/']
 REPAIRS['COMP-0364']['expected_urls'] = ['https://leafspace.teamtailor.com/']
 REPAIRS.update({
+    'COMP-0186': {
+        'company': 'DroneDeploy',
+        'ats': 'Lever',
+        'expected_url': 'https://dronedeploy.com/about/careers',
+        'expected_urls': [
+            'https://dronedeploy.com/about/careers/',
+            'https://www.dronedeploy.com/careers',
+            'https://www.dronedeploy.com/careers/',
+        ],
+        'url': 'https://api.lever.co/v0/postings/dronedeploy',
+        'evidence': (
+            'DroneDeploy official careers page states that DroneDeploy roles are '
+            'now listed on Procore after the acquisition; its public employer '
+            'Lever board remains the verified source for the DroneDeploy inventory.'
+        ),
+    },
     'COMP-0486': {
         'company': 'Haivision', 'ats': 'Haivision',
         'expected_url': 'https://www.haivision.com/about/careers/',
@@ -921,8 +937,8 @@ REPAIRS.update({
                   'evidence': 'Official XTEND WordPress careers API exposes the complete employer-scoped career inventory.'},
     'COMP-0180': {'company': 'Ascent AeroSystems', 'ats': 'Gusto',
                   'expected_url': 'https://ascentaerosystems.com/careers/',
-                  'url': 'https://jobs.gusto.com/go/ascentaerosystems',
-                  'evidence': 'Official Ascent AeroSystems careers page links its Gusto board'},
+                  'url': 'https://jobs.gusto.com/boards/robinson-unmanned-ab0be6b1-c413-41d2-9d68-f62c878589e4',
+                  'evidence': 'Official Ascent AeroSystems careers page now identifies the acquired business as Robinson Unmanned and links its employer-scoped Gusto board'},
     'COMP-0182': {'company': 'Aero Systems West', 'ats': 'Browser',
                   'expected_url': 'https://aerosystemswest.com/careers/',
                   'url': 'https://aerosystemswest.com/careers/',
@@ -1099,7 +1115,7 @@ REPAIRS.update({
     'COMP-0278': {'company': 'MachineMetrics', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://www.machinemetrics.com/careers', 'https://www.machinemetrics.com/careers/'], 'url': 'https://www.machinemetrics.com/careers/', 'evidence': 'Official MachineMetrics careers page currently publishes featured roles linking to Indeed and LinkedIn; the previously pinned Greenhouse board returns HTTP 404.'},
     'COMP-0289': {'company': 'Kontron', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://www.kontron.com/en/group/careers', 'https://www.kontron.com/en/group/careers/', 'https://www.kontron.com/en/career', 'https://www.kontron.com/en/career/'], 'url': 'https://www.kontron.com/en/group/careers', 'evidence': 'Official Kontron careers page links the verified global Softgarden and Paylocity public job feeds.'},
     'COMP-0315': {'company': 'Iron Bow Technologies', 'ats': 'Greenhouse', 'expected_url': '', 'expected_urls': ['https://ironbow.com/careers', 'https://ironbow.com/careers/', 'https://ironbow.com/all-jobs', 'https://ironbow.com/all-jobs/', 'https://www.ironbow.com/careers/', 'https://www.ironbow.com/careers', 'https://www.ironbow.com/all-jobs', 'https://www.ironbow.com/all-jobs/'], 'url': 'https://boards-api.greenhouse.io/v1/boards/ironbowtechnologies/jobs?content=true', 'evidence': 'Official Iron Bow all-jobs page and observed Job Board module link the employer-scoped Greenhouse board ironbowtechnologies.'},
-    'COMP-0324': {'company': 'Vexar Defense', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://vexardefense.com/careers/', 'https://vexardefense.com/careers'], 'url': 'https://vexardefense.com/careers/', 'evidence': 'Official Vexar Defense careers page; ATS endpoint not safely established.'},
+    'COMP-0324': {'company': 'Vexar Defense', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://vexardefense.com/careers/', 'https://vexardefense.com/careers', 'https://vexardefense.com/'], 'url': 'https://vexardefense.com/', 'evidence': 'Official Vexar Defense homepage is the canonical source; the former /careers/ route is a 404, and the homepage advertises talent recruitment without exposing a public ATS or job inventory.'},
     'COMP-0339': {'company': 'Calytrix Technologies', 'ats': 'Browser', 'expected_url': 'https://www.calytrix.com/careers/', 'expected_urls': ['https://calytrix.com/careers/', 'https://calytrix.com/careers', 'https://www.calytrix.com/careers'], 'url': 'https://www.calytrix.com/careers/', 'evidence': 'Official Calytrix careers site; current canonical host is www.calytrix.com and no employer-scoped public ATS endpoint was safely established.'},
     'COMP-0340': {'company': 'MVRsimulation', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://mvrsimulation.com/careers/', 'https://mvrsimulation.com/careers'], 'url': 'https://mvrsimulation.com/careers/', 'evidence': 'Official MVRsimulation careers page; ATS endpoint not safely established.'},
     'COMP-0344': {'company': 'Mass Virtual', 'ats': 'Mass Virtual Paylocity', 'expected_url': 'https://www.massvirtual.com/careers/', 'expected_urls': ['https://www.massvirtual.com/careers/', 'https://www.massvirtual.com/careers', 'https://www.massvirtual.com/open-position'], 'url': 'https://recruiting.paylocity.com/recruiting/v2/api/feed/jobs/2df5ac23-47b5-4c64-b536-e7f04caf6ffe', 'evidence': 'Official Mass Virtual Open Positions page embeds a Paylocity feed with three full postings.'},
@@ -1291,7 +1307,14 @@ REPAIRS.update({
                   'url': 'https://blues.com/bluescareers/',
                   'evidence': 'Official Blues careers page; its Open Positions section directs candidates to LinkedIn, with no employer-scoped ATS exposed.'},
     'COMP-0287': {'company': 'One Stop Systems', 'ats': 'Shopify', 'expected_url': 'https://onestopsystems.com/pages/open-positions', 'expected_urls': ['https://onestopsystems.com/careers/', 'https://onestopsystems.com/pages/open-positions'], 'url': 'https://onestopsystems.com/pages/open-positions', 'evidence': 'Official One Stop Systems Shopify open-positions page exposes seven structural job pages.'},
-    'COMP-0293': {'company': 'Carbyne', 'ats': 'Browser', 'expected_url': 'https://www.carbyne.com/careers/', 'url': 'https://www.carbyne.com/careers/', 'evidence': 'Official Carbyne careers page; browser-rendered openings.'},
+    'COMP-0293': {'company': 'Carbyne', 'ats': 'Greenhouse',
+                  'expected_url': 'https://www.carbyne.com/careers/',
+                  'expected_urls': ['https://carbyne.com/company/life-at-carbyne/',
+                                    'https://carbyne.com/company/life-at-carbyne',
+                                    'https://www.axon.com/careers',
+                                    'https://www.axon.com/careers/'],
+                  'url': 'https://boards-api.greenhouse.io/v1/boards/axon/jobs?content=true',
+                  'evidence': 'Official Carbyne careers page links into Axon 911; the official Axon Greenhouse board exposes the structured Carbyne department partition.'},
     'COMP-0295': {'company': 'Getac', 'ats': 'Browser', 'expected_url': 'https://www.getac.com/us/company/careers/', 'url': 'https://www.getac.com/us/company/careers/', 'evidence': 'Official Getac US careers page.'},
     'COMP-0296': {'company': 'Panasonic Connect', 'ats': 'Jibe', 'expected_url': 'https://careers.na.panasonic.com/connect', 'url': 'https://careers.na.panasonic.com/connect', 'evidence': 'Official Panasonic Connect career center exposes a public Jibe API with employer tags for PCONA and PSG.'},
     'COMP-0301': {'company': 'JMP Quick Technology', 'ats': 'iCIMS', 'expected_url': 'https://jmp.com/careers/', 'url': 'https://jmp-sas.icims.com/jobs/search?ss=1', 'evidence': 'JMP careers page links the public JMP SAS iCIMS board; live adapter validation retrieved two complete postings.'},
@@ -1439,6 +1462,40 @@ def repair_source(ats, url, company_id, company):
 
 
 REPAIRS.update({
+    'COMP-0363': {
+        'company': 'RBC Signals',
+        'ats': 'Browser',
+        'expected_url': 'https://rbcsignals.com/careers/',
+        'expected_urls': [
+            'https://rbcsignals.com/careers',
+            'https://www.rbcsignals.com/careers/',
+            'https://www.rbcsignals.com/careers',
+            'https://rbcsignals.com/',
+            'https://www.rbcsignals.com/',
+        ],
+        'url': 'https://rbcsignals.com/',
+        'evidence': (
+            'Official RBC Signals website. The public site has no employer-scoped '
+            'ATS or published careers board; the browser route is pinned to the '
+            'official homepage and must fail closed when live access is unavailable.'
+        ),
+    },
+    'COMP-0354': {
+        'company': 'XOCEAN',
+        'ats': 'Browser',
+        'expected_url': 'https://www.xocean.com/careers/',
+        'expected_urls': [
+            'https://www.xocean.com/careers',
+            'https://xocean.com/careers/',
+            'https://xocean.com/careers',
+        ],
+        'url': 'https://www.xocean.com/careers/',
+        'evidence': (
+            'Official XOCEAN careers page is the canonical source. It exposes '
+            'careers@xocean.com and a LinkedIn opportunities link, but no '
+            'employer-scoped public ATS inventory; browser validation must fail closed.'
+        ),
+    },
     'COMP-0469': {
         'company': 'Mutualink',
         'ats': 'ADP',
@@ -1591,6 +1648,15 @@ REPAIRS.update({'COMP-0490': {
     'evidence': 'Official Amphenol Aerospace careers source; employer-scoped AcquireTM board with ASP.NET pagination and JSON-LD job details.',
 }})
 
+REPAIRS.update({'COMP-0491': {
+    'company': 'Fischer Connectors',
+    'ats': 'Fischer Connectors careers',
+    'expected_url': 'https://fischerconnectors.com/en/about-us/join-us/job-openings/',
+    'expected_urls': ['https://fischerconnectors.com/en/about-us/join-us/job-openings'],
+    'url': 'https://fischerconnectors.com/en/about-us/join-us/job-openings/',
+    'evidence': 'Official Fischer Connectors openings page publishes the employer\'s first-party job-detail links and full public descriptions.',
+}})
+
 # General Dynamics Information Technology COMP-0011: the official GDIT
 # careers page links the employer-scoped Workday External_Career_Site board.
 # Keep the public board URL pinned so generic Workday routing preserves the
@@ -1615,6 +1681,18 @@ REPAIRS.update({'COMP-0489': {
     'evidence': 'Official Glenair North America employment page states the form is not a job application and exposes no public ATS or job postings.',
 }})
 
+# Norseman Defense Technologies COMP-0303: the official homepage currently
+# sends applicants to a LinkedIn company search. LinkedIn's guest shell is not
+# an enumerable inventory, so keep the routing pinned to a guarded adapter.
+REPAIRS.update({'COMP-0303': {
+    'company': 'Norseman Defense Technologies',
+    'ats': 'Norseman Defense careers',
+    'expected_url': 'https://www.norseman.com/',
+    'expected_urls': ['https://norseman.tech/', 'https://norseman.tech/company/careers'],
+    'url': 'https://www.norseman.com/',
+    'evidence': 'Official Norseman homepage links only to the LinkedIn company jobs search; LinkedIn guest output does not expose a complete employer-scoped inventory or full descriptions.',
+}})
+
 # Vertex Solutions COMP-0338: the official careers page links to an Indeed
 # employer-management dashboard.  Pin the canonical source and guarded
 # adapter; the dashboard is not a public employer-scoped inventory feed.
@@ -1625,4 +1703,68 @@ REPAIRS.update({'COMP-0338': {
     'expected_urls': ['https://vertexsolutions.com/careers/', 'https://www.vertexsolutions.com/careers'],
     'url': 'https://www.vertexsolutions.com/careers/',
     'evidence': 'Official Vertex Solutions careers page links View Open Positions to an Indeed employer-management dashboard; no public employer-scoped listing feed was established.',
+}})
+
+# Aethercomm (COMP-0128) is now presented as "FG Aethercomm" inside
+# Frontgrade's shared parent careers portal.  Keep the canonical parent page
+# pinned, but do not let generic browser discovery treat the mixed board as an
+# employer-scoped Aethercomm inventory.
+REPAIRS.update({'COMP-0128': {
+    'company': 'Aethercomm',
+    'ats': 'Frontgrade shared careers',
+    'expected_url': 'https://www.aethercomm.com/careers/',
+    'expected_urls': [
+        'https://www.aethercomm.com/careers',
+        'https://careers.frontgrade.com/fg-locations',
+    ],
+    'url': 'https://careers.frontgrade.com/fg-locations',
+    'evidence': (
+        'Official Aethercomm careers route now resolves to Frontgrade\'s shared '
+        'careers portal, which labels FG Aethercomm but does not expose a '
+        'standalone employer-scoped public inventory; the adapter fails closed '
+        'until an explicit Aethercomm scope is available.'
+    ),
+}})
+
+# DroneDeploy's official careers page now redirects applicants to Procore after
+# the acquisition.  Preserve the historical, employer-scoped DroneDeploy
+# Lever board as the installed inventory source rather than importing Procore's
+# mixed parent-company jobs.
+REPAIRS.update({'COMP-0186': {
+    'company': 'DroneDeploy',
+    'ats': 'Lever',
+    'expected_url': 'https://dronedeploy.com/about/careers',
+    'expected_urls': [
+        'https://dronedeploy.com/about/careers/',
+        'https://www.dronedeploy.com/careers',
+        'https://www.dronedeploy.com/careers/',
+    ],
+    'url': 'https://api.lever.co/v0/postings/dronedeploy',
+    'evidence': (
+        'Official DroneDeploy careers page states that roles are now listed at '
+        'Procore; the public DroneDeploy Lever board is retained as the '
+        'employer-scoped inventory and excludes Procore parent roles.'
+    ),
+}})
+
+# ECS Solutions (COMP-0405): the official ECS site identifies Magnum Systems'
+# careers page as the parent/official route, whose public careers link resolves
+# to the employer-specific iSolved board. Pin the board so generic discovery
+# cannot mistake the parent page or an empty HTML shell for an inventory.
+REPAIRS.update({'COMP-0405': {
+    'company': 'ECS Solutions',
+    'ats': 'isolved',
+    'expected_url': 'https://magnumsystems.com/about/careers/',
+    'expected_urls': [
+        'https://magnumsystems.com/about/careers',
+        'https://www.magnumsystems.com/about/careers/',
+        'https://www.magnumsystems.com/about/careers',
+    ],
+    'url': 'https://magnumsystems.isolvedhire.com/jobs/',
+    'evidence': (
+        'Official ECS Solutions careers route is the Magnum Systems careers '
+        'page; it links the employer-specific Magnum Systems iSolved public '
+        'jobs board. The installed iSolved adapter is used with this pinned '
+        'scope and fails closed when the board is empty or inaccessible.'
+    ),
 }})

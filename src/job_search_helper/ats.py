@@ -796,6 +796,12 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0489" and company.casefold() == "glenair":
         from .glenair import fetch_glenair
         return fetch_glenair(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0491" and company.casefold() == "fischer connectors":
+        from .fischer_connectors import fetch_fischer_connectors
+        return fetch_fischer_connectors(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0128" and company.casefold() == "aethercomm":
+        from .aethercomm import fetch_aethercomm
+        return fetch_aethercomm(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0169" and company.casefold() == "skysafe":
         from .skysafe import fetch_skysafe
         return fetch_skysafe(careers_url, company_id, company, html_transport)
@@ -892,6 +898,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0238" and company.casefold() == "caterpillar":
         from .caterpillar import fetch_caterpillar
         return fetch_caterpillar(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0180" and company.casefold() == "ascent aerosystems":
+        from .gusto import fetch_gusto
+        return fetch_gusto(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
@@ -1215,6 +1224,32 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
                         issues.append("Re:Build Optimation office-scoped inventory changed during reread.")
                     if not first_scope:
                         issues.append("Re:Build Optimation office partition is empty.")
+                    entries = first_scope
+                elif company_id == "COMP-0293" and company.casefold() == "carbyne":
+                    # Carbyne is now part of Axon 911 and shares Axon's
+                    # Greenhouse board.  The department names are the
+                    # authoritative employer partition; do not use title or
+                    # keyword matching against the mixed Axon inventory.
+                    def scoped(rows):
+                        out = []
+                        for raw in rows:
+                            depts = raw.get("departments") if isinstance(raw, dict) else None
+                            names = {d.get("name") for d in depts if isinstance(d, dict)} if isinstance(depts, list) else set()
+                            if any(isinstance(name, str) and "carbyne" in name.casefold() for name in names):
+                                out.append(raw)
+                        return out
+                    first_scope = scoped(entries)
+                    reread = _json(url, transport)
+                    reread_rows = reread.get("jobs") if isinstance(reread, dict) else None
+                    if not isinstance(reread_rows, list):
+                        raise FetchError("partial", "Carbyne Greenhouse reread returned an unexpected schema.")
+                    second_scope = scoped(reread_rows)
+                    def fingerprints(rows):
+                        return {str(x.get("id")): (text(x.get("title")), tuple(sorted(str(d.get("name")) for d in (x.get("departments") or []) if isinstance(d, dict)))) for x in rows}
+                    if fingerprints(first_scope) != fingerprints(second_scope):
+                        issues.append("Carbyne department-scoped inventory changed during reread.")
+                    if not first_scope:
+                        issues.append("Carbyne department partition is empty.")
                     entries = first_scope
                 elif company_id == "COMP-0158" and company.casefold() == "dedrone by axon":
                     # Axon's board is shared, but its structured department fields
