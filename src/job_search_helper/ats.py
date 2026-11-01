@@ -811,6 +811,12 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0248" and company.casefold() == "dematic":
         from .dematic import fetch_dematic
         return fetch_dematic(careers_url, company_id, company, transport or HTTPTransport())
+    if company_id == "COMP-0278" and company.casefold() == "machinemetrics":
+        from .machinemetrics import fetch_machinemetrics
+        return fetch_machinemetrics(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0348" and company.casefold() == "videoray":
+        from .videoray import fetch_videoray
+        return fetch_videoray(careers_url, company_id, company, transport or HTTPTransport())
     if company_id == "COMP-0240" and company.casefold() == "komatsu":
         from .komatsu import fetch_komatsu
         return fetch_komatsu(careers_url, company_id, company, transport or discovery_transport or HTTPTransport())
