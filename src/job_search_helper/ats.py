@@ -213,7 +213,8 @@ def _safe_api_url(url: str) -> None:
                and not parsed.query and not parsed.fragment)
     radd = (parsed.hostname == "radd-co.com" and (parsed.path == "/sitemap.xml" or bool(re.fullmatch(r"/open-roles/[A-Za-z0-9-]+", parsed.path))) and not parsed.query and not parsed.fragment)
     exyn = parsed.hostname == "www.exyn.com" and parsed.path == "/about/careers" and not parsed.query and not parsed.fragment
-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn)
+    dsi = parsed.hostname in {"dsiinnovations.com", "www.dsiinnovations.com"} and parsed.path == "/employment-opportunities/" and not parsed.query and not parsed.fragment
+    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi)
             or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
     if parsed.hostname in {"l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com"} and not (ublox_algolia or ublox_detail):
@@ -778,6 +779,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0492" and company.casefold() == "southwest antennas":
         from .southwest_antennas import fetch_southwest_antennas
         return fetch_southwest_antennas(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0113" and company.casefold() == "rajant corporation":
+        from .rajant import fetch_rajant
+        return fetch_rajant(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0401" and company.casefold() == "polytron":
         from .polytron import fetch_polytron
         return fetch_polytron(careers_url, company_id, company, html_transport)
@@ -849,6 +853,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0336" and company.casefold() == "advanced simulation technology inc. (asti)":
         from .asti import fetch_asti
         return fetch_asti(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())
+    if company_id == "COMP-0391" and company.casefold() == "dsi innovations":
+        from .dsi_innovations import fetch_dsi_innovations
+        return fetch_dsi_innovations(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0344" and company.casefold() == "mass virtual":
         from .massvirtual import fetch_massvirtual
         return fetch_massvirtual(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())
