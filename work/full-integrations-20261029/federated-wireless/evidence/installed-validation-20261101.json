@@ -1,0 +1,28 @@
+{
+  "company_id": "COMP-0406",
+  "company": "Federated Wireless",
+  "validation_date": "2026-11-01",
+  "official_source": "https://federatedwireless.ai/about/",
+  "ats": "ADP Workforce Now",
+  "board": "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?ccId=19000101_000001&cid=922ca7fd-dabc-4d02-a6e0-336d96392d9a&lang=en_US",
+  "source_evidence": {
+    "official_careers_page": "https://federatedwireless.ai/about/",
+    "careers_link_target": "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?ccId=19000101_000001&cid=922ca7fd-dabc-4d02-a6e0-336d96392d9a&lang=en_US",
+    "scope": "Federated Wireless company-scoped ADP Workforce Now board"
+  },
+  "adapter_routing": {
+    "adapter": "src/job_search_helper/adp.py",
+    "routing": "REPAIRS[COMP-0406] -> ADP",
+    "status": "present and focused-tested"
+  },
+  "installed_normal_pipeline": [
+    {"pass": 1, "status": "complete", "jobs": 2, "reason": "ADP: retrieved 2 full postings in 1 listing page.", "posting_ids": ["9201867448879_1", "9201858392458_1"]},
+    {"pass": 2, "status": "complete", "jobs": 2, "reason": "ADP: retrieved 2 full postings in 1 listing page.", "posting_ids": ["9201867448879_1", "9201858392458_1"]}
+  ],
+  "focused_tests": {"command": "PYTHONPATH=src:tests python -m unittest tests.test_federated_wireless tests.test_adp", "passed": 20, "failed": 0},
+  "terminal_status": "complete",
+  "counted_complete": true,
+  "stable_installed_job_count": 2,
+  "commit": "b8f707a",
+  "shared_completion_ledgers_edited": false
+}
