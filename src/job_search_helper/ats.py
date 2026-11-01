@@ -823,6 +823,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0493" and company.casefold() == "antenna research associates":
         from .antenna_research_associates import fetch_antenna_research_associates
         return fetch_antenna_research_associates(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0506" and company.casefold() == "scythe robotics":
+        from .scythe_robotics import fetch_scythe_robotics
+        return fetch_scythe_robotics(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0453" and company.casefold() == "tactical edge":
         from .tactical_edge import fetch_tactical_edge
         return fetch_tactical_edge(careers_url, company_id, company, html_transport)

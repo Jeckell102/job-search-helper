@@ -1,0 +1,18 @@
+{
+  "company_id": "COMP-0506",
+  "company": "Scythe Robotics",
+  "status": "blocked",
+  "complete": false,
+  "live_count": 0,
+  "source_url": "https://joinscythe.com/",
+  "ats": "Dover careers",
+  "official_source": "The official Scythe Robotics careers page is reachable in a real browser, identifies Scythe Robotics, and currently displays 'No positions available at this time'.",
+  "installed_normal_pipeline": [
+    {"pass": 1, "status": "failed", "live_count": 0, "reason": "Careers page network/timeout failure; board discovery did not complete."},
+    {"pass": 2, "status": "failed", "live_count": 0, "reason": "Careers page network/timeout failure; board discovery did not complete."}
+  ],
+  "blocker": "The installed HTTP transport cannot reach joinscythe.com consistently, so the explicit zero-opening page observed in a real browser cannot be established by the installed normal pipeline.",
+  "focused_tests": "3 focused checks passed",
+  "shared_completion_ledgers": "not edited",
+  "validated_at": "2026-11-01"
+}
