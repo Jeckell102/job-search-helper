@@ -803,11 +803,17 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0440" and company.casefold() == "ducommun":
         from .ducommun import fetch_ducommun
         return fetch_ducommun(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0200" and company.casefold() == "symbotic":
+        from .symbotic import fetch_symbotic
+        return fetch_symbotic(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
         from .one_stop_systems import fetch_one_stop_systems
         return fetch_one_stop_systems(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())
+    if company_id == "COMP-0151" and company.casefold() == "rohde & schwarz usa":
+        from .rohde_schwarz_usa import fetch_rohde_schwarz_usa
+        return fetch_rohde_schwarz_usa(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0262" and company.casefold() == "kvh industries":
         from .kvh import fetch_kvh
         return fetch_kvh(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())

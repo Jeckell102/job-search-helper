@@ -859,10 +859,11 @@ REPAIRS.update({
     # integration batch.  Browser entries stay employer-scoped until a
     # stable public ATS endpoint is verified; the two Greenhouse entries use
     # the shared Axon/Dedrone and DroneSense boards respectively.
-    'COMP-0151': {'company': 'Rohde & Schwarz USA', 'ats': 'Browser',
-                  'expected_url': 'https://www.co.rohde-schwarz.com/us/career/jobs/career-jobboard_251573.html',
-                  'url': 'https://www.co.rohde-schwarz.com/us/career/jobs/career-jobboard_251573.html',
-                  'evidence': 'Official Rohde & Schwarz USA career job board'},
+    'COMP-0151': {'company': 'Rohde & Schwarz USA', 'ats': 'Rohde & Schwarz USA careers',
+                  'expected_url': 'https://www.rohde-schwarz.com/us/career/jobs/career-jobboard_251573.html',
+                  'expected_urls': ['https://www.co.rohde-schwarz.com/us/career/jobs/career-jobboard_251573.html'],
+                  'url': 'https://www.rohde-schwarz.com/us/career/jobs/career-jobboard_251573.html',
+                  'evidence': 'Official Rohde & Schwarz USA job board; the USA filter and offset pages expose the complete employer-scoped inventory.'},
     'COMP-0157': {'company': 'D-Fend Solutions', 'ats': 'Lever',
                   'expected_url': 'https://d-fendsolutions.com/about-us/careers/',
                   'expected_urls': ['https://d-fendsolutions.com/about-us/careers/', 'https://d-fendsolutions.com/careers/'],
@@ -929,10 +930,10 @@ REPAIRS.update({
                   'expected_url': 'https://www.dronesense.com/careers',
                   'url': 'https://job-boards.greenhouse.io/dronesense',
                   'evidence': 'Official DroneSense careers page and public Greenhouse board'},
-    'COMP-0200': {'company': 'Symbotic', 'ats': 'Browser',
+    'COMP-0200': {'company': 'Symbotic', 'ats': 'Symbotic careers',
                   'expected_url': 'https://www.symbotic.com/careers/jobs/',
                   'url': 'https://www.symbotic.com/careers/jobs/',
-                  'evidence': 'Official Symbotic jobs page'},
+                  'evidence': 'Official Symbotic first-party jobs page with employer-scoped role detail pages.'},
     'COMP-0221': {'company': 'Gatik', 'ats': 'Greenhouse',
                   'expected_url': 'https://gatik.ai/careers/',
                   'expected_urls': ['https://gatik.ai/careers/', 'https://www.gatik.ai/careers/', 'https://archive.gatik.ai/careers/'],
