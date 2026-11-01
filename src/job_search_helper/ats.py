@@ -785,6 +785,12 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0401" and company.casefold() == "polytron":
         from .polytron import fetch_polytron
         return fetch_polytron(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0494" and company.casefold() == "savox communications":
+        from .savox import fetch_savox
+        return fetch_savox(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0453" and company.casefold() == "tactical edge":
+        from .tactical_edge import fetch_tactical_edge
+        return fetch_tactical_edge(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
