@@ -1506,3 +1506,16 @@ REPAIRS.update({'COMP-0490': {
     'url': 'https://amphenol-aerospace.acquiretm.com/home.aspx',
     'evidence': 'Official Amphenol Aerospace careers source; employer-scoped AcquireTM board with ASP.NET pagination and JSON-LD job details.',
 }})
+
+# General Dynamics Information Technology COMP-0011: the official GDIT
+# careers page links the employer-scoped Workday External_Career_Site board.
+# Keep the public board URL pinned so generic Workday routing preserves the
+# GDIT tenant/site boundary rather than guessing from the parent company.
+REPAIRS.update({'COMP-0011': {
+    'company': 'General Dynamics Information Technology',
+    'ats': 'Workday',
+    'expected_url': 'https://www.gdit.com/careers/',
+    'expected_urls': ['https://www.gdit.com/careers'],
+    'url': 'https://gdit.wd5.myworkdayjobs.com/External_Career_Site',
+    'evidence': 'Official GDIT careers source links the employer-scoped Workday External_Career_Site board; live installed validation was blocked before listing discovery.',
+}})

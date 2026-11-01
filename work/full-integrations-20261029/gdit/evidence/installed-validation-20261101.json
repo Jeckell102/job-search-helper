@@ -1,0 +1,20 @@
+{
+  "company_id": "COMP-0011",
+  "company": "General Dynamics Information Technology",
+  "official_careers_url": "https://www.gdit.com/careers/",
+  "ats": "Workday",
+  "board_url": "https://gdit.wd5.myworkdayjobs.com/External_Career_Site",
+  "adapter": "generic Workday adapter with exact GDIT tenant/site routing",
+  "focused_tests": {
+    "command": "PYTHONPATH=src python -m pytest -q tests/test_company_sources.py tests/test_workday.py",
+    "result": "passed"
+  },
+  "installed_normal_pipeline": [
+    {"reread": 1, "status": "partial", "jobs": 0, "reason": "Workday listing page 1: Network/timeout failure after bounded retries. Workday normalized posting count does not match the inventory count."},
+    {"reread": 2, "status": "partial", "jobs": 0, "reason": "Workday listing page 1: Network/timeout failure after bounded retries. Workday normalized posting count does not match the inventory count."}
+  ],
+  "stable_installed_job_count": null,
+  "terminal_blocker": "The installed normal pipeline could reach the configured GDIT Workday endpoint but could not retrieve listing page 1 after bounded retries on either reread. Inventory completeness and a stable job count therefore cannot be established.",
+  "count_complete": false,
+  "validated_at": "2026-11-01"
+}
