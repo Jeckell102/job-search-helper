@@ -220,6 +220,7 @@ def _safe_api_url(url: str) -> None:
     exyn = parsed.hostname == "www.exyn.com" and parsed.path == "/about/careers" and not parsed.query and not parsed.fragment
     csod_search = (parsed.hostname == "us.api.csod.com" and parsed.path == "/rec-job-search/external/jobs" and not parsed.query and not parsed.fragment)
     sick_search = (parsed.hostname == "jobs.sick.com" and parsed.path == "/services/recruiting/v1/jobs" and not parsed.query and not parsed.fragment)
+    sick_detail = (parsed.hostname == "jobs.sick.com" and bool(re.fullmatch(r"/usa/job/[A-Za-z0-9%()_-]+/[0-9]+-en_US/", parsed.path)) and not parsed.query and not parsed.fragment)
     csod_detail = (parsed.hostname == "ducommun.csod.com" and bool(re.fullmatch(r"/services/x/job-requisition/v2/requisitions/[0-9]+/jobDetails", parsed.path)) and parse_qs(parsed.query) == {"cultureId": ["1"]})
     dsi = parsed.hostname in {"dsiinnovations.com", "www.dsiinnovations.com"} and parsed.path == "/employment-opportunities/" and not parsed.query and not parsed.fragment
     ericsson_query = parse_qs(parsed.query, keep_blank_values=True)
@@ -237,7 +238,7 @@ def _safe_api_url(url: str) -> None:
                    and set(parse_qs(parsed.query)) == {"state"}
                    and len(parse_qs(parsed.query).get("state", [])) == 1
                    and parse_qs(parsed.query).get("state", [""])[0])
-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search and not sick_search)
+    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search and not sick_search and not sick_detail)
             or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
     if parsed.hostname in {"l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com"} and not (ublox_algolia or ublox_detail):
@@ -353,7 +354,7 @@ class HTTPTransport:
             raise FetchError('unsupported', 'HiBob permits only the verified anonymous company routing header and public GET endpoints.')
         from .taleo import is_taleo_host
         from .ukg import is_ukg_host, SEARCH as UKG_SEARCH
-        expect_html = ((is_ukg_host(parsed_url.hostname) and not parsed_url.path.endswith(UKG_SEARCH)) or is_icims_host(parsed_url.hostname) or parsed_url.hostname == "recruiting.paylocity.com"
+        expect_html = ((is_ukg_host(parsed_url.hostname) and not parsed_url.path.endswith(UKG_SEARCH)) or is_icims_host(parsed_url.hostname) or parsed_url.hostname == "recruiting.paylocity.com" or (parsed_url.hostname == "jobs.sick.com" and parsed_url.path.startswith("/usa/job/"))
                        or (parsed_url.hostname or "").endswith(".breezy.hr")
                        or (is_taleo_host(parsed_url.hostname) and parsed_url.path != "/careersection/rest/jobboard/searchjobs"))
         response_limit = (MAX_GREENHOUSE_BOARD_BYTES if payload is None

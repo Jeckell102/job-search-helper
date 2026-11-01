@@ -1,0 +1,15 @@
+{
+  "company_id": "COMP-0272",
+  "company": "SICK",
+  "status": "complete",
+  "official_careers_page": "https://sick.com/us/en/careers",
+  "official_source": "https://jobs.sick.com/usa?locale=en_US",
+  "ats": "SuccessFactors",
+  "search_endpoint": "https://jobs.sick.com/services/recruiting/v1/jobs",
+  "stable_installed_job_count": 18,
+  "installed_normal_pipeline": [{"pass": 1, "status": "complete", "jobs": 18}, {"pass": 2, "status": "complete", "jobs": 18}],
+  "focused_tests": "2 passed: tests/test_sick.py",
+  "notes": "Global SuccessFactors results were filtered to employer-scoped USA postings (brandUrl=usa, supported locale en_US). Date-sorted pagination was used because the UI recent sort can reorder while paginating.",
+  "validated_at": "2026-11-01",
+  "shared_completion_ledgers": "not edited"
+}
