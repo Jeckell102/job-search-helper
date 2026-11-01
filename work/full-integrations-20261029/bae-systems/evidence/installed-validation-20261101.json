@@ -1,0 +1,30 @@
+{
+  "company_id": "COMP-0073",
+  "company": "BAE Systems, Inc.",
+  "status": "blocked",
+  "ats": "Phenom",
+  "official_careers_url": "https://jobs.baesystems.com/global/en/",
+  "source_url": "https://jobs.baesystems.com/global/en/search-results",
+  "focused_tests": {
+    "command": "PYTHONPATH=src python -m pytest -q tests/test_phenom.py tests/test_phenom_reconciliation.py tests/test_raytheon_canonical.py",
+    "result": "50 passed"
+  },
+  "installed_rereads": [
+    {
+      "attempt": 1,
+      "result": "blocked",
+      "observation": "The official Phenom listing completed at 2,071 postings; detail reconciliation reached 200 of 2,071 before the bounded run was stopped without a terminal Inventory result.",
+      "log": "/tmp/bae-installed-1.log"
+    },
+    {
+      "attempt": 2,
+      "result": "blocked",
+      "observation": "The official Phenom listing completed at 2,071 postings; the bounded normal-pipeline run exited 124 before detail reconciliation produced a terminal Inventory result.",
+      "log": "/tmp/bae-installed-2.log"
+    }
+  ],
+  "stable_installed_job_count": null,
+  "blocker": "Live listing access is reachable, but the installed normal pipeline cannot complete the 2,071-detail reconciliation within the bounded verification run; no stable installed inventory was established.",
+  "counted_complete": false,
+  "validated_at": "2026-11-01"
+}
