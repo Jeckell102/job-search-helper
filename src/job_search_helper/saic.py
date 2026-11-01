@@ -1,4 +1,4 @@
-"""Company-scoped browser inventory for SAIC's public Talemetry careers site.
+"""Company-scoped browser inventory for SAIC's public TalentBrew careers site.
 
 SAIC's employer-owned board is server rendered but presents a Cloudflare
 challenge to the non-browser transport.  Its public HTML has a bounded,
