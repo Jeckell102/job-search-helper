@@ -1,0 +1,49 @@
+{
+  "company_id": "COMP-0048",
+  "company": "AMERGINT Technologies",
+  "validation_date": "2026-11-01",
+  "status": "blocked",
+  "counted_complete": false,
+  "official_source": "https://amergint.com/careers/",
+  "official_source_result": {
+    "http_status": 200,
+    "final_url": "https://www.caci.com/space",
+    "identity": "CACI Space business page",
+    "scope": "AMERGINT-specific careers inventory not exposed"
+  },
+  "successor_source": {
+    "url": "https://searchcareers.caci.com/careers",
+    "result": "shared CACI careers board; no authoritative AMERGINT employer/business-unit partition established",
+    "accepted": false
+  },
+  "installed_normal_pipeline_rereads": [
+    {
+      "pass": 1,
+      "status": "blocked",
+      "jobs": 0,
+      "ats": "",
+      "reason": "Careers page HTTP 403: access denied or human verification; manual review required."
+    },
+    {
+      "pass": 2,
+      "status": "blocked",
+      "jobs": 0,
+      "ats": "",
+      "reason": "Careers page HTTP 403: access denied or human verification; manual review required."
+    }
+  ],
+  "focused_tests": {
+    "command": "PYTHONPATH=src python3 -m pytest -p no:cacheprovider tests/test_amergint.py -q",
+    "result": "3 passed",
+    "regression_note": "The broader route suite was also run; 17 passed and 1 unrelated concurrent Ericsson expectation failed because its provider was repaired in parallel. No AMERGINT test failed."
+  },
+  "blocker": "The installed normal pipeline is denied at the official AMERGINT URL, and the successor CACI board is shared without an AMERGINT-specific scope. Importing all CACI Space jobs would be unsafe cross-company relabeling.",
+  "evidence": [
+    "work/full-integrations-20261029/amergint/scope-report.md",
+    "work/full-integrations-20261029/amergint/acceptance-plan.md",
+    "work/full-integrations-20261029/amergint/identity-diagnostics.json",
+    "work/full-integrations-20261029/amergint/evidence/www_amergint_com_careers_.headers",
+    "work/full-integrations-20261029/amergint/evidence/www_amergint_com_careers_.body",
+    "work/full-integrations-20261029/amergint/evidence/caci-careers.body"
+  ]
+}
