@@ -699,44 +699,54 @@ def fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
 
 def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
                     transport: Any = None, *, discovery_transport: Any = None, progress_factory=None) -> Inventory:
-    if careers_url.rstrip('/') == 'https://www.kuka.com/en-us/company/careers':
-        from .kuka import fetch_kuka
-        return fetch_kuka(careers_url, company_id, company, discovery_transport or transport)
-    if careers_url.rstrip('/') == 'https://grexdefense.com/careers':
-        from .grex_defense import fetch_grex_defense
-        return fetch_grex_defense(careers_url, company_id, company, discovery_transport or transport)
-    if company_id == 'COMP-0424' and company.casefold() == 'wolf advanced technology':
-        from .wolf import fetch_wolf
-        return fetch_wolf(careers_url, company_id, company, discovery_transport or transport)
-    if company_id == 'COMP-0448' and company.casefold() == 'hx5':
-        from .hx5 import fetch_hx5
-        return fetch_hx5(careers_url, company_id, company, discovery_transport or transport)
-    if company_id == 'COMP-0428' and company.casefold() == 'aitech systems':
-        from .aitech import fetch_aitech
-        return fetch_aitech(careers_url, company_id, company, discovery_transport or transport)
-    if company_id == 'COMP-0427' and company.casefold() == 'annapolis micro systems':
-        from .annapolis_micro import fetch_annapolis_micro
-        return fetch_annapolis_micro(careers_url, company_id, company, discovery_transport or transport)
-    if careers_url == 'https://www.haivision.com/about/careers/':
-        from .haivision import fetch_haivision
-        return fetch_haivision(careers_url, company_id, company, discovery_transport or transport)
-    if company_id == 'COMP-0166' and company.casefold() == 'black river systems company':
-        from .black_river import fetch_black_river
-        return fetch_black_river(careers_url, company_id, company, discovery_transport or transport)
-    if company_id == 'COMP-0171' and company.casefold() == 'freefly systems':
-        from .freefly import fetch_freefly
-        return fetch_freefly(careers_url, company_id, company, discovery_transport or transport)
-    if company_id == 'COMP-0183' and company.casefold() == 'anra technologies':
-        from .anra import fetch_anra
-        return fetch_anra(careers_url, company_id, company, discovery_transport or transport)
-    """Retrieve official board data; a transport with get(url) is injectable.
+    """Retrieve official board data using an injectable public-source transport.
 
+    Validate the source before company-specific dispatch so a missing URL
+    produces an actionable inventory result instead of an attribute error.
     Ashby unlisted postings remain present with is_listed=False, preventing
     false disappearance counts; callers must not discover/review those rows.
     """
-    discovery_note = ""
     if not isinstance(careers_url, str) or not careers_url.strip():
-        return Inventory("unsupported", reason="Missing Official Careers URL; add the employer's careers page or ATS board URL.")
+        return Inventory(
+            "unsupported",
+            reason="Missing Official Careers URL; add the employer's careers page or ATS board URL.",
+        )
+
+    # These first-party HTML adapters precede generic ATS discovery. Keep the
+    # caller's HTML transport when supplied, including for fixture replays.
+    html_transport = discovery_transport if discovery_transport is not None else transport
+    if careers_url.rstrip("/") == "https://www.kuka.com/en-us/company/careers":
+        from .kuka import fetch_kuka
+        return fetch_kuka(careers_url, company_id, company, html_transport)
+    if careers_url.rstrip("/") == "https://grexdefense.com/careers":
+        from .grex_defense import fetch_grex_defense
+        return fetch_grex_defense(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0424" and company.casefold() == "wolf advanced technology":
+        from .wolf import fetch_wolf
+        return fetch_wolf(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0448" and company.casefold() == "hx5":
+        from .hx5 import fetch_hx5
+        return fetch_hx5(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0428" and company.casefold() == "aitech systems":
+        from .aitech import fetch_aitech
+        return fetch_aitech(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0427" and company.casefold() == "annapolis micro systems":
+        from .annapolis_micro import fetch_annapolis_micro
+        return fetch_annapolis_micro(careers_url, company_id, company, html_transport)
+    if careers_url == "https://www.haivision.com/about/careers/":
+        from .haivision import fetch_haivision
+        return fetch_haivision(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0166" and company.casefold() == "black river systems company":
+        from .black_river import fetch_black_river
+        return fetch_black_river(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0171" and company.casefold() == "freefly systems":
+        from .freefly import fetch_freefly
+        return fetch_freefly(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0183" and company.casefold() == "anra technologies":
+        from .anra import fetch_anra
+        return fetch_anra(careers_url, company_id, company, html_transport)
+
+    discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
         from .shopify_jobs import fetch_shopify_jobs
         return fetch_shopify_jobs(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())

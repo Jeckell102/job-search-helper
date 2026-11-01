@@ -44,6 +44,7 @@ class RoutingRecoveryTests(unittest.TestCase):
         ('COMP-0390', 'Vertech', 'https://www.vertech.com/open-positions', 'Paycor Recruiting'),
         ('COMP-0098', 'Blue Origin', 'https://www.blueorigin.com/careers', 'Workday'),
         ('COMP-0501', 'Reliable Robotics', 'https://reliable.co/careers', 'Ashby'),
+        ('COMP-0296', 'Panasonic Connect', 'https://careers.na.panasonic.com/connect', 'Jibe'),
     ]
 
     def test_verified_routing_preserves_user_changes_and_other_employers(self):
@@ -58,7 +59,6 @@ class RoutingRecoveryTests(unittest.TestCase):
 
     def test_unverified_and_real_parent_sources_stay_restricted(self):
         for cid, company, url in [
-                ('COMP-0296', 'Panasonic Connect', 'https://careers.na.panasonic.com/connect'),
                 ('COMP-0016', 'LinQuest', 'https://kbr.wd5.myworkdayjobs.com/en-US/KBR_Careers')]:
             label = 'Workday (shared parent board)' if cid == 'COMP-0016' else 'Shared ATS'
             self.assertEqual(repair_source(label, url, cid, company), (label, url, ''))
@@ -128,7 +128,7 @@ class ListingRetryTests(unittest.TestCase):
         progress = BrowserProgress()
         progress.discover([{'url': u, 'title': 'Open roles'} for u in self.LISTINGS] +
                           [{'url': real, 'title': 'Field Engineer'}])
-        _exclude_saved_navigation(progress)
+        _exclude_saved_navigation(progress, self.LISTINGS[0])
         self.assertEqual(list(progress.entries()), [real])
         self.assertEqual(len(progress._read('job')), len(self.LISTINGS) + 1)
 

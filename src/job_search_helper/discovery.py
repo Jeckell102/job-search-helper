@@ -15,6 +15,7 @@ from .ats import FetchError, HTTPResponse, _challenge, resolve_board
 MAX_HTML_BYTES = 2 * 1024 * 1024
 MAX_REDIRECTS = 4
 MAX_DISCOVERY_PAGES = 5
+DEFAULT_USER_AGENT = "JobSearchHelper/1.0 (public careers-board discovery; read-only)"
 CTA_TERMS = (
     "apply",
     "job",
@@ -64,12 +65,14 @@ def _public_addresses(host):
 class CareersTransport:
     """Fetch public HTML without cookies, proxies, automatic redirects or credentials."""
 
-    def __init__(self, timeout=15, interval=0.4, sleep=time.sleep, accept=None, max_bytes=MAX_HTML_BYTES):
+    def __init__(self, timeout=15, interval=0.4, sleep=time.sleep, accept=None,
+                 max_bytes=MAX_HTML_BYTES, user_agent=DEFAULT_USER_AGENT):
         self.timeout = timeout
         self.interval = interval
         self.sleep = sleep
         self.accept = accept or "text/html,application/xhtml+xml"
         self.max_bytes = max_bytes
+        self.user_agent = user_agent
         self.last_request = 0.0
         self.context = ssl.create_default_context()
 
@@ -92,7 +95,7 @@ class CareersTransport:
                     if parsed.query:
                         target += "?" + parsed.query
                     connection.request("GET", target, headers={
-                        "User-Agent": "JobSearchHelper/1.0 (public careers-board discovery; read-only)",
+                        "User-Agent": self.user_agent,
                         "Accept": self.accept, "Accept-Encoding": "identity",
                     })
                     response = connection.getresponse()

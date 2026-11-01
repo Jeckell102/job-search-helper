@@ -1380,7 +1380,8 @@ REPAIRS.update({
 
 def repair_source(ats, url, company_id, company):
     entry = REPAIRS.get(company_id)
-    if (not entry or company.strip().casefold() not in {
+    if (not entry or not isinstance(company, str) or not isinstance(url, str)
+            or company.strip().casefold() not in {
             name.casefold() for name in (entry['company'], *entry.get('company_aliases', []))}
             or url.strip() not in (entry['expected_url'], *entry.get('expected_urls', []))):
         return ats, url, ''
@@ -1420,7 +1421,16 @@ REPAIRS.update({
 
 REPAIRS.update({'COMP-0424': {'company': 'WOLF Advanced Technology', 'ats': 'WOLF Scouterecruit', 'expected_url': 'https://www.wolfadvancedtechnology.com/careers', 'expected_urls': ['https://www.wolfadvancedtechnology.com/careers/'], 'url': 'https://wolfadvancedtechnology.scouterecruit.net', 'evidence': 'Official careers page embeds the WOLF Scouterecruit board with 9 stable public postings and full details.'}})
 
-REPAIRS.update({'COMP-0427': {'company': 'Annapolis Micro Systems', 'ats': 'Annapolis Micro careers', 'expected_url': 'https://www.annapmicro.com/careers-at-annapolis-micro-systems/', 'expected_urls': ['https://www.annapmicro.com/careers-at-annapolis-micro-systems'], 'url': 'https://www.annapmicro.com/careers-at-annapolis-micro-systems/', 'evidence': 'Official careers page exposes 23 stable role detail pages with full descriptions.'}})
+REPAIRS.update({
+    'COMP-0427': {
+        'company': 'Annapolis Micro Systems',
+        'ats': 'Annapolis Micro careers',
+        'expected_url': 'https://www.annapmicro.com/careers-at-annapolis-micro-systems/',
+        'expected_urls': ['https://www.annapmicro.com/careers-at-annapolis-micro-systems'],
+        'url': 'https://www.annapmicro.com/careers-at-annapolis-micro-systems/',
+        'evidence': 'Official careers index and linked career categories publish first-party role pages with full descriptions; enumerate the current set on each scan.',
+    },
+})
 
 REPAIRS.update({'COMP-0428': {'company': 'Aitech Systems', 'ats': 'Aitech Comeet', 'expected_url': 'https://aitechsystems.com/careers/', 'expected_urls': ['https://aitechsystems.com/careers'], 'url': 'https://aitechsystems.com/careers/', 'evidence': 'Official Aitech careers page exposes 17 stable Comeet role pages across four location indexes with complete public descriptions.'}})
 
