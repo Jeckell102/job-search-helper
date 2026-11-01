@@ -1,6 +1,6 @@
 # Preferred functions; this is NOT an allowlist. Unmatched titles still reach AI.
 # Matching a phrase is a review hint, never automatic acceptance.
-# title-blacklist.txt ALWAYS wins, including Staff, Principal, and Director.
+# title-blacklist.txt ALWAYS wins. Seniority alone is not an exclusion; relevant Staff/Director roles may reach review.
 # One phrase per line. Case and punctuation are ignored; whole words match.
 # Use regex: only for deliberate regular expressions.
 solutions engineer
@@ -27,5 +27,19 @@ associate product line manager
 product engineer
 product specialist
 technical product specialist
+field engineering
+field engineer
 field support
 field service
+technical program manager
+technical project manager
+forward deployed
+deployment strategist
+mission operations
+technical operations
+customer success
+technical support
+technical account manager
+training manager
+application support
+network deployment

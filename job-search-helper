@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 jsh_root="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# `start` is the automated scraper entry point.  Keep the older helper
+# commands available here, but send start to the runner that owns the
+# multi-worker defaults and streamlined option help.
+if [[ "${1:-}" == "start" ]]; then
+  exec env PYTHONPATH="$jsh_root/src" "$jsh_root/.venv/bin/python" -m job_search_helper.runner "$@"
+fi
+
 exec env PYTHONPATH="$jsh_root/src" "$jsh_root/.venv/bin/python" -m job_search_helper.cli "$@"

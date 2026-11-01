@@ -40,6 +40,103 @@ class Transport:
 
 
 class ATSAdapterTests(unittest.TestCase):
+    def test_avient_oracle_tenant_uses_wildcard_accept_only_for_that_host(self):
+        class Response:
+            status = 200
+            headers = {}
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self, _limit): return b'{}'
+
+        class Opener:
+            def __init__(self): self.accepts = []
+            def open(self, request, timeout):
+                self.accepts.append(request.headers['Accept'])
+                return Response()
+
+        avient = HTTPTransport(sleep=lambda _: None)
+        avient.opener = Opener()
+        avient.get('https://fa-eqzh-saasfaprod1.fa.ocs.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions')
+        ordinary = HTTPTransport(sleep=lambda _: None)
+        ordinary.opener = Opener()
+        ordinary.get('https://ebfr.fa.us2.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions')
+        self.assertEqual(avient.opener.accepts, ['*/*'])
+        self.assertEqual(ordinary.opener.accepts, ['application/json'])
+
+    def test_scout_ai_captured_ashby_inventory_is_complete_and_full_content(self):
+        data = fixture("scout_ashby")
+        t = Transport([response(data)])
+        result = fetch_inventory("Ashby", "https://jobs.ashbyhq.com/scout-ai", "COMP-0496", "Scout AI", t)
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual(len(result.jobs), len(data["jobs"]))
+        self.assertEqual({j["posting_id"] for j in result.jobs}, {str(j["id"]) for j in data["jobs"]})
+        self.assertTrue(all(len(j["description"].strip()) > 100 for j in result.jobs))
+        self.assertTrue(all(j["url"].startswith("https://jobs.ashbyhq.com/scout-ai/") for j in result.jobs))
+        self.assertTrue(all(j["description"] == text(item["descriptionPlain"] or item["descriptionHtml"])
+                            for j, item in zip(result.jobs, data["jobs"])))
+        self.assertEqual(t.urls, ["https://api.ashbyhq.com/posting-api/job-board/scout-ai?includeCompensation=true"])
+
+    def test_scout_missing_content_and_identity_are_partial_with_valid_jobs_retained(self):
+        data = fixture("scout_ashby")
+        data["jobs"][0]["descriptionHtml"] = ""
+        data["jobs"][0]["descriptionPlain"] = ""
+        data["jobs"][1].pop("id")
+        data["jobs"][1].pop("jobUrl")
+        result = fetch_inventory("Ashby", "https://jobs.ashbyhq.com/scout-ai", "COMP-0496", "Scout AI", Transport([response(data)]))
+        self.assertEqual(result.status, "partial")
+        self.assertEqual(len(result.jobs), len(data["jobs"]) - 2)
+
+    def test_scout_duplicate_posting_id_is_not_complete(self):
+        data = fixture("scout_ashby")
+        data["jobs"][1]["id"] = data["jobs"][0]["id"]
+        data["jobs"][1]["jobUrl"] = data["jobs"][0]["jobUrl"]
+        result = fetch_inventory("Ashby", "https://jobs.ashbyhq.com/scout-ai", "COMP-0496", "Scout AI", Transport([response(data)]))
+        self.assertEqual(result.status, "partial")
+
+    def test_carbon_robotics_captured_ashby_inventory_is_complete_and_scoped(self):
+        """Replay the official Ashby payload captured from Carbon's job-openings page."""
+        data = fixture("carbon_ashby")
+        t = Transport([response(data)])
+        result = fetch_inventory(
+            "Ashby", "https://jobs.ashbyhq.com/carbon-robotics",
+            "COMP-0234", "Carbon Robotics", t,
+        )
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual(len(result.jobs), len(data["jobs"]))
+        self.assertEqual(
+            {job["posting_id"] for job in result.jobs},
+            {str(job["id"]) for job in data["jobs"]},
+        )
+        self.assertTrue(all(job["description"].strip() for job in result.jobs))
+        self.assertTrue(all("Carbon Robotics" in job["description"] for job in result.jobs))
+        self.assertEqual(
+            t.urls,
+            ["https://api.ashbyhq.com/posting-api/job-board/carbon-robotics?includeCompensation=true"],
+        )
+
+    def test_carbon_missing_description_is_partial_with_verified_jobs_preserved(self):
+        data = fixture("carbon_ashby")
+        data["jobs"][1]["descriptionHtml"] = ""
+        data["jobs"][1]["descriptionPlain"] = ""
+        result = fetch_inventory(
+            "Ashby", "https://jobs.ashbyhq.com/carbon-robotics",
+            "COMP-0234", "Carbon Robotics", Transport([response(data)]),
+        )
+        self.assertEqual(result.status, "partial")
+        self.assertEqual(len(result.jobs), len(data["jobs"]) - 1)
+        self.assertNotIn(str(data["jobs"][1]["id"]), {job["posting_id"] for job in result.jobs})
+
+    def test_carbon_missing_identity_never_reports_complete(self):
+        data = fixture("carbon_ashby")
+        data["jobs"][0].pop("id")
+        data["jobs"][0].pop("jobUrl")
+        result = fetch_inventory(
+            "Ashby", "https://jobs.ashbyhq.com/carbon-robotics",
+            "COMP-0234", "Carbon Robotics", Transport([response(data)]),
+        )
+        self.assertEqual(result.status, "partial")
+        self.assertEqual(len(result.jobs), len(data["jobs"]) - 1)
+
     def test_greenhouse_uses_public_posting_id_and_full_content(self):
         t = Transport([response(fixture("greenhouse"))])
         result = fetch_inventory("Greenhouse", "https://job-boards.greenhouse.io/acme/jobs/123", "C-1", "Acme", t)
@@ -219,6 +316,16 @@ class ATSAdapterTests(unittest.TestCase):
         with self.assertRaises(FetchError):
             _safe_api_url("https://example.com/")
         _safe_api_url("https://api.lever.co/v0/postings/acme")
+
+    def test_breezy_public_inventory_and_detail_paths_are_pinned(self):
+        for url in (
+            "https://matrix-technologies-inc.breezy.hr/",
+            "https://matrix-technologies-inc.breezy.hr/json",
+            "https://matrix-technologies-inc.breezy.hr/p/c7caf79c19df-construction-manager-project-based",
+        ):
+            _safe_api_url(url)
+        with self.assertRaises(FetchError):
+            _safe_api_url("https://matrix-technologies-inc.breezy.hr/p/c7caf79c19df-construction-manager-project-based?x=1")
 
     def test_retry_after_cap(self):
         self.assertEqual(_delay({"Retry-After": "9999"}, 0), 8)

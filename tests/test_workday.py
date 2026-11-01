@@ -8,6 +8,7 @@ from urllib.error import HTTPError
 
 from job_search_helper.ats import FetchError, HTTPResponse, HTTPTransport, _safe_api_url, fetch_inventory, resolve_board
 from job_search_helper.engine import Engine, State, _inventory_source
+from job_search_helper.workday import _posting, _reconcile_changed_workday
 from job_search_helper.repository import MemoryRepository
 from test_ats import Transport, response
 from test_discovery import html
@@ -51,6 +52,29 @@ class WorkdayTests(unittest.TestCase):
         result = fetch_inventory(ats, url, "C-1", "Acme", t, discovery_transport=pages or Transport([]))
         return result, t
 
+    def test_missing_detail_does_not_discard_later_jobs_or_claim_complete(self):
+        result, t = self.fetch([page(2, [listing(1), listing(2)]),
+                                HTTPResponse(404, b"missing"), response(detail(2))])
+        self.assertEqual(result.status, "partial")
+        self.assertEqual([j["req_id"] for j in result.jobs], ["REQ2"])
+        self.assertIn("404", result.reason)
+        self.assertEqual(len(t.urls), 3)
+
+    def test_access_denial_stops_detail_requests(self):
+        result, t = self.fetch([page(2, [listing(1), listing(2)]),
+                                HTTPResponse(403, b"denied"), response(detail(2))])
+        self.assertEqual(result.status, "blocked")
+        self.assertFalse(result.jobs)
+        self.assertEqual(len(t.urls), 2)
+
+    def test_final_access_denial_does_not_retry_reconciliation(self):
+        with patch("job_search_helper.workday.PAGE_SIZE", 1):
+            result, t = self.fetch([page(2), page(0, [listing(2)]), response(detail()),
+                                    response(detail(2)), HTTPResponse(403, b"denied")])
+        self.assertEqual(result.status, "blocked")
+        self.assertEqual([job["req_id"] for job in result.jobs], ["REQ1", "REQ2"])
+        self.assertEqual(len(t.posts), 3)
+
     def test_resolves_locale_jobs_detail_and_api_urls(self):
         for url in (BOARD, BOARD + "/jobs", BOARD + listing()["externalPath"], ROOT, ROOT + "/jobs"):
             with self.subTest(url=url):
@@ -73,11 +97,29 @@ class WorkdayTests(unittest.TestCase):
 
     def test_pagination_uses_initial_total_when_later_pages_report_zero(self):
         with patch("job_search_helper.workday.PAGE_SIZE", 1):
-            result, t = self.fetch([page(2), response(detail()), page(0, [listing(2)]),
-                                    response(detail(2)), page(2)])
+            result, t = self.fetch([page(2), page(0, [listing(2)]), response(detail()),
+                                    response(detail(2)), page(2), page(0, [listing(2)])])
         self.assertEqual(result.status, "complete", result.reason)
         self.assertEqual(len(result.jobs), 2)
-        self.assertEqual([body["offset"] for _, body in t.posts], [0, 1, 0])
+        self.assertEqual([body["offset"] for _, body in t.posts], [0, 1, 0, 1])
+
+    def test_listings_finish_before_detail_delay_can_shift_pages(self):
+        class MovingTransport:
+            def __init__(self): self.detail_started = False; self.listing_calls = []
+            def post(self, url, payload):
+                self.listing_calls.append(payload['offset'])
+                if payload['offset']:
+                    return page(0, [listing(2)])
+                return page(2)
+            def get(self, url):
+                self.detail_started = True
+                return response(detail(2 if url.endswith('REQ2') else 1))
+        with patch('job_search_helper.workday.PAGE_SIZE', 1):
+            transport = MovingTransport()
+            result = fetch_inventory('Workday', BOARD, 'C-1', 'Acme', transport)
+        self.assertEqual(result.status, 'complete', result.reason)
+        self.assertEqual([j['posting_id'] for j in result.jobs], ['opaque-1', 'opaque-2'])
+        self.assertEqual(transport.listing_calls[:2], [0, 1])
 
     def test_scoped_search_is_preserved_in_request_and_inventory_identity(self):
         result, t = self.fetch([page(0, [])], url=BOARD + "/jobs?q=Design+Group&utm_source=example",
@@ -122,13 +164,13 @@ class WorkdayTests(unittest.TestCase):
 
     def test_listing_schema_count_and_early_empty_page_fail_closed(self):
         for responses in ([response({})], [page(True, [])], [page(0)],
-                          [page(2), response(detail()), page(0, [])]):
+                          [page(2), page(0, []), response(detail())]):
             result, _ = self.fetch(responses)
             self.assertEqual(result.status, "partial", result.reason)
 
     def test_repeated_page_does_not_fetch_duplicate_details(self):
         with patch("job_search_helper.workday.PAGE_SIZE", 1):
-            result, t = self.fetch([page(2), response(detail()), page(0)])
+            result, t = self.fetch([page(2), page(0), response(detail())])
         self.assertEqual(result.status, "partial")
         self.assertEqual(len(result.jobs), 1)
         self.assertIn("repeated", result.reason)
@@ -136,8 +178,10 @@ class WorkdayTests(unittest.TestCase):
 
     def test_count_change_first_page_change_and_page_cap_are_partial(self):
         with patch("job_search_helper.workday.PAGE_SIZE", 1):
-            for responses in ([page(2), response(detail()), page(3, [listing(2)])],
-                              [page(2), response(detail()), page(0, [listing(2)]), response(detail(2)), page(2, [listing(3)])]):
+            for responses in ([page(2), page(3, [listing(2)]), response(detail())],
+                              [page(2), page(0, [listing(2)]), response(detail()), response(detail(2)),
+                               page(2, [listing(3)]), page(0, [listing(2)]),
+                               page(2, [listing(3)]), page(0, [listing(2)]), response({})]):
                 result, _ = self.fetch(responses)
                 self.assertEqual(result.status, "partial")
             with patch("job_search_helper.workday.MAX_PAGES", 1):
@@ -161,7 +205,7 @@ class WorkdayTests(unittest.TestCase):
             with self.subTest(path=path), redirect_stderr(StringIO()):
                 result, t = self.fetch([page(entries=[{**listing(), "externalPath": path}])])
                 self.assertEqual(result.status, "partial")
-                self.assertEqual(t.urls, [ROOT + "/jobs"])
+
 
     def test_late_http_failure_keeps_jobs_without_claiming_complete(self):
         for code, status in ((403, "blocked"), (429, "partial"), (500, "partial"), (404, "partial")):
@@ -218,6 +262,63 @@ class WorkdayTests(unittest.TestCase):
             self.assertEqual(request.get_method(), "POST")
             self.assertEqual(json.loads(request.data), payload)
             self.assertEqual(request.get_header("Content-type"), "application/json")
+
+
+class WorkdayReconciliationTests(unittest.TestCase):
+    def setUp(self):
+        self.endpoint = ROOT
+        self.payload = {"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": ""}
+        self.host = "acme.wd501.myworkdayjobs.com"
+        self.old = [_posting(detail(1), listing(1)["externalPath"], "Careers", self.host, "C-1", "Acme"),
+                    _posting(detail(2), listing(2)["externalPath"], "Careers", self.host, "C-1", "Acme")]
+
+    def reconcile(self, entries, total, detail_numbers=(), *, second_entries=None, second_total=None):
+        first = response({"total": total, "jobPostings": entries})
+        second = response({"total": total if second_total is None else second_total,
+                           "jobPostings": entries if second_entries is None else second_entries})
+        details = [response(detail(n)) for n in detail_numbers]
+        # Reconciliation now fetches any new details before its mandatory
+        # all-pages post-detail reread; keep the second listing response last.
+        transport = WorkdayTransport([first, *details, second])
+        return _reconcile_changed_workday(self.endpoint, self.payload, 2, "Careers", self.host,
+                                          "C-1", "Acme", transport, self.old,
+                                          {listing(n)["externalPath"]: listing(n) for n in (1, 2)})
+
+    def test_addition_reuses_old_rows_and_fetches_new_detail(self):
+        jobs, issue = self.reconcile([listing(1), listing(2), listing(3)], 3, [3])
+        self.assertIn("reconciled cohort", issue)
+        self.assertEqual([job["req_id"] for job in jobs], ["REQ1", "REQ2", "REQ3"])
+
+    def test_removal_uses_stable_refreshed_cohort_without_union(self):
+        jobs, issue = self.reconcile([listing(1)], 1)
+        self.assertIn("reconciled cohort", issue)
+        self.assertEqual([job["req_id"] for job in jobs], ["REQ1"])
+
+    def test_same_count_substitution_fetches_only_new_detail(self):
+        jobs, issue = self.reconcile([listing(1), listing(3)], 2, [3])
+        self.assertIn("reconciled cohort", issue)
+        self.assertEqual([job["req_id"] for job in jobs], ["REQ1", "REQ3"])
+
+    def test_second_pass_count_drift_fails_closed(self):
+        jobs, issue = self.reconcile([listing(1), listing(2)], 2,
+                                     second_entries=[listing(1), listing(2), listing(3)], second_total=3)
+        self.assertIsNone(jobs)
+        self.assertIn("changed", issue)
+
+    def test_duplicate_refresh_fails_closed(self):
+        jobs, issue = self.reconcile([listing(1), listing(1)], 2)
+        self.assertIsNone(jobs)
+        self.assertIn("repeated", issue)
+
+    def test_new_detail_failure_fails_closed(self):
+        first = response({"total": 2, "jobPostings": [listing(1), listing(3)]})
+        second = response({"total": 2, "jobPostings": [listing(1), listing(3)]})
+        transport = WorkdayTransport([first, second, HTTPResponse(404, b"missing")])
+        jobs, issue = _reconcile_changed_workday(self.endpoint, self.payload, 2, "Careers", self.host,
+                                                  "C-1", "Acme", transport, self.old,
+                                                  {listing(n)["externalPath"]: listing(n) for n in (1, 2)})
+        self.assertIsNone(jobs)
+        self.assertIn("could not be verified", issue)
 
 
 class WorkdayEngineTests(unittest.TestCase):

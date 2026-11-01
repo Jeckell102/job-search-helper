@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlencode, urlsplit
 
-from job_search_helper.adp import API, CAREERS_PATH, HOST
+from job_search_helper.adp import API, API_PATH, CAREERS_PATH, HOST
 from job_search_helper.ats import FetchError, HTTPResponse, HTTPTransport, Inventory, _safe_api_url, fetch_inventory, resolve_board
 from job_search_helper.engine import Engine, State, _inventory_source
 from job_search_helper.repository import MemoryRepository
@@ -16,6 +16,9 @@ CID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 PARAMS = {"cid": CID, "ccId": "9201677718185_2", "lang": "en_US"}
 BOARD = f"https://{HOST}{CAREERS_PATH}?" + urlencode(PARAMS)
 SOURCE = API + "?" + urlencode(PARAMS)
+AIRGAIN_HOST = "workforcenow.cloud.adp.com"
+AIRGAIN_PARAMS = {"cid": "a5bb880d-c347-4e46-9d87-7fa641c11036", "ccId": "19000101_000001", "lang": "en_US"}
+AIRGAIN_BOARD = f"https://{AIRGAIN_HOST}{CAREERS_PATH}?" + urlencode(AIRGAIN_PARAMS) + "&type=JS"
 
 
 def posting(number=1, full=False):
@@ -54,6 +57,30 @@ class AdpTests(unittest.TestCase):
                     SOURCE, SOURCE + "&locale=en_US&%24skip=21&%24top=20"):
             self.assertEqual(resolve_board("ADP", url), ("ADP", urlencode(PARAMS), API + "?"))
         self.assertEqual(_inventory_source(BOARD), SOURCE)
+
+    def test_airgain_cloud_origin_is_preserved_for_board_api_details_and_output(self):
+        legacy = BOARD.replace(HOST, "workforcenow.adp.com")
+        for board, host in ((AIRGAIN_BOARD, AIRGAIN_HOST), (legacy, HOST)):
+            with self.subTest(host=host):
+                name, params, root = resolve_board("ADP", board)
+                self.assertEqual(name, "ADP")
+                self.assertEqual(root, f"https://{host}{API_PATH}?")
+                self.assertIn("ccId=", params)
+
+        items = [posting(index, full=True) for index in range(1, 22)]
+        responses = [page(21, 1, items[:20])]
+        responses += [response(item) for item in items[:20]]
+        responses += [page(21, 21, items[20:])]
+        responses += [response(items[20]), page(21, 1, items[:20])]
+        result, transport = self.fetch(responses, url=AIRGAIN_BOARD)
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual(len(result.jobs), 21)
+        self.assertTrue(all(url.startswith(f"https://{AIRGAIN_HOST}/") for url in transport.urls))
+        self.assertTrue(all(job["url"].startswith(f"https://{AIRGAIN_HOST}/") for job in result.jobs))
+
+        legacy_result, _ = self.fetch(
+            [HTTPResponse(404, b"legacy board unavailable")], url=legacy)
+        self.assertIn(legacy_result.status, {"failed", "partial"})
 
     def test_full_details_and_separate_stable_external_and_requisition_ids(self):
         result, t = self.fetch([page(), response(posting(full=True))])

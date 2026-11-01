@@ -1,0 +1,102 @@
+{
+  "Id": "93a511fe-6cad-46d6-bf8d-d4867aa8bc87",
+  "Title": "Drafting Lead",
+  "Featured": false,
+  "FullTime": true,
+  "HoursPerWeek": null,
+  "JobCategoryName": "Engineering Support Services",
+  "Locations": [
+    {
+      "Id": "497b12f7-c247-5634-85ca-e19a61d91773",
+      "LocalizedName": null,
+      "LocalizedLocationId": null,
+      "LocalizedDescription": "AL08 - Madison",
+      "Address": {
+        "Line1": "26641 Distribution Boulevard NW",
+        "Line2": null,
+        "City": "Madison",
+        "State": {
+          "Name": "Alabama",
+          "Code": "AL"
+        },
+        "PostalCode": "35756",
+        "Country": {
+          "Id": "e3feb389-b1c5-4eda-848f-0444adcc0403",
+          "Name": "United States",
+          "Code": "USA"
+        }
+      },
+      "DisplayName": false,
+      "DisplayLocationId": false,
+      "DisplayDescription": false,
+      "DisplayAddress": true,
+      "DisplayStreetAddress": false,
+      "Coordinates": {
+        "Longitude": -86.8082056,
+        "Latitude": 34.6800661
+      },
+      "Shapes": null,
+      "SourceOfTruth": 1,
+      "IsAvailableForOpportunities": true
+    }
+  ],
+  "PostedDate": "2026-10-01T20:05:38.669Z",
+  "UpdatedDate": "2026-10-02T20:44:32.824Z",
+  "RequisitionNumber": "DRAFT010136",
+  "Description": "<p>The <a href=\"https://www.ara.com/huntsville-alabama/\" target=\"_blank\" rel=\"noopener\">Prototype, Manufacturing and Integration (PMI) Division</a> of <strong>Applied Research Associates (ARA), Inc</strong> (<a href=\"http://www.ara.com\" target=\"_blank\" rel=\"noopener\">www.ara.com</a>) has an exciting opportunity for a full-time <strong>Drafting Lead</strong> to work <span style=\"text-decoration: underline;\">on-site</span> in our Madison, AL location.&nbsp; A&nbsp;Drafting Lead develops design drawings according to engineering sketches and proposal specifications using standard and specialized computer aided design (CAD) techniques and skills.&nbsp; Digitizes, edits, and revises engineering drawings of components, parts, structures, and/or assemblies.&nbsp; Makes engineering computations, mathematical calculations, determines scales, and prepares or revises specifications.&nbsp; Makes final drawing, checking dimension of parts, materials to be used, relation of one part to another, and relation of various parts to whole structure or project.&nbsp; Checks drawings for final approval to ensure conformance to design criteria, ARA standards, and ANSI standards.&nbsp;&nbsp;The complexity of assignments requires exercise of considerable initiative, latitude, independent judgment, and the ability to work under general technical direction.</p>\n<p><span style=\"color: #003366; background-color: #ffff99;\"><em><strong>This position will require passing a national background check <span style=\"text-decoration: underline;\">and</span> <span style=\"text-decoration: underline;\">Must be able to obtain &amp; maintain a SECRET clearance from the US Department of War</span>. Must be a US Citizen.</strong></em></span></p>\n<p><span style=\"text-decoration: underline;\"><strong>Drafting Lead Experience &amp; Skills Needed:</strong></span></p>\n<ul>\n<li><strong>Bachelor&rsquo;s Degree <span style=\"text-decoration: underline;\">and</span> 5+ years of Drafting experience <span style=\"text-decoration: underline;\">OR</span> a Associates and 8+ years of Drafting experience, <span style=\"text-decoration: underline;\">OR</span> a H.S. diploma (or equivalent) and 12+ years&rsquo; experience in Drafting within manufacturing field</strong></li>\n<li>Advanced SolidWorks knowledge and practice, advanced SolidWorks PDM knowledge</li>\n<li>In-depth understanding and practice of ANSI Y14 drawing standards</li>\n<li>Experience in producing a drawing package which includes drafting techniques, processes, how a drawing should look, dimensions and tolerances</li>\n<li>Strong attention to detail and precision in translating designs into accurate technical specifications</li>\n<li>Capable of performing advanced drafting techniques with intermediate to advanced knowledge of practical fabrication techniques</li>\n<li>Experience with metal fabrication and welding, and system assembly</li>\n<li>Highly proficient in producing drawings used for manufacturing and production</li>\n<li>Excellent communication skills to effectively collaborate with the engineering, design, and production teams</li>\n<li>Ability to prioritize tasks in a fast-paced manufacturing environment</li>\n<li>Provides solutions and a proactive approach to overcoming challenges</li>\n<li>Ability to support design team through moderate to advanced additions/changes of model</li>\n<li>Job requires any or all of the following: pushing, pulling, sitting, sitting for long periods of time, standing, standing for long periods of time, reaching, grasping, bending, climbing, stooping, vision for computer work and near and distance work and candidate must be able to lift up to 50 lbs. individually or 50 lbs. or more assisted</li>\n<li>Be physically capable of wearing all required personal protective equipment to include, but not limited to safety glasses, respirator, safety shoes, hearing protection and hand protection as required</li>\n</ul>\n<p><a href=\"https://www.ara.com/who-we-are/\" target=\"_blank\" rel=\"noopener\"><strong>Who is ARA?</strong></a><br /><a href=\"https://www.ara.com\" target=\"_blank\" rel=\"noopener\">Applied Research Associates (ARA)</a> is a 100% employee-owned technology solutions company with more than 2,300 employee-owners across the United States and beyond. Our dedicated team brings deep technical expertise and a passion for solving complex challenges &ndash; creating innovative solutions that protect our safety, security, and way of life. At ARA, every project is an opportunity to exceed expectations. We deliver solutions that not only meet mission objectives but unlock new possibilities for the future.&nbsp;</p>\n<p><span style=\"background-color: #ffff99;\"><strong>*Learn more about who we are and what we do by going to: <a href=\"https://www.ara.com\" target=\"_blank\" rel=\"noopener\">www.ara.com</a></strong></span></p>\n<p>ARA offers competitive benefits that address our employees&rsquo; needs now and in the future. Learn more about each of our <strong><a href=\"https://www.ara.com/careers/\" target=\"_blank\" rel=\"noopener\">ARA Benefits &amp; Employee Owned here</a></strong>.</p>\n<p>Interested in applying? Go to <a href=\"https://www.ara.com/careers/\" target=\"_blank\" rel=\"noopener\">ARA Careers</a> for the <strong>Drafting Lead</strong> JobPosting<span style=\"color: #0000ff;\">. <span style=\"color: #ffffff;\">#LI-AB1 #CAD #SolidWorks #Drafting</span></span></p>",
+  "EqualOpportunityEmployerDescription": "Equal Opportunity Employer/Protected Veterans/Individuals with Disabilities<br>\r\nThis employer is required to notify all applicants of their rights pursuant to federal employment laws.\r\nFor further information, please review the <a href='https://www.eeoc.gov/poster' target='_blank'>Know Your Rights</a> notice from the Department of Labor.",
+  "PayTransparencyPolicyStatement": null,
+  "MatchScore": 1.0,
+  "HasApplied": false,
+  "ApplicationJobBoardName": null,
+  "ApplicationJobBoardId": null,
+  "DateApplied": null,
+  "Salaried": true,
+  "CompensationAmount": null,
+  "PublishingStatus": 1,
+  "Links": [],
+  "BehaviorCriteria": [],
+  "MotivationCriteria": [],
+  "EducationCriteria": [],
+  "LicenseAndCertificationCriteria": [],
+  "SkillCriteria": [],
+  "WorkExperienceCriteria": [],
+  "JobBoardMemberships": [
+    {
+      "JobBoardId": "07442cec-d18e-4589-ab15-8342edc29af7",
+      "PublishedInternal": false,
+      "PublishedExternal": true,
+      "ExternalPostedDate": "2026-10-07T23:53:30.242Z",
+      "InternalPostedDate": null
+    },
+    {
+      "JobBoardId": "063a79cf-d30e-41b3-b34d-06bf32f029c5",
+      "PublishedInternal": true,
+      "PublishedExternal": false,
+      "ExternalPostedDate": null,
+      "InternalPostedDate": "2026-10-07T23:53:30.242Z"
+    }
+  ],
+  "AssessmentUri": null,
+  "AssessmentStatus": null,
+  "OpportunityIsClosed": false,
+  "TravelRequired": null,
+  "TravelDescription": null,
+  "SupervisorName": null,
+  "Assessments": [],
+  "ApplicationId": null,
+  "CompensationAnnualMinimum": null,
+  "CompensationAnnualMaximum": null,
+  "CompensationHourlyMinimum": null,
+  "CompensationHourlyMaximum": null,
+  "CompensationCurrencyCode": null,
+  "CompensationCurrency": null,
+  "JobLocationType": 1,
+  "PayRangeVisible": false,
+  "PayRange": {
+    "PayRangeMinimum": null,
+    "PayRangeMaximum": null
+  },
+  "PayRangeCurrencyCode": "USD",
+  "OpportunityType": 0
+}

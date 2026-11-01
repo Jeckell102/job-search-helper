@@ -1,0 +1,234 @@
+{
+  "status": 200,
+  "error": {
+    "message": "",
+    "body": ""
+  },
+  "data": {
+    "positions": [
+      {
+        "id": 1340074648245,
+        "displayJobId": "R10255003",
+        "name": "2027 Mechanical/Aerospace Engineer Intern - Baltimore MD",
+        "locations": [
+          "United States-Maryland-Baltimore"
+        ],
+        "standardizedLocations": [
+          "Baltimore, MD, US"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Intern/Casual",
+        "creationTs": 1791331200,
+        "isHot": 0,
+        "workLocationOption": "onsite",
+        "locationFlexibility": null,
+        "atsJobId": "R10255003",
+        "positionUrl": "/careers/job/1340074648245"
+      },
+      {
+        "id": 1340074648463,
+        "displayJobId": "R10255010",
+        "name": "2027 Electrical/Systems Engineer Intern - Baltimore MD",
+        "locations": [
+          "United States-Maryland-Baltimore"
+        ],
+        "standardizedLocations": [
+          "Baltimore, MD, US"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Intern/Casual",
+        "creationTs": 1791331200,
+        "isHot": 0,
+        "workLocationOption": "onsite",
+        "locationFlexibility": null,
+        "atsJobId": "R10255010",
+        "positionUrl": "/careers/job/1340074648463"
+      },
+      {
+        "id": 1340074653140,
+        "displayJobId": "R10255145",
+        "name": "Supply Chain Logistics Specialist - Level 2/3",
+        "locations": [
+          "United States-Utah-Corinne"
+        ],
+        "standardizedLocations": [
+          "Corinne, UT, US"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Global Supply Chain Mult-Func",
+        "creationTs": 1791331200,
+        "isHot": 0,
+        "workLocationOption": "onsite",
+        "locationFlexibility": null,
+        "atsJobId": "R10255145",
+        "positionUrl": "/careers/job/1340074653140"
+      },
+      {
+        "id": 1340074653298,
+        "displayJobId": "R10255148",
+        "name": "Supply Chain Technical Coordinator 3",
+        "locations": [
+          "United States-Utah-Corinne"
+        ],
+        "standardizedLocations": [
+          "Corinne, UT, US"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Global Supply Chain Mult-Func",
+        "creationTs": 1791331200,
+        "isHot": 0,
+        "workLocationOption": "onsite",
+        "locationFlexibility": null,
+        "atsJobId": "R10255148",
+        "positionUrl": "/careers/job/1340074653298"
+      },
+      {
+        "id": 1340072826536,
+        "displayJobId": "R10239455",
+        "name": "Sr Staff Chief Engineer",
+        "locations": [
+          "United States-Maryland-Baltimore"
+        ],
+        "standardizedLocations": [
+          "Baltimore, MD, US"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Engineering Mult-Func",
+        "creationTs": 1783468800,
+        "isHot": 0,
+        "workLocationOption": "onsite",
+        "locationFlexibility": "flexible_within_country",
+        "atsJobId": "R10239455",
+        "positionUrl": "/careers/job/1340072826536"
+      },
+      {
+        "id": 1340074544372,
+        "displayJobId": "R10253814",
+        "name": "Industrial Security Manager - Level 3",
+        "locations": [
+          "United States-Maryland-Linthicum"
+        ],
+        "standardizedLocations": [
+          "Linthicum Heights, MD, US"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Security Mult-Func",
+        "creationTs": 1790726400,
+        "isHot": 0,
+        "workLocationOption": "onsite",
+        "locationFlexibility": null,
+        "atsJobId": "R10253814",
+        "positionUrl": "/careers/job/1340074544372"
+      },
+      {
+        "id": 1340074659369,
+        "displayJobId": "R10255166",
+        "name": "Calling all Secret-Cleared Optical Engineers! (Chandler)",
+        "locations": [
+          "United States-Arizona-Chandler"
+        ],
+        "standardizedLocations": [
+          "Chandler, AZ, US"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Engineering Mult-Func",
+        "creationTs": 1791417600,
+        "isHot": 0,
+        "workLocationOption": "onsite",
+        "locationFlexibility": null,
+        "atsJobId": "R10255166",
+        "positionUrl": "/careers/job/1340074659369"
+      },
+      {
+        "id": 1340074548096,
+        "displayJobId": "R10253885",
+        "name": "Program and Planning Scheduling Analyst - Level 3 or 4",
+        "locations": [
+          "United States-Utah-Magna"
+        ],
+        "standardizedLocations": [
+          "Magna, UT, US"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Business Management Mult-Func",
+        "creationTs": 1791417600,
+        "isHot": 0,
+        "workLocationOption": "onsite",
+        "locationFlexibility": null,
+        "atsJobId": "R10253885",
+        "positionUrl": "/careers/job/1340074548096"
+      },
+      {
+        "id": 1340070402653,
+        "displayJobId": "R10222022",
+        "name": "Principal Software Engineer",
+        "locations": [
+          "United Kingdom-Cheltenham"
+        ],
+        "standardizedLocations": [
+          "Cheltenham, England, GB"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Cyber",
+        "creationTs": 1770336000,
+        "isHot": 0,
+        "workLocationOption": "hybrid",
+        "locationFlexibility": null,
+        "atsJobId": "R10222022",
+        "positionUrl": "/careers/job/1340070402653"
+      },
+      {
+        "id": 1340070402656,
+        "displayJobId": "R10222023",
+        "name": "Lead Software Engineer",
+        "locations": [
+          "United Kingdom-London"
+        ],
+        "standardizedLocations": [
+          "London, England, GB"
+        ],
+        "postedTs": 1791417600,
+        "solrScore": null,
+        "stars": 0,
+        "department": "Cyber",
+        "creationTs": 1770336000,
+        "isHot": 0,
+        "workLocationOption": "hybrid",
+        "locationFlexibility": null,
+        "atsJobId": "R10222023",
+        "positionUrl": "/careers/job/1340070402656"
+      }
+    ],
+    "count": 3761,
+    "sortBy": "timestamp",
+    "appliedFilters": {},
+    "debug": {},
+    "savedSearchMetadata": {
+      "savedSearchParamsHash": null,
+      "isSavedSearchActive": false
+    },
+    "resultsMetaData": {
+      "usedFuzzSearch": false,
+      "mocTitle": null
+    }
+  },
+  "metadata": null
+}

@@ -33,9 +33,9 @@ class TargetedWriterTests(unittest.TestCase):
         service.get_calls.clear()
         result = repo.commit([op('1', **{'Review Notes': 'two'})])
         ranges = [r for call in service.get_calls for r in call.get('ranges', [])]
-        self.assertIn("'Job History'!K2:K101", ranges)
-        self.assertIn("'Job History'!F2:F101", ranges)
-        self.assertNotIn("'Job History'!A3:AF3", ranges)
+        self.assertIn("'Job History'!K2:K", ranges)
+        self.assertIn("'Job History'!F2:F", ranges)
+        self.assertIn("'Job History'!A3:AF3", ranges)
         self.assertNotIn("'Job History'!A1:AF1000", ranges)
         self.assertEqual(result['timings']['read_requests'], 1)
         self.assertEqual(result['timings']['write_requests'], 1)
@@ -51,7 +51,7 @@ class TargetedWriterTests(unittest.TestCase):
         self.assertNotIn("'Job History'!A1:AF1000", ranges)
         self.assertEqual(len(planner.rows['Job History']), 100)
 
-    def test_append_uses_cached_tail_without_scanning_manual_orphan_rows(self):
+    def test_append_rechecks_orphan_rows_and_destination_validation(self):
         service, repo = self.make(1)
         repo.commit([op('0', **{'Review Notes': 'warm'})])
         service.set_cell('Job History', 3, 'Review Notes', 'manual orphan')
@@ -59,9 +59,11 @@ class TargetedWriterTests(unittest.TestCase):
                                                            'effectiveValue': {'numberValue': 1}})
         service.set_cell('Job History', 5, 'Job Status', cell={'dataValidation': {'strict': True,
             'condition': {'type': 'ONE_OF_LIST', 'values': [{'userEnteredValue': 'Open'}]}}})
-        repo.commit([op('new', **{'Job Status': 'bad'})])
+        with self.assertRaisesRegex(RepositoryError, 'dropdown choice'):
+            repo.commit([op('new', **{'Job Status': 'bad'})])
+        repo.commit([op('new', **{'Job Status': 'Open'})])
         rows = repo.read('Job History')
-        self.assertEqual(rows[1]['Job Key'], 'new')
+        self.assertEqual(rows[-1]['Job Key'], 'new')
         self.assertTrue(any(r['Review Notes'] == 'manual orphan' for r in rows))
         self.assertEqual(service.sheet('Job History')['data'][0]['rowData'][4]['values'][1]['userEnteredValue'], {'formulaValue': '=1'})
 

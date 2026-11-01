@@ -14,6 +14,8 @@ from .ats import FetchError, Inventory, _base, _json, text
 
 
 HOST = "workforcenow.adp.com"
+LEGACY_HOST = "workforcenow.cloud.adp.com"
+HOSTS = frozenset({HOST, LEGACY_HOST})
 CAREERS_PATH = "/mascsr/default/mdf/recruitment/recruitment.html"
 API_PATH = "/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions"
 API = f"https://{HOST}{API_PATH}"
@@ -63,7 +65,7 @@ def safe_api_path(parsed):
 
 def resolve_adp(ats, url):
     p = urlsplit(url)
-    if (p.scheme != "https" or p.hostname != HOST or p.username or p.password or p.port not in (None, 443)):
+    if (p.scheme != "https" or p.hostname not in HOSTS or p.username or p.password or p.port not in (None, 443)):
         raise ValueError("Provide a verified public ADP Workforce Now HTTPS URL.")
     api = p.path == API_PATH or bool(re.fullmatch(re.escape(API_PATH) + "/" + TOKEN, p.path))
     if p.path != CAREERS_PATH and not api:
@@ -74,7 +76,7 @@ def resolve_adp(ats, url):
         raise ValueError("ATS / Source disagrees with the verified ATS URL.")
     if any(marker in configured for marker in ("shared", "parent")) and not params.get("userQuery"):
         raise ValueError("Shared/parent ADP board requires an explicit company search; verify its career center and userQuery.")
-    return "ADP", urlencode(params), API + "?"
+    return "ADP", urlencode(params), f"https://{p.hostname}{API_PATH}?"
 
 
 def _token(value, name):
@@ -102,7 +104,7 @@ def _external_id(item):
     return _token(_fields(item, "stringFields").get("ExternalJobID", {}).get("stringValue"), "ExternalJobID")
 
 
-def _posting(item, ident, external_id, params, company_id, company):
+def _posting(item, ident, external_id, params, company_id, company, host=HOST):
     if not isinstance(item, dict) or item.get("itemID") != ident:
         raise FetchError("partial", "ADP job detail ID does not match its listing.")
     if _external_id(item) != external_id:
@@ -143,7 +145,7 @@ def _posting(item, ident, external_id, params, company_id, company):
     public_params["jobId"] = external_id
     row = _base({"id": ident}, "ADP", company_id, company)
     row.update(title=text(item["requisitionTitle"]), description=text(item["requisitionDescription"]),
-               req_id=text(item.get("clientRequisitionID")), url=f"https://{HOST}{CAREERS_PATH}?" + urlencode(public_params),
+               req_id=text(item.get("clientRequisitionID")), url=f"https://{host}{CAREERS_PATH}?" + urlencode(public_params),
                location="; ".join(dict.fromkeys(places)), department=text(strings.get("HomeDepartment", {}).get("stringValue")),
                compensation=compensation, created_at=text(item.get("postDate")))
     if not row["title"] or not row["description"]:
@@ -172,6 +174,11 @@ def _page(data, offset, *, search=False):
 
 def fetch_adp(board, root, company_id, company, transport):
     source = root + board
+    origin = urlsplit(source)
+    if (origin.scheme != "https" or origin.hostname not in HOSTS or origin.path != API_PATH
+            or origin.username or origin.password or origin.port not in (None, 443) or origin.fragment):
+        return Inventory("unsupported", reason="ADP requires a verified public API origin.", source_url=source)
+    api = f"https://{origin.hostname}{API_PATH}"
     params = dict(parse_qsl(board))
     request_params = {**params, "locale": params["lang"]}
     # Unfiltered $skip is one-based; keyword searches start at zero.
@@ -183,7 +190,7 @@ def fetch_adp(board, root, company_id, company, transport):
     try:
         for page in range(MAX_PAGES):
             context = f"ADP listing page {page + 1}"
-            url = API + "?" + urlencode({**request_params, "$skip": offset, "$top": PAGE_SIZE})
+            url = api + "?" + urlencode({**request_params, "$skip": offset, "$top": PAGE_SIZE})
             total, entries = _page(_json(url, transport), offset, search=search)
             if expected is None:
                 expected = total
@@ -201,8 +208,8 @@ def fetch_adp(board, root, company_id, company, transport):
                 external_id = _external_id(item)
                 context = f"ADP job detail {ident}"
                 detail_params = {key: request_params[key] for key in ("cid", "ccId", "lang", "locale")}
-                detail = _json(API + "/" + ident + "?" + urlencode(detail_params), transport)
-                jobs.append(_posting(detail, ident, external_id, params, company_id, company))
+                detail = _json(api + "/" + ident + "?" + urlencode(detail_params), transport)
+                jobs.append(_posting(detail, ident, external_id, params, company_id, company, origin.hostname))
             if page == 0:
                 first_ids = page_ids
             offset += len(entries)
@@ -214,7 +221,7 @@ def fetch_adp(board, root, company_id, company, transport):
             raise FetchError("partial", "ADP page cap reached before the inventory ended.")
         if not search and expected > PAGE_SIZE:
             context = "ADP final listing check"
-            url = API + "?" + urlencode({**request_params, "$skip": 1, "$top": PAGE_SIZE})
+            url = api + "?" + urlencode({**request_params, "$skip": 1, "$top": PAGE_SIZE})
             total, entries = _page(_json(url, transport), 1)
             current = [item.get("itemID") for item in entries if isinstance(item, dict)]
             if total != expected or current != first_ids:

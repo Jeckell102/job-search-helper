@@ -1,0 +1,39 @@
+{
+  "company_id": "COMP-0082",
+  "authoritative_company_name": "Thales Defense & Security, Inc.",
+  "cycle_status": "partial",
+  "current_inventory_count": 0,
+  "sheet_last_inventory_count": 0,
+  "current_source": "https://www.thalesdsi.com/careers/",
+  "configured_ats_source": "Browser",
+  "current_reason": "No supported ATS link found within the bounded careers-page discovery limit; browser listing discovery found no verifiable job links.",
+  "existing_route": {
+    "registry_company": "Thales Defense & Security",
+    "ats": "iCIMS",
+    "url": "https://jobs-thalesdsi.icims.com/jobs/search",
+    "expected_urls": [
+      "https://careers.thalesdsi.com/?locale=en_US",
+      "https://careers.thalesdsi.com/",
+      "https://www.thalesdsi.com/careers/"
+    ],
+    "evidence": "Official TDSI careers page and public job pages identify jobs-thalesdsi.icims.com as the employer board."
+  },
+  "identity_finding": "The existing route is guarded by exact company name and source URL. The live Companies row has the legal suffix ', Inc.'; therefore the route does not apply to the live row despite the URL matching.",
+  "offline_guard_results": {
+    "Thales Defense & Security": ["iCIMS", "https://jobs-thalesdsi.icims.com/jobs/search"],
+    "Thales Defense & Security, Inc.": ["Browser", "https://www.thalesdsi.com/careers/"],
+    "Thales Defense & Security, Inc": ["Browser", "https://www.thalesdsi.com/careers/"],
+    "Thales DSI": ["Browser", "https://www.thalesdsi.com/careers/"]
+  },
+  "proposed_guard_change": {
+    "company_aliases": ["Thales Defense & Security, Inc.", "Thales Defense & Security, Inc"],
+    "preserve_exact_company_id": "COMP-0082",
+    "preserve_expected_source": "https://www.thalesdsi.com/careers/",
+    "preserve_target_board": "https://jobs-thalesdsi.icims.com/jobs/search"
+  },
+  "offline_tests": {
+    "existing_next_company_route_test": "passed",
+    "live_legal_name_guard_probe": "failed_to_route_until_alias_added",
+    "live_fetch_performed": false
+  }
+}

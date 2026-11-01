@@ -74,6 +74,34 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(self.engine._dashboard.sync_plan_count, 0)
         self.assertEqual(self.state.cycle(self.cycle)['status'], 'Complete')
 
+    def test_browser_pending_details_finish_with_exceptions_and_explicit_retry_skips_successes(self):
+        from job_search_helper.ats import Inventory
+        from job_search_helper.browser_progress import BrowserProgress
+        from job_search_helper.browser_scraper import with_browser_fallback
+        initial = inventory('C-0', 'Company 0', company(0)['Official Careers URL'])
+        initial.status = 'partial'
+        initial.browser_pending_urls = ['https://example.com/jobs/pending']
+        self.engine.fetcher = lambda source, url, cid, name: initial if cid == 'C-0' else inventory(cid, name, url)
+        self.engine.resume_local(self.cycle, fetch_workers=2)
+        current = self.state.cycle(self.cycle)
+        self.assertEqual(current['status'], 'Complete with exceptions')
+        self.assertEqual(current['companies']['C-0']['stage'], 'partial')
+        self.assertIsNone(self.inbox.get(self.cycle, 'C-0'))
+        # Refetch is limited to the unfinished company; its durable browser
+        # progress is supplied through the normal worker path.
+        calls = []
+        def browser(ats, url, cid, name, *, progress):
+            calls.append(cid)
+            self.assertIsInstance(progress, BrowserProgress)
+            self.assertEqual(progress.scope[:2], (self.cycle, 'C-0'))
+            return Inventory('partial', initial.jobs)
+        self.engine.fetcher = with_browser_fallback(lambda *args: Inventory('partial'))
+        with patch('job_search_helper.browser_scraper.fetch_browser_inventory', side_effect=browser):
+            self.engine.resume_local(self.cycle, fetch_workers=2, retry_partial=True)
+        self.assertEqual(calls, ['C-0'])
+        self.assertEqual(self.state.cycle(self.cycle)['companies']['C-0']['stage'], 'partial')
+        self.assertEqual(len(self.repo.read('Job History')), 6)
+
     def test_sync_uses_narrow_company_control_refreshes(self):
         self.defer()
         pipeline = LocalPipeline(self.engine, self.cycle)
@@ -403,6 +431,30 @@ class LocalPipelineTests(unittest.TestCase):
         restarted.resume_local(self.cycle, sync_only=True)
         self.assertEqual(len(restarted.repo.read('Job History')), 6)
         self.assertIsNone(restarted.inbox.get(self.cycle, 'C-0'))
+
+    def test_retry_discards_stale_textron_parent_board_payload_and_refetches(self):
+        from job_search_helper.ats import Inventory
+
+        careers = 'https://www.textronsystems.com/careers/apply-today'
+        self.service.set_cell('Companies', 1, 'Official Careers URL', careers)
+        self.service.set_cell('Companies', 1, 'ATS / Source', 'Taleo')
+        stale = Inventory('partial', [inventory('C-0', 'Company 0', careers).jobs[0]],
+                          'old shared-board partial',
+                          'https://textron.taleo.net/careersection/textron/jobsearch.ftl', 'Taleo')
+        self.inbox.save(self.cycle, 'C-0', inventory_payload(stale, {
+            'Official Careers URL': careers,
+        }))
+        self.inbox.block(self.cycle, 'C-0')
+
+        attempts = []
+        def refetch(source, url, cid, name):
+            attempts.append(cid)
+            return inventory(cid, name, url)
+        self.engine.fetcher = refetch
+        self.engine.resume_local(self.cycle, retry_blocked=True, fetch_workers=2)
+
+        self.assertIn('C-0', attempts)
+        self.assertIsNone(self.inbox.get(self.cycle, 'C-0'))
 
 
     def test_full_description_is_written_to_evidence_tab_not_history(self):

@@ -11,7 +11,9 @@ import json
 import math
 import os
 import re
+import sys
 import tempfile
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -31,6 +33,7 @@ SCHEMAS = {
         "Company", "Job Title", "Job URL", "Location", "Salary / Range",
         "Work Arrangement", "Fit Review", "Application Status", "Date Applied",
         "Date Found", "Last Checked", "Notes",
+        "Review Questions",
     ],
     "Job History": [
         "Company", "Job Title", "Added to Opportunities?", "Rejection Reason",
@@ -161,6 +164,7 @@ class _Sheet:
     column_count: int = 26
     tables: list[dict] = field(default_factory=list)
     append_floor: int = 0
+    basic_filter: dict | None = None
 
     def records(self):
         records = []
@@ -241,7 +245,11 @@ class IdentityIndex:
             if header not in self.columns:
                 index = {}
                 for row, values in self.rows.items():
-                    index.setdefault(_identity_key(header, values.get(header, "")), set()).add(row)
+                    try:
+                        key = _identity_key(header, values.get(header, ""))
+                    except ValueError:
+                        continue
+                    index.setdefault(key, set()).add(row)
                 self.columns[header] = index
             ids = self.columns[header].get(_identity_key(header, value), set())
             candidates = ids.copy() if candidates is None else candidates & ids
@@ -251,8 +259,17 @@ class IdentityIndex:
         old = self.rows.get(row)
         for header, index in self.columns.items():
             if old is not None:
-                index.get(_identity_key(header, old.get(header, "")), set()).discard(row)
-            index.setdefault(_identity_key(header, values.get(header, "")), set()).add(row)
+                try:
+                    old_key = _identity_key(header, old.get(header, ""))
+                except ValueError:
+                    old_key = None
+                if old_key is not None:
+                    index.get(old_key, set()).discard(row)
+            try:
+                key = _identity_key(header, values.get(header, ""))
+            except ValueError:
+                continue
+            index.setdefault(key, set()).add(row)
         self.rows[row] = values
 
 
@@ -445,6 +462,17 @@ class MemoryRepository:
                   for col, h in enumerate(sheet.headers)}
         return copy.deepcopy(values)
 
+    def read_rows(self, tab, row_numbers):
+        """Read exact native data rows, preserving their 1-based numbers."""
+        _tab(tab)
+        if tab not in self._sheets:
+            raise RepositoryError(f"Missing tab: {tab}")
+        row_numbers = list(row_numbers)
+        row_count = self._sheets[tab].row_count
+        if any(type(row) is not int or not 2 <= row <= row_count for row in row_numbers):
+            raise RepositoryError(f"Data row numbers must be integers between 2 and {row_count}.")
+        return {row: self.read_row(tab, row) for row in dict.fromkeys(row_numbers)}
+
     def validate_schema(self):
         for tab, required in self.schemas.items():
             if tab not in self._sheets:
@@ -501,6 +529,42 @@ def _execute(request, action):
             f"Google Sheets {action} failed ({type(exc).__name__})." + suffix) from exc
 
 
+def _uncompressed_read_request(request, error):
+    """Copy a safe read for one identity-encoded retry after a ratio failure."""
+    try:
+        from httplib2.decode import DecodeRatioError
+        from googleapiclient.http import HttpRequest
+    except ImportError:
+        # The Google dependencies are optional, and older httplib2 has no guard.
+        return None
+    if not isinstance(error, DecodeRatioError) or not isinstance(request, HttpRequest):
+        return None
+    if request.resumable is not None:
+        return None
+    headers = getattr(request, "headers", None)
+    if not isinstance(headers, dict):
+        return None
+    if any(not isinstance(key, str) or not isinstance(value, str)
+           for key, value in headers.items()):
+        return None
+    normalized = {key.lower(): value for key, value in headers.items()}
+    method = str(getattr(request, "method", "")).upper()
+    overrides = [value.upper() for key, value in headers.items()
+                 if key.lower() == "x-http-method-override"]
+    # googleapiclient converts long GET URLs to POST with this override before
+    # sending them. Reuse that exact URI/body, without treating other POSTs as reads.
+    if not ((method in {"GET", "HEAD"} and not overrides) or
+            (method == "POST" and overrides == ["GET"])):
+        return None
+    if normalized.get("accept-encoding", "").strip().lower() == "identity":
+        return None
+    retry = copy.copy(request)
+    retry.headers = {key: value for key, value in headers.items()
+                     if key.lower() != "accept-encoding"}
+    retry.headers["accept-encoding"] = "identity"
+    return retry
+
+
 class GoogleRepository:
     def __init__(self, service, spreadsheet_id, schemas=None, min_request_interval=2.5):
         if not re.fullmatch(r"[A-Za-z0-9_-]+", str(spreadsheet_id)):
@@ -516,18 +580,14 @@ class GoogleRepository:
         self._metadata_cache = None
         self._header_cache = {}
         self._write_layout = {}
+        self._identity_hints = {}
         self._committed_partial = False
         self.metrics = {"read_requests": 0, "write_requests": 0, "read_response_bytes": 0,
                         "write_payload_bytes": 0, "read_seconds": 0.0, "write_seconds": 0.0,
                         "throttle_seconds": 0.0, "prepare_seconds": 0.0,
                         "build_requests_seconds": 0.0}
 
-    def _execute(self, request, action):
-        # Scraper and reviewer run as separate processes but share one Google-user
-        # quota. Pace each process conservatively so their combined traffic stays
-        # below the Sheets per-user request limit. Read requests may be retried
-        # safely by googleapiclient on 429/5xx responses; writes are never
-        # automatically retried because a lost write response can be ambiguous.
+    def _pace_request(self, action):
         delay = max(0.0, self._next_request_at - time.monotonic())
         wait_started = time.monotonic()
         if delay:
@@ -535,13 +595,30 @@ class GoogleRepository:
         self.metrics["throttle_seconds"] += time.monotonic() - wait_started
         self._next_request_at = time.monotonic() + self.min_request_interval
         self.metrics[action + "_requests"] += 1
+
+    def _execute(self, request, action):
+        # Scraper and reviewer run as separate processes but share one Google-user
+        # quota. Pace each process conservatively so their combined traffic stays
+        # below the Sheets per-user request limit. Read requests may be retried
+        # safely by googleapiclient on 429/5xx responses; writes are never
+        # automatically retried because a lost write response can be ambiguous.
+        self._pace_request(action)
         started = time.monotonic()
         try:
             if action == "read":
                 try:
-                    response = request.execute(num_retries=5)
-                except TypeError:
-                    response = request.execute()
+                    try:
+                        response = request.execute(num_retries=5)
+                    except TypeError:
+                        response = request.execute()
+                except Exception as exc:
+                    retry = _uncompressed_read_request(request, exc)
+                    if retry is None:
+                        raise
+                    # Negotiate uncompressed bytes; never weaken decoder limits.
+                    # Count and pace the extra read, with no further retry loop.
+                    self._pace_request("read")
+                    response = retry.execute(num_retries=0)
                 self.metrics["read_response_bytes"] += len(json.dumps(response, ensure_ascii=True).encode("utf-8"))
             else:
                 response = request.execute()
@@ -550,6 +627,7 @@ class GoogleRepository:
             # Discard layout on ambiguous failures. The next attempt starts
             # from authoritative identities, including remotely applied rows.
             self._write_layout.clear()
+            self._identity_hints.clear()
             self._metadata_cache = None
             self._header_cache.clear()
             suffix = (" No successful write is confirmed; resume the same keyed decision."
@@ -586,7 +664,7 @@ class GoogleRepository:
             return {}
         data = self._execute(self.service.spreadsheets().get(
             spreadsheetId=self.spreadsheet_id, ranges=ranges_override or ranges, includeGridData=True,
-            fields=("sheets(properties(sheetId,title,gridProperties),tables,"
+            fields=("sheets(properties(sheetId,title,gridProperties),tables,basicFilter,"
                     "data(startRow,startColumn,rowData(values(userEnteredValue,effectiveValue,"
                     "formattedValue,hyperlink,textFormatRuns,dataValidation))))"),
         ), "read")
@@ -601,7 +679,8 @@ class GoogleRepository:
                 raise RepositoryError(f"{tab}: grid exceeds safe bounds.")
             sheet = _Sheet([], sheet_id=props["sheetId"], row_count=grid["rowCount"],
                            column_count=grid["columnCount"],
-                           tables=raw.get("tables", found[tab].get("tables", [])))
+                           tables=raw.get("tables", found[tab].get("tables", [])),
+                           basic_filter=copy.deepcopy(raw.get("basicFilter")))
             for block in raw.get("data", []):
                 for offset, row in enumerate(block.get("rowData", [])):
                     rownum = block.get("startRow", 0) + offset
@@ -624,50 +703,243 @@ class GoogleRepository:
             loaded[tab] = sheet
         if set(loaded) != set(tabs):
             raise RepositoryError("The server omitted a requested sheet; no write is safe.")
+        for tab, sheet in loaded.items():
+            self._header_cache[tab] = (list(sheet.headers),
+                                       {header: index for index, header in enumerate(sheet.headers)})
         return loaded
 
-    def _load_commit(self, operations):
-        """Fresh identity columns plus narrow manual-control cells."""
+    def _load_existing_commit(self, operations, *, use_hints=True):
+        """Resolve existing identities, then read only their guarded/write cells.
+
+        Cached identities only select target ranges; one fresh response still
+        includes every identity and affected cell. Moved identities or layouts
+        force a fresh discovery read before retrying. Inserts use the normal
+        loader because sparse identity reads cannot establish a safe append tail.
+        """
         tabs = sorted({op["tab"] for op in operations})
-        if (not set(tabs) & {"Job History", "Opportunities"}
-                or any(tab not in self._write_layout for tab in tabs)):
+        if not hasattr(self.service.spreadsheets(), "values"):
             return self._load(tabs)
-        ranges = []
         metadata = self._metadata()
         found = {s["properties"]["title"]: s for s in metadata.get("sheets", [])}
+        layouts, identity_fields, identity_ranges = {}, {}, []
         for tab in tabs:
             if tab not in found:
                 raise RepositoryError(f"Missing tab: {tab}")
-            headers, tail = self._write_layout[tab]
+            headers = self._headers(tab)[0]
+            rows = found[tab]["properties"]["gridProperties"]["rowCount"]
             escaped = tab.replace("'", "''")
-            ranges.append(f"'{escaped}'!1:1")
             identities = set().union(*(set(op["identity"]) for op in operations if op["tab"] == tab))
             if tab == "Job History":
-                identities.update({"Company", "Job Key", "Official Job URL", "Added to Opportunities?", "Review Status"})
-            narrow = set(identities)
+                identities.update({"Company", "Job Key", "Official Job URL"})
+            if not identities <= set(headers):
+                return self._load(tabs)
+            layouts[tab] = (headers, rows)
+            identity_fields[tab] = identities
+            identity_ranges.append(f"'{escaped}'!1:1")
+            for header in sorted(identities):
+                col = _column_name(headers.index(header) + 1)
+                if rows > 1:
+                    identity_ranges.append(f"'{escaped}'!{col}2:{col}{rows}")
+        cached = use_hints and all(
+            tab in self._identity_hints
+            and identity_fields[tab] <= self._identity_hints[tab][1]
+            and self._identity_hints[tab][0].headers == layouts[tab][0]
+            and self._identity_hints[tab][0].row_count == layouts[tab][1]
+            for tab in tabs)
+        if cached:
+            initial = {tab: self._identity_hints[tab][0] for tab in tabs}
+            indexes = {tab: self._identity_hints[tab][2] for tab in tabs}
+        else:
+            initial = self._load(tabs, identity_ranges)
+            indexes = {}
+        if any(initial[t].headers != layouts[t][0] or initial[t].row_count != layouts[t][1] for t in tabs):
+            self._metadata_cache = None
+            self._header_cache = {}
+            self._write_layout.clear()
+            return self._load(tabs)
+        targets, cell_ranges = {}, []
+        for tab, sheet in initial.items():
+            index = indexes[tab] if cached else IdentityIndex(sheet.records())
+            selected, fields = {}, set(identity_fields[tab])
+            if tab == 'Job History':
+                fields.update({'Added to Opportunities?', 'Review Status'})
             for op in operations:
                 if op["tab"] != tab:
                     continue
-                narrow.update(op.get("expected", {}))
-                narrow.update(op.get("append_notes", {}))
-            for header in narrow:
-                if header not in headers:
-                    return self._load(tabs)
-                col = _column_name(headers.index(header) + 1)
-                ranges.append(f"'{escaped}'!{col}2:{col}{tail + 1}")
-        sheets = self._load(tabs, ranges)
-        if any(sheets[t].headers != self._write_layout[t][0] for t in tabs):
-            self._write_layout.clear()
+                matches = index.matches(op["identity"])
+                if len(matches) != 1:
+                    if cached:
+                        return self._load_existing_commit(operations, use_hints=False)
+                    detail = "matches multiple rows; refusing to guess" if matches else "does not exist; append is not authorized"
+                    raise RepositoryError(f"{tab}: identity {detail}.")
+                selected.update(matches)
+                for group in ("values", "expected", "append_notes"):
+                    fields.update(op.get(group, {}))
+            if not fields <= set(sheet.headers):
+                return self._load(tabs)
+            targets[tab] = selected
+            columns = [sheet.headers.index(field) for field in fields]
+            # A few contiguous spans keep the request compact. Avoid fetching
+            # large cached descriptions/snapshots unless the operation needs them.
+            excluded = {sheet.headers.index(field) for field in ("Current Snapshot", "Job Description")
+                        if field in sheet.headers and field not in fields}
+            spans = []
+            for col in range(min(columns), max(columns) + 1):
+                if col in excluded:
+                    continue
+                if not spans or col != spans[-1][-1] + 1:
+                    spans.append([])
+                spans[-1].append(col)
+            escaped = tab.replace("'", "''")
+            row_groups = []
+            for row in sorted(selected):
+                if not row_groups or row != row_groups[-1][-1] + 1:
+                    row_groups.append([])
+                row_groups[-1].append(row)
+            for group in row_groups:
+                for span in spans:
+                    cell_ranges.append(f"'{escaped}'!{_column_name(span[0]+1)}{group[0]+1}:{_column_name(span[-1]+1)}{group[-1]+1}")
+        final = self._load(tabs, [*identity_ranges, *cell_ranges])
+        if any(final[t].headers != initial[t].headers or final[t].row_count != initial[t].row_count for t in tabs):
+            if cached:
+                self._metadata_cache = None
+                self._header_cache = {}
+                return self._load_existing_commit(operations, use_hints=False)
+            raise RepositoryError("Sheet layout changed while reading affected rows; replan from fresh rows.")
+        for tab, selected in targets.items():
+            sheet = final[tab]
+            for row, previous in selected.items():
+                for header in identity_fields[tab]:
+                    current = _value(sheet.cells.get((row, sheet.headers.index(header)), {}), header)
+                    if not _equivalent(header, current, previous.get(header, "")):
+                        if cached:
+                            return self._load_existing_commit(operations, use_hints=False)
+                        raise RepositoryError(f"{tab}: identity or manual control moved while reading affected rows; replan from fresh rows.")
+        self._targeted_existing_tabs = set(tabs)
+        self._sparse_identity_fields = identity_fields
+        return final
+
+    def _load_commit(self, operations):
+        """Read fresh identities and only the rows needed by this commit."""
+        tabs = sorted({op["tab"] for op in operations})
+        if set(tabs) <= {"Job History", "Opportunities"} and all(not op.get("append_if_missing") for op in operations):
+            return self._load_existing_commit(operations)
+        if not hasattr(self.service.spreadsheets(), "values"):
             return self._load(tabs)
-        for tab, sheet in sheets.items():
-            props = found[tab]["properties"]
-            grid = props.get("gridProperties", {})
-            sheet.sheet_id = props["sheetId"]
-            sheet.row_count = grid.get("rowCount", sheet.row_count)
-            sheet.column_count = grid.get("columnCount", sheet.column_count)
-            sheet.tables = found[tab].get("tables", [])
-            sheet.append_floor = self._write_layout[tab][1]
-        return sheets
+        return self._load_sparse_commit(operations)
+
+    def _load_sparse_commit(self, operations):
+        """Keep descriptions out of unrelated reads, including evidence upserts.
+
+        The first read locates identities. The final read repeats that scan and
+        loads complete affected rows, preserving cell guards and the planning
+        cache's untouched fields. Appends additionally inspect the unused tail
+        for orphan values/formulas and destination validation.
+        """
+        tabs = sorted({op["tab"] for op in operations})
+        by_tab = {tab: [op for op in operations if op["tab"] == tab] for tab in tabs}
+        identity_fields = {}
+        for tab, tab_ops in by_tab.items():
+            fields = set().union(*(set(op["identity"]) for op in tab_ops))
+            if tab == "Job History":
+                fields.update({"Company", "Job Key", "Official Job URL"})
+            identity_fields[tab] = fields
+
+        def identity_ranges_for(layouts):
+            identity_ranges = []
+            for tab in tabs:
+                headers = layouts[tab]
+                if not identity_fields[tab] <= set(headers):
+                    raise RepositoryError(f"{tab}: unknown identity fields.")
+                escaped = tab.replace("'", "''")
+                identity_ranges.append(f"'{escaped}'!1:1")
+                for header in sorted(identity_fields[tab]):
+                    col = _column_name(headers.index(header) + 1)
+                    # Do not stop at a cached tail: newly added identities and
+                    # duplicates must participate in the fresh identity check.
+                    identity_ranges.append(f"'{escaped}'!{col}2:{col}")
+            return identity_ranges
+
+        def select_rows(sheets, indexes):
+            match_rows, floors, row_ranges = [], {}, []
+            for tab, sheet in sheets.items():
+                index = indexes[tab]
+                selected = set()
+                needs_append = False
+                for op in by_tab[tab]:
+                    rows = tuple(row for row, _ in index.matches(op["identity"]))
+                    match_rows.append((tab, op["identity"], rows))
+                    selected.update(rows)
+                    # _prepare resolves sequential operations, including an
+                    # insert followed by an update to that same new identity.
+                    needs_append |= not rows and bool(op.get("append_if_missing"))
+                escaped = tab.replace("'", "''")
+                end = _column_name(sheet.column_count)
+                groups = []
+                for row in sorted(selected):
+                    if not groups or row != groups[-1][-1] + 1:
+                        groups.append([])
+                    groups[-1].append(row)
+                for group in groups:
+                    row_ranges.append(f"'{escaped}'!A{group[0]+1}:{end}{group[-1]+1}")
+                if needs_append:
+                    floor = max(index.rows, default=0)
+                    floors[tab] = floor
+                    if floor + 1 < sheet.row_count:
+                        row_ranges.append(f"'{escaped}'!A{floor+2}:{end}{sheet.row_count}")
+            return match_rows, floors, row_ranges
+
+        def unchanged(sheets, final, match_rows):
+            for tab, before in sheets.items():
+                after = final[tab]
+                if (after.headers != before.headers or after.row_count != before.row_count
+                        or after.column_count != before.column_count or after.sheet_id != before.sheet_id):
+                    return False
+            indexes = {tab: IdentityIndex(sheet.records()) for tab, sheet in final.items()}
+            return all(tuple(row for row, _ in indexes[tab].matches(identity)) == rows
+                       for tab, identity, rows in match_rows)
+
+        def finish(final, floors):
+            for tab, sheet in final.items():
+                sheet.append_floor = floors.get(tab, 0)
+            # Existing-only reads do not establish an append tail.
+            self._targeted_existing_tabs.update(set(tabs) - set(floors))
+            self._sparse_identity_fields = identity_fields
+            return final
+
+        layouts = {tab: self._headers(tab)[0] for tab in tabs}
+        identity_ranges = identity_ranges_for(layouts)
+        initial = None
+        if all(tab in self._identity_hints
+               and identity_fields[tab] <= self._identity_hints[tab][1]
+               and layouts[tab] == self._identity_hints[tab][0].headers for tab in tabs):
+            hints = {tab: self._identity_hints[tab][0] for tab in tabs}
+            indexes = {tab: self._identity_hints[tab][2] for tab in tabs}
+            match_rows, floors, row_ranges = select_rows(hints, indexes)
+            initial = self._load(tabs, [*identity_ranges, *row_ranges])
+            if unchanged(hints, initial, match_rows):
+                # Cached locations selected ranges; all values, identities,
+                # formulas and validation now come from one fresh response.
+                return finish(initial, floors)
+
+        # A reordered header triggers one rescan using the freshly validated
+        # header. Changed cached locations reuse the response as discovery data.
+        for attempt in range(2):
+            if initial is None:
+                initial = self._load(tabs, identity_ranges)
+            if all(initial[tab].headers == layouts[tab] for tab in tabs):
+                break
+            layouts = {tab: initial[tab].headers for tab in tabs}
+            identity_ranges = identity_ranges_for(layouts)
+            initial = None
+        else:
+            raise RepositoryError("Sheet headers changed while resolving identities; replan from fresh rows.")
+        indexes = {tab: IdentityIndex(sheet.records()) for tab, sheet in initial.items()}
+        match_rows, floors, row_ranges = select_rows(initial, indexes)
+        final = self._load(tabs, [*identity_ranges, *row_ranges])
+        if not unchanged(initial, final, match_rows):
+            raise RepositoryError("Sheet layout or identity moved or changed while reading affected rows; replan from fresh rows.")
+        return finish(final, floors)
 
     def _headers(self, tab):
         _tab(tab)
@@ -800,6 +1072,49 @@ class GoogleRepository:
         return {header: padded[index] if index < len(padded) else ""
                 for index, header in enumerate(headers)}
 
+    def read_rows(self, tab, row_numbers):
+        """Read exact native rows as plain values in batches of at most 100.
+
+        Blank and trailing cells are retained as empty strings. These values
+        support review planning; commits still reread guarded cells themselves.
+        """
+        _tab(tab)
+        row_numbers = list(row_numbers)
+        if any(type(row) is not int or row < 2 for row in row_numbers):
+            raise RepositoryError("Data row numbers are 1-based integers and must be >= 2.")
+        row_numbers = list(dict.fromkeys(row_numbers))
+        if not row_numbers:
+            return {}
+        headers, _ = self._headers(tab)
+        metadata = self._metadata()
+        found = {sheet["properties"]["title"]: sheet for sheet in metadata.get("sheets", [])}
+        row_count = found[tab]["properties"].get("gridProperties", {}).get("rowCount", 0)
+        if not 0 < row_count <= MAX_ROWS:
+            raise RepositoryError(f"{tab}: invalid row count.")
+        if any(row > row_count for row in row_numbers):
+            raise RepositoryError(f"Data row numbers must be within the {row_count}-row grid.")
+        escaped = tab.replace(chr(39), chr(39)*2)
+        end = _column_name(len(headers))
+        records = {}
+        for offset in range(0, len(row_numbers), 100):
+            batch = row_numbers[offset:offset + 100]
+            result = self._execute(
+                self.service.spreadsheets().values().batchGet(
+                    spreadsheetId=self.spreadsheet_id,
+                    ranges=[f"'{escaped}'!A{row}:{end}{row}" for row in batch],
+                    majorDimension="ROWS",
+                ),
+                "read",
+            )
+            value_ranges = result.get("valueRanges", [])
+            if len(value_ranges) != len(batch):
+                raise RepositoryError("The server omitted a requested data row.")
+            for row, value_range in zip(batch, value_ranges):
+                values = (value_range.get("values") or [[]])[0]
+                records[row] = {header: values[index] if index < len(values) else ""
+                                for index, header in enumerate(headers)}
+        return records
+
     def read(self, tab):
         sheet = self._load([tab])[tab]
         return [values for _, values in sheet.records()]
@@ -905,6 +1220,11 @@ class GoogleRepository:
             "rows": [{"values": [{"userEnteredValue": _encoded(header)} for header in missing]}],
             "fields": "userEnteredValue",
         }}]
+        capacity = found[tab]['properties'].get('gridProperties', {}).get('columnCount', 0)
+        if capacity < start_col + len(missing):
+            requests.insert(0, {'appendDimension': {
+                'sheetId': sheet_id, 'dimension': 'COLUMNS',
+                'length': start_col + len(missing) - capacity}})
         payload = {"requests": requests}
         self.metrics["write_payload_bytes"] += len(json.dumps(payload, ensure_ascii=True).encode("utf-8"))
         self._execute(self.service.spreadsheets().batchUpdate(
@@ -922,6 +1242,8 @@ class GoogleRepository:
             raise RepositoryError("Refusing to write the protected Job Search Master - Original backup.")
         operations = list(operations)
         self._committed_rows = {}
+        self._targeted_existing_tabs = set()
+        self._sparse_identity_fields = {}
         if not operations:
             return {"inserted": 0, "updated": 0, "requests": 0}
         for operation in operations:
@@ -993,8 +1315,17 @@ class GoogleRepository:
                 "start": {"sheetId": sheets[block["tab"]].sheet_id,
                           "rowIndex": block["row"], "columnIndex": block["col"]},
                 "rows": block["rows"], "fields": "userEnteredValue"}})
+        # API cell edits do not always refresh the visible basic filter. Reapply
+        # only the existing filter from this commit's fresh grid read, preserving
+        # all criteria, bounds, and sort settings; never create a new filter.
+        history = sheets.get("Job History")
+        if history and history.basic_filter and any(
+                tab == "Job History" and history.headers[col] in {"Added to Opportunities?", "Review Status"}
+                for tab, _, col in changed):
+            requests.append({"setBasicFilter": {"filter": copy.deepcopy(history.basic_filter)}})
         timings["build_requests_seconds"] = time.monotonic() - build_started
         self.metrics["build_requests_seconds"] += timings["build_requests_seconds"]
+        structural = False
         if requests:
             payload_started = time.monotonic()
             payload_bytes = len(json.dumps({"requests": requests}, ensure_ascii=True).encode("utf-8"))
@@ -1015,13 +1346,29 @@ class GoogleRepository:
             if structural:
                 self._metadata_cache = None
                 self._header_cache = {}
-        self._header_cache = {}
+                self._identity_hints.clear()
         committed_started = time.monotonic()
         self._committed_partial = True
         self._committed_rows = {}
         for tab, sheet in sheets.items():
             records = sheet.records()
-            self._write_layout[tab] = (list(sheet.headers), max([sheet.append_floor, 0, *[r for r, _ in records]]))
+            fields = self._sparse_identity_fields.get(tab)
+            if fields and not structural:
+                # Cache locations/identity values only; never cached cell data
+                # as authority for a later write.
+                layout = _Sheet(list(sheet.headers), sheet_id=sheet.sheet_id,
+                                row_count=sheet.row_count, column_count=sheet.column_count)
+                identities = ((row, {field: values[field] for field in fields})
+                              for row, values in records if any(values[field] != "" for field in fields))
+                self._identity_hints[tab] = (layout, set(fields), IdentityIndex(identities))
+            else:
+                self._identity_hints.pop(tab, None)
+            if tab in self._targeted_existing_tabs:
+                # This read did not inspect arbitrary orphan cells below the last
+                # identity; a later append must rediscover its destination fully.
+                self._write_layout.pop(tab, None)
+            else:
+                self._write_layout[tab] = (list(sheet.headers), max([sheet.append_floor, 0, *[r for r, _ in records]]))
             index = IdentityIndex(records)
             touched = {}
             for op in operations:
@@ -1119,82 +1466,226 @@ class GoogleRepository:
         return {"inserted": 0, "updated": len(requests), "requests": len(requests)}
 
 
-def _authorize(write=False, interactive=False):
-    """Use existing OAuth credentials unless explicitly asked to authenticate.
+_OAUTH_SCOPES = {
+    False: "https://www.googleapis.com/auth/spreadsheets.readonly",
+    True: "https://www.googleapis.com/auth/spreadsheets",
+}
 
-    Read-only and writable credentials never share token files. Token refresh is
-    allowed, but preflight will not open a browser or request broader scopes.
-    """
-    try:
-        from google.auth.transport.requests import Request
-        from google.oauth2.credentials import Credentials
-        from google_auth_oauthlib.flow import InstalledAppFlow
-        from googleapiclient.discovery import build
-    except ImportError as exc:
-        raise RepositoryError("Google support is not installed. Run: .venv/bin/python3.11 -m pip install -e '.[google]'") from exc
-    scope = "https://www.googleapis.com/auth/spreadsheets" + ("" if write else ".readonly")
-    credentials_path = Path(os.getenv("GOOGLE_CREDENTIALS_FILE", "credentials.json")).expanduser().resolve()
-    token_setting = "GOOGLE_TOKEN_WRITE_FILE" if write else "GOOGLE_TOKEN_READ_FILE"
-    default_token = ".secrets/token-write.json" if write else ".secrets/token-readonly.json"
-    raw_token = Path(os.getenv(token_setting, default_token)).expanduser()
-    if raw_token.is_symlink() or raw_token.parent.is_symlink():
-        raise RepositoryError("OAuth token paths must not be symlinks.")
-    token_path = raw_token.resolve()
-    other_setting = "GOOGLE_TOKEN_READ_FILE" if write else "GOOGLE_TOKEN_WRITE_FILE"
-    other_default = ".secrets/token-readonly.json" if write else ".secrets/token-write.json"
-    if token_path == Path(os.getenv(other_setting, other_default)).expanduser().resolve():
-        raise RepositoryError("Read-only and write credentials require different token files.")
-    credentials = None
-    must_save = False
-    if token_path.exists():
-        if token_path.stat().st_mode & 0o077:
-            raise RepositoryError(f"Token permissions must be 0600; correct the permissions of {token_path}.")
-        # Check the recorded grant BEFORE creating a credential with requested scopes.
-        with token_path.open(encoding="utf-8") as handle:
-            saved = json.load(handle)
-        if set(saved.get("scopes", [])) != {scope}:
-            raise RepositoryError("Saved token scopes do not exactly match this command; reauthenticate with a separate token.")
-        credentials = Credentials.from_authorized_user_info(saved, [scope])
-    if credentials and credentials.expired and credentials.refresh_token:
+
+def _needs_google_sign_in(error):
+    """Recognize permanent grant failures without displaying OAuth responses."""
+    if getattr(error, "retryable", False):
+        return False
+    for detail in error.args:
+        if isinstance(detail, dict):
+            code = detail.get("error")
+        elif isinstance(detail, str):
+            code = detail.partition(":")[0]
+            if detail.startswith("{"):
+                try:
+                    response = json.loads(detail)
+                    code = response.get("error") if isinstance(response, dict) else None
+                except (TypeError, ValueError):
+                    pass
+        else:
+            continue
+        if code in ("invalid_grant", "invalid_scope"):
+            return True
+    return False
+
+
+class _OAuthSession:
+    """Keep independently scoped credentials valid throughout a scraper run."""
+
+    def __init__(self, write=False, interactive=False, renew_both=False):
         try:
-            credentials.refresh(Request())
-            must_save = True
-        except Exception:
-            if not interactive:
-                raise
-            # A revoked/expired refresh token should not block an explicit
-            # reauthentication request. Fall through to a fresh browser grant.
-            credentials = None
-            must_save = False
-    if not credentials or not credentials.valid:
-        if not interactive:
-            raise RepositoryError("No valid token is available; run the explicit authenticate command first.")
-        if not credentials_path.is_file():
+            from google.auth.exceptions import RefreshError
+            from google.auth.transport.requests import Request
+            from google.oauth2.credentials import Credentials
+            from google_auth_httplib2 import AuthorizedHttp
+            from google_auth_oauthlib.flow import InstalledAppFlow
+            from googleapiclient.discovery import build
+            from googleapiclient.http import build_http
+        except ImportError as exc:
+            raise RepositoryError("Google support is not installed. Run: .venv/bin/python3.11 -m pip install -e '.[google]'") from exc
+        self.refresh_error = RefreshError
+        self._request = Request
+        self._credential_type = Credentials
+        self._flow_type = InstalledAppFlow
+        self._authorized_http = AuthorizedHttp
+        self._build = build
+        self._build_http = build_http
+        self.write = bool(write)
+        self.interactive = interactive
+        self.renew_both = renew_both
+        self.modes = (False, True) if renew_both else (self.write,)
+        self.lock = threading.RLock()
+        self.credentials_path = Path(os.getenv("GOOGLE_CREDENTIALS_FILE", "credentials.json")).expanduser().resolve()
+        self.paths = {}
+        for mode, setting, default in (
+            (False, "GOOGLE_TOKEN_READ_FILE", ".secrets/token-readonly.json"),
+            (True, "GOOGLE_TOKEN_WRITE_FILE", ".secrets/token-write.json"),
+        ):
+            raw = Path(os.getenv(setting, default)).expanduser()
+            if raw.is_symlink() or raw.parent.is_symlink():
+                raise RepositoryError("OAuth token paths must not be symlinks.")
+            self.paths[mode] = raw.resolve()
+        if self.paths[False] == self.paths[True]:
+            raise RepositoryError("Read-only and write credentials require different token files.")
+        # Validate every selected file before refreshing or replacing either one.
+        self.credentials = {mode: self._load(mode) for mode in self.modes}
+        self._saved = {mode: self._fingerprint(self.credentials[mode]) for mode in self.modes}
+
+    @staticmethod
+    def _fingerprint(credentials):
+        if credentials is None:
+            return None
+        return (credentials.token, credentials.refresh_token, credentials.expiry)
+
+    def _load(self, write):
+        path = self.paths[write]
+        if not path.exists():
+            return None
+        if path.stat().st_mode & 0o077:
+            raise RepositoryError(f"Token permissions must be 0600; correct the permissions of {path}.")
+        with path.open(encoding="utf-8") as handle:
+            saved = json.load(handle)
+        if set(saved.get("scopes", [])) != {_OAUTH_SCOPES[write]}:
+            if self.interactive:
+                return None
+            raise RepositoryError("Saved token scopes do not exactly match this command; reauthenticate with a separate token.")
+        return self._credential_type.from_authorized_user_info(saved, [_OAUTH_SCOPES[write]])
+
+    @staticmethod
+    def _validate_grant(credentials, write):
+        granted = getattr(credentials, "granted_scopes", None)
+        if granted is not None and _OAUTH_SCOPES[write] not in granted:
+            raise RepositoryError("Google did not grant the requested Sheets permission; authorize the requested access.")
+        if not credentials.valid or not credentials.refresh_token:
+            raise RepositoryError("Google did not return valid offline credentials; run ./job-search-scraper auth again.")
+
+    def _sign_in(self, write):
+        if not self.interactive:
+            raise RepositoryError("No valid token is available; run ./job-search-scraper auth first.")
+        if not self.credentials_path.is_file():
             raise RepositoryError("Google Desktop OAuth credentials.json is missing; configure GOOGLE_CREDENTIALS_FILE.")
-        flow = InstalledAppFlow.from_client_secrets_file(str(credentials_path), [scope])
-        credentials = flow.run_local_server(host="localhost", port=0, open_browser=True)
-        must_save = True
-    if must_save:
-        token_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        label = "write" if write else "read-only"
+        print(f"Google {label} authorization needs sign-in. Complete the browser authorization to continue.",
+              file=sys.stderr, flush=True)
+        flow = self._flow_type.from_client_secrets_file(str(self.credentials_path), [_OAUTH_SCOPES[write]])
+        # Explicit consent obtains a replacement refresh token, including when a
+        # previous grant exists but its refresh token has expired or been revoked.
+        credentials = flow.run_local_server(
+            host="localhost", port=0, open_browser=True,
+            access_type="offline", prompt="consent",
+        )
+        self._validate_grant(credentials, write)
+        return credentials
+
+    def _save_if_changed(self, write):
+        credentials = self.credentials[write]
+        fingerprint = self._fingerprint(credentials)
+        if fingerprint == self._saved[write]:
+            return
+        serialized = credentials.to_json()
+        if set(json.loads(serialized).get("scopes", [])) != {_OAUTH_SCOPES[write]}:
+            raise RepositoryError("Refusing to save a credential with mismatched Sheets scopes.")
+        path = self.paths[write]
+        path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         # Never chmod the user's home or arbitrary existing broad directory.
-        if token_path.parent.stat().st_mode & 0o077:
+        if path.parent.stat().st_mode & 0o077:
             raise RepositoryError("Token parent directory must already have private 0700 permissions.")
-        fd, temporary = tempfile.mkstemp(prefix="token-", suffix=".json", dir=token_path.parent)
+        fd, temporary = tempfile.mkstemp(prefix="token-", suffix=".json", dir=path.parent)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 os.fchmod(handle.fileno(), 0o600)
-                handle.write(credentials.to_json())
+                handle.write(serialized)
                 handle.flush()
                 os.fsync(handle.fileno())
-            os.replace(temporary, token_path)
+            os.replace(temporary, path)
+            self._saved[write] = fingerprint
         finally:
             if os.path.exists(temporary):
                 os.unlink(temporary)
-    return build("sheets", "v4", credentials=credentials, cache_discovery=False)
+
+    def ensure_valid(self, force=False):
+        with self.lock:
+            # A scraper session renews the pair when either credential expires.
+            # Standalone read commands continue to use only read-only access.
+            renew = force or (self.renew_both and any(
+                credential is None or not credential.valid
+                for credential in self.credentials.values()
+            ))
+            for mode in self.modes:
+                credentials = self.credentials[mode]
+                if renew or credentials is None or not credentials.valid:
+                    if credentials is not None and credentials.refresh_token:
+                        try:
+                            credentials.refresh(self._request())
+                        except self.refresh_error as exc:
+                            # A network/server/client-configuration failure is
+                            # not evidence that consent needs to be replaced.
+                            if not self.interactive or not _needs_google_sign_in(exc):
+                                raise
+                            credentials = self._sign_in(mode)
+                    else:
+                        credentials = self._sign_in(mode)
+                    self._validate_grant(credentials, mode)
+                    self.credentials[mode] = credentials
+                self._save_if_changed(mode)
+
+    def save_changed(self):
+        for mode in self.modes:
+            self._save_if_changed(mode)
 
 
-def authorize(write=False, interactive=False):
+class _RenewingGoogleHttp:
+    """Recover only credential failures in Google's authorized HTTP transport."""
+
+    def __init__(self, authorization):
+        self._authorization = authorization
+        self._http = authorization._authorized_http(
+            authorization.credentials[authorization.write], http=authorization._build_http(),
+        )
+
+    def __getattr__(self, name):
+        return getattr(self._http, name)
+
+    def request(self, *args, **kwargs):
+        authorization = self._authorization
+        with authorization.lock:
+            # Refresh and persist both credentials before sending Sheets changes.
+            authorization.ensure_valid()
+            self._http.credentials = authorization.credentials[authorization.write]
+            try:
+                response = self._http.request(*args, **kwargs)
+            except authorization.refresh_error as exc:
+                if not _needs_google_sign_in(exc):
+                    raise
+                # AuthorizedHttp refreshes before transmission or following an
+                # HTTP 401 rejection. An expired/revoked grant can therefore be
+                # recovered here without replaying an acknowledged Sheets write.
+                # The exact request is attempted once more; transport failures,
+                # timeouts and other uncertain write failures still propagate.
+                authorization.ensure_valid(force=True)
+                self._http.credentials = authorization.credentials[authorization.write]
+                response = self._http.request(*args, **kwargs)
+            # Google's own 401 refresh can succeed even before local expiry.
+            authorization.save_changed()
+            return response
+
+
+def _authorize(write=False, interactive=False, renew_both=False):
+    """Refresh selected credentials; scraper sessions maintain both token files."""
+    authorization = _OAuthSession(write=write, interactive=interactive, renew_both=renew_both)
+    authorization.ensure_valid()
+    return authorization._build("sheets", "v4", http=_RenewingGoogleHttp(authorization), cache_discovery=False)
+
+
+def authorize(write=False, interactive=False, renew_both=False):
     try:
+        if renew_both:
+            return _authorize(write=write, interactive=interactive, renew_both=True)
         return _authorize(write=write, interactive=interactive)
     except RepositoryError:
         raise

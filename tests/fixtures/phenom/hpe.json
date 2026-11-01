@@ -1,0 +1,148 @@
+{
+  "url": "https://careers.hpe.com/us/en/search-results",
+  "app": {
+    "refNum": "HPE1US",
+    "baseUrl": "https://careers.hpe.com/us/en/",
+    "siteType": "external",
+    "locale": "en_us"
+  },
+  "ddo": {
+    "eagerLoadRefineSearch": {
+      "status": 200,
+      "hits": 10,
+      "totalHits": 1516,
+      "data": {
+        "jobs": [
+          {
+            "siteType": "external",
+            "reqId": "1201873",
+            "jobId": "1201873",
+            "title": "Senior Network Test Engineer",
+            "jobSeqNo": "HPE1US1201873EXTERNALENUS",
+            "postedDate": "2026-07-06T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering & QA"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1201690",
+            "jobId": "1201690",
+            "title": "Network for AI Sales Specialist",
+            "jobSeqNo": "HPE1US1201690EXTERNALENUS",
+            "postedDate": "2026-07-24T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Sales"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1208507",
+            "jobId": "1208507",
+            "title": "Computer Test Technician - 2nd Shift",
+            "jobSeqNo": "HPE1US1208507EXTERNALENUS",
+            "postedDate": "2026-08-10T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Manufacturing, Supply Chain & Operations"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1208414",
+            "jobId": "1208414",
+            "title": "Distinguished Technologist Mechanical Engineer (Network Infrastructure)",
+            "jobSeqNo": "HPE1US1208414EXTERNALENUS",
+            "postedDate": "2026-06-23T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering & QA"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1208488",
+            "jobId": "1208488",
+            "title": "Japanese IT Operation Support Engineer",
+            "jobSeqNo": "HPE1US1208488EXTERNALENUS",
+            "postedDate": "2026-08-03T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Professional Services & Consulting"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1210201",
+            "jobId": "1210201",
+            "title": "Electrical Engineer",
+            "jobSeqNo": "HPE1US1210201EXTERNALENUS",
+            "postedDate": "2026-08-10T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering & QA"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1190434",
+            "jobId": "1190434",
+            "title": "Senior Manager Corporate Strategy",
+            "jobSeqNo": "HPE1US1190434EXTERNALENUS",
+            "postedDate": "2026-06-23T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Finance, Accounting & Business Planning"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1194497",
+            "jobId": "1194497",
+            "title": "SFDC QA Automation Engineer",
+            "jobSeqNo": "HPE1US1194497EXTERNALENUS",
+            "postedDate": "2026-08-06T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Engineering & QA"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1208121",
+            "jobId": "1208121",
+            "title": "Marketing AI Workflow Architect (Houston, TX)",
+            "jobSeqNo": "HPE1US1208121EXTERNALENUS",
+            "postedDate": "2026-08-19T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Marketing, Communications & Public Relations"
+          },
+          {
+            "siteType": "external",
+            "reqId": "1208296",
+            "jobId": "1208296",
+            "title": "SLED Hunter \u2013 North \u2013 New York Area",
+            "jobSeqNo": "HPE1US1208296EXTERNALENUS",
+            "postedDate": "2026-07-30T00:00:00.000+0000",
+            "jobVisibility": [
+              "external"
+            ],
+            "category": "Sales"
+          }
+        ],
+        "keywords": ""
+      },
+      "eid": {
+        "searchType": "allJobs",
+        "query": ""
+      }
+    }
+  },
+  "params": {
+    "from": "0"
+  }
+}

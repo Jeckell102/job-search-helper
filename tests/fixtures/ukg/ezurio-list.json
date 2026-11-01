@@ -1,0 +1,536 @@
+{
+  "opportunities": [
+    {
+      "Id": "9fb656f2-f3a2-4bf3-ab09-57f2ddcfe4fd",
+      "Featured": false,
+      "Title": "Digital Marketing Specialist",
+      "RequisitionNumber": "DIGIT001559",
+      "FullTime": true,
+      "JobCategoryName": "Marketing",
+      "Locations": [
+        {
+          "Id": "642f3a2f-fada-5aee-8892-b55cb62b1ead",
+          "LocalizedName": "Akron",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Akron",
+          "Address": {
+            "Line1": "388 South Main Street",
+            "Line2": "Suite 330",
+            "City": "Akron",
+            "PostalCode": "44311",
+            "State": {
+              "Code": "OH",
+              "Name": "Ohio"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": true,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 41.075133877376,
+            "Longitude": -81.523291087487
+          }
+        }
+      ],
+      "PostedDate": "2026-10-06T18:50:44.114Z",
+      "BriefDescription": "The Digital Marketing role will plan and execute multi-channel digital marketing campaigns to build brand awareness, generate demand, and support pipeline growth. This position will manage day-to-day execution across paid, organic, AI search, and content channels, working cross-functionally with sales and product marketing to increase engagement and lead generation.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "7fabbb7e-319d-4ff7-9dcb-3e4e6d5efef7",
+      "Featured": false,
+      "Title": "Embedded Software Engineer",
+      "RequisitionNumber": "EMBED001568",
+      "FullTime": true,
+      "JobCategoryName": "Engineering",
+      "Locations": [
+        {
+          "Id": "642f3a2f-fada-5aee-8892-b55cb62b1ead",
+          "LocalizedName": "Akron",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Akron",
+          "Address": {
+            "Line1": "388 South Main Street",
+            "Line2": "Suite 330",
+            "City": "Akron",
+            "PostalCode": "44311",
+            "State": {
+              "Code": "OH",
+              "Name": "Ohio"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": true,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 41.075133877376,
+            "Longitude": -81.523291087487
+          }
+        }
+      ],
+      "PostedDate": "2026-09-25T18:47:40.409Z",
+      "BriefDescription": "The Embedded Software Engineer designs, develops, and supports Wi-Fi radio firmware and driver software for Ezurio's wireless connectivity products, working closely with the RF hardware development team in the USA and Taiwan, program management, and customers to deliver reliable, innovative, and resilient embedded software. The ideal candidate is comfortable working close to the metal - register-level access, bootloaders, and drivers in a resource-constrained environment - as well as building the connectivity stacks that sit above them, and brings strong debugging and root-cause analysis skills to complex hardware/software and RF interaction issues. Deep 802.11 protocol expertise is not required; we are willing to train a strong embedded/RTOS candidate on the Wi-Fi-specific pieces.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "eb432ba6-4182-4ba7-a3c5-61b84e6fb86a",
+      "Featured": false,
+      "Title": "Program Manager II - Software Engineering",
+      "RequisitionNumber": "PROGR001565",
+      "FullTime": true,
+      "JobCategoryName": "Engineering",
+      "Locations": [
+        {
+          "Id": "642f3a2f-fada-5aee-8892-b55cb62b1ead",
+          "LocalizedName": "Akron",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Akron",
+          "Address": {
+            "Line1": "388 South Main Street",
+            "Line2": "Suite 330",
+            "City": "Akron",
+            "PostalCode": "44311",
+            "State": {
+              "Code": "OH",
+              "Name": "Ohio"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": true,
+          "DisplayDescription": true,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 41.075133877376,
+            "Longitude": -81.523291087487
+          }
+        },
+        {
+          "Id": "85cfbdba-09e0-40e7-9b9f-f57a58427264",
+          "LocalizedName": "Remote USA",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": null,
+            "Line2": null,
+            "City": null,
+            "PostalCode": null,
+            "State": null,
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": false,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 46.09249645722756,
+            "Longitude": -115.97626959614995
+          }
+        }
+      ],
+      "PostedDate": "2026-09-24T11:45:45.661Z",
+      "BriefDescription": "The Program Manager II - Software Engineering leads the planning and delivery of custom embedded software, firmware, and connectivity stacks that run on Ezurio's Wi-Fi Radios, System-on-Modules (SOMs) and Single Board Computers (SBCs). These multi-discipline software programs \u2014 spanning radio firmware, board support packages, drivers, middleware, cloud/edge connectivity, and customer application enablement \u2014 require disciplined project management from concept through release and long-term support.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 0,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "c5afd0a8-c19a-4299-8481-8805612af08f",
+      "Featured": false,
+      "Title": "Sr Product Manager - SBC Portfolio",
+      "RequisitionNumber": "SRPRO001561",
+      "FullTime": true,
+      "JobCategoryName": "Marketing",
+      "Locations": [
+        {
+          "Id": "09952695-1ed0-53b1-8966-9ca8254cb8a3",
+          "LocalizedName": null,
+          "LocalizedLocationId": "NUSIV1",
+          "LocalizedDescription": "Irvine",
+          "Address": {
+            "Line1": "16450 Scientific Way",
+            "Line2": null,
+            "City": "Irvine",
+            "PostalCode": "92618",
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 33.6309994406311,
+            "Longitude": -117.73424568640719
+          }
+        }
+      ],
+      "PostedDate": "2026-08-11T15:33:26.668Z",
+      "BriefDescription": "Ezurio is seeking a Senior Product Manager to own our Single Board Computer (SBC) portfolio end to end, spanning both our established SBC lines and our newly acquired Gateworks industrial SBC family. This is a senior, hands-on product leadership role for someone with a strong hardware background who can drive commercial and technical decisions across the full SBC lifecycle: growing the standard portfolio, leading custom SBC programs, and owning the customer relationship for sustaining boards already in the field. You will join a product management team covering Ezurio's full connectivity and compute portfolio, reporting to the VP of Product Management & Marketing. This is a newly created role reflecting Ezurio's continued investment in growing its SBC business.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "916f5b9d-a067-4634-91ac-e8b54adcd247",
+      "Featured": false,
+      "Title": "Plant Manager",
+      "RequisitionNumber": "PLANT001560",
+      "FullTime": true,
+      "JobCategoryName": "Admin - Mgmt",
+      "Locations": [
+        {
+          "Id": "09952695-1ed0-53b1-8966-9ca8254cb8a3",
+          "LocalizedName": null,
+          "LocalizedLocationId": "NUSIV1",
+          "LocalizedDescription": "Irvine",
+          "Address": {
+            "Line1": "16450 Scientific Way",
+            "Line2": null,
+            "City": "Irvine",
+            "PostalCode": "92618",
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 33.6309994406311,
+            "Longitude": -117.73424568640719
+          }
+        }
+      ],
+      "PostedDate": "2026-08-05T20:20:13.258Z",
+      "BriefDescription": "Directs and controls the overall activities of Ezurio\u2019s Irvine California operations. Responsibilities include planning, budgeting, implementing and maintaining cost controls, and methods.\u00a0 Additional responsibilities include the safe production of products that meet the customer's requirements for quality and quantity.\u00a0 This role has responsibly for the site\u2019s warehouse, quality, end of line testing, planning, and SMT operations.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "719e6bd3-373f-45a9-a343-88bbc9a3ee9f",
+      "Featured": false,
+      "Title": "Master Planner",
+      "RequisitionNumber": "MASTE001547",
+      "FullTime": true,
+      "JobCategoryName": "DO - Logistics",
+      "Locations": [
+        {
+          "Id": "09952695-1ed0-53b1-8966-9ca8254cb8a3",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Irvine",
+          "Address": {
+            "Line1": "16450 Scientific Way",
+            "Line2": null,
+            "City": "Irvine",
+            "PostalCode": "92618",
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 33.6309994406311,
+            "Longitude": -117.73424568640719
+          }
+        }
+      ],
+      "PostedDate": "2026-05-27T20:34:04.762Z",
+      "BriefDescription": "Under direct supervision, the Master Planner is responsible for creating and maintaining the Master Production Schedule to support manufacturing operations. This role ensures alignmet between customer demand, prouction capacity, material availability, and inventory objectives to achieve on-time delivery, efficient utlization of resources and cost control.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 1,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "c0b3cbe7-418e-43de-8103-da75a2fb5103",
+      "Featured": false,
+      "Title": "Sales Engineer - Southeast",
+      "RequisitionNumber": "SALES001528",
+      "FullTime": true,
+      "JobCategoryName": "Sales",
+      "Locations": [
+        {
+          "Id": "85cfbdba-09e0-40e7-9b9f-f57a58427264",
+          "LocalizedName": "Remote USA",
+          "LocalizedLocationId": null,
+          "LocalizedDescription": null,
+          "Address": {
+            "Line1": null,
+            "Line2": null,
+            "City": null,
+            "PostalCode": null,
+            "State": null,
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": true,
+          "DisplayLocationId": false,
+          "DisplayAddress": false,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 0,
+          "Coordinates": {
+            "Latitude": 46.09249645722756,
+            "Longitude": -115.97626959614995
+          }
+        }
+      ],
+      "PostedDate": "2026-05-19T20:45:33.177Z",
+      "BriefDescription": "This role is built for an engineer who is energized by the deal as much as the design. As a Sales Engineer at Ezurio, you sit at the intersection of deep technical know-how and real customer impact, helping companies bring winning wireless products to market with our embedded modules, SOMs, and antennas. You will be the first commercial and technical voice many customers hear, the partner our distributors lean on, and the person who decides which opportunities are worth chasing. Expect to lead discovery calls, match the right Ezurio solution to each use case, and help close designs that ship in volume. Bring engineering credibility, sharp commercial instincts, real hunger to win, and a team-first mindset, and this role will stretch and reward you in equal measure.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    },
+    {
+      "Id": "21a228c3-21ea-4bcc-94ac-0801863ee4ef",
+      "Featured": false,
+      "Title": "Sales Engineer - West",
+      "RequisitionNumber": "SALES001544",
+      "FullTime": true,
+      "JobCategoryName": "Sales",
+      "Locations": [
+        {
+          "Id": "7ec10526-4285-534d-b907-d6f636a864ca",
+          "LocalizedName": null,
+          "LocalizedLocationId": null,
+          "LocalizedDescription": "Remote - US CA",
+          "Address": {
+            "Line1": "Update",
+            "Line2": null,
+            "City": "Update",
+            "PostalCode": "92119",
+            "State": {
+              "Code": "CA",
+              "Name": "California"
+            },
+            "Country": {
+              "Code": "USA",
+              "Name": "United States"
+            }
+          },
+          "DisplayName": false,
+          "DisplayLocationId": false,
+          "DisplayAddress": true,
+          "DisplayStreetAddress": false,
+          "DisplayDescription": false,
+          "SourceOfTruth": 1,
+          "Coordinates": {
+            "Latitude": 32.800815810123666,
+            "Longitude": -117.04327426658506
+          }
+        }
+      ],
+      "PostedDate": "2026-05-06T16:28:06.729Z",
+      "BriefDescription": "This role is built for an engineer who is energized by the deal as much as the design. As a Sales Engineer at Ezurio, you sit at the intersection of deep technical know-how and real customer impact, helping companies bring winning wireless products to market with our embedded modules, SOMs, and antennas. You will be the first commercial and technical voice many customers hear, the partner our distributors lean on, and the person who decides which opportunities are worth chasing. Expect to lead discovery calls, match the right Ezurio solution to each use case, and help close designs that ship in volume. Bring engineering credibility, sharp commercial instincts, real hunger to win, and a team-first mindset, and this role will stretch and reward you in equal measure.",
+      "MatchScore": 1.0,
+      "MatchedLocations": [],
+      "Distance": null,
+      "JobLocationType": 2,
+      "OpportunityType": 0
+    }
+  ],
+  "totalCount": 8,
+  "locations": [
+    {
+      "PhysicalLocation": {
+        "Id": "642f3a2f-fada-5aee-8892-b55cb62b1ead",
+        "LocalizedName": "Akron",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "Akron",
+        "Address": {
+          "Line1": "388 South Main Street",
+          "Line2": "Suite 330",
+          "City": "Akron",
+          "PostalCode": "44311",
+          "State": {
+            "Code": "OH",
+            "Name": "Ohio"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": true,
+        "DisplayDescription": true,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 41.075133877376,
+          "Longitude": -81.523291087487
+        }
+      },
+      "Count": 3
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "7ec10526-4285-534d-b907-d6f636a864ca",
+        "LocalizedName": null,
+        "LocalizedLocationId": null,
+        "LocalizedDescription": "Remote - US CA",
+        "Address": {
+          "Line1": "Update",
+          "Line2": null,
+          "City": "Update",
+          "PostalCode": "92119",
+          "State": {
+            "Code": "CA",
+            "Name": "California"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 32.800815810123666,
+          "Longitude": -117.04327426658506
+        }
+      },
+      "Count": 1
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "09952695-1ed0-53b1-8966-9ca8254cb8a3",
+        "LocalizedName": null,
+        "LocalizedLocationId": "NUSIV1",
+        "LocalizedDescription": "Irvine",
+        "Address": {
+          "Line1": "16450 Scientific Way",
+          "Line2": null,
+          "City": "Irvine",
+          "PostalCode": "92618",
+          "State": {
+            "Code": "CA",
+            "Name": "California"
+          },
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": false,
+        "DisplayLocationId": false,
+        "DisplayAddress": true,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 1,
+        "Coordinates": {
+          "Latitude": 33.6309994406311,
+          "Longitude": -117.73424568640719
+        }
+      },
+      "Count": 3
+    },
+    {
+      "PhysicalLocation": {
+        "Id": "85cfbdba-09e0-40e7-9b9f-f57a58427264",
+        "LocalizedName": "Remote USA",
+        "LocalizedLocationId": null,
+        "LocalizedDescription": null,
+        "Address": {
+          "Line1": null,
+          "Line2": null,
+          "City": null,
+          "PostalCode": null,
+          "State": null,
+          "Country": {
+            "Code": "USA",
+            "Name": "United States"
+          }
+        },
+        "DisplayName": true,
+        "DisplayLocationId": false,
+        "DisplayAddress": false,
+        "DisplayStreetAddress": false,
+        "DisplayDescription": false,
+        "SourceOfTruth": 0,
+        "Coordinates": {
+          "Latitude": 46.09249645722756,
+          "Longitude": -115.97626959614995
+        }
+      },
+      "Count": 2
+    }
+  ]
+}

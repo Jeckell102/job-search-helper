@@ -16,6 +16,7 @@ from .engine import DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE, Engine, State, now, run_
 from .cleanup import cleanup_blacklisted_history
 from .repair import repair_careers_urls
 from .repository import GoogleRepository, MemoryRepository, authorize
+from .review_queue import DEFAULT_THRESHOLD, export_review_queues
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -52,16 +53,60 @@ def state_path() -> Path:
     return project_path(os.environ.get("STATE_DB_FILE", ".state/state.db"))
 
 
-def get_repository(write: bool = False, interactive: bool = False, min_request_interval: float | None = None) -> GoogleRepository:
+def storage_backend():
+    marker = PROJECT_ROOT / '.storage-backend'
+    default = marker.read_text().strip() if marker.exists() else 'sheets'
+    backend = os.environ.get("JOB_STORAGE_BACKEND", default).strip().lower()
+    if backend not in {"sheets", "sqlite"}:
+        raise ValueError("JOB_STORAGE_BACKEND must be sheets or sqlite.")
+    return backend
+
+
+def job_database_path():
+    return project_path(os.environ.get("JOB_DB_FILE", ".state/jobs.sqlite3"))
+
+
+def scraper_lock_name():
+    return "scraper.lock" if storage_backend() == "sqlite" else "writer.lock"
+
+
+def review_lock_name():
+    return "review-writeback.lock" if storage_backend() == "sqlite" else "writer.lock"
+
+
+def get_repository(write: bool = False, interactive: bool = False, min_request_interval: float | None = None,
+                   renew_both: bool = False):
+    # Local scraping and reviewing must not authenticate with Google at all.
+    if storage_backend() == "sqlite":
+        from .sqlite_repository import SQLiteRepository
+        spreadsheet_id = os.environ.get("SPREADSHEET_ID", "").strip()
+        if not spreadsheet_id or not re.fullmatch(r"[A-Za-z0-9_-]+", spreadsheet_id):
+            raise ValueError("Set SPREADSHEET_ID to the working spreadsheet ID in .env.")
+        return SQLiteRepository(job_database_path(), spreadsheet_id, readonly=not write)
+    return get_remote_repository(write=write, interactive=interactive,
+                                 min_request_interval=min_request_interval, renew_both=renew_both)
+
+
+def get_remote_repository(write: bool = False, interactive: bool = False, min_request_interval: float | None = None,
+                   renew_both: bool = False, schemas=None, evidence_archives: bool = True) -> GoogleRepository:
     spreadsheet_id = os.environ.get("SPREADSHEET_ID", "").strip()
     if not spreadsheet_id or not re.fullmatch(r"[A-Za-z0-9_-]+", spreadsheet_id):
         raise ValueError("Set SPREADSHEET_ID to the working spreadsheet ID in .env.")
     if write and spreadsheet_id == "1avssxbKDXMrKS0oFHNAfhbQ2HWNz3T_jkn4DSUEmqv0":
         raise ValueError("Refusing to write to Job Search Master - Original. Configure the working copy instead.")
-    service = authorize(write=write, interactive=interactive)
+    if renew_both:
+        service = authorize(write=write, interactive=interactive, renew_both=True)
+    else:
+        service = authorize(write=write, interactive=interactive)
     if min_request_interval is None:
-        return GoogleRepository(service, spreadsheet_id)
-    return GoogleRepository(service, spreadsheet_id, min_request_interval=min_request_interval)
+        repo = GoogleRepository(service, spreadsheet_id, schemas=schemas)
+    else:
+        repo = GoogleRepository(service, spreadsheet_id, schemas=schemas, min_request_interval=min_request_interval)
+    archive_file = os.environ.get("EVIDENCE_ARCHIVES_FILE", "").strip()
+    if archive_file and evidence_archives:
+        from .evidence_archives import EvidenceArchives
+        return EvidenceArchives(repo, project_path(archive_file))
+    return repo
 
 
 def detached_repository(repo: GoogleRepository) -> MemoryRepository:
@@ -71,6 +116,10 @@ def detached_repository(repo: GoogleRepository) -> MemoryRepository:
 
 def print_json(value: object) -> None:
     print(json.dumps(value, indent=2, ensure_ascii=False, default=str))
+
+
+class WriterLockBusy(RuntimeError):
+    """Another local process currently owns this writer lock."""
 
 
 @contextmanager
@@ -85,7 +134,7 @@ def writer_lock(path: Path):
         try:
             fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
-            raise RuntimeError("Another local helper holds the writer lock.") from exc
+            raise WriterLockBusy("Another local helper holds the writer lock.") from exc
         yield
     finally:
         fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
@@ -132,7 +181,7 @@ def execute_work(args: argparse.Namespace) -> None:
     print("APPLY: one controlled writer. Model calls remain disabled.")
     database = state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with writer_lock(database.parent / "writer.lock"):
+    with writer_lock(database.parent / scraper_lock_name()):
         repo = get_repository(write=True, interactive=args.authenticate)
         repo.validate_schema()
         state = State(str(database))
@@ -168,7 +217,7 @@ def execute_cleanup(args: argparse.Namespace) -> None:
 
     print("APPLY: setting Added to Opportunities? to No for excluded titles; reporting potential matches and uncertain titles.")
     database = state_path()
-    with writer_lock(database.parent / "writer.lock"):
+    with writer_lock(database.parent / scraper_lock_name()):
         repo = get_repository(write=True, interactive=args.authenticate)
         repo.validate_schema()
         print_json(cleanup_blacklisted_history(repo, apply=True))
@@ -186,7 +235,7 @@ def execute_repair_careers(args: argparse.Namespace) -> None:
 
     print("APPLY: validating replacement careers boards, queueing proven fixes, and recording unvalidated candidates for review.")
     database = state_path()
-    with writer_lock(database.parent / "writer.lock"):
+    with writer_lock(database.parent / scraper_lock_name()):
         repo = get_repository(write=True, interactive=args.authenticate)
         repo.validate_schema()
         print_json(repair_careers_urls(repo, apply=True))
@@ -206,7 +255,7 @@ def execute_setup_evidence_tab(args: argparse.Namespace) -> None:
         raise ValueError("--apply requires --exclusive-writer. Stop other spreadsheet writers before changing workbook structure.")
     print("APPLY: creating or repairing the Job Evidence tab and moving existing descriptions out of Job History.")
     database = state_path()
-    with writer_lock(database.parent / "writer.lock"):
+    with writer_lock(database.parent / scraper_lock_name()):
         repo = get_repository(write=True, interactive=args.authenticate, min_request_interval=1.1)
         setup = repo.ensure_tab("Job Evidence")
         # Prime narrow commit layouts. Without this, each batch would reload the
@@ -257,13 +306,20 @@ def parser() -> argparse.ArgumentParser:
     demo.add_argument("--output", help="New/empty output directory; defaults to a temporary directory.")
     preflight = commands.add_parser("preflight", help="Validate access and workbook headers; never change cells.")
     preflight.add_argument("--authenticate", action="store_true", help="Allow interactive read-only Google OAuth.")
-    auth = commands.add_parser("auth", help="Obtain Google OAuth credentials; no spreadsheet writes.")
-    auth.add_argument("--write", action="store_true", help="Request the separate write credential explicitly.")
+    auth = commands.add_parser("auth", help="Renew both Google OAuth credentials; no spreadsheet writes.")
+    auth_scope = auth.add_mutually_exclusive_group()
+    auth_scope.add_argument("--write", action="store_true", help="Renew only the separate write credential.")
+    auth_scope.add_argument("--read-only", action="store_true", help="Renew only the separate read-only credential.")
     status = commands.add_parser("status", help="Read local cycle status without creating or updating state.")
     status.add_argument("--cycle")
     reviews = commands.add_parser("reviews", help="Export the saved pending review queue to a new local file.")
     reviews.add_argument("--cycle", required=True)
     reviews.add_argument("--output", required=True)
+    review_queue = commands.add_parser("review-queue", help="Build read-only weighted AI review queues from Job History.")
+    review_queue.add_argument("--threshold", type=int, default=DEFAULT_THRESHOLD)
+    review_queue.add_argument("--output-dir", default=str(PROJECT_ROOT / ".state" / "review-queue"))
+    review_queue.add_argument("--overwrite", action="store_true")
+    review_queue.add_argument("--authenticate", action="store_true", help="Permit OAuth if credentials are absent.")
     cleanup = commands.add_parser(
         "cleanup-blacklist",
         aliases=["cleanup-titles"],
@@ -274,6 +330,12 @@ def parser() -> argparse.ArgumentParser:
     cleanup.add_argument("--exclusive-writer", action="store_true", help="Confirm all other sheet writers are stopped.")
     cleanup.add_argument("--workers", type=int, default=1, help=argparse.SUPPRESS)
     cleanup.add_argument("--authenticate", action="store_true", help="Permit OAuth if credentials are absent.")
+
+    closed = commands.add_parser("cleanup-closed", help="Deterministically change eligible Closed + Pending rows to No; no AI review.")
+    closed.add_argument("--apply", action="store_true", help="Apply guarded cleanup and verify scoped Sheet delivery.")
+    closed.add_argument("--dry-run", action="store_true", help="Preview without changes (the default).")
+    closed.add_argument("--limit", type=int, default=100, help="Bounded cleanup size, 1–100.")
+    closed.add_argument("--authenticate", action="store_true", help="Permit interactive Google authorization if needed.")
 
     repair = commands.add_parser(
         "repair-careers-urls",
@@ -346,8 +408,9 @@ def main(argv: list[str] | None = None) -> int:
             os.environ[variable] = str(project_path(os.environ.get(variable, default)))
 
         if args.command == "auth":
-            authorize(write=args.write, interactive=True)
-            print("Google authorization saved. No spreadsheet cells were modified.")
+            authorize(write=args.write, interactive=True, renew_both=not (args.write or args.read_only))
+            label = "write" if args.write else "read-only" if args.read_only else "read and write"
+            print(f"Google {label} authorization saved. No spreadsheet cells were modified.")
         elif args.command == "preflight":
             repo = get_repository(interactive=args.authenticate)
             validation = repo.validate_schema()
@@ -371,7 +434,16 @@ def main(argv: list[str] | None = None) -> int:
             finally:
                 state.close()
             print_json({"reviews": count, "output": str(output)})
+        elif args.command == "review-queue":
+            repo = get_repository(write=False, interactive=args.authenticate)
+            print_json(export_review_queues(
+                repo, args.output_dir, threshold=args.threshold, overwrite=args.overwrite,
+                inventory_database=state_path().parent / "inventories.sqlite3"
+            ))
         elif args.command in {"cleanup-blacklist", "cleanup-titles"}:
+            execute_cleanup(args)
+        elif args.command == "cleanup-closed":
+            from .closed_jobs import execute_cleanup
             execute_cleanup(args)
         elif args.command == "repair-careers-urls":
             execute_repair_careers(args)

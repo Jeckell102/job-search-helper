@@ -1,6 +1,10 @@
 # Job Search Helper — reviewed replacement
 
-This is a manually started helper for a quality-first job search, not an autonomous applicant or a substitute for a fit assessment. It retrieves a verified employer hiring-board inventory, removes obvious hard-title exclusions, compares stable posting identities and saved descriptions, and queues the remaining work for a human or your signed-in AI session. Only an explicitly reviewed, accepted decision can create an Opportunity.
+This is a manually started helper for a quality-first job search, not an autonomous applicant or a substitute for a fit assessment. It retrieves a verified employer hiring-board inventory, removes obvious hard-title exclusions, compares stable posting identities and saved descriptions, and queues the remaining work for a human or your signed-in AI session. Reviewed accepts and third-pass outcomes with unresolved questions create Opportunities.
+
+Third-pass questions go to Opportunities rather than a Manual Review hold. The audit decision remains `Needs Info`, while Job History becomes `Reviewed` with `Added to Opportunities?=Yes`. The matching Opportunity contains `Review Questions`; a new questions Opportunity has a blank Fit Review and `Not Reviewed` application status. Existing fit decisions, personal Notes, application status, and dates are preserved. Unresolved outcomes do not certify description completion or increment reconsideration. Second-pass `NEEDS_INFO` continues to use Manual Review.
+
+The explicit `job-search-reviewer promote-questions --pass 3 --run-id RUN_ID --file REQUESTS.jsonl` maintenance command converts allowlisted, unchanged, proven third-pass manual holds. Each request supplies exact identity, immutable assessment signature, unique migration ID and the user's instruction. It audits the prior assessment, intent and publication before guarded writeback and remote readback. It preserves manual No choices, source conflicts, missing History records and unrelated second-pass holds. Reusing the same request safely resumes an uncertain response.
 
 It makes **no Gemini, OpenAI, or other model API calls**. No API key or additional model spending is needed to run the tests or helper. Google OAuth credentials are necessary only for real spreadsheet access. Do not paste credentials or token files into chat.
 
@@ -23,7 +27,7 @@ The demo uses an invented fixture company and job descriptions, not your live wo
 
 The intended working spreadsheet is:
 
-`1NEg-VRWldCg18mIzLeyz7wRIB8U9M_r4zlnQOxN5NMw`
+`1LJwaKYvD8Xh1cCub9VAYfzhsDEyoIcew9LHgaxbOT7Y`
 
 The backup named **Job Search Master - Original** is not a target. Check the configured spreadsheet ID before any command using `--apply`.
 
@@ -127,11 +131,61 @@ Public boards at `https://recruiting.paylocity.com/Recruiting/Jobs/All/COMPANY_U
 
 The adapter reads the full embedded `window.pageData.Jobs` list as JSON without executing JavaScript, then fetches every public detail page. It preserves full descriptions plus requirements, location, department, published salary text, dates, explicit remote status, and stable posting IDs. The list's shortened description is never treated as the full job. Every detail must confirm its posting ID and company board. A final listing recheck catches changes during the scan, including an empty board gaining jobs. Missing data, duplicates, access denials, and size limits leave the inventory incomplete and cannot close old jobs or advance successful-scan dates. Per-job progress and failing-detail diagnostics appear in the terminal. No applications, logins, cookies, or CAPTCHA bypasses are used.
 
+### UKG / UltiPro public boards
+
+Public JobBoard URLs on `recruiting.ultipro.com` and `recruiting2.ultipro.com` are supported, including discovery through employer careers links and embeds. The tenant and board GUID must come from the configured official board. Empty search/location parameters and posted-date sorting do not change inventory scope; nonempty filters, individual posting URLs, internal boards, and explicitly shared/parent scopes require review.
+
+The adapter reads the anonymous board configuration, posts only to its public `JobBoardView/LoadSearchResults` listing search, and retrieves every `OpportunityDetail` page. It parses embedded JSON without executing scripts or accessing candidate accounts. Search results include featured roles, so featured cards are not imported a second time. Requests retain the shared transport's rate limit, bounded retries, size limit, and no-redirect behavior.
+
+A complete result requires matching page counts, unique IDs, full descriptions, requisition identity, external membership on the configured board, open status, and matching posting dates. Full descriptions include separate education, experience, license, skill, behavior, and motivation requirements when supplied. Pay periods are preserved; an unlabeled PayRange remains unlabeled. Every listing page and the board configuration are rechecked at completion. Failures retain verified jobs as incomplete and cannot establish closures. Generic browser fallback cannot replace this adapter's result.
+
+Read-only validation on 2026-10-08 retrieved 159 full postings across four complete inventories: Applied Research Associates (ARA) 116, Globalstar 8, CPI Satcom & Antenna Technologies 27, and Ezurio 8. Validation did not update spreadsheet rows. Restart the scraper to load the installed integration; existing retry settings still apply.
+
+### Paycom public portals
+
+Public `https://www.paycomonline.net/v4/ats/web.php/portal/PORTAL_KEY/career-page` boards and employer pages linking to them are supported. The adapter uses the anonymous session supplied by the public careers page, kept only in memory and sent only to Paycom's pinned public careers service. Only listing-search and full job-detail reads are allowed. Configured filters, individual job URLs, unknown services, internal sessions, and explicitly shared/parent scopes are rejected rather than expanded.
+
+Every page must reconcile with the advertised total and unique IDs. Every description must match its listed ID, title, tenant and open status. All listing pages are rechecked at completion. Failures retain verified postings as incomplete and cannot establish closures; generic browser scraping cannot replace these results.
+
+Read-only validation on 2026-10-08 retrieved 104 full postings across six complete portal inventories: Red Cat Holdings 52, Teal Drones 15, FlightWave Aerospace 11, AeroTEC 9, Sabel Systems 15, and Icom America 2. Portal counts may overlap where related companies advertise the same roles. No spreadsheet rows were changed by validation.
+
+### Northrop Grumman
+
+The configured corporate `/careers` page is routed to its verified public `jobs.northropgrumman.com/careers` board when browser fallback is enabled. Corporate CMS navigation, including EEO, E-Verify and Contact Us, cannot become job records. The dedicated browser adapter reads the public Eightfold listing and detail responses, preserving requisition IDs, locations, titles and full descriptions. It requires matching identities and descriptions; it never substitutes the corporate page text for a job description.
+
+The adapter follows public search pages, checks counts and duplicates, and rechecks all page identities before declaring completeness. Changed inventories, access denials and missing details remain incomplete; already retrieved full jobs are retained. Filtered URLs are not expanded to a whole-company inventory. No login or application action is performed. Previously saved non-job rows are not deleted by this code change. Restart the scraper to load both changes.
+
+### BambooHR public boards
+
+BambooHR support reads the public `/careers/list` inventory and each `/careers/{id}/detail` job description. Direct `https://EMPLOYER.bamboohr.com/careers` boards, public legacy `/jobs/` links, and linked or embedded boards on employer careers pages are recognized. An individual job URL alone is not accepted as a complete company board. The adapter uses public GET requests with bounded retries and rate limiting; it does not call the authenticated HR API or application endpoints.
+
+Each posting preserves its stable public ID, full description, department, published compensation text, date posted, location, and explicit on-site/remote/hybrid setting. Compensation periods are not inferred. The listing's `meta.totalCount` must equal the complete unique posting list; missing metadata, unexpected pagination, unavailable job details, title/identity mismatches, and changing inventories remain incomplete. The full list is rechecked after all details are read, including an empty list gaining jobs.
+
+Employer careers pages sometimes link only part of a shared BambooHR board. The adapter retrieves only those linked open postings and keeps the original employer URL as its source identity. It also rechecks the employer page at the end. A subset, stale links, or changed page scope remains partial and cannot establish closure; it never silently imports all parent-company jobs. Multiple tenants, unrecognized filters, and explicitly shared/parent boards without a company scope require review. Generic browser fallback does not replace or merge BambooHR results because it cannot validate those scopes or keep the same posting identity.
+
+Read-only validation on 2026-10-08 retrieved 79 full postings: Plus One Robotics (2), ThayerMahan (7), Satellogic (21), PLEXSYS (14), Druid Software (3), Safran Federal Systems (9), and Blue Canyon Technologies (23). The first five inventories verified as complete. Safran's employer-page links changed during the scan, and Blue Canyon's page linked a subset of its board; both retained their fetched jobs with partial status. These counts are observations from validation, not a production spreadsheet update.
+
+Restart/resume the scraper to load the installed adapter. Existing failed/blocked companies retry according to the existing runner settings. A process already running at installation keeps its loaded code until restarted.
+
+### Phenom career sites
+
+Phenom support reads the public site's embedded search data, follows every results page, and retrieves each posting's full description. It supports the `Phenom (career site)` and `Phenom / BrassRing` labels, including BAE's separate required/preferred qualifications and published compensation. Known Phenom employer domains are also recognized when their sheet label is blank or `Browser`. The adapter does not execute the embedded scripts or visit application endpoints.
+
+The configured employer home page supplies its locale-specific search URL. Custom landing pages retain their original scope and pagination; they are never replaced by the unfiltered parent search. Explicit `keywords` searches are supported only when the response confirms that exact keyword scope. Other query filters, partial-page starting URLs, and fragment filters require manual review. Keyword matches are search scope, not independent proof of division ownership. Raytheon, Collins Aerospace, HPE Aruba Networking, and Juniper rows cannot use an unfiltered RTX/HPE home page as their company inventory. Use a verified company-specific landing page.
+
+A complete result requires consistent board/locale identity, unique posting IDs, matching advertised totals, full descriptions, and a final first-page/count recheck. Missing or changed data, repeated pages, rate limits, access denials, and unsupported scopes remain incomplete; successfully fetched postings are retained. Generic browser fallback does not replace or merge Phenom results because it cannot verify those scopes or preserve the same posting identity.
+
+Read-only validation on 2026-10-08 retrieved complete single-requisition search inventories from MITRE, BAE Systems, Cisco, HPE, Serco, and Leonardo UK, plus all 28 jobs across three pages of Leonardo's `network` search. This validates the integration, not complete coverage of those entire employers. RTX returned HTTP 403. KBR's old URL redirected to a shared KBR/Trinzic landing page and needs a verified replacement scope. HPE's generic parent URL is not sufficient for the HPE Aruba Networking row. These sheet configurations are not changed automatically.
+
+Restart/resume the scraper after installation to load the adapter. Previously blocked rows retry according to the existing runner settings. A scan that was already running at installation keeps its previously loaded code until restarted.
+
 ### Taleo
 
 Standard public Oracle Taleo boards at `https://EMPLOYER.taleo.net/careersection/BOARD/jobsearch.ftl` are supported. Job detail and apply links on the same career section are normalized back to the public job-search board so a company inventory is still scoped by its board, not by one posting. Direct Taleo links and same-site careers pages that point to Taleo can be discovered automatically. Unknown filters, shared/parent board labels, and nonstandard Taleo portals require manual review.
 
 The adapter reads the public search page to find Taleo's portal number, posts the same unfiltered public search request the page uses, then fetches every public detail page. It preserves the public contest number as the stable posting ID, title, location, department column when available, and full visible detail text. A complete scan requires consistent listing totals, unique posting IDs, detail pages that confirm the listing title, and a final first-page recheck when jobs were found. Access denials, human verification, changed pagination, missing details, or malformed pages remain incomplete and cannot close old jobs. No cookies, login, application forms, or one-time authorization bypasses are used.
+
+Textron Systems is handled through its company-scoped, paginated careers page rather than Textron's shared Taleo parent board. The direct pass reads the rendered job cards and descriptions from every careers-page result page. If that inventory is partial or the site blocks direct reads, the browser fallback repeats the scoped pagination. Changing totals remain partial but the retrieved postings are retained; they are never treated as a complete parent-company inventory.
 
 Dayforce is still a major unsupported family. Its documented JobFeeds API requires authorized access, and its public app endpoints can deny direct read-only calls outside the browser app. Those rows stay blocked/manual-review unless a direct supported ATS link is found or a future browser-rendered adapter is added.
 
@@ -182,7 +236,9 @@ For normal operation, use the scraper wrapper:
 ./job-search-scraper start
 ```
 
-It resumes the newest unfinished local cycle, recovers an unfinished workbook cycle if needed, or starts a new full-company scan. The process remains the only Google Sheets writer. Fetch workers never read or write Google Sheets; they only retrieve company inventories and return full job data to the writer.
+Every normal `start` creates a fresh scan of all currently active companies, including previously successful and partial companies and new additions. Use `./job-search-helper start --resume --fetch-workers 15` to explicitly continue the latest scan: completed companies are skipped, partial inventories are retried, and saved inventories and browser progress are reused. Resume never falls back to an older unfinished cycle or silently starts a new scan. Old checkpoints and inventories are retained; `sync` can still process saved work. The process remains the only Google Sheets writer. Fetch workers never read or write Google Sheets; they only retrieve company inventories and return full job data to the writer.
+
+A finished pass with incomplete companies closes as `Complete with exceptions`; those companies remain Partial or blocked and do not receive a successful Last Checked date. After final synchronization, the summary reports new Job History rows added this invocation, successfully scanned companies, partially scanned companies, and companies skipped within its scope (blank when zero). Nonzero blocked/failed or saved-but-unprocessed counts are shown separately. Existing job updates and titles kept only in the local filter audit are not counted as new jobs.
 
 To fetch multiple company inventories while keeping one Sheets writer:
 
@@ -190,7 +246,7 @@ To fetch multiple company inventories while keeping one Sheets writer:
 ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200
 ```
 
-The scraper defaults to `5` fetch workers, `--assignment-window 100`, and `--batch-size 200`, so plain `./job-search-scraper start` opens the same worker dashboard unless you override those options.
+The scraper defaults to `5` fetch workers, `--assignment-window 100`, and `--batch-size 200`, so plain `./job-search-scraper start` opens the same worker dashboard unless you override those options. `--fetch-workers` accepts `1` through `50`.
 
 The controller reads a narrow planning snapshot once, processes jobs locally, and stores both fetched inventories and planned changes in `.state/inventories.sqlite3`. Job planning loads `Job History` identity/review-control columns, not full rows or long descriptions. The writer combines changes from multiple companies into each Sheets upload. Assignment and job planning use the local snapshot. Before upload, the writer refreshes only narrow company-control columns such as status, claims, retry hold, and official URL. For Job History commits, it rereads identity columns plus `Added to Opportunities?` and `Review Status`; new rows append after the cached tail. This keeps your manual opportunity decisions safe without rereading full rows or long descriptions. Workers never access Sheets; they save each result to SQLite and take another assignment even while an upload is busy.
 
@@ -204,7 +260,7 @@ If one company hits a writer-side scraper error, the run logs that company to `.
 ./job-search-scraper errors
 ```
 
-On Ctrl+C, queued assignments are cancelled and running fetches finish into the durable SQLite inbox. Restart resumes frozen, keyed changes from the last acknowledged upload; only fetches without saved results need repeating. An uncertain write retains the original plan and requires explicit `sync --retry-blocked`, with fresh identity checks on replay. A rejected preflight plan retains the original inventory and is rebuilt from fresh rows on explicit retry. Completed inventories are removed only after all company changes are acknowledged and the local cycle checkpoint succeeds. Failed companies retain their inventories for explicit retry. To adjust Google Sheets pacing for the writer:
+On Ctrl+C, queued assignments are cancelled and running fetches finish into the durable SQLite inbox. `start --resume` resumes frozen, keyed changes from the last acknowledged upload; only fetches without saved results need repeating. An uncertain write retains the original plan and requires explicit `sync --retry-blocked`, with fresh identity checks on replay. A rejected preflight plan retains the original inventory and is rebuilt from fresh rows on explicit retry. Completed inventories are removed only after all company changes are acknowledged and the local cycle checkpoint succeeds. Failed companies retain their inventories for explicit retry. To adjust Google Sheets pacing for the writer:
 
 ```bash
 ./job-search-scraper start --fetch-workers 5 --assignment-window 100 --batch-size 200 --sheet-request-interval 1.1
@@ -214,7 +270,7 @@ Lower values are faster but more likely to hit Google per-user request limits. T
 
 Planned changes from different companies share atomic Sheets batches. `--batch-size 200` limits operations (including company status and Opportunity updates), so it is not necessarily 200 jobs. Uploads also split at a conservative local payload budget and the existing `2.2 MB` encoded API limit. Validation failures are isolated by company; ambiguous writes are never automatically retried. API request pacing and read retry/backoff remain unchanged.
 
-`--sync-interval 60` uploads a partly filled batch after 60 seconds, checked between local company planning steps. A full batch uploads immediately, and remaining changes upload at the end. This interval is a flush trigger, not a guaranteed maximum visibility delay: a large company or slow Sheets call can take longer.
+`--sync-interval 60` uploads a partly filled batch after 60 seconds, checked between local company planning steps. A full batch uploads immediately; its leftover changes join the next company's batch instead of triggering a small extra upload. Remaining changes upload at the end. Cycle-progress updates use the same interval on a separate timer, with final status saved immediately; local recovery checkpoints still save after every upload and company completion. This interval is a flush trigger, not a guaranteed maximum visibility delay: a large company or slow Sheets call can take longer.
 
 ```bash
 ./job-search-scraper start --batch-size 200 --sync-interval 60
@@ -246,6 +302,8 @@ After resolving a company write error, retry its retained payload with `./job-se
 Keep the **whole `.state` directory**, including the inbox and any SQLite WAL files. Unsynced jobs now depend on that local storage. The inbox is restricted to the local account and bound to the spreadsheet ID; changing destinations requires retaining the original inbox with its original destination. Successful company syncs release their inventories and plans. Existing checkpoint databases migrate automatically, and legacy interrupted companies without saved inventory are refetched.
 
 The writer loads the planning snapshot once per run and indexes Job History identities in memory. It updates that cache after confirmed writes. Subsequent Job History commits reread identity columns and the manual opportunity/review-lock cells, not full affected rows or the append tail. Small control tabs still use a single fresh read. Manual edits should be limited to `Added to Opportunities?` while the scraper is running; do not manually add/delete jobs, sort rows, or edit formulas during a writer commit.
+
+At the start of both `start` and `sync`, Job History rows whose `Added to Opportunities?` value is `Yes` are reconciled into Opportunities. Existing rows are matched by company and canonical job URL, so this is idempotent with scraper-added opportunities and preserves application status, dates, and notes. A manual change made during an active writer run is picked up on the next run.
 
 New rows use grouped, explicitly addressed blocks inside the same atomic `batchUpdate`; updates use only contiguous changed cells. Explicit destinations allow validation before writing. The writer does not blindly retry a positional append after a timeout: restart resolves stable identities from Sheets, then replays the saved inventory. An ambiguous response or checkpoint interruption therefore cannot append the same keyed job again. Continue to avoid sorting/inserting/deleting sheet rows during a commit; the API does not offer a transaction spanning read and write.
 
@@ -299,8 +357,8 @@ This command changes only `Added to Opportunities?` to `No`. It does not delete 
 
 Two editable files control title screening:
 
-- `title-blacklist.txt`: excluded roles and seniority levels. All existing exclusions remain in effect. Staff, Principal, and Director are excluded even when the function otherwise matches.
-- `title-review-list.txt`: preferred applications, product, customer-facing technical, field support, and field service roles. Matching this list is a review hint, not automatic acceptance or an allowlist. Jobs outside the shortlist still go to AI review unless an exclusion applies.
+- `title-blacklist.txt`: hard title exclusions used only when the title alone is enough to reject. Seniority by itself is not an exclusion; relevant Staff and Director roles may proceed to review. Principal remains excluded by the current policy, as do generic Systems Engineer titles and the other explicit discipline/function exclusions in the file.
+- `title-review-list.txt`: preferred applications, product, customer-facing technical, field/deployment, training, technical program, support, and mission-operations roles. Matching this list is a review hint, not automatic acceptance or an allowlist. Jobs outside the shortlist still go to AI review unless an exclusion applies.
 
 Exclusions always take priority. Unmatched titles remain uncertain. Phrases match whole words, ignore case, and allow punctuation between words; `regex:` entries support deliberate regular expressions. Restart a running scraper after editing either list.
 
@@ -314,9 +372,47 @@ Stop the scraper and other sheet writers first. This applies immediately, just l
 
 Both cleanup commands use the same rules and report excluded, potentially good, and uncertain title counts. The report lists potentially good and uncertain rows that are not already `No`. Only excluded titles can be changed, and only the `Added to Opportunities?` cell is updated. Existing `No` decisions are never promoted, active reviews and unresolved identities are skipped, and other fields and Opportunities rows are preserved. No model calls or AI tokens are used. Future scrapes use the same exclusions before inserting jobs.
 
+## Build token-efficient AI review queues
+
+Every normal `start` and `sync` refreshes the local review queues before work and after completion, including an empty sync. Interrupted or failed runs attempt a final refresh without hiding the original error. These are read-only queue exports: no AI calls or job-decision writes are made. `./job-search-scraper review-queue --overwrite` remains available for manual regeneration.
+
+Default bands are `SECOND_PASS_HIGH` = 30+, `SECOND_PASS_STANDARD` = 17–29, `FIRST_PASS_BORDERLINE` = 8–16, and `FIRST_PASS_LOW` = 0–7. The numerical score is triage, never a final fit decision. Missing or truncated evidence routes to FIRST PASS even if its numerical band is high. Deliberate `--threshold` tuning is recorded in `summary.json`; normal use keeps the 17-point second-pass cutoff.
+
+`.state/review-queue/first-pass.jsonl` contains identity, title, scores/band, reasons, and evidence/provenance flags, without a Company field or full description. `second-pass.jsonl` includes the complete stored description and the same company-free review metadata. Company names may occur naturally inside descriptions; full evidence is not redacted. Independent salary, travel, nonpermanent-employment, and explicit SaaS exclusions stay in `deterministic-filtered.jsonl` and cannot be overturned by title-only rescue.
+
+Current title rejects are mirrored into FIRST PASS as `FIRST_PASS_TITLE_FILTER_AUDIT` and also retained in the deterministic audit; this overlap is not additional jobs. Newly scraped blacklisted titles remain excluded from Sheets insertion, but complete inventories now retain their audit evidence in the existing local `inventories.sqlite3` database. Export reads this evidence without modifying the database. Local audit entries never reopen an existing history decision, claim, closed row, or frozen record; keys and canonical URLs prevent legacy-identity duplicates. Previously discarded inventories cannot be reconstructed by this change: forward audit coverage grows as companies are freshly scraped. The retention table is initialized by the next scraper start, not by read-only export.
+
+Weighted phrases use word boundaries rather than incidental fragments such as RF inside performance. FIRST PASS can rescue plausible low-score or suspicious title-filter records; SECOND PASS performs description triage, and THIRD PASS independently assesses final fit and U.S. eligibility. A local-only rescue with no Job History row is reviewed and logged as `Needs Staging`, not silently inserted into Sheets; it requires an explicitly authorized keyed import.
+
+Exports build before touching previous output, stage complete files, replace each file, and publish `summary.json` last. Its `file_sha256` entries let consumers detect a mixed or changing generation. Successful overwrite removes only the obsolete `full-review.jsonl` and `title-audit.jsonl` filenames, not decision logs. Summary counts include the title-audit overlap and missing evidence. The reduction estimate compares serialized input characters including metadata, not measured tokens or cost; it excludes prompts, output, and later rescued descriptions.
+
+The canonical assessment instructions are the existing Google Drive **AI Prompt**. Local prompt entrypoints route to it and `prompts/CONCURRENT-REVIEW-RUNS.txt`, rather than retaining conflicting old two-pass instructions. Explicit FIRST/SECOND/THIRD PASS selection is required; editing a prompt never starts reviews. FIRST PASS is title sanity, SECOND PASS is lower-cost full-description triage, and THIRD PASS is stronger final review. No Prompt Library tab is used.
+
+## Concurrent three-pass reviews
+
+`./job-search-reviewer` now runs the managed review controller, not the scraper. From this project directory, use `start --pass N`, retain its run ID, and repeat `next --pass N --run-id RUN_ID`, model assessment, and `submit --pass N --run-id RUN_ID --file RESULTS_FILE`. Results must contain each claimed job_key, source_hash, claim_token, and input_version. Use `evidence` for targeted source hydration and `finish` for a fresh live queue check. Full launch details are in `prompts/CONCURRENT-REVIEW-RUNS.txt` and the current Drive AI Prompt.
+
+When told to start or continue a run, keep processing the selected pass until its entire queue is exhausted; a batch is only an internal work unit, not a stopping point. Before finishing, refresh that pass’s queue and upstream handoffs and process anything newly added, repeating until no eligible items remain.
+
+Multiple independent agents may review the same pass simultaneously, as well as different passes. Each new chat calls `start --pass N` without a run ID and keeps its own unique returned `run_id`; a continuation uses `start --pass N --run-id RUN_ID`. Do not share IDs between agents. The run ID is the worker identity. Atomic claims skip other workers' live jobs and resume only this worker's unfinished batch. Run-specific leases and fenced exact-identity claims live in `.state/review-queue/concurrent/review-runtime.sqlite3`; only committed upstream decisions create downstream handoffs. Coordination version `multi-run-v2` adds the `review_runs` table while preserving existing v1 leases, claims, decisions and assessment format. Queue publications are locked and hash-verified. Completed decisions survive refreshes. The database coordinates reviews but does not run an AI model.
+
+During long reviews or waits, use `heartbeat --pass N --run-id RUN_ID` approximately every five minutes to renew this worker's lease and unexpired claims. Leases last 30 minutes. `pause` releases only this worker's claims. Expired claims may be reassigned with new tokens, and stale submissions are rejected. Starting a new worker never releases another worker's live claims.
+
+Use `status --pass N --run-id RUN_ID` to inspect this worker's saved assessment counts, outcomes, delivery states and owned claims alongside the shared pass totals. Work saved by another agent is not counted as this agent's new review.
+
+Normal pass-1 `submit` saves title decisions and automatically synchronizes `PASS` as title-screened `No` through the guarded helper; `RESCUE` hands off to pass 2 without a Sheet decision. A title-only `PASS` does not claim full-description review and does not copy `Source Hash` into `Description Hash`. Normal pass-2 `submit` automatically writes `CLEAR_REJECT` to Job History as `No` / `Reviewed` / `Reject`, and `NEEDS_INFO` as `Manual Review` / `Manual Review` / `Needs Info`; `ESCALATE` hands off to pass 3. Normal pass-3 `submit` automatically writes and verifies each completed job or batch: `Accept` adds or updates the Opportunity and sets History to `Yes`, `Reject` sets `No`, and `Needs Info` sets both `Added to Opportunities?` and `Review Status` to `Manual Review`.
+
+Use `submit --local-only` only to deliberately stage saved assessments without Sheet writes. Retry pending synchronization with `writeback --pass N --run-id RUN_ID --limit 25`; repeat bounded batches as needed. Single-job retries also accept `--job-key KEY --source-hash HASH`. A completed assessment does not need another review to retry its Sheet update. Only verified live values produce `Written`; a blocked or uncertain write stays `Pending`. All three passes’ `finish` commands attempt one pending-write batch (default 25, `--limit` 1–100) before the fresh completion check; repeat `finish` or `writeback` while pending synchronization remains. `start` and `next` do not automatically drain older pending writes.
+
+The helper shares the scraper's writer lock across pending selection, live identity/manual checks, write intent, Sheet delivery, readback and durable delivery-status updates. Reviewers can work in parallel while Sheet writes remain serialized. A busy writer returns `WRITEBACK_DEFERRED` without overwriting another writer's saved status; retry pending delivery later. Missing History rows remain `Needs Staging`; conflicts preserve changed sources and manual choices. Outside/manual editors do not participate in the local lock, so expected-field checks and verification remain necessary. Never bypass the helper with direct concurrent Sheet writes.
+
+Count remaining review work using both columns: `Pending` / `Needs Review` means still awaiting review, while `Manual Review` / `Manual Review` means reviewed and awaiting human information. An unchanged source stays in Manual Review; a changed source returns to Pending / Needs Review for fresh assessment. A successful Sheet write removes that job from the next active queue export; its saved assessment and verified write remain in the runtime history.
+
+Original root decision logs are preserved as read-only legacy inputs. Managed exports are under `concurrent/`; each worker has its own checkpoint under `concurrent/run-checkpoints/`, returned by `start` and `next`. The older `pass-N-checkpoint.json` paths are shared progress summaries and must never supply a resume ID. Existing managed chats keep their run IDs and reload the current prompt; old arbitrary scripts remain unsupported. `finish` returns CONTINUE for available work, WAITING_WORKERS while another worker in the same pass holds jobs, and WAITING_UPSTREAM for any earlier active worker. Wait and recheck while renewing your lease. Only DRAINED/DRAINED_WITH_EXCEPTIONS confirms the whole selected queue is drained at the live check; finishing closes only the caller's run. Actual interruptions are PAUSED_NOT_COMPLETE. Report personal new/reused assessment counts separately from pass-wide totals and verified deliveries.
+
 ## Scraper preferences and restarting
 
-The existing blacklist is preserved, with `saas` and `software as a service` added. It still overrides the preferred list, including the existing literal `senior engineer` and `lead engineer` entries. Senior and Lead are not blanket exclusions; for example, Senior Product Manager and Lead Field Applications Engineer remain eligible when no other rule matches.
+The blacklist remains authoritative but is intentionally conservative: broad `staff`, `director`, `lab`, `accounts`, `Development`, `business development`, bare `electrical`, and generic `test engineer` exclusions were removed after they were found to suppress real Opportunity candidates. A narrowly scoped regex still excludes an otherwise-generic `Staff Engineer` / `Senior Staff Engineer` title. The existing literal `senior engineer` and `lead engineer` entries still apply where those exact phrases appear. Seniority alone is not a blanket exclusion.
 
 New jobs also receive conservative, local Python screening:
 
@@ -324,30 +420,32 @@ New jobs also receive conservative, local Python screening:
 - Travel up to 50% is acceptable; explicit travel above 50% is excluded. Unknown or ambiguous travel stays for review.
 - Only permanent jobs qualify. Explicit contract, temporary, fixed-term, contract-to-hire, internship, and seasonal employment is excluded; unspecified employment stays for review. Working with customer contracts is not contract employment.
 - Prefer hardware and mixed hardware/software products. Explicit SaaS product responsibilities are excluded, but incidental SaaS tool use, integrations, or experience requirements do not exclude a job. Other uncertain product types stay for AI review.
-- All locations, relocation, onsite, hybrid, and remote arrangements are eligible.
+- The scraper does not filter location during initial triage. THIRD PASS verifies U.S.-based or explicitly U.S.-remote eligibility after responsibility fit; any U.S. location, relocation, onsite, hybrid, or remote arrangement may qualify.
 
-Preferred titles include Field Application(s) Engineer, Application(s) Engineer, Product/Customer Applications Engineer, Product Manager (including Assistant, Associate, and Technical), Product Owner, Product Line Manager, Solutions Engineer, Sales/Pre-Sales Engineer, Customer Engineer, Product Engineer, Product/Technical Product Specialist, Field Support, and Field Service. **Unmatched titles are retained for AI review**, with a note explaining that they fall outside the preferred shortlist. No missing preference is treated as an automatic rejection.
+Preferred titles include Field Application(s) Engineer, Field Engineer/Field Engineering, Application(s) Engineer, Product/Customer Applications Engineer, Product Manager (including Assistant, Associate, and Technical), Product Owner, Product Line Manager, Solutions Engineer, Sales/Pre-Sales Engineer, Customer Engineer, Product Engineer, Product/Technical Product Specialist, Field Support/Service, Technical Program/Project Manager, Forward Deployed, Deployment Strategist, Mission/Technical Operations, Customer Success/Technical Support/Technical Account, Training Manager, Application Support, and Network Deployment. **Unmatched titles are retained for AI review**. No missing preference is treated as an automatic rejection.
 
-Blacklist matches are skipped before insertion and reported in the terminal. Other clear exclusions on new jobs are saved to Job History as `No` / `Reviewed` / `Reject`, with the evidence and Rejection Reason retained. Existing jobs keep the existing reassessment workflow: manual No decisions and review notes are preserved, and In Progress rows are untouched. This change does not retroactively sweep existing jobs. The title cleanup commands remain title-only; they do not apply travel, employment, or description rules.
+Blacklist matches are skipped before Sheets insertion and reported in the terminal; complete fetched inventories also retain their evidence locally for FIRST PASS title-filter auditing. Other clear exclusions on new jobs are saved to Job History as `No` / `Reviewed` / `Reject`, with the evidence and Rejection Reason retained. Existing jobs keep the existing reassessment workflow: manual No decisions and review notes are preserved, and In Progress rows are untouched. This change does not retroactively sweep existing jobs. The title cleanup commands remain title-only; they do not apply travel, employment, or description rules.
 
-You can leave an existing scrape running during a code update. To load the new rules, press Ctrl+C once, wait for the process to exit, then run `./job-search-scraper start` with your preferred worker/batch options. An interrupted upload replays its frozen keyed changes after restart; locally acknowledged batches are skipped. Saved inventories and plans resume from SQLite; legacy interruptions without saved inventories are refetched. Already saved jobs are not duplicated. Completed companies remain completed in the resumed cycle and receive the new rules on the next full scan. Keep `.state`; do not start a second writer. Fetch workers may take time to finish outstanding requests before the interrupted process exits.
+You can leave an existing scrape running during a code update. To load the new rules, press Ctrl+C once, wait for the process to exit, then run `./job-search-scraper start --resume` with your preferred worker/batch options to continue that scan, or plain `start` for a fresh full scan. With `--resume`, an interrupted upload replays its frozen keyed changes; locally acknowledged batches are skipped. Saved inventories and plans resume from SQLite; legacy interruptions without saved inventories are refetched. Already saved jobs are not duplicated. Completed companies remain completed in the resumed cycle and receive the new rules on the next full scan. Keep `.state`; do not start a second writer. Fetch workers may take time to finish outstanding requests before the interrupted process exits.
 
 ## Assessment objective for the reviewing AI
 
 Use these preferences as authoritative over wording in old resume samples:
 
-- Apply the title exclusions first. Staff, Principal, and Director roles are outside scope, including otherwise relevant functions.
+- Apply the title exclusions first. Seniority alone is not a rejection: relevant Staff and Director roles may proceed to responsibility review. Principal remains a current title exclusion unless the policy is changed again.
 - Favor higher recall for credible **Strong**, **Possible**, and **Stretch** roles. Evaluate actual responsibilities, autonomy, customer influence, and leadership scope, not a management title alone.
 - Prefer the applications, product, customer-facing technical, field support, and field service roles listed above, especially hardware and mixed products. Keep other nonblacklisted titles for full responsibility review; the shortlist is not an allowlist. Exclude explicitly SaaS-focused roles, explicit nonpermanent employment, and travel requirements above 50%. Unknowns stay for review.
 - Reject mandatory security-clearance requirements, including obtaining and maintaining a clearance. Distinguish merely preferred clearance from a requirement.
 - Reject jobs requiring this candidate to author software, firmware, scripts, algorithms, or test-automation frameworks. The candidate can operate tools, make minor or AI-assisted modifications, use APIs/webhooks, troubleshoot, and define objectives and logic for engineers. Primary systems-test/test-automation jobs are not targets. An occasional practical acceptance check in a field role is not automatically a coding job.
 - Reject a stated **maximum annual USD base salary** below **$120,000**. Prefer compensation nearer **$180,000**. A range crossing the floor can qualify with a concern. Missing base salary remains `verify`, not evidence that the floor is met. Do not treat equity, bonus, OTE, hourly totals, or non-USD compensation as confirmed USD base salary.
-- Any location, relocation, onsite, hybrid, or remote arrangement is eligible. Do not invent geographic exclusions or a pay premium. Surface travel, shift, rotation, and on-call concerns in the narrative.
+- Any U.S.-based or explicitly U.S.-remote location, relocation, onsite, hybrid, or remote arrangement is eligible. Do not invent additional geographic exclusions or a pay premium. Surface travel, shift, rotation, and on-call concerns in the narrative.
 - Use the approved Resume Samples and current, evidence-backed candidate profile for experience and resume selection. If that information is not available in the review session, ask for it rather than inventing skills or credentials. Resume selection follows role qualification, not employer industry alone.
 - Keep one useful narrative explaining fit, supporting experience, gaps, salary/location concerns, recommended resume where supported, and meaningful changes. Preserve the user's personal notes and all application decisions.
 - Never equate passing a title filter with passing a fit assessment. If hard-blocker evidence is unresolved, return `needs_info`; do not mark the blocker false without evidence.
 
-## Decisions JSONL contract
+## Legacy manual-import JSONL contract — not managed review results
+
+The following section documents the older manual importer only. Do not use this schema or importer for the managed three-pass pipeline; use the current prompt and reviewer submit/writeback commands.
 
 Create a UTF-8 file containing **one complete JSON object per line**, without Markdown fences. Copy the exact `job_key` and `description_hash` from the exported pending record. The hash binds the decision to the description reviewed; stale decisions must not be applied to different content.
 
@@ -378,7 +476,7 @@ The current Opportunities dropdown uses legacy fit labels. The helper retains co
 
 ## Recordkeeping and safety boundaries
 
-- The operational tab allowlist is Companies, Job History, Opportunities, and Scan Cycles. The stored Prompt Library is not fetched or executed by normal processing.
+- The operational tab allowlist is Companies, Job History, Job Evidence, Opportunities, and Scan Cycles. Prompt Library is not required, fetched, executed, or recreated by normal processing.
 - Existing application decisions, Date Applied, personal Notes, and formulas are not whole-sheet rewritten. A new accepted job starts as Not Reviewed with Date Applied blank.
 - Source text is written as literal cell text, not as a spreadsheet formula. Per-job related writes use one Google Sheets batch request; there is no clear-and-rewrite operation.
 - Posting IDs and identity-bearing URL parameters are preserved. A new posting ID is distinct even when the title matches; tracking changes alone do not create a new job.
@@ -414,3 +512,13 @@ See `REVIEW.md` for the section-by-section audit of the original script. Provide
 - [Ashby public Job Posting API](https://developers.ashbyhq.com/docs/public-job-posting-api)
 - [Oracle Taleo custom career section URLs](https://docs.oracle.com/en/cloud/saas/taleo-enterprise/25a/otccu/c-customcareersectionurls.html)
 - [Apps Script trigger restrictions](https://developers.google.com/apps-script/guides/triggers)
+
+### Additional shared careers platforms
+
+Public inventory adapters now cover Rippling, Pinpoint, Breezy HR, SmartRecruiters, Workable, JazzHR, Jobvite, Dayforce, Comeet, ClearCompany, ApplicantPro, isolved, Paycor Recruiting, Jibe, and TalentBrew, with broader Eightfold support. Full descriptions and inventory checks distinguish complete feeds from partial or blocked sources. Browser-dependent platforms use the existing optional browser fallback. See [shared ATS integrations](docs/shared-ats-integrations.md) for source-scope rules and activation details.
+
+### Correct a published fit or questions assessment
+
+`job-search-reviewer correct-published-reject --pass 3 --run-id RUN_ID --file REQUEST.jsonl` (also accepted as `correct-questions-reject`) corrects one of that run's verified third-pass Accept or Needs Info assessments when new primary evidence confirms rejection. It retains the existing Opportunity, personal Notes, Fit Review, Application Status and Date Applied; History remains Added to Opportunities?=Yes and the managed Review Questions field receives a readable resolved correction. No Opportunity is created or deleted. Normal rejection behavior is unchanged.
+
+Prepare a request using the exact `correction_snapshot` signatures for the saved assessment, intent, Written publication receipt and selected local/live rows. Supply job_key, source_hash, input_version, expected_assessment_signature, expected_intent_signature, expected_publication_signature, expected_live_signature, a unique correction_id, correction_reason and a substantiated Reject assessment. Any intervening source, human-field, identity or delivery change blocks preparation. Prior assessment, intent, receipt and live values remain in the durable correction audit; reviewed_at and run identity are retained, with corrected_at recorded separately. Retrying the identical correction safely reconciles uncertain delivery without resetting a verified receipt or repeating reconsideration increments.

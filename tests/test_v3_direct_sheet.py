@@ -29,7 +29,7 @@ class DirectSheetWorkflowTests(unittest.TestCase):
         self.assertTrue(excluded_title("Systems Engineer"))
         self.assertTrue(excluded_title("Senior Staff Engineer, Survivability Materials"))
         self.assertTrue(excluded_title("Electrical Engineer"))
-        self.assertTrue(excluded_title("Staff Solutions Engineer"))
+        self.assertFalse(excluded_title("Staff Solutions Engineer"))
         self.assertFalse(excluded_title("Field Applications Engineer"))
 
     def test_new_job_goes_to_sheet_review_queue(self):

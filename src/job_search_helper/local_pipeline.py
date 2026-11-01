@@ -11,12 +11,23 @@ import json
 from queue import Empty, Full, Queue, SimpleQueue
 from threading import Event
 import time
+from urllib.parse import urlsplit
 
 from .ats import Inventory
+from .browser_progress import BrowserProgress
 from .batching import PlanningRepository, PendingState
 from .dashboard import TerminalDashboard
-from .engine import inventory_payload, now
+from .engine import MAX_FETCH_WORKERS, inventory_payload, now
 from .repository import RepositoryError, UncertainWriteError
+
+
+def _stale_scoped_taleo_payload(company, payload):
+    """Old Textron payloads used the shared Taleo board instead of its scoped page."""
+    from .taleo_careers import supports_scoped_taleo_careers
+    source_host = urlsplit(str(payload.get('source_url', ''))).hostname or ''
+    return (supports_scoped_taleo_careers(
+        str(company.get('ATS / Source', '')), str(company.get('Official Careers URL', ''))
+    ) and source_host.endswith('.taleo.net'))
 
 
 class LocalPipeline:
@@ -35,6 +46,8 @@ class LocalPipeline:
         self.pending = deque()
         self.ignored = set()
         self.last_sync = time.monotonic()
+        self.last_cycle_sync = self.last_sync
+        self.synced_stages = None
         self.dashboard = None
 
     def refresh_company_controls(self):
@@ -105,6 +118,10 @@ class LocalPipeline:
                     return
                 self.pending.append(cid)
             return
+        # Older ADP MyJobs inventories assigned the board URL to every job.
+        # Repair only unplanned payloads; frozen operations must replay exactly.
+        from .adp_myjobs import repair_saved_urls
+        payload = repair_saved_urls(payload)
         company = self.companies.get(cid)
         if company is None:
             self.fail(cid, ValueError('Company removed from workbook'), 'planning inventory')
@@ -155,6 +172,9 @@ class LocalPipeline:
                         prior = originals.get(('Job History', number), {})
                         manual = expected.get('Added to Opportunities?', prior.get('Added to Opportunities?', ''))
                         op['expected'] = {'Added to Opportunities?': manual}
+                        if str(manual).strip().casefold() == 'manual review':
+                            for field in ('Review Status', 'Source Hash'):
+                                op['expected'][field] = expected.get(field, prior.get(field, ''))
                         # Legacy Job Keys are migrated using the unique job URL.
                         # Retain this guard so a concurrent identity change is
                         # replanned instead of overwritten.
@@ -197,7 +217,8 @@ class LocalPipeline:
         self.state.save_cycle(self.cycle)
         # Checkpoint first: a crash before deletion leaves a fully acknowledged
         # plan that finish() can safely replay without any Sheets writes.
-        if plan['final']['stage'] in {'complete', 'partial'}:
+        if plan['final']['stage'] in {'complete', 'partial'} or (
+                plan['final'].get('browser_pending_urls') or plan['final'].get('browser_discovery_incomplete')):
             self.inbox.acknowledge(self.cid, cid)
         else:
             self.inbox.block(self.cid, cid)
@@ -267,7 +288,7 @@ class LocalPipeline:
         self.planner.accept_commit()
         self.engine._checkpoint()
 
-    def flush(self):
+    def flush(self, full_only=False):
         if not self.pending:
             return
         active = [(cid, *self.inbox.plan(self.cid, cid)) for cid in self.pending if cid not in self.ignored]
@@ -291,19 +312,39 @@ class LocalPipeline:
                 cursor += 1
                 count += 1
                 size += cost
-        self.upload(entries)
+        # Carry an undersized tail into the next company's batch. The frozen
+        # operations and acknowledged cursor remain in SQLite until drained.
+        if not full_only or count >= self.engine.batch_size or size >= 500_000:
+            self.upload(entries)
         for cid, plan, _ in active:
             if cid not in self.ignored:
                 saved = self.inbox.plan(self.cid, cid)
                 if saved[1] == len(plan['operations']):
                     self.finish(cid, plan)
-        self.engine._sync_cycle(self.cycle)
-        self.last_sync = time.monotonic()
+                else:
+                    self.pending.append(cid)
+        # Frequent full batches must not keep postponing the partial-batch
+        # deadline. Only a complete drain resets this timer.
+        if not full_only:
+            self.last_sync = time.monotonic()
         self.refresh_queue_status()
 
-    def run(self, fetch_workers=5, assignment_window=100, sync_only=False, defer_sync=False, retry_blocked=False):
-        if not 1 <= fetch_workers <= 5 or not 1 <= assignment_window <= 100:
-            raise ValueError('Fetch workers must be 1-5 and assignment window 1-100')
+    def sync_cycle_progress(self, force=False):
+        stages = tuple(item['stage'] for item in self.cycle['companies'].values())
+        # The last loop iteration may already have written the final status.
+        # Forcing completion bypasses the timer, not this no-change check.
+        if stages == self.synced_stages:
+            return
+        if not force and time.monotonic() - self.last_cycle_sync < self.interval:
+            return
+        self.engine._sync_cycle(self.cycle)
+        self.synced_stages = stages
+        self.last_cycle_sync = time.monotonic()
+
+    def run(self, fetch_workers=5, assignment_window=100, sync_only=False, defer_sync=False, retry_blocked=False,
+            retry_partial=False):
+        if not 1 <= fetch_workers <= MAX_FETCH_WORKERS or not 1 <= assignment_window <= 100:
+            raise ValueError(f'Fetch workers must be 1-{MAX_FETCH_WORKERS} and assignment window 1-100')
         if sync_only and defer_sync:
             raise ValueError('Deferred fetching and sync-only cannot be combined')
         self.retry_blocked = retry_blocked
@@ -313,6 +354,7 @@ class LocalPipeline:
         self.refresh_company_controls()
         self.refresh_queue_status()
         completed = SimpleQueue()
+        handled = set()
         snapshots = []
         saved_ids = set(self.inbox.pending(self.cid, include_blocked=True))
         for cid, item in self.cycle['companies'].items():
@@ -321,12 +363,14 @@ class LocalPipeline:
             saved = self.inbox.get(self.cid, cid) if cid in saved_ids else None
             if saved:
                 payload, blocked = saved
+                stale_scoped_payload = company is not None and _stale_scoped_taleo_payload(company, payload)
                 failed_fetch_payload = (not payload.get('jobs')
                                         and payload.get('inventory_status') in {'failed', 'blocked', 'unsupported'})
-                sheet_retry = sheet_queued and (item.get('stage') in {'blocked', 'failed', 'unsupported'} or failed_fetch_payload)
+                retry_fetch_payload = failed_fetch_payload or stale_scoped_payload
+                sheet_retry = sheet_queued and (item.get('stage') in {'blocked', 'failed', 'unsupported'} or retry_fetch_payload)
                 if blocked and not (retry_blocked or sheet_retry):
                     continue
-                if (retry_blocked or sheet_retry) and not sync_only and failed_fetch_payload:
+                if (retry_blocked or sheet_retry) and not sync_only and retry_fetch_payload:
                     self.inbox.acknowledge(self.cid, cid)
                     saved = None
                     item['stage'] = 'queued'
@@ -339,8 +383,12 @@ class LocalPipeline:
                 item['stage'] = 'queued'
             if item['stage'] == 'inventory':
                 item['stage'] = 'queued'  # Legacy interruption without a saved inventory.
-            if sync_only or item['stage'] in {'complete', 'partial'}:
+            if sync_only or item['stage'] == 'complete':
                 continue
+            if item['stage'] == 'partial':
+                if not retry_partial:
+                    continue
+                item['stage'] = 'queued'
             if item['stage'] != 'queued' and not retry_blocked:
                 continue
             company = self.companies.get(cid)
@@ -391,8 +439,13 @@ class LocalPipeline:
                 cid = company['Company ID']
                 self.dashboard.worker_fetching(slot, company['Company'])
                 try:
-                    result = self.engine.fetcher(str(company.get('ATS / Source', '')),
-                        company['Official Careers URL'], cid, company['Company'])
+                    fetch = getattr(self.engine.fetcher, 'fetch_with_progress', None)
+                    args = (str(company.get('ATS / Source', '')), company['Official Careers URL'], cid, company['Company'])
+                    if fetch is not None:
+                        result = fetch(*args, progress_factory=lambda source: BrowserProgress(
+                            self.inbox, self.cid, cid, source))
+                    else:
+                        result = self.engine.fetcher(*args)
                     if not isinstance(result, Inventory):
                         raise ValueError('Invalid inventory')
                 except Exception as exc:
@@ -400,7 +453,10 @@ class LocalPipeline:
                 self.inbox.save(self.cid, cid, inventory_payload(result, company))
                 self.refresh_queue_status()
                 completed.put(cid)
-                self.dashboard.worker_handoff(slot, company['Company'], len(result.jobs))
+                self.dashboard.worker_handoff(
+                    slot, company['Company'], len(result.jobs), status=result.status,
+                    pending_urls=len(result.browser_pending_urls),
+                    discovery_incomplete=result.browser_discovery_incomplete)
         pool = ThreadPoolExecutor(max_workers=fetch_workers + 1)
         try:
             producer = pool.submit(feed)
@@ -417,6 +473,7 @@ class LocalPipeline:
                         producer.result()
                         break
                 else:
+                    handled.add(cid)
                     if defer_sync:
                         payload = self.inbox.get(self.cid, cid)[0]
                         self.cycle['companies'][cid].update(
@@ -428,13 +485,28 @@ class LocalPipeline:
                 if not defer_sync and self.pending:
                     count = sum(len(self.inbox.plan(self.cid, cid)[0]['operations']) - self.inbox.plan(self.cid, cid)[1]
                                 for cid in self.pending)
-                    if count >= self.engine.batch_size or time.monotonic() - self.last_sync >= self.interval:
+                    if time.monotonic() - self.last_sync >= self.interval:
                         self.flush()
+                    elif count >= self.engine.batch_size:
+                        self.flush(full_only=True)
+                if not defer_sync:
+                    self.sync_cycle_progress()
             if not defer_sync:
                 self.flush()
-            self.engine._sync_cycle(self.cycle)
-            self.dashboard.writer_message('Saved locally' if defer_sync else 'Complete')
+            self.sync_cycle_progress(force=True)
+            self.dashboard.writer_message('Saved locally' if defer_sync else self.cycle['status'])
         finally:
             stop.set()
             pool.shutdown(wait=True, cancel_futures=True)
-        return self.engine.status(self.cid)
+        result = self.engine.status(self.cid)
+        attempted = handled | self.ignored
+        stages = [self.cycle['companies'][cid]['stage'] for cid in attempted]
+        result['run_counts'] = {
+            'new_jobs': self.dashboard.new_job_count,
+            'successful': stages.count('complete'),
+            'partial': stages.count('partial'),
+            'skipped': len(set(self.cycle['companies']) - attempted),
+            'failed': sum(stage in {'blocked', 'failed', 'unsupported'} for stage in stages),
+            'pending': sum(stage in {'queued', 'inventory'} for stage in stages),
+        }
+        return result
