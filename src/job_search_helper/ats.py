@@ -745,6 +745,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0183" and company.casefold() == "anra technologies":
         from .anra import fetch_anra
         return fetch_anra(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0362" and company.casefold() == "atlas space operations":
+        from .atlas_space import fetch_atlas_space
+        return fetch_atlas_space(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
