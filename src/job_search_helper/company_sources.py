@@ -1430,6 +1430,24 @@ REPAIRS.update({
     },
 })
 
+# CymSTAR's first-party careers page links an employer-scoped ADP Workforce
+# Now board.  Keep the exact tenant and career-center identifiers so generic
+# ADP pagination/detail validation can enforce the company boundary.
+REPAIRS.update({
+    'COMP-0333': {
+        'company': 'CymSTAR',
+        'ats': 'ADP',
+        'expected_url': 'https://cymstar.com/careers/',
+        'expected_urls': [
+            'https://www.cymstar.com/careers',
+            'https://www.cymstar.com/careers/',
+            'https://www.cymstar.com/careers/career-listing',
+        ],
+        'url': 'https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?client=cymstar&ccId=19000101_000001&cid=d1bbed86-b8f3-4234-bd7b-d96e7853d0dc&lang=en_US',
+        'evidence': 'Official CymSTAR careers page links the employer-scoped ADP Workforce Now board; saved listing evidence exposes nine stable requisitions.',
+    },
+})
+
 # Firefly Aerospace COMP-0377: official careers page links the employer-scoped Workday board.
 REPAIRS.update({
     'COMP-0377': {

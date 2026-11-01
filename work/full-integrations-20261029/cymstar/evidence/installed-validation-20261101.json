@@ -1,0 +1,19 @@
+{
+  "company_id": "COMP-0333",
+  "company": "CymSTAR",
+  "status": "blocked",
+  "counted_complete": false,
+  "official_careers_url": "https://www.cymstar.com/careers/career-listing",
+  "ats": "ADP",
+  "source_url": "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?client=cymstar&ccId=19000101_000001&cid=d1bbed86-b8f3-4234-bd7b-d96e7853d0dc&lang=en_US",
+  "installed_normal_pipeline": {
+    "rereads": [
+      {"attempt": 1, "status": "failed", "jobs": 0, "reason": "ADP listing page 1: Network/timeout failure after bounded retries."},
+      {"attempt": 2, "status": "failed", "jobs": 0, "reason": "ADP listing page 1: Network/timeout failure after bounded retries."}
+    ],
+    "stable_job_count": null
+  },
+  "focused_tests": {"command": "PYTHONPATH=src python -m pytest -q tests/test_cymstar.py tests/test_adp.py tests/test_company_sources.py", "passed": 26, "failed": 0},
+  "terminal_blocker": "Live ADP public listing endpoint was unreachable from the installed normal pipeline on two consecutive rereads; inventory completeness and stable count cannot be established.",
+  "validated_at": "2026-11-01"
+}
