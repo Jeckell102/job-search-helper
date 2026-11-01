@@ -227,7 +227,11 @@ def _safe_api_url(url: str) -> None:
                        and ericsson_query.get("domain") == ["ericsson.com"]
                        and ericsson_query.get("hl") == ["en"]
                        and re.fullmatch(r"[1-9][0-9]{0,15}", ericsson_query.get("position_id", [""])[0] or ""))
-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail)
+    gdls_search = (parsed.hostname == "www.gd.com" and parsed.path == "/careers/job-search"
+                   and set(parse_qs(parsed.query)) == {"state"}
+                   and len(parse_qs(parsed.query).get("state", [])) == 1
+                   and parse_qs(parsed.query).get("state", [""])[0])
+    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search)
             or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
     if parsed.hostname in {"l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com"} and not (ublox_algolia or ublox_detail):
@@ -793,6 +797,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0248" and company.casefold() == "dematic":
         from .dematic import fetch_dematic
         return fetch_dematic(careers_url, company_id, company, transport or HTTPTransport())
+    if company_id == "COMP-0097" and company.casefold() == "general dynamics land systems":
+        from .gd_land_systems import fetch_gd_land_systems
+        return fetch_gd_land_systems(careers_url, company_id, company, transport or HTTPTransport())
     if company_id == "COMP-0331" and company.casefold() == "mak technologies":
         from .mak import fetch_mak
         return fetch_mak(careers_url, company_id, company, html_transport)

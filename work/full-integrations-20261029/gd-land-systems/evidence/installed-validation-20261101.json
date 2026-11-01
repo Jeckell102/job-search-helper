@@ -1,0 +1,26 @@
+{
+  "company_id": "COMP-0097",
+  "company": "General Dynamics Land Systems",
+  "status": "blocked",
+  "counted_complete": false,
+  "official_landing": "https://www.gdls.com/careers/",
+  "official_source": "https://www.gd.com/careers/job-search?state=H4sIAAjv5GoAAx2KQQqAIBQFrxJv3QlaB23atfRLfPS3Sgu1QMS7Z%2B5mmClga4PEiEnpEQcbSY2hCsGzE8JEMBxEwm4ud7PPhJHw8vlIbPUfu%2FRzmYeVvR22HJO41quuGvUDfvIOQ2YAAAA%3D",
+  "ats": "GD Land Systems",
+  "scope_guard": "Explicit General Dynamics business-unit facet; every accepted listing must be labeled GD Land Systems.",
+  "validated_at": "2026-11-01T20:27:53Z",
+  "focused_tests": {
+    "command": "PYTHONPATH=src python -m pytest -q tests/test_gd_land_systems.py",
+    "result": "2 passed"
+  },
+  "installed_rereads": [
+    {"run": 1, "status": "blocked", "jobs": 0, "http_status": 403},
+    {"run": 2, "status": "blocked", "jobs": 0, "http_status": 403}
+  ],
+  "terminal_blocker": "The official General Dynamics filtered careers route returned HTTP 403 on both installed normal rereads; a complete current GD Land Systems inventory and full descriptions cannot be established.",
+  "source_hashes": {
+    "src/job_search_helper/gd_land_systems.py": "0d48a11d205a360b0f6a737b276cbd13b5c9ccd2ca361ae2c1c988a513b50589",
+    "src/job_search_helper/ats.py": "6c8ef79da29ad8865d527711cf9ea14a266c8014e9e70540273dc73c86d438a2",
+    "src/job_search_helper/company_sources.py": "089b6af7bc462c1b24c156ccf643ab64ead7ee727dd1d6190f02ee3cb06f3350",
+    "tests/test_gd_land_systems.py": "ca6276054eca61b076c3eeda620803a0a0a43294a6403519301aeb6abb476ed0"
+  }
+}
