@@ -885,14 +885,19 @@ REPAIRS.update({
                   'expected_urls': ['https://www.blackriversystems.com/careers', 'https://www.blackriversystems.com/careers/'],
                   'url': 'https://www.blackriversystems.com/job-opportunities/',
                   'evidence': 'Official Black River careers page links a first-party WordPress job-opportunities inventory with 14 full postings.'},
-    'COMP-0167': {'company': 'Perennial Autonomy', 'ats': 'Direct inquiry',
-                  'expected_url': 'https://www.perennialrobotics.com/careers',
-                  'url': 'https://www.perennialrobotics.com/careers',
-                  'evidence': 'Official Perennial Autonomy careers contact'},
+    'COMP-0167': {'company': 'Perennial Autonomy', 'ats': 'Perennial Autonomy careers',
+                  'expected_url': 'https://www.perennialautonomy.com/',
+                  'expected_urls': ['https://www.perennialautonomy.com/',
+                                    'https://www.perennialautonomy.com/careers',
+                                    'https://www.perennialrobotics.com/careers'],
+                  'url': 'https://www.perennialautonomy.com/',
+                  'evidence': 'Official Perennial Autonomy website; current public site exposes no employer-scoped ATS or verifiable job-posting inventory.'},
     'COMP-0169': {'company': 'SkySafe', 'ats': 'Direct inquiry',
-                  'expected_url': 'https://www.skysafe.io/careers',
-                  'url': 'https://www.skysafe.io/careers',
-                  'evidence': 'Official SkySafe careers contact'},
+                  'expected_url': 'https://www.skysafe.io/contact',
+                  'expected_urls': ['https://www.skysafe.io/contact',
+                                    'https://www.skysafe.io/careers'],
+                  'url': 'https://www.skysafe.io/contact',
+                  'evidence': 'Official SkySafe site; no public employer-scoped ATS verified'},
     'COMP-0171': {'company': 'Freefly Systems', 'ats': 'Freefly Careers',
                   'expected_url': 'https://freeflysystems.com/careers/open',
                   'url': 'https://freeflysystems.com/careers/open',
@@ -1095,7 +1100,7 @@ REPAIRS.update({
     'COMP-0289': {'company': 'Kontron', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://www.kontron.com/en/group/careers', 'https://www.kontron.com/en/group/careers/', 'https://www.kontron.com/en/career', 'https://www.kontron.com/en/career/'], 'url': 'https://www.kontron.com/en/group/careers', 'evidence': 'Official Kontron careers page links the verified global Softgarden and Paylocity public job feeds.'},
     'COMP-0315': {'company': 'Iron Bow Technologies', 'ats': 'Greenhouse', 'expected_url': '', 'expected_urls': ['https://ironbow.com/careers', 'https://ironbow.com/careers/', 'https://ironbow.com/all-jobs', 'https://ironbow.com/all-jobs/', 'https://www.ironbow.com/careers/', 'https://www.ironbow.com/careers', 'https://www.ironbow.com/all-jobs', 'https://www.ironbow.com/all-jobs/'], 'url': 'https://boards-api.greenhouse.io/v1/boards/ironbowtechnologies/jobs?content=true', 'evidence': 'Official Iron Bow all-jobs page and observed Job Board module link the employer-scoped Greenhouse board ironbowtechnologies.'},
     'COMP-0324': {'company': 'Vexar Defense', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://vexardefense.com/careers/', 'https://vexardefense.com/careers'], 'url': 'https://vexardefense.com/careers/', 'evidence': 'Official Vexar Defense careers page; ATS endpoint not safely established.'},
-    'COMP-0339': {'company': 'Calytrix Technologies', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://calytrix.com/careers/', 'https://calytrix.com/careers'], 'url': 'https://calytrix.com/careers/', 'evidence': 'Official Calytrix careers page; ATS endpoint not safely established.'},
+    'COMP-0339': {'company': 'Calytrix Technologies', 'ats': 'Browser', 'expected_url': 'https://www.calytrix.com/careers/', 'expected_urls': ['https://calytrix.com/careers/', 'https://calytrix.com/careers', 'https://www.calytrix.com/careers'], 'url': 'https://www.calytrix.com/careers/', 'evidence': 'Official Calytrix careers site; current canonical host is www.calytrix.com and no employer-scoped public ATS endpoint was safely established.'},
     'COMP-0340': {'company': 'MVRsimulation', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://mvrsimulation.com/careers/', 'https://mvrsimulation.com/careers'], 'url': 'https://mvrsimulation.com/careers/', 'evidence': 'Official MVRsimulation careers page; ATS endpoint not safely established.'},
     'COMP-0344': {'company': 'Mass Virtual', 'ats': 'Mass Virtual Paylocity', 'expected_url': 'https://www.massvirtual.com/careers/', 'expected_urls': ['https://www.massvirtual.com/careers/', 'https://www.massvirtual.com/careers', 'https://www.massvirtual.com/open-position'], 'url': 'https://recruiting.paylocity.com/recruiting/v2/api/feed/jobs/2df5ac23-47b5-4c64-b536-e7f04caf6ffe', 'evidence': 'Official Mass Virtual Open Positions page embeds a Paylocity feed with three full postings.'},
     'COMP-0354': {'company': 'XOCEAN', 'ats': 'Browser', 'expected_url': '', 'expected_urls': ['https://www.xocean.com/careers/', 'https://www.xocean.com/careers'], 'url': 'https://www.xocean.com/careers/', 'evidence': 'Official XOCEAN careers page; ATS endpoint not safely established.'},
@@ -1280,7 +1285,11 @@ REPAIRS.update({
 # First 34 companies in the October 2026 next-100 integration pass. These
 # entries are employer-scoped and fail closed for browser-only/shared boards.
 REPAIRS.update({
-    'COMP-0281': {'company': 'Blues', 'ats': 'Browser', 'expected_url': 'https://www.blues.io/careers', 'url': 'https://www.blues.io/careers', 'evidence': 'Official Blues careers page; ATS not yet identified.'},
+    'COMP-0281': {'company': 'Blues', 'ats': 'Browser',
+                  'expected_url': 'https://blues.com/bluescareers/',
+                  'expected_urls': ['https://www.blues.io/careers', 'https://www.blues.io/careers/', 'https://blues.com/bluescareers', 'https://blues.com/bluescareers/'],
+                  'url': 'https://blues.com/bluescareers/',
+                  'evidence': 'Official Blues careers page; its Open Positions section directs candidates to LinkedIn, with no employer-scoped ATS exposed.'},
     'COMP-0287': {'company': 'One Stop Systems', 'ats': 'Shopify', 'expected_url': 'https://onestopsystems.com/pages/open-positions', 'expected_urls': ['https://onestopsystems.com/careers/', 'https://onestopsystems.com/pages/open-positions'], 'url': 'https://onestopsystems.com/pages/open-positions', 'evidence': 'Official One Stop Systems Shopify open-positions page exposes seven structural job pages.'},
     'COMP-0293': {'company': 'Carbyne', 'ats': 'Browser', 'expected_url': 'https://www.carbyne.com/careers/', 'url': 'https://www.carbyne.com/careers/', 'evidence': 'Official Carbyne careers page; browser-rendered openings.'},
     'COMP-0295': {'company': 'Getac', 'ats': 'Browser', 'expected_url': 'https://www.getac.com/us/company/careers/', 'url': 'https://www.getac.com/us/company/careers/', 'evidence': 'Official Getac US careers page.'},
@@ -1291,9 +1300,26 @@ REPAIRS.update({
     'COMP-0304': {'company': 'Cornet Technology, Inc.', 'ats': 'Browser', 'expected_url': 'https://www.cornet.com/careers/', 'url': 'https://www.cornet.com/careers/', 'evidence': 'Official Cornet Technology careers page.'},
     'COMP-0307': {'company': 'iGov', 'ats': 'isolved', 'expected_url': 'https://www.igov.com/careers/', 'url': 'https://igov.isolvedhire.com/iframe/mobile', 'evidence': 'Official iGov careers page embeds the isolved public jobs board; it currently states there are no job openings.'},
     'COMP-0308': {'company': 'Telos Corporation', 'ats': 'HRsmart', 'expected_url': 'https://www.telos.com/careers', 'expected_urls': ['https://www.telos.com/careers', 'https://www.telos.com/careers/'], 'url': 'https://telos.hua.hrsmart.com/hr/ats/JobSearch/index', 'evidence': 'Official Telos careers page links the public HRsmart Career Search Engine; verified 16-job View All inventory and full detail pages.'},
-    'COMP-0310': {'company': 'Kägwerks', 'ats': 'Browser', 'expected_url': 'https://www.kaegwerks.com/careers/', 'url': 'https://www.kaegwerks.com/careers/', 'evidence': 'Official Kägwerks careers page.'},
+    'COMP-0310': {
+        'company': 'Kägwerks',
+        'ats': 'Browser',
+        'expected_url': 'https://kagwerks.com/careers/',
+        'expected_urls': [
+            'https://kagwerks.com/',
+            'https://www.kagwerks.com/',
+            'https://www.kaegwerks.com/careers/',
+        ],
+        'url': 'https://kagwerks.com/careers/',
+        'evidence': 'Official Kägwerks careers route; the company website is identified as kagwerks.com and its public careers page is browser-only.'
+    },
     'COMP-0321': {'company': 'Grex Defense', 'ats': 'Browser', 'expected_url': 'https://grexdefense.com/careers/', 'expected_urls': ['https://grexdefense.com/careers', 'https://grexdefense.com/careers/'], 'url': 'https://grexdefense.com/careers', 'evidence': 'Official Grex Defense static careers page exposes exactly five current roles.'},
-    'COMP-0322': {'company': 'Celaris Industries', 'ats': 'Browser', 'expected_url': 'https://celarisindustries.com/careers/', 'url': 'https://celarisindustries.com/careers/', 'evidence': 'Official Celaris Industries careers page.'},
+    'COMP-0322': {'company': 'Celaris Industries', 'ats': 'Browser',
+                  'expected_url': 'https://www.celaris.us/careers/',
+                  'expected_urls': ['https://www.celaris.us/careers',
+                                    'https://celaris.us/careers/',
+                                    'https://celaris.us/careers'],
+                  'url': 'https://www.celaris.us/careers/',
+                  'evidence': 'KKI parent site links Celaris Industries at celaris.us; the company careers route is browser-only.'},
     'COMP-0323': {'company': 'Surtr Defense Systems', 'ats': 'Y Combinator', 'expected_url': 'https://www.ycombinator.com/companies/surtr-defense-systems/jobs', 'url': 'https://www.ycombinator.com/companies/surtr-defense-systems/jobs', 'evidence': 'Y Combinator company jobs page; public inventory requires browser access.'},
     'COMP-0325': {'company': 'RADD', 'ats': 'RADD static careers', 'expected_url': 'https://radd.tech/', 'expected_urls': ['https://radd.tech/', 'https://radd-co.com/'], 'url': 'https://radd-co.com/', 'evidence': 'Official RADD sitemap publishes three first-party open-role pages with full descriptions.'},
     'COMP-0328': {'company': 'Exyn Technologies', 'ats': 'Exyn careers', 'expected_url': 'https://www.exyn.com/about/careers', 'url': 'https://www.exyn.com/about/careers', 'evidence': 'Official Exyn careers page embeds two current full open-position descriptions.'},
@@ -1301,8 +1327,15 @@ REPAIRS.update({
     'COMP-0333': {'company': 'CymSTAR', 'ats': 'Browser', 'expected_url': 'https://cymstar.com/careers/', 'url': 'https://cymstar.com/careers/', 'evidence': 'Official CymSTAR careers page.'},
     'COMP-0336': {'company': 'Advanced Simulation Technology inc. (ASTi)', 'ats': 'ASTi careers', 'expected_url': 'https://www.asti-usa.com/careers/', 'expected_urls': ['https://www.asti-usa.com/careers/', 'https://www.asti-usa.com/jobs/index.html'], 'url': 'https://www.asti-usa.com/jobs/positions.html', 'evidence': 'Official ASTi careers page links to two full available positions.'},
     'COMP-0338': {'company': 'Vertex Solutions', 'ats': 'Browser', 'expected_url': 'https://vertexsolutions.com/careers/', 'url': 'https://vertexsolutions.com/careers/', 'evidence': 'Official Vertex Solutions careers page.'},
-    'COMP-0347': {'company': 'Ocean Aero', 'ats': 'Browser', 'expected_url': 'https://oceanaero.com/careers/', 'url': 'https://oceanaero.com/careers/', 'evidence': 'Official Ocean Aero careers page.'},
-    'COMP-0348': {'company': 'VideoRay', 'ats': 'Workday', 'expected_url': 'https://www.videoray.com/careers/', 'url': 'https://www.videoray.com/careers/', 'evidence': 'Official VideoRay careers page; shared Workday parent board requires company scope verification.'},
+    'COMP-0347': {'company': 'Ocean Aero', 'ats': 'Browser',
+                  'expected_url': 'https://www.oceanaero.com/careers/',
+                  'expected_urls': ['https://www.oceanaero.com/careers/',
+                                    'https://www.oceanaero.com/careers',
+                                    'https://oceanaero.com/careers/',
+                                    'https://oceanaero.com/careers'],
+                  'url': 'https://www.oceanaero.com/careers/',
+                  'evidence': 'Official Ocean Aero careers page; it exposes LinkedIn and Indeed application links, with no employer-scoped ATS board.'},
+    'COMP-0348': {'company': 'VideoRay', 'ats': 'Workday (shared parent board)', 'expected_url': 'https://videoray.com/about-us/careers/', 'expected_urls': ['https://videoray.com/about-us/careers/', 'https://www.videoray.com/careers/'], 'url': 'https://avav.wd1.myworkdayjobs.com/en-US/AVAV?q=VideoRay', 'evidence': 'Official VideoRay careers page directs applicants to AV careers; AVAV Workday employer search explicitly scopes the parent board to VideoRay.'},
     'COMP-0356': {'company': 'Nauticus Robotics', 'ats': 'SmartRecruiters', 'expected_url': 'https://nauticusrobotics.com/careers/', 'url': 'https://careers.smartrecruiters.com/nauticusrobotics', 'evidence': 'Official Nauticus careers page and employer-scoped SmartRecruiters board.'},
     'COMP-0357': {'company': 'Exail', 'ats': 'Cegid HR', 'expected_url': 'https://www.exail.com/careers', 'url': 'https://jobs.exail.com/en/annonces', 'evidence': 'Official Exail careers page links its employer-scoped Cegid HR (DigitalRecruiters) board.'},
     'COMP-0362': {'company': 'ATLAS Space Operations', 'ats': 'ATLAS Space careers', 'expected_url': 'https://atlasspace.com/careers/', 'expected_urls': ['https://atlasspace.com/careers', 'https://www.atlas.space/careers', 'https://www.atlas.space/careers/'], 'url': 'https://atlasspace.com/careers/', 'evidence': 'Official ATLAS Space Operations careers page publishes a validated no-current-openings state and dynamically linked first-party role pages.'},
@@ -1406,6 +1439,28 @@ def repair_source(ats, url, company_id, company):
 
 
 REPAIRS.update({
+    'COMP-0469': {
+        'company': 'Mutualink',
+        'ats': 'ADP',
+        'expected_url': 'https://www.mutualink.net/careers/',
+        'expected_urls': [
+            'https://mutualink.net/careers/',
+            'https://mutualinkusa.com/',
+        ],
+        'url': 'https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=62f98b62-0dc2-459c-8cc3-68eb6e41bac4&ccId=19000101_000001&lang=en_US',
+        'evidence': 'Official Mutualink careers route redirects to mutualinkusa.com; the official Mutualink USA footer links Join Us to this employer-scoped ADP Workforce Now board.',
+    },
+    'COMP-0173': {
+        'company': 'ModalAI',
+        'ats': 'ModalAI careers',
+        'expected_url': 'https://modalai.com/careers',
+        'expected_urls': [
+            'https://www.modalai.com/pages/careers',
+            'https://www.modalai.com/pages/careers/',
+        ],
+        'url': 'https://www.modalai.com/pages/careers',
+        'evidence': 'Official ModalAI Shopify careers page; it advertises resume-by-email hiring rather than a public employer-scoped ATS board.',
+    },
     'COMP-0174': {
         'company': 'Quantum Systems USA',
         'ats': 'Quantum Systems USA careers',
@@ -1547,4 +1602,27 @@ REPAIRS.update({'COMP-0011': {
     'expected_urls': ['https://www.gdit.com/careers'],
     'url': 'https://gdit.wd5.myworkdayjobs.com/External_Career_Site',
     'evidence': 'Official GDIT careers source links the employer-scoped Workday External_Career_Site board; live installed validation was blocked before listing discovery.',
+}})
+
+# Glenair COMP-0489: the official North America page is an employment-interest
+# form, explicitly not a job application.  Pin it to the guarded adapter so a
+# generic browser scrape cannot infer an empty complete inventory.
+REPAIRS.update({'COMP-0489': {
+    'company': 'Glenair',
+    'ats': 'Glenair employment inquiry',
+    'expected_url': 'https://www.glenair.com/contact/employment.htm',
+    'url': 'https://www.glenair.com/contact/employment.htm',
+    'evidence': 'Official Glenair North America employment page states the form is not a job application and exposes no public ATS or job postings.',
+}})
+
+# Vertex Solutions COMP-0338: the official careers page links to an Indeed
+# employer-management dashboard.  Pin the canonical source and guarded
+# adapter; the dashboard is not a public employer-scoped inventory feed.
+REPAIRS.update({'COMP-0338': {
+    'company': 'Vertex Solutions',
+    'ats': 'Indeed employer dashboard',
+    'expected_url': 'https://www.vertexsolutions.com/careers/',
+    'expected_urls': ['https://vertexsolutions.com/careers/', 'https://www.vertexsolutions.com/careers'],
+    'url': 'https://www.vertexsolutions.com/careers/',
+    'evidence': 'Official Vertex Solutions careers page links View Open Positions to an Indeed employer-management dashboard; no public employer-scoped listing feed was established.',
 }})

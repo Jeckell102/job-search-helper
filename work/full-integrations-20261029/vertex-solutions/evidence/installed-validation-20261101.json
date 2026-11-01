@@ -1,0 +1,19 @@
+{
+  "company": "Vertex Solutions",
+  "company_id": "COMP-0338",
+  "validated_at": "2026-11-01",
+  "official_source": "https://www.vertexsolutions.com/careers/",
+  "ats": "Indeed employer dashboard",
+  "source_finding": "The official careers page exposes View Open Positions linking to an Indeed employer-management dashboard; no public employer-scoped listing feed was established.",
+  "adapter": "src/job_search_helper/vertex_solutions.py",
+  "focused_tests": {"count": 3, "passed": 3, "runner": "direct focused function invocation via .venv/bin/python", "pytest_note": "pytest executable is not installed in the workspace"},
+  "installed_normal_pipeline": [
+    {"pass": 1, "status": "failed", "job_count": 0, "reason": "Careers page network/timeout failure; board discovery did not complete."},
+    {"pass": 2, "status": "failed", "job_count": 0, "reason": "Careers page network/timeout failure; board discovery did not complete."}
+  ],
+  "terminal_status": "blocked",
+  "counted_complete": false,
+  "blocker": "Live DNS/network access to the official careers page was unavailable in both installed rereads; the Indeed employer dashboard is not a public employer-scoped inventory source.",
+  "stable_installed_job_count": null,
+  "shared_completion_ledgers_edited": false
+}

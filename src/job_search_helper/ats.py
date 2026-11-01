@@ -778,6 +778,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0166" and company.casefold() == "black river systems company":
         from .black_river import fetch_black_river
         return fetch_black_river(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0167" and company.casefold() == "perennial autonomy":
+        from .perennial_autonomy import fetch_perennial_autonomy
+        return fetch_perennial_autonomy(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0171" and company.casefold() == "freefly systems":
         from .freefly import fetch_freefly
         return fetch_freefly(careers_url, company_id, company, html_transport)
@@ -790,6 +793,12 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0430" and company.casefold() == "cp technologies":
         from .cp_technologies import fetch_cp_technologies
         return fetch_cp_technologies(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0489" and company.casefold() == "glenair":
+        from .glenair import fetch_glenair
+        return fetch_glenair(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0169" and company.casefold() == "skysafe":
+        from .skysafe import fetch_skysafe
+        return fetch_skysafe(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0454" and company.casefold() == "missionedge technologies":
         from .missionedge import fetch_missionedge
         return fetch_missionedge(careers_url, company_id, company, html_transport)
@@ -874,6 +883,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0272" and company.casefold() == "sick":
         from .sick import fetch_sick
         return fetch_sick(careers_url, company_id, company, transport or HTTPTransport())
+    if company_id == "COMP-0338" and company.casefold() == "vertex solutions":
+        from .vertex_solutions import fetch_vertex_solutions
+        return fetch_vertex_solutions(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
