@@ -1,0 +1,35 @@
+{
+  "company_id": "COMP-0378",
+  "company": "Redwire",
+  "status": "blocked",
+  "counted_complete": false,
+  "official_source": "https://careers.rdw.com/jobs/search",
+  "source_evidence": "Redwire's official careers site links to the careers.rdw.com employer-scoped search portal. The portal is hosted on the Clinch career-site platform and publishes paginated listings with JSON-LD JobPosting detail records.",
+  "adapter": "Redwire careers (Clinch)",
+  "focused_tests": {
+    "command": "PYTHONPATH=src python -m pytest -q tests/test_redwire.py",
+    "result": "3 passed"
+  },
+  "installed_rereads": [
+    {
+      "attempt": 1,
+      "status": "blocked",
+      "jobs": 0,
+      "reason": "Redwire careers page blocked (HTTP 202).",
+      "waf_action": "challenge"
+    },
+    {
+      "attempt": 2,
+      "status": "blocked",
+      "jobs": 0,
+      "reason": "Redwire careers page blocked (HTTP 202).",
+      "waf_action": "challenge"
+    }
+  ],
+  "terminal_blocker": "Both installed normal-pipeline rereads were stopped by the public CloudFront AWS WAF challenge before listing discovery; stable inventory count could not be established.",
+  "validated_at": "2026-11-01",
+  "notes": [
+    "No completion ledger was edited.",
+    "Redwire remains uncounted complete until a live installed reread can retrieve and recheck the employer-scoped inventory."
+  ]
+}

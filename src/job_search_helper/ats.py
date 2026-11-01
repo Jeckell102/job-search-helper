@@ -930,6 +930,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0391" and company.casefold() == "dsi innovations":
         from .dsi_innovations import fetch_dsi_innovations
         return fetch_dsi_innovations(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0378" and company.casefold() == "redwire":
+        from .redwire import fetch_redwire
+        return fetch_redwire(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0467" and company.casefold() == "dtc, a codan company":
         from .dtc_codan import fetch_dtc_codan
         return fetch_dtc_codan(careers_url, company_id, company, discovery_transport or transport)
