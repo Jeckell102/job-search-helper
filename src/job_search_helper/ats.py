@@ -787,6 +787,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0302" and company.casefold() == "deployable technologies":
         from .deployable import fetch_deployable
         return fetch_deployable(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0248" and company.casefold() == "dematic":
+        from .dematic import fetch_dematic
+        return fetch_dematic(careers_url, company_id, company, transport or HTTPTransport())
     if company_id == "COMP-0331" and company.casefold() == "mak technologies":
         from .mak import fetch_mak
         return fetch_mak(careers_url, company_id, company, html_transport)
