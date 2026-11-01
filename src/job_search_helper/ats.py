@@ -799,6 +799,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0169" and company.casefold() == "skysafe":
         from .skysafe import fetch_skysafe
         return fetch_skysafe(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0303" and company.casefold() == "norseman defense technologies":
+        from .norseman_defense import fetch_norseman_defense
+        return fetch_norseman_defense(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0454" and company.casefold() == "missionedge technologies":
         from .missionedge import fetch_missionedge
         return fetch_missionedge(careers_url, company_id, company, html_transport)
@@ -886,6 +889,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0338" and company.casefold() == "vertex solutions":
         from .vertex_solutions import fetch_vertex_solutions
         return fetch_vertex_solutions(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0238" and company.casefold() == "caterpillar":
+        from .caterpillar import fetch_caterpillar
+        return fetch_caterpillar(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":

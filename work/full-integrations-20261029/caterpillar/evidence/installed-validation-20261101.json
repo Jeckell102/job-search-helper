@@ -1,0 +1,19 @@
+{
+  "company_id": "COMP-0238",
+  "company": "Caterpillar",
+  "source_url": "https://careers.caterpillar.com/en/",
+  "ats": "Caterpillar Careers",
+  "official_source": "Caterpillar's official employer-owned careers portal at careers.caterpillar.com; its public jobs surface uses a custom HTML/XML feed rather than a standard Greenhouse, Workday, or Lever board.",
+  "status": "blocked",
+  "live_role_count": 0,
+  "stable_reread": false,
+  "normal_pipeline": false,
+  "installed_passes": [
+    {"pass": 1, "status": "failed", "live_role_count": 0, "reason": "Terminal DNS/network access failed before the official XML feed could be read; browser fallback was unavailable because Playwright is not installed."},
+    {"pass": 2, "status": "failed", "live_role_count": 0, "reason": "Terminal DNS/network access failed before the official XML feed could be read; browser fallback was unavailable because Playwright is not installed."}
+  ],
+  "focused_tests": "2 focused assertions passed by direct Python invocation; pytest executable is not installed in this environment.",
+  "commit": null,
+  "validated_at": "2026-11-01",
+  "notes": "The Caterpillar adapter is employer-scoped, parses the official XML jobs surface when reachable, deduplicates requisition IDs, and fails closed on HTTP/network failures. Caterpillar is not counted complete because both installed rereads failed before discovery and no stable inventory was established."
+}
