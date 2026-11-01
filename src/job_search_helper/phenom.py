@@ -20,6 +20,7 @@ KNOWN_HOSTS = frozenset({
     "careers.kbr.com", "careers.serco-na.com", "careers.mitre.org",
     "jobs.baesystems.com", "careers.rtx.com", "careers.uk.leonardo.com",
     "careers.cisco.com", "careers.hpe.com", "careers.trinzic.com", "careers.geaerospace.com",
+    "careers.abb",
 })
 MAX_PAGES = 500
 MAX_RECONCILIATIONS = 3
