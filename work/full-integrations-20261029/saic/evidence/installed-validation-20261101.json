@@ -1,0 +1,36 @@
+{
+  "company_id": "COMP-0002",
+  "company": "SAIC",
+  "status": "blocked",
+  "counted_complete": false,
+  "requested_careers_url": "https://jobs.saic.com/?bid=5081",
+  "official_source": "https://jobs.saic.com/search/jobs",
+  "ats": "SAIC TalentBrew",
+  "focused_tests": {
+    "command": "PYTHONPATH=src .venv/bin/python -m unittest -v tests.test_saic tests.test_company_sources",
+    "result": "8 passed"
+  },
+  "installed_normal_pipeline": {
+    "rereads": [
+      {
+        "attempt": 1,
+        "status": "blocked",
+        "jobs": 0,
+        "reason": "SAIC public careers page returned HTTP 403 before listing discovery.",
+        "elapsed_seconds": 1.0
+      },
+      {
+        "attempt": 2,
+        "status": "blocked",
+        "jobs": 0,
+        "reason": "SAIC public careers page returned HTTP 403 before listing discovery.",
+        "elapsed_seconds": 0.9
+      }
+    ],
+    "stable_job_count": null
+  },
+  "commit": "71f5524",
+  "terminal_blocker": "The official SAIC TalentBrew listing endpoint returned HTTP 403 on two consecutive installed browser-pipeline rereads. Inventory completeness and a stable job count cannot be established, so SAIC is not counted complete.",
+  "shared_completion_ledgers": "not edited",
+  "validated_at": "2026-11-01"
+}
