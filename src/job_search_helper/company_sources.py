@@ -1352,7 +1352,7 @@ REPAIRS.update({
                                     'https://apply.clearcompany.com/t2s-solutions?noheader=False'],
                   'url': 'https://careers-api.clearcompany.com/v1/366df4d7-cb40-1096-8cdb-1f53109453cf',
                   'evidence': 'Official T2S Solutions source redirects to the ClearCompany T2S career site; verified employer-scoped ClearCompany API returns the complete 15-posting inventory.'},
-    'COMP-0397': {'company': 'Hallam-ICS', 'ats': 'Browser', 'expected_url': 'https://www.hallam-ics.com/careers', 'url': 'https://www.hallam-ics.com/careers', 'evidence': 'Official Hallam-ICS careers page; ATS not exposed in the public HTML.'},
+    'COMP-0397': {'company': 'Hallam-ICS', 'ats': 'SaaShr', 'expected_url': 'https://www.hallam-ics.com/careers', 'url': 'https://secure7.saashr.com/ta/6211585.careers?CareersSearch=&career_portal_id=4915719&ein_id=118982210&lang=en-US', 'evidence': 'Official Hallam-ICS careers page links its company-specific UKG Pro Workforce Ready (SaaShr) career portal.'},
     'COMP-0401': {'company': 'Polytron', 'ats': 'Polytron careers', 'expected_url': 'https://polytron.com/careers/', 'url': 'https://polytron.com/careers/', 'evidence': 'Official Polytron careers page and linked Application Engineer job-description PDF.'},
     'COMP-0406': {'company': 'Federated Wireless', 'ats': 'Browser', 'expected_url': '', 'url': 'https://www.federatedwireless.com/careers/', 'evidence': 'Official Federated Wireless careers page; browser-only inventory.'},
     'COMP-0408': {'company': 'Baicells', 'ats': 'Browser', 'expected_url': 'https://www.baicells.com/careers', 'url': 'https://www.baicells.com/careers', 'evidence': 'Official Baicells careers page; ATS not exposed in the public HTML.'},

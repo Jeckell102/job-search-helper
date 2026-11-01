@@ -751,6 +751,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0427" and company.casefold() == "annapolis micro systems":
         from .annapolis_micro import fetch_annapolis_micro
         return fetch_annapolis_micro(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0397" and company.casefold() == "hallam-ics":
+        from .saashr import fetch_saashr
+        return fetch_saashr(careers_url, company_id, company, html_transport)
     if careers_url == "https://www.haivision.com/about/careers/":
         from .haivision import fetch_haivision
         return fetch_haivision(careers_url, company_id, company, html_transport)

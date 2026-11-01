@@ -1,0 +1,18 @@
+{
+  "company_id": "COMP-0397",
+  "company": "Hallam-ICS",
+  "requested_careers_url": "https://www.hallam-ics.com/careers",
+  "official_source": "https://secure7.saashr.com/ta/6211585.careers?CareersSearch=&career_portal_id=4915719&ein_id=118982210&lang=en-US",
+  "ats": "SaaShr",
+  "validation_date": "2026-11-01",
+  "focused_tests": {
+    "command": "PYTHONPATH=src python -m unittest tests.test_hallam_ics -v",
+    "status": "passed",
+    "tests": 2
+  },
+  "installed_normal_pipeline": [
+    {"pass": 1, "status": "failed", "jobs": 0, "reason": "Careers page network/timeout failure; board discovery did not complete."},
+    {"pass": 2, "status": "failed", "jobs": 0, "reason": "Careers page network/timeout failure; board discovery did not complete."}
+  ],
+  "conclusion": "Not complete and not counted. The installed adapter and routing are present and focused tests pass, but both live normal-pipeline rereads were blocked by the execution environment's inability to resolve/connect to secure7.saashr.com. No stable job count was established."
+}
