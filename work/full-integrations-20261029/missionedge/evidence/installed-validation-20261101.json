@@ -1,0 +1,21 @@
+{
+  "company_id": "COMP-0454",
+  "company": "MissionEdge Technologies",
+  "source_url": "https://missionedgetechnologies.com/careers/",
+  "ats": "MissionEdge Technologies careers",
+  "status": "complete",
+  "live_role_count": 41,
+  "linked_records_seen": 44,
+  "stale_records_excluded": [
+    "https://www.bringtheedge.tech/jobs/m25301-1844",
+    "https://www.bringtheedge.tech/jobs/m25301-1849",
+    "https://www.bringtheedge.tech/jobs/m25301-1830"
+  ],
+  "stale_record_policy": "Excluded only linked detail pages returning HTTP 404; all remaining scoped detail pages required substantive descriptions.",
+  "stable_reread": true,
+  "normal_pipeline": true,
+  "focused_tests": "3 passed",
+  "commit": "20df246",
+  "validated_at": "2026-11-01",
+  "notes": "Official careers page links employer-scoped bringtheedge.tech role pages. Two complete inventory passes returned the same 41 live roles and descriptions."
+}
