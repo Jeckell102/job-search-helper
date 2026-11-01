@@ -788,14 +788,20 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0494" and company.casefold() == "savox communications":
         from .savox import fetch_savox
         return fetch_savox(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0493" and company.casefold() == "antenna research associates":
+        from .antenna_research_associates import fetch_antenna_research_associates
+        return fetch_antenna_research_associates(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0453" and company.casefold() == "tactical edge":
         from .tactical_edge import fetch_tactical_edge
         return fetch_tactical_edge(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0473" and company.casefold() == "centralsquare technologies":
+        from .centralsquare import fetch_centralsquare
+        return fetch_centralsquare(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
-        from .shopify_jobs import fetch_shopify_jobs
-        return fetch_shopify_jobs(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())
+        from .one_stop_systems import fetch_one_stop_systems
+        return fetch_one_stop_systems(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())
     if company_id == "COMP-0262" and company.casefold() == "kvh industries":
         from .kvh import fetch_kvh
         return fetch_kvh(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())

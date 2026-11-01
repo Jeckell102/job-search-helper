@@ -1423,6 +1423,15 @@ REPAIRS.update({
 
 REPAIRS.update({'COMP-0424': {'company': 'WOLF Advanced Technology', 'ats': 'WOLF Scouterecruit', 'expected_url': 'https://www.wolfadvancedtechnology.com/careers', 'expected_urls': ['https://www.wolfadvancedtechnology.com/careers/'], 'url': 'https://wolfadvancedtechnology.scouterecruit.net', 'evidence': 'Official careers page embeds the WOLF Scouterecruit board with 9 stable public postings and full details.'}})
 
+REPAIRS.update({'COMP-0473': {
+    'company': 'CentralSquare Technologies',
+    'ats': 'CentralSquare HireBridge',
+    'expected_url': 'https://www.centralsquare.com/why-centralsquare/careers',
+    'expected_urls': ['https://www.centralsquare.com/why-centralsquare/careers/'],
+    'url': 'https://recruit.hirebridge.com/v3/Jobs/list.aspx?cid=7724',
+    'evidence': 'CentralSquare official careers page links its employer-scoped HireBridge career center; current board publishes 11 job IDs with full public detail pages.'
+}})
+
 REPAIRS.update({
     'COMP-0427': {
         'company': 'Annapolis Micro Systems',
