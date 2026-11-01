@@ -1,0 +1,15 @@
+{
+  "company_id": "COMP-0136",
+  "company": "Ericsson",
+  "source_url": "https://jobs.ericsson.com/careers",
+  "ats": "Ericsson Eightfold",
+  "status": "blocked",
+  "live_jobs": null,
+  "reason": "The installed normal transport reached Ericsson's official careers source but received HTTP 403 access denied. This is not evidence of zero openings.",
+  "endpoint": "https://jobs.ericsson.com/api/pcsx/search?domain=ericsson.com&query=&location=&start=0",
+  "focused_tests": "tests/test_ericsson.py: 2 passed",
+  "official_source_verified": true,
+  "adapter_ready_for_retry": true,
+  "observed_result": "Verified company source repair: https://jobs.ericsson.com/careers. HTTP 403: access denied; manual review, no automatic retry.",
+  "validated_at": "2026-11-01"
+}

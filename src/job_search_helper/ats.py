@@ -216,7 +216,18 @@ def _safe_api_url(url: str) -> None:
     csod_search = (parsed.hostname == "us.api.csod.com" and parsed.path == "/rec-job-search/external/jobs" and not parsed.query and not parsed.fragment)
     csod_detail = (parsed.hostname == "ducommun.csod.com" and bool(re.fullmatch(r"/services/x/job-requisition/v2/requisitions/[0-9]+/jobDetails", parsed.path)) and parse_qs(parsed.query) == {"cultureId": ["1"]})
     dsi = parsed.hostname in {"dsiinnovations.com", "www.dsiinnovations.com"} and parsed.path == "/employment-opportunities/" and not parsed.query and not parsed.fragment
-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail)
+    ericsson_query = parse_qs(parsed.query, keep_blank_values=True)
+    ericsson_search = (parsed.hostname == "jobs.ericsson.com" and parsed.path == "/api/pcsx/search"
+                       and set(ericsson_query) >= {"domain", "query", "location", "start"}
+                       and ericsson_query.get("domain") == ["ericsson.com"]
+                       and ericsson_query.get("query") == [""]
+                       and ericsson_query.get("location") == [""]
+                       and ericsson_query.get("start", [""])[0].isdigit())
+    ericsson_detail = (parsed.hostname == "jobs.ericsson.com" and parsed.path == "/api/pcsx/position_details"
+                       and ericsson_query.get("domain") == ["ericsson.com"]
+                       and ericsson_query.get("hl") == ["en"]
+                       and re.fullmatch(r"[1-9][0-9]{0,15}", ericsson_query.get("position_id", [""])[0] or ""))
+    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail)
             or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
     if parsed.hostname in {"l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com"} and not (ublox_algolia or ublox_detail):
