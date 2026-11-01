@@ -733,6 +733,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if careers_url.rstrip("/") == "https://www.kuka.com/en-us/company/careers":
         from .kuka import fetch_kuka
         return fetch_kuka(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0437" and company.casefold() == "garmin":
+        from .garmin import fetch_garmin
+        return fetch_garmin(careers_url, company_id, company, transport or html_transport)
     if careers_url.rstrip("/") == "https://grexdefense.com/careers":
         from .grex_defense import fetch_grex_defense
         return fetch_grex_defense(careers_url, company_id, company, html_transport)
@@ -784,6 +787,12 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0302" and company.casefold() == "deployable technologies":
         from .deployable import fetch_deployable
         return fetch_deployable(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0331" and company.casefold() == "mak technologies":
+        from .mak import fetch_mak
+        return fetch_mak(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0136" and company.casefold() == "ericsson":
+        from .ericsson import fetch_ericsson
+        return fetch_ericsson(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0403" and company.casefold() == "south shore controls":
         from .south_shore_controls import fetch_south_shore_controls
         return fetch_south_shore_controls(careers_url, company_id, company, html_transport)

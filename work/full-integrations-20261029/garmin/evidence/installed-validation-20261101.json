@@ -1,0 +1,18 @@
+{
+  "company": "Garmin",
+  "company_id": "COMP-0437",
+  "source_url": "https://careers.garmin.com/jobs",
+  "requested_careers_url": "https://www.garmin.com/pl-PL/careers/",
+  "ats": "Garmin Jibe",
+  "status": "complete",
+  "live_count": 443,
+  "stable_reread": true,
+  "normal_pipeline": true,
+  "description_validation": "all retained postings have substantive public descriptions",
+  "application_hosts": [
+    "canada-garmin.icims.com",
+    "careers-garmin.icims.com"
+  ],
+  "focused_tests": "4 passed",
+  "notes": "Jibe count metadata is the total matching inventory; four official Canada postings use the Canada Garmin iCIMS host."
+}

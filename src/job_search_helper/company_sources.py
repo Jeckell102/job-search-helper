@@ -470,8 +470,8 @@ REPAIRS = {'COMP-0440': {'ats': 'Cornerstone careers',
                'url': 'https://api.ashbyhq.com/posting-api/job-board/robco?includeCompensation=true'},
  'COMP-0331': {'ats': 'JazzHR',
                'company': 'MAK Technologies',
-               'evidence': 'https://www.mak.com/',
-               'expected_url': '',
+               'evidence': 'Official MAK Technologies careers page links the employer-scoped MAK JazzHR board.',
+               'expected_url': 'https://www.mak.com/connect/careers',
                'url': 'https://mak.applytojob.com/apply'},
  'COMP-0332': {'ats': 'BambooHR',
                'company': 'OneArc',
@@ -1405,6 +1405,19 @@ REPAIRS.update({
         'expected_urls': ['https://www.nuro.ai/careers/'],
         'url': 'https://boards-api.greenhouse.io/v1/boards/nuro',
         'evidence': 'Nuro official careers page loads /_nuxt/7114896.modern.js, which requests https://boards-api.greenhouse.io/v1/boards/nuro/jobs/?content=true for the complete employer inventory.',
+    },
+})
+REPAIRS.update({
+    'COMP-0437': {
+        'company': 'Garmin',
+        'ats': 'Garmin Jibe',
+        'expected_url': 'https://www.garmin.com/pl-PL/careers/',
+        'expected_urls': [
+            'https://www.garmin.com/en-US/careers/',
+            'https://www.garmin.com/en-US/careers',
+        ],
+        'url': 'https://careers.garmin.com/jobs',
+        'evidence': 'Official Garmin careers page links the employer-scoped public Jibe job board; its API publishes 443 full postings.',
     },
 })
 REPAIRS.update({
