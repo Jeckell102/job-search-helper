@@ -1,0 +1,44 @@
+{
+  "before": {
+    "existing_rows": 200,
+    "unused_rows": 23829,
+    "batch_rows": 100,
+    "results": [
+      {
+        "phase": "cold",
+        "inserted": 100,
+        "read_requests": 4,
+        "write_requests": 1,
+        "read_response_bytes": 27340602
+      },
+      {
+        "phase": "warm",
+        "inserted": 100,
+        "read_requests": 1,
+        "write_requests": 1,
+        "read_response_bytes": 25906492
+      }
+    ]
+  },
+  "after": {
+    "existing_rows": 200,
+    "unused_rows": 23829,
+    "batch_rows": 100,
+    "results": [
+      {
+        "phase": "cold",
+        "inserted": 100,
+        "read_requests": 6,
+        "write_requests": 1,
+        "read_response_bytes": 2828687
+      },
+      {
+        "phase": "warm",
+        "inserted": 100,
+        "read_requests": 3,
+        "write_requests": 1,
+        "read_response_bytes": 1497877
+      }
+    ]
+  }
+}

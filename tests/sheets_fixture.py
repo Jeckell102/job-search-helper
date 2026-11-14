@@ -86,9 +86,10 @@ class RangeSheets(StatefulSheets):
     def values(self):
         outer = self
         class Values:
-            def _response(self, ranges, single=False):
+            def _response(self, ranges, single=False, value_render_option=None):
                 grid = outer.get(ranges=ranges, includeGridData=True)
                 outer.get_calls[-1]['values_api'] = True
+                outer.get_calls[-1]['valueRenderOption'] = value_render_option
                 class Response:
                     def execute(self, num_retries=0):
                         before_bytes = outer.response_bytes
@@ -106,6 +107,8 @@ class RangeSheets(StatefulSheets):
                                 values = []
                                 for cell in row.get('values', []):
                                     value = cell.get('effectiveValue', cell.get('userEnteredValue', {}))
+                                    if value_render_option == 'FORMULA' and 'formulaValue' in cell.get('userEnteredValue', {}):
+                                        value = cell['userEnteredValue']
                                     values.append(next(iter(value.values()), ''))
                                 while values and values[-1] == '':
                                     values.pop()
@@ -118,7 +121,8 @@ class RangeSheets(StatefulSheets):
                         return response
                 return Response()
             def get(self, **kwargs):
-                return self._response([kwargs['range']], single=True)
+                return self._response([kwargs['range']], single=True,
+                                      value_render_option=kwargs.get('valueRenderOption'))
             def batchGet(self, **kwargs):
-                return self._response(kwargs['ranges'])
+                return self._response(kwargs['ranges'], value_render_option=kwargs.get('valueRenderOption'))
         return Values()

@@ -1046,13 +1046,53 @@ class GoogleRepository:
             return self._load(tabs)
         return self._load_sparse_commit(operations)
 
+    def _append_tail_floors(self, sheets, floors):
+        """Find occupied tail rows without downloading their dropdown rules.
+
+        FORMULA keeps formulas whose calculated value is blank visible. A
+        values response omits empty trailing rows even when they have validation.
+        The result selects insertion rows; it never authorizes a write itself.
+        """
+        ranges, selected = [], []
+        result = dict(floors)
+        for tab, floor in floors.items():
+            sheet = sheets[tab]
+            if floor + 1 >= sheet.row_count:
+                continue
+            escaped = tab.replace("'", "''")
+            ranges.append(f"'{escaped}'!A{floor+2}:{_column_name(sheet.column_count)}{sheet.row_count}")
+            selected.append((tab, floor))
+        if not ranges:
+            return result
+        response = self._execute(self.service.spreadsheets().values().batchGet(
+            spreadsheetId=self.spreadsheet_id, ranges=ranges,
+            majorDimension='ROWS', valueRenderOption='FORMULA'), 'read')
+        values = response.get('valueRanges', [])
+        if len(values) != len(selected):
+            raise RepositoryError('The server omitted an append-tail range; no write is safe.')
+        for (tab, floor), value_range in zip(selected, values):
+            sheet = sheets[tab]
+            rows = value_range.get('values', [])
+            if not isinstance(rows, list) or len(rows) > sheet.row_count - floor - 1:
+                raise RepositoryError(f'{tab}: invalid append-tail response; no write is safe.')
+            for offset, row in enumerate(rows, floor + 1):
+                if not isinstance(row, list) or len(row) > sheet.column_count:
+                    raise RepositoryError(f'{tab}: invalid append-tail row; no write is safe.')
+                occupied = [col for col, value in enumerate(row) if value is not None and value != '']
+                if occupied and max(occupied) >= len(sheet.headers):
+                    raise RepositoryError(f'{tab}: occupied append-tail column has no header.')
+                if occupied:
+                    result[tab] = offset
+        return result
+
     def _load_sparse_commit(self, operations):
         """Keep descriptions out of unrelated reads, including evidence upserts.
 
         The first read locates identities. The final read repeats that scan and
         loads complete affected rows, preserving cell guards and the planning
-        cache's untouched fields. Appends additionally inspect the unused tail
-        for orphan values/formulas and destination validation.
+        cache's untouched fields. Appends scan tail values/formulas separately,
+        read validation only at planned destinations, and recheck tail occupancy
+        before returning the snapshot to the writer.
         """
         tabs = sorted({op["tab"] for op in operations})
         by_tab = {tab: [op for op in operations if op["tab"] == tab] for tab in tabs}
@@ -1079,18 +1119,18 @@ class GoogleRepository:
             return identity_ranges
 
         def select_rows(sheets, indexes):
-            match_rows, floors, row_ranges = [], {}, []
+            match_rows, floors, row_ranges, append_counts = [], {}, [], {}
             for tab, sheet in sheets.items():
                 index = indexes[tab]
                 selected = set()
-                needs_append = False
+                append_count = 0
                 for op in by_tab[tab]:
                     rows = tuple(row for row, _ in index.matches(op["identity"]))
                     match_rows.append((tab, op["identity"], rows))
                     selected.update(rows)
                     # _prepare resolves sequential operations, including an
                     # insert followed by an update to that same new identity.
-                    needs_append |= not rows and bool(op.get("append_if_missing"))
+                    append_count += int(not rows and bool(op.get("append_if_missing")))
                 escaped = tab.replace("'", "''")
                 end = _column_name(sheet.column_count)
                 groups = []
@@ -1100,11 +1140,18 @@ class GoogleRepository:
                     groups[-1].append(row)
                 for group in groups:
                     row_ranges.append(f"'{escaped}'!A{group[0]+1}:{end}{group[-1]+1}")
-                if needs_append:
-                    floor = max(index.rows, default=0)
-                    floors[tab] = floor
-                    if floor + 1 < sheet.row_count:
-                        row_ranges.append(f"'{escaped}'!A{floor+2}:{end}{sheet.row_count}")
+                if append_count:
+                    floors[tab] = max(index.rows, default=0)
+                    append_counts[tab] = append_count
+            floors = self._append_tail_floors(sheets, floors)
+            for tab, floor in floors.items():
+                sheet = sheets[tab]
+                # Repeated inserts of one identity may overestimate this bound,
+                # but sequential preparation can never insert more than this.
+                end_row = min(sheet.row_count, floor + 1 + append_counts[tab])
+                if floor + 1 < end_row:
+                    escaped = tab.replace("'", "''")
+                    row_ranges.append(f"'{escaped}'!A{floor+2}:{_column_name(sheet.column_count)}{end_row}")
             return match_rows, floors, row_ranges
 
         def unchanged(sheets, final, match_rows):
@@ -1118,6 +1165,13 @@ class GoogleRepository:
                        for tab, identity, rows in match_rows)
 
         def finish(final, floors):
+            for tab, floor in floors.items():
+                # Never let _prepare shift an insertion past the rows whose
+                # validation was loaded if content arrived during these reads.
+                if any(row > floor for row, _ in final[tab].records()):
+                    raise RepositoryError('Append destination changed during validation; retry fresh.')
+            if self._append_tail_floors(final, floors) != floors:
+                raise RepositoryError('Append tail changed during validation; retry fresh.')
             for tab, sheet in final.items():
                 sheet.append_floor = floors.get(tab, 0)
             # Existing-only reads do not establish an append tail.
