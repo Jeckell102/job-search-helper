@@ -17,17 +17,18 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from queue import Empty, SimpleQueue
-from threading import Lock, get_ident
+from threading import Event, Lock, get_ident
 from urllib.parse import urlencode, urlsplit
 
 from .ats import Inventory, fetch_inventory, resolve_board, lever_location_scope
 from .batching import PlanningRepository, PendingState
+from .cooperative_fetch import CooperativeFetchWork
 from .core import (FIT_LABELS, POLICY_VERSION, canonicalize_url, changed_fields,
                    job_key, material_hash, pack_snapshot,
                    plain_text, reconsiderations, unpack_snapshot, validate_decision)
 from .dashboard import TerminalDashboard
 from .efficiency import classify_title, strip_job_boilerplate
-from .screening import screen_posting
+from .screening import Screening, screen_posting
 
 
 def now() -> str:
@@ -780,18 +781,42 @@ class Engine:
         else:
             snapshot["pending"] = copy.deepcopy(posting)
 
-        # New postings get free deterministic screening before they ever enter
-        # the Work queue. Changed previously reviewed postings always return to
-        # Needs Review so an earlier decision is not silently replaced.
-        if not old:
-            screening = screen_posting(posting)
+        # New postings and still-unreviewed Pending jobs get full screening,
+        # including pay/employment rule improvements, preserving choices and any
+        # existing Opportunity. Other prior decisions retain reassessment rules.
+        from .locations import check_posting_location
+        location_reason = check_posting_location(posting).rejection_reason
+        auto_location_rejection = bool(old and old.get("Added to Opportunities?") == "No"
+            and old.get("Decision") == "Reject"
+            and str(old.get("Rejection Reason", "")).startswith("Location exclusion:")
+            and "[US location cleanup]" in str(old.get("Review Notes", "")))
+        location_rescreen = bool(old and location_reason
+            and (old.get("Added to Opportunities?") == "Pending" and old.get("Review Status") == "Needs Review"
+                 or auto_location_rejection and old.get("Review Status") == "Reviewed")
+            and not old.get("Review Started At")
+            and not self._opportunity(posting, company, [snapshot.get("opportunity_url"), old.get("Official Job URL")]))
+        pending_rescreen = bool(old and old.get("Added to Opportunities?") == "Pending"
+            and old.get("Review Status") == "Needs Review" and not old.get("Review Started At")
+            and not self._opportunity(posting, company, [snapshot.get("opportunity_url"), old.get("Official Job URL")]))
+        candidate_screen = screen_posting(posting) if not old or pending_rescreen else None
+        # Managed claims can exist without an In Progress value in the Sheet.
+        if pending_rescreen and candidate_screen.reason:
+            from .location_cleanup import active_review_keys
+            state_path = getattr(self.state, "path", None)
+            if state_path and state_path != ":memory:":
+                if key in active_review_keys(Path(state_path).parent / "review-queue/concurrent/review-runtime.sqlite3"):
+                    return
+        pending_rejection = pending_rescreen and candidate_screen.reason
+        if not old or location_rescreen or pending_rejection:
+            screening = (candidate_screen if not old else
+                Screening(candidate_screen.reason if pending_rejection else location_reason, old.get("Review Notes", "")))
             auto_reason = screening.reason
             values["Review Notes"] = screening.review_note
 
             if auto_reason:
                 snapshot["evaluated"] = copy.deepcopy(posting)
                 snapshot["pending"] = None
-                snapshot["evaluations"] = [{
+                snapshot["evaluations"] = [*snapshot.get("evaluations", []), {
                     "decision": "reject",
                     "fit_level": None,
                     "narrative": auto_reason,
@@ -800,13 +825,16 @@ class Engine:
                     "changed_fields": ["Initial evidence baseline"],
                 }]
                 values.update({
-                    "First Seen": stamp[:10], "Added to Opportunities?": "No",
-                    "Reconsideration Count": 0, "Reconsideration Status": "Eligible",
+                    "Added to Opportunities?": "No",
+                    "Reconsideration Count": reconsiderations(old) if old else 0,
+                    "Reconsideration Status": old.get("Reconsideration Status", "Eligible") if old else "Eligible",
                     "Review Status": "Reviewed", "Review Started At": "",
                     "Decision": "Reject", "Fit Level": "",
                     "Rejection Reason": auto_reason, "Last Evaluated": stamp,
                     "Description Hash": current_hash,
                 })
+                if not old:
+                    values["First Seen"] = stamp[:10]
                 self._notice(f"Filtered - {posting['title']} at {company['Company']}: {auto_reason}")
             else:
                 values.update({
@@ -854,7 +882,7 @@ class Engine:
             append_notes=url_note, identity=history_identity,
         )
         history_op["expected"] = {h: (old or {}).get(h, "") for h in (
-            "Added to Opportunities?", "Review Status", "Decision", "Reconsideration Count",
+            "Added to Opportunities?", "Review Status", "Review Started At", "Decision", "Reconsideration Count",
             "Description Hash", "Source Hash", "Rejection Reason", "Review Notes")}
         if migrating_legacy_key:
             history_op["expected"]["Job Key"] = old["Job Key"]
@@ -976,6 +1004,7 @@ class Engine:
 
         # Re-read company rows between each company; add genuinely new intake to --all.
         processed = set()
+        fetch_work = CooperativeFetchWork(scope_id=cycle_id)
         while True:
             rows = self._company_rows()
             if cycle["all"]:
@@ -1016,7 +1045,8 @@ class Engine:
                     self.state.save_cycle(cycle)
                     continue
                 self._commit(self._company_op(company, {"Active Cycle ID": cycle_id, "Scan State": "In Progress", "Record Updated": now()}))
-                inventory = self.fetcher(str(company.get("ATS / Source", "")), str(company.get("Official Careers URL", "")), cid, company["Company"])
+                with fetch_work.bind_worker(company["Company"]):
+                    inventory = self.fetcher(str(company.get("ATS / Source", "")), str(company.get("Official Careers URL", "")), cid, company["Company"])
                 item.update(jobs=inventory.jobs, inventory_status=inventory.status, reason=inventory.reason,
                             source_url=inventory.source_url, ats=inventory.ats, fetched_at=now(), stage="inventory",
                             staging_complete=False, next_job_index=0)
@@ -1106,6 +1136,7 @@ class Engine:
         dashboard = TerminalDashboard(fetch_workers)
         self._dashboard = dashboard
         dashboard.start()
+        shared_work = CooperativeFetchWork(max_pending=2 * fetch_workers, scope_id=cycle_id)
 
         def worker_slot():
             thread = get_ident()
@@ -1117,38 +1148,71 @@ class Engine:
                 return worker_slots[thread]
 
         def fetch_company(snapshot):
-            cid = snapshot["Company ID"]
-            slot = worker_slot()
-            dashboard.worker_fetching(slot, snapshot["Company"])
-            started.put(cid)
             try:
-                inventory = self.fetcher(
-                    str(snapshot.get("ATS / Source", "")),
-                    str(snapshot.get("Official Careers URL", "")),
-                    cid, snapshot["Company"],
-                )
-                if not isinstance(inventory, Inventory):
-                    inventory = Inventory("failed", reason="Fetch worker returned an invalid inventory result")
-            except Exception as exc:
-                dashboard.worker_failed(slot, snapshot["Company"])
-                inventory = Inventory("failed", reason=f"Fetch worker failed: {type(exc).__name__}")
-            # Outside the fetch exception handler: durability failures must not
-            # replace a successfully fetched inventory with an error payload.
-            if self.inbox is not None:
-                self.inbox.save(cycle_id, cid, inventory_payload(inventory, snapshot))
-            dashboard.worker_handoff(slot, snapshot["Company"], len(inventory.jobs))
-            return cid, inventory
+                cid = snapshot["Company ID"]
+                slot = worker_slot()
+                dashboard.worker_fetching(slot, snapshot["Company"])
+                started.put(cid)
+                with shared_work.bind_worker(snapshot["Company"]):
+                    try:
+                        inventory = self.fetcher(
+                            str(snapshot.get("ATS / Source", "")),
+                            str(snapshot.get("Official Careers URL", "")),
+                            cid, snapshot["Company"],
+                        )
+                        if not isinstance(inventory, Inventory):
+                            inventory = Inventory("failed", reason="Fetch worker returned an invalid inventory result")
+                    except Exception as exc:
+                        dashboard.worker_failed(slot, snapshot["Company"])
+                        inventory = Inventory("failed", reason=f"Fetch worker failed: {type(exc).__name__}")
+                    # Durability failures must surface, never replace a fetched
+                    # inventory with an error payload or a success checkpoint.
+                    if self.inbox is not None:
+                        self.inbox.save(cycle_id, cid, inventory_payload(inventory, snapshot))
+                    dashboard.worker_handoff(slot, snapshot["Company"], len(inventory.jobs))
+                    return cid, inventory
+            finally:
+                shared_work.company_done()
 
         def set_writer_status(company, done, total, elapsed, processed=0):
             dashboard.writer_progress(company, done, total, elapsed, processed)
 
         processed = set()
         in_flight = {}
+        helpers = {}
         saving_cid = None
         planner = None
         window_size = max(assignment_window, fetch_workers)
-        with _fetch_pool(fetch_workers) as executor:
+
+        def stop_helpers():
+            for future, stop in helpers.items():
+                stop.set()
+                future.cancel()
+
+        @contextmanager
+        def helper_lifetime():
+            try:
+                yield
+            finally:
+                # End helper loops before executor shutdown waits for threads.
+                # Owners still finish or cancel their own outstanding details.
+                stop_helpers()
+
+        def help_company(stop):
+            slot = worker_slot()
+            try:
+                shared_work.help_until_finished(
+                    stop, on_help=lambda name: dashboard.worker_assisting(slot, name))
+            finally:
+                dashboard.worker_assisting(slot, "")
+
+        with _fetch_pool(fetch_workers) as executor, helper_lifetime():
             def collect_finished():
+                for future in list(helpers):
+                    if future.done():
+                        helpers.pop(future)
+                        if not future.cancelled():
+                            future.result()
                 for future in list(in_flight):
                     if not future.done():
                         continue
@@ -1220,15 +1284,42 @@ class Engine:
                     self.state.save_cycle(cycle)
                     processed.add(cid)
                 if assignments:
+                    # New companies take priority. Stop an earlier helper batch
+                    # before queueing them; already running details can finish.
+                    stop_helpers()
                     self._commit(*operations)
                     self.state.save_cycle(cycle)
                     for cid, snapshot in assignments:
-                        in_flight[executor.submit(fetch_company, snapshot)] = cid
+                        shared_work.company_added()
+                        try:
+                            future = executor.submit(fetch_company, snapshot)
+                        except BaseException:
+                            shared_work.company_done()
+                            raise
+                        # Canceled assignments never enter fetch_company's
+                        # finally block, but must release their accounting.
+                        future.add_done_callback(
+                            lambda done: shared_work.company_done() if done.cancelled() else None)
+                        in_flight[future] = cid
+
+            def supply_helpers():
+                if sync_only or not in_flight:
+                    return
+                assigned_ids = set(in_flight.values())
+                if any(cid not in processed and cid not in assigned_ids and item.get("stage") == "queued"
+                       for cid, item in cycle["companies"].items()):
+                    return
+                # These futures sit behind company assignments in the same
+                # bounded executor. They can only use otherwise idle workers.
+                for _ in range(max(0, fetch_workers - 1 - len(helpers))):
+                    stop = Event()
+                    helpers[executor.submit(help_company, stop)] = stop
 
             def service_fetchers(rows=None):
                 collect_finished()
                 record_started()
                 refill(rows)
+                supply_helpers()
 
             while True:
                 rows = self._company_rows()
@@ -1252,7 +1343,7 @@ class Engine:
                                    if cid not in processed and item.get("stage") == "inventory"]
                 if not inventory_ready:
                     if in_flight:
-                        wait(in_flight, return_when=FIRST_COMPLETED)
+                        wait([*in_flight, *helpers], return_when=FIRST_COMPLETED)
                         continue
                     if not sync_only and any(cid not in processed and item.get("stage") == "queued"
                            for cid, item in cycle["companies"].items()):
@@ -1346,6 +1437,9 @@ class Engine:
             if in_flight:
                 for future in in_flight:
                     future.cancel()
+        for future in helpers:
+            if not future.cancelled():
+                future.result()
         self._sync_cycle(cycle)
         self._checkpoint()
         return self.status(cycle_id)
@@ -1373,8 +1467,13 @@ class Engine:
             raise ValueError("Missing or duplicate decision keys in import file")
         if not decisions:
             return self.status(cycle_id)
-        planner = PlanningRepository(self.repo)
         reviews = {r["job_key"]: r for r in self.state.reviews(cycle_id)}
+        if any(key not in reviews for key in keys):
+            raise ValueError(
+                "Decision file has no matching saved legacy review queue. "
+                "Current scans use job-search-reviewer submit; no decisions were saved."
+            )
+        planner = PlanningRepository(self.repo)
         for start in range(0, len(decisions), self.batch_size):
             chunk = decisions[start:start + self.batch_size]
             company_ids = {reviews[d["job_key"]]["company_id"] for d in chunk if d["job_key"] in reviews}
@@ -1756,19 +1855,50 @@ def run_demo(output_dir):
     excluded = dict(posting, posting_id="124", title="Software Engineer", url="https://boards.greenhouse.io/demo/jobs/124")
     repo = MemoryRepository({"Companies": [company], "Job History": [], "Opportunities": [], "Scan Cycles": []})
     state = State(destination / "demo-state.db")
-    engine = Engine(repo, state, fetcher=lambda *args: Inventory(status="complete", jobs=[posting, excluded], reason="Offline fixture", source_url=company["Official Careers URL"]))
-    cycle = engine.start_cycle(["DEMO-001"])
-    before = engine.resume(cycle)
-    engine.export_reviews(cycle, destination / "reviews.jsonl")
-    queued = state.reviews(cycle, "pending")[0]
-    decision = {"job_key": queued["job_key"], "description_hash": queued["description_hash"], "decision": "accept", "fit_level": "Strong",
-                "narrative": "DEMO ONLY: customer discovery and field deployment align with the fictional test profile; no mandatory clearance or code ownership. Confirm travel. Resume selection would be performed by the reviewer.",
-                "reviewer": "Offline demonstration fixture", "policy_version": POLICY_VERSION, "mandatory_clearance": False,
-                "code_authoring_required": False, "primary_test_automation": False, "base_max_usd": 190000, "material_change": False}
-    decision_path = destination / "decisions.example.jsonl"
-    decision_path.write_text(json.dumps(decision) + "\n", encoding="utf-8")
-    after = engine.import_decisions(cycle, decision_path)
-    output = {"before_review": before, "after_review": after, "tables": {tab: repo.read(tab) for tab in ("Companies", "Job History", "Opportunities", "Scan Cycles")}}
-    (destination / "demo-results.json").write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
-    state.close()
-    return {"output_dir": str(destination.resolve()), "before_review": before, "after_review": after, "notice": "Offline fixtures only. No Google writes or AI/API charges."}
+    try:
+        engine = Engine(repo, state, fetcher=lambda *args: Inventory(status="complete", jobs=[posting, excluded], reason="Offline fixture", source_url=company["Official Careers URL"]))
+        cycle = engine.start_cycle(["DEMO-001"])
+        before = engine.resume(cycle)
+        from .review_queue import export_review_queues
+        from .review_runtime import Runtime
+        from .review_writeback import sync_pending
+        queue = destination / "review-queue"
+        export_review_queues(repo, queue)
+        runtime = Runtime(queue)
+        try:
+            # These are declared fictional fixture assessments, never model output.
+            owner = runtime.start(1)["run_id"]
+            titles = runtime.next(1, owner)["items"]
+            claim_fields = ("job_key", "source_hash", "claim_token", "input_version")
+            if titles:
+                runtime.submit(1, owner, [{**{k:item[k] for k in claim_fields},
+                    "decision":"RESCUE", "reason":"DEMO ONLY: fictional deployment title merits description review."}
+                    for item in titles])
+            owner = runtime.start(2)["run_id"]
+            descriptions = runtime.next(2, owner)["items"]
+            runtime.submit(2, owner, [{**{k:item[k] for k in claim_fields},
+                "triage_decision":"ESCALATE", "description_complete":True,
+                "reason":"DEMO ONLY: fixture describes customer deployment responsibilities.",
+                "evidence_source":"offline_demo_fixture", "evidence_locator":"Job Evidence exact fixture identity",
+                "evidence_packet":{"core_responsibilities":["Lead customer deployments and technical discovery."]}}
+                for item in descriptions])
+            owner = runtime.start(3)["run_id"]
+            item = runtime.next(3, owner)["items"][0]
+            decision = {**{k:item[k] for k in claim_fields}, "decision":"Accept", "fit_level":"Strong",
+                "reason":"DEMO ONLY: customer discovery and field deployment match the fictional test profile.",
+                "location_check":{"status":"verified_us", "source_value":posting["location"],
+                                  "evidence":"Explicit Remote, US location in the fictional posting."},
+                "policy_conflicts":[]}
+            (destination / "decisions.example.jsonl").write_text(json.dumps(decision) + "\n", encoding="utf-8")
+            runtime.submit(3, owner, [decision])
+            delivery = sync_pending(runtime, 3, owner, repo=repo, lock_path=destination / "demo-review.lock")
+            if delivery.get("counts") != {"Written":1}:
+                raise RuntimeError("Offline demonstration review did not verify its fixture delivery")
+            after = engine.status(cycle)
+        finally:
+            runtime.close()
+        output = {"before_review": before, "after_review": after, "tables": {tab: repo.read(tab) for tab in ("Companies", "Job History", "Opportunities", "Scan Cycles")}}
+        (destination / "demo-results.json").write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
+        return {"output_dir": str(destination.resolve()), "before_review": before, "after_review": after, "notice": "Offline fixtures only. No Google writes or AI/API charges."}
+    finally:
+        state.close()

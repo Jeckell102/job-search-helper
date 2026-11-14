@@ -195,9 +195,12 @@ The writer reuses indexed planning data, reads only identity columns/affected ro
 1. Retrieve complete official ATS inventory where supported.
 2. Match jobs against Job History by stable identity.
 3. Skip an `In Progress` row so ChatGPT Work owns its review snapshot.
-4. New jobs receive deterministic $0 screening:
+4. New jobs and unreviewed Pending jobs receive deterministic $0 screening:
    - blacklisted title -> skipped, with a terminal reason;
    - clear maximum annual USD base below $120,000, travel above 50%, nonpermanent employment, or explicit SaaS product responsibilities -> `Reviewed / Reject` directly;
+   - explicit USD hourly base rates, including starting rates, use 2,080 hours/year; the highest advertised rate or range endpoint must reach $120,000;
+   - fixed-term agreements with spelled or numeric durations are nonpermanent employment;
+   - manual choices, active review claims, and existing Opportunities are preserved.
    - otherwise -> `Needs Review`.
 5. Materially changed previously reviewed jobs return to `Needs Review`.
 6. Work-readable source fields are written directly into Job History.
@@ -241,3 +244,5 @@ Only stable identity columns are scanned across the full Job History tab;
 `Added to Opportunities?` and `Review Status` are freshly read for affected rows.
 An offline 3,000-row benchmark reduced the second batch from two reads to one
 and reduced its response payload by 76%, while preserving target-row metadata.
+
+After a pay/employment screening update, stop the scraper and run `python -m job_search_helper.screening_cleanup` with the installed environment for a read-only preview. Add `--apply` for guarded correction of up to 100 existing Pending rows using their exact saved source hashes and verified Sheet readback. Then `./job-search-helper start --resume` loads the updated rules and continues the saved cycle. Repeat cleanup only if additional eligible rows remain.

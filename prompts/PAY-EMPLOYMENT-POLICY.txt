@@ -1,0 +1,12 @@
+PAY AND EMPLOYMENT SCREENING UPDATE — 2026-11-14
+
+The authoritative connected AI Prompt contains this policy. This copy documents
+the installed scraper's matching rules; reading it does not start a review pass.
+
+Reject a stated maximum annual USD base below $120,000, explicit nonpermanent employment (contract, temporary, fixed-term, contract-to-hire, internship, or seasonal), required travel above 50%, or explicit SaaS-product responsibility. A range reaching $120,000 may proceed. For explicit USD hourly base pay, annualize at 2,080 hours/year and use the highest advertised base rate or range endpoint across shifts or locations. Apply this rule to advertised starting hourly rates even when no maximum is stated: reject when every stated base-pay option annualizes below $120,000. Do not count overtime toward the base-pay floor. A fixed-term agreement is nonpermanent employment, including when its duration is spelled out, such as a six-month fixed-term agreement. Use base pay and exclude bonus, commission, OTE, and equity from that calculation. Customer contract work and incidental SaaS tool use or integration are compatible. Missing or ambiguous pay, travel, employment, or product evidence is insufficient to reject. Missing salary alone does not require Needs Info.
+
+Deterministic screening leaves unclear currency, units or mixed pay components
+for individual review. It preserves manual choices, active review claims and
+existing Opportunities. Existing unreviewed Pending rows are screened again on
+their next sighting. The screening_cleanup maintenance command applies the
+pay/employment checks to exact saved source versions with guarded publication.
