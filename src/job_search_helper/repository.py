@@ -72,8 +72,32 @@ class RepositoryError(RuntimeError):
     """A schema, identity, permission, or preservation precondition failed."""
 
 
+class PreflightWriteError(RepositoryError):
+    """Commit validation failed before any remote write was submitted."""
+
+
+class MissingIdentityError(PreflightWriteError):
+    """Fresh pre-write identity lookup failed; no batch was submitted."""
+    def __init__(self, tab, identity):
+        self.tab = tab
+        self.identity = dict(identity)
+        super().__init__(f"{tab}: identity does not exist; append is not authorized.")
+
+
+class ReviewFieldsChangedError(PreflightWriteError):
+    """Fresh pre-write guards changed; no remote batch has been submitted."""
+    def __init__(self, tab, identity):
+        self.tab = tab
+        self.identity = dict(identity)
+        super().__init__(f"{tab}: review fields changed since planning; replan from fresh rows.")
+
+
 class UncertainWriteError(RepositoryError):
     """A write may have landed; preserve its exact keyed plan for explicit replay."""
+
+
+class BatchPayloadTooLarge(PreflightWriteError):
+    """The encoded request exceeded the limit before any write was attempted."""
 
 
 def _tab(tab):
@@ -274,6 +298,16 @@ class IdentityIndex:
 
 
 def _prepare(sheets, schemas, operations):
+    """Validate a private snapshot without leaving ambiguous delivery receipts."""
+    try:
+        return _prepare_cells(sheets, schemas, operations)
+    except PreflightWriteError:
+        raise
+    except RepositoryError as exc:
+        raise PreflightWriteError(str(exc)) from None
+
+
+def _prepare_cells(sheets, schemas, operations):
     """Mutate only a private snapshot; return exact, validated cell edits."""
     indexes = {tab: IdentityIndex(sheet.records()) for tab, sheet in sheets.items()}
     tails = {tab: max([sheet.append_floor, 0, *indexes[tab].rows]) for tab, sheet in sheets.items()}
@@ -323,7 +357,7 @@ def _prepare(sheets, schemas, operations):
                     if aliases:
                         raise RepositoryError("Job History: official URL already has another identity; replan before inserting.")
             if not operation.get("append_if_missing", False):
-                raise RepositoryError(f"{tab}: identity does not exist; append is not authorized.")
+                raise MissingIdentityError(tab, identity)
             row = tails[tab] + 1
             tails[tab] = row
             if row >= MAX_ROWS:
@@ -336,13 +370,23 @@ def _prepare(sheets, schemas, operations):
         else:
             row, old_values = matches[0]
             expected = operation.get("expected", {})
-            if any(not _equivalent(h, old_values.get(h, ""), v) for h, v in expected.items()):
-                # An acknowledged-but-not-checkpointed batch can be replayed.
-                # Accept only if all intended values already landed; otherwise
-                # preserve intervening review/user edits and require replanning.
-                if not all(_equivalent(h, old_values.get(h, ""), v)
-                           for h, v in operation.get("values", {}).items()):
-                    raise RepositoryError(f"{tab}: review fields changed since planning; replan from fresh rows.")
+            mismatched = {h for h, v in expected.items()
+                          if not _equivalent(h, old_values.get(h, ""), v)}
+            if mismatched:
+                # Replay only changes this operation could have made. A pure
+                # guard, or a changed source field outside the write set, is
+                # never evidence that an earlier delivery succeeded.
+                intended = operation.get("values", {})
+                notes = operation.get("append_notes", {})
+                replayed = (mismatched <= set(intended) | set(notes)
+                            and bool(intended or notes)
+                            and all(_equivalent(h, old_values.get(h, ""), v)
+                                    for h, v in intended.items())
+                            and all(isinstance(text, str) and bool(text.strip())
+                                    and text in str(old_values.get(h, "") or "")
+                                    for h, text in notes.items()))
+                if not replayed:
+                    raise ReviewFieldsChangedError(tab, identity)
             values = dict(operation.get("values", {}))
             # Job-level review lock. If AI has claimed this Job History row,
             # scraper/source updates are ignored for this pass. AI claim refresh
@@ -581,6 +625,7 @@ class GoogleRepository:
         self._header_cache = {}
         self._write_layout = {}
         self._identity_hints = {}
+        self._compact_identity_hints = {}
         self._committed_partial = False
         self.metrics = {"read_requests": 0, "write_requests": 0, "read_response_bytes": 0,
                         "write_payload_bytes": 0, "read_seconds": 0.0, "write_seconds": 0.0,
@@ -628,6 +673,7 @@ class GoogleRepository:
             # from authoritative identities, including remotely applied rows.
             self._write_layout.clear()
             self._identity_hints.clear()
+            self._compact_identity_hints.clear()
             self._metadata_cache = None
             self._header_cache.clear()
             suffix = (" No successful write is confirmed; resume the same keyed decision."
@@ -757,7 +803,7 @@ class GoogleRepository:
             self._header_cache = {}
             self._write_layout.clear()
             return self._load(tabs)
-        targets, cell_ranges = {}, []
+        targets, cell_ranges, read_fields = {}, [], {}
         for tab, sheet in initial.items():
             index = indexes[tab] if cached else IdentityIndex(sheet.records())
             selected, fields = {}, set(identity_fields[tab])
@@ -770,6 +816,8 @@ class GoogleRepository:
                 if len(matches) != 1:
                     if cached:
                         return self._load_existing_commit(operations, use_hints=False)
+                    if not matches:
+                        raise MissingIdentityError(tab, op["identity"])
                     detail = "matches multiple rows; refusing to guess" if matches else "does not exist; append is not authorized"
                     raise RepositoryError(f"{tab}: identity {detail}.")
                 selected.update(matches)
@@ -778,15 +826,12 @@ class GoogleRepository:
             if not fields <= set(sheet.headers):
                 return self._load(tabs)
             targets[tab] = selected
+            read_fields[tab] = fields
             columns = [sheet.headers.index(field) for field in fields]
-            # A few contiguous spans keep the request compact. Avoid fetching
-            # large cached descriptions/snapshots unless the operation needs them.
-            excluded = {sheet.headers.index(field) for field in ("Current Snapshot", "Job Description")
-                        if field in sheet.headers and field not in fields}
+            # Read only identities, guards and write destinations. Unrelated
+            # columns between those fields need no cell metadata or values.
             spans = []
-            for col in range(min(columns), max(columns) + 1):
-                if col in excluded:
-                    continue
+            for col in sorted(columns):
                 if not spans or col != spans[-1][-1] + 1:
                     spans.append([])
                 spans[-1].append(col)
@@ -817,12 +862,185 @@ class GoogleRepository:
                         raise RepositoryError(f"{tab}: identity or manual control moved while reading affected rows; replan from fresh rows.")
         self._targeted_existing_tabs = set(tabs)
         self._sparse_identity_fields = identity_fields
+        self._committed_field_masks = read_fields
+        return final
+
+    def _compact_identities(self, layouts, identity_fields, *, checks=()):
+        """Read plain, unformatted keys without per-cell grid metadata.
+
+        URL identities retain the cell-aware loader, since displayed hyperlink
+        labels cannot prove a canonical URL. Every optimized batch still gets
+        a fresh complete key scan, including rows below previously cached tails.
+        """
+        ranges, specifications = [], []
+        for tab, sheet in layouts.items():
+            escaped = tab.replace("'", "''")
+            ranges.append(f"'{escaped}'!1:1")
+            specifications.append((tab, None))
+            for header in sorted(identity_fields[tab]):
+                col = _column_name(sheet.headers.index(header) + 1)
+                ranges.append(f"'{escaped}'!{col}2:{col}")
+                specifications.append((tab, header))
+        for tab, r0, r1, c0, c1 in checks:
+            escaped = tab.replace("'", "''")
+            ranges.append(f"'{escaped}'!{_column_name(c0+1)}{r0+1}:{_column_name(c1+1)}{r1+1}")
+            specifications.append((tab, (r0, r1, c0, c1)))
+        response = self._execute(self.service.spreadsheets().values().batchGet(
+            spreadsheetId=self.spreadsheet_id, ranges=ranges,
+            majorDimension='ROWS', valueRenderOption='UNFORMATTED_VALUE'), 'read')
+        values = response.get('valueRanges', [])
+        if len(values) != len(specifications):
+            raise RepositoryError('The server omitted identity ranges; no write is safe.')
+        records = {tab: {} for tab in layouts}
+        for (tab, header), column in zip(specifications, values):
+            rows = column.get('values', [])
+            if isinstance(header, tuple):
+                r0, r1, c0, c1 = header
+                for row in range(r0, r1 + 1):
+                    observed = rows[row-r0] if row-r0 < len(rows) else []
+                    for col in range(c0, c1 + 1):
+                        field = layouts[tab].headers[col]
+                        value = observed[col-c0] if col-c0 < len(observed) else ''
+                        before = _value(layouts[tab].cells.get((row, col), {}), field)
+                        if not _equivalent(field, before, value):
+                            self._compact_identity_hints.clear()
+                            raise ReviewFieldsChangedError(tab, {'row': row + 1})
+                continue
+            if header is None:
+                if not rows or rows[0] != layouts[tab].headers:
+                    self._metadata_cache = None
+                    self._header_cache.clear()
+                    self._compact_identity_hints.clear()
+                    raise RepositoryError('Sheet headers changed during identity validation; retry fresh.')
+                continue
+            for row, cells in enumerate(rows, 1):
+                value = cells[0] if cells else ''
+                if value != '':
+                    records[tab].setdefault(row, {})[header] = value
+        return {tab: IdentityIndex(rows.items()) for tab, rows in records.items()}
+
+    def _load_compact_existing_commit(self, operations, *, use_hints=True):
+        """Use cached locations only to select a fresh, exact cell read.
+
+        A following compact key scan must prove each selected identity is still
+        unique at the same row. Changed locations trigger fresh discovery; all
+        formulas, validations and manual guards come from the detailed read.
+        """
+        tabs = sorted({op['tab'] for op in operations})
+        layouts, identity_fields = {}, {}
+        metadata = self._metadata()
+        found = {s['properties']['title']: s for s in metadata.get('sheets', [])}
+        for tab in tabs:
+            if tab not in found:
+                raise RepositoryError(f'Missing tab: {tab}')
+            props = found[tab]['properties']
+            layouts[tab] = _Sheet(list(self._headers(tab)[0]), sheet_id=props['sheetId'],
+                row_count=props['gridProperties']['rowCount'],
+                column_count=props['gridProperties']['columnCount'])
+            identity_fields[tab] = set().union(*(set(op['identity']) for op in operations if op['tab'] == tab))
+        cached = use_hints and all(
+            tab in self._compact_identity_hints
+            and time.monotonic() - self._compact_identity_hints[tab][0] < 60
+            and self._compact_identity_hints[tab][1].headers == layouts[tab].headers
+            and identity_fields[tab] <= self._compact_identity_hints[tab][2]
+            for tab in tabs)
+        indexes = ({tab: self._compact_identity_hints[tab][3] for tab in tabs}
+                   if cached else self._compact_identities(layouts, identity_fields))
+        selected, ranges, read_fields, checks = {}, [], {}, []
+        for tab in tabs:
+            sheet = layouts[tab]
+            fields = set(identity_fields[tab])
+            if tab == 'Job History':
+                fields.update({'Added to Opportunities?', 'Review Status'})
+            selected[tab] = {}
+            for op in operations:
+                if op['tab'] != tab:
+                    continue
+                matches = indexes[tab].matches(op['identity'])
+                if len(matches) != 1:
+                    if cached:
+                        return self._load_compact_existing_commit(operations, use_hints=False)
+                    if not matches:
+                        raise MissingIdentityError(tab, op['identity'])
+                    raise RepositoryError(f'{tab}: identity matches multiple rows; refusing to guess.')
+                selected[tab].update(matches)
+                for group in ('values', 'expected', 'append_notes'):
+                    fields.update(op.get(group, {}))
+            if not fields <= set(sheet.headers):
+                return self._load_existing_commit(operations, use_hints=False)
+            read_fields[tab] = fields
+            columns = sorted(sheet.headers.index(field) for field in fields)
+            spans, row_groups = [], []
+            for col in columns:
+                if not spans or col != spans[-1][-1] + 1:
+                    spans.append([])
+                spans[-1].append(col)
+            for row in sorted(selected[tab]):
+                if not row_groups or row != row_groups[-1][-1] + 1:
+                    row_groups.append([])
+                row_groups[-1].append(row)
+            escaped = tab.replace("'", "''")
+            ranges.append(f"'{escaped}'!1:1")
+            for rows in row_groups:
+                for span in spans:
+                    ranges.append(f"'{escaped}'!{_column_name(span[0]+1)}{rows[0]+1}:{_column_name(span[-1]+1)}{rows[-1]+1}")
+                # Recheck scalar destinations/guards in the SAME compact
+                # response as the final key scan. This catches edits made
+                # while that request is in flight. URLs still use grid links.
+                scalar_spans = []
+                for col in columns:
+                    if sheet.headers[col] in URL_HEADERS:
+                        continue
+                    if not scalar_spans or col != scalar_spans[-1][-1] + 1:
+                        scalar_spans.append([])
+                    scalar_spans[-1].append(col)
+                for span in scalar_spans:
+                    checks.append((tab, rows[0], rows[-1], span[0], span[-1]))
+        final = self._load(tabs, ranges)
+        if any(final[t].headers != layouts[t].headers or final[t].sheet_id != layouts[t].sheet_id
+               or final[t].row_count != layouts[t].row_count for t in tabs):
+            self._metadata_cache = None
+            self._header_cache.clear()
+            self._compact_identity_hints.clear()
+            return self._load_existing_commit(operations, use_hints=False)
+        fresh = self._compact_identities(final, identity_fields, checks=checks)
+        for op in operations:
+            tab = op['tab']
+            before = indexes[tab].matches(op['identity'])
+            after = fresh[tab].matches(op['identity'])
+            if len(after) > 1:
+                raise RepositoryError(f'{tab}: identity matches multiple rows; refusing to guess.')
+            if [r for r, _ in before] != [r for r, _ in after]:
+                self._compact_identity_hints.clear()
+                if cached:
+                    return self._load_compact_existing_commit(operations, use_hints=False)
+                raise RepositoryError('Sheet identities moved during validation; retry fresh.')
+        for tab, rows in selected.items():
+            for row in rows:
+                for header in identity_fields[tab]:
+                    actual = _value(final[tab].cells.get((row, final[tab].headers.index(header)), {}), header)
+                    if not _equivalent(header, actual, fresh[tab].rows[row].get(header, '')):
+                        self._compact_identity_hints.clear()
+                        if cached:
+                            return self._load_compact_existing_commit(operations, use_hints=False)
+                        raise RepositoryError('Sheet identity changed while reading guarded cells; retry fresh.')
+            self._compact_identity_hints[tab] = (time.monotonic(), final[tab], identity_fields[tab], fresh[tab])
+        self._targeted_existing_tabs = set(tabs)
+        # Only affected rows enter _prepare and acknowledgement processing.
+        # The compact index above already proved global identity uniqueness.
+        self._sparse_identity_fields = {}
+        self._committed_field_masks = read_fields
         return final
 
     def _load_commit(self, operations):
         """Read fresh identities and only the rows needed by this commit."""
         tabs = sorted({op["tab"] for op in operations})
-        if set(tabs) <= {"Job History", "Opportunities"} and all(not op.get("append_if_missing") for op in operations):
+        if (set(tabs) <= {'Job History', 'Opportunities', 'Companies'}
+                and hasattr(self.service.spreadsheets(), 'values')
+                and all(not op.get('append_if_missing') and not (set(op['identity']) & URL_HEADERS)
+                        for op in operations)):
+            return self._load_compact_existing_commit(operations)
+        if set(tabs) <= {"Job History", "Opportunities", "Companies"} and all(not op.get("append_if_missing") for op in operations):
             return self._load_existing_commit(operations)
         if not hasattr(self.service.spreadsheets(), "values"):
             return self._load(tabs)
@@ -995,12 +1213,13 @@ class GoogleRepository:
             ),
             "read",
         )
+        value_ranges = result.get("valueRanges", [])
+        if len(value_ranges) != len(headers):
+            raise RepositoryError("The server omitted a requested value column; no blank edits were inferred.")
         columns = []
-        for value_range in result.get("valueRanges", []):
+        for value_range in value_ranges:
             raw = value_range.get("values", [])
             columns.append([row[0] if row else "" for row in raw])
-        while len(columns) < len(headers):
-            columns.append([])
         max_len = max((len(c) for c in columns), default=0)
         records = []
         for offset in range(max_len):
@@ -1036,12 +1255,13 @@ class GoogleRepository:
             ),
             "read",
         )
+        value_ranges = result.get("valueRanges", [])
+        if len(value_ranges) != len(headers):
+            raise RepositoryError("The server omitted a requested value column; no blank edits were inferred.")
         columns = []
-        for value_range in result.get("valueRanges", []):
+        for value_range in value_ranges:
             raw = value_range.get("values", [])
             columns.append([row[0] if row else "" for row in raw])
-        while len(columns) < len(headers):
-            columns.append([])
         max_len = max((len(c) for c in columns), default=0)
         records = []
         for offset in range(max_len):
@@ -1236,12 +1456,25 @@ class GoogleRepository:
         return missing
 
     def commit(self, operations):
+        # Include identity/layout reads and request construction in the proven
+        # pre-write boundary. Once a write starts, failures retain receipts.
+        before = self.metrics["write_requests"]
+        try:
+            return self._commit(operations)
+        except RepositoryError as exc:
+            if (not isinstance(exc, (PreflightWriteError, UncertainWriteError))
+                    and self.metrics["write_requests"] == before):
+                raise PreflightWriteError(str(exc)) from exc
+            raise
+
+    def _commit(self, operations):
         timings = {}
         commit_started = time.monotonic()
         if self.spreadsheet_id == PROTECTED_BACKUP_ID:
             raise RepositoryError("Refusing to write the protected Job Search Master - Original backup.")
         operations = list(operations)
         self._committed_rows = {}
+        self._committed_field_masks = {}
         self._targeted_existing_tabs = set()
         self._sparse_identity_fields = {}
         if not operations:
@@ -1332,7 +1565,7 @@ class GoogleRepository:
             timings["payload_seconds"] = time.monotonic() - payload_started
             timings["payload_bytes"] = payload_bytes
             if payload_bytes > MAX_BATCH_UPDATE_BYTES:
-                raise RepositoryError(f"Planned batch exceeds the {MAX_BATCH_UPDATE_MB_LABEL} safety threshold. No write attempted; resume with --batch-size 25 (or 5).")
+                raise BatchPayloadTooLarge(f"Planned batch exceeds the {MAX_BATCH_UPDATE_MB_LABEL} safety threshold. No write attempted; resume with --batch-size 25 (or 5).")
             structural = any(set(req) & {"appendDimension", "updateTable", "insertDimension", "deleteDimension"}
                              for req in requests)
             # No automatic retry of writes: after a timeout, rerun the same keyed
@@ -1347,6 +1580,12 @@ class GoogleRepository:
                 self._metadata_cache = None
                 self._header_cache = {}
                 self._identity_hints.clear()
+                self._compact_identity_hints.clear()
+            else:
+                for tab, _, col in changed:
+                    hint = self._compact_identity_hints.get(tab)
+                    if hint and sheets[tab].headers[col] in hint[2]:
+                        self._compact_identity_hints.pop(tab, None)
         committed_started = time.monotonic()
         self._committed_partial = True
         self._committed_rows = {}
@@ -1413,7 +1652,7 @@ class GoogleRepository:
         target_range = f"'{escaped}'!{_column_name(target_col + 1)}2:{_column_name(target_col + 1)}{row_count}"
         cell_data = self._execute(self.service.spreadsheets().get(
             spreadsheetId=self.spreadsheet_id, ranges=[target_range], includeGridData=True,
-            fields="sheets(data(startRow,startColumn,rowData(values(userEnteredValue,dataValidation))))",
+            fields="sheets(data(startRow,startColumn,rowData(values(userEnteredValue,effectiveValue,dataValidation))))",
         ), "read")
         cells = {}
         for raw_sheet in cell_data.get("sheets", []):
@@ -1424,7 +1663,7 @@ class GoogleRepository:
                     cells[start + offset] = values[0] if values else {}
 
         requests = []
-        allowed_keys = {"tab", "row_number", "identity", "values"}
+        allowed_keys = {"tab", "row_number", "identity", "values", "expected"}
         for operation in operations:
             if not isinstance(operation, dict) or set(operation) != allowed_keys:
                 raise RepositoryError("Blacklist cleanup operation has unexpected fields.")
@@ -1443,11 +1682,19 @@ class GoogleRepository:
                 raise RepositoryError("Job History changed after cleanup planning; no cleanup write attempted.")
             if current.get("Review Status") == "In Progress":
                 raise RepositoryError("A cleanup target entered review; no cleanup write attempted.")
-            if str(current.get("Added to Opportunities?", "")).strip().casefold() == "no":
-                continue
+            expected = operation["expected"]
+            if not isinstance(expected, dict) or set(expected) != {"Added to Opportunities?"}:
+                raise RepositoryError("Blacklist cleanup requires the observed opportunity choice.")
+            _scalar(expected["Added to Opportunities?"])
             cell = cells.get(row_number - 1, {})
             if cell.get("userEnteredValue", {}).get("formulaValue"):
                 raise RepositoryError("Refusing to replace a formula in Added to Opportunities?.")
+            latest = _value(cell, "Added to Opportunities?")
+            if str(latest).strip().casefold() == "no":
+                continue  # A repeated delivery is already applied.
+            if any(not _equivalent("Added to Opportunities?", value, expected["Added to Opportunities?"])
+                   for value in (current.get("Added to Opportunities?", ""), latest)):
+                raise ReviewFieldsChangedError("Job History", identity)
             _validate_dropdown(cell.get("dataValidation", {}), "No", "Job History", "Added to Opportunities?")
             requests.append({"updateCells": {
                 "start": {"sheetId": props["sheetId"], "rowIndex": row_number - 1,

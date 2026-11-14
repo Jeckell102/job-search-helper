@@ -88,6 +88,7 @@ class RangeSheets(StatefulSheets):
         class Values:
             def _response(self, ranges, single=False):
                 grid = outer.get(ranges=ranges, includeGridData=True)
+                outer.get_calls[-1]['values_api'] = True
                 class Response:
                     def execute(self, num_retries=0):
                         before_bytes = outer.response_bytes
