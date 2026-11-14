@@ -89,8 +89,8 @@ def execute_cleanup(args):
 
 def main():
     import argparse
-    from .cli import load_environment
-    load_environment()
+    from .cli import load_environment, PROJECT_ROOT
+    load_environment(PROJECT_ROOT / ".env")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--limit", type=int, default=100)

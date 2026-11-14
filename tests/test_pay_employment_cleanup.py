@@ -31,6 +31,14 @@ def plan(repo, **kwargs):
 
 
 class ScreeningCleanupTests(unittest.TestCase):
+    def test_command_loads_config_before_read_only_preview(self):
+        from job_search_helper.screening_cleanup import main
+        from job_search_helper.cli import PROJECT_ROOT
+        with patch("sys.argv", ["screening_cleanup"]), patch("job_search_helper.cli.load_environment", autospec=True) as load, patch("job_search_helper.screening_cleanup.execute_cleanup") as execute:
+            main()
+        load.assert_called_once_with(PROJECT_ROOT / ".env")
+        self.assertFalse(execute.call_args.args[0].apply)
+
     def test_exact_saved_source_becomes_no_with_audit_note(self):
         repo = MemoryRepository({"Job History": [job()]})
         before = copy.deepcopy(repo.tables)
