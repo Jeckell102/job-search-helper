@@ -212,7 +212,8 @@ class Controller:
         try:
             with out.open('w', encoding='utf-8') as stdout, err.open('w', encoding='utf-8') as stderr:
                 process = subprocess.Popen(argv, cwd=self.project, env=self.env,
-                    stdin=stdin_file or subprocess.DEVNULL, stdout=stdout, stderr=stderr,
+                    stdin=stdin_file or subprocess.DEVNULL,
+                    stdout=None if name == 'scrape' else stdout, stderr=stderr,
                     start_new_session=True,
                     pass_fds=(() if self.controller_lock is None else (self.controller_lock.fileno(),)))
                 try:
