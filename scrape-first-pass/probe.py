@@ -3,10 +3,11 @@ import fcntl
 import json
 import sqlite3
 import sys
+import hashlib
 from collections import Counter
 
 from job_search_helper.runner import _load_environment
-from job_search_helper.cli import state_path, job_database_path, storage_backend
+from job_search_helper.cli import state_path, job_database_path, storage_backend, PROJECT_ROOT
 
 
 def locked(path):
@@ -38,7 +39,19 @@ def inspect():
 
 
 if __name__ == '__main__':
-    if sys.argv[1:] == ['remote-preflight']:
+    if len(sys.argv) == 3 and sys.argv[1] == 'review-proof':
+        run_id = sys.argv[2]
+        directory = PROJECT_ROOT / '.state/review-queue/concurrent'
+        with sqlite3.connect((directory / 'review-runtime.sqlite3').resolve().as_uri() + '?mode=ro', uri=True) as db:
+            db.row_factory = sqlite3.Row
+            row = db.execute('SELECT * FROM review_runs WHERE stage=1 AND run_id=?', (run_id,)).fetchone()
+            if row is None:
+                raise ValueError('No matching FIRST PASS run in the managed runtime')
+            started = db.execute("SELECT MIN(at) FROM events WHERE stage=1 AND event='run_started' AND detail=?", (run_id,)).fetchone()[0]
+        digest = hashlib.sha256(json.dumps(run_id, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        checkpoint = json.loads((directory / 'run-checkpoints' / f'pass-1-{digest}.json').read_text())
+        print(json.dumps({'run': dict(row), 'started_at': started, 'checkpoint': checkpoint}))
+    elif sys.argv[1:] == ['remote-preflight']:
         from job_search_helper.cli import get_repository, get_remote_repository
         from job_search_helper.sheet_profile import profile_schemas
         _load_environment()
