@@ -1,4 +1,4 @@
-"""One-command scraper coordinator. AI review is performed separately in ChatGPT Work."""
+"""Public scrape-to-FIRST-PASS workflow and its internal scan worker."""
 from __future__ import annotations
 
 import argparse
@@ -31,9 +31,12 @@ def print_help():
 
 Commands:
   start        Start a fresh scan of all currently active companies.
+               - After completed scraping and verified Sheets sync, automatically
+                 read AI Prompt in Google Drive and run FIRST PASS through Codex
+                 using GPT-5.6 Luna with medium reasoning.
                - Rechecks companies completed or partial in an earlier scan.
                - Includes new companies from the startup company list.
-               - Use start --resume to continue the latest scan instead.
+               - Use start --resume to continue the saved scan or FIRST PASS.
                - SQLite: pulls Sheets once, publishes saved changes, then scrapes.
                - Publishes saved batches continuously while updates are pending.
                - No Sheets watcher runs after the command exits.
@@ -132,7 +135,7 @@ Options for start (batch size, sync interval and request interval also apply to 
       Minimum delay between Google Sheets requests made by the writer.
       Allowed: 0.5-5.0. Default: 1.1.
 
-Screening on start (no AI calls):
+Deterministic screening during scraping (before the automatic AI review):
   Existing title blacklist plus SaaS exclusions always win.
   title-review-list.txt highlights preferred roles; unmatched titles still
   go to AI review. Hardware/mixed products are preferred, not required.
