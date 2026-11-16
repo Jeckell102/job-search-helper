@@ -128,8 +128,9 @@ Options for start (batch size, sync interval and request interval also apply to 
       the last batch upload immediately. Applies to start and sync.
       Also controls cycle-progress updates; final status saves immediately.
       With SQLite, saved changes are checked every 2 seconds and pending
-      batches publish back to back. This interval bounds each publishing pass
-      and retries held/error work; startup pulls once and exit drains changes.
+      updates gather up to 100 rows or 15 seconds (capped by this interval).
+      Full batches publish back to back. The interval also bounds each publishing
+      pass and retries held/error work; startup pulls once and exit drains immediately.
 
   --sheet-request-interval SECONDS
       Minimum delay between Google Sheets requests made by the writer.
@@ -271,7 +272,9 @@ def _refresh_review_queue(repo, database):
         f"filtered={result['deterministic_filtered']} | "
         f"title_audit_overlap={result['title_filter_audit_overlap']} | "
         f"filtered_only={result['deterministic_filtered'] - result['title_filter_audit_overlap']} | "
-        f"bands={json.dumps(result['band_counts'], sort_keys=True)}",
+        f"bands={json.dumps(result['band_counts'], sort_keys=True)} | "
+        f"build_seconds={result.get('build_seconds', 0):.2f} | "
+        f"calculations={json.dumps(result.get('calculations', {}), sort_keys=True)}",
         flush=True,
     )
     return result
