@@ -27,7 +27,8 @@ class Tests(unittest.TestCase):
     def controller(self):
         ctl = object.__new__(c.Controller)
         ctl.work = self.root
-        ctl.state = {'stage': 'REVIEWING', 'review_run_id': 'owned-run'}
+        ctl.state = {'stage': 'REVIEWING', 'review_run_id': 'owned-run', 'workflow_id': 'fixture-workflow'}
+        ctl.project = self.root
         ctl.args = argparse.Namespace(batch_size=25, max_wait_checks=1, fetch_workers=5,
                                       scrape_timeout=1, command='run', resume=False)
         ctl.announce = Mock()
@@ -42,29 +43,9 @@ class Tests(unittest.TestCase):
             self.assertFalse(c.publication_ready({**good, **change}))
         self.assertFalse(c.publication_ready({}))
 
-    def test_claim_tokens_are_copied_from_actual_claim(self):
-        output = c.validate_assessments({'assessments': [decision()]}, [claim()])
-        self.assertEqual(output[0]['claim_token'], 'token-1')
-        self.assertEqual(output[0]['input_version'], 1)
 
-    def test_model_identity_corruption_is_blocked(self):
-        bad_batches = [[], [decision('invented')], [decision(), decision()],
-                       [{**decision(), 'decision': 'Accept'}], [{**decision(), 'reason': ''}]]
-        for rows in bad_batches:
-            with self.assertRaises(c.Blocked):
-                c.validate_assessments({'assessments': rows}, [claim()])
 
-    def test_changed_or_manual_withdrawn_claim_never_submitted(self):
-        rows = c.validate_assessments({'assessments': [decision()]}, [claim()])
-        self.assertEqual(c.reconcile(rows, []), [])
-        self.assertEqual(c.reconcile(rows, [claim(token='replacement')]), [])
-        self.assertEqual(c.reconcile(rows, [claim()]), rows)
 
-    def test_title_input_omits_descriptions_and_practical_fields(self):
-        row = {**claim(), 'job_description': 'secret', 'company': 'irrelevant',
-               'location': 'irrelevant', 'pay': 123, 'url': 'https://example.com'}
-        self.assertEqual(c.title_input(row), {k: v for k, v in claim().items()
-                                            if k not in ('claim_token', 'input_version')})
 
     def test_live_prompt_requires_actual_successful_connector_result(self):
         content = 'FIRST PASS RESCUE PASS ' + ('policy text ' * 150)
@@ -130,53 +111,10 @@ class Tests(unittest.TestCase):
             ctl.scrape()
         self.assertEqual(ctl.state['stage'], 'SCRAPING')
 
-    def test_full_review_requires_managed_finish(self):
-        ctl = self.controller()
-        ctl.fetch_prompt = Mock(return_value=('live policy', 'hash'))
-        rows = c.validate_assessments({'assessments': [decision()]}, [claim()])
-        ctl.assess = Mock(return_value=rows)
-        ctl.review_command = Mock(side_effect=[{}, {'items': [claim()]}, {'items': [claim()]},
-                                              {'saved': 1}, {'items': []}, {}, {'state': 'DRAINED'}])
-        ctl.review()
-        self.assertEqual(ctl.state['stage'], 'COMPLETE')
-        self.assertEqual([x.args[0] for x in ctl.review_command.call_args_list],
-                         ['start', 'next', 'next', 'submit', 'next', 'status', 'finish'])
 
-    def test_manual_change_before_submit_skips_the_job(self):
-        ctl = self.controller()
-        ctl.fetch_prompt = Mock(return_value=('policy', 'hash'))
-        ctl.assess = Mock(return_value=c.validate_assessments({'assessments': [decision()]}, [claim()]))
-        ctl.review_command = Mock(side_effect=[{}, {'items': [claim()]}, {'items': []},
-                                              {'items': []}, {}, {'state': 'DRAINED'}])
-        ctl.review()
-        self.assertNotIn('submit', [x.args[0] for x in ctl.review_command.call_args_list])
 
-    def test_empty_queue_with_pending_publication_is_not_complete(self):
-        ctl = self.controller()
-        ctl.fetch_prompt = Mock(return_value=('policy', 'hash'))
-        ctl.review_command = Mock(side_effect=[{}, {'items': []}, {}, {'state': 'WRITEBACK_PENDING'}])
-        with self.assertRaises(c.Blocked):
-            ctl.review()
-        self.assertNotEqual(ctl.state['stage'], 'COMPLETE')
 
-    def test_lost_start_response_never_launches_a_second_worker(self):
-        ctl = self.controller()
-        ctl.state = {'stage': 'REVIEWING', 'start_attempted': True}
-        ctl.fetch_prompt = Mock(return_value=('policy', 'hash'))
-        ctl.review_command = Mock()
-        with self.assertRaises((OSError, c.Blocked)):
-            ctl.review()
-        ctl.review_command.assert_not_called()
 
-    def test_saved_start_receipt_recovers_same_run(self):
-        ctl = self.controller()
-        ctl.state = {'stage': 'REVIEWING', 'start_attempted': True}
-        (self.root / 'managed-start.stdout').write_text('{"run_id":"recovered","pass":1}')
-        ctl.fetch_prompt = Mock(return_value=('policy', 'hash'))
-        ctl.review_command = Mock(side_effect=[{}, {'items': []}, {}, {'state': 'DRAINED_WITH_EXCEPTIONS'}])
-        ctl.review()
-        self.assertEqual(ctl.state['review_run_id'], 'recovered')
-        self.assertEqual(ctl.state['status'], 'DRAINED_WITH_EXCEPTIONS')
 
     def test_codex_configuration_pins_requested_model_and_effort(self):
         ctl = self.controller()
@@ -222,6 +160,99 @@ class Tests(unittest.TestCase):
             ctl.publish_gate()
         self.assertEqual(ctl.state['stage'], 'REVIEWING')
         self.assertEqual(ctl.state['scrape_publication']['conflicts'], 4)
+
+    def proof(self):
+        return {'run': {'run_id': 'owned-run', 'stage': 1, 'state': 'drained'},
+                'started_at': 101,
+                'checkpoint': {'run_id': 'owned-run', 'run': {'state': 'drained'},
+                    'passes': {'1': {'ready': 0, 'claimed': 0, 'pending_writeback': 0,
+                                     'pending_publication': 0, 'upstream_active': [],
+                                     'conflicts': 0, 'deferred': 0, 'publication': {}}}}}
+
+    def test_handoff_tells_ai_to_read_live_prompt_and_manage_review(self):
+        ctl = self.controller()
+        prompt = ctl.handoff_prompt()
+        self.assertIn('Read "AI Prompt" in my Google Drive and do a FIRST PASS', prompt)
+        self.assertIn(c.PROMPT_ID, prompt)
+        self.assertIn('GPT-5.6 Luna with medium reasoning', prompt)
+        self.assertIn('You manage the review yourself', prompt)
+        self.assertIn('immediately before starting or resuming', prompt)
+        self.assertNotIn('<claimed_titles>', prompt)
+        self.assertFalse(hasattr(ctl, 'assess'))
+
+    def test_agent_launch_is_one_persistent_task_with_google_tools(self):
+        ctl = self.controller(); ctl.codex = '/codex'
+        argv = ctl.agent_argv(self.root/'result', self.root/'schema')
+        self.assertEqual(argv[argv.index('-m')+1], 'gpt-5.6-luna')
+        self.assertIn('model_reasoning_effort="medium"', argv)
+        self.assertIn('workspace-write', argv)
+        self.assertNotIn('--ignore-user-config', argv)
+        self.assertNotIn('--ephemeral', argv)
+        self.assertNotIn('--dangerously-bypass-approvals-and-sandbox', argv)
+
+    def test_resume_uses_exact_saved_codex_session(self):
+        ctl = self.controller(); ctl.codex='/codex'
+        argv = ctl.agent_argv(self.root/'result', self.root/'schema', 'exact-session')
+        self.assertIn('resume', argv)
+        self.assertEqual(argv[-2:], ['exact-session', '-'])
+        self.assertNotIn('--last', argv)
+
+    def test_session_recovery_refuses_ambiguous_logs(self):
+        self.assertEqual(c.session_id([{'type':'thread.started','thread_id':'one'}]), 'one')
+        for events in ([], [{'type':'thread.started','thread_id':i} for i in ('one','two')]):
+            with self.assertRaises(c.Blocked): c.session_id(events)
+
+    def test_ai_claim_of_completion_requires_runtime_proof(self):
+        result={'state':'DRAINED','run_id':'owned-run','summary':'Finished'}
+        owner={'workflow_id':'fixture-workflow','run_id':'owned-run'}
+        self.assertEqual(c.verify_completion(result,owner,self.proof(),'fixture-workflow',100), 'DRAINED')
+        for key in ('ready','claimed','pending_writeback','pending_publication'):
+            proof=self.proof(); proof['checkpoint']['passes']['1'][key]=1
+            with self.assertRaises(c.Blocked):
+                c.verify_completion(result,owner,proof,'fixture-workflow',100)
+        proof=self.proof(); proof['run']['state']='active'
+        with self.assertRaises(c.Blocked): c.verify_completion(result,owner,proof,'fixture-workflow',100)
+
+    def test_old_or_wrong_worker_cannot_supply_completion(self):
+        result={'state':'DRAINED','run_id':'owned-run','summary':'Finished'}
+        owner={'workflow_id':'fixture-workflow','run_id':'owned-run'}
+        with self.assertRaises(c.Blocked): c.verify_completion(result,owner,self.proof(),'other-workflow',100)
+        with self.assertRaises(c.Blocked): c.verify_completion(result,owner,self.proof(),'fixture-workflow',102)
+
+    def test_exceptions_must_be_reported(self):
+        result={'state':'DRAINED','run_id':'owned-run','summary':'Finished'}
+        owner={'workflow_id':'fixture-workflow','run_id':'owned-run'}
+        proof=self.proof(); proof['checkpoint']['passes']['1']['conflicts']=1
+        with self.assertRaises(c.Blocked): c.verify_completion(result,owner,proof,'fixture-workflow',100)
+        result['state']='DRAINED_WITH_EXCEPTIONS'
+        self.assertEqual(c.verify_completion(result,owner,proof,'fixture-workflow',100), result['state'])
+
+    def test_review_launches_ai_once_and_checks_proof_without_python_batches(self):
+        ctl=self.controller(); ctl.codex='/codex'; ctl.python=Path('/python')
+        ctl.args.review_timeout=60
+        ctl.state={'stage':'REVIEWING','workflow_id':'fixture-workflow','agent_started_at':100}
+        prompt_text='FIRST PASS RESCUE PASS '+('policy '*300)
+        def command(argv,name,**kwargs):
+            if name=='codex-first-pass':
+                response=Path(argv[argv.index('-o')+1])
+                c.atomic(response,{'state':'DRAINED','run_id':'owned-run','summary':'Finished'})
+                c.atomic(ctl.work/'review-owner.json',{'workflow_id':'fixture-workflow','run_id':'owned-run'})
+                events=[{'type':'thread.started','thread_id':'session-1'},
+                    {'type':'item.completed','item':{'type':'mcp_tool_call','status':'completed',
+                        'tool':'google_drive.get_document','result':{'structured_content':{
+                            'documentId':c.PROMPT_ID,'body':{'content':[{'textRun':{'content':prompt_text}}]}}}}},
+                    {'type':'turn.completed'}]
+                kwargs['fixed_output'].write_text('\n'.join(json.dumps(e) for e in events))
+                return 0,kwargs['fixed_output']
+            self.assertEqual(name,'verify-ai-finish')
+            path=ctl.work/'proof.json';c.atomic(path,self.proof());return 0,path
+        ctl.command=Mock(side_effect=command)
+        ctl.review_command=Mock(side_effect=AssertionError('Python must not drive review batches'))
+        ctl.review()
+        self.assertEqual(ctl.state['status'],'DRAINED')
+        self.assertEqual(ctl.state['codex_session_id'],'session-1')
+        self.assertEqual(ctl.command.call_count,2)
+        ctl.review_command.assert_not_called()
 
 
 if __name__ == '__main__':
