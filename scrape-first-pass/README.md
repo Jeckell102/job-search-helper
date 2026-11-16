@@ -13,6 +13,18 @@ remains the source of review instructions. Only FIRST PASS is requested.
 
 ## Commands
 
+Both public scraper entry points now use the same packaged workflow. Your normal
+command starts scraping, synchronizes saved results, and launches FIRST PASS:
+
+```sh
+./job-search-helper start --fetch-workers 15
+```
+
+`./job-search-scraper start` follows the same path. All scraper options are
+forwarded to a private scan worker; the worker cannot recursively start the
+workflow. Maintenance and help commands do not launch AI.
+
+
 From the installed job-search-helper directory:
 
 ```sh
@@ -30,7 +42,11 @@ a scrape or review, take claims, or change Sheet cells.
 Use `--fetch-workers 10` if desired. It waits for the owned cycle to reach
 `Complete` or `Complete with exceptions`, then verifies zero pending upload
 rows/cells and no sync error. Normal bounded synchronization retries may run.
-Recorded conflicts are preserved; incomplete publication blocks the AI handoff.
+A completed scan whose only failure is final Sheets synchronization proceeds to
+the bounded publication retry step. Other scraper errors still stop the workflow.
+Unresolved publication blocks the AI handoff. One-sided recognized Fit Review
+changes in Sheets are imported only if the local rating is unchanged and has no
+pending or uncertain delivery. Concurrent rating changes remain conflicts.
 
 The AI task runs in the scraper project with workspace write permission and
 network access for its existing Google tools. It uses ordinary sandboxing, keeps
@@ -50,7 +66,15 @@ receipt under the configured state directory's `scrape-first-pass/` folder.
 `run --resume` resumes that exact AI conversation and its own managed review run;
 it never uses `--last` or guesses another task's run ID. A completed scrape is not
 repeated. Resuming a completed workflow is a no-op. Plain `run` after completion
-starts a new workflow. Separately launched scrapes are not implicitly adopted.
+starts a new workflow. A completed scan from an older installation can be recovered explicitly without
+rescanning:
+
+```sh
+./job-search-pipeline review --cycle CYC-EXACT-ID
+```
+
+Recovery requires the latest completed cycle and an idle scraper. Repeating it
+resumes the same saved task, or does nothing if that task already completed.
 
 An AI message saying "done" is insufficient. Python verifies a successful live
 Google Doc read, the matching ownership receipt, and the managed runtime's drained
@@ -65,12 +89,18 @@ have 48-hour default timeouts (`--scrape-timeout` / `--review-timeout`, seconds)
 The computer must stay awake and connected. No schedule or recurring service is
 created. No Jetson or API key is needed; saved Codex account authentication is used.
 
+The implementation lives in `src/job_search_helper/scrape_first_pass.py`, with
+`pipeline_probe.py` and the private `scrape_worker.py`. The old controller and
+probe entry points are compatibility shims; they contain no second implementation.
+
 Only source files belong in GitHub. Logs, live prompts, results, state databases,
-and credentials remain local. Install this folder inside the scraper project and
-install `job-search-pipeline` in its root with executable permission.
+and credentials remain local. Install the packaged modules, runner, sync changes, compatibility entry points,
+and `job-search-pipeline` together. Keep `job-search-pipeline` executable.
 
 ```sh
-python3 -m unittest discover -s scrape-first-pass -p 'test_*.py' -v
+PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -p 'test_*pipeline*.py' -v
+PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -p 'test_scrape_first_pass.py' -v
+PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -p 'test_opportunity_fit_sync.py' -v
 ```
 
 References: [Codex scripted execution and resume](https://learn.chatgpt.com/docs/non-interactive-mode),
