@@ -6,6 +6,7 @@ from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import threading
 import coding_tools
+import public_tools
 
 BASE = Path(__file__).resolve().parent.parent
 TOKEN = (BASE / 'bridge-token').read_text().strip()
@@ -40,11 +41,12 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body, dict) or set(body) != {'name', 'args', 'names'}:
                 raise ValueError('Invalid request')
             names = body['names']
-            if not isinstance(names, list) or any(not isinstance(n, str) or n not in coding_tools.NAMES for n in names):
+            if not isinstance(names, list) or any(not isinstance(n, str) or n not in coding_tools.NAMES | public_tools.NAMES for n in names):
                 raise ValueError('Invalid allowed tools')
             if not isinstance(body['name'], str):
                 raise ValueError('Invalid tool name')
-            result = coding_tools.execute(body['name'], body['args'], set(names))
+            executor = public_tools.execute if body['name'] in public_tools.NAMES else coding_tools.execute
+            result = executor(body['name'], body['args'], set(names))
             result['workspace_location'] = 'scraper computer: Job Search Helper dev/wrapper-coder/repo'
             self.reply(200, result)
         except (ValueError, TypeError, OSError):

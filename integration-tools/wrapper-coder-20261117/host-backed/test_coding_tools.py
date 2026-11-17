@@ -12,6 +12,15 @@ class CodingTests(unittest.TestCase):
         for name in ['src','tests','docs']:(self.root/name).mkdir()
         self.p=patch.object(c,'ROOT',self.root);self.p.start()
     def tearDown(self):self.p.stop();self.temp.cleanup()
+    def test_required_protocol_is_readable_but_not_model_editable(self):
+        p=self.root/'docs/wrapper-development-test-protocol.md';p.write_text('required steps')
+        r=c.execute('code_read', {'path': 'docs/wrapper-development-test-protocol.md'}, c.NAMES)
+        self.assertTrue(r['ok'])
+        for name in ['docs/wrapper-development-test-protocol.md', 'docs//wrapper-development-test-protocol.md']:
+            r=c.execute('code_edit', {'path':name,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'old':'required','new':'optional'}, c.NAMES)
+            self.assertFalse(r['ok'])
+        self.assertEqual(p.read_text(),'required steps')
+
     def test_path_escape_and_hidden_files(self):
         for path in ['../config/key','src/../../key','/etc/passwd','src/.env','tests/x.sh','src/../tests/x.py']:
             with self.assertRaises(ValueError):c.path_for(path,True)

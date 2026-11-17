@@ -61,7 +61,7 @@ def execute(name, args, names):
     import urllib.request
     import urllib.error
     try:
-        if name not in names or name not in NAMES:
+        if name not in names or name not in NAMES | {'web_read', 'web_search'}:
             raise ValueError('This action is outside the current request.')
         config = json.loads((Path(__file__).parent / 'config/wrapper-host.json').read_text())
         payload = json.dumps({'name': name, 'args': args, 'names': sorted(names)}).encode()

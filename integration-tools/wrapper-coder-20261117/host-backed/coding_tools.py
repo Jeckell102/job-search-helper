@@ -150,6 +150,8 @@ def execute(name, args, names):
 
 
 def _execute(name, args):
+    if name in ('code_edit', 'code_create') and PurePosixPath(args['path']).as_posix() == 'docs/wrapper-development-test-protocol.md':
+        raise ValueError('The required test protocol is operator-maintained and read-only to coding tools.')
     if name == 'code_list':
         query = args.get('query', '').lower()
         if len(query)>100:

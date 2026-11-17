@@ -15,3 +15,17 @@ Rollback must preserve work in the host development checkout. Stop the host brid
 ## Verified migration checks
 
 Seven guarded-tool regression tests passed; 46 Bosch wrapper tests passed on the scraper computer; four host-location/isolation checks passed through both the Jetson forwarding client and a real model chat. Unauthorized HTTP access, path escape, write-scope denial and disconnected-write behavior were checked. The migration archive is kept locally, never published.
+
+## Required development and test procedure
+
+Copy `wrapper-development-test-protocol.md` into the development checkout's `docs/` directory. Install this directory's `coding_runtime.py` as the Jetson runtime module, in addition to the existing host-forwarding coding_tools client. The runtime loads the full protocol from the host before each coding turn, includes it in the model instructions, and reports the verified read. Missing, truncated or incorrect protocol content stops the turn before inference or coding actions. The host backend prevents model edits to the protocol.
+
+The procedure requires baseline tests, verified public source evidence, focused repairs, nonempty normal-dispatch tests, negative cases, separate live read-only scraper validation with a receipt, and verified installation/GitHub delivery. Offline code_test calls cannot execute live network scraping; until the operator performs that check, the model must report it as outstanding. The actual entry point fetch_inventory includes source repair and provider dispatch. A passed direct-wrapper test or HTTP 200 alone does not establish a working live integration.
+
+Twelve installed protocol/tool tests passed. The automated tests verify per-turn loading, preservation of conversation history, stopping on absent/truncated/wrong instructions, and prevention of model edits to the procedure. Model adherence to every substantive step still requires reviewing the recorded evidence; automatic loading does not make the model infallible.
+
+## Work offloaded to the scraper computer
+
+For Wrapper Coder, public web searches and page reads now execute on the scraper host alongside source reads/edits, Git operations and offline tests. The Jetson retains AI inference and lightweight chat/tool coordination. Install public_web.py, public_web_types.py and public_tools.py with the host backend, and update the host_server and Jetson forwarding client/runtime. Existing public-only destination checks, pinned-address connections, redirect validation, response limits and request-based authorization remain in place; there is no web-execution fallback on the Jetson. Other chat profiles are unchanged.
+
+The installed suite has 18 passing protocol, guarded-tool and public-web tests. Real requests forwarded from the Jetson returned a public page and search results on the scraper host, while a private address was rejected. Keep the scraper computer awake and its host/tunnel user services running for coding work.
