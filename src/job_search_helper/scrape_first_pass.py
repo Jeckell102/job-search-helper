@@ -27,10 +27,35 @@ PROMPT_ID = '1bcv5MMcCySGDzolaFyZYQZYOvaMZEdqTQV6a8KnTMxA'
 FINISHED = {'Complete', 'Complete with exceptions'}
 DRAINED = {'DRAINED', 'DRAINED_WITH_EXCEPTIONS'}
 HERE = Path(__file__).resolve().parent
+# The Linux desktop package includes the same executable used by its tasks,
+# but ordinary login shells do not inherit the app's augmented PATH.
+DESKTOP_CODEX_PATHS = (Path('/usr/lib/chatgpt/resources/codex'),)
 
 
 class Blocked(RuntimeError):
     pass
+
+
+def resolve_codex(requested=None):
+    """Honor explicit configuration, then PATH, then an installed desktop CLI.
+
+    Never silently substitute another binary for a broken explicit override.
+    Return None for automatic discovery failure so read-only status still works.
+    """
+    override = requested or os.environ.get('JOB_SEARCH_CODEX')
+    if override:
+        found = shutil.which(str(Path(override).expanduser()))
+        if found:
+            return str(Path(found).absolute())
+        raise Blocked(f'Configured Codex executable is missing or not executable: {override}. '
+                      'Correct --codex or JOB_SEARCH_CODEX.')
+    found = shutil.which('codex')
+    if found:
+        return str(Path(found).absolute())
+    for candidate in DESKTOP_CODEX_PATHS:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return str(candidate)
+    return None
 
 
 def now():
@@ -178,9 +203,13 @@ class Controller:
         self.args = args
         self.project = Path(args.project).expanduser().resolve()
         self.python = self.project / '.venv/bin/python'
-        self.codex = shutil.which(args.codex)
-        if not self.codex or not self.python.is_file():
-            raise Blocked('Codex or the scraper Python environment is unavailable.')
+        if not self.python.is_file() or not os.access(self.python, os.X_OK):
+            raise Blocked(f'Scraper Python is missing or not executable: {self.python}. '
+                          'Restore this project\'s virtual environment before running.')
+        self.codex = resolve_codex(args.codex)
+        if not self.codex and args.command != 'status':
+            raise Blocked('Codex CLI was not found on PATH or in the installed desktop app. '
+                          'Install Codex CLI or set JOB_SEARCH_CODEX to its executable path.')
         self.env = {**os.environ, 'PYTHONPATH': str(self.project / 'src'), 'PYTHONUNBUFFERED': '1'}
         self.state = None
         self.work = None
@@ -497,6 +526,7 @@ class Controller:
             if latest.exists():
                 state = json.loads(Path(json.loads(latest.read_text())['workflow']).read_text())
             print(json.dumps({'workflow': state, 'scraper_busy': info['scraper_busy'],
+                              'runtime': {'python': str(self.python), 'codex': self.codex},
                               'latest_cycle': info['cycles'][-1] if info['cycles'] else None}, indent=2))
             return 0
         with exclusive(root / 'controller.lock') as lock:
@@ -529,7 +559,9 @@ class Controller:
                 if self.args.resume:
                     raise Blocked('No pipeline workflow exists to resume.')
                 if previous and previous['stage'] != 'COMPLETE':
-                    raise Blocked('An unfinished workflow exists. Use run --resume.')
+                    raise Blocked('An unfinished workflow exists. Resume it with '
+                                  './job-search-helper start --resume '
+                                  '(or ./job-search-pipeline run --resume).')
                 if info['scraper_busy']:
                     raise Blocked('A scraper is already active; no duplicate run was started.')
                 self.work = root / ('run-' + uuid.uuid4().hex)
@@ -580,7 +612,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=('check', 'run', 'status', 'review'))
     parser.add_argument('--project', default=str(HERE.parents[1]))
-    parser.add_argument('--codex', default='codex')
+    parser.add_argument('--codex', help='Codex executable; otherwise use JOB_SEARCH_CODEX, '
+                        'PATH, or the installed desktop app, in that order.')
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--cycle', help='Exact completed scrape cycle for review-only recovery.')
     parser.add_argument('--scraper-args', nargs=argparse.REMAINDER,
