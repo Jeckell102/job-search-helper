@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**W04/Lockheed full validation is still active. The ten-task integration goal is complete. Status: IN_PROGRESS for Lockheed only.**
+**The ten-task integration goal is complete. No normal-dispatch validation is active.**
 
-Do not duplicate Lockheed's active paced validation. W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics are complete. After Lockheed reaches a verified result, choose the highest-priority eligible unclaimed task in W06 or the next remaining W02 candidate. Black River remains `IMPLEMENTED_AWAITING_VALIDATION` because its production `CareersTransport` cannot fetch the first public detail from this environment. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
+Lockheed and Black River are `IMPLEMENTED_AWAITING_VALIDATION`; neither is complete. The Lockheed paced process is absent and its checkpoint stopped in detail retrieval, so do not claim it is still active. W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics are complete. Choose the highest-priority eligible unclaimed task in W06 or the next remaining W02 candidate only after inspecting current process and saved validation state.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -41,7 +41,7 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W02/JR Automation | COMP-0250 JR Automation | COMPLETE | /root / 2026-11-17T16:56:00Z | Replaced the stale 64-total and corrected canonical page paths; live normal dispatch completed with 59 full postings and a stable six-page reread. |
 | W02/KUKA | COMP-0246 KUKA Robotics | COMPLETE | /root / 2026-11-17T17:00:00Z | Removed the stale 115-item gate while retaining the exact employer facet; live normal dispatch completed with 111 full postings and a stable reread. |
 | W02/ASTi | COMP-0336 Advanced Simulation Technology inc. (ASTi) | COMPLETE | /root / 2026-11-17T17:03:00Z | Replaced the stale two-role requirement with an explicit nonempty inventory check; live normal dispatch completed with 2 full postings and a stable reread. |
-| W04/Lockheed | COMP-0074 Lockheed Martin | IN_PROGRESS | /root/lockheed / 2026-11-17T17:02:38Z | Exact official landing alias now routes to the scoped Eightfold adapter; 29 focused tests passed. Full paced normal-dispatch validation (6,986 listings) remains active until its required final reread completes. |
+| W04/Lockheed | COMP-0074 Lockheed Martin | IMPLEMENTED_AWAITING_VALIDATION | /root / 2026-11-17T17:14:00Z | Exact landing alias and 29 focused tests are in place. The full paced validation process is no longer running; its `/tmp/lockheed-w04-validation-20261117.json` checkpoint stopped in `details` phase before a completed normal-dispatch result or final reread. |
 | W06/Serve Robotics | COMP-0542 Serve Robotics | COMPLETE | /root/serve_ubiquiti / 2026-11-17T17:07:35Z | Added guarded official-careers-to-Ashby routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 23 full postings. |
 | W06/Ubiquiti | COMP-0749 Ubiquiti | COMPLETE | /root/serve_ubiquiti / 2026-11-17T17:07:35Z | Added guarded official-careers-to-Greenhouse routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 168 full postings. |
 | W05/IERUS | COMP-0449 IERUS Technologies | COMPLETE | /root/ierus / 2026-11-17T17:09:05Z | Repaired the exact legacy JobScore alias to its canonical host; targeted suite passed 15 tests and normal dispatch returned 62 full postings with stable internal reread. |
