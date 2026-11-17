@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**Three active lanes: W04/Lockheed, W06/Texas Instruments, and W06/Danfoss. Status: IN_PROGRESS.**
+**PAUSED_NOT_COMPLETE — 308 companies remain. Resume with the saved states below.**
 
-Do not duplicate the three active lanes. Lockheed is actively checkpointing its complete validation and is not yet complete. W06/Zebra is `IMPLEMENTED_AWAITING_VALIDATION` because the exact Workday route reaches a public human-verification block. W02/Black River and W06/Aerotech are complete, along with W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics. When a lane finishes, claim the next highest-priority eligible unclaimed W06 or W02 company after inspecting current process and saved validation state.
+The agent lanes were intentionally paused at the user's request. Reinspect active process and checkpoint state before resuming. Lockheed's durable checkpoint is `/tmp/lockheed-w04-v2-20261117.json` (6,991 listings and 449 full details at the last verified update; final reread still required). ATS Corporation's route is implemented but its live SuccessFactors listing lacks a consistent published result range. Crown Equipment was interrupted before a report. Current W06 provider blocks are recorded in the live handoff.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
