@@ -397,6 +397,20 @@ def _description(page, fallback: str) -> str:
 # Briefly require stable text to avoid saving the first fragment of a render.
 DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
     const clean = value => (value || '').replace(/\s+/g, ' ').trim();
+    const addressText = value => {
+        if (!value) return '';
+        if (typeof value === 'string') return clean(value);
+        if (Array.isArray(value)) return [...new Set(value.map(addressText).filter(Boolean))].join('; ');
+        if (typeof value !== 'object') return '';
+        if (typeof value.address === 'string') return clean(value.address);
+        const address = value.address && typeof value.address === 'object' ? value.address : value;
+        const country = typeof address.addressCountry === 'object'
+            ? address.addressCountry.name || address.addressCountry.value || ''
+            : address.addressCountry || '';
+        return [...new Set([
+            address.addressLocality, address.addressRegion, country, address.name
+        ].map(clean).filter(Boolean))].join(', ');
+    };
     const body = clean(document.body?.innerText);
     if (/verify you are human|checking your browser|access denied|just a moment/i.test(body.slice(0, 1500))) return false;
     const mantechDetail = location.hostname === 'careers.mantech.com' &&
@@ -405,6 +419,7 @@ DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
         ? clean(document.querySelector('h2.banner__text__title')?.innerText) || fallbackTitle
         : clean(document.querySelector('h1')?.innerText) || fallbackTitle;
     let description = '';
+    let jobLocation = '';
     const walk = value => {
         if (!value || typeof value !== 'object') return;
         const types = [].concat(value['@type'] || []);
@@ -412,6 +427,7 @@ DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
             title = clean(value.title);
             const doc = new DOMParser().parseFromString(value.description, 'text/html');
             description = clean(doc.body.textContent);
+            jobLocation = addressText(value.jobLocation) || addressText(value.applicantLocationRequirements) || jobLocation;
         }
         for (const child of Object.values(value)) {
             if (Array.isArray(child)) child.forEach(walk);
@@ -429,10 +445,21 @@ DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
         const text = clean(document.querySelector('main, [role="main"], article')?.innerText) || body;
         if (/\b(responsibilities|requirements|qualifications|about the role|what you.ll do)\b/i.test(text)) description = text;
     }
+    if (!jobLocation) {
+        const root = document.querySelector('main, [role="main"], article') || document;
+        const selectors = [
+            '[itemprop="jobLocation"]', '[data-automation-id="locations"]',
+            '[data-automation-id="location"]', '[data-testid*="location"]',
+            '.job-location', '.job__location', '.jobLocation', '[class~="location"]'
+        ].join(', ');
+        jobLocation = [...root.querySelectorAll(selectors)]
+            .map(node => clean(node.innerText || node.textContent))
+            .find(value => value && value.length <= 180 && value.toLowerCase() !== 'location') || '';
+    }
     if (!title || description.length < 120) return false;
-    const value = {title, description};
+    const value = {title, location: jobLocation, description};
     if (!settle) return value;
-    const signature = title + '\n' + description;
+    const signature = title + '\n' + jobLocation + '\n' + description;
     const previous = window.__jshDetailContent;
     if (!previous || previous.signature !== signature) {
         window.__jshDetailContent = {signature, at: performance.now()};
@@ -440,6 +467,24 @@ DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
     }
     return performance.now() - previous.at >= 500 ? value : false;
 }"""
+
+
+def _detail_location(title: str, description: str) -> str:
+    """Recover a visible header location when a generic page has no location markup."""
+    text = plain_text(description)
+    prefix = re.compile(
+        rf"^(?:Back to all jobs\s+)?{re.escape(plain_text(title))}\s+(.{{2,180}}?)\s+"
+        r"(?:Company Overview|Position Summary|About (?:the |this )?(?:Company|Role|Job)|What You(?:'|’)ll Do)\b",
+        re.I,
+    )
+    match = prefix.search(text)
+    if not match:
+        return ""
+    candidate = plain_text(match.group(1)).strip(" ,-|")
+    looks_like_location = bool(
+        re.search(r"[,;]|\b(?:Remote|Hybrid|On[- ]site|United States|USA|U\.S\.|Worldwide)\b", candidate, re.I)
+    )
+    return candidate if looks_like_location else ""
 
 
 def _fetch_detail(browser, link, timeout_ms):
@@ -735,12 +780,19 @@ def fetch_browser_inventory(ats: str, careers_url: str, company_id: str, company
                                 break
                             continue
                         consecutive_failures = 0
+                        template = link.get('template', {})
+                        location = plain_text(content.get("location") or template.get("location") or "")
+                        if not location:
+                            location = _detail_location(content['title'], content['description'])
+                        work_arrangement = plain_text(template.get("work_arrangement") or "")
+                        if not work_arrangement and "remote" in f"{location} {content['description']}".casefold():
+                            work_arrangement = "Remote"
                         job = {"company_id": company_id, "company": company, "ats": ats or "Browser",
                             "posting_id": _posting_id(url), "req_id": "", "url": url,
                             "location": "", "work_arrangement": "", "compensation": "",
                             "department": "", "created_at": "", "updated_at": "", "is_listed": True,
-                            **link.get('template', {}), "url": url, "title": content['title'],
-                            "description": content['description']}
+                            **template, "url": url, "title": content['title'], "location": location,
+                            "work_arrangement": work_arrangement, "description": content['description']}
                         # Commit each success before requesting the next page.
                         progress.save_job(url, job)
                     if budget_exhausted:
