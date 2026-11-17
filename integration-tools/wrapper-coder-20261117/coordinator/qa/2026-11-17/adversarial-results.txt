@@ -1,0 +1,91 @@
+test_dispatch_must_reserve_remaining_total_tokens (__main__.QAControls) ... FAIL
+test_elapsed_deadline_must_stop_next_call_inside_a_session (__main__.QAControls) ... FAIL
+test_empty_unrelated_search_and_protocol_read_cannot_satisfy_inspection (__main__.QAControls) ... FAIL
+test_explicit_do_not_modify_must_not_enable_or_perform_edits (__main__.QAControls) ... FAIL
+test_render_timing_alone_must_not_count_as_progress (__main__.QAControls) ... FAIL
+test_snapshot_write_error_must_not_kill_scheduler_thread (__main__.QAControls) ... FAIL
+
+======================================================================
+FAIL: test_dispatch_must_reserve_remaining_total_tokens (__main__.QAControls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/wrapper-coordinator-qa-20261117/test_qa_controls.py", line 90, in test_dispatch_must_reserve_remaining_total_tokens
+    self.assertEqual({'model_calls': len(self.history), 'tokens': state['tokens']},
+AssertionError: {'model_calls': 1, 'tokens': 120559} != {'model_calls': 0, 'tokens': 119999}
+- {'model_calls': 1, 'tokens': 120559}
+?                 ^             ^^^^
+
++ {'model_calls': 0, 'tokens': 119999}
+?                 ^             ^^^^
+
+
+======================================================================
+FAIL: test_elapsed_deadline_must_stop_next_call_inside_a_session (__main__.QAControls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/wrapper-coordinator-qa-20261117/test_qa_controls.py", line 108, in test_elapsed_deadline_must_stop_next_call_inside_a_session
+    self.assertEqual(len(calls), 1, 'No further inference should start after the deadline.')
+AssertionError: 2 != 1 : No further inference should start after the deadline.
+
+======================================================================
+FAIL: test_empty_unrelated_search_and_protocol_read_cannot_satisfy_inspection (__main__.QAControls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/wrapper-coordinator-qa-20261117/test_qa_controls.py", line 53, in test_empty_unrelated_search_and_protocol_read_cannot_satisfy_inspection
+    self.assertEqual((state['phase'], state['status']), ('inspect', 'QUEUED'))
+AssertionError: Tuples differ: ('verify', 'REVIEW_COMPLETE_LIVE_NOT_VALIDATED') != ('inspect', 'QUEUED')
+
+First differing element 0:
+'verify'
+'inspect'
+
+- ('verify', 'REVIEW_COMPLETE_LIVE_NOT_VALIDATED')
++ ('inspect', 'QUEUED')
+
+======================================================================
+FAIL: test_explicit_do_not_modify_must_not_enable_or_perform_edits (__main__.QAControls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/wrapper-coordinator-qa-20261117/test_qa_controls.py", line 40, in test_explicit_do_not_modify_must_not_enable_or_perform_edits
+    self.assertEqual(observed, {'mode': 'review', 'file': 'value = 1\n'})
+AssertionError: {'mode': 'develop', 'file': 'value = 2\n'} != {'mode': 'review', 'file': 'value = 1\n'}
+- {'file': 'value = 2\n', 'mode': 'develop'}
+?                   ^              ^   ^^^
+
++ {'file': 'value = 1\n', 'mode': 'review'}
+?                   ^              ^  + ^
+
+
+======================================================================
+FAIL: test_render_timing_alone_must_not_count_as_progress (__main__.QAControls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/wrapper-coordinator-qa-20261117/test_qa_controls.py", line 80, in test_render_timing_alone_must_not_count_as_progress
+    self.assertEqual((state['status'], state['no_progress']), ('PAUSED_NO_PROGRESS', 3))
+AssertionError: Tuples differ: ('QUEUED', 0) != ('PAUSED_NO_PROGRESS', 3)
+
+First differing element 0:
+'QUEUED'
+'PAUSED_NO_PROGRESS'
+
+- ('QUEUED', 0)
++ ('PAUSED_NO_PROGRESS', 3)
+
+======================================================================
+FAIL: test_snapshot_write_error_must_not_kill_scheduler_thread (__main__.QAControls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/wrapper-coordinator-qa-20261117/test_qa_controls.py", line 67, in test_snapshot_write_error_must_not_kill_scheduler_thread
+    self.assertEqual({'alive': alive, 'uncaught': uncaught, 'status': state['status']},
+AssertionError: {'alive': False, 'uncaught': ['OSError'], 'status': 'QUEUED'} != {'alive': True, 'uncaught': [], 'status': 'QUEUED'}
+- {'alive': False, 'status': 'QUEUED', 'uncaught': ['OSError']}
+?           ^^^^                                    ---------
+
++ {'alive': True, 'status': 'QUEUED', 'uncaught': []}
+?           ^^^
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.212s
+
+FAILED (failures=6)

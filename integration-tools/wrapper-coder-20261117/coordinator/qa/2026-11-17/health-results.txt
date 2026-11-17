@@ -1,0 +1,12 @@
+active
+active
+470d447cc33a8445866b5ea7d2d97a4dbbde7e03	refs/heads/tools/wrapper-coder-20261117
+
+protocol_complete True
+actual_tokenizer_budget {"context_tokens": 12288, "prompt_tokens": 2960, "message_count": 2, "safety_margin_tokens": 32, "available_generation_tokens": 9296, "thinking_enabled": false, "method": "qwen35_official_tokenizer_template_v1"}
+prior_acceptance_state {"id": "WRAP-a7541481cf", "status": "REVIEW_COMPLETE_LIVE_NOT_VALIDATED", "phase": "verify", "mode": "review", "sessions": 2, "calls": 8, "tokens": 44994}
+durable_receipt_count 12
+queued_or_running 0
+database_quick_check ok
+
+Unauthenticated endpoint probes: host /coordinator HTTP 403; forwarded Jetson /api/wrapper-turn HTTP 403.

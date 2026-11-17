@@ -1,0 +1,7 @@
+test_inference_uses_shared_background_gate_and_omits_private_reasoning (test_wrapper_inference.InferenceTests) ... ok
+test_unsupported_tools_and_excess_output_rejected (test_wrapper_inference.InferenceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.005s
+
+OK

@@ -1,0 +1,43 @@
+test_budget_does_not_reset_on_resume (test_coordinator.CoordinatorTests) ... ok
+test_completion_claim_without_evidence_cannot_advance (test_coordinator.CoordinatorTests) ... ok
+test_context_pressure_offers_only_checkpoint (test_coordinator.CoordinatorTests) ... ok
+test_crash_with_pending_edit_never_replays_automatically (test_coordinator.CoordinatorTests) ... ok
+test_development_phase_can_edit_and_offline_success_stops_at_operator_gate (test_coordinator.CoordinatorTests) ... ok
+test_external_file_change_pauses_before_model_call (test_coordinator.CoordinatorTests) ... ok
+test_failed_verification_cannot_be_marked_ready (test_coordinator.CoordinatorTests) ... ok
+test_fresh_sessions_retain_receipts_and_advance_to_real_verification (test_coordinator.CoordinatorTests) ... ok
+test_pause_and_resume_keep_existing_receipts (test_coordinator.CoordinatorTests) ... ok
+test_pause_in_flight_is_preserved_on_restart (test_coordinator.CoordinatorTests) ... ok
+test_recovery_after_completed_read_continues_automatically (test_coordinator.CoordinatorTests) ... ok
+test_repeated_bad_path_gets_valid_hint_and_stops (test_coordinator.CoordinatorTests) ... ok
+test_review_worker_cannot_edit_and_truncated_calls_do_not_execute (test_coordinator.CoordinatorTests) ... ok
+test_source_gate_and_development_authorization (test_coordinator.CoordinatorTests) ... ok
+test_three_no_progress_sessions_stop (test_coordinator.CoordinatorTests) ... ok
+test_argument_validation (test_coding_tools.CodingTests) ... ok
+test_create_read_guard_edit_and_no_overwrite (test_coding_tools.CodingTests) ... ok
+test_path_escape_and_hidden_files (test_coding_tools.CodingTests) ... ok
+test_read_only_authorization (test_coding_tools.CodingTests) ... ok
+test_required_protocol_is_readable_but_not_model_editable (test_coding_tools.CodingTests) ... ok
+test_symlink_and_hardlink (test_coding_tools.CodingTests) ... ok
+test_test_path_arguments (test_coding_tools.CodingTests) ... ok
+test_unique_edit_and_size_limit (test_coding_tools.CodingTests) ... ok
+test_network_error_is_reported (test_public_tools.PublicToolsTests) ... ok
+test_parser_omits_scripts_and_styles (test_public_tools.PublicToolsTests) ... ok
+test_private_and_credential_urls_are_denied (test_public_tools.PublicToolsTests) ... ok
+test_private_or_mixed_dns_is_denied (test_public_tools.PublicToolsTests) ... ok
+test_reads_and_searches_execute_on_host (test_public_tools.PublicToolsTests) ... ok
+test_rendered_read_executes_on_host (test_public_tools.PublicToolsTests) ... ok
+test_scope_and_arguments (test_public_tools.PublicToolsTests) ... ok
+test_allows_public_navigation_and_same_host_reads (test_rendered_web.RenderedWebPolicyTests) ... ok
+test_blocks_third_party_subresources (test_rendered_web.RenderedWebPolicyTests) ... ok
+test_blocks_writes_and_unneeded_resources (test_rendered_web.RenderedWebPolicyTests) ... ok
+test_inserts_system_instruction_when_needed (test_required_protocol.RequiredProtocolTests) ... ok
+test_loads_host_instructions_on_every_turn_without_mutating_history (test_required_protocol.RequiredProtocolTests) ... ok
+test_missing_protocol_prevents_inference_and_coding_actions (test_required_protocol.RequiredProtocolTests) ... ok
+test_missing_truncated_or_wrong_document_fails_closed (test_required_protocol.RequiredProtocolTests) ... ok
+test_tool_round_limit_returns_handoff_instead_of_backend_error (test_required_protocol.RequiredProtocolTests) ... ok
+
+----------------------------------------------------------------------
+Ran 38 tests in 1.949s
+
+OK
