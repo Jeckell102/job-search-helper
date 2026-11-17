@@ -35,7 +35,7 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 |---|---|---|---|---|
 | W01 | Shared Rippling parser; 13 listed companies | COMPLETE | /root / 2026-11-17T16:05:43Z | Added explicit old/new query-key validation. Twelve boards passed full normal-dispatch validation; goTenna is separately partial because its recorded board now returns HTTP 404 before parser execution. See `W01_RIPPLING_VALIDATION_2026-11-17.md`. |
 | W03 + W02/Hughes | COMP-0118 Hughes Network Systems | COMPLETE | /root / 2026-11-17T16:32:11Z | Pinned the scoped EchoStar API transport and replaced the historical count/page assumption with dynamic enumeration and complete reread validation. Live normal dispatch completed with 6 full postings. See `W03_HUGHES_VALIDATION_2026-11-17.md`. |
-| W02/Black River | COMP-0166 Black River Systems Company | READY | Unassigned / 2026-11-17T16:32:11Z | Replace the historical 14-link requirement with complete employer-scoped listing and reread validation. |
+| W02/Black River | COMP-0166 Black River Systems Company | IMPLEMENTED_AWAITING_VALIDATION | /root / 2026-11-17T16:40:00Z | Replaced the stale 14-link guard and added structural regression tests. The live normal-dispatch run did not finish within the bounded validation window, so no integration completion claim is made. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
@@ -58,6 +58,15 @@ Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, 
 - **GitHub backup / commit:** pending this task's backup commit.
 - **Remaining work or blocker:** none for the bounded Hughes adapter repair. Adoption by a future scraper run remains separate.
 - **Next task and exact first action:** W02/Black River. Inspect the current employer listing route and replace the fixed 14-link guard with structural pagination/completeness validation.
+
+- **W02/Black River / COMP-0166 Black River Systems Company / /root / 2026-11-17T16:40:00Z:**
+- **Status and outcome:** IMPLEMENTED_AWAITING_VALIDATION. The adapter now accepts the verified first-party dated posting URL structure across years and no longer rejects the current 15-link inventory merely because it differs from a stale count of 14. It remains fail-closed for an unproven empty listing and preserves employer/full-description/detail validation plus a final link-set reread.
+- **Changes:** `src/job_search_helper/black_river.py` replaces the fixed count with structural dated-posting recognition and an explicit nonempty-listing requirement. `tests/test_black_river.py` covers a 15-role inventory through normal dispatch, empty listings, incomplete descriptions, and changing final membership.
+- **Verification:** Focused regression passed 17 tests. The 2026-11-17 public listing exposed 15 first-party role URLs and no pagination controls. The required live normal-dispatch validation was attempted twice; both attempts entered the public listing but did not return an inventory result before the bounded request window elapsed. The second bounded command stopped during detail retrieval without a result. No live completion count is recorded.
+- **Installation / run adoption / Sheet publication:** not performed. No scraper cycle, local inventory state, or Google Sheets data was changed.
+- **GitHub backup / commit:** pending this task's backup commit.
+- **Remaining work or blocker:** isolate the slow public detail request or run the read-only normal dispatcher with a permitted longer validation window; then record the actual result and only then mark the company complete or partial.
+- **Next task and exact first action:** W02/Black River remains the active next item. Inspect timed public detail retrieval one URL at a time, then rerun normal dispatch to a result.
 
 After each task, append an entry using this structure:
 
@@ -1082,6 +1091,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0166 — Black River Systems Company
+
+**Current implementation status (2026-11-17):** W02 code and regression coverage are implemented, but live normal-dispatch validation has not returned a result. The company remains partial until the public detail-retrieval delay is isolated and the complete inventory is validated.
 
 **Disposition:** Strong repair candidate · **Work order:** W02
 
