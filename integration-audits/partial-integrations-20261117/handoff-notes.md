@@ -1,5 +1,59 @@
 # Partial-company integration handoff — 17 November 2026
 
+<!-- AGENT_WORKFLOW_START -->
+## Agent role and next-item instructions
+
+**Your role: Job Scraper Integration Engineer.** Use this handoff to implement and verify the next unfinished integration task in `/home/chris/job-search-helper_old`. Work on the fix, not just another plan. Complete one bounded task per invocation unless the user asks you to continue through more items. Follow current repository instructions and the user's authorized scope.
+
+### Current next item
+
+**W01 — Repair the shared Rippling query-key schema. Status: READY.**
+
+Start with the W01 work order below. It identifies the reproduced exception, affected companies, code, and validation requirements. Read the latest copy of this file before starting; if W01 has since been completed, select the next eligible unfinished item using the priority order below. If a task is already in progress, check its owner and saved work before continuing it or choosing another item.
+
+**Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
+
+Split multi-company work orders into clearly named subtasks when appropriate. A completed subtask does not complete its whole work order or all affected companies.
+
+### Required workflow
+
+1. **Claim the task in this file before editing code.** Update the task ledger with the task/subtask ID, exact company scope, `IN_PROGRESS`, your task/agent identifier, and a UTC timestamp. Check current code and earlier progress so you do not duplicate or overwrite another agent's work.
+2. **Implement the bounded fix.** Follow the selected work order and the acceptance contract later in this document. Preserve employer scope, stable job identity, full-description requirements, manual decisions, and saved valid work.
+3. **Verify the result.** Run relevant regression checks and fresh validation through the normal dispatcher for the task's stated company scope. Record actual results. A fixture pass, a reachable page, or removal of the first error is not a fully integrated company. Keep installation, run adoption, and Sheet publication status separate from adapter validation.
+4. **Update this handoff immediately when the task finishes, before your final response.** Update the ledger, add a dated progress-log entry, and add a current implementation note to each affected company entry. Record what changed, code/test paths, exact validation commands and evidence locations, results and counts, unresolved issues, deployment/adoption status, and the commit or backup reference. Preserve the original audit reasons and snapshot as historical evidence.
+5. **Set the next item explicitly.** Replace the “Current next item” assignment with the highest-priority eligible unfinished task and a concrete first action. If part of a work order remains, say exactly which companies or checks are unfinished.
+6. **Report incomplete work honestly.** Use `IMPLEMENTED_AWAITING_VALIDATION` when code is written but required validation is missing. Use `BLOCKED` with the exact failed step, evidence, and condition needed to resume when progress cannot continue. Do not mark a task `COMPLETE` or a company integrated merely because the code was committed. `COMPLETE` requires the stated implementation scope and required validation to pass; separately list any installation, run-adoption, or publication work still outside that scope.
+7. **Save the updated handoff to GitHub with the work**, following the project instruction to save copies after updates. Refresh affected package hashes if maintaining `PACKAGE_MANIFEST.json`. In your final response, identify the completed task, verification, remaining limits, saved handoff, and next item.
+
+This Markdown file is the live task record. The audit and source snapshots below describe 17 November 2026 and must not be presented as fresh run status after fixes. Update this file directly; do not regenerate it from the historical snapshots in a way that overwrites progress, task ownership, or company implementation notes.
+
+### Task ledger
+
+Only tasks explicitly recorded as complete with evidence are complete. Work orders absent from this ledger are unstarted unless their original description identifies an existing implementation, as W09 does.
+
+| Task | Scope | Status | Owner / updated UTC | Outcome / next action |
+|---|---|---|---|---|
+| W01 | Shared Rippling parser; 13 listed companies | READY | Unassigned / not started | Read W01; reproduce the query-key failure, implement schema handling, and validate the affected scope. |
+
+Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
+
+### Progress log
+
+No integration task has been executed under this workflow yet. The earlier Bosch Rexroth implementation is documented in W09.
+
+After each task, append an entry using this structure:
+
+- **Task / company scope / owner / updated UTC:**
+- **Status and outcome:**
+- **Changes:** code and test paths, with a short explanation.
+- **Verification:** commands, evidence paths, live source/date, inventory and full-description counts, reconciliation results, and unresolved failures.
+- **Installation / run adoption / Sheet publication:** state each separately; use “not performed” where applicable.
+- **GitHub backup / commit:**
+- **Remaining work or blocker:**
+- **Next task and exact first action:**
+
+<!-- AGENT_WORKFLOW_END -->
+
 ## Read this first
 
 The best first repair is the shared Rippling listing parser: **13 partial companies** report the same exception, and the exact exception was reproduced against current public Forterra and DroneUp page data. Next address historical fixed job-count checks and HTML/API transport mismatches. These are concrete implementation problems, although clearing the first error does not establish complete inventory coverage.
