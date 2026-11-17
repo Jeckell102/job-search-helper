@@ -239,7 +239,7 @@ class Tests(unittest.TestCase):
         argv = ctl.agent_argv(self.root/'result', self.root/'schema')
         self.assertEqual(argv[argv.index('-m')+1], 'gpt-5.6-luna')
         self.assertIn('model_reasoning_effort="medium"', argv)
-        self.assertIn('workspace-write', argv)
+        self.assertIn('sandbox_mode="workspace-write"', argv)
         self.assertNotIn('--ignore-user-config', argv)
         self.assertNotIn('--ephemeral', argv)
         self.assertNotIn('--dangerously-bypass-approvals-and-sandbox', argv)
@@ -250,6 +250,11 @@ class Tests(unittest.TestCase):
         self.assertIn('resume', argv)
         self.assertEqual(argv[-2:], ['exact-session', '-'])
         self.assertNotIn('--last', argv)
+        resume_options = argv[argv.index('resume')+1:]
+        for setting in ('sandbox_mode="workspace-write"',
+                        'sandbox_workspace_write.network_access=true',
+                        'approval_policy="never"', 'model_reasoning_effort="medium"'):
+            self.assertIn(setting, resume_options)
 
     def test_session_recovery_refuses_ambiguous_logs(self):
         self.assertEqual(c.session_id([{'type':'thread.started','thread_id':'one'}]), 'one')
