@@ -1,0 +1,52 @@
+--- a/server.py
++++ b/server.py
+@@ -162,6 +162,12 @@
+             if method=='GET' and self.static(path): return
+             if path=='/healthz' and method=='GET':
+                 self.response(200,{'status':'ok','version':store.VERSION}); return
++            if path == '/api/wrapper-turn' and method == 'POST':
++                key=json.loads((store.ROOT/'config/wrapper-host.json').read_text())['token']
++                if not secrets.compare_digest(self.headers.get('Authorization',''), 'Bearer '+key):
++                    self.response(403, {'error':'Unauthorized'}); return
++                from wrapper_inference import infer
++                self.response(200, infer(self.server.engine, self.body())); return
+             if path.startswith('/api/worker/'):
+                 if method!='POST': self.response(405,{'error':'Worker endpoints require POST.'}); return
+                 if not self.worker_auth(): return
+@@ -264,9 +270,14 @@
+         if not isinstance(messages[-1],dict) or messages[-1].get('role')!='user' or not isinstance(messages[-1].get('content'),str):
+             raise ValueError('The last message must be a text user message.')
+         # Only the current explicit user command can create state; never an earlier turn or model output.
+-        direct=route(messages[-1]['content'])
++        if profile.model_id == 'qwen-wrapper:4b' and messages[-1]['content'].strip().lower().startswith('/wrapper'):
++            from wrapper_commands import command
++            direct=command(messages[-1]['content'])
++        else:
++            direct=route(messages[-1]['content'])
+         if profile.model_id == 'qwen-wrapper:4b' and messages[-1]['content'].strip().lower() == '/tools':
+-            direct=('Wrapper Coder: source search/read, guarded edits, new files, offline tests, diffs, and explicitly requested local commits. '
++            direct=('For automatic continuation use /wrapper help. /wrapper start <objective including tests/test_company.py> runs a persistent MuleLab task with sequential Jetson workers. '
++                    'Wrapper Coder: source search/read, guarded edits, new files, offline tests, diffs, and explicitly requested local commits. '
+                     'Use src/, tests/, and docs/ paths in Job Search Helper dev/wrapper-coder/repo on the scraper computer. Files, tests and temporary work stay there; the Jetson only runs the AI. The scraper computer must be online. Public web search, raw page read, and bounded JavaScript-rendered page read are available when requested. '
+                     'Tests run offline with filesystem, network, memory, process and time limits. No production installation, Sheets writes or GitHub push. '
+                     'Example: Read the Bosch Rexroth wrapper and run tests/test_bosch_rexroth.py. Context: 12,288 tokens; work on one small change at a time.')
+--- a/tool_runtime.py
++++ b/tool_runtime.py
+@@ -8,7 +8,7 @@
+ from profile_policy import resolve_profile
+ from storage import settings
+ 
+-def native_turn(engine, messages, schemas, profile, limit, temperature, thinking, abort, deadline):
++def native_turn(engine, messages, schemas, profile, limit, temperature, thinking, abort, deadline, foreground=True):
+     from engine import BackendError, Cancelled
+     payload={'model':profile.model_id,'messages':messages,'tools':schemas,'stream':True,
+              'think':thinking,'options':{'num_ctx':profile.context_tokens,'num_predict':limit,
+@@ -17,7 +17,7 @@
+     request=urllib.request.Request(settings()['ollama_url'].rstrip('/')+'/api/chat',
+             data=json.dumps(payload).encode(),headers={'Content-Type':'application/json'})
+     message={'role':'assistant','content':'','thinking':'','tool_calls':[]}
+-    with engine.gate.hold(True,abort):
++    with engine.gate.hold(foreground,abort):
+         left=min(profile.generation_timeout_seconds,deadline-time.monotonic())
+         if left<=0: raise BackendError('tool_turn_deadline_exceeded')
+         try:
