@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**W02/Aitech — Replace the historical fixed inventory-size check with complete current enumeration. Status: READY.**
+**Two active lanes: W04/Lockheed and W06/RightHand Robotics. Status: IN_PROGRESS.**
 
-Start with COMP-0428 Aitech Systems. Inspect its current official listing structure and existing fixed 17-link guard, then replace that historical count with complete employer-scoped enumeration, full descriptions, and a final reread through normal dispatch. Black River remains `IMPLEMENTED_AWAITING_VALIDATION` because its production `CareersTransport` cannot fetch the first public detail from this environment. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
+Do not duplicate the active lanes. W06/Serve Robotics, W06/Ubiquiti, and W05/IERUS are complete. After a lane records verified completion, choose the highest-priority eligible unclaimed task in W06 or the next remaining W02 candidate. Black River remains `IMPLEMENTED_AWAITING_VALIDATION` because its production `CareersTransport` cannot fetch the first public detail from this environment. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -41,6 +41,11 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W02/JR Automation | COMP-0250 JR Automation | COMPLETE | /root / 2026-11-17T16:56:00Z | Replaced the stale 64-total and corrected canonical page paths; live normal dispatch completed with 59 full postings and a stable six-page reread. |
 | W02/KUKA | COMP-0246 KUKA Robotics | COMPLETE | /root / 2026-11-17T17:00:00Z | Removed the stale 115-item gate while retaining the exact employer facet; live normal dispatch completed with 111 full postings and a stable reread. |
 | W02/ASTi | COMP-0336 Advanced Simulation Technology inc. (ASTi) | COMPLETE | /root / 2026-11-17T17:03:00Z | Replaced the stale two-role requirement with an explicit nonempty inventory check; live normal dispatch completed with 2 full postings and a stable reread. |
+| W04/Lockheed | COMP-0074 Lockheed Martin | IN_PROGRESS | /root/lockheed / 2026-11-17T17:02:38Z | Exact official landing alias now routes to the scoped Eightfold adapter; 29 focused tests passed. Full paced normal-dispatch validation (6,986 listings) remains active until its required final reread completes. |
+| W06/Serve Robotics | COMP-0542 Serve Robotics | COMPLETE | /root/serve_ubiquiti / 2026-11-17T17:07:35Z | Added guarded official-careers-to-Ashby routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 23 full postings. |
+| W06/Ubiquiti | COMP-0749 Ubiquiti | COMPLETE | /root/serve_ubiquiti / 2026-11-17T17:07:35Z | Added guarded official-careers-to-Greenhouse routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 168 full postings. |
+| W05/IERUS | COMP-0449 IERUS Technologies | COMPLETE | /root/ierus / 2026-11-17T17:09:05Z | Repaired the exact legacy JobScore alias to its canonical host; targeted suite passed 15 tests and normal dispatch returned 62 full postings with stable internal reread. |
+| W06/RightHand Robotics | COMP-0710 RightHand Robotics | IN_PROGRESS | /root/ierus / 2026-11-17T17:10:22Z | Verify the official-careers-to-employer-scoped Breezy route, then run normal-dispatch listing/detail/recheck validation. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
@@ -2516,6 +2521,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 
 ### COMP-0449 — IERUS Technologies
 
+**Current implementation status (2026-11-17):** W05/IERUS is validated complete. The adapter and source-repair mapping permit only the recorded legacy JobScore alias and its exact canonical `careers.jobscore.com` replacement. `tests/test_ierus.py`, `tests/test_company_sources.py`, and `tests/test_next_100_middle.py` passed 15 tests. Read-only normal dispatch returned 62 unique postings, each with a nonempty description and canonical tracking-free JobScore detail URL; the adapter’s final reread remained stable. Installation, scraper-run adoption, and Sheet publication were not performed.
+
 **Disposition:** Strong canonical-source candidate · **Work order:** W05
 
 **Initial group:** C3 Stale URL/redirect/request repair
@@ -3091,6 +3098,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `False`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0542 — Serve Robotics
+
+**Current implementation status (2026-11-17):** W06/Serve Robotics is validated complete. `company_sources.py` now recognizes only the official careers-page alias and repairs it to the employer-scoped `serverobotics` Ashby board. `tests/test_serve_robotics.py`, `tests/test_ubiquiti.py`, `tests/test_ats.py`, and `tests/test_source_routing_recovery.py` passed 49 tests. Two read-only normal-dispatch executions each returned the same 23 job IDs with nonempty descriptions. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Strong native integration candidate · **Work order:** W06
 
@@ -7117,6 +7126,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `None`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0749 — Ubiquiti
+
+**Current implementation status (2026-11-17):** W06/Ubiquiti is validated complete. `company_sources.py` now recognizes only the official `careers.ui.com` alias and repairs it to the employer-scoped `ubiquiti` Greenhouse board. `tests/test_serve_robotics.py`, `tests/test_ubiquiti.py`, `tests/test_ats.py`, and `tests/test_source_routing_recovery.py` passed 49 tests. Two read-only normal-dispatch executions each returned the same 168 job IDs with nonempty descriptions. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Strong native integration candidate · **Work order:** W06
 
