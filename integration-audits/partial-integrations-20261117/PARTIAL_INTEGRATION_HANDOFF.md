@@ -40,6 +40,7 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W02/Aitech | COMP-0428 Aitech Systems | COMPLETE | /root / 2026-11-17T16:52:00Z | Removed the stale 17-link guard and completed live normal dispatch with 15 full postings and a stable final reread. |
 | W02/JR Automation | COMP-0250 JR Automation | COMPLETE | /root / 2026-11-17T16:56:00Z | Replaced the stale 64-total and corrected canonical page paths; live normal dispatch completed with 59 full postings and a stable six-page reread. |
 | W02/KUKA | COMP-0246 KUKA Robotics | COMPLETE | /root / 2026-11-17T17:00:00Z | Removed the stale 115-item gate while retaining the exact employer facet; live normal dispatch completed with 111 full postings and a stable reread. |
+| W02/ASTi | COMP-0336 Advanced Simulation Technology inc. (ASTi) | COMPLETE | /root / 2026-11-17T17:03:00Z | Replaced the stale two-role requirement with an explicit nonempty inventory check; live normal dispatch completed with 2 full postings and a stable reread. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
@@ -2012,6 +2013,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0336 — Advanced Simulation Technology inc. (ASTi)
+
+**Current implementation status (2026-11-17):** W02/ASTi is validated complete. Normal dispatch returned two full ASTi postings with a stable final positions-page reread after removal of the historical count gate. Regression: `tests/test_asti.py`, 3 passed. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Strong repair candidate · **Work order:** W02 + W03
 
