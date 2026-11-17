@@ -59,11 +59,27 @@ and follow the document through claims, assessments, submission, heartbeat,
 publication, and finish. It does not launch SECOND or THIRD PASS or other agents.
 The eligible first-pass backlog is included according to the live document.
 
+## Codex executable discovery
+
+The workflow uses an explicit `--codex` option first, then `JOB_SEARCH_CODEX`,
+then `codex` on the terminal's `PATH`. If none is configured, it also checks the
+installed Linux desktop package at `/usr/lib/chatgpt/resources/codex`. This lets
+ordinary terminal starts use the existing signed-in Codex installation even when
+the desktop app's extra search paths are absent. No shell-profile changes or
+second installation are required when that executable is available.
+
+For a different installation, set `JOB_SEARCH_CODEX` to its executable path before
+using the normal start command, or pass `--codex` to `job-search-pipeline`.
+An invalid explicit override reports an error instead of selecting another copy.
+Missing Python and missing Codex produce separate, actionable errors.
+`job-search-pipeline status` reports resolved executable paths and remains usable
+when automatic Codex discovery finds no installation.
+
 ## Completion and recovery
 
 Python records the exact Codex session ID, logs, final response and review-owner
 receipt under the configured state directory's `scrape-first-pass/` folder.
-`run --resume` resumes that exact AI conversation and its own managed review run;
+`./job-search-helper start --resume` (or pipeline `run --resume`) resumes that exact AI conversation and its own managed review run;
 it never uses `--last` or guesses another task's run ID. A completed scrape is not
 repeated. Resuming a completed workflow is a no-op. Plain `run` after completion
 starts a new workflow. A completed scan from an older installation can be recovered explicitly without
