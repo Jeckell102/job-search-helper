@@ -456,12 +456,15 @@ class Controller:
         )
 
     def agent_argv(self, response, schema, session=None):
-        argv = [self.codex, 'exec', '--sandbox', 'workspace-write',
-                '-c', 'sandbox_workspace_write.network_access=true',
-                '-c', 'approval_policy="never"']
+        argv = [self.codex, 'exec']
         if session:
             argv += ['resume']
-        argv += ['-m', MODEL, '-c', f'model_reasoning_effort="{EFFORT}"',
+        # Resume has its own configuration arguments. Apply the same settings
+        # after the subcommand so they reach both fresh and resumed tasks.
+        argv += ['-c', 'sandbox_mode="workspace-write"',
+                 '-c', 'sandbox_workspace_write.network_access=true',
+                 '-c', 'approval_policy="never"',
+                 '-m', MODEL, '-c', f'model_reasoning_effort="{EFFORT}"',
                  '--skip-git-repo-check', '--json', '--output-schema', str(schema),
                  '-o', str(response)]
         if session:
@@ -558,10 +561,10 @@ class Controller:
             else:
                 if self.args.resume:
                     raise Blocked('No pipeline workflow exists to resume.')
-                if previous and previous['stage'] != 'COMPLETE':
-                    raise Blocked('An unfinished workflow exists. Resume it with '
-                                  './job-search-helper start --resume '
-                                  '(or ./job-search-pipeline run --resume).')
+                if previous and previous['stage'] != 'COMPLETE' and self.args.command != 'run':
+                    raise Blocked('A different unfinished workflow exists. Use '
+                                  './job-search-helper resume to continue it, or '
+                                  './job-search-helper start for a new scrape and FIRST PASS.')
                 if info['scraper_busy']:
                     raise Blocked('A scraper is already active; no duplicate run was started.')
                 self.work = root / ('run-' + uuid.uuid4().hex)
@@ -570,6 +573,9 @@ class Controller:
                               'status': 'RUNNING', 'project': str(self.project),
                               'model': MODEL, 'reasoning_effort': EFFORT,
                               'before_cycles': [c['id'] for c in info['cycles']]}
+                if previous:
+                    self.state['previous_workflow'] = str(previous_path)
+                    self.announce(f'Starting a new scrape and FIRST PASS; previous workflow preserved at {previous_path}.')
                 if scraper_args is not None:
                     self.state['scraper_args'] = scraper_args
                 if requested_cycle:
@@ -634,7 +640,7 @@ def main(argv=None):
     try:
         return Controller(args).run()
     except KeyboardInterrupt:
-        print('PAUSED_NOT_COMPLETE: interrupted; use run --resume.', file=sys.stderr)
+        print('PAUSED_NOT_COMPLETE: interrupted; use ./job-search-helper resume to continue.', file=sys.stderr)
         return 130
     except (Blocked, OSError, ValueError, subprocess.SubprocessError) as exc:
         print(f'BLOCKED_NOT_COMPLETE: {exc}', file=sys.stderr)
