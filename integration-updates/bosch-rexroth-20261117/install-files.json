@@ -1,0 +1,8 @@
+[
+  "src/job_search_helper/ats.py",
+  "src/job_search_helper/shared_boards.py",
+  "src/job_search_helper/bosch_rexroth.py",
+  "tests/test_bosch_rexroth.py",
+  "tests/fixtures/bosch_rexroth/legal-notice.json",
+  "docs/bosch-rexroth-integration.md"
+]

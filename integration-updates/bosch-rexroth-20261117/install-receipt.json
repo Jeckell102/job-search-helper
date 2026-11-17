@@ -1,0 +1,29 @@
+{
+  "installed_at_unix": 1794926285.732686,
+  "files": {
+    "src/job_search_helper/ats.py": {
+      "before": "f0ebe723b3c60df74a1f1297263cc0607006f594264b4f5dba228483738094d5",
+      "after": "283fe192c73fc756a189088a6b2061392ca6e5544e13f45f0fd11033f854ef52"
+    },
+    "src/job_search_helper/shared_boards.py": {
+      "before": "3137cb3b86808b5b922cd265c74fc1da5f260b96667dd60975b347122be08ec5",
+      "after": "dedb185a488dfee2542b16cc53e95add44a491305d004144424d7972cb1f04ed"
+    },
+    "src/job_search_helper/bosch_rexroth.py": {
+      "before": null,
+      "after": "8f6cfaac7977bc46fc494eb2d7a420e2475ae9f741a25ea887967b671519f6c3"
+    },
+    "tests/test_bosch_rexroth.py": {
+      "before": null,
+      "after": "f8632b19a4164f851e88278a9cecfe1051a3f71025fe2be0d00f791d4930f9dc"
+    },
+    "tests/fixtures/bosch_rexroth/legal-notice.json": {
+      "before": null,
+      "after": "a932273fbd44c7149cb472ffe22262d8c949bba7e9841cdef0e93d9230bb8eb3"
+    },
+    "docs/bosch-rexroth-integration.md": {
+      "before": null,
+      "after": "39c0a03fa3e8ca4fcbae9d64d799c470b335e4a1d5f73268913fd78ca63ccccc"
+    }
+  }
+}

@@ -1,0 +1,506 @@
+{
+  "status": "complete",
+  "count": 70,
+  "elapsed_seconds": 36.78,
+  "reason": "Bosch Rexroth U.S.: verified 70 full postings for Bosch Rexroth Corporation; rechecked 355 U.S. Bosch listing cards; fetched 70 details and reused 0.",
+  "source_url": "https://www.boschrexroth.com/en/us/jobs-and-career/job-opportunities/",
+  "browser_fallback_allowed": false,
+  "legal_entities": [
+    "Bosch Rexroth Corporation"
+  ],
+  "countries": [
+    "us"
+  ],
+  "jobs": [
+    {
+      "id": "744000161866799",
+      "title": "Sr. Controls Engineer",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000161866799-sr-controls-engineer",
+      "description_chars": 6576
+    },
+    {
+      "id": "744000161842054",
+      "title": "Outside Sales Engineer (Direct Channel) - Linear Technologies",
+      "location": "Dallas, TX, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000161842054-outside-sales-engineer-direct-channel-linear-technologies",
+      "description_chars": 6905
+    },
+    {
+      "id": "744000161164840",
+      "title": "Electrical Maintenance Technician",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000161164840-electrical-maintenance-technician",
+      "description_chars": 4416
+    },
+    {
+      "id": "744000161164005",
+      "title": "Logistics Associate - (2nd Shift Material Handler)",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000161164005-logistics-associate-2nd-shift-material-handler-",
+      "description_chars": 4698
+    },
+    {
+      "id": "744000161165139",
+      "title": "Logistics Associate - (2nd Shift Material Handler)",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000161165139-logistics-associate-2nd-shift-material-handler-",
+      "description_chars": 4698
+    },
+    {
+      "id": "744000161159295",
+      "title": "Deburrer",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000161159295-deburrer",
+      "description_chars": 4827
+    },
+    {
+      "id": "744000161136879",
+      "title": "Automation Technician",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000161136879-automation-technician-",
+      "description_chars": 3472
+    },
+    {
+      "id": "744000161136294",
+      "title": "Strategic Buyer- Direct Materials NA",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000161136294-strategic-buyer-direct-materials-na",
+      "description_chars": 5518
+    },
+    {
+      "id": "744000160888240",
+      "title": "Supplier Quality Engineer",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160888240-supplier-quality-engineer",
+      "description_chars": 6172
+    },
+    {
+      "id": "744000160887970",
+      "title": "Sales Account Manager - Mobile Hydraulics",
+      "location": "Fountain Inn, SC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160887970-sales-account-manager-mobile-hydraulics",
+      "description_chars": 7187
+    },
+    {
+      "id": "744000160888514",
+      "title": "Sales Branch Manager \u2014 Mobile Hydraulics",
+      "location": "Fountain Inn, SC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160888514-sales-branch-manager-mobile-hydraulics",
+      "description_chars": 7255
+    },
+    {
+      "id": "744000160611325",
+      "title": "Aftermarket Coordinator",
+      "location": "Grove City, OH, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160611325-aftermarket-coordinator",
+      "description_chars": 4904
+    },
+    {
+      "id": "744000160311555",
+      "title": "Deburrer",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160311555-deburrer",
+      "description_chars": 4827
+    },
+    {
+      "id": "744000160312009",
+      "title": "Deburrer",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160312009-deburrer",
+      "description_chars": 4827
+    },
+    {
+      "id": "744000160311749",
+      "title": "Setter",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160311749-setter",
+      "description_chars": 5012
+    },
+    {
+      "id": "744000160271309",
+      "title": "Engineering Academy Associate Engineer",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160271309-engineering-academy-associate-engineer",
+      "description_chars": 5809
+    },
+    {
+      "id": "744000160256767",
+      "title": "Sales Engineer - Industrial Automation (AR, OK, LA, TX)",
+      "location": "Dallas, TX, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000160256767-sales-engineer-industrial-automation-ar-ok-la-tx-",
+      "description_chars": 5911
+    },
+    {
+      "id": "744000159967189",
+      "title": "Aftermarket Field Service Technician",
+      "location": "Atlanta, GA, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000159967189-aftermarket-field-service-technician",
+      "description_chars": 5319
+    },
+    {
+      "id": "744000159738719",
+      "title": "Production Worker",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000159738719-production-worker",
+      "description_chars": 5624
+    },
+    {
+      "id": "744000159738699",
+      "title": "Manifold Assembler I",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000159738699-manifold-assembler-i",
+      "description_chars": 4249
+    },
+    {
+      "id": "744000159738649",
+      "title": "Production Worker",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000159738649-production-worker",
+      "description_chars": 5624
+    },
+    {
+      "id": "744000159679854",
+      "title": "Manifold Assembler I",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000159679854-manifold-assembler-i",
+      "description_chars": 4249
+    },
+    {
+      "id": "744000159678228",
+      "title": "PM Production Worker",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000159678228-pm-production-worker",
+      "description_chars": 5624
+    },
+    {
+      "id": "744000159676388",
+      "title": "Honer I",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000159676388-honer-i",
+      "description_chars": 3683
+    },
+    {
+      "id": "744000159643129",
+      "title": "Manufacturing Engineer I",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000159643129-manufacturing-engineer-i",
+      "description_chars": 4299
+    },
+    {
+      "id": "744000158840009",
+      "title": "Stockroom Associate I",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000158840009-stockroom-associate-i-",
+      "description_chars": 4776
+    },
+    {
+      "id": "744000158839879",
+      "title": "Honer I (PM)",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000158839879-honer-i-pm-",
+      "description_chars": 3683
+    },
+    {
+      "id": "744000158310115",
+      "title": "Mechanical Assembler - Linear Technologies",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000158310115-mechanical-assembler-linear-technologies",
+      "description_chars": 3476
+    },
+    {
+      "id": "744000157845649",
+      "title": "Field Service Technician",
+      "location": "Bethlehem, PA, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000157845649-field-service-technician",
+      "description_chars": 6077
+    },
+    {
+      "id": "744000157544421",
+      "title": "Shipping Lead (2nd Shift)",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000157544421-shipping-lead-2nd-shift-",
+      "description_chars": 6332
+    },
+    {
+      "id": "744000157519801",
+      "title": "Cycle Counter I",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000157519801-cycle-counter-i",
+      "description_chars": 5212
+    },
+    {
+      "id": "744000157517059",
+      "title": "Field Service Engineer- Iowa Territory",
+      "location": "Davenport, IA, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000157517059-field-service-engineer-iowa-territory",
+      "description_chars": 7222
+    },
+    {
+      "id": "744000157171239",
+      "title": "Outside Sales Engineer (Direct Channel) - Linear Technologies",
+      "location": "Austin, TX, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000157171239-outside-sales-engineer-direct-channel-linear-technologies",
+      "description_chars": 5939
+    },
+    {
+      "id": "744000156848759",
+      "title": "Houston Site Coordinator",
+      "location": "Houston, Texas, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000156848759-houston-site-coordinator",
+      "description_chars": 4536
+    },
+    {
+      "id": "744000156407455",
+      "title": "PM Manifold Assembler I",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000156407455-pm-manifold-assembler-i",
+      "description_chars": 4249
+    },
+    {
+      "id": "744000156311682",
+      "title": "Software Engineering Co-Op - Spring 2027",
+      "location": "Fountain Inn, SC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000156311682-software-engineering-co-op-spring-2027",
+      "description_chars": 4890
+    },
+    {
+      "id": "744000156312749",
+      "title": "Senior Demand Planning Specialist",
+      "location": "Fountain Inn, SC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000156312749-senior-demand-planning-specialist",
+      "description_chars": 7217
+    },
+    {
+      "id": "744000156075220",
+      "title": "PM Manifold Assembler I",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000156075220-pm-manifold-assembler-i",
+      "description_chars": 4249
+    },
+    {
+      "id": "744000156073439",
+      "title": "Receiving Associate I",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000156073439-receiving-associate-i",
+      "description_chars": 4545
+    },
+    {
+      "id": "744000156070702",
+      "title": "Production Worker",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000156070702-production-worker",
+      "description_chars": 5624
+    },
+    {
+      "id": "744000156026467",
+      "title": "PM Honing Team Lead",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000156026467-pm-honing-team-lead-",
+      "description_chars": 4371
+    },
+    {
+      "id": "744000155999850",
+      "title": "Channel Partner Manager \u2013 Linear Technologies (West Region)",
+      "location": "Pleasanton, CA, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000155999850-channel-partner-manager-linear-technologies-west-region-",
+      "description_chars": 6554
+    },
+    {
+      "id": "744000155101377",
+      "title": "ERP/IT Intern- Summer 2027",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000155101377-erp-it-intern-summer-2027",
+      "description_chars": 3379
+    },
+    {
+      "id": "744000155100809",
+      "title": "Manufacturing Engineer Intern - Summer 2027",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000155100809-manufacturing-engineer-intern-summer-2027",
+      "description_chars": 3522
+    },
+    {
+      "id": "744000155097535",
+      "title": "Purchasing (PUE) Intern - Summer 2027",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000155097535-purchasing-pue-intern-summer-2027",
+      "description_chars": 3505
+    },
+    {
+      "id": "744000153856764",
+      "title": "Supplier Quality Intern - Summer 2027",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000153856764-supplier-quality-intern-summer-2027",
+      "description_chars": 4021
+    },
+    {
+      "id": "744000153802419",
+      "title": "Product Manager - Linear Components",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000153802419-product-manager-linear-components",
+      "description_chars": 6623
+    },
+    {
+      "id": "744000153777745",
+      "title": "Health, Safety & Environment (HSE) Specialist, Sr",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000153777745-health-safety-environment-hse-specialist-sr",
+      "description_chars": 5609
+    },
+    {
+      "id": "744000153489638",
+      "title": "Hubspot Marketing Automation Specialist",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000153489638-hubspot-marketing-automation-specialist",
+      "description_chars": 8823
+    },
+    {
+      "id": "744000152705426",
+      "title": "Material Planning Intern - Summer 2027",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000152705426-material-planning-intern-summer-2027",
+      "description_chars": 3818
+    },
+    {
+      "id": "744000151828325",
+      "title": "Engineering Manager - Assembly Technology",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000151828325-engineering-manager-assembly-technology",
+      "description_chars": 9113
+    },
+    {
+      "id": "744000151710621",
+      "title": "Inventory Specialist",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000151710621-inventory-specialist",
+      "description_chars": 5232
+    },
+    {
+      "id": "744000151710999",
+      "title": "Calibration Tech",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000151710999-calibration-tech",
+      "description_chars": 4421
+    },
+    {
+      "id": "744000151709424",
+      "title": "Senior Inventory Specialist",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000151709424-senior-inventory-specialist",
+      "description_chars": 6007
+    },
+    {
+      "id": "744000150444089",
+      "title": "National Key Account Channel Manager \u2013 Linear Technologies",
+      "location": "Dallas, TX, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000150444089-national-key-account-channel-manager-linear-technologies",
+      "description_chars": 6603
+    },
+    {
+      "id": "744000150371149",
+      "title": "Project Engineer",
+      "location": "Grove City, OH, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000150371149-project-engineer",
+      "description_chars": 4185
+    },
+    {
+      "id": "744000148857079",
+      "title": "Material Planner",
+      "location": "Pineville, NC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148857079-material-planner",
+      "description_chars": 4403
+    },
+    {
+      "id": "744000148250504",
+      "title": "Sales Intern",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148250504-sales-intern",
+      "description_chars": 2819
+    },
+    {
+      "id": "744000148252267",
+      "title": "Design Engineer Intern",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148252267-design-engineer-intern",
+      "description_chars": 3554
+    },
+    {
+      "id": "744000148250353",
+      "title": "Product Management Intern",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148250353-product-management-intern",
+      "description_chars": 3587
+    },
+    {
+      "id": "744000148253129",
+      "title": "Test Engineer Intern",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148253129-test-engineer-intern",
+      "description_chars": 3717
+    },
+    {
+      "id": "744000148250171",
+      "title": "Sales Engineer (Distribution) Intern",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148250171-sales-engineer-distribution-intern",
+      "description_chars": 3729
+    },
+    {
+      "id": "744000148250710",
+      "title": "Design Engineer Intern",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148250710-design-engineer-intern",
+      "description_chars": 3555
+    },
+    {
+      "id": "744000148251949",
+      "title": "Sales Engineer (OEM) Intern",
+      "location": "Vernon Hills, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148251949-sales-engineer-oem-intern",
+      "description_chars": 3896
+    },
+    {
+      "id": "744000148246120",
+      "title": "Service Engineer Intern",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000148246120-service-engineer-intern",
+      "description_chars": 3816
+    },
+    {
+      "id": "744000143152669",
+      "title": "Maintenance Technician II",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000143152669-maintenance-technician-ii-",
+      "description_chars": 6288
+    },
+    {
+      "id": "744000141796492",
+      "title": "HMC Machinist III",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000141796492-hmc-machinist-iii",
+      "description_chars": 4443
+    },
+    {
+      "id": "744000139664339",
+      "title": "National Account Partner Manager \u2013 Linear Technologies",
+      "location": "Farmington Hills, MI, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000139664339-national-account-partner-manager-linear-technologies",
+      "description_chars": 6636
+    },
+    {
+      "id": "744000127214024",
+      "title": "Controls Systems Engineer (Multiple Positions) (REF286610T)",
+      "location": "Fountain Inn, SC, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000127214024-controls-systems-engineer-multiple-positions-ref286610t-",
+      "description_chars": 1723
+    },
+    {
+      "id": "744000115242936",
+      "title": "Honing Set-Up",
+      "location": "Lincolnshire, IL, United States",
+      "url": "https://jobs.smartrecruiters.com/BoschGroup/744000115242936-honing-set-up-",
+      "description_chars": 3703
+    }
+  ]
+}

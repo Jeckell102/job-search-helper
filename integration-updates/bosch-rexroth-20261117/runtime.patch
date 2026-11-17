@@ -1,0 +1,694 @@
+--- a/src/job_search_helper/ats.py
++++ b/src/job_search_helper/ats.py
+@@ -747,6 +747,11 @@
+             "unsupported",
+             reason="Missing Official Careers URL; add the employer's careers page or ATS board URL.",
+         )
++
++    if company_id == 'COMP-0571' and company.casefold() == 'bosch rexroth':
++        from .bosch_rexroth import fetch_bosch_rexroth
++        return fetch_bosch_rexroth(careers_url, company_id, company, transport,
++                                  progress_factory=progress_factory)
+ 
+     # HPE's current first-party Networking landing page explicitly combines
+     # Aruba and Juniper.  It is useful source-discovery evidence, but it is
+--- a/src/job_search_helper/shared_boards.py
++++ b/src/job_search_helper/shared_boards.py
+@@ -189,6 +189,12 @@
+     p=urlsplit(url)
+     if p.scheme!='https' or p.username or p.password or p.port not in (None,443) or p.fragment or '\\' in url or any(ord(c)<=32 for c in url):return False
+     if b.name=='SmartRecruiters':
++        # Only the verified Bosch U.S. wrapper may use this extra listing route.
++        if (b.slug == 'BoschGroup' and payload is None
++                and p.hostname == 'api.smartrecruiters.com'
++                and p.path == '/v1/companies/BoschGroup/postings'
++                and re.fullmatch(r'limit=100&offset=[0-9]+&country=us', p.query)):
++            return True
+         return payload is None and p.hostname=='api.smartrecruiters.com' and bool(re.fullmatch('/v1/companies/'+re.escape(b.slug)+r'/postings(?:/[0-9]+)?',p.path)) and (not p.query or bool(re.fullmatch(r'limit=100&offset=[0-9]+',p.query)))
+     if p.hostname!=urlsplit(b.root).hostname:return False
+     if b.name=='Jibe':return payload is None and p.path=='/api/jobs' and bool(re.fullmatch(r'page=[1-9][0-9]*&limit=100',p.query))
+--- /dev/null
++++ b/src/job_search_helper/bosch_rexroth.py
+@@ -0,0 +1,207 @@
++"""U.S. Bosch Rexroth inventory from Bosch's public SmartRecruiters feed.
++
++Read every U.S. listing card, select by provider legal entity (not brand or
++keywords), then fetch only Rexroth descriptions. Recheck scoped membership and
++metadata before declaring completion. Unrelated Bosch edits do not restart it.
++"""
++from __future__ import annotations
++
++from contextlib import closing
++import json
++from pathlib import Path
++import re
++from threading import Event
++
++from .ats import FetchError, HTTPResponse, Inventory, text
++from .cooperative_fetch import iter_details
++from .derived_cache import content_digest
++from . import shared_boards as boards
++
++COMPANY_ID = 'COMP-0571'
++COMPANY = 'Bosch Rexroth'
++SOURCE = 'https://www.boschrexroth.com/en/us/jobs-and-career/job-opportunities/'
++SOURCES = frozenset({
++    SOURCE.rstrip('/'),
++    'https://www.boschrexroth.com/en/us/jobs-and-career',
++    'https://careers.smartrecruiters.com/BoschGroup',
++    'https://careers.smartrecruiters.com/BoschGroup/us',
++})
++API = 'https://api.smartrecruiters.com/v1/companies/BoschGroup/postings'
++BOARD = boards.board_link('https://careers.smartrecruiters.com/BoschGroup')
++ENTITY_FIELD = '586a9995e4b0daa006ae1078'
++ENTITY = 'Bosch Rexroth Corporation'
++# Scope-specific checkpoint identity prevents reuse of the old parent inventory.
++SCOPE = API + '?country=us&scope=bosch-rexroth-corporation'
++
++
++def _entity(entry):
++    fields = entry.get('customField')
++    if not isinstance(fields, list):
++        raise FetchError('partial', 'Bosch legal-entity metadata is missing.')
++    values = [f.get('valueLabel') for f in fields
++              if isinstance(f, dict) and f.get('fieldId') == ENTITY_FIELD]
++    if len(values) != 1 or not isinstance(values[0], str) or not values[0].strip():
++        raise FetchError('partial', 'Bosch legal-entity metadata is missing or ambiguous.')
++    return values[0]
++
++
++def _validate_card(entry):
++    if (not isinstance(entry, dict)
++            or not isinstance(entry.get('id'), str)
++            or not re.fullmatch(r'[0-9]+', entry['id'])
++            or not isinstance(entry.get('name'), str) or not entry['name'].strip()
++            or entry.get('company', {}).get('identifier') != 'BoschGroup'
++            or entry.get('visibility') != 'PUBLIC'
++            or entry.get('location', {}).get('country') != 'us'):
++        raise FetchError('partial', 'Bosch U.S. listing identity, country or visibility is invalid.')
++    return _entity(entry) == ENTITY
++
++
++def _listing(transport):
++    selected = []
++    total = None
++    seen = set()
++    for offset in range(0, boards.MAX_JOBS, 100):
++        page = boards.js(transport, API + f'?limit=100&offset={offset}&country=us')
++        count = page.get('totalFound')
++        entries = page.get('content')
++        if (type(count) is not int or not 0 <= count <= boards.MAX_JOBS
++                or type(page.get('offset')) is not int or page['offset'] != offset
++                or type(page.get('limit')) is not int or page['limit'] != 100
++                or not isinstance(entries, list)
++                or len(entries) != min(100, count - offset)
++                or (total is not None and total != count)):
++            raise FetchError('partial', 'Bosch U.S. pagination/count changed or is invalid.')
++        total = count
++        for entry in entries:
++            scoped = _validate_card(entry)
++            if entry['id'] in seen:
++                raise FetchError('partial', 'Bosch U.S. listing has duplicate posting IDs.')
++            seen.add(entry['id'])
++            if scoped:
++                selected.append(entry)
++        if len(seen) == total:
++            return selected, total
++    raise FetchError('partial', 'Bosch U.S. listing exceeded the inventory limit.')
++
++
++class _DetailResponse:
++    """Replay the already validated response into the shared normalizer."""
++    def __init__(self, url, response):
++        self.url, self.response = url, response
++
++    def get(self, url):
++        if url != self.url:
++            raise FetchError('partial', 'Unexpected Bosch detail URL.')
++        return self.response
++
++
++def _posting(transport, entry, company_id, company):
++    url = API + '/' + entry['id']
++    response = transport.get(url)
++    detail = json.loads(boards.checked(response))
++    if not _validate_card(detail):
++        raise FetchError('partial', 'Bosch detail no longer belongs to U.S. Rexroth.')
++    if detail.get('refNumber') != entry.get('refNumber'):
++        raise FetchError('partial', 'Bosch listing/detail requisition mismatch.')
++    # Some Rexroth legal-notice postings put all duties and requirements in
++    # companyDescription. Accept only an explicit employer/title/requisition
++    # match with substantive role text, never generic company boilerplate.
++    sections = detail['jobAd']['sections']
++    description_source = 'jobDescription'
++    if not text(sections.get('jobDescription', {}).get('text')):
++        body = text(sections.get('companyDescription', {}).get('text'))
++        reference = entry.get('refNumber', '')
++        title = re.sub(r'\s*\(' + re.escape(reference) + r'\)\s*$', '', entry['name']).strip()
++        folded = body.casefold()
++        if (not reference or len(body) < 500 or ENTITY.casefold() not in folded
++                or reference.casefold() not in folded or title.casefold() not in folded
++                or not re.search(r'\b(?:seeks|is seeking)\b', folded)
++                or not re.search(r'\b(?:reqs|requirements|qualifications)\b', folded)):
++            raise FetchError('partial', 'Bosch full role description is missing or unproven.')
++        section = sections.pop('companyDescription')
++        sections['jobDescription'] = dict(section, title='Job Description')
++        response = HTTPResponse(200, json.dumps(detail).encode())
++        description_source = 'companyDescription'
++    row = boards.posting(BOARD, _DetailResponse(url, response), entry, company_id, company)
++    row['description_source'] = description_source
++    if not row['location']:
++        raise FetchError('partial', 'Bosch detail location is missing.')
++    row.update(legal_entity=ENTITY, employer=ENTITY, country='us',
++               req_id=text(detail.get('refNumber')))
++    return row
++
++
++def fetch_bosch_rexroth(url, company_id, company, transport=None, *, progress_factory=None):
++    def result(status, jobs, reason):
++        return Inventory(status, jobs, reason, SOURCE, 'SmartRecruiters',
++                         browser_fallback_allowed=False)
++
++    if (company_id != COMPANY_ID or company.casefold() != COMPANY.casefold()
++            or url.rstrip('/') not in SOURCES):
++        return result('unsupported', [], 'Bosch Rexroth requires its verified U.S. careers source and exact company identity.')
++    transport = transport if transport is not None else boards.Transport(BOARD)
++    jobs, completed, revisions = [], {}, []
++    reused = fetched = 0
++    try:
++        progress = progress_factory(SCOPE) if progress_factory is not None else None
++        policy = content_digest([boards._detail_policy(company_id, company), Path(__file__).read_bytes(), SCOPE]) if progress else ''
++        saved = progress.completed_details(policy) if progress else {}
++        entries, us_total = _listing(transport)
++        for attempt in range(boards.MAX_INVENTORY_RECONCILIATIONS + 1):
++            if attempt == 0:
++                completed = {e['id']: saved[e['id']] for e in entries
++                             if e['id'] in saved and saved[e['id']][0] == e}
++                reused = len(completed)
++                jobs = [pair[1] for pair in completed.values()]
++            failures = []
++            blocked = Event()
++
++            def fetch_entry(entry):
++                if blocked.is_set():
++                    return entry, None, FetchError('blocked', 'Bosch detail fetching stopped after access denial.')
++                try:
++                    return entry, _posting(transport, entry, company_id, company), None
++                except FetchError as error:
++                    if error.status == 'blocked':
++                        blocked.set()
++                    return entry, None, error
++                except (ValueError, TypeError, KeyError, AttributeError, IndexError, OSError) as error:
++                    return entry, None, FetchError('partial', f'Bosch detail validation failed ({type(error).__name__}).')
++
++            pending = [e for e in entries if e['id'] not in completed]
++            results = (iter_details(fetch_entry, pending) if type(transport) is boards.Transport
++                       else (fetch_entry(e) for e in pending))
++            with closing(results):
++                for entry, row, error in results:
++                    if error:
++                        if error.status == 'blocked':
++                            raise error
++                        failures.append(entry['id'] + ': ' + error.reason)
++                    else:
++                        completed[entry['id']] = (entry, row)
++                        jobs.append(row)
++                        fetched += 1
++                        if progress:
++                            progress.save_detail(entry, row, policy)
++            current, us_total = _listing(transport)
++            changes = boards._inventory_changes(entries, current)
++            if not changes:
++                reason = (f'Bosch Rexroth U.S.: verified {len(jobs)} full postings for {ENTITY}; '
++                          f'rechecked {us_total} U.S. Bosch listing cards; '
++                          f'fetched {fetched} details and reused {reused}.')
++                if revisions:
++                    reason += ' Reconciled scoped inventory: ' + ' | '.join(revisions) + '.'
++                if failures:
++                    reason += f' {len(failures)} detail validations failed: ' + '; '.join(failures[:3])
++                return result('partial' if failures else 'complete', jobs, reason)
++            revisions.append(changes)
++            by_id = {entry['id']: entry for entry in current}
++            completed = {ident: pair for ident, pair in completed.items() if by_id.get(ident) == pair[0]}
++            jobs = [pair[1] for pair in completed.values()]
++            entries = current
++        raise FetchError('partial', 'Bosch Rexroth scoped inventory kept changing; retry required.')
++    except FetchError as error:
++        return result('blocked' if error.status == 'blocked' else 'partial', jobs, error.reason)
++    except (ValueError, TypeError, KeyError, AttributeError, IndexError, OSError) as error:
++        return result('partial', jobs, f'Bosch Rexroth public inventory failed validation ({type(error).__name__}).')
+--- /dev/null
++++ b/tests/test_bosch_rexroth.py
+@@ -0,0 +1,261 @@
++import copy
++import json
++from urllib.parse import parse_qs, urlsplit
++from unittest.mock import patch
++
++import pytest
++
++from job_search_helper import bosch_rexroth as rex, shared_boards as boards
++from job_search_helper.ats import HTTPResponse, fetch_inventory
++
++
++def card(ident='1', entity=rex.ENTITY, country='us', brand='Rexroth'):
++    return {'id': ident, 'name': 'Applications Engineer ' + ident, 'refNumber': 'REF' + ident,
++            'company': {'identifier': 'BoschGroup'}, 'visibility': 'PUBLIC',
++            'location': {'country': country, 'fullLocation': 'Bethlehem, PA, United States'},
++            'customField': [{'fieldId': rex.ENTITY_FIELD, 'valueLabel': entity},
++                            {'fieldId': 'brand', 'valueLabel': brand}]}
++
++
++def detail(entry):
++    result = copy.deepcopy(entry)
++    result.update(active=True, postingUrl='https://jobs.smartrecruiters.com/BoschGroup/' + entry['id'] + '-applications-engineer',
++                  jobAd={'sections': {'jobDescription': {'title': 'Job Description', 'text': '<p>Lead customer automation projects.</p>'}}})
++    return result
++
++
++class Feed:
++    def __init__(self, cohorts, details=None):
++        self.cohorts = cohorts
++        self.round = -1
++        self.calls = []
++        self.details = details or {e['id']: detail(e) for cohort in cohorts for e in cohort}
++        self.mutate_page = lambda p: p
++
++    def get(self, url):
++        self.calls.append(url)
++        parsed = urlsplit(url)
++        if parsed.path == urlsplit(rex.API).path:
++            query = parse_qs(parsed.query)
++            assert query['country'] == ['us']
++            offset = int(query['offset'][0])
++            if offset == 0:
++                self.round += 1
++            entries = self.cohorts[min(self.round, len(self.cohorts) - 1)]
++            data = self.mutate_page({'offset': offset, 'limit': 100, 'totalFound': len(entries), 'content': entries[offset:offset + 100]})
++        else:
++            data = self.details[parsed.path.rsplit('/', 1)[-1]]
++        if isinstance(data, HTTPResponse):
++            return data
++        return HTTPResponse(200, json.dumps(data).encode())
++
++    @property
++    def detail_ids(self):
++        return [url.rsplit('/', 1)[-1] for url in self.calls if '?' not in url]
++
++
++def scan(feed, **kwargs):
++    return fetch_inventory('SmartRecruiters', rex.SOURCE, rex.COMPANY_ID, rex.COMPANY, feed, **kwargs)
++
++
++def test_filters_before_details_and_retains_rexroth_other_brands():
++    entries = [card(), card('2', brand='Bosch Group'), card('3', brand='Hägglunds'), card('4', 'Robert Bosch LLC')]
++    feed = Feed([entries])
++    result = scan(feed)
++    assert result.status == 'complete', result.reason
++    assert feed.detail_ids == ['1', '2', '3']
++    assert {j['legal_entity'] for j in result.jobs} == {rex.ENTITY}
++    assert {j['req_id'] for j in result.jobs} == {'REF1', 'REF2', 'REF3'}
++    assert result.source_url == rex.SOURCE
++    assert not result.browser_fallback_allowed
++
++
++def test_all_pages_are_rechecked_even_when_only_later_page_has_rexroth():
++    entries = [card(str(i), 'Robert Bosch LLC') for i in range(100)] + [card('100')]
++    feed = Feed([entries])
++    result = scan(feed)
++    assert result.status == 'complete', result.reason
++    assert feed.detail_ids == ['100']
++    assert sum('offset=100' in url for url in feed.calls) == 2
++
++
++@pytest.mark.parametrize('mutation', [
++    lambda e: e['location'].update(country='de'),
++    lambda e: e.update(customField=[]),
++    lambda e: e['customField'].append({'fieldId': rex.ENTITY_FIELD, 'valueLabel': rex.ENTITY}),
++    lambda e: e.update(visibility='INTERNAL'),
++    lambda e: e['company'].update(identifier='Other'),
++    lambda e: e.update(id='../outside'),
++])
++def test_invalid_listing_scope_cannot_complete(mutation):
++    entry = card(); mutation(entry)
++    result = scan(Feed([[entry]]))
++    assert result.status == 'partial'
++    assert result.jobs == []
++    assert not result.browser_fallback_allowed
++
++
++@pytest.mark.parametrize('mutation', [
++    lambda d: d['customField'][0].update(valueLabel='Robert Bosch LLC'),
++    lambda d: d['location'].update(country='ca'),
++    lambda d: d.update(active=False),
++    lambda d: d.update(id='2'),
++    lambda d: d.update(name='Other job'),
++    lambda d: d.update(refNumber='OTHER'),
++    lambda d: d.update(postingUrl='https://jobs.smartrecruiters.com/Other/1-job'),
++    lambda d: d['jobAd']['sections']['jobDescription'].update(text=''),
++    lambda d: d['location'].update(fullLocation=''),
++])
++def test_invalid_details_excluded_but_verified_jobs_preserved(mutation):
++    entries = [card(), card('2')]
++    d = detail(entries[0]); mutation(d)
++    result = scan(Feed([entries], {'1': d, '2': detail(entries[1])}))
++    assert result.status == 'partial'
++    assert [j['posting_id'] for j in result.jobs] == ['2']
++
++
++@pytest.mark.parametrize('mutation', [
++    lambda p: dict(p, totalFound=p['totalFound']+1),
++    lambda p: dict(p, limit=99),
++    lambda p: dict(p, offset=1),
++    lambda p: dict(p, totalFound=True),
++    lambda p: dict(p, content='invalid'),
++])
++def test_malformed_pagination_cannot_complete(mutation):
++    feed = Feed([[card()]]); feed.mutate_page = mutation
++    assert scan(feed).status == 'partial'
++
++
++def test_duplicate_ids_cannot_complete():
++    assert scan(Feed([[card(), card()]])).status == 'partial'
++
++
++def test_unrelated_bosch_churn_does_not_restart_rexroth_details():
++    feed = Feed([[card(), card('2', 'Robert Bosch LLC')], [card(), card('3', 'Robert Bosch LLC')]])
++    assert scan(feed).status == 'complete'
++    assert feed.detail_ids == ['1']
++
++
++def test_removal_and_addition_reconcile_without_refetching_unchanged_jobs():
++    feed = Feed([[card(), card('2')], [card(), card('3')]])
++    result = scan(feed)
++    assert result.status == 'complete', result.reason
++    assert {j['posting_id'] for j in result.jobs} == {'1', '3'}
++    assert feed.detail_ids == ['1', '2', '3']
++
++
++def test_persistent_scoped_drift_stays_partial():
++    feed = Feed([[card(str(i))] for i in range(5)])
++    assert scan(feed).status == 'partial'
++
++
++def test_empty_scope_rechecked_before_completion():
++    feed = Feed([[card('2', 'Robert Bosch LLC')]])
++    result = scan(feed)
++    assert result.status == 'complete'
++    assert not result.jobs
++    assert len(feed.calls) == 2
++
++
++def test_blocked_detail_stops_and_retains_verified_work():
++    entries = [card(), card('2'), card('3')]
++    feed = Feed([entries], {'1': detail(entries[0]), '2': HTTPResponse(403, b'Forbidden'), '3': detail(entries[2])})
++    result = scan(feed)
++    assert result.status == 'blocked'
++    assert [j['posting_id'] for j in result.jobs] == ['1']
++    assert feed.detail_ids == ['1', '2']
++
++
++class Progress:
++    def __init__(self):
++        self.saved = {}; self.policy = ''; self.sources = []
++    def __call__(self, source):
++        self.sources.append(source); return self
++    def completed_details(self, policy):
++        return self.saved if policy == self.policy else {}
++    def save_detail(self, entry, row, policy):
++        self.policy = policy; self.saved[entry['id']] = (entry, row)
++
++
++def test_resume_reuses_only_matching_scoped_details():
++    progress = Progress()
++    assert scan(Feed([[card()]]), progress_factory=progress).status == 'complete'
++    feed = Feed([[card(), card('2')]])
++    result = scan(feed, progress_factory=progress)
++    assert result.status == 'complete'
++    assert feed.detail_ids == ['2']
++    assert set(progress.sources) == {rex.SCOPE}
++
++
++def test_cooperative_transport_uses_same_validations():
++    feed = Feed([[card(), card('2', 'Robert Bosch LLC')]])
++    transport = boards.Transport(rex.BOARD)
++    with patch.object(transport, 'get', side_effect=feed.get):
++        result = scan(transport)
++    assert result.status == 'complete'
++    assert feed.detail_ids == ['1']
++
++
++@pytest.mark.parametrize('source', sorted(rex.SOURCES))
++def test_verified_sources_route_to_scoped_adapter(source):
++    result = fetch_inventory('SmartRecruiters', source, rex.COMPANY_ID, rex.COMPANY, Feed([[card()]]))
++    assert result.status == 'complete'
++
++
++@pytest.mark.parametrize('source', [rex.SOURCE+'?q=sales', rex.SOURCE.replace('https:', 'http:'),
++                                    'https://careers.smartrecruiters.com/Other',
++                                    'https://jobs.bosch.com/en', rex.SOURCE+'#filter'])
++def test_changed_source_never_expands_to_parent(source):
++    feed = Feed([[card()]])
++    result = fetch_inventory('SmartRecruiters', source, rex.COMPANY_ID, rex.COMPANY, feed)
++    assert result.status == 'unsupported'
++    assert not result.browser_fallback_allowed
++    assert not feed.calls
++
++
++def test_wrapper_requires_exact_company_identity():
++    assert rex.fetch_bosch_rexroth(rex.SOURCE, 'OTHER', rex.COMPANY).status == 'unsupported'
++    assert rex.fetch_bosch_rexroth(rex.SOURCE, rex.COMPANY_ID, 'Bosch').status == 'unsupported'
++
++
++def test_only_pinned_bosch_us_listing_route_is_added():
++    url = rex.API + '?limit=100&offset=0&country=us'
++    assert boards.allowed(rex.BOARD, url)
++    for bad in [url.replace('country=us', 'country=de'), url+'&q=engineer', url.replace('/postings?', '/postings/1?'),
++                url.replace('api.smartrecruiters.com', 'example.com'), url+'#x', url.replace('https:', 'http:')]:
++        assert not boards.allowed(rex.BOARD, bad)
++    assert not boards.allowed(rex.BOARD, url, {})
++    assert not boards.allowed(boards.board_link('https://careers.smartrecruiters.com/Example'), url)
++
++
++def test_scoped_source_not_comparable_to_legacy_parent_for_closure():
++    from job_search_helper.engine import _inventory_source
++    assert _inventory_source(rex.SOURCE) != _inventory_source(rex.BOARD.url)
++
++
++def test_live_legal_notice_with_role_description_in_company_section():
++    from pathlib import Path
++    full = json.loads((Path(__file__).parent/'fixtures/bosch_rexroth/legal-notice.json').read_text())
++    entry = {k: full[k] for k in ('id','name','refNumber','company','visibility','location','customField')}
++    result = scan(Feed([[entry]], {entry['id']: full}))
++    assert result.status == 'complete', result.reason
++    assert result.jobs[0]['description_source'] == 'companyDescription'
++    assert 'C/C++ and MATLAB Simulink' in result.jobs[0]['description']
++    assert result.jobs[0]['description'].count('Bosch Rexroth Corporation seeks') == 1
++
++
++@pytest.mark.parametrize('bad_value', ['generic boilerplate', 'wrong ref', 'wrong title'])
++def test_alternate_section_requires_real_role_evidence(bad_value):
++    from pathlib import Path
++    full = json.loads((Path(__file__).parent/'fixtures/bosch_rexroth/legal-notice.json').read_text())
++    entry = {k: copy.deepcopy(full[k]) for k in ('id','name','refNumber','company','visibility','location','customField')}
++    section = full['jobAd']['sections']['companyDescription']
++    if bad_value == 'generic boilerplate':
++        section['text'] = ('Bosch Rexroth Corporation is an engineering employer. '*30)
++    elif bad_value == 'wrong ref':
++        section['text'] = section['text'].replace('REF286610T', 'REFOTHER')
++    else:
++        section['text'] = section['text'].replace('Controls Systems Engineer', 'Other Position')
++    result = scan(Feed([[entry]], {entry['id']: full}))
++    assert result.status == 'partial'
++    assert not result.jobs
+--- /dev/null
++++ b/tests/fixtures/bosch_rexroth/legal-notice.json
+@@ -0,0 +1,162 @@
++{
++  "id": "744000127214024",
++  "name": "Controls Systems Engineer (Multiple Positions) (REF286610T)",
++  "uuid": "2bf8c7d1-1b7b-4419-b96d-84907e7d5572",
++  "jobId": "51ba573b-e9d1-4192-aa23-335faaffec3b",
++  "jobAdId": "346933f9-d4f6-499f-ae13-1af7a3629efc",
++  "defaultJobAd": true,
++  "refNumber": "REF286610T",
++  "company": {
++    "name": "Bosch Group",
++    "identifier": "BoschGroup"
++  },
++  "location": {
++    "city": "Fountain Inn",
++    "region": "SC",
++    "country": "us",
++    "address": "8 Southchase Court",
++    "postalCode": "29644",
++    "remote": false,
++    "hybrid": false,
++    "latitude": "34.6959238",
++    "longitude": "-82.2380589",
++    "fullLocation": "Fountain Inn, SC, United States"
++  },
++  "customField": [
++    {
++      "fieldId": "5abe2a4ab60a5e486a2d9b1d",
++      "fieldLabel": "Contract type",
++      "valueId": "1e46492b-d24f-460c-b095-38cf08a778d8",
++      "valueLabel": "Unlimited"
++    },
++    {
++      "fieldId": "5abe28e96d8bc56863dd9746",
++      "fieldLabel": "Tariff Area",
++      "valueId": "82f1dd4b-de9d-4134-9f1a-8d315be380ae",
++      "valueLabel": "United States Local Grades"
++    },
++    {
++      "fieldId": "586a997ee4b05fd937b86098",
++      "fieldLabel": "Legal Entity(acronym)",
++      "valueId": "DCUS",
++      "valueLabel": "DCUS"
++    },
++    {
++      "fieldId": "586a99b5e4b0daa006ae1079",
++      "fieldLabel": "Working Location",
++      "valueId": "Fountain Inn, SC",
++      "valueLabel": "Fountain Inn, SC"
++    },
++    {
++      "fieldId": "5abe295a6d8bc56863dd9747",
++      "fieldLabel": "Global Salary Level",
++      "valueId": "427b1359-5057-4375-a2ae-6c649782296d",
++      "valueLabel": "Experienced/ Middle Tariff"
++    },
++    {
++      "fieldId": "69ca83a2489188782a1e9f87",
++      "fieldLabel": "Direct Or Indirect",
++      "valueId": "0d8b2ae9-fc67-447b-9165-201f59f71e90",
++      "valueLabel": "Direct"
++    },
++    {
++      "fieldId": "5abe29f9b60a5e486a2d9b1c",
++      "fieldLabel": "Working hours",
++      "valueId": "60756b3e-dbab-4353-ac3a-0064d2bb27d8",
++      "valueLabel": "Full-time"
++    },
++    {
++      "fieldId": "586a9995e4b0daa006ae1078",
++      "fieldLabel": "Legal Entity",
++      "valueId": "Bosch Rexroth Corporation",
++      "valueLabel": "Bosch Rexroth Corporation"
++    },
++    {
++      "fieldId": "691cf1c93001c782b9560ab7",
++      "fieldLabel": "Division full name",
++      "valueId": "d3ef257d-1f63-457f-b72f-8caac2ddc992",
++      "valueLabel": "Drive and Control Technology"
++    },
++    {
++      "fieldId": "5abe27936d8bc56863dd9745",
++      "fieldLabel": "Position type",
++      "valueId": "c7b4da31-6f38-405a-b2e8-08a76e3c3f2c",
++      "valueLabel": "Professional"
++    },
++    {
++      "fieldId": "COUNTRY",
++      "fieldLabel": "Country/Region",
++      "valueId": "us",
++      "valueLabel": "United States"
++    },
++    {
++      "fieldId": "586a971ee4b0daa006ae1077",
++      "fieldLabel": "Brands",
++      "valueId": "default",
++      "valueLabel": "Bosch Group"
++    },
++    {
++      "fieldId": "586a996ce4b05fd937b86097",
++      "fieldLabel": "Working Country",
++      "valueId": "US",
++      "valueLabel": "United States"
++    },
++    {
++      "fieldId": "586a9b22e4b05fd937b8609a",
++      "fieldLabel": "Local Grade",
++      "valueId": "US_E3",
++      "valueLabel": "US_E3"
++    },
++    {
++      "fieldId": "586a99a5e4b05fd937b86099",
++      "fieldLabel": "Division",
++      "valueId": "DC",
++      "valueLabel": "DC"
++    }
++  ],
++  "releasedDate": "2026-05-19T13:47:20.327Z",
++  "postingUrl": "https://jobs.smartrecruiters.com/BoschGroup/744000127214024-controls-systems-engineer-multiple-positions-ref286610t-",
++  "jobAd": {
++    "sections": {
++      "companyDescription": {
++        "title": "Company Description",
++        "text": "<p>Bosch Rexroth Corporation seeks Controls Systems Engineer (Multiple Positions) at its facility located at 8 Southchase Court, Fountain Inn, SC 29644. Function as software developer and support lead for customer project activities. Support customer project activities, which involves performing requirement analysis, system design, software development and verification using the Bosch Rexroth machine controllers. Develop platform solutions to implement functionality and automated functions on skid steer loaders. Manage platform development which aims to offer solutions that are versatile and portable on various machine types. REQS: This position requires a bachelor\u2019s degree or foreign equivalent in Computer Science, Computer Engineering, Electrical Engineering, Electronic Engineering or a related field. Plus 3 years of experience as a Software Engineer, System Engineer or occupation involving Embedded Software development. Additionally, the applicant must have employment experience with: (1) C/C++ and MATLAB Simulink; (2) Embedded code development; (3) Software architecture tools (IBM Rhapsody or MATLAB System Composer); (4) Git, SVN and other SW versioning tools; (5) Software Testing and debugging tools such (TPT fusion, INCA, Vector CANalyzer, or CANape; and (6) CAN protocols (SAE J1939 and ISO 11783. UDS stack, or ISO14229). Travel: 25% domestic and international travel. Telecommuting: 1 day per week allowed to work from home. Applicants who are interested in this position should apply via <a href=\"https://www.bosch.us/careers/\" rel=\"noopener noreferrer\">https://www.bosch.us/careers/</a>, search <strong>[Controls Systems Engineer/ Reference # - REF286610T].</strong></p>"
++      },
++      "jobDescription": {
++        "title": "Job Description",
++        "text": ""
++      },
++      "qualifications": {
++        "title": "Qualifications",
++        "text": ""
++      },
++      "additionalInformation": {
++        "title": "Additional Information",
++        "text": "<p>All your information will be kept confidential according to EEO guidelines.</p>"
++      }
++    }
++  },
++  "active": true,
++  "visibility": "PUBLIC",
++  "industry": {
++    "id": "mechanical_engineering",
++    "label": "Mechanical Or Industrial Engineering"
++  },
++  "function": {
++    "id": "engineering",
++    "label": "Engineering"
++  },
++  "experienceLevel": {
++    "id": "mid_senior_level",
++    "label": "Mid-Senior Level"
++  },
++  "typeOfEmployment": {
++    "id": "permanent",
++    "label": "Full-time"
++  },
++  "language": {
++    "code": "en",
++    "label": "English",
++    "labelNative": "English (US)"
++  }
++}
+--- /dev/null
++++ b/docs/bosch-rexroth-integration.md
+@@ -0,0 +1,23 @@
++# Bosch Rexroth U.S. integration
++
++Bosch Rexroth (COMP-0571) now routes through a company-specific wrapper before generic SmartRecruiters discovery. The previous route downloaded roughly 5,055 worldwide Bosch postings and attributed the shared parent board to Rexroth.
++
++The wrapper paginates the public BoschGroup API with `country=us`, validates every U.S. listing card, and selects the exact provider Legal Entity `Bosch Rexroth Corporation` before fetching descriptions. It includes that entity's Rexroth, Bosch Group, and Hägglunds brands. Other legal entities, including HydraForce, remain outside this corporate-entity scope. It does not claim worldwide coverage.
++
++- Accepts only the verified Rexroth U.S. careers pages or legacy BoschGroup board URLs for the exact company identity. Changed sources fail closed.
++- Rechecks all U.S. listing pages, counts, unique IDs, and selected records before declaring completion. Only changes to selected Rexroth records require detail reconciliation.
++- Validates detail company, legal entity, country, title, posting ID, public URL, active state, requisition, and full description. HTTP failures, malformed cards, missing entity metadata, blocked access, or persistent changes remain incomplete.
++- Reuses unchanged descriptions through a separate scope checkpoint and code-derived policy fingerprint. Existing cooperative workers share the normal host pacing and retry limits.
++- A narrow alternate-section rule handles public legal notices whose duties are stored under `companyDescription`. It requires substantive text matching the employer, exact title, requisition, hiring language and qualifications marker; generic company boilerplate is rejected.
++- Generic browser fallback is disabled so a failed scoped scan cannot silently expand to all Bosch jobs.
++- The returned inventory source is the Rexroth U.S. job-opportunities page, distinct from the former BoschGroup source. Existing closure logic therefore does not compare the old parent inventory against this narrowed scope. Existing job keys remain SmartRecruiters + posting ID.
++
++Validation on November 17, 2026: the live parent API had 5,067 worldwide postings; the U.S. feed had 355, of which 70 belonged to Bosch Rexroth Corporation. Of those 70, 62 carried the Rexroth brand, four Bosch Group and four Hägglunds. One Controls Systems Engineer posting used the alternate description layout.
++
++Installation changes scraper code and regression tests only. It does not rewrite historical jobs, manual decisions, Opportunities, or live Sheet data, and does not restart an existing scraper process. A process started before installation retains its imported code; the wrapper is used by a new process when it next fetches this company's inventory. Resuming a cycle can reuse an already saved old inventory, so a fresh company fetch is needed to replace that older inventory.
++
++Sources:
++
++- https://www.boschrexroth.com/en/us/jobs-and-career/job-opportunities/
++- https://developers.smartrecruiters.com/docs/endpoints
++- https://api.smartrecruiters.com/v1/companies/BoschGroup/postings?limit=100&offset=0&country=us

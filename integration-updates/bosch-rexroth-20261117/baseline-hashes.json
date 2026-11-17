@@ -1,0 +1,8 @@
+{
+  "src/job_search_helper/ats.py": "f0ebe723b3c60df74a1f1297263cc0607006f594264b4f5dba228483738094d5",
+  "src/job_search_helper/shared_boards.py": "3137cb3b86808b5b922cd265c74fc1da5f260b96667dd60975b347122be08ec5",
+  "src/job_search_helper/bosch_rexroth.py": null,
+  "tests/test_bosch_rexroth.py": null,
+  "tests/fixtures/bosch_rexroth/legal-notice.json": null,
+  "docs/bosch-rexroth-integration.md": null
+}
