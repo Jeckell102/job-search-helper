@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**Three active lanes: W02/Black River, W04/Lockheed, and W06/Aerotech. Status: IN_PROGRESS.**
+**Three active lanes: W04/Lockheed, W06/Zebra, and W06/Booz Allen. Status: IN_PROGRESS.**
 
-Do not duplicate the three active lanes. Lockheed and Black River begin as `IMPLEMENTED_AWAITING_VALIDATION`; neither is complete. W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics are complete. When a lane finishes, claim the next highest-priority eligible unclaimed W06 or W02 company after inspecting current process and saved validation state.
+Do not duplicate the three active lanes. Lockheed remains `IMPLEMENTED_AWAITING_VALIDATION`; it is not complete. W02/Black River and W06/Aerotech are now complete, along with W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics. When a lane finishes, claim the next highest-priority eligible unclaimed W06 or W02 company after inspecting current process and saved validation state.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -35,7 +35,7 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 |---|---|---|---|---|
 | W01 | Shared Rippling parser; 13 listed companies | COMPLETE | /root / 2026-11-17T16:05:43Z | Added explicit old/new query-key validation. Twelve boards passed full normal-dispatch validation; goTenna is separately partial because its recorded board now returns HTTP 404 before parser execution. See `W01_RIPPLING_VALIDATION_2026-11-17.md`. |
 | W03 + W02/Hughes | COMP-0118 Hughes Network Systems | COMPLETE | /root / 2026-11-17T16:32:11Z | Pinned the scoped EchoStar API transport and replaced the historical count/page assumption with dynamic enumeration and complete reread validation. Live normal dispatch completed with 6 full postings. See `W03_HUGHES_VALIDATION_2026-11-17.md`. |
-| W02/Black River | COMP-0166 Black River Systems Company | IMPLEMENTED_AWAITING_VALIDATION | /root / 2026-11-17T16:40:00Z | Replaced the stale 14-link guard and added structural regression tests. The live normal-dispatch run did not finish within the bounded validation window, so no integration completion claim is made. |
+| W02/Black River | COMP-0166 Black River Systems Company | COMPLETE | /root/black_river_lane / 2026-11-17T17:56:23Z | Existing structural implementation passed 17 focused tests. Two independent normal-dispatch runs returned the same 15 full postings with final inventory rereads. |
 | W02/Freefly | COMP-0171 Freefly Systems | COMPLETE | /root / 2026-11-17T16:48:00Z | Removed the stale 15-posting guard, retained structured inventory/detail/recheck validation, and completed live normal dispatch with 14 full postings. |
 | W02/Aitech | COMP-0428 Aitech Systems | COMPLETE | /root / 2026-11-17T16:52:00Z | Removed the stale 17-link guard and completed live normal dispatch with 15 full postings and a stable final reread. |
 | W02/JR Automation | COMP-0250 JR Automation | COMPLETE | /root / 2026-11-17T16:56:00Z | Replaced the stale 64-total and corrected canonical page paths; live normal dispatch completed with 59 full postings and a stable six-page reread. |
@@ -46,9 +46,10 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W06/Ubiquiti | COMP-0749 Ubiquiti | COMPLETE | /root/serve_ubiquiti / 2026-11-17T17:07:35Z | Added guarded official-careers-to-Greenhouse routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 168 full postings. |
 | W05/IERUS | COMP-0449 IERUS Technologies | COMPLETE | /root/ierus / 2026-11-17T17:09:05Z | Repaired the exact legacy JobScore alias to its canonical host; targeted suite passed 15 tests and normal dispatch returned 62 full postings with stable internal reread. |
 | W06/RightHand Robotics | COMP-0710 RightHand Robotics | COMPLETE | /root/ierus / 2026-11-17T17:11:50Z | Added guarded official-careers-to-Breezy routing; targeted suite passed 22 tests and normal dispatch returned 3 full postings with stable final reread. |
-| W02/Black River | COMP-0166 Black River Systems Company | IN_PROGRESS | /root/black_river_lane / 2026-11-17T17:52:36Z | Reconcile the existing implementation with normal-dispatch validation; investigate only the documented direct-public-detail transport discrepancy if it recurs. |
 | W04/Lockheed | COMP-0074 Lockheed Martin | IN_PROGRESS | /root/lockheed_lane / 2026-11-17T17:52:36Z | Resume or redesign bounded complete validation of the exact scoped Eightfold adapter; retain final reread evidence and do not claim sampled pages as complete. |
-| W06/Aerotech | COMP-0789 Aerotech | IN_PROGRESS | /root/aerotech_lane / 2026-11-17T17:52:36Z | Verify official-careers linkage to the employer-scoped JazzHR board, implement an exact route if justified, and validate through normal dispatch. |
+| W06/Aerotech | COMP-0789 Aerotech | COMPLETE | /root/aerotech_lane / 2026-11-17T17:56:23Z | Added guarded official-careers-to-JazzHR routing; 18 focused tests passed and normal dispatch returned 26 full postings with a final reread. |
+| W06/Zebra | COMP-0538 Zebra Technologies | IN_PROGRESS | /root/aerotech_lane / 2026-11-17T17:56:23Z | Verify the exact official-careers-to-Zebra Workday route and complete normal-dispatch inventory; preserve intended scope. |
+| W06/Booz Allen | COMP-0623 Booz Allen Hamilton | IN_PROGRESS | /root/black_river_lane / 2026-11-17T17:56:23Z | Verify the exact official-careers-to-BAH Workday route and complete normal-dispatch inventory; preserve intended scope. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
@@ -1114,7 +1115,7 @@ The register is generated from the immutable snapshot plus reviewed implementati
 
 ### COMP-0166 — Black River Systems Company
 
-**Current implementation status (2026-11-17):** W02 code and regression coverage are implemented, but live normal-dispatch validation has not returned a result. The company remains partial until the public detail-retrieval delay is isolated and the complete inventory is validated.
+**Current implementation status (2026-11-17):** W02/Black River is validated complete. No code change was needed beyond the existing structural repair. `tests/test_black_river.py` and `tests/test_next_company_routes.py` passed 17 focused tests. Two independent read-only normal-dispatch executions, using `CareersTransport(timeout=12, interval=.2)`, each returned the same 15 full postings and confirmed final public-inventory rereads. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Strong repair candidate · **Work order:** W02
 
@@ -7893,6 +7894,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `None`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0789 — Aerotech
+
+**Current implementation status (2026-11-17):** W06/Aerotech is validated complete. The exact official careers aliases are repaired only to the employer-scoped Aerotech JazzHR board. `tests/test_aerotech.py` and `tests/test_shared_boards.py` passed 18 focused tests. Read-only normal dispatch returned 26 distinct job URLs with nonempty descriptions and a stable final public-inventory reread. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Native integration candidate · **Work order:** W06
 
