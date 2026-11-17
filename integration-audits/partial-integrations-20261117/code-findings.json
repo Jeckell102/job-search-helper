@@ -1,0 +1,240 @@
+{
+  "code": {
+    "src/job_search_helper/shared_boards.py": {
+      "sha256": "dedb185a488dfee2542b16cc53e95add44a491305d004144424d7972cb1f04ed",
+      "lines": [
+        {
+          "line": 414,
+          "text": "            key=qs[0]['queryKey'][-1];d=qs[0]['state']['data'];n=d['totalItems']"
+        },
+        {
+          "line": 415,
+          "text": "            if type(n) is not int or not 0<=n<=MAX_JOBS or d['page']!=page or d['pageSize']!=20 or d['totalPages']!=math.ceil(n/20) or key.get('page')!=page or any(key.get(k) for k in ('searchQuery','departments','workplaceType','country','state','city')):raise FetchError('partial','Rippling pagination or scope cannot be verified.')"
+        },
+        {
+          "line": 536,
+          "text": "    marker='jobs-list' if b.name=='JazzHR' else 'jv-job-list'"
+        }
+      ]
+    },
+    "src/job_search_helper/ats.py": {
+      "sha256": "283fe192c73fc756a189088a6b2061392ca6e5544e13f45f0fd11033f854ef52",
+      "lines": [
+        {
+          "line": 63,
+          "text": "def is_oracle_host(host: str | None) -> bool:"
+        },
+        {
+          "line": 64,
+          "text": "    return bool(re.fullmatch(r\"[a-z0-9][a-z0-9-]*\\.fa\\.(?:us[0-9]+|ocs)\\.oraclecloud\\.com\", host or \"\"))"
+        },
+        {
+          "line": 776,
+          "text": "    html_transport = discovery_transport if discovery_transport is not None else transport"
+        },
+        {
+          "line": 884,
+          "text": "        return fetch_videoray(careers_url, company_id, company, transport or HTTPTransport(), html_transport)"
+        },
+        {
+          "line": 1005,
+          "text": "        return fetch_hughes(careers_url, company_id, company, transport or HTTPTransport())"
+        },
+        {
+          "line": 1023,
+          "text": "        return fetch_asti(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())"
+        },
+        {
+          "line": 1037,
+          "text": "        return fetch_massvirtual(careers_url, company_id, company, discovery_transport or transport or HTTPTransport())"
+        }
+      ]
+    },
+    "src/job_search_helper/asti.py": {
+      "sha256": "32a22c45c05623efe2733fbdc750a3ecf57152483367c6cf449fa3bc01efc0be",
+      "lines": [
+        {
+          "line": 48,
+          "text": "    if len(out)!=2: raise FetchError(\"partial\",f\"ASTi positions page exposed {len(out)} verifiable roles, expected the two published positions.\")"
+        },
+        {
+          "line": 55,
+          "text": "    client=transport or CareersTransport(); jobs=[]"
+        }
+      ]
+    },
+    "src/job_search_helper/hughes.py": {
+      "sha256": "7fe0ff40de30946a533ad1b1332816e4aba6d81bce82447b0a80bbab38875c5c",
+      "lines": [
+        {
+          "line": 21,
+          "text": " t=transport or HTTPTransport(); jobs=[]; seen=set()"
+        },
+        {
+          "line": 24,
+          "text": "  if total!=14 or pages!=2: raise FetchError('partial','Hughes filtered inventory count changed or pagination is incomplete.')"
+        }
+      ]
+    },
+    "src/job_search_helper/massvirtual.py": {
+      "sha256": "e19660eed3cde0c6c6d527f863fc1dc6cc89ce42581cb2cb7f86359e0eac48d8",
+      "lines": [
+        {
+          "line": 36,
+          "text": " client=transport or CareersTransport(); jobs=[]"
+        }
+      ]
+    },
+    "src/job_search_helper/videoray.py": {
+      "sha256": "665ee2cb4b7f21568d2fe3afbf86f9c97646690733624545040bda2499fde4cf",
+      "lines": [
+        {
+          "line": 147,
+          "text": "    discovery_transport = discovery_transport or transport"
+        }
+      ]
+    },
+    "src/job_search_helper/black_river.py": {
+      "sha256": "1d3ee3b1d4b22723cbcb4f9a11946daddfee9ec38c99edce5d5b071ef80918a5",
+      "lines": [
+        {
+          "line": 67,
+          "text": "        if len(first) != 14:"
+        }
+      ]
+    },
+    "src/job_search_helper/freefly.py": {
+      "sha256": "23d022b62ada5c2301ebd47f85d852359960c6924f1cd2416db2c72f55ff4c4a",
+      "lines": [
+        {
+          "line": 54,
+          "text": "        if len(first) != 15: raise FetchError(\"partial\", f\"Freefly careers inventory changed; found {len(first)} postings.\")"
+        }
+      ]
+    },
+    "src/job_search_helper/aitech.py": {
+      "sha256": "6bf18fb214a4c359621f553bb88212d626e652eaae071c75700f1af6d4986c14",
+      "lines": [
+        {
+          "line": 49,
+          "text": "  if len(first)!=17: raise FetchError('partial',f'Aitech role inventory changed; found {len(first)} role links.')"
+        }
+      ]
+    },
+    "src/job_search_helper/jr_automation.py": {
+      "sha256": "91f6281d826e29c4c30dc789fac5df990189a3e1b9048437dfee53795ca312c9",
+      "lines": [
+        {
+          "line": 158,
+          "text": "        if total != 64 or pages > MAX_PAGES:"
+        }
+      ]
+    },
+    "src/job_search_helper/kuka.py": {
+      "sha256": "5b57e46482470d0925514e213bea8d4fdc75db2c71ea03808a75e352da7657bf",
+      "lines": [
+        {
+          "line": 32,
+          "text": "    if len(rows) != 115 or any(not isinstance(x, dict) or KUKA_FACET not in (x.get(\"facets\") or []) for x in rows):"
+        }
+      ]
+    },
+    "src/job_search_helper/caterpillar.py": {
+      "sha256": "e2466fe60ca0339d8a6dfc828a7ccdcc7cc04afd47ab83898eeacea4a53bf205",
+      "lines": [
+        {
+          "line": 45,
+          "text": "        if not tags.intersection({\"job\", \"jobposting\", \"posting\", \"position\"}):"
+        },
+        {
+          "line": 72,
+          "text": "            or careers_url.rstrip(\"/\") not in {SOURCE.rstrip(\"/\"), \"https://careers.caterpillar.com\"}):"
+        },
+        {
+          "line": 98,
+          "text": "        return Inventory(\"complete\", jobs, f\"Caterpillar employer-scoped feed returned {len(jobs)} US postings.\", XML_SOURCE, \"Caterpillar Careers\")"
+        }
+      ]
+    },
+    "src/job_search_helper/browser_scraper.py": {
+      "sha256": "333241b1bd94dab6e6de6a7ee0c2d20a032cadf19b676ed3499b9079d160ed17",
+      "lines": [
+        {
+          "line": 635,
+          "text": "    if (company_id == \"COMP-0074\" and company.casefold() == \"lockheed martin\""
+        },
+        {
+          "line": 637,
+          "text": "        from .lockheed import fetch_lockheed"
+        }
+      ]
+    },
+    "src/job_search_helper/company_sources.py": {
+      "sha256": "932bda3f822f9949cd3a87218669c700ead726daaec7c89c710cc4bd367f537f",
+      "lines": [
+        {
+          "line": 1117,
+          "text": "    'COMP-0074': {'company': 'Lockheed Martin', 'ats': 'Eightfold', 'expected_url': '', 'url': 'https://lockheedmartin.eightfold.ai/careers', 'evidence': 'https://lockheedmartin.eightfold.ai/careers'},"
+        },
+        {
+          "line": 1501,
+          "text": "def repair_source(ats, url, company_id, company):"
+        }
+      ]
+    }
+  },
+  "offline_reproductions": {
+    "caterpillar_two_distinct_records": {
+      "input_records": 2,
+      "parsed_records": [
+        [
+          "one",
+          "One",
+          "https://careers.caterpillar.com/en/jobs/r1/one/",
+          "One full description",
+          ""
+        ]
+      ],
+      "input_xml": "<jobs><job><id>one</id><title>One</title><url>https://careers.caterpillar.com/en/jobs/r1/one/</url><description>One full description</description></job><job><id>two</id><title>Two</title><url>https://careers.caterpillar.com/en/jobs/r2/two/</url><description>Two full description</description></job></jobs>"
+    },
+    "garrett_oracle_host_recognized": false
+  },
+  "current_source_repair": {
+    "COMP-0074": {
+      "input_ats": "Browser",
+      "input_url": "https://www.lockheedmartin.com/en-us/careers/",
+      "output": [
+        "Browser",
+        "https://www.lockheedmartin.com/en-us/careers/",
+        ""
+      ]
+    },
+    "COMP-0238": {
+      "input_ats": "Caterpillar Careers",
+      "input_url": "https://www.caterpillar.com/en/careers.html",
+      "output": [
+        "Caterpillar Careers",
+        "https://www.caterpillar.com/en/careers.html",
+        ""
+      ]
+    },
+    "COMP-0248": {
+      "input_ats": "Workday",
+      "input_url": "https://kiongroup.wd3.myworkdayjobs.com/KION_SCS?Country=55273a1b49934d97ae15342ef51f6b95&Country=80938777cac5440fab50d729f9634969&Country=972dc4ba8d454bc0b893ff84b1529077&Country=d903bb3fedad45039383f6de334ad4db",
+      "output": [
+        "Workday",
+        "https://kiongroup.wd3.myworkdayjobs.com/KION_SCS?Country=55273a1b49934d97ae15342ef51f6b95&Country=80938777cac5440fab50d729f9634969&Country=972dc4ba8d454bc0b893ff84b1529077&Country=d903bb3fedad45039383f6de334ad4db",
+        ""
+      ]
+    },
+    "COMP-0736": {
+      "input_ats": "Workday",
+      "input_url": "https://www.latticesemi.com/About/Jobs",
+      "output": [
+        "Workday",
+        "https://www.latticesemi.com/About/Jobs",
+        ""
+      ]
+    }
+  }
+}

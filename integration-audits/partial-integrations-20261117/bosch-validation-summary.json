@@ -1,0 +1,17 @@
+{
+  "status": "complete",
+  "count": 70,
+  "elapsed_seconds": 36.78,
+  "reason": "Bosch Rexroth U.S.: verified 70 full postings for Bosch Rexroth Corporation; rechecked 355 U.S. Bosch listing cards; fetched 70 details and reused 0.",
+  "source_url": "https://www.boschrexroth.com/en/us/jobs-and-career/job-opportunities/",
+  "browser_fallback_allowed": false,
+  "legal_entities": [
+    "Bosch Rexroth Corporation"
+  ],
+  "countries": [
+    "us"
+  ],
+  "source_artifact": "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/bosch-rexroth-20261117/evidence/live-validation.json",
+  "source_sha256": "3195ff3d0d2dadd9cc84c652d32ff2e274161068c2bae04ec804c337df911ceb",
+  "note": "Earlier same-day validation, not rerun by this audit; current cycle remains partial."
+}

@@ -1,0 +1,22 @@
+{
+  "cycle_id": "CYC-DE2DC903A35A",
+  "partial_companies": 334,
+  "audit_kind": "read-only source and integration triage; no runtime code or Sheet changes",
+  "github_branch": "audit/partial-integrations-20261117",
+  "github_directory": "integration-audits/partial-integrations-20261117",
+  "files": {
+    "PARTIAL_INTEGRATION_HANDOFF.md": "c874de0141e0c479d6dd6e5b3f007eea9fb82d2729ed49114e161c0873d0a637",
+    "bosch-validation-summary.json": "a8703d6337f42a26ec94658ec1169b00ee5afdfadbd3ef29669b98ccb2c4a312",
+    "build_handoff.py": "38e009c5f22a77e7fe2fa7336eaa8a9cdd7684fbc3f375e6b3388c0ab2c5085f",
+    "candidate-endpoint-probes.json": "e23827ad0d8c6fd10025222101ae885c7e74af3db61160709086e70ffaa1749c",
+    "capture_code_findings.py": "56026f8fd42994356c1ca78b4c46f760e85f64bb53dd95e50db1f91d0941fb1a",
+    "capture_snapshot.py": "e257e39f420e39d39c70b2a5c3f00bdaf58a839cbc7db383b5f648f200c36dfc",
+    "code-findings.json": "893437a020063b51bfa8f30325e2dbec0f6ff53069fd6886d8253b55bb397274",
+    "handoff-notes.md": "dcc6166d5ebb736ccc70e78ec330ab81194042450ecb99b00ceeceb811615fd0",
+    "probe_candidates.py": "a5209fe5e2f4eb95a6ad0e91edca79b15eb84854538eec9f6a92d5dd20abef5a",
+    "probe_sources.py": "7206d0e38e157edaae92ca5969c8fa9106539c16235d49eff6e72479a2e096de",
+    "public-source-probes.json": "79587f35fa81089564ddf4fed2c90be52454687795b8859adb70947536fd7ef0",
+    "snapshot.json": "ec7ac49dee257314f01ffb61524f7668a640bc6b1bfc6a5911eac2bcde89b1e1",
+    "triage.json": "50ee3dbe29c6e3edbff98b5e39bef94bc468d67e9fbb1b6a049177dc7eb6ad14"
+  }
+}
