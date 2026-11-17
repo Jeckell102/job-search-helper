@@ -16,6 +16,12 @@ Each test run uses an isolated user service with a 512 MiB memory limit, 24-task
 
 Python setup uses `python3 -m venv --without-pip` plus the official pip zip application if ensurepip is unavailable. Install requirements inside that environment and install Playwright Chromium. No system Python or administrator access is needed when browser system libraries already exist. Generated test code runs offline; Chromium is installed for separate controlled browser development, not arbitrary model shell access.
 
+## Final delivery to the scraper
+
+The development checkout is an intermediate workspace. Completed wrappers must be installed alongside the other integrations in the active Job Search Helper checkout on the scraper computer. Include the module under `src/job_search_helper/`, its dispatcher registration, relevant tests and fixtures, and integration notes. Compare against the current active files, preserve unrelated edits, back up replacements, verify wrapper and routing tests, and verify the installed files. Save the source update and validation notes to GitHub without runtime data or credentials.
+
+The seven development tools do not transfer files between computers or install into the active scraper. An operator must complete and verify installation and GitHub backup before reporting final delivery. Until then, report development as awaiting installation. Track run adoption and fresh company-inventory validation separately; an existing process or cached inventory can retain earlier behavior. This workflow requirement does not itself enable automatic installation.
+
 ## Validation on 2026-11-17
 
 - 206 staged core regression tests passed; 55 targeted tests passed after the model-specific help change.
