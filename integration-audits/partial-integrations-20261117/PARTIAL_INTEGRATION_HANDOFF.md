@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**The ten-task integration goal is complete. No normal-dispatch validation is active.**
+**Three active lanes: W02/Black River, W04/Lockheed, and W06/Aerotech. Status: IN_PROGRESS.**
 
-Lockheed and Black River are `IMPLEMENTED_AWAITING_VALIDATION`; neither is complete. The Lockheed paced process is absent and its checkpoint stopped in detail retrieval, so do not claim it is still active. W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics are complete. Choose the highest-priority eligible unclaimed task in W06 or the next remaining W02 candidate only after inspecting current process and saved validation state.
+Do not duplicate the three active lanes. Lockheed and Black River begin as `IMPLEMENTED_AWAITING_VALIDATION`; neither is complete. W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics are complete. When a lane finishes, claim the next highest-priority eligible unclaimed W06 or W02 company after inspecting current process and saved validation state.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -46,6 +46,9 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W06/Ubiquiti | COMP-0749 Ubiquiti | COMPLETE | /root/serve_ubiquiti / 2026-11-17T17:07:35Z | Added guarded official-careers-to-Greenhouse routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 168 full postings. |
 | W05/IERUS | COMP-0449 IERUS Technologies | COMPLETE | /root/ierus / 2026-11-17T17:09:05Z | Repaired the exact legacy JobScore alias to its canonical host; targeted suite passed 15 tests and normal dispatch returned 62 full postings with stable internal reread. |
 | W06/RightHand Robotics | COMP-0710 RightHand Robotics | COMPLETE | /root/ierus / 2026-11-17T17:11:50Z | Added guarded official-careers-to-Breezy routing; targeted suite passed 22 tests and normal dispatch returned 3 full postings with stable final reread. |
+| W02/Black River | COMP-0166 Black River Systems Company | IN_PROGRESS | /root/black_river_lane / 2026-11-17T17:52:36Z | Reconcile the existing implementation with normal-dispatch validation; investigate only the documented direct-public-detail transport discrepancy if it recurs. |
+| W04/Lockheed | COMP-0074 Lockheed Martin | IN_PROGRESS | /root/lockheed_lane / 2026-11-17T17:52:36Z | Resume or redesign bounded complete validation of the exact scoped Eightfold adapter; retain final reread evidence and do not claim sampled pages as complete. |
+| W06/Aerotech | COMP-0789 Aerotech | IN_PROGRESS | /root/aerotech_lane / 2026-11-17T17:52:36Z | Verify official-careers linkage to the employer-scoped JazzHR board, implement an exact route if justified, and validate through normal dispatch. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
