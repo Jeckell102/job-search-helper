@@ -92,16 +92,17 @@ class RuntimeDiscoveryTests(unittest.TestCase):
         self.assertEqual(workflow.MODEL, 'gpt-5.6-luna')
         self.assertEqual(workflow.EFFORT, 'medium')
 
-    def test_paused_review_is_preserved_with_actionable_resume_command(self):
+    def test_review_recovery_does_not_replace_a_different_unfinished_workflow(self):
         ctl = self.controller()
         ctl.args.resume = False
+        ctl.args.command = 'review'; ctl.args.cycle = 'finished'
         ctl.probe = Mock(return_value={'state_dir':str(self.root), 'scraper_busy':False,
                                       'cycles':[{'id':'finished', 'status':'Complete'}]})
         base = self.root/'scrape-first-pass'; previous = base/'run-previous/workflow.json'
-        state = {'stage':'REVIEWING', 'status':'PAUSED_NOT_COMPLETE', 'cycle_id':'finished'}
+        state = {'stage':'REVIEWING', 'status':'PAUSED_NOT_COMPLETE', 'cycle_id':'older'}
         workflow.atomic(previous, state)
         workflow.atomic(base/'latest.json', {'workflow':str(previous)})
-        with self.assertRaisesRegex(workflow.Blocked, r'job-search-helper start --resume'):
+        with self.assertRaisesRegex(workflow.Blocked, r'job-search-helper resume'):
             ctl.run()
         self.assertEqual(json.loads(previous.read_text()), state)
         self.assertEqual(list(base.glob('run-*')), [previous.parent])
