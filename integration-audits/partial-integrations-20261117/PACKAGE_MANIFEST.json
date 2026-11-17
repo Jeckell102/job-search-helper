@@ -1,12 +1,13 @@
 {
   "cycle_id": "CYC-DE2DC903A35A",
   "partial_companies": 334,
-  "audit_kind": "partial-integration audit plus W01 Rippling runtime repair and read-only validation; no Sheets changes",
+  "audit_kind": "partial-integration audit plus W01 Rippling and W03/W02 Hughes runtime repairs with read-only validation; no Sheets changes",
   "github_branch": "audit/partial-integrations-20261117",
   "github_directory": "integration-audits/partial-integrations-20261117",
   "files": {
-    "PARTIAL_INTEGRATION_HANDOFF.md": "37c082b4b2226276abfa6370e830e19c56ae7c89b1faf209908c968c2cc22f00",
+    "PARTIAL_INTEGRATION_HANDOFF.md": "445807ffda54fbe8be5aac1e2d015a24e638558a872014ebc445469bed22d878",
     "W01_RIPPLING_VALIDATION_2026-11-17.md": "36b6dbf126370b781fc8fd9e93f62d4423c607636bb1d72d482ed49250be7bac",
+    "W03_HUGHES_VALIDATION_2026-11-17.md": "de6c1607ede03547062e897a03b2766cae2a98b7898c6cd79834b1ae2e68bc83",
     "bosch-validation-summary.json": "a8703d6337f42a26ec94658ec1169b00ee5afdfadbd3ef29669b98ccb2c4a312",
     "build_handoff.py": "38e009c5f22a77e7fe2fa7336eaa8a9cdd7684fbc3f375e6b3388c0ab2c5085f",
     "candidate-endpoint-probes.json": "e23827ad0d8c6fd10025222101ae885c7e74af3db61160709086e70ffaa1749c",

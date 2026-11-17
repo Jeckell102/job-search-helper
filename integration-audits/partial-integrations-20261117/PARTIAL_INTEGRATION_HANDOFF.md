@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**W03 + W02/Hughes — Correct the Hughes public API transport and replace its historical fixed-count check. Status: READY.**
+**W02/Black River — Replace the historical fixed inventory-size check with complete current enumeration. Status: READY.**
 
-Start with the W03 work order and the overlapping Hughes row in W02 below. The bounded task is COMP-0118 Hughes Network Systems: permit only the verified scoped public API route, replace the exact 14-job/two-page assumption with dynamic complete pagination and reread validation, then validate normal dispatch. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
+Start with COMP-0166 Black River Systems Company. Inspect its current official listing structure and existing fixed 14-link guard, then replace that historical count with employer-scoped complete enumeration, full descriptions, and a final reread through normal dispatch. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -34,7 +34,8 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | Task | Scope | Status | Owner / updated UTC | Outcome / next action |
 |---|---|---|---|---|
 | W01 | Shared Rippling parser; 13 listed companies | COMPLETE | /root / 2026-11-17T16:05:43Z | Added explicit old/new query-key validation. Twelve boards passed full normal-dispatch validation; goTenna is separately partial because its recorded board now returns HTTP 404 before parser execution. See `W01_RIPPLING_VALIDATION_2026-11-17.md`. |
-| W03 + W02/Hughes | COMP-0118 Hughes Network Systems | READY | Unassigned / 2026-11-17T16:13:00Z | Start with exact API transport allowlisting and dynamic pagination/reread validation. |
+| W03 + W02/Hughes | COMP-0118 Hughes Network Systems | COMPLETE | /root / 2026-11-17T16:32:11Z | Pinned the scoped EchoStar API transport and replaced the historical count/page assumption with dynamic enumeration and complete reread validation. Live normal dispatch completed with 6 full postings. See `W03_HUGHES_VALIDATION_2026-11-17.md`. |
+| W02/Black River | COMP-0166 Black River Systems Company | READY | Unassigned / 2026-11-17T16:32:11Z | Replace the historical 14-link requirement with complete employer-scoped listing and reread validation. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
@@ -48,6 +49,15 @@ Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, 
 - **GitHub backup / commit:** pending this task's backup commit.
 - **Remaining work or blocker:** COMP-0110 goTenna current source returns HTTP 404 and must remain partial until a verified employer-scoped public source is established. This does not invalidate the W01 parser repair.
 - **Next task and exact first action:** W03 + W02/Hughes. Inspect the current Hughes public API response, narrow the allowed endpoint contract, and replace the exact 14-job/two-page check with dynamic reconciliation tests.
+
+- **W03 + W02/Hughes / COMP-0118 Hughes Network Systems / /root / 2026-11-17T16:32:11Z:**
+- **Status and outcome:** COMPLETE. The exact public `jobs.echostar.com/api/jobs?tags4=Hughes&page=<n>` route is now allowed only when its Hughes scope and bounded page parameter are present. The adapter no longer assumes 14 jobs or two pages; it enumerates all dynamic pages, checks stable totals, validates unique employer-scoped full-description records, and rereads full membership.
+- **Changes:** `src/job_search_helper/ats.py` adds the narrow Hughes API allowlist. `src/job_search_helper/hughes.py` adds page validation, dynamic page traversal, row/total reconciliation, and full-inventory reread. `tests/test_hughes.py` covers normal top-level dispatch, below/above historical totals, explicit empty, malformed/duplicate/truncated/scope failures, changing membership, and transport restrictions.
+- **Verification:** Focused regression passed 20 tests. Read-only production normal dispatch completed with six full postings (102169, 101937, 100842, 100916, 100844, 100999), full descriptions, and a stable final reread. See `W03_HUGHES_VALIDATION_2026-11-17.md`.
+- **Installation / run adoption / Sheet publication:** not performed. No scraper cycle, local inventory state, or Google Sheets data was changed.
+- **GitHub backup / commit:** pending this task's backup commit.
+- **Remaining work or blocker:** none for the bounded Hughes adapter repair. Adoption by a future scraper run remains separate.
+- **Next task and exact first action:** W02/Black River. Inspect the current employer listing route and replace the fixed 14-link guard with structural pagination/completeness validation.
 
 After each task, append an entry using this structure:
 
@@ -864,6 +874,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `False`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0118 — Hughes Network Systems
+
+**Current implementation status (2026-11-17):** W03 + W02/Hughes is validated complete. Normal dispatch returned six full Hughes-scoped postings with a stable complete-inventory reread after the narrow EchoStar API transport and dynamic pagination repair. See `W03_HUGHES_VALIDATION_2026-11-17.md`. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Strong repair candidate · **Work order:** W02 + W03
 
