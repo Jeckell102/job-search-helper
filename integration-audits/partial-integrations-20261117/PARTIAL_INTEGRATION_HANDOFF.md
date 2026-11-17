@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**W02/Black River — Replace the historical fixed inventory-size check with complete current enumeration. Status: READY.**
+**W02/Aitech — Replace the historical fixed inventory-size check with complete current enumeration. Status: READY.**
 
-Start with COMP-0166 Black River Systems Company. Inspect its current official listing structure and existing fixed 14-link guard, then replace that historical count with employer-scoped complete enumeration, full descriptions, and a final reread through normal dispatch. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
+Start with COMP-0428 Aitech Systems. Inspect its current official listing structure and existing fixed 17-link guard, then replace that historical count with complete employer-scoped enumeration, full descriptions, and a final reread through normal dispatch. Black River remains `IMPLEMENTED_AWAITING_VALIDATION` because its production `CareersTransport` cannot fetch the first public detail from this environment. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -36,6 +36,8 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W01 | Shared Rippling parser; 13 listed companies | COMPLETE | /root / 2026-11-17T16:05:43Z | Added explicit old/new query-key validation. Twelve boards passed full normal-dispatch validation; goTenna is separately partial because its recorded board now returns HTTP 404 before parser execution. See `W01_RIPPLING_VALIDATION_2026-11-17.md`. |
 | W03 + W02/Hughes | COMP-0118 Hughes Network Systems | COMPLETE | /root / 2026-11-17T16:32:11Z | Pinned the scoped EchoStar API transport and replaced the historical count/page assumption with dynamic enumeration and complete reread validation. Live normal dispatch completed with 6 full postings. See `W03_HUGHES_VALIDATION_2026-11-17.md`. |
 | W02/Black River | COMP-0166 Black River Systems Company | IMPLEMENTED_AWAITING_VALIDATION | /root / 2026-11-17T16:40:00Z | Replaced the stale 14-link guard and added structural regression tests. The live normal-dispatch run did not finish within the bounded validation window, so no integration completion claim is made. |
+| W02/Freefly | COMP-0171 Freefly Systems | COMPLETE | /root / 2026-11-17T16:48:00Z | Removed the stale 15-posting guard, retained structured inventory/detail/recheck validation, and completed live normal dispatch with 14 full postings. |
+| W02/Aitech | COMP-0428 Aitech Systems | READY | Unassigned / 2026-11-17T16:48:00Z | Replace the historical 17-link requirement with complete employer-scoped listing and reread validation. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
@@ -67,6 +69,15 @@ Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, 
 - **GitHub backup / commit:** pending this task's backup commit.
 - **Remaining work or blocker:** isolate the slow public detail request or run the read-only normal dispatcher with a permitted longer validation window; then record the actual result and only then mark the company complete or partial.
 - **Next task and exact first action:** W02/Black River remains the active next item. Inspect timed public detail retrieval one URL at a time, then rerun normal dispatch to a result.
+
+- **W02/Freefly / COMP-0171 Freefly Systems / /root / 2026-11-17T16:48:00Z:**
+- **Status and outcome:** COMPLETE. The adapter no longer treats a current 14-posting inventory as incomplete merely because it differs from the historical count of 15. It retains structured listing IDs, full employer-scoped details, duplicate validation, and stable final membership reread.
+- **Changes:** `src/job_search_helper/freefly.py` removes the stale fixed count. `tests/test_freefly.py` covers normal dispatcher inventories below and above that count, invalid/empty listings, incomplete details, and changed final membership.
+- **Verification:** Focused regression passed 17 tests. Read-only normal dispatch on 2026-11-17, using `CareersTransport(timeout=6, interval=0.2)`, completed with 14 full postings, all descriptions present, and a stable final reread.
+- **Installation / run adoption / Sheet publication:** not performed. No scraper cycle, local inventory state, or Google Sheets data was changed.
+- **GitHub backup / commit:** pending this task's backup commit.
+- **Remaining work or blocker:** none for the bounded Freefly adapter repair. Adoption by a future scraper run remains separate.
+- **Next task and exact first action:** W02/Aitech. Inspect its official listing contract and replace the stale 17-link guard with structural completeness validation.
 
 After each task, append an entry using this structure:
 
@@ -1161,6 +1172,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `False`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0171 — Freefly Systems
+
+**Current implementation status (2026-11-17):** W02/Freefly is validated complete. Normal dispatch returned 14 full Freefly postings with a stable final inventory reread after removal of the fixed-count guard. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Strong repair candidate · **Work order:** W02
 
