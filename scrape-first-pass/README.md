@@ -20,6 +20,21 @@ command starts scraping, synchronizes saved results, and launches FIRST PASS:
 ./job-search-helper start --fetch-workers 15
 ```
 
+`start` always begins a fresh full scrape, even when an older FIRST PASS was
+paused. It creates a new workflow and keeps the older workflow, review receipts,
+and already-published decisions intact. The new workflow records the previous
+workflow's path. FIRST PASS starts only after the new scrape and publication
+gate complete. An active controller or scraper still prevents a duplicate run.
+
+To continue the latest workflow at its saved step instead:
+
+```sh
+./job-search-helper resume
+```
+
+If that workflow already finished scraping, `resume` continues its FIRST PASS
+without scraping again. `start --resume` remains a compatible spelling.
+
 `./job-search-scraper start` follows the same path. All scraper options are
 forwarded to a private scan worker; the worker cannot recursively start the
 workflow. Maintenance and help commands do not launch AI.
@@ -52,6 +67,8 @@ The AI task runs in the scraper project with workspace write permission and
 network access for its existing Google tools. It uses ordinary sandboxing, keeps
 Google connectors enabled, and cannot request unattended privilege escalation.
 No system-wide Codex settings are changed. Missing access pauses the workflow.
+Fresh and resumed AI tasks receive the same explicit sandbox, network, model,
+and approval settings after the applicable Codex subcommand.
 
 The handoff asks Codex to read the full current AI Prompt immediately before
 starting/resuming, own a single managed FIRST PASS run, save its actual run ID,
@@ -79,10 +96,10 @@ when automatic Codex discovery finds no installation.
 
 Python records the exact Codex session ID, logs, final response and review-owner
 receipt under the configured state directory's `scrape-first-pass/` folder.
-`./job-search-helper start --resume` (or pipeline `run --resume`) resumes that exact AI conversation and its own managed review run;
+`./job-search-helper resume` (or pipeline `run --resume`) resumes that exact AI conversation and its own managed review run;
 it never uses `--last` or guesses another task's run ID. A completed scrape is not
-repeated. Resuming a completed workflow is a no-op. Plain `run` after completion
-starts a new workflow. A completed scan from an older installation can be recovered explicitly without
+repeated. Resuming a completed workflow is a no-op. Plain `start` or pipeline `run`
+always starts a new workflow. A completed scan from an older installation can be recovered explicitly without
 rescanning:
 
 ```sh
