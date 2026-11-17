@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**Two active lanes: W04/Lockheed and W06/RightHand Robotics. Status: IN_PROGRESS.**
+**W04/Lockheed full validation is still active. The ten-task integration goal is complete. Status: IN_PROGRESS for Lockheed only.**
 
-Do not duplicate the active lanes. W06/Serve Robotics, W06/Ubiquiti, and W05/IERUS are complete. After a lane records verified completion, choose the highest-priority eligible unclaimed task in W06 or the next remaining W02 candidate. Black River remains `IMPLEMENTED_AWAITING_VALIDATION` because its production `CareersTransport` cannot fetch the first public detail from this environment. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
+Do not duplicate Lockheed's active paced validation. W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics are complete. After Lockheed reaches a verified result, choose the highest-priority eligible unclaimed task in W06 or the next remaining W02 candidate. Black River remains `IMPLEMENTED_AWAITING_VALIDATION` because its production `CareersTransport` cannot fetch the first public detail from this environment. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -45,7 +45,7 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W06/Serve Robotics | COMP-0542 Serve Robotics | COMPLETE | /root/serve_ubiquiti / 2026-11-17T17:07:35Z | Added guarded official-careers-to-Ashby routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 23 full postings. |
 | W06/Ubiquiti | COMP-0749 Ubiquiti | COMPLETE | /root/serve_ubiquiti / 2026-11-17T17:07:35Z | Added guarded official-careers-to-Greenhouse routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 168 full postings. |
 | W05/IERUS | COMP-0449 IERUS Technologies | COMPLETE | /root/ierus / 2026-11-17T17:09:05Z | Repaired the exact legacy JobScore alias to its canonical host; targeted suite passed 15 tests and normal dispatch returned 62 full postings with stable internal reread. |
-| W06/RightHand Robotics | COMP-0710 RightHand Robotics | IN_PROGRESS | /root/ierus / 2026-11-17T17:10:22Z | Verify the official-careers-to-employer-scoped Breezy route, then run normal-dispatch listing/detail/recheck validation. |
+| W06/RightHand Robotics | COMP-0710 RightHand Robotics | COMPLETE | /root/ierus / 2026-11-17T17:11:50Z | Added guarded official-careers-to-Breezy routing; targeted suite passed 22 tests and normal dispatch returned 3 full postings with stable final reread. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
@@ -6336,6 +6336,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0710 — RightHand Robotics
+
+**Current implementation status (2026-11-17):** W06/RightHand Robotics is validated complete. The exact official careers-page source is repaired to the employer-scoped `righthand-robotics` Breezy board only. `tests/test_righthand_robotics.py`, `tests/test_shared_boards.py`, and `tests/test_company_sources.py` passed 22 tests. Read-only normal dispatch returned three unique scoped postings with nonempty descriptions and a stable adapter final reread. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Native integration candidate · **Work order:** W06
 
