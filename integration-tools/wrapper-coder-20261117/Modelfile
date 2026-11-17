@@ -1,0 +1,6 @@
+FROM qwen3.5:4b
+PARAMETER num_ctx 12288
+PARAMETER num_predict 3072
+PARAMETER temperature 0.2
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.05

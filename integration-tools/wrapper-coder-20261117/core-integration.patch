@@ -1,0 +1,46 @@
+--- a/engine.py
++++ b/engine.py
+@@ -83,6 +83,9 @@
+         cfg=settings(); profile=resolve_profile(profile_id) if profile_id else None
+         max_tokens=(profile.max_output_tokens if profile else cfg['max_output_tokens']) if max_tokens is None else max_tokens
+         prompt=SYSTEM
++        if profile and profile.model_id == "qwen-wrapper:4b":
++            from coding_runtime import SYSTEM as CODING_SYSTEM
++            prompt=CODING_SYSTEM
+         if agent:
+             if agent not in agents(): raise InputError('Unknown agent.')
+             prompt+='\n'+agents()[agent]['instructions']
+@@ -99,6 +102,10 @@
+         )
+ 
+     def stream(self,messages,foreground=True,max_tokens=None,temperature=None,abort=lambda:False,profile_id=None,think_override=None,network_enabled=False):
++        if network_enabled and profile_id == "qwen-wrapper:4b":
++            from coding_runtime import stream as coding_stream
++            yield from coding_stream(self,messages,max_tokens,temperature,abort,profile_id,think_override)
++            return
+         if network_enabled:
+             from assistant_tools import request_scope
+             if request_scope(messages)['names']:
+--- a/server.py
++++ b/server.py
+@@ -265,6 +265,11 @@
+             raise ValueError('The last message must be a text user message.')
+         # Only the current explicit user command can create state; never an earlier turn or model output.
+         direct=route(messages[-1]['content'])
++        if profile.model_id == 'qwen-wrapper:4b' and messages[-1]['content'].strip().lower() == '/tools':
++            direct=('Wrapper Coder: source search/read, guarded edits, new files, offline tests, diffs, and explicitly requested local commits. '
++                    'Use src/, tests/, and docs/ paths in the separate development checkout. Public web search/read is available when requested. '
++                    'Tests run offline with filesystem, network, memory, process and time limits. No production installation, Sheets writes or GitHub push. '
++                    'Example: Read the Bosch Rexroth wrapper and run tests/test_bosch_rexroth.py. Context: 12,288 tokens; work on one small change at a time.')
+         if direct is not None:
+             WAKE.set(); chunks=iter([{'text':direct},{'done':True,'input_tokens':0,'output_tokens':0}])
+         else:
+@@ -285,7 +290,7 @@
+             )
+             limit=resolve_output_limit(
+                 prepared,profile,raw_limit,thinking_override=override,
+-                tools=schemas_for(prepared) or None
++                tools=(__import__("coding_tools").schemas_for(prepared) if profile.model_id == "qwen-wrapper:4b" else schemas_for(prepared)) or None
+             )
+             chunks=self.server.engine.stream(prepared,max_tokens=limit,temperature=temp,profile_id=profile.model_id,think_override=override,network_enabled=True)
+         cid='chatcmpl-'+str(uuid.uuid4()); created=int(time.time())
