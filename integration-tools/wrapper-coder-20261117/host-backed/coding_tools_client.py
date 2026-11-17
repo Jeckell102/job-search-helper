@@ -32,6 +32,12 @@ SCHEMAS = [
     spec('code_commit', 'Commit development changes locally only when the user explicitly requests a commit. Does not push or install.', {'message': S}, ['message']),
 ]
 NAMES = {s['function']['name'] for s in SCHEMAS}
+RENDERED_SCHEMA = spec(
+    'rendered_web_read',
+    'Render one public JavaScript page in an ephemeral browser on the scraper computer and return bounded visible text and links. Use for dynamic pages that web_read cannot inspect.',
+    {'url': S},
+    ['url'],
+)
 
 
 def scope(messages):
@@ -52,7 +58,12 @@ def scope(messages):
 def schemas_for(messages):
     names = scope(messages)
     from assistant_tools import schemas_for as web_schemas
-    return [s for s in SCHEMAS if s['function']['name'] in names] + [s for s in web_schemas(messages) if s['function']['name'] in ('web_search','web_read')]
+    result = [s for s in SCHEMAS if s['function']['name'] in names]
+    result += [s for s in web_schemas(messages) if s['function']['name'] in ('web_search','web_read')]
+    last = next((m['content'] for m in reversed(messages) if m.get('role') == 'user'), '').lower()
+    if re.search(r'\b(render|rendered|javascript|browser|dynamic|rendered_web_read)\b', last) and re.search(r'https?://', last):
+        result.append(RENDERED_SCHEMA)
+    return result
 
 
 
@@ -61,7 +72,7 @@ def execute(name, args, names):
     import urllib.request
     import urllib.error
     try:
-        if name not in names or name not in NAMES | {'web_read', 'web_search'}:
+        if name not in names or name not in NAMES | {'web_read', 'web_search', 'rendered_web_read'}:
             raise ValueError('This action is outside the current request.')
         config = json.loads((Path(__file__).parent / 'config/wrapper-host.json').read_text())
         payload = json.dumps({'name': name, 'args': args, 'names': sorted(names)}).encode()

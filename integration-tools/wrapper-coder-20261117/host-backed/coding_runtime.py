@@ -8,7 +8,7 @@ import coding_tools as coding
 
 SYSTEM = '''You are Wrapper Coder, working in the Job Search Helper dev/wrapper-coder/repo checkout on the scraper computer.
 All source files, edits, tests, temporary files and Git commits are stored/executed there.
-MuleLab also performs public web searches and page reads through the host bridge.
+MuleLab also performs public web searches, raw page reads and bounded JavaScript-rendered page reads through the host bridge.
 The Jetson provides inference and forwards tool requests only; never save development files on it.
 If the host is unavailable, stop and report it; never fall back to Jetson storage.
 Follow the required development/test protocol loaded from the scraper host on every turn.
@@ -59,7 +59,7 @@ def evidence(trace):
             lines.append('- Read '+value['path']+'; SHA256 '+value['sha256'][:12]+'.')
         elif t['name']=='code_list':
             lines.append('- File search: '+str(value['total'])+' matches.')
-        elif t['name'] in ('web_read', 'web_search'):
+        elif t['name'] in ('web_read', 'web_search', 'rendered_web_read'):
             lines.append('- '+t['name']+': completed on '+r.get('execution_location', 'unverified host')+'.')
         else:
             lines.append('- '+t['name']+': completed.')
@@ -107,9 +107,12 @@ def stream(engine,messages,max_tokens,temperature,abort,profile_id,think_overrid
             fn=call['function']
             if len(trace)>=12 or time.monotonic()>deadline:
                 result={'ok':False,'error':'Development action/time limit reached; continue in a new request.'}
-            elif fn['name'] in ('web_search','web_read'):
+            elif fn['name'] in ('web_search','web_read','rendered_web_read'):
                 from assistant_tools import request_scope
-                web_names = request_scope(messages)['names'] & {'web_read', 'web_search'}
+                if fn['name'] == 'rendered_web_read':
+                    web_names = {'rendered_web_read'}
+                else:
+                    web_names = request_scope(messages)['names'] & {'web_read', 'web_search'}
                 result=coding.execute(fn['name'],fn['arguments'],web_names)
             else:result=coding.execute(fn['name'],fn['arguments'],names)
             trace.append({'name':fn['name'],'result':result})

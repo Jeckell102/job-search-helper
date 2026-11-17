@@ -19,7 +19,7 @@
          if profile.model_id == 'qwen-wrapper:4b' and messages[-1]['content'].strip().lower() == '/tools':
              direct=('Wrapper Coder: source search/read, guarded edits, new files, offline tests, diffs, and explicitly requested local commits. '
 -                    'Use src/, tests/, and docs/ paths in the separate development checkout. Public web search/read is available when requested. '
-+                    'Use src/, tests/, and docs/ paths in Job Search Helper dev/wrapper-coder/repo on the scraper computer. Files, tests and temporary work stay there; the Jetson only runs the AI. The scraper computer must be online. Public web search/read is available when requested. '
++                    'Use src/, tests/, and docs/ paths in Job Search Helper dev/wrapper-coder/repo on the scraper computer. Files, tests and temporary work stay there; the Jetson only runs the AI. The scraper computer must be online. Public web search, raw page read, and bounded JavaScript-rendered page read are available when requested. '
                      'Tests run offline with filesystem, network, memory, process and time limits. No production installation, Sheets writes or GitHub push. '
                      'Example: Read the Bosch Rexroth wrapper and run tests/test_bosch_rexroth.py. Context: 12,288 tokens; work on one small change at a time.')
          if direct is not None:

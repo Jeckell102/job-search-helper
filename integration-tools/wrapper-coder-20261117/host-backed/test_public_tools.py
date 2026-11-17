@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 import public_tools as tools
 import public_web as web
+import rendered_web
 from public_web_types import PageText
 
 
@@ -24,6 +25,13 @@ class PublicToolsTests(unittest.TestCase):
                 self.assertTrue(result['ok'])
                 self.assertEqual(result['execution_location'], 'scraper computer')
                 call.assert_called_once_with('example')
+
+    def test_rendered_read_executes_on_host(self):
+        with patch.object(rendered_web, 'read_page', return_value={'text': 'rendered result'}) as call:
+            result = tools.execute('rendered_web_read', {'url': 'https://example.com'}, {'rendered_web_read'})
+            self.assertTrue(result['ok'])
+            self.assertEqual(result['execution_location'], 'scraper computer')
+            call.assert_called_once_with('https://example.com')
 
     def test_private_and_credential_urls_are_denied(self):
         for url in ['file:///etc/passwd', 'http://localhost/', 'https://a:b@example.com/', 'https://example.com:8443/']:

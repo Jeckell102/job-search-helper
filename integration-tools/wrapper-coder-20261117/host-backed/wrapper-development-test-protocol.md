@@ -11,7 +11,7 @@ Follow these steps for each company. Work on one bounded company task at a time.
 
 ## 2. Inspect actual public source behavior
 
-- Use permitted web tools to establish current redirects, listing structure, pagination, IDs, description fields and empty-state behavior. Record URLs and observation time when available. A reachable HTML shell, HTTP 200, search snippet or sample job does not prove inventory completeness.
+- Use permitted web tools to establish current redirects, listing structure, pagination, IDs, description fields and empty-state behavior. When a raw page read only returns a JavaScript shell, use rendered_web_read on the exact public listing URL and record the final URL, visible text and links. Rendered evidence is an observation of the page, not a scraper run. Record URLs and observation time when available. A reachable HTML shell, HTTP 200, search snippet or sample job does not prove inventory completeness.
 - If tools cannot inspect the necessary public listing or detail data, state exactly what evidence is missing. Do not guess a new schema or invent fixtures and call them captured evidence. Existing fixtures may support a clearly labeled provisional change.
 - Distinguish captured public fixtures from synthetic edge cases. Minimize fixtures to the fields/content needed for tests; exclude credentials, private data and unnecessary copied content.
 
@@ -34,7 +34,7 @@ Follow these steps for each company. Work on one bounded company task at a time.
 
 ## 5. Required live read-only scraper validation — operator gate
 
-- The current Wrapper Coder code_test tool is OFFLINE. Web page reads are not a live scraper run. There is no tool in this profile that runs the full scraper against the network. Never claim this gate passed from fixture results or website accessibility.
+- The current Wrapper Coder code_test tool is OFFLINE. Raw or rendered web page reads are not a live scraper run. There is no tool in this profile that runs the full scraper against the network. Never claim this gate passed from fixture results or website accessibility.
 - Hand off the exact company inputs, changed files, focused test names, public evidence and missing checks to the operator. Until a receipt is supplied, report IMPLEMENTED_AWAITING_LIVE_VALIDATION (or BLOCKED if implementation cannot proceed).
 - The operator reviews the diff and runs the development checkout's actual fetch_inventory with the original configured ATS/URL, company ID/name and default production transports. Use a bounded isolated read-only harness, no live credentials, no browser profile, no inventory/checkpoint database writes and no Sheet publication. Do not run the production start/resume command or a full scrape cycle for this gate.
 - Verify that imports resolve to the development checkout. The successful result must have proven complete employer-scoped inventory, unique stable IDs/URLs, full descriptions for all included jobs, all pages accounted for, and a stable final inventory reread. Reconcile returned IDs/counts against the actual public listing, not a historic expected number. An empty result needs explicit source evidence. A partial, blocked or timed-out run fails this gate even if some descriptions were saved.
