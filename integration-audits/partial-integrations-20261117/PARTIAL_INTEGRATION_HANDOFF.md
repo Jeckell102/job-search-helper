@@ -7,7 +7,7 @@
 
 ### Current next item
 
-**Three active lanes: W04/Lockheed, W06/Booz Allen, and W06/CrowdStrike. Status: IN_PROGRESS.**
+**Three active lanes: W04/Lockheed, W06/Texas Instruments, and W06/Danfoss. Status: IN_PROGRESS.**
 
 Do not duplicate the three active lanes. Lockheed is actively checkpointing its complete validation and is not yet complete. W06/Zebra is `IMPLEMENTED_AWAITING_VALIDATION` because the exact Workday route reaches a public human-verification block. W02/Black River and W06/Aerotech are complete, along with W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics. When a lane finishes, claim the next highest-priority eligible unclaimed W06 or W02 company after inspecting current process and saved validation state.
 
@@ -49,8 +49,14 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W04/Lockheed | COMP-0074 Lockheed Martin | IN_PROGRESS | /root/lockheed_lane / 2026-11-17T17:52:36Z | Resume or redesign bounded complete validation of the exact scoped Eightfold adapter; retain final reread evidence and do not claim sampled pages as complete. |
 | W06/Aerotech | COMP-0789 Aerotech | COMPLETE | /root/aerotech_lane / 2026-11-17T17:56:23Z | Added guarded official-careers-to-JazzHR routing; 18 focused tests passed and normal dispatch returned 26 full postings with a final reread. |
 | W06/Zebra | COMP-0538 Zebra Technologies | IMPLEMENTED_AWAITING_VALIDATION | /root/aerotech_lane / 2026-11-17T18:01:35Z | Guarded exact official-to-Zebra Workday routing and 33 focused tests passed; live normal dispatch is blocked by Workday human verification on the first public detail, so no complete result or reread exists. |
-| W06/Booz Allen | COMP-0623 Booz Allen Hamilton | IN_PROGRESS | /root/black_river_lane / 2026-11-17T17:56:23Z | Verify the exact official-careers-to-BAH Workday route and complete normal-dispatch inventory; preserve intended scope. |
-| W06/CrowdStrike | COMP-0663 CrowdStrike | IN_PROGRESS | /root/aerotech_lane / 2026-11-17T18:01:35Z | Verify exact official-careers-to-CrowdStrike Workday routing and complete normal-dispatch inventory while preserving the full unfiltered scope. |
+| W06/Booz Allen | COMP-0623 Booz Allen Hamilton | IMPLEMENTED_AWAITING_VALIDATION | /root/black_river_lane / 2026-11-17T18:05:09Z | Guarded exact Workday route, board-specific capped-list recovery, and 76 focused tests passed. A public job-family page exposes a requisition-only card with no detail path, preventing complete description validation and final reread. |
+| W06/CrowdStrike | COMP-0663 CrowdStrike | IMPLEMENTED_AWAITING_VALIDATION | /root/aerotech_lane / 2026-11-17T18:05:09Z | Guarded exact Workday route and 33 focused tests passed. Normal dispatch read 16 full descriptions, then human verification blocked a public detail; no full inventory or final reread exists. |
+| W06/Bentley Systems | COMP-0667 Bentley Systems | IMPLEMENTED_AWAITING_VALIDATION | /root/aerotech_lane / 2026-11-17T18:07:32Z | Guarded exact Workday route and 33 focused tests passed. Normal dispatch read one full description, then human verification blocked a public detail; no full inventory or final reread exists. |
+| W06/Fortinet | COMP-0660 Fortinet | IMPLEMENTED_AWAITING_VALIDATION | /root/black_river_lane / 2026-11-17T18:09:42Z | Guarded exact Oracle route and 35 focused tests passed. Public site claims 1,083 roles but exposes 1,082 records before its empty boundary, so complete inventory validation and final reread cannot pass. |
+| W06/onsemi | COMP-0731 onsemi | COMPLETE | /root/aerotech_lane / 2026-11-17T18:12:20Z | Guarded exact Oracle route and 20 focused tests passed. Normal dispatch returned 708 distinct full postings with a stable 36-page final reread. |
+| W06/Power Integrations | COMP-0791 Power Integrations | COMPLETE | /root/black_river_lane / 2026-11-17T18:13:36Z | Guarded official-to-Jobvite routing and presentation-flag normalization passed 34 focused tests. Normal dispatch returned 50 full postings with final inventory reread. |
+| W06/Texas Instruments | COMP-0727 Texas Instruments | IN_PROGRESS | /root/aerotech_lane / 2026-11-17T18:12:20Z | Verify official custom-host-to-Oracle canonical mapping and complete normal-dispatch inventory. |
+| W06/Danfoss | COMP-0570 Danfoss | IN_PROGRESS | /root/black_river_lane / 2026-11-17T18:13:36Z | Verify exact official-careers-to-SuccessFactors routing and complete normal-dispatch inventory. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
