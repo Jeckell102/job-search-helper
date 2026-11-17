@@ -25,6 +25,8 @@ If further work remains after a limit, say precisely what remains.'''
 
 
 PROTOCOL_PATH = 'docs/wrapper-development-test-protocol.md'
+MAX_TOOL_ROUNDS = 12
+MAX_RECORDED_ACTIONS = 20
 
 
 def load_required_protocol(messages):
@@ -67,7 +69,7 @@ def evidence(trace):
 
 
 def stream(engine,messages,max_tokens,temperature,abort,profile_id,think_override):
-    from engine import Cancelled, BackendError
+    from engine import Cancelled
     profile=resolve_profile(profile_id)
     history=[dict(m) for m in messages]; trace=[]; names=coding.scope(messages)
     totals={'input_tokens':0,'output_tokens':0,'generation_seconds':0,'context_checks':[], 'network_tool_results':trace}
@@ -79,9 +81,9 @@ def stream(engine,messages,max_tokens,temperature,abort,profile_id,think_overrid
         yield {'done': True, 'finish_reason': 'stop', **totals}
         return
     deadline=time.monotonic()+600
-    for round_no in range(8):
+    for round_no in range(MAX_TOOL_ROUNDS):
         if engine.stop.is_set() or abort():raise Cancelled()
-        schemas=coding.schemas_for(messages) if round_no<7 else []
+        schemas=coding.schemas_for(messages)
         try:
             estimate=estimate_context(history,profile.context_tokens,thinking=False,tools=schemas,internal_tools=True)
             ensure_generation_room(estimate)
@@ -100,12 +102,11 @@ def stream(engine,messages,max_tokens,temperature,abort,profile_id,think_overrid
             else:text+=evidence(trace)
             yield {'text':text}
             yield {'done':True,'finish_reason':done['done_reason'],**totals};return
-        if not schemas:raise BackendError('coding_tool_round_limit_exceeded')
         history.append(msg)
         for call in msg['tool_calls']:
             if engine.stop.is_set() or abort():raise Cancelled()
             fn=call['function']
-            if len(trace)>=12 or time.monotonic()>deadline:
+            if len(trace)>=MAX_RECORDED_ACTIONS or time.monotonic()>deadline:
                 result={'ok':False,'error':'Development action/time limit reached; continue in a new request.'}
             elif fn['name'] in ('web_search','web_read','rendered_web_read'):
                 from assistant_tools import request_scope
@@ -117,5 +118,5 @@ def stream(engine,messages,max_tokens,temperature,abort,profile_id,think_overrid
             else:result=coding.execute(fn['name'],fn['arguments'],names)
             trace.append({'name':fn['name'],'result':result})
             history.append({'role':'tool','tool_name':fn['name'],'content':json.dumps(result)})
-    yield {'text':'The development step limit was reached; more work may remain.'+evidence(trace)}
+    yield {'text':'The development tool-turn limit was reached. Completed actions are recorded below. Continue in a new request with the remaining task.'+evidence(trace)}
     yield {'done':True,'finish_reason':'length',**totals}
