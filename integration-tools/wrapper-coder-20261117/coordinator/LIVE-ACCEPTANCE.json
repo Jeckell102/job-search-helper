@@ -1,0 +1,61 @@
+{
+  "task": "WRAP-7f9c2bc240",
+  "state": {
+    "status": "REVIEW_COMPLETE_LIVE_NOT_VALIDATED",
+    "mode": "review",
+    "phase": "verify",
+    "sessions": 2,
+    "calls": 9,
+    "tokens": 49451,
+    "authorization_version": 1
+  },
+  "receipt_count": 10,
+  "offline_tests": [
+    {
+      "phase": "baseline",
+      "arguments": {
+        "paths": "tests/test_scythe_robotics.py"
+      },
+      "exit_code": 0,
+      "output": "....                                                                     [100%]\n4 passed in 0.07s\n",
+      "source_manifest_sha256": "c0f9929acb011ba12a32b568f4448eb0d3979093fa86989e5f0a6a91bf7cbe85",
+      "source_unchanged_during_test": true
+    },
+    {
+      "phase": "verify",
+      "arguments": {
+        "paths": "tests/test_scythe_robotics.py"
+      },
+      "exit_code": 0,
+      "output": "....                                                                     [100%]\n4 passed in 0.07s\n",
+      "source_manifest_sha256": "c0f9929acb011ba12a32b568f4448eb0d3979093fa86989e5f0a6a91bf7cbe85",
+      "source_unchanged_during_test": true
+    }
+  ],
+  "public_source_observations": [
+    {
+      "tool": "rendered_web_read",
+      "requested_url": "https://jobs.dover.com/scytherobotics?src=app",
+      "final_url": "https://jobs.dover.com/scytherobotics?src=app",
+      "http_status": 200,
+      "company_text_present": true,
+      "explicit_empty_present": true
+    }
+  ],
+  "restart_preserved_exact_task_and_receipts": true,
+  "database_quick_check": "ok",
+  "health_after_restart": {
+    "ok": true,
+    "status": "healthy",
+    "worker_alive": true,
+    "authoritative_state": "SQLite",
+    "snapshot_errors": {},
+    "control_failures": 0,
+    "control_error": "",
+    "fatal_error": "",
+    "text": "Coordinator healthy; worker alive: True; snapshot failures: 0."
+  },
+  "handoff_exists": true,
+  "source_unchanged": true,
+  "live_scraper_validation": "NOT_RUN: coordinator repair only; no company wrapper changed."
+}

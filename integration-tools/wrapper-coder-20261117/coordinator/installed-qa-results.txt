@@ -1,0 +1,11 @@
+test_dispatch_must_reserve_remaining_total_tokens (__main__.QAControls) ... ok
+test_elapsed_deadline_must_stop_next_call_inside_a_session (__main__.QAControls) ... ok
+test_empty_unrelated_search_and_protocol_read_cannot_satisfy_inspection (__main__.QAControls) ... ok
+test_explicit_do_not_modify_must_not_enable_or_perform_edits (__main__.QAControls) ... ok
+test_render_timing_alone_must_not_count_as_progress (__main__.QAControls) ... ok
+test_snapshot_write_error_must_not_kill_scheduler_thread (__main__.QAControls) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.762s
+
+OK

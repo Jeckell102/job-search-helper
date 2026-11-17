@@ -36,13 +36,15 @@ class Store:
         finally:
             db.close()
 
-    def create(self, objective, tests, mode, max_sessions=10):
+    def create(self, objective, tests, mode, max_sessions=10, *, authorization_version=0, evidence_requirements=None):
         task_id = 'WRAP-' + uuid.uuid4().hex[:10]
         state = dict(id=task_id, objective=objective, tests=tests, mode=mode,
                      status='QUEUED', phase='baseline', created=time.time(),
+                     time_budget_policy='wall_time_from_creation_including_queue_and_pause',
                      sessions=0, calls=0, tokens=0, max_sessions=max_sessions,
                      checkpoint={}, manifest={}, stop_requested=False, reason='',
-                     no_progress=0, errors=0, phase_start=0)
+                     no_progress=0, errors=0, phase_start=0,
+                     authorization_version=authorization_version, evidence_requirements=evidence_requirements or {})
         with self.connect() as db:
             db.execute('INSERT INTO tasks VALUES (?,?)', (task_id, json.dumps(state)))
         return state
@@ -92,12 +94,15 @@ class Store:
 
     def recover(self):
         for state in self.all():
-            if state['status'] == 'PAUSING':
+            uncertain = (state['status'] in ('RUNNING', 'PAUSING', 'QUEUED') and
+                         any(r['result'] is None for r in self.receipts(state['id'])))
+            if uncertain:
+                self.update(state['id'], status='PAUSED_RECOVERY',
+                            reason='Interrupted action needs inspection before resume; no action was replayed.')
+            elif state['status'] == 'PAUSING':
                 self.update(state['id'], status='PAUSED', reason='Pause preserved across service restart.')
             elif state['status'] == 'RUNNING':
-                uncertain = any(r['result'] is None for r in self.receipts(state['id']))
-                self.update(state['id'], status='PAUSED_RECOVERY' if uncertain else 'QUEUED',
-                            reason='Interrupted action needs inspection before resume.' if uncertain else 'Recovered checkpoint.')
+                self.update(state['id'], status='QUEUED', reason='Recovered checkpoint.')
 
     def export(self, task_id):
         with self.export_lock:
@@ -110,6 +115,7 @@ class Store:
         checkpoint = state['checkpoint']
         text = (f"# {task_id}\n\nStatus: {state['status']}\nPhase: {state['phase']}\n\n"
                 f"Objective: {state['objective']}\n\nReason: {state['reason']}\n\n"
+                'Budgets: One-hour lifetime from creation, including queued and paused time. Resume does not reset time, calls, sessions or tokens. Already-started actions may finish; the next action is checked before dispatch.\n\n'
                 f"Worker summary (model-authored, verify against receipts):\n{checkpoint.get('summary', '')}\n\n"
                 f"Next action: {checkpoint.get('next_action', 'Continue the next incomplete phase.')}\n\n"
                 f"Resume in Wrapper Coder:\n\n`/wrapper resume {task_id}`\n\n"

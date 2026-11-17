@@ -1,0 +1,39 @@
+{
+  "backup": "/home/chris/job-search-helper_old/dev/wrapper-coder/rollback/qa-repairs-20261117-155718",
+  "development_archive": "/home/chris/job-search-helper_old/dev/wrapper-coder/repairs/qa-20261117-155718",
+  "host_sha256": {
+    "wrapper_task.py": "3860b0d5acd38df2279b781bb016f135d27da4de25ce6884104ee267b0ee3482",
+    "test_scope_parity.py": "d67cf6d776cab34b9372d78b5804d1f5fe6470493ac37480941d1deb04b80394",
+    "coordinator_permissions.py": "f5e4c6e29db1f5f95acc93280bfc834c0d51a238be20fb82ae36869bf5e362b6",
+    "host_server.py": "670b9ca670a17f6748354feace1d2124d6bf55122ec88ce29381509ede2fcd3a",
+    "test_coordinator.py": "84ccdff0ea9b5dc7ddfba4313e8f524c64d14149ce1ff4fdbf3ea5885c7460fc",
+    "coordinator_evidence.py": "31f21c1807cb3b77e2032bf13f296ee8721dee1389b17605d6db33697158303b",
+    "test_coordinator_integration.py": "54a029463fc166976f87605a6dc7cc2e2f6d9f8cf761d698a89cdf7088e4ea16",
+    "coding_tools.py": "a3d5fa0a71e67e47524282f0b1d2bdbdf604af02c8c85723fc434a322e99e996",
+    "coordinator_store.py": "7c1b00b1c2d89f4c8cf524f289eab670cbf874b36ab832ab34dae2749b64c02b",
+    "test_coordinator_evidence.py": "382f4021bfd9f69c8b3f4ab39cc00896f777d8946ffb848c1a177daeb278676b",
+    "test_coordinator_resilience.py": "00ce484bcfbe5baa5e4a9646db0d381975ae58a2f3abeb922ceb270a729cccd2",
+    "test_coordinator_permissions.py": "52bcb607dd7a6e7b5de8b3be280b9a79cc40efc9aed72335927998196272f0e4",
+    "coordinator.py": "5955072e4d32adcc87a6e5bd0abe39585f245e941f58704a7d5617a9ba2cf426",
+    "jetson-coding_tools.py": "639c0d7d6de1e32a9dbb2415fbb5b379f0ff6d49a5984d38f00d030d1b1f1ce4",
+    "test_coordinator_transport.py": "675acb1df4f625a3c8c7d0752f2c31a9e11648abafdfc83f9c13f793a7021656"
+  },
+  "jetson_sha256": {
+    "wrapper_commands.py": "282f489be0cc1215ae79482f569b277e9ac1c4ad6ab044bb922e61246d94785e",
+    "coding_tools.py": "639c0d7d6de1e32a9dbb2415fbb5b379f0ff6d49a5984d38f00d030d1b1f1ce4",
+    "coordinator_permissions.py": "f5e4c6e29db1f5f95acc93280bfc834c0d51a238be20fb82ae36869bf5e362b6"
+  },
+  "host_health": {
+    "ok": true,
+    "status": "healthy",
+    "worker_alive": true,
+    "authoritative_state": "SQLite",
+    "snapshot_errors": {},
+    "control_failures": 0,
+    "control_error": "",
+    "fatal_error": "",
+    "text": "Coordinator healthy; worker alive: True; snapshot failures: 0."
+  },
+  "task_database_preserved": true,
+  "transport_followup": "One tool call per response requested; bounded gateway error codes exposed. Live acceptance passed as WRAP-7f9c2bc240 across two worker sessions; task and receipts survived a controlled restart."
+}

@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import threading
+import sqlite3
+import time
 import coding_tools
 import public_tools
 from coordinator import Coordinator
@@ -13,6 +15,15 @@ BASE = Path(__file__).resolve().parent.parent
 TOKEN = (BASE / 'bridge-token').read_text().strip()
 SLOTS = threading.BoundedSemaphore(4)
 COORDINATOR = None
+
+
+def supervise(coordinator, exit_process=os._exit, interval=1):
+    """A dead scheduler must fail the service so Restart=on-failure can recover it."""
+    while True:
+        if not coordinator.thread.is_alive():
+            exit_process(75)
+            return
+        time.sleep(interval)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -63,6 +74,8 @@ class Handler(BaseHTTPRequestHandler):
                     COORDINATOR.workspace_lock.release()
             result['workspace_location'] = 'scraper computer: Job Search Helper dev/wrapper-coder/repo'
             self.reply(200, result)
+        except sqlite3.Error:
+            self.reply(503, {'ok': False, 'error': 'Task database unavailable. No action was replayed; check coordinator health.'})
         except (ValueError, TypeError, OSError) as exc:
             self.reply(200 if self.path == '/coordinator' else 400,
                        {'ok': False, 'error': str(exc)[:350]})
@@ -75,4 +88,5 @@ if __name__ == '__main__':
     server = ThreadingHTTPServer(('127.0.0.1', 18789), Handler)
     COORDINATOR = Coordinator()
     COORDINATOR.start()
+    threading.Thread(target=supervise, args=(COORDINATOR,), name='coordinator-supervisor', daemon=True).start()
     server.serve_forever()

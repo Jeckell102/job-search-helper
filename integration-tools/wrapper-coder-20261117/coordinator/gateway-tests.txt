@@ -1,0 +1,14 @@
+test_bad_command_never_sends_request (test_wrapper_commands.WrapperCommandTests) ... ok
+test_contradictory_duplicate_unknown_and_misplaced_flags_rejected (test_wrapper_commands.WrapperCommandTests) ... ok
+test_default_review_never_infers_authority_from_words (test_wrapper_commands.WrapperCommandTests) ... ok
+test_explicit_develop_flag_before_objective (test_wrapper_commands.WrapperCommandTests) ... ok
+test_mode_and_objective_forwarded_without_jetson_persistence (test_wrapper_commands.WrapperCommandTests) ... ok
+test_no_write_conflict_never_sends_request (test_wrapper_commands.WrapperCommandTests) ... ok
+test_non_commands_help_and_health (test_wrapper_commands.WrapperCommandTests) ... ok
+test_inference_uses_shared_background_gate_and_omits_private_reasoning (test_wrapper_inference.InferenceTests) ... ok
+test_unsupported_tools_and_excess_output_rejected (test_wrapper_inference.InferenceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.006s
+
+OK

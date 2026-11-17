@@ -42,8 +42,8 @@ class CoordinatorTests(unittest.TestCase):
         self.git_patch.start()
         self.addCleanup(self.git_patch.stop)
 
-    def task(self, objective='Read src/a.py and run tests/test_a.py'):
-        return self.co.command({'action': 'start', 'objective': objective})['id']
+    def task(self, objective='Read src/a.py and run tests/test_a.py', mode='review'):
+        return self.co.command({'action': 'start', 'objective': objective, 'mode': mode})['id']
 
     def checkpoint(self, outcome='continue'):
         return response('worker_checkpoint', {'summary': 'Read src/a.py; saved evidence.',
@@ -55,7 +55,7 @@ class CoordinatorTests(unittest.TestCase):
         self.answers = [response('code_read', {'path': 'src/a.py'}), self.checkpoint()]
         self.co.step(task)
         first_history = len(self.history)
-        self.answers = [self.checkpoint('phase_done')]
+        self.answers = [response('code_read', {'path': 'tests/test_a.py'}), self.checkpoint('phase_done')]
         self.co.step(task)
         fresh = self.history[first_history]
         self.assertEqual(len(fresh), 2)
@@ -96,7 +96,7 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(self.history, [])
 
     def test_crash_with_pending_edit_never_replays_automatically(self):
-        task = self.task('Fix src/a.py and run tests/test_a.py')
+        task = self.task('Fix src/a.py and run tests/test_a.py', mode='develop')
         self.co.store.update(task, status='RUNNING')
         self.co.store.intent(task, 'implement', 'code_edit', {'path': 'src/a.py'})
         recovered = Store(self.co.store.base)
@@ -161,7 +161,7 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(self.co.store.get(task)['status'], 'PAUSED_TEST_FAILURE')
 
     def test_source_gate_and_development_authorization(self):
-        task = self.task('Fix src/a.py using https://example.com and run tests/test_a.py')
+        task = self.task('Fix src/a.py using https://example.com and run tests/test_a.py', mode='develop')
         self.assertEqual(self.co.store.get(task)['mode'], 'develop')
         self.co.step(task)
         self.answers = [response('code_read', {'path': 'src/a.py'}), self.checkpoint('phase_done')]
@@ -169,9 +169,10 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(self.co.store.get(task)['phase'], 'inspect')
 
     def test_development_phase_can_edit_and_offline_success_stops_at_operator_gate(self):
-        task = self.task('Fix src/a.py and run tests/test_a.py')
+        task = self.task('Fix src/a.py and run tests/test_a.py', mode='develop')
         self.co.step(task)
-        self.answers = [response('code_read', {'path': 'src/a.py'}), self.checkpoint('phase_done')]
+        self.answers = [response('code_read', {'path': 'src/a.py'}),
+                        response('code_read', {'path': 'tests/test_a.py'}), self.checkpoint('phase_done')]
         self.co.step(task)
         self.assertEqual(self.co.store.get(task)['phase'], 'implement')
         digest = c.manifest()['src/a.py']
