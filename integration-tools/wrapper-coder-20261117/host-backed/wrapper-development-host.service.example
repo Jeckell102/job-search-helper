@@ -1,0 +1,12 @@
+[Unit]
+Description=Job Search Helper wrapper development tools
+[Service]
+WorkingDirectory=%h/job-search-helper/dev/wrapper-coder/tools
+ExecStart=%h/job-search-helper/.venv/bin/python -B %h/job-search-helper/dev/wrapper-coder/tools/host_server.py
+Environment=PYTHONDONTWRITEBYTECODE=1
+UMask=0077
+NoNewPrivileges=true
+Restart=on-failure
+RestartSec=3
+[Install]
+WantedBy=default.target

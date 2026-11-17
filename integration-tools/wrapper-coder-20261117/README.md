@@ -1,5 +1,7 @@
 # Wrapper Coder development tooling
 
+> Current deployment: [Host-backed development](host-backed/README.md) supersedes the Jetson-local storage instructions below. Wrapper files and temporary tests now live in the scraper computer's Job Search Helper dev folder. The original setup details below are retained as history.
+
 This source-only extension adds a dedicated Wrapper Coder profile to the existing local AI core (validated against version 0.2.2). It is an integration record, not a standalone installer.
 
 The profile reuses the installed Qwen3.5 4B weights with a 12,288-token context, thinking disabled by default, and a 3,072-token maximum output. Existing chat profiles retain their existing settings. A larger context changes runtime configuration, not model training or intelligence.

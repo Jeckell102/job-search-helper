@@ -1,0 +1,10 @@
+[Unit]
+Description=Jetson connection to Job Search Helper development files
+After=network-online.target wrapper-development-host.service
+Wants=wrapper-development-host.service
+[Service]
+ExecStart=/usr/bin/ssh -NT -o BatchMode=yes -o StrictHostKeyChecking=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o ConnectTimeout=10 -R 127.0.0.1:18789:127.0.0.1:18789 YOUR_JETSON_SSH_ALIAS
+Restart=always
+RestartSec=5
+[Install]
+WantedBy=default.target
