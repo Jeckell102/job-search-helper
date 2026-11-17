@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**Three active lanes: W04/Lockheed, W06/Zebra, and W06/Booz Allen. Status: IN_PROGRESS.**
+**Three active lanes: W04/Lockheed, W06/Booz Allen, and W06/CrowdStrike. Status: IN_PROGRESS.**
 
-Do not duplicate the three active lanes. Lockheed remains `IMPLEMENTED_AWAITING_VALIDATION`; it is not complete. W02/Black River and W06/Aerotech are now complete, along with W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics. When a lane finishes, claim the next highest-priority eligible unclaimed W06 or W02 company after inspecting current process and saved validation state.
+Do not duplicate the three active lanes. Lockheed is actively checkpointing its complete validation and is not yet complete. W06/Zebra is `IMPLEMENTED_AWAITING_VALIDATION` because the exact Workday route reaches a public human-verification block. W02/Black River and W06/Aerotech are complete, along with W06/Serve Robotics, W06/Ubiquiti, W05/IERUS, and W06/RightHand Robotics. When a lane finishes, claim the next highest-priority eligible unclaimed W06 or W02 company after inspecting current process and saved validation state.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -48,8 +48,9 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 | W06/RightHand Robotics | COMP-0710 RightHand Robotics | COMPLETE | /root/ierus / 2026-11-17T17:11:50Z | Added guarded official-careers-to-Breezy routing; targeted suite passed 22 tests and normal dispatch returned 3 full postings with stable final reread. |
 | W04/Lockheed | COMP-0074 Lockheed Martin | IN_PROGRESS | /root/lockheed_lane / 2026-11-17T17:52:36Z | Resume or redesign bounded complete validation of the exact scoped Eightfold adapter; retain final reread evidence and do not claim sampled pages as complete. |
 | W06/Aerotech | COMP-0789 Aerotech | COMPLETE | /root/aerotech_lane / 2026-11-17T17:56:23Z | Added guarded official-careers-to-JazzHR routing; 18 focused tests passed and normal dispatch returned 26 full postings with a final reread. |
-| W06/Zebra | COMP-0538 Zebra Technologies | IN_PROGRESS | /root/aerotech_lane / 2026-11-17T17:56:23Z | Verify the exact official-careers-to-Zebra Workday route and complete normal-dispatch inventory; preserve intended scope. |
+| W06/Zebra | COMP-0538 Zebra Technologies | IMPLEMENTED_AWAITING_VALIDATION | /root/aerotech_lane / 2026-11-17T18:01:35Z | Guarded exact official-to-Zebra Workday routing and 33 focused tests passed; live normal dispatch is blocked by Workday human verification on the first public detail, so no complete result or reread exists. |
 | W06/Booz Allen | COMP-0623 Booz Allen Hamilton | IN_PROGRESS | /root/black_river_lane / 2026-11-17T17:56:23Z | Verify the exact official-careers-to-BAH Workday route and complete normal-dispatch inventory; preserve intended scope. |
+| W06/CrowdStrike | COMP-0663 CrowdStrike | IN_PROGRESS | /root/aerotech_lane / 2026-11-17T18:01:35Z | Verify exact official-careers-to-CrowdStrike Workday routing and complete normal-dispatch inventory while preserving the full unfiltered scope. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
@@ -3054,6 +3055,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 38 saved pending URLs; discovery incomplete flag `False`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0538 — Zebra Technologies
+
+**Current implementation status (2026-11-17):** W06/Zebra routing is implemented but awaits live validation. The exact official careers source is repaired only to the unfiltered Zebra Workday board; job-family highlight links are excluded. `tests/test_zebra.py` and `tests/test_workday.py` passed 33 tests. Read-only normal dispatch reached the scoped endpoint but stopped at the first public detail because Workday required human verification, so it returned zero jobs and cannot support a final reread or completion claim. Installation, scraper-run adoption, and Sheet publication were not performed.
 
 **Disposition:** Native integration candidate · **Work order:** W06
 
