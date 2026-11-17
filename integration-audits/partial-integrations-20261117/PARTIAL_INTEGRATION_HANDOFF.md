@@ -7,9 +7,9 @@
 
 ### Current next item
 
-**W01 — Repair the shared Rippling query-key schema. Status: READY.**
+**W03 + W02/Hughes — Correct the Hughes public API transport and replace its historical fixed-count check. Status: READY.**
 
-Start with the W01 work order below. It identifies the reproduced exception, affected companies, code, and validation requirements. Read the latest copy of this file before starting; if W01 has since been completed, select the next eligible unfinished item using the priority order below. If a task is already in progress, check its owner and saved work before continuing it or choosing another item.
+Start with the W03 work order and the overlapping Hughes row in W02 below. The bounded task is COMP-0118 Hughes Network Systems: permit only the verified scoped public API route, replace the exact 14-job/two-page assumption with dynamic complete pagination and reread validation, then validate normal dispatch. Read the latest copy of this file before starting; if a task is already in progress, check its owner and saved work before continuing it or choosing another item.
 
 **Priority order:** W01 → W03 transport fixes together with the overlapping Hughes W02 count fix → remaining W02 count fixes → W04 Lockheed routing → W06 Serve Robotics and Ubiquiti → W05 redirect repairs → W08 provider repairs → remaining discovery, scope, and access investigations. W07 must be resolved before enabling Caterpillar completeness. W09 is adoption verification of an existing implementation, not a request to build it again.
 
@@ -33,13 +33,21 @@ Only tasks explicitly recorded as complete with evidence are complete. Work orde
 
 | Task | Scope | Status | Owner / updated UTC | Outcome / next action |
 |---|---|---|---|---|
-| W01 | Shared Rippling parser; 13 listed companies | READY | Unassigned / not started | Read W01; reproduce the query-key failure, implement schema handling, and validate the affected scope. |
+| W01 | Shared Rippling parser; 13 listed companies | COMPLETE | /root / 2026-11-17T16:05:43Z | Added explicit old/new query-key validation. Twelve boards passed full normal-dispatch validation; goTenna is separately partial because its recorded board now returns HTTP 404 before parser execution. See `W01_RIPPLING_VALIDATION_2026-11-17.md`. |
+| W03 + W02/Hughes | COMP-0118 Hughes Network Systems | READY | Unassigned / 2026-11-17T16:13:00Z | Start with exact API transport allowlisting and dynamic pagination/reread validation. |
 
 Statuses: `READY`, `IN_PROGRESS`, `IMPLEMENTED_AWAITING_VALIDATION`, `BLOCKED`, `COMPLETE`.
 
 ### Progress log
 
-No integration task has been executed under this workflow yet. The earlier Bosch Rexroth implementation is documented in W09.
+- **W01 / 13 Rippling companies / /root / 2026-11-17T16:13:00Z:**
+- **Status and outcome:** COMPLETE for the shared parser repair. The parser accepts the current trailing `en-US` query-key form and the verified `true`/`false` boolean variant while rejecting non-boolean flags, unrecognized/ambiguous key layouts, non-`en-US` locale, and any filters. Twelve companies passed full normal-dispatch inventory validation with final rereads. goTenna remains partial because `https://ats.rippling.com/gotenna/jobs` returns HTTP 404; that is a source repair/discovery issue, not the parser exception.
+- **Changes:** `src/job_search_helper/shared_boards.py` adds `_rippling_filters` and uses it before Rippling pagination validation. `tests/test_shared_boards.py` covers the trailing locale, both valid boolean states, malformed/ambiguous/filtered keys, wrong board identity, and a 21-posting two-page listing.
+- **Verification:** `PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' PYTHONPATH=src /home/chris/job-search-helper_old/.venv/bin/python -m pytest -q tests/test_shared_boards.py tests/test_rippling_locations.py` passed 20 tests. The full live normal-dispatch results, source URLs, counts, and final-recheck outcomes are in `W01_RIPPLING_VALIDATION_2026-11-17.md`.
+- **Installation / run adoption / Sheet publication:** not performed. The validation invoked adapters read-only; it did not start a scraper cycle, write local inventory state, or publish to Google Sheets.
+- **GitHub backup / commit:** pending this task's backup commit.
+- **Remaining work or blocker:** COMP-0110 goTenna current source returns HTTP 404 and must remain partial until a verified employer-scoped public source is established. This does not invalidate the W01 parser repair.
+- **Next task and exact first action:** W03 + W02/Hughes. Inspect the current Hughes public API response, narrow the allowed endpoint contract, and replace the exact 14-job/two-page check with dynamic reconciliation tests.
 
 After each task, append an entry using this structure:
 
@@ -515,6 +523,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 
 ### COMP-0066 — Forterra
 
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 50 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
+
 **Disposition:** Strong repair candidate · **Work order:** W01
 
 **Initial group:** A1 Shared adapter exception
@@ -830,6 +840,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0110 — goTenna
+
+**Current implementation status (2026-11-17):** W01 parser repair is installed, but the recorded Rippling board currently returns HTTP 404 before parser execution. The company remains partial pending verified source repair/discovery. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
 
 **Disposition:** Strong repair candidate · **Work order:** W01
 
@@ -1199,6 +1211,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 
 ### COMP-0178 — Performance Drone Works (PDW)
 
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 39 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
+
 **Disposition:** Strong repair candidate · **Work order:** W01
 
 **Initial group:** A1 Shared adapter exception
@@ -1266,6 +1280,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0188 — DroneUp
+
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: zero postings under an explicit complete public inventory and stable final reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
 
 **Disposition:** Strong repair candidate · **Work order:** W01
 
@@ -1360,6 +1376,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0237 — Bonsai Robotics
+
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 7 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
 
 **Disposition:** Strong repair candidate · **Work order:** W01
 
@@ -1629,6 +1647,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 
 ### COMP-0260 — Advanced Navigation
 
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 22 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
+
 **Disposition:** Strong repair candidate · **Work order:** W01
 
 **Initial group:** A1 Shared adapter exception
@@ -1740,6 +1760,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0288 — ADLINK Technology
+
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 10 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
 
 **Disposition:** Strong repair candidate · **Work order:** W01
 
@@ -1876,6 +1898,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `False`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0320 — Foundation
+
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 26 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
 
 **Disposition:** Strong repair candidate · **Work order:** W01
 
@@ -2017,6 +2041,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 
 ### COMP-0349 — Blue Robotics
 
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 1 full posting with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
+
 **Disposition:** Strong repair candidate · **Work order:** W01
 
 **Initial group:** A1 Shared adapter exception
@@ -2038,6 +2064,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `False`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0350 — Kraken Robotics
+
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 22 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
 
 **Disposition:** Strong repair candidate · **Work order:** W01
 
@@ -2509,6 +2537,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 
 ### COMP-0483 — Cyngn
 
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 19 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
+
 **Disposition:** Strong repair candidate · **Work order:** W01
 
 **Initial group:** A1 Shared adapter exception
@@ -2664,6 +2694,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 0 saved pending URLs; discovery incomplete flag `True`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0495 — Overland AI
+
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 46 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
 
 **Disposition:** Strong repair candidate · **Work order:** W01
 
@@ -2988,6 +3020,8 @@ The register is generated from the immutable snapshot plus reviewed implementati
 **Checkpoint context:** 1 saved pending URLs; discovery incomplete flag `False`; previous cycle stage `partial`. Neither pending count nor this flag alone proves coverage.
 
 ### COMP-0539 — Mytra
+
+**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 40 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`.
 
 **Disposition:** Strong repair candidate · **Work order:** W01
 
