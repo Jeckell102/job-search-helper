@@ -5,7 +5,7 @@
   "github_branch": "audit/partial-integrations-20261117",
   "github_directory": "integration-audits/partial-integrations-20261117",
   "files": {
-    "PARTIAL_INTEGRATION_HANDOFF.md": "f501742105a37a0300b17753d69fb7af383e2e3005524cd0234fee4af3374bcb",
+    "PARTIAL_INTEGRATION_HANDOFF.md": "71fe0385522faeaf6641c93193278d4b3593ae1aabd92912adec6107aabbe028",
     "W01_RIPPLING_VALIDATION_2026-11-17.md": "36b6dbf126370b781fc8fd9e93f62d4423c607636bb1d72d482ed49250be7bac",
     "W03_HUGHES_VALIDATION_2026-11-17.md": "de6c1607ede03547062e897a03b2766cae2a98b7898c6cd79834b1ae2e68bc83",
     "bosch-validation-summary.json": "a8703d6337f42a26ec94658ec1169b00ee5afdfadbd3ef29669b98ccb2c4a312",
