@@ -50,7 +50,7 @@ All task data, tests, source observations, repair development and rollback copie
 
 For code rollback, stop at an idle boundary, restore the backed-up host and Jetson runtime files, then restart their respective services. Preserve the current task database and task directories; no schema migration or task-history rollback is required. Restoring the pre-repair code also restores the assessed defects.
 
-Source, tests, updated operator instructions and sanitized verification are saved to the existing GitHub backup branch. Runtime task databases, bridge credentials, private prompts and full page bodies are excluded from publication. The backup receipt is recorded separately after remote readback.
+Source, tests, updated operator instructions and sanitized verification were published with explicit approval to the existing public GitHub backup branch, `tools/wrapper-coder-20261117`. The source publication commit is `33da8a268fb0f5299790329c2e52429e2b5a3510`; all 27 published files were read back from that immutable commit and matched the prepared content byte for byte. Runtime task databases, bridge credentials, private prompts and full page bodies were excluded. The complete development archive remains on MuleLab, and `BACKUP-RECEIPT.json` records the remote verification.
 
 ## Operator commands
 

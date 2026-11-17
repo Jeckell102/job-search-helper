@@ -1,0 +1,17 @@
+{
+  "repository": "Jeckell102/job-search-helper",
+  "visibility": "public",
+  "branch": "tools/wrapper-coder-20261117",
+  "previous_head": "8e563bd88336013a5d738a110ad18cee3017a207",
+  "source_publication_commit": "33da8a268fb0f5299790329c2e52429e2b5a3510",
+  "published_files": 27,
+  "readback_verified_files": 27,
+  "readback_failures": 0,
+  "excluded": [
+    "credentials and bridge configuration",
+    "task databases",
+    "private prompts and full task receipts",
+    "rendered page bodies",
+    "tokenizer cache and model weights"
+  ]
+}
