@@ -163,12 +163,12 @@ class CoordinatorTests(unittest.TestCase):
             self.co.step(task)
         self.assertEqual(self.co.store.get(task)['status'], 'PAUSED_TEST_FAILURE')
 
-    def test_live_validated_status_reports_operator_receipt(self):
+    def test_live_validated_status_alone_does_not_claim_operator_receipt(self):
         task = self.task()
         state = self.co.store.update(task, status='LIVE_VALIDATED')
         text = self.co.describe(state)
-        self.assertIn('Operator live-validation receipt saved.', text)
-        self.assertNotIn('not certified by the worker', text)
+        self.assertNotIn('Operator live-validation receipt saved.', text)
+        self.assertIn('not certified by the worker', text)
 
     def test_source_gate_and_development_authorization(self):
         task = self.task('Fix src/a.py using https://example.com and run tests/test_a.py', mode='develop')

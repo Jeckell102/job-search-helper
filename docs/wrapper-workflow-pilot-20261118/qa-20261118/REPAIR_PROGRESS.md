@@ -18,12 +18,9 @@ Atomic pilot/campaign/queue transitions accepted after the terminal-status bypas
 
 Canonical identity and company registry implemented. Exact102-member identity migration passed on a disposable database: dry run unchanged; first apply102; second apply0 and byte-identical; old budgets, statuses and history preserved; integrity OK; controls OFF. Independent testing caught an activation-fields mutation bypass after the initial188-test pass; post-update validation now rolls it back. Final independent full suite190/190 and focused45/45 passed. Roadmap accepted. Group4 exact edit scope and independent acceptance assertions now in progress. Group3 GitHub backup b71c399 pushed.
 
-## Remaining
+## Current remaining work
 
-3. Canonical identity and duplicate prevention.
-4. Exact edit scope and independent acceptance tests.
-5. Atomic inference reservation and pause precedence.
-6. Durable campaign completion and truthful reporting.
+6. Durable campaign completion and truthful reporting (final boundary regressions).
 7. Scheduler ownership, baseline inputs, reproducible deployment.
 
 Then: independent final QA using fresh reviewers. Any failure creates a new report and fresh repair/verification lanes; the goal remains active until re-QA passes. Live scraper validation and installing generated wrappers remain separate gates.
@@ -41,3 +38,11 @@ Group4 ACCEPTED after all corrections: independent13/13, combined35/35, full214/
 Atomic inference reservations, a serialized worker-session lease, exactly-once usage reconciliation and durable redacted model receipts implemented. Uncertain requests globally block later companies and re-enabling scheduling, including after restart. Independent13/13 and combined84/84 passed; corrected concurrent session double-count race. Legacy migrations reject unresolved inference; exact102 rehearsals still pass. Final full suite running. Group4 backup3289365 pushed.
 
 Group5 ACCEPTED: final full231/231 and roadmap highest-risk5/5 passed. Group6 durable reconciliation/reporting now active.
+
+## Finding6 rehearsal and ongoing checks
+
+Two-company offline rehearsal passed using actual guarded edits, Git workspaces and OS-sandbox tests with simulated web/model responses: 15 steps, 4 model callbacks. Company1 failed its initial assertion, was repaired, then passed editable and immutable acceptance; company2 stopped blocked. Context/workspace isolation, pause/restart counter/receipt preservation, terminal exception accounting and repeated status stability passed. This is host-workflow evidence, not live Jetson or scraper certification. Independent reviewers found additional late-result control-generation and in-flight quiescence cases; Group6 stays open until those fixes and final verification pass. GitHub Group5 backup f950f3c pushed successfully.
+
+Group6 final review: independent13/13, combined59/59, full250/250 and real two-company rehearsal passed before two additional boundary findings. Status was implicitly sealing a partial pre-start batch roster; also an old drained campaign could disable a separately started generic queue on a later status read. Group6 remains IN PROGRESS pending explicit activation sealing, atomic late-import rejection, observational terminal status, and new regression/full checks. Group7 remains waiting.
+
+Group6 ACCEPTED IN STAGING after final boundary fixes: independent15/15, campaign-focused39/39, implementation/control focused62/62, final frozen full254/254 (22.010s), and actual OS-sandbox two-company rehearsal PASS. Exact historical live receipt compatibility independently verified against both original pilots. Group7 is next; production remains paused and unchanged.

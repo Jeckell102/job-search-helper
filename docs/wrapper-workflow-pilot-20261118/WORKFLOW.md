@@ -87,3 +87,13 @@ MuleLab reserves each model call in a database transaction immediately before di
 Model receipts contain request, tool and response digests and accounting evidence, rather than prompt contents. Finalization adjusts a reservation once using valid observed usage; invalid usage retains the reservation and stops for inspection. A crash or uncertain transport result never triggers an automatic resend of that request. Restart preserves counters and unresolved evidence. The existing Jetson endpoint is not claimed to provide provider-side idempotency.
 
 An unresolved model receipt is a global safety stop across companies. A timed-out request may still be running on the Jetson. Python therefore blocks later inference reservations and pauses scheduling rather than assuming that a timeout freed the lane. Inspect the recorded request and reconcile the provider state explicitly; elapsed time or a new chat does not authorize replay or clear the uncertainty.
+
+## Campaign completion and paused work
+
+Import the reviewed company list in one or more batches before explicitly starting the campaign. Status checks during preparation do not lock the list. Starting the campaign seals its membership; later additions require a new campaign. Exact batch replay and an explicit retry for an existing company preserve the reviewed membership.
+
+Campaign status counts the current assignment for each registered company once. Earlier attempts remain in history. Offline-ready companies are reported as awaiting live validation; an offline pass does not certify job downloads or installation. Blocked, exhausted, excluded, and individually paused companies are reported with their reasons and permitted next action.
+
+When every current company has reached a recorded boundary and no action remains in flight, Python saves an immutable completion snapshot and turns scheduling off. `DRAINED_WITH_EXCEPTIONS` means some companies still need attention. Repeating a status request does not create a new revision. An explicit eligible resume, include, or retry reopens the campaign with its earlier completion snapshot preserved.
+
+A global pause retains the selected company and prevents automatic advancement. An unresolved inference receipt stops the entire lane for reconciliation. Results arriving after a pause or a changed control generation cannot advance the phase, publish success, or restore scheduling; saved evidence does not override the operator's control decision.

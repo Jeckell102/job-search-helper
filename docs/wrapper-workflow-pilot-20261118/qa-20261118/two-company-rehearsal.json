@@ -1,0 +1,129 @@
+{
+  "result": "PASS",
+  "scope": "Offline host rehearsal; not live scraper or Jetson validation",
+  "model_calls": 4,
+  "steps": 15,
+  "pause_restart_verified": true,
+  "real_test_results": [
+    {
+      "workspace": "WRAP-fa53b31020",
+      "exit_code": 1
+    },
+    {
+      "workspace": "WRAP-fa53b31020",
+      "exit_code": 0
+    },
+    {
+      "workspace": "WRAP-fa53b31020",
+      "exit_code": 0
+    },
+    {
+      "workspace": "WRAP-9f49f0d6fa",
+      "exit_code": 1
+    }
+  ],
+  "campaign": {
+    "campaign_id": "offline-two-company",
+    "membership_digest": "2912b8b93c1d172c324b76201afff758bedacc708407501b563961d88492ad1a",
+    "membership_sealed": true,
+    "observed_membership_digest": "2912b8b93c1d172c324b76201afff758bedacc708407501b563961d88492ad1a",
+    "total": 2,
+    "counts": {
+      "OFFLINE_READY_AWAITING_LIVE_VALIDATION": 1,
+      "PAUSED_BLOCKED": 1
+    },
+    "members": [
+      {
+        "company_id": "COMP-9001",
+        "company": "Alpha Rehearsal",
+        "task_id": "WRAP-fa53b31020",
+        "status": "AWAITING_LIVE_VALIDATION",
+        "phase": "verify",
+        "disposition": "CAMPAIGN_FINISHED",
+        "bucket": "OFFLINE_READY_AWAITING_LIVE_VALIDATION",
+        "exception": false,
+        "reason": "Current source passed both editable and immutable offline tests. Live validation and delivery remain.",
+        "next_action": "Operator live validation required; installation is a separate gate.",
+        "receipt_id": 11,
+        "receipt_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ]
+      },
+      {
+        "company_id": "COMP-9002",
+        "company": "Beta Rehearsal",
+        "task_id": "WRAP-9f49f0d6fa",
+        "status": "PAUSED_BLOCKED",
+        "phase": "inspect",
+        "disposition": "CAMPAIGN_FINISHED",
+        "bucket": "PAUSED_BLOCKED",
+        "exception": true,
+        "reason": "Worker blocked: Beta requires operator source clarification.; next: Inspect the saved fixture evidence before retry.",
+        "next_action": "Review the reason and receipts, then explicitly resume when the lane and budgets permit.",
+        "receipt_id": 15,
+        "receipt_ids": [
+          12,
+          13,
+          14,
+          15
+        ]
+      }
+    ],
+    "exceptions": [
+      {
+        "company_id": "COMP-9002",
+        "company": "Beta Rehearsal",
+        "task_id": "WRAP-9f49f0d6fa",
+        "status": "PAUSED_BLOCKED",
+        "phase": "inspect",
+        "disposition": "CAMPAIGN_FINISHED",
+        "bucket": "PAUSED_BLOCKED",
+        "exception": true,
+        "reason": "Worker blocked: Beta requires operator source clarification.; next: Inspect the saved fixture evidence before retry.",
+        "next_action": "Review the reason and receipts, then explicitly resume when the lane and budgets permit.",
+        "receipt_id": 15,
+        "receipt_ids": [
+          12,
+          13,
+          14,
+          15
+        ]
+      }
+    ],
+    "errors": [],
+    "state": "DRAINED_WITH_EXCEPTIONS",
+    "reconciliation_digest": "ce22c4f0dff26c5d896e04c8980d584a64db22eeef8d70eb77591e77012e6fc1",
+    "revision": 1,
+    "created_at": 1795032541.0228775,
+    "updated_at": 1795032543.4177806,
+    "control_generation": 23
+  },
+  "states": [
+    {
+      "id": "WRAP-fa53b31020",
+      "status": "AWAITING_LIVE_VALIDATION",
+      "phase": "verify",
+      "calls": 3,
+      "tokens": 1680,
+      "sessions": 2
+    },
+    {
+      "id": "WRAP-9f49f0d6fa",
+      "status": "PAUSED_BLOCKED",
+      "phase": "inspect",
+      "calls": 1,
+      "tokens": 560,
+      "sessions": 1
+    }
+  ]
+}

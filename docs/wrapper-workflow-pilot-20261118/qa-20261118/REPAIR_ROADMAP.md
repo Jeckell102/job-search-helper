@@ -242,14 +242,14 @@ Required focused tests:
 
 Current gate status: **ACCEPTED IN STAGING.** A durable inference receipt and budget reservation now commit immediately before the existing three-argument model callback. Pause/deadline/ownership/identity/budget races that commit first create no receipt and invoke no model; a dispatch that commits first is accounted once, and later control loss drops its tools. Valid usage adjusts only its reservation; invalid, missing, zero, or excessive usage fails closed without counter reset. Timeout/crash/malformed response becomes nonreplayable `UNCERTAIN`, disables controls, and globally blocks sessions, selectors, activations, reservations, and tool intents for every company. Attempts to re-enable queue/campaign while unresolved now reject; lower-level tampered controls still cannot bypass the receipt barrier. Both legacy migrations reject unresolved inference. Independent Group-5 QA passed 13/13, combined focused coverage passed 84, the final frozen host suite passed 231/231, and an additional roadmap rerun of the five highest-risk pause/dispatch/global-barrier/concurrency/migration cases passed. Production remains unchanged and no live inference ran.
 
-### 6. Campaign completion and truthful reporting — IN PROGRESS
+### 6. Campaign completion and truthful reporting — ACCEPTED IN STAGING
 
-- [ ] Persist campaign totals and terminal `DRAINED` or `DRAINED_WITH_EXCEPTIONS` outcomes.
-- [ ] Report company identity, current stage, exception reason, and next allowed action.
-- [ ] Correct held-batch, paused-queue, gate, resume, and live-validation wording.
-- [ ] Keep offline-ready distinct from live-validated and installed.
-- [ ] Add terminal accounting and status text tests.
-- [ ] Focused and full suites pass; roadmap review approves group 6.
+- [x] Persist campaign totals and terminal `DRAINED` or `DRAINED_WITH_EXCEPTIONS` outcomes.
+- [x] Report company identity, current stage, exception reason, and next allowed action.
+- [x] Correct held-batch, paused-queue, gate, resume, and live-validation wording.
+- [x] Keep offline-ready distinct from live-validated and installed.
+- [x] Add terminal accounting and status text tests.
+- [x] Focused and full suites pass; roadmap review approves group 6 after the pre-start roster and unrelated-queue regressions pass.
 
 Acceptance criteria:
 
@@ -290,7 +290,15 @@ Required focused tests:
 11. Deterministic pause/control races at final worker checkpoint, phase-done, baseline completion, verification promotion, and scheduler error preserve the committed pause/operator gate; no delayed result changes `PAUSING`/`PAUSED` to `QUEUED` or launders a terminal status.
 12. Existing campaign isolation, pause, atomic controls, identity, scope, inference, restart, and cumulative-budget tests remain passing without live inference.
 
-### 7. Ownership, reproducibility, deployment, and final rehearsal — WAITING
+Current gate status: **ACCEPTED IN STAGING.** Reconciliation now uses only the current registry owner for each canonical company, preserves the explicitly sealed reviewed membership digest across changed-membership failures, records durable terminal revisions, and disables controls at a terminal or reconciliation boundary. A campaign finishes when all current companies have reached a recorded boundary; this is explicitly not a claim that every integration succeeded, was live-validated, was installed, or downloaded all jobs. Offline-ready, review-only, live-validated-awaiting-installation, user-paused, excluded, and named pause/error outcomes remain separate in both the durable JSON and bounded human report. Unknown ownership/state, incomplete totals, unfinished actions, or unresolved inference fail closed as `PAUSED_RECONCILIATION`.
+
+Selected exception outcomes retire atomically and allow the next held company to advance; a global stop retains the selected company, and any `RUNNING`/`PAUSING` lane owner prevents drain. Guarded result publication preserves a committed pause or operator gate across delayed checkpoint, baseline, verification, scheduler-error, and stop/restart-ABA races. Recoverable finished `PAUSED_*` exceptions may be explicitly resumed into a new campaign revision while retaining cumulative budgets and authorization checks; an exhausted budget remains rejected. Offline/live operator gates never reopen through resume.
+
+The final corrections separate observational status from explicit campaign activation. Status may reconcile an unsealed pre-start multi-batch roster without freezing a partial import; explicit activation seals the reviewed digest; late membership additions fail atomically with zero task, registry, or batch writes; exact batch replay and identity-preserving retry remain valid. Re-reading an unchanged drained campaign is observational and does not disable an explicitly resumed unrelated generic queue.
+
+Final independent verification passed 15/15 campaign-completion tests and 39/39 combined campaign-focused tests; implementation control/queue coverage passed 62/62. A separate roadmap rerun passed the 19 earlier campaign result/completion tests, direct resume checks for a recoverable exception, operator-gate rejection, and exhausted-budget rejection, then independently reproduced unsealed two-batch import, activation sealing, zero-write late rejection, exact replay, repeated corruption, and observational terminal status. Both actual historical `LIVE_VALIDATED` pilot records passed the compatibility validator against their stored operator receipts without joining campaign totals. The corrected frozen full host suite passed 254/254. The real OS-sandbox two-company fake-model rehearsal passed again after the sealing and terminal-status fixes, with fresh per-company context and no live inference. Production remains unchanged and controls remain OFF.
+
+### 7. Ownership, reproducibility, deployment, and final rehearsal — IN PROGRESS
 
 - [ ] Enforce scheduler ownership inside `run()` as well as `start()`.
 - [ ] Include every copied test/config input in the campaign baseline digest and drift checks.

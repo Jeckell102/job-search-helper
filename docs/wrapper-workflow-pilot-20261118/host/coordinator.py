@@ -1,3 +1,4 @@
+from coordinator_campaign import next_action, valid_live_evidence, campaign_text
 from coordinator_inference import digest as inference_digest
 """MuleLab-owned sequential worker scheduler; Jetson performs inference only."""
 import hashlib
@@ -230,7 +231,7 @@ class Coordinator:
         return canonical_requirements(state['integration'], result) if state.get('integration') else result
 
     def budget_pause(self, task_id, reason):
-        self.store.update(task_id, status='PAUSED_BUDGET', reason=reason)
+        self.store.publish_result(task_id, self.store.result_snapshot(task_id), status='PAUSED_BUDGET', reason=reason)
         raise BudgetReached(reason)
 
     def command(self, data):
@@ -259,6 +260,7 @@ class Coordinator:
             counts = {}
             for state in states:
                 counts[state['status']] = counts.get(state['status'], 0) + 1
+            reconciliation = self.store.reconcile_campaign()
             enabled = self.store.queue_enabled()
             autopilot = self.store.autopilot_enabled()
             campaign = self.store.campaign_control()
@@ -268,9 +270,9 @@ class Coordinator:
                             for s in states)
             pilot = self.store.pilot_task()
             return {'ok': True, 'enabled': enabled, 'autopilot': autopilot,
-                    'campaign': campaign, 'pilot': pilot,
+                    'campaign': campaign, 'campaign_result': reconciliation, 'pilot': pilot,
                     'untouched': untouched, 'counts': counts, 'upcoming': upcoming,
-                    'text': 'Queue ' + ('running' if enabled else 'paused after the current action') + '. One company at a time.\n' +
+                    'text': campaign_text(reconciliation) + '\nQueue ' + ('running' if enabled else 'paused after the current action') + '. One company at a time.\n' +
                     (f"Campaign: ON ({campaign['campaign_id']}); Python will select one held member when the lane is free.\n" if autopilot else 'Campaign: OFF.\n') +
                     ('Pilot only: ' + pilot + '.\n' if pilot else '') +
                     f'Untouched backlog: {untouched}.\n' + json.dumps(counts, sort_keys=True) +
@@ -292,12 +294,12 @@ class Coordinator:
                 self.export(task_id)
             self.wake.set()
             return {'ok': True, 'ids': ids, 'reused': reused,
-                    'text': ('Existing' if reused else 'Queued') + f' batch: {len(ids)} companies. Check /wrapper queue.'}
+                    'text': ('Existing' if reused else 'Imported and held') + f' batch: {len(ids)} companies. Campaign selection is required. Check /wrapper queue.'}
         if action == 'start':
             state = self.store.create(**self.assignment(data))
             self.export(state['id'])
             self.wake.set()
-            return {'ok': True, 'id': state['id'], 'text': f"Queued {state['id']} on MuleLab ({state['mode']}). Workers continue automatically.\nCheck: /wrapper status {state['id']}"}
+            return {'ok': True, 'id': state['id'], 'text': f"Queued {state['id']} on MuleLab ({state['mode']}). {'Workers continue automatically.' if self.store.queue_enabled() and not self.store.campaign_enabled() else 'Saved behind paused or campaign controls; generic queue scheduling is required.'}\nCheck: /wrapper status {state['id']}"}
         if action == 'list':
             return {'ok': True, 'text': '\n'.join(f"{s['id']}: {s['status']} / {s['phase']}" for s in self.store.all()[-30:]) or 'No coordinator tasks.'}
         state = self.store.get(data.get('id'))
@@ -366,7 +368,7 @@ class Coordinator:
         elif action != 'status':
             raise ValueError('Use start, status, list, pause, resume, exclude, include, pilot controls, campaign controls, queue controls, or health.')
         self.export(state['id'])
-        return {'ok': True, 'state': {k: v for k, v in state.items() if k != 'manifest'}, 'state_digest': task_state_digest(state), 'text': self.describe(state)}
+        return {'ok': True, 'state': {k: v for k, v in state.items() if k != 'manifest'}, 'state_digest': task_state_digest(state), 'next_action': next_action(state), 'text': self.describe(state)}
 
     def describe(self, state):
         validate_bound_identity(state)
@@ -381,7 +383,7 @@ class Coordinator:
         planned = ('Python plan: ' + str(len(plan.get('complete', []))) + ' completed requirements; '
                    + str(len(plan.get('remaining', []))) + ' remaining. Next: '
                    + str((plan.get('next') or {}).get('label', plan.get('assignment', 'baseline or verification'))) + '.\n') if state.get('workflow_version') == 2 else ''
-        certification = ('Operator live-validation receipt saved.' if state['status'] == 'LIVE_VALIDATED'
+        certification = ('Matching operator live-validation receipt saved; installation remains a separate gate.' if state['status'] == 'LIVE_VALIDATED' and valid_live_evidence(state, receipts)
                          else 'Live validation and installation are not certified by the worker.')
         return (f"{state['id']}: {state['status']}\nStage: {state['phase']} ({state['mode']})\n" +
                 (f"Company: {state['integration_identity']['company_id']} {state['integration_identity']['company']} | {state['integration_identity']['configured_url']} | identity {state['integration_identity_digest']}\n" if state.get('integration_identity') else '') +
@@ -392,9 +394,9 @@ class Coordinator:
                 'Pauses count; resume retains all budgets.\n'
                 + latest + planned + inference_status +
                 f"{state['reason']}\nWorker summary (verify against receipts): {cp.get('summary', 'No worker summary yet.')}\n"
-                f"Next: {cp.get('next_action', 'Continue the current stage.')}\n"
+                f"Disposition: {state.get('campaign_disposition')}\nNext: {next_action(state)}\n"
                 f"Files and receipts: {self.store.base / state['id']}\n"
-                f"Resume if paused: /wrapper resume {state['id']}\n"
+                
                 + certification)
 
     def start(self):
@@ -441,6 +443,7 @@ class Coordinator:
                     pilot = self.store.pilot_task()
                     task = self.store.claim_pilot(pilot) if pilot else None
                 if task:
+                    task = self.store.result_snapshot(task['id'])
                     with self.workspace_lock:
                         try:
                             self.step(task['id'])
@@ -452,7 +455,7 @@ class Coordinator:
                             uncertain = (any(r['result'] is None for r in self.store.receipts(task['id']))
                                          or any(r['status'] in ('DISPATCHING', 'UNCERTAIN') for r in self.store.inference_receipts(task['id'])))
                             retry = errors < 3 and not uncertain and not state['stop_requested']
-                            self.store.update(task['id'], status='QUEUED' if retry else ('PAUSED_RECOVERY' if uncertain else 'PAUSED_ERROR'), errors=errors,
+                            self.store.publish_result(task['id'], dict(state, result_control_generation=task['result_control_generation']), status='QUEUED' if retry else ('PAUSED_RECOVERY' if uncertain else 'PAUSED_ERROR'), errors=errors,
                                               reason=f'{type(exc).__name__}: {str(exc)[:250]}')
                             self.export(task['id'])
                             self.stop.wait(CONTROL_RETRY_SECONDS if retry else 0)
@@ -476,8 +479,10 @@ class Coordinator:
 
     def paused(self, task_id):
         state = self.store.get(task_id)
+        if reached_operator_gate(state):
+            return True
         if state['stop_requested'] or self.stop.is_set():
-            self.store.update(task_id, status='PAUSED', reason='Stopped at a safe action boundary.')
+            self.store.stop_at_boundary(task_id, 'Stopped at a safe action boundary.')
             self.export(task_id)
             return True
         campaign = self.store.campaign_control()
@@ -486,8 +491,7 @@ class Coordinator:
                 return False
             if (not campaign['enabled']
                     or state.get('campaign_id') != campaign.get('campaign_id')):
-                self.store.update(task_id, status='PAUSED',
-                                  reason='Campaign stopped at an action boundary; selection retained.')
+                self.store.stop_at_boundary(task_id, 'Campaign stopped at an action boundary; selection retained.')
                 self.export(task_id)
                 return True
             return False
@@ -495,12 +499,11 @@ class Coordinator:
             # A HELD, USER_PAUSED, EXCLUDED, or finished campaign record never
             # becomes generic queue work, even when step() is called directly.
             if state['status'] in ('RUNNING', 'QUEUED'):
-                self.store.update(task_id, status='PAUSED',
-                                  reason='Campaign member is not selected; retained for campaign control.')
+                self.store.stop_at_boundary(task_id, 'Campaign member is not selected; retained for campaign control.')
                 self.export(task_id)
             return True
         if not self.store.queue_enabled() and self.store.pilot_task() != task_id:
-            self.store.update(task_id, status='QUEUED', reason='Queue paused at an action boundary.')
+            self.store.stop_at_boundary(task_id, 'Queue paused at an action boundary.', queued=True)
             self.export(task_id)
             return True
         return False
@@ -583,35 +586,39 @@ class Coordinator:
             self.export(task_id)
 
     def _step(self, task_id):
-        state = self.store.get(task_id)
+        state = self.store.result_snapshot(task_id)
+        result_generation = state['result_control_generation']
         validate_bound_identity(state)
         if self.paused(task_id):
             return
         if state.get('workflow_version') == 2 and state.get('activated_at') is None:
-            state = self.store.update(task_id, activated_at=time.time())
+            state = dict(self.store.update(task_id, activated_at=time.time()), result_control_generation=result_generation)
         if state['mode'] == 'develop' and state.get('authorization_version') != 1:
-            self.store.update(task_id, status='PAUSED_AUTHORIZATION',
+            self.store.publish_result(task_id, state, status='PAUSED_AUTHORIZATION',
                               reason='Older task lacks explicit development authorization. Review receipts and start a new assignment with --develop.')
             self.export(task_id)
             return
         if not state.get('evidence_requirements'):
-            state = self.store.update(task_id, evidence_requirements=self.requirements(state))
+            state = dict(self.store.update(task_id, evidence_requirements=self.requirements(state)), result_control_generation=result_generation)
         self.check_deadline(task_id)
         current_manifest = manifest()
         if state['manifest'] and current_manifest != state['manifest']:
-            self.store.update(task_id, status='PAUSED_FILES_CHANGED', reason='Development files changed outside this task. Review before resuming.')
+            self.store.publish_result(task_id, state, status='PAUSED_FILES_CHANGED', reason='Development files changed outside this task. Review before resuming.')
             self.export(task_id)
             return
         try:
-            state = acceptance.ensure_bundle(self.store, state, code.root())
+            state = dict(acceptance.ensure_bundle(self.store, state, code.root()), result_control_generation=result_generation)
         except (ValueError, OSError, SyntaxError) as exc:
-            self.store.update(task_id, status='PAUSED_BLOCKED', reason=str(exc))
+            self.store.publish_result(task_id, state, status='PAUSED_BLOCKED', reason=str(exc))
             self.export(task_id)
             return
-        state = self.store.update(task_id, status='RUNNING', manifest=current_manifest)
+        state = self.store.publish_result(task_id, state, status='RUNNING', manifest=current_manifest)
+        if state['status'] not in ('RUNNING','QUEUED'):
+            return
+        state = self.store.result_snapshot(task_id)
         if state['phase'] == 'baseline':
             passed = self.tests(state)
-            self.store.update(task_id, baseline_passed=bool(passed), phase='inspect', status='QUEUED',
+            self.store.publish_result(task_id, state, baseline_passed=bool(passed), phase='inspect', status='QUEUED',
                 reason='Baseline passed.' if passed else 'Baseline failed; worker must diagnose the recorded failures.')
         elif state['phase'] == 'verify':
             verification_inputs = (manifest(), acceptance.files(code.root()))
@@ -641,17 +648,17 @@ class Coordinator:
                     raise ValueError('Acceptance receipt no longer binds the current source, scope, and bundle.')
             except (ValueError, OSError) as exc:
                 passed, drift = False, str(exc)
-            self.store.update(task_id,
+            self.store.publish_result(task_id, state,
                 status=('AWAITING_LIVE_VALIDATION' if state['mode'] == 'develop' else 'REVIEW_COMPLETE_LIVE_NOT_VALIDATED') if passed else ('PAUSED_FILES_CHANGED' if drift else 'PAUSED_TEST_FAILURE'),
                 reason='Current source passed both editable and immutable offline tests. Live validation and delivery remain.' if passed else (drift or 'Verification failed; inspect the test receipt.'))
         elif state['sessions'] >= state['max_sessions'] or state['calls'] >= MAX_CALLS or state['tokens'] >= MAX_TOKENS:
-            self.store.update(task_id, status='PAUSED_BUDGET', reason='Bounded task budget reached; progress saved.')
+            self.store.publish_result(task_id, state, status='PAUSED_BUDGET', reason='Bounded task budget reached; progress saved.')
         else:
             if state.get('workflow_version') != 2 or not self.prepare_step(state):
                 self.session(self.store.get(task_id))
         final_state = self.store.get(task_id)
         if final_state['stop_requested'] and final_state['status'] in ('RUNNING', 'QUEUED', 'PAUSING'):
-            self.store.update(task_id, status='PAUSED', reason='Pause requested; completed actions are recorded.')
+            self.store.stop_at_boundary(task_id, 'Pause requested; completed actions are recorded.')
         self.export(task_id)
 
     def evidence_receipts(self, task_id):
@@ -664,32 +671,32 @@ class Coordinator:
         receipts = self.evidence_receipts(task_id)
         planned = workflow.plan(state, receipts, manifest(), code.root())
         work = dict(state.get('workflow', {}), plan=planned)
-        self.store.update(task_id, workflow=work)
+        self.store.publish_result(task_id, state, workflow=work)
         action = planned['next']
         if not action:
             return False
         if not action['name']:
-            self.store.update(task_id, status='PAUSED_BLOCKED', reason='Public source still lacks usable employer evidence after raw and rendered retrieval: ' + action['label'])
+            self.store.publish_result(task_id, state, status='PAUSED_BLOCKED', reason='Public source still lacks usable employer evidence after raw and rendered retrieval: ' + action['label'])
             return True
         if work.get('automatic_actions', 0) >= workflow.MAX_AUTOMATIC_ACTIONS:
             self.budget_pause(task_id, 'Automatic evidence action allowance exhausted; receipts and work plan saved.')
         if self.paused(task_id):
             return True
-        self.store.update(task_id, workflow=dict(work, automatic_actions=work.get('automatic_actions', 0) + 1))
+        self.store.publish_result(task_id, state, workflow=dict(work, automatic_actions=work.get('automatic_actions', 0) + 1))
         result = self.execute(state, action['name'], action['arguments'], {action['name']})
         if action['name'] == 'code_read' and (not result.get('ok') or not result.get('result', {}).get('text')):
-            self.store.update(task_id, status='PAUSED_BLOCKED', reason='Assigned excerpt could not be read: ' + action['label'])
+            self.store.publish_result(task_id, state, status='PAUSED_BLOCKED', reason='Assigned excerpt could not be read: ' + action['label'])
         elif action['name'] == 'code_diff':
             valid, missing = phase_evidence(state, self.evidence_receipts(task_id), manifest())
-            self.store.update(task_id, phase='verify' if valid else state['phase'], status='QUEUED' if valid else 'PAUSED_BLOCKED',
+            self.store.publish_result(task_id, state, phase='verify' if valid else state['phase'], status='QUEUED' if valid else 'PAUSED_BLOCKED',
                               reason='Current diff verified; offline validation next.' if valid else missing)
         else:
-            self.store.update(task_id, status='QUEUED', reason='Python collected ' + action['label'] + '; receipt saved.')
+            self.store.publish_result(task_id, state, status='QUEUED', reason='Python collected ' + action['label'] + '; receipt saved.')
         # Persist a refreshed next action, including after a restart between reads.
         latest = self.store.get(task_id)
         if latest['phase'] in ('inspect', 'implement'):
             planned = workflow.plan(latest, self.evidence_receipts(task_id), manifest(), code.root())
-            self.store.update(task_id, workflow=dict(latest['workflow'], plan=planned))
+            self.store.publish_result(task_id, state, workflow=dict(latest['workflow'], plan=planned))
         return True
 
     def messages(self, state, protocol):
@@ -771,7 +778,7 @@ class Coordinator:
         if state is None:
             return
         try:
-            return self._session_body(state, protocol)
+            return self._session_body(self.store.result_snapshot(task_id), protocol)
         finally:
             self.store.end_inference_session(task_id, state['inference_session_id'])
 
@@ -897,7 +904,7 @@ class Coordinator:
                     if name == 'code_read' and result.get('ok'):
                         focus = focus or self.evidence_receipts(task_id)[-1]['id']
                         feedback = {'ok': True, 'receipt_id': focus, 'note': 'The requested excerpt is first in the evidence packet.'}
-                    self.store.update(task_id, workflow=dict(active['workflow'], focus_receipt_id=focus,
+                    self.store.publish_result(task_id, state, workflow=dict(active['workflow'], focus_receipt_id=focus,
                                                             last_action={'name': name, 'result': feedback}))
                 history.append({'role': 'tool', 'tool_name': str(name), 'content': json.dumps(compact(result))})
                 receipts = self.evidence_receipts(task_id)
@@ -911,7 +918,7 @@ class Coordinator:
                 active = self.store.get(task_id)
                 changed = prior_progress != workflow.progress_key(self.evidence_receipts(task_id), manifest())
                 stalls = 0 if changed else active.get('workflow', {}).get('stall_turns', 0) + 1
-                self.store.update(task_id, workflow=dict(active['workflow'], stall_turns=stalls))
+                self.store.publish_result(task_id, state, workflow=dict(active['workflow'], stall_turns=stalls))
                 if stalls >= workflow.MAX_STALL_TURNS:
                     checkpoint = {'summary': 'Repeated actions added no source coverage or changes.',
                                   'next_action': 'Inspect the saved work plan and missing evidence.', 'outcome': 'blocked'}
@@ -930,7 +937,7 @@ class Coordinator:
         if outcome == 'phase_done':
             if guided and state['phase'] == 'implement':
                 active = self.store.get(task_id)
-                self.store.update(task_id, checkpoint=checkpoint, status='QUEUED',
+                self.store.publish_result(task_id, state, checkpoint=checkpoint, status='QUEUED',
                                   workflow=dict(active['workflow'], finish_requested=True),
                                   reason='Worker requests completion; Python will inspect the current diff and run tests.')
                 return
@@ -940,9 +947,9 @@ class Coordinator:
                 no_progress = 0
                 if guided:
                     active = self.store.get(task_id)
-                    self.store.update(task_id, workflow=dict(active['workflow'], finish_requested=False, stall_turns=0, last_action=None))
+                    self.store.publish_result(task_id, state, workflow=dict(active['workflow'], finish_requested=False, stall_turns=0, last_action=None))
             else:
                 checkpoint['next_action'] = missing
         status = 'PAUSED_BLOCKED' if outcome == 'blocked' else 'PAUSED_NO_PROGRESS' if no_progress >= 3 else 'QUEUED'
-        self.store.update(task_id, checkpoint=checkpoint, phase=phase, status=status,
-                          no_progress=no_progress, errors=0, reason='Worker checkpoint saved on MuleLab.')
+        self.store.publish_result(task_id, state, checkpoint=checkpoint, phase=phase, status=status,
+                          no_progress=no_progress, errors=0, reason=('Worker blocked: ' + str(checkpoint.get('summary', ''))[:500] + '; next: ' + str(checkpoint.get('next_action', ''))[:500]) if outcome == 'blocked' else 'Worker checkpoint saved on MuleLab.')

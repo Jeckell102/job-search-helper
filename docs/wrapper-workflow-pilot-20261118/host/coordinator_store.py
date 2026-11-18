@@ -9,6 +9,7 @@ import uuid
 from contextlib import contextmanager
 import threading
 from coordinator_inference import InferenceStore
+from coordinator_campaign import CampaignStore, next_action
 from coordinator_identity import bind_identity, validate_bound_identity
 from coordinator_acceptance import initial_scope, validate_scope, exact_paths, digest as scope_digest
 
@@ -46,10 +47,10 @@ def task_state_digest(state):
 def reached_operator_gate(state):
     """Terminal work cannot be reopened by pause/resume control transitions."""
     return (state.get('status') in OPERATOR_GATE_STATUSES
-            or state.get('campaign_disposition') == CAMPAIGN_FINISHED)
+            or state.get('campaign_disposition') == CAMPAIGN_FINISHED and not state.get('campaign_outcome', '').startswith('PAUSED_'))
 
 
-class Store(InferenceStore):
+class Store(CampaignStore, InferenceStore):
     def __init__(self, base):
         self.base = Path(base)
         self.base.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -67,6 +68,9 @@ class Store(InferenceStore):
                     request_id TEXT PRIMARY KEY, task TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS batches(digest TEXT PRIMARY KEY, task_ids TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS campaigns(campaign_id TEXT PRIMARY KEY, data TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS campaign_seals(campaign_id TEXT PRIMARY KEY, membership_digest TEXT NOT NULL, sealed_at REAL NOT NULL);
+                CREATE TABLE IF NOT EXISTS campaign_snapshots(campaign_id TEXT NOT NULL, revision INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY(campaign_id, revision));
                 CREATE TABLE IF NOT EXISTS campaign_company_registry(
                     campaign_id TEXT NOT NULL, company_id TEXT NOT NULL,
                     current_task_id TEXT NOT NULL, identity_digest TEXT NOT NULL,
@@ -159,6 +163,8 @@ class Store(InferenceStore):
                         if not provenance or provenance[0] != scoped_digest:
                             raise ValueError('Registry import provenance conflicts with batch replay.')
                 return ids, True
+            if held and db.execute('SELECT 1 FROM campaign_seals WHERE campaign_id=?', (campaign_id,)).fetchone():
+                raise ValueError('Campaign membership is sealed; use a new reviewed campaign for additional companies.')
             for state in states:
                 if held:
                     if db.execute('SELECT 1 FROM campaign_company_registry WHERE campaign_id=? AND company_id=?',
@@ -211,6 +217,7 @@ class Store(InferenceStore):
                          campaign_disposition=HELD_FOR_CAMPAIGN, isolated_workspace=True,
                          status='PAUSED', retry_of=task_id, reason='Explicit operator retry held for campaign selection.')
             state = bind_identity(state)
+            self._reopen_campaign(db, old['campaign_id'])
             db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
             db.execute('UPDATE campaign_company_registry SET current_task_id=?, retry_of=? WHERE campaign_id=? AND company_id=?',
                        (state['id'], task_id, state['campaign_id'], state['campaign_company_id']))
@@ -346,6 +353,10 @@ class Store(InferenceStore):
                 raise ValueError('Stop the active campaign before selecting another campaign.')
             if not enabled and campaign_id is not None and current_id not in (None, campaign_id):
                 raise ValueError('The requested campaign is not the active campaign.')
+            if enabled:
+                from coordinator_campaign import digest as membership_digest
+                roster = db.execute('SELECT company_id,identity_digest FROM campaign_company_registry WHERE campaign_id=? ORDER BY company_id', (selected_id,)).fetchall()
+                db.execute('INSERT OR IGNORE INTO campaign_seals VALUES (?,?,?)', (selected_id, membership_digest(roster), time.time()))
             for key, value in (('campaign_enabled', bool(enabled)),
                                ('active_campaign_id', selected_id),
                                ('autopilot_enabled', bool(enabled)),
@@ -353,6 +364,8 @@ class Store(InferenceStore):
                 db.execute('INSERT INTO settings VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
                            (key, json.dumps(value)))
             self._bump_control_generation(db)
+            if enabled:
+                self._campaign_reconcile(db, selected_id)
 
     def configure_autopilot(self, enabled):
         self.configure_campaign(enabled)
@@ -458,6 +471,7 @@ class Store(InferenceStore):
                 fields = dict(fields, campaign_disposition=SELECTED,
                               campaign_selected_at=time.time(),
                               campaign_run_id=uuid.uuid4().hex)
+            self._reopen_campaign(db, state.get('campaign_id'))
             state.update(fields)
             state.update(status='QUEUED', stop_requested=False)
             # Activation fields must preserve the complete immutable binding.
@@ -494,8 +508,6 @@ class Store(InferenceStore):
         """Select exactly one held member of the active campaign."""
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            if self._inference_pending(db):
-                return None
             controls = dict(db.execute(
                 "SELECT key,value FROM settings WHERE key IN ('campaign_enabled','active_campaign_id','pilot_task')"
             ).fetchall())
@@ -503,6 +515,9 @@ class Store(InferenceStore):
             active_campaign = json.loads(controls['active_campaign_id']) if 'active_campaign_id' in controls else None
             pilot = json.loads(controls['pilot_task']) if 'pilot_task' in controls else None
             selected_campaign = campaign_id or active_campaign or DEFAULT_CAMPAIGN_ID
+            reconciled = self._campaign_reconcile(db, selected_campaign)
+            if reconciled['state'] in ('PAUSED_RECONCILIATION', 'DRAINED', 'DRAINED_WITH_EXCEPTIONS'):
+                return None
             if require_enabled and (not enabled or active_campaign != selected_campaign):
                 return None
             if pilot is not None:
@@ -522,12 +537,8 @@ class Store(InferenceStore):
                 if state['status'] in ('RUNNING', 'PAUSING'):
                     active.append(task_id)
                 if state.get('campaign_disposition') == SELECTED:
-                    if state['status'] not in ('QUEUED', 'RUNNING', 'PAUSING', 'PAUSED'):
-                        state['campaign_disposition'] = CAMPAIGN_FINISHED
-                        db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
-                    else:
-                        selected = state
-                        selected_count += 1
+                    selected = state
+                    selected_count += 1
                 if (candidate is None and state.get('campaign_id') == selected_campaign
                         and state.get('campaign_disposition') == HELD_FOR_CAMPAIGN
                         and not state.get('stop_requested')
@@ -707,6 +718,7 @@ class Store(InferenceStore):
             state = json.loads(row[0])
             if state.get('campaign_disposition') != EXCLUDED:
                 raise ValueError('Only an excluded campaign task can be included.')
+            self._reopen_campaign(db, state.get('campaign_id'))
             if reached_operator_gate(state):
                 state.update(campaign_disposition=USER_PAUSED, stop_requested=True,
                              reason='Included in campaign; operator gate retained.')
@@ -856,9 +868,9 @@ class Store(InferenceStore):
                 ('Budgets: One hour from first assignment, including pauses; initial queue wait is excluded. ' if state.get('workflow_version') == 2 else 'Budgets: One-hour lifetime from creation, including queued and paused time. ') +
                 'Resume does not reset time, calls, sessions or tokens. Already-started actions may finish; the next action is checked before dispatch.\n\n' +
                 f"Worker summary (model-authored, verify against receipts):\n{checkpoint.get('summary', '')}\n\n"
-                f"Next action: {checkpoint.get('next_action', 'Continue the next incomplete phase.')}\n\n"
+                f"Next action: {next_action(state)}\n\n"
                 f"Python work plan: {json.dumps(state.get('workflow', {}).get('plan', {}))}\n\n"
-                f"Resume in Wrapper Coder:\n\n`/wrapper resume {task_id}`\n\n"
+                
                 f"Inspect progress:\n\n`/wrapper status {task_id}`\n\n"
                 "Live scraper validation, installation and GitHub delivery of generated wrappers require operator review.\n")
         for name, payload in [('checkpoint.json', json.dumps(state, indent=2)),
