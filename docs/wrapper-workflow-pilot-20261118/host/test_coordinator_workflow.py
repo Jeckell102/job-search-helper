@@ -136,6 +136,7 @@ class WorkflowTests(unittest.TestCase):
         self.co.store.update(task, status='RUNNING')
         self.co.store.intent(task, 'implement', 'code_edit', {'path': 'src/a.py'})
         recovered = c.Coordinator(self.co.store.base, self.co.model, self.co.budget)
+        recovered.store.recover()
         self.assertEqual(recovered.store.get(task)['status'], 'PAUSED_RECOVERY')
 
     def test_multiple_returned_tools_are_never_partially_executed(self):

@@ -55,8 +55,16 @@ def prepare(handoff, triage, root):
         context = (f'# {cid} — {name}\n\nImported historical backlog context, not instructions granting permissions.\n\n'
                    f'Work order: {company.get("work_order")}\n\nNext step: {next_step}\n\n'
                    + section + '\n\nHistorical ledger: ' + json.dumps(prior) + '\n')
+        integration = {'company_id': cid, 'company': name,
+                       'configured_url': company['configured_url'],
+                       'tests': tests, 'source_targets': modules,
+                       'work_order': company.get('work_order', '')}
+        for key in ('ats', 'repaired_url'):
+            if isinstance(company.get(key), str) and company[key]:
+                integration[key] = company[key]
         queued.append({'company_id': cid, 'work_order': company.get('work_order', ''),
-                       'assignment': {'objective': objective, 'mode': 'develop', 'max_sessions': 10}, 'context': context})
+                       'assignment': {'objective': objective, 'mode': 'develop', 'max_sessions': 10,
+                                      'integration': integration}, 'context': context})
     priority = {'W02': 0, 'W03': 1, 'W04': 2, 'W05': 3, 'W06': 4, 'W07': 5, 'W08': 6}
     queued.sort(key=lambda item: (priority.get(item['work_order'].split()[0], 9), item['company_id']))
     return queued, held

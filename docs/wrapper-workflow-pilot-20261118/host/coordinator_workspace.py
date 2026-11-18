@@ -9,6 +9,11 @@ import coding_tools as code
 
 
 def batch_source():
+    # Unit/acceptance fixtures replace ROOT with a private repository. Respect
+    # that explicit source before consulting the installed campaign snapshot.
+    default_root = code.BASE / 'repo'
+    if code.ROOT != default_root:
+        return code.ROOT
     source = code.BASE / 'queue-base'
     return source if source.is_dir() else code.ROOT
 

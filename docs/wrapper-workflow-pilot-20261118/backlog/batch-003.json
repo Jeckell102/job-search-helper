@@ -1,0 +1,82 @@
+[
+  {
+    "objective": "Develop the next bounded integration repair for COMP-0786 Brooks Automation. Read docs/backlog/COMP-0786.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.brooks.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+    "mode": "develop",
+    "max_sessions": 10,
+    "integration": {
+      "company_id": "COMP-0786",
+      "company": "Brooks Automation",
+      "configured_url": "https://www.brooks.com/careers/",
+      "tests": [
+        "tests/test_workday.py",
+        "tests/test_workday_leidos.py",
+        "tests/test_workday_leidos_reconcile.py",
+        "tests/test_workday_reconcile.py"
+      ],
+      "source_targets": [
+        "src/job_search_helper/workday.py"
+      ],
+      "work_order": "Access investigations"
+    }
+  },
+  {
+    "objective": "Develop the next bounded integration repair for COMP-0787 Azenta Life Sciences. Read docs/backlog/COMP-0787.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://azenta.wd1.myworkdayjobs.com/AzentaJobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+    "mode": "develop",
+    "max_sessions": 10,
+    "integration": {
+      "company_id": "COMP-0787",
+      "company": "Azenta Life Sciences",
+      "configured_url": "https://azenta.wd1.myworkdayjobs.com/AzentaJobs",
+      "tests": [
+        "tests/test_workday.py",
+        "tests/test_workday_leidos.py",
+        "tests/test_workday_leidos_reconcile.py",
+        "tests/test_workday_reconcile.py"
+      ],
+      "source_targets": [
+        "src/job_search_helper/workday.py"
+      ],
+      "work_order": "Access investigations"
+    }
+  },
+  {
+    "objective": "Develop the next bounded integration repair for COMP-0788 Renishaw. Read docs/backlog/COMP-0788.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.renishaw.com/en/careers--6417. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+    "mode": "develop",
+    "max_sessions": 10,
+    "integration": {
+      "company_id": "COMP-0788",
+      "company": "Renishaw",
+      "configured_url": "https://www.renishaw.com/en/careers--6417",
+      "tests": [
+        "tests/test_workday.py",
+        "tests/test_workday_leidos.py",
+        "tests/test_workday_leidos_reconcile.py",
+        "tests/test_workday_reconcile.py"
+      ],
+      "source_targets": [
+        "src/job_search_helper/workday.py"
+      ],
+      "work_order": "Access investigations"
+    }
+  },
+  {
+    "objective": "Develop the next bounded integration repair for COMP-0795 KLA. Read docs/backlog/COMP-0795.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://kla.wd1.myworkdayjobs.com/en-US/Search. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+    "mode": "develop",
+    "max_sessions": 10,
+    "integration": {
+      "company_id": "COMP-0795",
+      "company": "KLA",
+      "configured_url": "https://kla.wd1.myworkdayjobs.com/en-US/Search",
+      "tests": [
+        "tests/test_workday.py",
+        "tests/test_workday_leidos.py",
+        "tests/test_workday_leidos_reconcile.py",
+        "tests/test_workday_reconcile.py"
+      ],
+      "source_targets": [
+        "src/job_search_helper/workday.py"
+      ],
+      "work_order": "Access investigations"
+    }
+  }
+]

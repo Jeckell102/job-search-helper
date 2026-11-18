@@ -13,9 +13,9 @@ if status['model_busy'] or status['foreground_waiting']:
 target = '/home/chris/AI/local-ai/wrapper_commands.py'
 ssh = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', 'jetson']
 old = subprocess.check_output(ssh + ['cat ' + target])
-if hashlib.sha256(old).hexdigest() != '282f489be0cc1215ae79482f569b277e9ac1c4ad6ab044bb922e61246d94785e':
+if hashlib.sha256(old).hexdigest() != '0d98b2ecb021d9e40a8803f227a0538299dbdb33ab70072f905072182eaf9944':
     raise RuntimeError('Jetson forwarder changed; inspect before updating.')
-archive = Path('/home/chris/job-search-helper_old/dev/wrapper-coder/repairs/persistent-workflow-20261118-115754')
+archive = Path('/home/chris/job-search-helper_old/dev/wrapper-coder/repairs/campaign-coordinator-20261118-134603')
 (archive/'jetson-wrapper_commands-before.py').write_bytes(old)
 new = (Path(__file__).parent/'jetson/wrapper_commands.py').read_bytes()
 subprocess.run(ssh + ["python3 -c 'import pathlib,sys,os; p=pathlib.Path(\"/home/chris/AI/local-ai/wrapper_commands.py\"); t=p.with_suffix(\".py.new\"); t.write_bytes(sys.stdin.buffer.read()); os.chmod(t,p.stat().st_mode); t.replace(p)'"], input=new, check=True)

@@ -1,5 +1,6 @@
 """MuleLab-owned sequential worker scheduler; Jetson performs inference only."""
 import hashlib
+import fcntl
 import json
 from pathlib import Path
 import re
@@ -27,6 +28,10 @@ MIN_OUTPUT_TOKENS = 256
 
 class BudgetReached(Exception):
     """A durable budget pause; never retry this action automatically."""
+
+
+class ActionStopped(Exception):
+    """A control change won the race before an action intent was written."""
 
 CHECKPOINT_SCHEMA = code.spec('worker_checkpoint',
     'Save a concise public task summary and next action. phase_done asks the coordinator to verify the phase; it does not certify completion.',
@@ -122,10 +127,11 @@ class Coordinator:
         self.workspace_lock = threading.Lock()
         self.export_errors = {}
         self.health_lock = threading.Lock()
+        self.control_lock = threading.Lock()
         self.control_failures = 0
         self.control_error = ''
         self.fatal_error = ''
-        self.store.recover()
+        self.scheduler_lock = None
 
     def export(self, task_id):
         """Readable snapshots are replaceable; SQLite is the authoritative record."""
@@ -179,8 +185,30 @@ class Coordinator:
         requirements = build_requirements(objective, tests, code.root())
         if len(requirements['required_files']) > 32 or len(requirements['source_targets']) > 12:
             raise ValueError('Use one bounded company assignment with at most 32 files and 12 source URLs.')
+        integration = data.get('integration') or {}
+        if not isinstance(integration, dict):
+            raise ValueError('integration must be structured company metadata.')
+        if integration:
+            required = {'company_id', 'company', 'configured_url', 'tests', 'source_targets'}
+            if set(integration) - (required | {'work_order', 'ats', 'repaired_url'}) or required - set(integration):
+                raise ValueError('integration metadata has missing or unexpected fields.')
+            if not re.fullmatch(r'COMP-\d{4,}', integration['company_id'] or ''):
+                raise ValueError('integration company_id is invalid.')
+            if not isinstance(integration['company'], str) or not integration['company'].strip():
+                raise ValueError('integration company is invalid.')
+            if (not isinstance(integration['configured_url'], str)
+                    or not integration['configured_url'].startswith('https://')):
+                raise ValueError('integration configured_url must be HTTPS.')
+            if integration['tests'] != tests:
+                raise ValueError('integration tests must exactly match the requested tests.')
+            if (not isinstance(integration['source_targets'], list)
+                    or any(not isinstance(p, str) or p not in requirements['required_files']
+                           for p in integration['source_targets'])):
+                raise ValueError('integration source_targets must be assigned source files.')
+            integration = json.loads(json.dumps(integration))
         return dict(objective=objective, tests=tests, mode=mode, max_sessions=max_sessions,
-                    authorization_version=1, evidence_requirements=requirements, workflow_version=self.workflow_version)
+                    authorization_version=1, evidence_requirements=requirements,
+                    workflow_version=self.workflow_version, integration=integration)
 
     def budget_pause(self, task_id, reason):
         self.store.update(task_id, status='PAUSED_BUDGET', reason=reason)
@@ -190,7 +218,8 @@ class Coordinator:
         action = data.get('action')
         if action == 'health':
             return self.health()
-        if action in ('queue', 'queue-pause', 'queue-resume', 'pilot-stop'):
+        if action in ('queue', 'queue-pause', 'queue-resume', 'pilot-stop',
+                      'autopilot-start', 'autopilot-stop', 'autopilot-status'):
             if action != 'queue':
                 if action == 'pilot-stop':
                     pilot = self.store.pilot_task()
@@ -201,20 +230,31 @@ class Coordinator:
                             self.store.update(pilot, stop_requested=True,
                                               status='PAUSING' if pilot_state['status'] == 'RUNNING' else 'PAUSED',
                                               reason='Pilot stop requested.')
-                else:
-                    self.store.set_queue_enabled(action == 'queue-resume')
+                elif action in ('autopilot-start', 'autopilot-stop'):
+                    with self.control_lock:
+                        self.store.configure_autopilot(action == 'autopilot-start')
+                elif action != 'autopilot-status':
+                    with self.control_lock:
+                        self.store.configure_queue(action == 'queue-resume')
                 self.wake.set()
             states = self.store.all()
             counts = {}
             for state in states:
                 counts[state['status']] = counts.get(state['status'], 0) + 1
             enabled = self.store.queue_enabled()
+            autopilot = self.store.autopilot_enabled()
             upcoming = [s['id'] for s in states if s['status'] in ('QUEUED', 'RUNNING')]
+            untouched = sum(bool(s.get('isolated_workspace')) and s['status'] == 'PAUSED'
+                            and s['phase'] == 'baseline' and s.get('activated_at') is None
+                            for s in states)
             pilot = self.store.pilot_task()
-            return {'ok': True, 'enabled': enabled, 'pilot': pilot, 'counts': counts, 'upcoming': upcoming,
+            return {'ok': True, 'enabled': enabled, 'autopilot': autopilot, 'pilot': pilot,
+                    'untouched': untouched, 'counts': counts, 'upcoming': upcoming,
                     'text': 'Queue ' + ('running' if enabled else 'paused after the current action') + '. One company at a time.\n' +
+                    ('Autopilot: ON; Python will select one untouched company when the lane is free.\n' if autopilot else 'Autopilot: OFF.\n') +
                     ('Pilot only: ' + pilot + '.\n' if pilot else '') +
-                    json.dumps(counts, sort_keys=True) + '\nNext: ' + ', '.join(upcoming[:10])}
+                    f'Untouched backlog: {untouched}.\n' + json.dumps(counts, sort_keys=True) +
+                    '\nActive/next: ' + ', '.join(upcoming[:10])}
         if action == 'batch':
             items = data.get('items')
             if not isinstance(items, list) or not 1 <= len(items) <= 400 or any(not isinstance(i, dict) for i in items):
@@ -225,7 +265,7 @@ class Coordinator:
             finally:
                 code.WORKSPACE.reset(token)
             digest = hashlib.sha256(json.dumps(items, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-            ids, reused = self.store.enqueue_batch(digest, specs)
+            ids, reused = self.store.enqueue_batch(digest, specs, held=True)
             for task_id in ids:
                 self.export(task_id)
             self.wake.set()
@@ -286,7 +326,7 @@ class Coordinator:
             state = self.store.update(state['id'], **fields)
             self.wake.set()
         elif action != 'status':
-            raise ValueError('Use start, status, list, pause, resume, pilot-start, pilot-stop, queue controls, or health.')
+            raise ValueError('Use start, status, list, pause, resume, pilot controls, autopilot controls, queue controls, or health.')
         self.export(state['id'])
         return {'ok': True, 'state': {k: v for k, v in state.items() if k != 'manifest'}, 'text': self.describe(state)}
 
@@ -317,11 +357,23 @@ class Coordinator:
     def start(self):
         if getattr(self, 'thread', None) and self.thread.is_alive():
             return
+        lock_path = self.store.base / 'scheduler.lock'
+        self.scheduler_lock = lock_path.open('a+')
+        try:
+            fcntl.flock(self.scheduler_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            self.scheduler_lock.close()
+            self.scheduler_lock = None
+            self.fatal_error = 'Another coordinator process owns the scheduler.'
+            raise RuntimeError(self.fatal_error) from None
         self.thread = threading.Thread(target=self.run, name='mulelab-wrapper-coordinator', daemon=True)
         self.thread.start()
 
     def run(self):
-        recovery_required = False
+        # Only the process holding scheduler.lock may reconcile RUNNING state.
+        # Recovery happens in the supervised loop so transient database errors
+        # use the same bounded retry/fail-visible policy as normal scheduling.
+        recovery_required = True
         while not self.stop.is_set():
             try:
                 if recovery_required:
@@ -333,11 +385,16 @@ class Coordinator:
                 for task_id in pending_exports:
                     self.export(task_id)
                 states = self.store.all()
+                if self.store.autopilot_enabled() and self.store.queue_enabled():
+                    activated = self.store.activate_next_untouched()
+                    if activated:
+                        self.export(activated['id'])
+                        states = self.store.all()
                 if self.store.queue_enabled():
-                    task = next((s for s in states if s['status'] == 'QUEUED'), None)
+                    task = self.store.claim_queued()
                 else:
                     pilot = self.store.pilot_task()
-                    task = next((s for s in states if s['id'] == pilot and s['status'] == 'QUEUED'), None)
+                    task = self.store.claim_queued(pilot) if pilot else None
                 if task:
                     with self.workspace_lock:
                         try:
@@ -385,7 +442,9 @@ class Coordinator:
 
     def execute(self, state, name, args, names):
         self.check_deadline(state['id'])
-        receipt = self.store.intent(state['id'], state['phase'], name, args)
+        receipt = self.store.active_intent(state['id'], state['phase'], name, args)
+        if receipt is None:
+            raise ActionStopped('Coordinator paused before the next action started.')
         diff_before = manifest() if name == 'code_diff' else None
         executor = web.execute if name in web.NAMES else code.execute
         if name in ('code_edit', 'code_create') and manifest() != self.store.get(state['id'])['manifest']:
@@ -432,6 +491,9 @@ class Coordinator:
             with workspace(self.store, self.store.get(task_id), create=True):
                 self._step(task_id)
         except BudgetReached:
+            self.export(task_id)
+        except ActionStopped:
+            self.paused(task_id)
             self.export(task_id)
 
     def _step(self, task_id):

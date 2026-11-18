@@ -1,0 +1,4063 @@
+{
+  "source": "/home/chris/job-search-helper_old/temp/partial-integration-audit-20261117/PARTIAL_INTEGRATION_HANDOFF.md",
+  "source_sha256": "92a3b8318b86067671814798c8531bb22033c16c7d91d6b5fd2594d13488ae00",
+  "queued_candidates": [
+    {
+      "company_id": "COMP-0344",
+      "work_order": "W03",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0344 Mass Virtual. Read docs/backlog/COMP-0344.md for the saved work order and prior evidence. Inspect src/job_search_helper/massvirtual.py src/job_search_helper/paylocity.py src/job_search_helper/ats.py. Run tests/test_massvirtual.py tests/test_paylocity.py. Retrieve current employer evidence from https://www.massvirtual.com/career. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0344",
+          "company": "Mass Virtual",
+          "configured_url": "https://www.massvirtual.com/career",
+          "tests": [
+            "tests/test_massvirtual.py",
+            "tests/test_paylocity.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/massvirtual.py",
+            "src/job_search_helper/paylocity.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W03"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0348",
+      "work_order": "W03",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0348 VideoRay. Read docs/backlog/COMP-0348.md for the saved work order and prior evidence. Inspect src/job_search_helper/videoray.py src/job_search_helper/workday.py src/job_search_helper/ats.py. Run tests/test_videoray.py tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://videoray.com/about-us/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0348",
+          "company": "VideoRay",
+          "configured_url": "https://videoray.com/about-us/careers/",
+          "tests": [
+            "tests/test_videoray.py",
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/videoray.py",
+            "src/job_search_helper/workday.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W03"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0097",
+      "work_order": "W05",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0097 General Dynamics Land Systems. Read docs/backlog/COMP-0097.md for the saved work order and prior evidence. Inspect src/job_search_helper/gd_land_systems.py src/job_search_helper/ats.py. Run tests/test_gd_land_systems.py. Retrieve current employer evidence from https://www.gdls.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0097",
+          "company": "General Dynamics Land Systems",
+          "configured_url": "https://www.gdls.com/careers/",
+          "tests": [
+            "tests/test_gd_land_systems.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/gd_land_systems.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W05"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0278",
+      "work_order": "W05",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0278 MachineMetrics. Read docs/backlog/COMP-0278.md for the saved work order and prior evidence. Inspect src/job_search_helper/machinemetrics.py src/job_search_helper/company_sources.py src/job_search_helper/ats.py. Run tests/test_machinemetrics.py. Retrieve current employer evidence from https://www.machinemetrics.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0278",
+          "company": "MachineMetrics",
+          "configured_url": "https://www.machinemetrics.com/careers",
+          "tests": [
+            "tests/test_machinemetrics.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/machinemetrics.py",
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W05"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0506",
+      "work_order": "W05",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0506 Scythe Robotics. Read docs/backlog/COMP-0506.md for the saved work order and prior evidence. Inspect src/job_search_helper/scythe_robotics.py src/job_search_helper/company_sources.py src/job_search_helper/ats.py. Run tests/test_scythe_robotics.py. Retrieve current employer evidence from https://joinscythe.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0506",
+          "company": "Scythe Robotics",
+          "configured_url": "https://joinscythe.com/",
+          "tests": [
+            "tests/test_scythe_robotics.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/scythe_robotics.py",
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W05"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0554",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0554 Zimmer Biomet. Read docs/backlog/COMP-0554.md for the saved work order and prior evidence. Inspect src/job_search_helper/phenom.py src/job_search_helper/company_sources.py. Run tests/test_phenom.py tests/test_phenom_reconciliation.py. Retrieve current employer evidence from https://careers.zimmerbiomet.com/us/en/clinical-careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0554",
+          "company": "Zimmer Biomet",
+          "configured_url": "https://careers.zimmerbiomet.com/us/en/clinical-careers",
+          "tests": [
+            "tests/test_phenom.py",
+            "tests/test_phenom_reconciliation.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/phenom.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0564",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0564 Trane Technologies. Read docs/backlog/COMP-0564.md for the saved work order and prior evidence. Inspect src/job_search_helper/phenom.py src/job_search_helper/company_sources.py. Run tests/test_phenom.py tests/test_phenom_reconciliation.py. Retrieve current employer evidence from https://careers.tranetechnologies.com/global/en/c/services-jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0564",
+          "company": "Trane Technologies",
+          "configured_url": "https://careers.tranetechnologies.com/global/en/c/services-jobs",
+          "tests": [
+            "tests/test_phenom.py",
+            "tests/test_phenom_reconciliation.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/phenom.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0568",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0568 SMC Corporation of America. Read docs/backlog/COMP-0568.md for the saved work order and prior evidence. Inspect src/job_search_helper/shared_extended.py src/job_search_helper/company_sources.py. Run tests/test_shared_extended.py. Retrieve current employer evidence from https://careers.smcusa.com/search. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0568",
+          "company": "SMC Corporation of America",
+          "configured_url": "https://careers.smcusa.com/search",
+          "tests": [
+            "tests/test_shared_extended.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/shared_extended.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0588",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0588 Crown Equipment. Read docs/backlog/COMP-0588.md for the saved work order and prior evidence. Inspect src/job_search_helper/successfactors.py src/job_search_helper/company_sources.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://us-careers.crown.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0588",
+          "company": "Crown Equipment",
+          "configured_url": "https://us-careers.crown.com/",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/successfactors.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0594",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0594 Tennant Company. Read docs/backlog/COMP-0594.md for the saved work order and prior evidence. Inspect src/job_search_helper/successfactors.py src/job_search_helper/company_sources.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://jobs.tennantco.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0594",
+          "company": "Tennant Company",
+          "configured_url": "https://jobs.tennantco.com/",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/successfactors.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0604",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0604 Krones. Read docs/backlog/COMP-0604.md for the saved work order and prior evidence. Inspect src/job_search_helper/successfactors.py src/job_search_helper/company_sources.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://workfor.kronesusa.com/go/View-All-Jobs/9284400/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0604",
+          "company": "Krones",
+          "configured_url": "https://workfor.kronesusa.com/go/View-All-Jobs/9284400/",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/successfactors.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0620",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0620 Teradyne. Read docs/backlog/COMP-0620.md for the saved work order and prior evidence. Inspect src/job_search_helper/successfactors.py src/job_search_helper/company_sources.py src/job_search_helper/ats.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://jobs.teradyne.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0620",
+          "company": "Teradyne",
+          "configured_url": "https://jobs.teradyne.com/",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/successfactors.py",
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0621",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0621 JLG Industries. Read docs/backlog/COMP-0621.md for the saved work order and prior evidence. Inspect src/job_search_helper/phenom.py src/job_search_helper/company_sources.py. Run tests/test_phenom.py tests/test_phenom_reconciliation.py. Retrieve current employer evidence from https://careers.oshkoshcorp.com/us/en. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0621",
+          "company": "JLG Industries",
+          "configured_url": "https://careers.oshkoshcorp.com/us/en",
+          "tests": [
+            "tests/test_phenom.py",
+            "tests/test_phenom_reconciliation.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/phenom.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0622",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0622 Oshkosh Corporation. Read docs/backlog/COMP-0622.md for the saved work order and prior evidence. Inspect src/job_search_helper/phenom.py src/job_search_helper/company_sources.py. Run tests/test_phenom.py tests/test_phenom_reconciliation.py. Retrieve current employer evidence from https://careers.oshkoshcorp.com/us/en. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0622",
+          "company": "Oshkosh Corporation",
+          "configured_url": "https://careers.oshkoshcorp.com/us/en",
+          "tests": [
+            "tests/test_phenom.py",
+            "tests/test_phenom_reconciliation.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/phenom.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0658",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0658 CommScope. Read docs/backlog/COMP-0658.md for the saved work order and prior evidence. Inspect src/job_search_helper/successfactors.py src/job_search_helper/company_sources.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://jobs.commscope.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0658",
+          "company": "CommScope",
+          "configured_url": "https://jobs.commscope.com/",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/successfactors.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0740",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0740 Supermicro. Read docs/backlog/COMP-0740.md for the saved work order and prior evidence. Inspect src/job_search_helper/successfactors.py src/job_search_helper/company_sources.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://jobs.supermicro.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0740",
+          "company": "Supermicro",
+          "configured_url": "https://jobs.supermicro.com/",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/successfactors.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0742",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0742 congatec. Read docs/backlog/COMP-0742.md for the saved work order and prior evidence. Inspect src/job_search_helper/successfactors.py src/job_search_helper/company_sources.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://www.congatec.com/us/congatec/career-1/open-positions/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0742",
+          "company": "congatec",
+          "configured_url": "https://www.congatec.com/us/congatec/career-1/open-positions/",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/successfactors.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0765",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0765 Endress+Hauser. Read docs/backlog/COMP-0765.md for the saved work order and prior evidence. Inspect src/job_search_helper/successfactors.py src/job_search_helper/company_sources.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://www.us.endress.com/en/endress-hauser-group/career/job-opportunities/process-automation-jobs-us. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0765",
+          "company": "Endress+Hauser",
+          "configured_url": "https://www.us.endress.com/en/endress-hauser-group/career/job-opportunities/process-automation-jobs-us",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/successfactors.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0779",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0779 Arrow Electronics. Read docs/backlog/COMP-0779.md for the saved work order and prior evidence. Inspect src/job_search_helper/phenom.py src/job_search_helper/company_sources.py. Run tests/test_phenom.py tests/test_phenom_reconciliation.py. Retrieve current employer evidence from https://careers.arrow.com/us/en/americas/?from=40&rk=l-americas&s=1. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0779",
+          "company": "Arrow Electronics",
+          "configured_url": "https://careers.arrow.com/us/en/americas/?from=40&rk=l-americas&s=1",
+          "tests": [
+            "tests/test_phenom.py",
+            "tests/test_phenom_reconciliation.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/phenom.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0780",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0780 Thermo Fisher Scientific. Read docs/backlog/COMP-0780.md for the saved work order and prior evidence. Inspect src/job_search_helper/phenom.py src/job_search_helper/company_sources.py. Run tests/test_phenom.py tests/test_phenom_reconciliation.py. Retrieve current employer evidence from https://jobs.thermofisher.com/global/en/c/customer-technical-support-jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0780",
+          "company": "Thermo Fisher Scientific",
+          "configured_url": "https://jobs.thermofisher.com/global/en/c/customer-technical-support-jobs",
+          "tests": [
+            "tests/test_phenom.py",
+            "tests/test_phenom_reconciliation.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/phenom.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0781",
+      "work_order": "W06",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0781 Danaher. Read docs/backlog/COMP-0781.md for the saved work order and prior evidence. Inspect src/job_search_helper/phenom.py src/job_search_helper/company_sources.py. Run tests/test_phenom.py tests/test_phenom_reconciliation.py. Retrieve current employer evidence from https://jobs.danaher.com/global/en/us-customer-support-jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0781",
+          "company": "Danaher",
+          "configured_url": "https://jobs.danaher.com/global/en/us-customer-support-jobs",
+          "tests": [
+            "tests/test_phenom.py",
+            "tests/test_phenom_reconciliation.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/phenom.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W06"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0238",
+      "work_order": "W07",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0238 Caterpillar. Read docs/backlog/COMP-0238.md for the saved work order and prior evidence. Inspect src/job_search_helper/caterpillar.py src/job_search_helper/ats.py. Run tests/test_caterpillar.py. Retrieve current employer evidence from https://www.caterpillar.com/en/careers.html. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0238",
+          "company": "Caterpillar",
+          "configured_url": "https://www.caterpillar.com/en/careers.html",
+          "tests": [
+            "tests/test_caterpillar.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/caterpillar.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W07"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0005",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0005 Amentum. Read docs/backlog/COMP-0005.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/amentum.py. Run tests/test_amentum.py. Retrieve current employer evidence from https://www.amentumcareers.com/jobs/search. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0005",
+          "company": "Amentum",
+          "configured_url": "https://www.amentumcareers.com/jobs/search",
+          "tests": [
+            "tests/test_amentum.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/amentum.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0011",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0011 General Dynamics Information Technology. Read docs/backlog/COMP-0011.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/gdit.py. Run tests/test_gdit.py. Retrieve current employer evidence from https://www.gdit.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0011",
+          "company": "General Dynamics Information Technology",
+          "configured_url": "https://www.gdit.com/careers/",
+          "tests": [
+            "tests/test_gdit.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/gdit.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0025",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0025 MITRE. Read docs/backlog/COMP-0025.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/phenom.py. Run tests/test_phenom.py tests/test_phenom_reconciliation.py. Retrieve current employer evidence from https://careers.mitre.org/us/en. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0025",
+          "company": "MITRE",
+          "configured_url": "https://careers.mitre.org/us/en",
+          "tests": [
+            "tests/test_phenom.py",
+            "tests/test_phenom_reconciliation.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/phenom.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0080",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0080 HII Mission Technologies. Read docs/backlog/COMP-0080.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/hii.py. Run tests/test_hii.py. Retrieve current employer evidence from https://www.hii.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0080",
+          "company": "HII Mission Technologies",
+          "configured_url": "https://www.hii.com/careers",
+          "tests": [
+            "tests/test_hii.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/hii.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0240",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0240 Komatsu. Read docs/backlog/COMP-0240.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/komatsu.py src/job_search_helper/successfactors.py. Run tests/test_komatsu.py tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://www.komatsu.com/en-us/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0240",
+          "company": "Komatsu",
+          "configured_url": "https://www.komatsu.com/en-us/careers",
+          "tests": [
+            "tests/test_komatsu.py",
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/komatsu.py",
+            "src/job_search_helper/successfactors.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0248",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0248 Dematic. Read docs/backlog/COMP-0248.md for the saved work order and prior evidence. Inspect src/job_search_helper/dematic.py src/job_search_helper/workday.py src/job_search_helper/company_sources.py src/job_search_helper/ats.py. Run tests/test_dematic.py tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://kiongroup.wd3.myworkdayjobs.com/KION_SCS?Country=55273a1b49934d97ae15342ef51f6b95&Country=80938777cac5440fab50d729f9634969&Country=972dc4ba8d454bc0b893ff84b1529077&Country=d903bb3fedad45039383f6de334ad4db. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0248",
+          "company": "Dematic",
+          "configured_url": "https://kiongroup.wd3.myworkdayjobs.com/KION_SCS?Country=55273a1b49934d97ae15342ef51f6b95&Country=80938777cac5440fab50d729f9634969&Country=972dc4ba8d454bc0b893ff84b1529077&Country=d903bb3fedad45039383f6de334ad4db",
+          "tests": [
+            "tests/test_dematic.py",
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/dematic.py",
+            "src/job_search_helper/workday.py",
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0257",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0257 u-blox. Read docs/backlog/COMP-0257.md for the saved work order and prior evidence. Inspect src/job_search_helper/ublox.py src/job_search_helper/ats.py. Run tests/test_ublox.py. Retrieve current employer evidence from https://www.u-blox.com/en/job-openings. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0257",
+          "company": "u-blox",
+          "configured_url": "https://www.u-blox.com/en/job-openings",
+          "tests": [
+            "tests/test_ublox.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ublox.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0398",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0398 Gray Solutions. Read docs/backlog/COMP-0398.md for the saved work order and prior evidence. Inspect src/job_search_helper/icims.py src/job_search_helper/company_sources.py. Run tests/test_icims.py. Retrieve current employer evidence from https://careershub-gray.icims.com/jobs/search?bga=true&hashed=-625916723&height=500&jan1offset=-360&jun1offset=-300&mobile=false&needsRedirect=false&ss=1&width=1270. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0398",
+          "company": "Gray Solutions",
+          "configured_url": "https://careershub-gray.icims.com/jobs/search?bga=true&hashed=-625916723&height=500&jan1offset=-360&jun1offset=-300&mobile=false&needsRedirect=false&ss=1&width=1270",
+          "tests": [
+            "tests/test_icims.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/icims.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0429",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0429 MilDef. Read docs/backlog/COMP-0429.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/teamtailor.py. Run tests/test_teamtailor.py. Retrieve current employer evidence from https://careers.mildef.com/jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0429",
+          "company": "MilDef",
+          "configured_url": "https://careers.mildef.com/jobs",
+          "tests": [
+            "tests/test_teamtailor.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/teamtailor.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0436",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0436 Honeywell Aerospace Technologies. Read docs/backlog/COMP-0436.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/oracle.py. Run tests/test_oracle.py. Retrieve current employer evidence from https://icfcjb.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/Aerospace/jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0436",
+          "company": "Honeywell Aerospace Technologies",
+          "configured_url": "https://icfcjb.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/Aerospace/jobs",
+          "tests": [
+            "tests/test_oracle.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/oracle.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0490",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0490 Amphenol Aerospace. Read docs/backlog/COMP-0490.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/acquiretm.py. Run tests/test_acquiretm.py. Retrieve current employer evidence from https://amphenol-aerospace.acquiretm.com/home.aspx. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0490",
+          "company": "Amphenol Aerospace",
+          "configured_url": "https://amphenol-aerospace.acquiretm.com/home.aspx",
+          "tests": [
+            "tests/test_acquiretm.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/acquiretm.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0494",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0494 Savox Communications. Read docs/backlog/COMP-0494.md for the saved work order and prior evidence. Inspect src/job_search_helper/ats.py src/job_search_helper/savox.py. Run tests/test_savox.py. Retrieve current employer evidence from https://www.savox.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0494",
+          "company": "Savox Communications",
+          "configured_url": "https://www.savox.com/careers",
+          "tests": [
+            "tests/test_savox.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/savox.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0724",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0724 Arm. Read docs/backlog/COMP-0724.md for the saved work order and prior evidence. Inspect src/job_search_helper/shared_extended.py. Run tests/test_shared_extended.py. Retrieve current employer evidence from https://careers.arm.com/search-jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0724",
+          "company": "Arm",
+          "configured_url": "https://careers.arm.com/search-jobs",
+          "tests": [
+            "tests/test_shared_extended.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/shared_extended.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0736",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0736 Lattice Semiconductor. Read docs/backlog/COMP-0736.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py src/job_search_helper/discovery.py src/job_search_helper/company_sources.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.latticesemi.com/About/Jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0736",
+          "company": "Lattice Semiconductor",
+          "configured_url": "https://www.latticesemi.com/About/Jobs",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py",
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0739",
+      "work_order": "W08",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0739 Samtec. Read docs/backlog/COMP-0739.md for the saved work order and prior evidence. Inspect src/job_search_helper/shared_boards.py. Run tests/test_shared_boards.py. Retrieve current employer evidence from https://jobs.jobvite.com/samtec/search. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0739",
+          "company": "Samtec",
+          "configured_url": "https://jobs.jobvite.com/samtec/search",
+          "tests": [
+            "tests/test_shared_boards.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/shared_boards.py"
+          ],
+          "work_order": "W08"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0003",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0003 Leidos. Read docs/backlog/COMP-0003.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://careers.leidos.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0003",
+          "company": "Leidos",
+          "configured_url": "https://careers.leidos.com/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0007",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0007 Parsons. Read docs/backlog/COMP-0007.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://jobs.parsons.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0007",
+          "company": "Parsons",
+          "configured_url": "https://jobs.parsons.com/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0024",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0024 Draper. Read docs/backlog/COMP-0024.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://draper.wd5.myworkdayjobs.com/en-US/Draper_Careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0024",
+          "company": "Draper",
+          "configured_url": "https://draper.wd5.myworkdayjobs.com/en-US/Draper_Careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0069",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0069 AeroVironment. Read docs/backlog/COMP-0069.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://avav.wd1.myworkdayjobs.com/AVAV. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0069",
+          "company": "AeroVironment",
+          "configured_url": "https://avav.wd1.myworkdayjobs.com/AVAV",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0070",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0070 Sierra Nevada Corporation. Read docs/backlog/COMP-0070.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://snc.wd1.myworkdayjobs.com/SNC_External_Career_Site/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0070",
+          "company": "Sierra Nevada Corporation",
+          "configured_url": "https://snc.wd1.myworkdayjobs.com/SNC_External_Career_Site/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0072",
+      "work_order": "Scope investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0072 General Atomics Aeronautical Systems. Read docs/backlog/COMP-0072.md for the saved work order and prior evidence. Inspect src/job_search_helper/company_sources.py src/job_search_helper/brassring.py. Run tests/test_brassring.py. Retrieve current employer evidence from https://www.ga.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0072",
+          "company": "General Atomics Aeronautical Systems",
+          "configured_url": "https://www.ga.com/careers/",
+          "tests": [
+            "tests/test_brassring.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/brassring.py"
+          ],
+          "work_order": "Scope investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0083",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0083 Curtiss-Wright Defense Solutions. Read docs/backlog/COMP-0083.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://curtisswright.wd1.myworkdayjobs.com/CW_External_Career_Site. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0083",
+          "company": "Curtiss-Wright Defense Solutions",
+          "configured_url": "https://curtisswright.wd1.myworkdayjobs.com/CW_External_Career_Site",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0086",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0086 Ultra Intelligence & Communications. Read docs/backlog/COMP-0086.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://ultra.wd3.myworkdayjobs.com/en-US/UICCareers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0086",
+          "company": "Ultra Intelligence & Communications",
+          "configured_url": "https://ultra.wd3.myworkdayjobs.com/en-US/UICCareers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0093",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0093 Teledyne FLIR Defense. Read docs/backlog/COMP-0093.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://flir.wd1.myworkdayjobs.com/flircareers/jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0093",
+          "company": "Teledyne FLIR Defense",
+          "configured_url": "https://flir.wd1.myworkdayjobs.com/flircareers/jobs",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0096",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0096 General Dynamics Mission Systems. Read docs/backlog/COMP-0096.md for the saved work order and prior evidence. Inspect src/job_search_helper/discovery.py src/job_search_helper/gdms.py. Run tests/test_gdms.py. Retrieve current employer evidence from https://gdmissionsystems.com/careers/job-search. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0096",
+          "company": "General Dynamics Mission Systems",
+          "configured_url": "https://gdmissionsystems.com/careers/job-search",
+          "tests": [
+            "tests/test_gdms.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/gdms.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0098",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0098 Blue Origin. Read docs/backlog/COMP-0098.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.blueorigin.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0098",
+          "company": "Blue Origin",
+          "configured_url": "https://www.blueorigin.com/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0099",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0099 Sierra Space. Read docs/backlog/COMP-0099.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://sierraspace.wd1.myworkdayjobs.com/Sierra_Space_External_Career_Site. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0099",
+          "company": "Sierra Space",
+          "configured_url": "https://sierraspace.wd1.myworkdayjobs.com/Sierra_Space_External_Career_Site",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0110",
+      "work_order": "W01",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0110 goTenna. Read docs/backlog/COMP-0110.md for the saved work order and prior evidence. Inspect src/job_search_helper/shared_boards.py. Run tests/test_shared_boards.py. Retrieve current employer evidence from https://gotenna.com/pages/jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0110",
+          "company": "goTenna",
+          "configured_url": "https://gotenna.com/pages/jobs",
+          "tests": [
+            "tests/test_shared_boards.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/shared_boards.py"
+          ],
+          "work_order": "W01"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0130",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0130 Motorola Solutions. Read docs/backlog/COMP-0130.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py src/job_search_helper/rapiddeploy.py. Run tests/test_rapiddeploy.py tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.motorolasolutions.com/en_us/about/careers.html. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0130",
+          "company": "Motorola Solutions",
+          "configured_url": "https://www.motorolasolutions.com/en_us/about/careers.html",
+          "tests": [
+            "tests/test_rapiddeploy.py",
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py",
+            "src/job_search_helper/rapiddeploy.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0136",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0136 Ericsson. Read docs/backlog/COMP-0136.md for the saved work order and prior evidence. Inspect src/job_search_helper/discovery.py src/job_search_helper/ericsson.py src/job_search_helper/ats.py. Run tests/test_ericsson.py. Retrieve current employer evidence from https://www.ericsson.com/en/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0136",
+          "company": "Ericsson",
+          "configured_url": "https://www.ericsson.com/en/careers",
+          "tests": [
+            "tests/test_ericsson.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/ericsson.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0153",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0153 VIAVI Solutions. Read docs/backlog/COMP-0153.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://viavisolutions.wd1.myworkdayjobs.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0153",
+          "company": "VIAVI Solutions",
+          "configured_url": "https://viavisolutions.wd1.myworkdayjobs.com/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0154",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0154 Analog Devices. Read docs/backlog/COMP-0154.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://analogdevices.wd1.myworkdayjobs.com/External. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0154",
+          "company": "Analog Devices",
+          "configured_url": "https://analogdevices.wd1.myworkdayjobs.com/External",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0167",
+      "work_order": "No public inventory",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0167 Perennial Autonomy. Read docs/backlog/COMP-0167.md for the saved work order and prior evidence. Inspect src/job_search_helper/company_sources.py src/job_search_helper/ats.py src/job_search_helper/perennial_autonomy.py. Run tests/test_perennial_autonomy.py. Retrieve current employer evidence from https://www.perennialautonomy.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0167",
+          "company": "Perennial Autonomy",
+          "configured_url": "https://www.perennialautonomy.com/",
+          "tests": [
+            "tests/test_perennial_autonomy.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/perennial_autonomy.py"
+          ],
+          "work_order": "No public inventory"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0169",
+      "work_order": "No public inventory",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0169 SkySafe. Read docs/backlog/COMP-0169.md for the saved work order and prior evidence. Inspect src/job_search_helper/company_sources.py src/job_search_helper/ats.py src/job_search_helper/skysafe.py. Run tests/test_skysafe.py. Retrieve current employer evidence from https://www.skysafe.io/contact. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0169",
+          "company": "SkySafe",
+          "configured_url": "https://www.skysafe.io/contact",
+          "tests": [
+            "tests/test_skysafe.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/skysafe.py"
+          ],
+          "work_order": "No public inventory"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0200",
+      "work_order": "Scope investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0200 Symbotic. Read docs/backlog/COMP-0200.md for the saved work order and prior evidence. Inspect src/job_search_helper/company_sources.py src/job_search_helper/symbotic.py. Run tests/test_symbotic.py. Retrieve current employer evidence from https://www.symbotic.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0200",
+          "company": "Symbotic",
+          "configured_url": "https://www.symbotic.com/careers/",
+          "tests": [
+            "tests/test_symbotic.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/symbotic.py"
+          ],
+          "work_order": "Scope investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0247",
+      "work_order": "Scope investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0247 Omron Automation. Read docs/backlog/COMP-0247.md for the saved work order and prior evidence. Inspect src/job_search_helper/omron.py src/job_search_helper/ats.py. Run tests/test_omron.py. Retrieve current employer evidence from https://automation.omron.com/en/us/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0247",
+          "company": "Omron Automation",
+          "configured_url": "https://automation.omron.com/en/us/careers/",
+          "tests": [
+            "tests/test_omron.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/omron.py",
+            "src/job_search_helper/ats.py"
+          ],
+          "work_order": "Scope investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0249",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0249 Bastian Solutions. Read docs/backlog/COMP-0249.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://vanderlande.wd3.myworkdayjobs.com/TALExternalCareers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0249",
+          "company": "Bastian Solutions",
+          "configured_url": "https://vanderlande.wd3.myworkdayjobs.com/TALExternalCareers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0254",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0254 Trimble. Read docs/backlog/COMP-0254.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.trimble.com/en/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0254",
+          "company": "Trimble",
+          "configured_url": "https://www.trimble.com/en/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0259",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0259 Inertial Labs. Read docs/backlog/COMP-0259.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://viavisolutions.wd1.myworkdayjobs.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0259",
+          "company": "Inertial Labs",
+          "configured_url": "https://viavisolutions.wd1.myworkdayjobs.com/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0271",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0271 Cognex. Read docs/backlog/COMP-0271.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://cognex.wd1.myworkdayjobs.com/External_Career_Site. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0271",
+          "company": "Cognex",
+          "configured_url": "https://cognex.wd1.myworkdayjobs.com/External_Career_Site",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0281",
+      "work_order": "No public inventory",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0281 Blues. Read docs/backlog/COMP-0281.md for the saved work order and prior evidence. Inspect src/job_search_helper/company_sources.py src/job_search_helper/ats.py src/job_search_helper/blues.py. Run tests/test_blues.py. Retrieve current employer evidence from https://blues.com/bluescareers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0281",
+          "company": "Blues",
+          "configured_url": "https://blues.com/bluescareers/",
+          "tests": [
+            "tests/test_blues.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/blues.py"
+          ],
+          "work_order": "No public inventory"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0283",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0283 Advantech. Read docs/backlog/COMP-0283.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://advantech.wd3.myworkdayjobs.com/en-US/External. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0283",
+          "company": "Advantech",
+          "configured_url": "https://advantech.wd3.myworkdayjobs.com/en-US/External",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0302",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0302 Deployable Technologies. Read docs/backlog/COMP-0302.md for the saved work order and prior evidence. Inspect src/job_search_helper/discovery.py src/job_search_helper/ats.py src/job_search_helper/deployable.py. Run tests/test_deployable.py. Retrieve current employer evidence from https://deployabletechnologies.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0302",
+          "company": "Deployable Technologies",
+          "configured_url": "https://deployabletechnologies.com/careers/",
+          "tests": [
+            "tests/test_deployable.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/deployable.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0354",
+      "work_order": "No public inventory",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0354 XOCEAN. Read docs/backlog/COMP-0354.md for the saved work order and prior evidence. Inspect src/job_search_helper/xocean.py src/job_search_helper/company_sources.py. Run tests/test_xocean.py. Retrieve current employer evidence from https://xocean.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0354",
+          "company": "XOCEAN",
+          "configured_url": "https://xocean.com/careers/",
+          "tests": [
+            "tests/test_xocean.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/xocean.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "No public inventory"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0361",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0361 Fugro. Read docs/backlog/COMP-0361.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.fugro.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0361",
+          "company": "Fugro",
+          "configured_url": "https://www.fugro.com/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0362",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0362 ATLAS Space Operations. Read docs/backlog/COMP-0362.md for the saved work order and prior evidence. Inspect src/job_search_helper/discovery.py src/job_search_helper/ats.py src/job_search_helper/atlas_space.py. Run tests/test_atlas_space.py. Retrieve current employer evidence from https://atlasspace.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0362",
+          "company": "ATLAS Space Operations",
+          "configured_url": "https://atlasspace.com/careers/",
+          "tests": [
+            "tests/test_atlas_space.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/atlas_space.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0395",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0395 BW Design Group. Read docs/backlog/COMP-0395.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://barrywehmiller.wd1.myworkdayjobs.com/BWCareers?q=Design+Group. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0395",
+          "company": "BW Design Group",
+          "configured_url": "https://barrywehmiller.wd1.myworkdayjobs.com/BWCareers?q=Design+Group",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0407",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0407 Mavenir. Read docs/backlog/COMP-0407.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://mavenir.wd1.myworkdayjobs.com/Mavenir_Careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0407",
+          "company": "Mavenir",
+          "configured_url": "https://mavenir.wd1.myworkdayjobs.com/Mavenir_Careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0413",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0413 Boldyn Networks. Read docs/backlog/COMP-0413.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://baicommunications.wd3.myworkdayjobs.com/External. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0413",
+          "company": "Boldyn Networks",
+          "configured_url": "https://baicommunications.wd3.myworkdayjobs.com/External",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0432",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0432 Moog. Read docs/backlog/COMP-0432.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0432",
+          "company": "Moog",
+          "configured_url": "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0434",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0434 Woodward. Read docs/backlog/COMP-0434.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://woodward.wd5.myworkdayjobs.com/woodward. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0434",
+          "company": "Woodward",
+          "configured_url": "https://woodward.wd5.myworkdayjobs.com/woodward",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0451",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0451 The Aerospace Corporation. Read docs/backlog/COMP-0451.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://aero.wd5.myworkdayjobs.com/External. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0451",
+          "company": "The Aerospace Corporation",
+          "configured_url": "https://aero.wd5.myworkdayjobs.com/External",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0473",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0473 CentralSquare Technologies. Read docs/backlog/COMP-0473.md for the saved work order and prior evidence. Inspect src/job_search_helper/discovery.py src/job_search_helper/ats.py src/job_search_helper/centralsquare.py. Run tests/test_centralsquare.py. Retrieve current employer evidence from https://www.centralsquare.com/why-centralsquare/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0473",
+          "company": "CentralSquare Technologies",
+          "configured_url": "https://www.centralsquare.com/why-centralsquare/careers",
+          "tests": [
+            "tests/test_centralsquare.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/centralsquare.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0487",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0487 Vislink Technologies. Read docs/backlog/COMP-0487.md for the saved work order and prior evidence. Inspect src/job_search_helper/discovery.py src/job_search_helper/ats.py src/job_search_helper/vislink.py. Run tests/test_vislink.py. Retrieve current employer evidence from https://www.vislink.com/about/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0487",
+          "company": "Vislink Technologies",
+          "configured_url": "https://www.vislink.com/about/careers/",
+          "tests": [
+            "tests/test_vislink.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/vislink.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0489",
+      "work_order": "No public inventory",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0489 Glenair. Read docs/backlog/COMP-0489.md for the saved work order and prior evidence. Inspect src/job_search_helper/company_sources.py src/job_search_helper/ats.py src/job_search_helper/glenair.py. Run tests/test_glenair.py. Retrieve current employer evidence from https://www.glenair.com/contact/employment.htm. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0489",
+          "company": "Glenair",
+          "configured_url": "https://www.glenair.com/contact/employment.htm",
+          "tests": [
+            "tests/test_glenair.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/company_sources.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/glenair.py"
+          ],
+          "work_order": "No public inventory"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0508",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0508 Axiom Space. Read docs/backlog/COMP-0508.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://axiomspace.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0508",
+          "company": "Axiom Space",
+          "configured_url": "https://axiomspace.com/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0528",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0528 AutoStore. Read docs/backlog/COMP-0528.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://autostore.wd3.myworkdayjobs.com/autostore. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0528",
+          "company": "AutoStore",
+          "configured_url": "https://autostore.wd3.myworkdayjobs.com/autostore",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0562",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0562 GE Vernova. Read docs/backlog/COMP-0562.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://careers.gevernova.com/jobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0562",
+          "company": "GE Vernova",
+          "configured_url": "https://careers.gevernova.com/jobs",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0565",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0565 JBT Marel. Read docs/backlog/COMP-0565.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://jbtm.wd108.myworkdayjobs.com/JBT_Marel_Career_Site. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0565",
+          "company": "JBT Marel",
+          "configured_url": "https://jbtm.wd108.myworkdayjobs.com/JBT_Marel_Career_Site",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0566",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0566 ProMach. Read docs/backlog/COMP-0566.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.promachinnovation.com/about/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0566",
+          "company": "ProMach",
+          "configured_url": "https://www.promachinnovation.com/about/careers/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0584",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0584 KONE. Read docs/backlog/COMP-0584.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://kone.wd3.myworkdayjobs.com/Careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0584",
+          "company": "KONE",
+          "configured_url": "https://kone.wd3.myworkdayjobs.com/Careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0595",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0595 Nilfisk. Read docs/backlog/COMP-0595.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.nilfisk.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0595",
+          "company": "Nilfisk",
+          "configured_url": "https://www.nilfisk.com/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0599",
+      "work_order": "Scope investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0599 Geek+. Read docs/backlog/COMP-0599.md for the saved work order and prior evidence. Inspect src/job_search_helper/bamboohr.py src/job_search_helper/company_sources.py. Run tests/test_bamboohr.py. Retrieve current employer evidence from https://www.geekplus.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0599",
+          "company": "Geek+",
+          "configured_url": "https://www.geekplus.com/",
+          "tests": [
+            "tests/test_bamboohr.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/bamboohr.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "Scope investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0614",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0614 EOS. Read docs/backlog/COMP-0614.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://eosgroup.wd3.myworkdayjobs.com/eos. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0614",
+          "company": "EOS",
+          "configured_url": "https://eosgroup.wd3.myworkdayjobs.com/eos",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0619",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0619 AMETEK. Read docs/backlog/COMP-0619.md for the saved work order and prior evidence. Inspect src/job_search_helper/discovery.py src/job_search_helper/ats.py src/job_search_helper/successfactors.py. Run tests/test_successfactors.py tests/test_successfactors_browser_fallback.py tests/test_successfactors_retry.py. Retrieve current employer evidence from https://www.ametek.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0619",
+          "company": "AMETEK",
+          "configured_url": "https://www.ametek.com/careers",
+          "tests": [
+            "tests/test_successfactors.py",
+            "tests/test_successfactors_browser_fallback.py",
+            "tests/test_successfactors_retry.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/ats.py",
+            "src/job_search_helper/successfactors.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0656",
+      "work_order": "Scope investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0656 Astroscale U.S.. Read docs/backlog/COMP-0656.md for the saved work order and prior evidence. Inspect src/job_search_helper/bamboohr.py src/job_search_helper/company_sources.py. Run tests/test_bamboohr.py. Retrieve current employer evidence from https://astroscale.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0656",
+          "company": "Astroscale U.S.",
+          "configured_url": "https://astroscale.com/careers/",
+          "tests": [
+            "tests/test_bamboohr.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/bamboohr.py",
+            "src/job_search_helper/company_sources.py"
+          ],
+          "work_order": "Scope investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0664",
+      "work_order": "Native discovery",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0664 Cloudflare. Read docs/backlog/COMP-0664.md for the saved work order and prior evidence. Inspect src/job_search_helper/discovery.py src/job_search_helper/saic.py src/job_search_helper/gd_land_systems.py. Run tests/test_gd_land_systems.py tests/test_saic.py. Retrieve current employer evidence from https://www.cloudflare.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0664",
+          "company": "Cloudflare",
+          "configured_url": "https://www.cloudflare.com/careers/",
+          "tests": [
+            "tests/test_gd_land_systems.py",
+            "tests/test_saic.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/discovery.py",
+            "src/job_search_helper/saic.py",
+            "src/job_search_helper/gd_land_systems.py"
+          ],
+          "work_order": "Native discovery"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0668",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0668 AVEVA. Read docs/backlog/COMP-0668.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.aveva.com/en/about/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0668",
+          "company": "AVEVA",
+          "configured_url": "https://www.aveva.com/en/about/careers/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0708",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0708 OTTO Motors. Read docs/backlog/COMP-0708.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://ottomotors.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0708",
+          "company": "OTTO Motors",
+          "configured_url": "https://ottomotors.com/careers/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0716",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0716 Novanta. Read docs/backlog/COMP-0716.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.novanta.com/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0716",
+          "company": "Novanta",
+          "configured_url": "https://www.novanta.com/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0725",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0725 NXP Semiconductors. Read docs/backlog/COMP-0725.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://nxp.wd3.myworkdayjobs.com/en-US/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0725",
+          "company": "NXP Semiconductors",
+          "configured_url": "https://nxp.wd3.myworkdayjobs.com/en-US/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0746",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0746 Adtran. Read docs/backlog/COMP-0746.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.adtran.com/en/about-us/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0746",
+          "company": "Adtran",
+          "configured_url": "https://www.adtran.com/en/about-us/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0748",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0748 EXFO. Read docs/backlog/COMP-0748.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://careers.exfo.com/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0748",
+          "company": "EXFO",
+          "configured_url": "https://careers.exfo.com/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0752",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0752 Spectrum Control. Read docs/backlog/COMP-0752.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.spectrumcontrol.com/about/careers. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0752",
+          "company": "Spectrum Control",
+          "configured_url": "https://www.spectrumcontrol.com/about/careers",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0771",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0771 Fronius USA. Read docs/backlog/COMP-0771.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.fronius.com/en-us/usa/career/jobs-at-fronius. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0771",
+          "company": "Fronius USA",
+          "configured_url": "https://www.fronius.com/en-us/usa/career/jobs-at-fronius",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0774",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0774 Bloom Energy. Read docs/backlog/COMP-0774.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.bloomenergy.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0774",
+          "company": "Bloom Energy",
+          "configured_url": "https://www.bloomenergy.com/careers/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0778",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0778 Avnet. Read docs/backlog/COMP-0778.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://avnet.wd1.myworkdayjobs.com/en-US/External. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0778",
+          "company": "Avnet",
+          "configured_url": "https://avnet.wd1.myworkdayjobs.com/en-US/External",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0784",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0784 Monolithic Power Systems. Read docs/backlog/COMP-0784.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.monolithicpower.com/about-mps/careers/job-listings.html. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0784",
+          "company": "Monolithic Power Systems",
+          "configured_url": "https://www.monolithicpower.com/about-mps/careers/job-listings.html",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0786",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0786 Brooks Automation. Read docs/backlog/COMP-0786.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.brooks.com/careers/. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0786",
+          "company": "Brooks Automation",
+          "configured_url": "https://www.brooks.com/careers/",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0787",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0787 Azenta Life Sciences. Read docs/backlog/COMP-0787.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://azenta.wd1.myworkdayjobs.com/AzentaJobs. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0787",
+          "company": "Azenta Life Sciences",
+          "configured_url": "https://azenta.wd1.myworkdayjobs.com/AzentaJobs",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0788",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0788 Renishaw. Read docs/backlog/COMP-0788.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://www.renishaw.com/en/careers--6417. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0788",
+          "company": "Renishaw",
+          "configured_url": "https://www.renishaw.com/en/careers--6417",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    },
+    {
+      "company_id": "COMP-0795",
+      "work_order": "Access investigations",
+      "assignment": {
+        "objective": "Develop the next bounded integration repair for COMP-0795 KLA. Read docs/backlog/COMP-0795.md for the saved work order and prior evidence. Inspect src/job_search_helper/workday.py. Run tests/test_workday.py tests/test_workday_leidos.py tests/test_workday_leidos_reconcile.py tests/test_workday_reconcile.py. Retrieve current employer evidence from https://kla.wd1.myworkdayjobs.com/en-US/Search. Preserve exact employer scope, full descriptions, pagination and stable reread checks. Save a tested development draft and an evidence-based handoff for live validation.",
+        "mode": "develop",
+        "max_sessions": 10,
+        "integration": {
+          "company_id": "COMP-0795",
+          "company": "KLA",
+          "configured_url": "https://kla.wd1.myworkdayjobs.com/en-US/Search",
+          "tests": [
+            "tests/test_workday.py",
+            "tests/test_workday_leidos.py",
+            "tests/test_workday_leidos_reconcile.py",
+            "tests/test_workday_reconcile.py"
+          ],
+          "source_targets": [
+            "src/job_search_helper/workday.py"
+          ],
+          "work_order": "Access investigations"
+        }
+      }
+    }
+  ],
+  "held": [
+    {
+      "company_id": "COMP-0032",
+      "company": "Soar Technology (SoarTech)",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0038",
+      "company": "Intrepid",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0043",
+      "company": "Digital Force Technologies",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0048",
+      "company": "AMERGINT Technologies",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0066",
+      "company": "Forterra",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 50 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0074",
+      "company": "Lockheed Martin",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IN_PROGRESS",
+      "context": "Resume or redesign bounded complete validation of the exact scoped Eightfold adapter; retain final reread evidence and do not claim sampled pages as complete."
+    },
+    {
+      "company_id": "COMP-0088",
+      "company": "Textron Systems",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0118",
+      "company": "Hughes Network Systems",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Pinned the scoped EchoStar API transport and replaced the historical count/page assumption with dynamic enumeration and complete reread validation. Live normal dispatch completed with 6 full postings. See `W03_HUGHES_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0140",
+      "company": "Cradlepoint",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0155",
+      "company": "Qorvo",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0158",
+      "company": "Dedrone by Axon",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0164",
+      "company": "Allen Control Systems",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0166",
+      "company": "Black River Systems Company",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Existing structural implementation passed 17 focused tests. Two independent normal-dispatch runs returned the same 15 full postings with final inventory rereads."
+    },
+    {
+      "company_id": "COMP-0171",
+      "company": "Freefly Systems",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Removed the stale 15-posting guard, retained structured inventory/detail/recheck validation, and completed live normal dispatch with 14 full postings."
+    },
+    {
+      "company_id": "COMP-0172",
+      "company": "Inspired Flight Technologies",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0173",
+      "company": "ModalAI",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0178",
+      "company": "Performance Drone Works (PDW)",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 39 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0180",
+      "company": "Ascent AeroSystems",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0185",
+      "company": "DroneSense",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0188",
+      "company": "DroneUp",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: zero postings under an explicit complete public inventory and stable final reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0195",
+      "company": "Flying Lion",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0217",
+      "company": "Field AI",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0237",
+      "company": "Bonsai Robotics",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 7 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0241",
+      "company": "Rockwell Automation",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0246",
+      "company": "KUKA Robotics",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Removed the stale 115-item gate while retaining the exact employer facet; live normal dispatch completed with 111 full postings and a stable reread."
+    },
+    {
+      "company_id": "COMP-0250",
+      "company": "JR Automation",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Replaced the stale 64-total and corrected canonical page paths; live normal dispatch completed with 59 full postings and a stable six-page reread."
+    },
+    {
+      "company_id": "COMP-0260",
+      "company": "Advanced Navigation",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 22 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0288",
+      "company": "ADLINK Technology",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 10 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0295",
+      "company": "Getac",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0300",
+      "company": "Genasys",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0307",
+      "company": "iGov",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0318",
+      "company": "Metrea",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0320",
+      "company": "Foundation",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 26 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0324",
+      "company": "Vexar Defense",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0334",
+      "company": "CAE USA",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0336",
+      "company": "Advanced Simulation Technology inc. (ASTi)",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Replaced the stale two-role requirement with an explicit nonempty inventory check; live normal dispatch completed with 2 full postings and a stable reread."
+    },
+    {
+      "company_id": "COMP-0349",
+      "company": "Blue Robotics",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 1 full posting with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0350",
+      "company": "Kraken Robotics",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 22 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0382",
+      "company": "Capella Space",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0388",
+      "company": "E Tech Group",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0397",
+      "company": "Hallam-ICS",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0405",
+      "company": "ECS Solutions",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0419",
+      "company": "Mission Secure",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0428",
+      "company": "Aitech Systems",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Removed the stale 17-link guard and completed live normal dispatch with 15 full postings and a stable final reread."
+    },
+    {
+      "company_id": "COMP-0449",
+      "company": "IERUS Technologies",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Repaired the exact legacy JobScore alias to its canonical host; targeted suite passed 15 tests and normal dispatch returned 62 full postings with stable internal reread."
+    },
+    {
+      "company_id": "COMP-0483",
+      "company": "Cyngn",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 19 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0485",
+      "company": "Fox Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0488",
+      "company": "COMROD",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0495",
+      "company": "Overland AI",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 46 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0523",
+      "company": "Swisslog",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0524",
+      "company": "Swisslog Healthcare",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0525",
+      "company": "TGW Logistics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0527",
+      "company": "Hai Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0529",
+      "company": "Vanderlande",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0532",
+      "company": "K\u00f6rber Supply Chain",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0534",
+      "company": "WITRON",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0536",
+      "company": "Honeywell Industrial Automation",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0537",
+      "company": "Mobile Industrial Robots (MiR)",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0538",
+      "company": "Zebra Technologies",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded exact official-to-Zebra Workday routing and 33 focused tests passed; live normal dispatch is blocked by Workday human verification on the first public detail, so no complete result or reread exists."
+    },
+    {
+      "company_id": "COMP-0539",
+      "company": "Mytra",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "READY",
+      "context": "**Current implementation status (2026-11-17):** W01 validated complete through normal dispatch: 40 full postings with stable final inventory reread. See `W01_RIPPLING_VALIDATION_2026-11-17.md`."
+    },
+    {
+      "company_id": "COMP-0542",
+      "company": "Serve Robotics",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Added guarded official-careers-to-Ashby routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 23 full postings."
+    },
+    {
+      "company_id": "COMP-0545",
+      "company": "Loop Robots",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0547",
+      "company": "Amazon Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0549",
+      "company": "Intuitive",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0550",
+      "company": "Johnson & Johnson MedTech Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0551",
+      "company": "Stryker",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0553",
+      "company": "CMR Surgical",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0555",
+      "company": "Emerson",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0557",
+      "company": "Parker Hannifin",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0558",
+      "company": "Mitsubishi Electric Automation",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0560",
+      "company": "Festo",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded exact SuccessFactors route and 30 focused tests passed. The public 12-role result range disagrees with its current posting links, preventing complete inventory, descriptions, and final reread."
+    },
+    {
+      "company_id": "COMP-0561",
+      "company": "Vertiv",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0563",
+      "company": "Hitachi Energy",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0567",
+      "company": "Tetra Pak",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0569",
+      "company": "Siemens",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0570",
+      "company": "Danfoss",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded exact SuccessFactors route, safe adapter extension, and 45 focused tests passed. Current public JS-driven search omits the static result-range/listing contract required for complete inventory validation."
+    },
+    {
+      "company_id": "COMP-0571",
+      "company": "Bosch Rexroth",
+      "disposition": "ADOPTION_VERIFICATION",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0572",
+      "company": "Eaton",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0573",
+      "company": "ATS Corporation",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded exact SuccessFactors route and 24 focused tests passed. Its live public listing did not expose a consistent published result range, so completion and final reread cannot be claimed."
+    },
+    {
+      "company_id": "COMP-0578",
+      "company": "Dusty Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0582",
+      "company": "GreyOrange",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0586",
+      "company": "TK Elevator",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0587",
+      "company": "Schindler Elevator",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0589",
+      "company": "Toyota Material Handling",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0590",
+      "company": "The Raymond Corporation",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0591",
+      "company": "Hyster-Yale",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0592",
+      "company": "Jungheinrich",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0597",
+      "company": "Gausium",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0598",
+      "company": "E80 Group",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0600",
+      "company": "Addverb",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0601",
+      "company": "ForwardX Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0605",
+      "company": "Syntegon",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0606",
+      "company": "Sidel",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0607",
+      "company": "Coesia",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0608",
+      "company": "Barry-Wehmiller",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0609",
+      "company": "Duravant",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0610",
+      "company": "Heat and Control",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0611",
+      "company": "MULTIVAC",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0612",
+      "company": "KHS Group",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0613",
+      "company": "Stratasys",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0615",
+      "company": "Formlabs",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0616",
+      "company": "TRUMPF",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0617",
+      "company": "DMG MORI",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0618",
+      "company": "Lincoln Electric",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0623",
+      "company": "Booz Allen Hamilton",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded exact Workday route, board-specific capped-list recovery, and 76 focused tests passed. A public job-family page exposes a requisition-only card with no detail path, preventing complete description validation and final reread."
+    },
+    {
+      "company_id": "COMP-0624",
+      "company": "Accenture Federal Services",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0625",
+      "company": "Deloitte",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0626",
+      "company": "LMI",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0627",
+      "company": "Battelle",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0628",
+      "company": "Jacobs",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0629",
+      "company": "AECOM",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0630",
+      "company": "Fluor",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0631",
+      "company": "BELL",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0632",
+      "company": "AAR Corp.",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0633",
+      "company": "Airbus U.S. Space & Defense",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0634",
+      "company": "Embraer",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0635",
+      "company": "Gulfstream Aerospace",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0636",
+      "company": "Spirit AeroSystems",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0637",
+      "company": "Triumph Group",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0638",
+      "company": "Garrett Motion",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded Oracle em2 route and 20 focused tests passed. Live normal dispatch retrieved 83 full descriptions but seven public details lacked title or full description, so complete inventory and final reread cannot pass."
+    },
+    {
+      "company_id": "COMP-0639",
+      "company": "Sierra Nevada Company Mission Solutions",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0640",
+      "company": "Merrick & Company",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0642",
+      "company": "RAND Corporation",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0643",
+      "company": "Johns Hopkins Applied Physics Laboratory",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0644",
+      "company": "Sandia National Laboratories",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0645",
+      "company": "Los Alamos National Laboratory",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0646",
+      "company": "Pacific Northwest National Laboratory",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0647",
+      "company": "Idaho National Laboratory",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0648",
+      "company": "Argonne National Laboratory",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0649",
+      "company": "MDA Space",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0650",
+      "company": "Intelsat",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0651",
+      "company": "Eutelsat OneWeb",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0654",
+      "company": "Relativity Space",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0655",
+      "company": "SpaceX",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0657",
+      "company": "Ciena",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0659",
+      "company": "NETSCOUT",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0660",
+      "company": "Fortinet",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded exact Oracle route and 35 focused tests passed. Public site claims 1,083 roles but exposes 1,082 records before its empty boundary, so complete inventory validation and final reread cannot pass."
+    },
+    {
+      "company_id": "COMP-0662",
+      "company": "Zscaler",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0663",
+      "company": "CrowdStrike",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded exact Workday route and 33 focused tests passed. Normal dispatch read 16 full descriptions, then human verification blocked a public detail; no full inventory or final reread exists."
+    },
+    {
+      "company_id": "COMP-0666",
+      "company": "Autodesk",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0667",
+      "company": "Bentley Systems",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded exact Workday route and 33 focused tests passed. Normal dispatch read one full description, then human verification blocked a public detail; no full inventory or final reread exists."
+    },
+    {
+      "company_id": "COMP-0670",
+      "company": "Dassault Syst\u00e8mes",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0671",
+      "company": "Ansys",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0672",
+      "company": "MathWorks",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0673",
+      "company": "Qualcomm",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0674",
+      "company": "Tektronix",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0675",
+      "company": "Fluke Corporation",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0676",
+      "company": "Rittal",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0677",
+      "company": "Weidm\u00fcller USA",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0678",
+      "company": "Turck",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0680",
+      "company": "ifm efector",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0681",
+      "company": "Balluff",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0682",
+      "company": "Pepperl+Fuchs",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0683",
+      "company": "WAGO",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0684",
+      "company": "SEW-EURODRIVE",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0685",
+      "company": "Regal Rexnord",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0686",
+      "company": "Kollmorgen",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0687",
+      "company": "Nidec Motion & Drives",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0688",
+      "company": "Atlas Copco",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0689",
+      "company": "Ingersoll Rand",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0690",
+      "company": "Kaeser Compressors",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0691",
+      "company": "Sullair",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0692",
+      "company": "Graco",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0693",
+      "company": "Nordson",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0694",
+      "company": "Donaldson",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0695",
+      "company": "Applied Industrial Technologies",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0696",
+      "company": "Motion Industries",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0697",
+      "company": "Miller Electric Mfg.",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0698",
+      "company": "ESAB",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0699",
+      "company": "Schaeffler",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0700",
+      "company": "The Timken Company",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0701",
+      "company": "Denso Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0702",
+      "company": "Epson Robots",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0703",
+      "company": "St\u00e4ubli Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0704",
+      "company": "Kawasaki Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0705",
+      "company": "Nachi Robotic Systems",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0706",
+      "company": "Doosan Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0710",
+      "company": "RightHand Robotics",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Added guarded official-careers-to-Breezy routing; targeted suite passed 22 tests and normal dispatch returned 3 full postings with stable final reread."
+    },
+    {
+      "company_id": "COMP-0711",
+      "company": "Mantis Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0712",
+      "company": "PickNik Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0714",
+      "company": "Aethon",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0715",
+      "company": "Badger Technologies",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0717",
+      "company": "Tesla",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0718",
+      "company": "Rivian",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0719",
+      "company": "Lucid Motors",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0720",
+      "company": "Hyundai Mobis",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0721",
+      "company": "Magna International",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0722",
+      "company": "Marvell Technology",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0726",
+      "company": "Microchip Technology",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0727",
+      "company": "Texas Instruments",
+      "disposition": "EXISTING_VALIDATION_OR_CLAIM",
+      "prior_status": "IMPLEMENTED_AWAITING_VALIDATION",
+      "context": "Guarded custom-host-to-Oracle mapping, explicit legacy-CX parser support, and 20 focused tests passed. Live inventory changed during pagination before details, so no complete inventory or final reread exists."
+    },
+    {
+      "company_id": "COMP-0728",
+      "company": "Infineon Technologies",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0729",
+      "company": "STMicroelectronics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0730",
+      "company": "Renesas Electronics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0731",
+      "company": "onsemi",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Guarded exact Oracle route and 20 focused tests passed. Normal dispatch returned 708 distinct full postings with a stable 36-page final reread."
+    },
+    {
+      "company_id": "COMP-0732",
+      "company": "Silicon Labs",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0733",
+      "company": "Nordic Semiconductor",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0734",
+      "company": "Semtech",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0735",
+      "company": "Synaptics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0737",
+      "company": "Vicor",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0741",
+      "company": "Dell Technologies",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0743",
+      "company": "Eurotech",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0747",
+      "company": "Ribbon Communications",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0749",
+      "company": "Ubiquiti",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Added guarded official-careers-to-Greenhouse routing; targeted suite passed 49 tests and two live normal-dispatch reads returned the same 168 full postings."
+    },
+    {
+      "company_id": "COMP-0751",
+      "company": "Epiq Solutions",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0754",
+      "company": "Flexiv",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0755",
+      "company": "Contoro Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0756",
+      "company": "Jacobi Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0758",
+      "company": "Verdant Robotics",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0759",
+      "company": "Solinftec",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0760",
+      "company": "Basler",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0761",
+      "company": "Allied Vision",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0762",
+      "company": "IDS Imaging Development Systems",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0763",
+      "company": "MVTec Software",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0764",
+      "company": "Yokogawa",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0766",
+      "company": "VEGA Americas",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0767",
+      "company": "Kistler",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0769",
+      "company": "SolarEdge",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0772",
+      "company": "Generac",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0773",
+      "company": "Cummins",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0775",
+      "company": "FuelCell Energy",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0782",
+      "company": "Waters Corporation",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0783",
+      "company": "MACOM",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0785",
+      "company": "MKS Instruments",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0789",
+      "company": "Aerotech",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Added guarded official-careers-to-JazzHR routing; 18 focused tests passed and normal dispatch returned 26 full postings with a final reread."
+    },
+    {
+      "company_id": "COMP-0790",
+      "company": "PI (Physik Instrumente)",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0791",
+      "company": "Power Integrations",
+      "disposition": "RECORDED_COMPLETE",
+      "prior_status": "COMPLETE",
+      "context": "Guarded official-to-Jobvite routing and presentation-flag normalization passed 34 focused tests. Normal dispatch returned 50 full postings with final inventory reread."
+    },
+    {
+      "company_id": "COMP-0793",
+      "company": "Applied Materials",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0794",
+      "company": "Lam Research",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0796",
+      "company": "ASML",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    },
+    {
+      "company_id": "COMP-0797",
+      "company": "Molex",
+      "disposition": "NEEDS_TEST_ASSIGNMENT",
+      "prior_status": "READY",
+      "context": ""
+    }
+  ]
+}

@@ -16,6 +16,9 @@ HELP = '''MuleLab wrapper coordinator commands:
 /wrapper queue
 /wrapper queue-pause
 /wrapper queue-resume
+/wrapper autopilot-start
+/wrapper autopilot-status
+/wrapper autopilot-stop
 
 Start defaults to review. Put --develop before the objective to explicitly authorize development edits; --review is also accepted. No-write instructions conflict with development mode and are rejected. Workers continue automatically on MuleLab using one Jetson inference slot. Live scraper validation and installation remain operator gates.'''
 
@@ -47,7 +50,8 @@ def parse_command(text):
         if len(parts[2].split()) != 1 or parts[2].startswith('--'):
             raise ValueError(action + ' requires one task ID and no mode flag.')
         data['id'] = parts[2]
-    elif action not in ('list', 'health', 'queue', 'queue-pause', 'queue-resume') or len(parts) != 2:
+    elif action not in ('list', 'health', 'queue', 'queue-pause', 'queue-resume',
+                        'autopilot-start', 'autopilot-status', 'autopilot-stop') or len(parts) != 2:
         raise ValueError('Invalid wrapper command. Use /wrapper help.')
     return data
 

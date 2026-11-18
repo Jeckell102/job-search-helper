@@ -19,6 +19,10 @@ class ImportTests(unittest.TestCase):
                 rows.append(dict(company_id=cid, company=name, candidate_tests=['tests/test_one.py'] if i != 3 else [], configured_url='https://example.com', work_order='W05'))
             queue, held = prepare(text, {'companies': rows}, root)
             self.assertEqual([q['company_id'] for q in queue], ['COMP-0004'])
+            self.assertEqual(queue[0]['assignment']['integration'], {
+                'company_id': 'COMP-0004', 'company': 'Four',
+                'configured_url': 'https://example.com', 'tests': ['tests/test_one.py'],
+                'source_targets': [], 'work_order': 'W05'})
             self.assertEqual([h['disposition'] for h in held], ['RECORDED_COMPLETE', 'EXISTING_VALIDATION_OR_CLAIM', 'NEEDS_TEST_ASSIGNMENT'])
 
     def test_identity_disagreement_rejects_import(self):

@@ -38,13 +38,16 @@ class Store:
         finally:
             db.close()
 
-    def create(self, objective, tests, mode, max_sessions=10, *, authorization_version=0, evidence_requirements=None, workflow_version=1):
-        state = self.new_state(objective, tests, mode, max_sessions, authorization_version, evidence_requirements, workflow_version)
+    def create(self, objective, tests, mode, max_sessions=10, *, authorization_version=0,
+               evidence_requirements=None, workflow_version=1, integration=None):
+        state = self.new_state(objective, tests, mode, max_sessions, authorization_version,
+                               evidence_requirements, workflow_version, integration)
         with self.connect() as db:
             db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
         return state
 
-    def new_state(self, objective, tests, mode, max_sessions, authorization_version, evidence_requirements, workflow_version):
+    def new_state(self, objective, tests, mode, max_sessions, authorization_version,
+                  evidence_requirements, workflow_version, integration=None):
         task_id = 'WRAP-' + uuid.uuid4().hex[:10]
         state = dict(id=task_id, objective=objective, tests=tests, mode=mode,
                      status='QUEUED', phase='baseline', created=time.time(),
@@ -53,12 +56,12 @@ class Store:
                      checkpoint={}, manifest={}, stop_requested=False, reason='',
                      no_progress=0, errors=0, phase_start=0,
                      authorization_version=authorization_version, evidence_requirements=evidence_requirements or {},
-                     workflow_version=workflow_version, workflow={})
+                     workflow_version=workflow_version, workflow={}, integration=integration or {})
         if workflow_version == 2:
             state.update(activated_at=None, time_budget_policy='one_hour_from_first_assignment_including_pauses')
         return state
 
-    def enqueue_batch(self, digest, specs):
+    def enqueue_batch(self, digest, specs, held=False):
         """Atomic and idempotent: a retried submission never duplicates work."""
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -68,6 +71,8 @@ class Store:
             states = [self.new_state(**spec) for spec in specs]
             for state in states:
                 state['isolated_workspace'] = True
+                if held:
+                    state.update(status='PAUSED', reason='Held for one-company campaign selection.')
                 db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
             ids = [s['id'] for s in states]
             db.execute('INSERT INTO batches VALUES (?,?)', (digest, json.dumps(ids)))
@@ -81,6 +86,96 @@ class Store:
     def set_queue_enabled(self, enabled):
         with self.connect() as db:
             db.execute("INSERT INTO settings VALUES ('queue_enabled',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (json.dumps(enabled),))
+
+    def autopilot_enabled(self):
+        with self.connect() as db:
+            value = db.execute("SELECT value FROM settings WHERE key='autopilot_enabled'").fetchone()
+        return value is not None and value[0] == 'true'
+
+    def set_autopilot_enabled(self, enabled):
+        with self.connect() as db:
+            db.execute("INSERT INTO settings VALUES ('autopilot_enabled',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                       (json.dumps(bool(enabled)),))
+
+    def configure_autopilot(self, enabled):
+        """Atomically couple campaign and queue controls."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            pilot = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
+            if enabled and pilot and json.loads(pilot[0]) is not None:
+                raise ValueError('Stop the single-company pilot before starting the backlog autopilot.')
+            for key, value in (('autopilot_enabled', bool(enabled)), ('queue_enabled', bool(enabled))):
+                db.execute('INSERT INTO settings VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
+                           (key, json.dumps(value)))
+
+    def configure_queue(self, enabled):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            pilot = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
+            if enabled and pilot and json.loads(pilot[0]) is not None:
+                raise ValueError('Stop the single-company pilot before resuming the global queue.')
+            db.execute("INSERT INTO settings VALUES ('queue_enabled',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                       (json.dumps(bool(enabled)),))
+
+    def activate_next_untouched(self):
+        """Atomically activate one imported company and leave every other one held.
+
+        Pilot runs deliberately left the imported backlog in PAUSED/baseline
+        before first activation.  Autopilot consumes only that exact state; it
+        never retries a failure, budget stop, operator gate, or previously
+        activated company without a separate reviewed policy.
+        """
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            rows = db.execute('SELECT id,state FROM tasks ORDER BY rowid').fetchall()
+            active = []
+            candidate = None
+            for task_id, raw in rows:
+                state = json.loads(raw)
+                if state['status'] in ('QUEUED', 'RUNNING', 'PAUSING'):
+                    active.append(task_id)
+                if (candidate is None and state.get('isolated_workspace')
+                        and state['status'] == 'PAUSED' and state['phase'] == 'baseline'
+                        and state.get('activated_at') is None
+                        and state.get('selected_at') is None
+                        and state.get('calls', 0) == 0 and state.get('sessions', 0) == 0
+                        and state.get('tokens', 0) == 0
+                        and state.get('authorization_version') == 1
+                        and state.get('mode') == 'develop'):
+                    if state.get('integration'):
+                        candidate = state
+            if active or candidate is None:
+                return None
+            candidate.update(status='QUEUED', stop_requested=False, errors=0,
+                             selected_at=time.time(),
+                             integration_run_id=uuid.uuid4().hex,
+                             worker_context_policy='fresh_context_for_each_call_and_company',
+                             reason='Selected by one-company autopilot with a fresh integration worker.')
+            db.execute('UPDATE tasks SET state=? WHERE id=?',
+                       (json.dumps(candidate), candidate['id']))
+            return candidate
+
+    def claim_queued(self, task_id=None):
+        """Atomically lease one queued task to a scheduler process.
+
+        The status transition is the cross-process mutex.  A second service
+        instance cannot observe the same task as QUEUED after this commit.
+        Existing write-ahead receipt recovery remains the crash boundary.
+        """
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            rows = db.execute('SELECT id,state FROM tasks ORDER BY rowid').fetchall()
+            decoded = [(current_id, json.loads(raw)) for current_id, raw in rows]
+            if any(state['status'] in ('RUNNING', 'PAUSING') for _, state in decoded):
+                return None
+            for current_id, state in decoded:
+                if state['status'] != 'QUEUED' or task_id is not None and current_id != task_id:
+                    continue
+                state.update(status='RUNNING', scheduler_claimed_at=time.time())
+                db.execute('UPDATE tasks SET state=? WHERE id=?',
+                           (json.dumps(state), current_id))
+                return state
+        return None
 
     def pilot_task(self):
         with self.connect() as db:
@@ -122,6 +217,27 @@ class Store:
         encoded = json.dumps(args, sort_keys=True)
         signature = hashlib.sha256((name + encoded).encode()).hexdigest()
         with self.connect() as db:
+            cursor = db.execute('INSERT INTO receipts(task,phase,name,arguments,signature,created) VALUES (?,?,?,?,?,?)',
+                                (task_id, phase, name, encoded, signature, time.time()))
+            return cursor.lastrowid
+
+    def active_intent(self, task_id, phase, name, args):
+        """Write the intent only while this task still owns the action lane."""
+        encoded = json.dumps(args, sort_keys=True)
+        signature = hashlib.sha256((name + encoded).encode()).hexdigest()
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise ValueError('Task not found.')
+            state = json.loads(row[0])
+            queue = db.execute("SELECT value FROM settings WHERE key='queue_enabled'").fetchone()
+            pilot = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
+            queue_enabled = queue is None or json.loads(queue[0])
+            pilot_task = json.loads(pilot[0]) if pilot else None
+            if (state['status'] != 'RUNNING' or state.get('stop_requested')
+                    or not queue_enabled and pilot_task != task_id):
+                return None
             cursor = db.execute('INSERT INTO receipts(task,phase,name,arguments,signature,created) VALUES (?,?,?,?,?,?)',
                                 (task_id, phase, name, encoded, signature, time.time()))
             return cursor.lastrowid

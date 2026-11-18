@@ -17,7 +17,7 @@ class Once(argparse.Action):
 
 def parse_request(argv=None):
     parser = argparse.ArgumentParser(description='Persistent MuleLab wrapper tasks')
-    parser.add_argument('action', choices=('start', 'status', 'list', 'health', 'pause', 'resume', 'pilot-start', 'pilot-stop', 'queue', 'queue-pause', 'queue-resume', 'enqueue'))
+    parser.add_argument('action', choices=('start', 'status', 'list', 'health', 'pause', 'resume', 'pilot-start', 'pilot-stop', 'queue', 'queue-pause', 'queue-resume', 'autopilot-start', 'autopilot-stop', 'autopilot-status', 'enqueue'))
     parser.add_argument('value', nargs='?', default='')
     parser.add_argument('--max-sessions', type=int, default=None, action=Once)
     parser.add_argument('--mode', choices=('review', 'develop'), default=None, action=Once,
@@ -45,7 +45,8 @@ def parse_request(argv=None):
         data = {'action': 'batch', 'items': items}
     elif args.mode is not None or args.max_sessions is not None:
         parser.error('--mode and --max-sessions only apply to start.')
-    elif args.action not in ('list', 'health', 'queue', 'queue-pause', 'queue-resume', 'pilot-stop'):
+    elif args.action not in ('list', 'health', 'queue', 'queue-pause', 'queue-resume', 'pilot-stop',
+                             'autopilot-start', 'autopilot-stop', 'autopilot-status'):
         if not args.value.strip():
             parser.error(args.action + ' requires a task ID.')
         data['id'] = args.value

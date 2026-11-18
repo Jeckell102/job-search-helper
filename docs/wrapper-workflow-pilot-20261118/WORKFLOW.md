@@ -10,10 +10,19 @@ In the Jetson Wrapper Coder chat:
 /wrapper queue
 /wrapper queue-pause
 /wrapper queue-resume
+/wrapper autopilot-start
+/wrapper autopilot-status
+/wrapper autopilot-stop
 /wrapper status WRAP-xxxxxxxxxx
 ```
 
 Status and queue commands are handled directly by Python and require no model calls. Pausing the queue lets an already-started action finish and stops the next action. Resuming the queue affects queued tasks only; blocked, exhausted, completed-review, and uncertain-recovery tasks remain stopped. A blocked company is recorded and Python selects the next queued company.
+
+`autopilot-start` is the persistent backlog control. Python atomically selects the oldest untouched imported company only when no other company is queued or running. Every other company remains paused. The selected company uses the Jetson's single inference lane until it reaches offline completion or a fail-closed pause; Python then selects the next untouched company. `autopilot-stop` persists across service restarts and lets the current bounded action finish before holding the lane. Failed, budget-exhausted, previously activated, and operator-gated tasks are never retried implicitly.
+
+Each selection receives a new integration-run identity and starts with zero model calls, tokens, sessions, and no model checkpoint. Model messages are rebuilt from that company's own receipts for every call. No chat context, counters, or summary from the prior company is carried into the next worker. Python retains the durable campaign order and historical receipts outside the disposable worker context.
+
+The durable list is stored on MuleLab, not on the Jetson. This keeps the queue, source, tests, and receipts together and prevents a context reset on the small model from losing or duplicating assignments. The Jetson sees one bounded company packet at a time and performs one inference call at a time.
 
 All files remain under `/home/chris/job-search-helper_old/dev/wrapper-coder` on MuleLab. Each batch company has `tasks/WRAP-.../repo`, its own source-only development copy, plus receipts, checkpoint, and HANDOFF files. `queue-base` is a saved source snapshot. Another company's draft never becomes the next company's baseline. No task data or development files are stored on the Jetson.
 
