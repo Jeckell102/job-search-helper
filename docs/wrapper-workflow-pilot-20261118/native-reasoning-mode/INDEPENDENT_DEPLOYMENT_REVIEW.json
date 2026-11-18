@@ -1,0 +1,11 @@
+{
+  "result": "PASS_REVIEWED_DEPLOYMENT_SCRIPT",
+  "independent": true,
+  "sha256": "14f61bac6cd26b294fde29a3b1a32c4845b17cf03b8e414e106fa96a9c9c0527",
+  "resolved_findings": [
+    "Atomic same-directory replacement with fsync, mode/ownership preservation, expected hash recheck and cleanup.",
+    "Replacement within recovery try; actual hash reconciled before known-version rollback.",
+    "Post-restart foreground_waiting must be zero."
+  ],
+  "scope": "Source review and compile only; no deployment executed by reviewer."
+}

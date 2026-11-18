@@ -1,0 +1,12 @@
+{
+  "status": "DEPLOYED_IDLE",
+  "original_sha256": "0f29def3adfa0a02649350aa77e2c6cbd222bc77c3a3602ce53853a5bc1a571d",
+  "installed_sha256": "cec08fbb11fe3e87fda2a89d2e9c2d46045aa9f779ece8b03722d4d2c6a3f970",
+  "queue_controls_off": true,
+  "model_busy_before": false,
+  "model_busy_after": false,
+  "default_think": false,
+  "private_reasoning_excluded": true,
+  "runtime_file": "/home/chris/AI/local-ai/wrapper_inference.py",
+  "time": 1795040871.1005924
+}

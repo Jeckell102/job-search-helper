@@ -1,0 +1,6 @@
+MainPID=1188667
+ExecStart={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /home/chris/AI/local-ai/server.py ; ignore_errors=no ; start_time=[Wed 2026-11-18 13:48:04 EST] ; stop_time=[n/a] ; pid=1188667 ; code=(null) ; status=0/0 }
+WorkingDirectory=/home/chris/AI/local-ai
+ActiveState=active
+SubState=running
+FragmentPath=/home/chris/.config/systemd/user/local-ai-orchestrator.service

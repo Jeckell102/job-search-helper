@@ -1,0 +1,20 @@
+{
+  "result": "PASS_STAGED_BOUNDED_MODE_CHANGE",
+  "independent": true,
+  "source_sha256": "cec08fbb11fe3e87fda2a89d2e9c2d46045aa9f779ece8b03722d4d2c6a3f970",
+  "original_sha256": "0f29def3adfa0a02649350aa77e2c6cbd222bc77c3a3602ce53853a5bc1a571d",
+  "independent_tests": 4,
+  "seconds": 0.007,
+  "runtime_source_inspection": "Read-only SSH inspected native_turn engine.gate.hold, payload think, num_ctx, num_predict, and require_output_room before dispatch.",
+  "limits": {
+    "context_tokens_unchanged": 12288,
+    "max_output_tokens_unchanged": 3072,
+    "mode_default": false,
+    "private_reasoning_returned": false,
+    "tool_execution": false
+  },
+  "limitations": [
+    "No runtime deployment or model comparison performed by reviewer.",
+    "Reasoning tokens compete within existing output ceiling; truncation remains possible and must not be treated as success."
+  ]
+}
