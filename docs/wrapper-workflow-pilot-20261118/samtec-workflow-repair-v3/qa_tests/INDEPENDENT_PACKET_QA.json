@@ -1,0 +1,17 @@
+{
+  "result": "PASS_FOCUSED_INDEPENDENT",
+  "independent": true,
+  "tests_passed": 6,
+  "seconds": 0.003,
+  "hashes": {
+    "host/coordinator_evidence.py": "a2ff9f2092eb18e0a127682c57eb4d0babcced3bafe299d1c222a0f95ffad5f7",
+    "host/coordinator_workflow.py": "ac848432bb0def0c81c75e624ec0503e200796141a47502e27ad70c6535191cc",
+    "qa_tests/test_packet_boundaries.py": "e9756bb6d8f776700c29e1e8148be4a51b295b6f0f6a01a81881e31af603fabe"
+  },
+  "resolved_findings": [
+    "Packet total with long links/title exceeded12000 characters; fixed full serialization bound.",
+    "A sole partial code line could claim visible coverage; fixed complete-line accounting."
+  ],
+  "scope": "Focused evidence packet and generic assigned source discovery; no runtime edits or AI calls.",
+  "final_refinements_reviewed": "Two diagnostic ranges per assigned wrapper and semantic diagnostic ordering preserve tests and source within focus budget."
+}

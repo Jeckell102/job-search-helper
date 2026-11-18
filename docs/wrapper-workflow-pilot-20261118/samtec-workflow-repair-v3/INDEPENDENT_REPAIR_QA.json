@@ -1,0 +1,23 @@
+{
+  "result": "PASS",
+  "independent": true,
+  "manifest_digest": "78989b264ce134243bd862351a1a65fdc1b63989b918be217edd482589392593",
+  "source_count": 71,
+  "prerequisite_count": 682,
+  "full_suite": {
+    "passed": 317,
+    "seconds": 41.127,
+    "log_sha256": "13076f544b41f90f70c771cc74dd0116ff6621ed6fdd5df227ad0b7f71b5638a"
+  },
+  "independent_focused_tests": 6,
+  "reviewed_hashes": {
+    "host/coordinator_evidence.py": "a2ff9f2092eb18e0a127682c57eb4d0babcced3bafe299d1c222a0f95ffad5f7",
+    "host/coordinator_workflow.py": "ac848432bb0def0c81c75e624ec0503e200796141a47502e27ad70c6535191cc",
+    "qa_tests/test_packet_boundaries.py": "e9756bb6d8f776700c29e1e8148be4a51b295b6f0f6a01a81881e31af603fabe"
+  },
+  "protected_rollout_unchanged": true,
+  "empty_migration_inputs": true,
+  "limitations": [
+    "Staged candidate only, no installed or live integration certification."
+  ]
+}

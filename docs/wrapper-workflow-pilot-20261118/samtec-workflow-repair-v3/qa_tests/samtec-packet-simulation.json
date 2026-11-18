@@ -1,0 +1,62 @@
+{
+  "simulation_only": true,
+  "diagnostic_ranges": [
+    {
+      "path": "src/job_search_helper/shared_boards.py",
+      "start_line": 565,
+      "end_line": 624
+    },
+    {
+      "path": "src/job_search_helper/shared_boards.py",
+      "start_line": 117,
+      "end_line": 176
+    }
+  ],
+  "packet_chars": 11839,
+  "items": [
+    {
+      "arguments": {
+        "path": "src/job_search_helper/shared_boards.py",
+        "start_line": 117
+      },
+      "visible_end_line": 203,
+      "has_guard": false,
+      "has_resolver": true
+    },
+    {
+      "arguments": {
+        "url": "https://jobs.jobvite.com/samtec/search"
+      },
+      "visible_end_line": null,
+      "has_guard": false,
+      "has_resolver": false
+    },
+    {
+      "arguments": {
+        "path": "src/job_search_helper/shared_boards.py",
+        "start_line": 565
+      },
+      "visible_end_line": 580,
+      "has_guard": true,
+      "has_resolver": false
+    },
+    {
+      "arguments": {
+        "path": "tests/test_shared_boards.py",
+        "start_line": 1
+      },
+      "visible_end_line": 17,
+      "has_guard": false,
+      "has_resolver": false
+    },
+    {
+      "arguments": {
+        "path": "docs/backlog/COMP-0739.md",
+        "start_line": 1
+      },
+      "visible_end_line": 9,
+      "has_guard": true,
+      "has_resolver": false
+    }
+  ]
+}
