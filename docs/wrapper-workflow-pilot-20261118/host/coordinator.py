@@ -296,6 +296,8 @@ class Coordinator:
         planned = ('Python plan: ' + str(len(plan.get('complete', []))) + ' completed requirements; '
                    + str(len(plan.get('remaining', []))) + ' remaining. Next: '
                    + str((plan.get('next') or {}).get('label', plan.get('assignment', 'baseline or verification'))) + '.\n') if state.get('workflow_version') == 2 else ''
+        certification = ('Operator live-validation receipt saved.' if state['status'] == 'LIVE_VALIDATED'
+                         else 'Live validation and installation are not certified by the worker.')
         return (f"{state['id']}: {state['status']}\nStage: {state['phase']} ({state['mode']})\n"
                 f"Worker sessions: {state['sessions']}/{state['max_sessions']}; model calls: {state['calls']}/{MAX_CALLS}.\n"
                 f"Accounted tokens: {state['tokens']}/{MAX_TOKENS}. " +
@@ -306,7 +308,7 @@ class Coordinator:
                 f"Next: {cp.get('next_action', 'Continue the current stage.')}\n"
                 f"Files and receipts: {self.store.base / state['id']}\n"
                 f"Resume if paused: /wrapper resume {state['id']}\n"
-                'Live validation and installation are not certified by the worker.')
+                + certification)
 
     def start(self):
         if getattr(self, 'thread', None) and self.thread.is_alive():

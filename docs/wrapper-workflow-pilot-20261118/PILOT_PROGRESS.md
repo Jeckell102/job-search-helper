@@ -56,7 +56,9 @@ Prove that the MuleLab Python coordinator and Jetson AI can take one incomplete 
 - Main-folder focused tests passed: 27 tests in 0.29 seconds. The first attempt was stopped during pytest startup by an unrelated ROS plugin missing `yaml`; rerunning with third-party plugin auto-loading disabled collected and passed the requested tests.
 - Main-folder live normal-dispatch validation passed with the default production transport: status `complete`, one posting, ID `4547468`, stable URL, 3,630-character full description, unique ID and URL, and a complete-feed reread.
 - The global wrapper queue is still paused. The 103 non-pilot assignments were not released.
-- Final coordinator snapshot passed 129 host-side unit and resilience tests. One stale unit fixture initially returned an empty mocked diff despite a simulated edit; the fixture now supplies the nonempty diff required by the implementation gate.
+- Final coordinator snapshot passed 130 host-side unit and resilience tests. One stale unit fixture initially returned an empty mocked diff despite a simulated edit; the fixture now supplies the nonempty diff required by the implementation gate. A status regression test also confirms that an operator-certified task no longer displays the pre-validation warning.
+- Live evidence was saved as durable receipt 111 and WRAP-bde78590e6 now reports `LIVE_VALIDATED`. The pilot slot was cleared, the global queue remains paused, and the coordinator was restarted successfully with a healthy worker.
+- Clean backup commit `7bc8a3d` was pushed to GitHub branch `backup/wrapper-pilot-20261118`. It contains the coordinator source, tests, operating notes, pilot evidence, and exact Mass Virtual patch; task databases, tokens, generated caches, isolated repositories, and unrelated dirty checkout changes are excluded. A follow-up commit records the final status wording and test.
 
 ## Result
 
