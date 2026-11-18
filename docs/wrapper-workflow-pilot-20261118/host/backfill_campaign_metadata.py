@@ -64,6 +64,8 @@ def backfill_campaign_identity(store, items, *, apply=False, baseline_root=None,
             raise ValueError('Identity backfill requires no active tasks.')
         if db.execute('SELECT 1 FROM receipts WHERE result IS NULL LIMIT 1').fetchone():
             raise ValueError('Identity backfill requires no unfinished receipt.')
+        if db.execute("SELECT 1 FROM inference_receipts WHERE status IN ('DISPATCHING','UNCERTAIN') LIMIT 1").fetchone():
+            raise ValueError('Migration requires no unresolved inference receipt.')
         provenance = {}
         for batch, raw in db.execute('SELECT digest,task_ids FROM batches'):
             for task_id in json.loads(raw):

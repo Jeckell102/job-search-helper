@@ -61,6 +61,8 @@ def migrate_campaign_membership(store, campaign_id, items, *, apply=False, revie
             raise ValueError('Migration requires no active tasks.')
         if db.execute('SELECT count(*) FROM receipts WHERE result IS NULL').fetchone()[0]:
             raise ValueError('Migration requires no unfinished receipts.')
+        if db.execute("SELECT 1 FROM inference_receipts WHERE status IN ('DISPATCHING','UNCERTAIN') LIMIT 1").fetchone():
+            raise ValueError('Migration requires no unresolved inference receipt.')
         pending = []
         seen = set()
         matched_ids = set()

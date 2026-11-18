@@ -1,3 +1,4 @@
+from coordinator_inference import digest as inference_digest
 """MuleLab-owned sequential worker scheduler; Jetson performs inference only."""
 import hashlib
 import fcntl
@@ -369,6 +370,8 @@ class Coordinator:
 
     def describe(self, state):
         validate_bound_identity(state)
+        unresolved = self.store.unresolved_inferences()
+        inference_status = ''.join(f"Unresolved inference: {r['request_id']} task {r['task']} company {r.get('company_id')} status {r['status']}; dispatch blocked pending reconciliation.\n" for r in unresolved)
         cp = state['checkpoint']
         receipts = self.store.receipts(state['id'])
         last = receipts[-1] if receipts else None
@@ -387,7 +390,7 @@ class Coordinator:
                 f"Accounted tokens: {state['tokens']}/{MAX_TOKENS}. " +
                 ('One hour from first assignment; initial queue wait is excluded. ' if state.get('workflow_version') == 2 else 'One hour from creation including queue time. ') +
                 'Pauses count; resume retains all budgets.\n'
-                + latest + planned +
+                + latest + planned + inference_status +
                 f"{state['reason']}\nWorker summary (verify against receipts): {cp.get('summary', 'No worker summary yet.')}\n"
                 f"Next: {cp.get('next_action', 'Continue the current stage.')}\n"
                 f"Files and receipts: {self.store.base / state['id']}\n"
@@ -446,9 +449,10 @@ class Coordinator:
                         except Exception as exc:
                             state = self.store.get(task['id'])
                             errors = state['errors'] + 1
-                            uncertain = any(r['result'] is None for r in self.store.receipts(task['id']))
+                            uncertain = (any(r['result'] is None for r in self.store.receipts(task['id']))
+                                         or any(r['status'] in ('DISPATCHING', 'UNCERTAIN') for r in self.store.inference_receipts(task['id'])))
                             retry = errors < 3 and not uncertain and not state['stop_requested']
-                            self.store.update(task['id'], status='QUEUED' if retry else 'PAUSED_ERROR', errors=errors,
+                            self.store.update(task['id'], status='QUEUED' if retry else ('PAUSED_RECOVERY' if uncertain else 'PAUSED_ERROR'), errors=errors,
                                               reason=f'{type(exc).__name__}: {str(exc)[:250]}')
                             self.export(task['id'])
                             self.stop.wait(CONTROL_RETRY_SECONDS if retry else 0)
@@ -645,7 +649,8 @@ class Coordinator:
         else:
             if state.get('workflow_version') != 2 or not self.prepare_step(state):
                 self.session(self.store.get(task_id))
-        if self.store.get(task_id)['stop_requested']:
+        final_state = self.store.get(task_id)
+        if final_state['stop_requested'] and final_state['status'] in ('RUNNING', 'QUEUED', 'PAUSING'):
             self.store.update(task_id, status='PAUSED', reason='Pause requested; completed actions are recorded.')
         self.export(task_id)
 
@@ -762,7 +767,17 @@ class Coordinator:
         protocol = protocol_result.get('result', {})
         if not protocol_result.get('ok') or protocol.get('truncated', True) or '# Required wrapper development and test protocol' not in protocol.get('text', ''):
             raise ValueError('Required protocol missing or incomplete; worker not started.')
-        self.store.update(task_id, sessions=state['sessions'] + 1)
+        state = self.store.start_inference_session(task_id, max_calls=MAX_CALLS, max_tokens=MAX_TOKENS, max_seconds=MAX_SECONDS)
+        if state is None:
+            return
+        try:
+            return self._session_body(state, protocol)
+        finally:
+            self.store.end_inference_session(task_id, state['inference_session_id'])
+
+    def _session_body(self, state, protocol):
+        task_id = state['id']
+        session_id = state['inference_session_id']
         names = {'code_list', 'code_read', 'code_diff'} | web.NAMES
         if state['mode'] == 'develop' and state['phase'] == 'implement':
             names |= {'code_edit', 'code_create', 'code_test'}
@@ -781,6 +796,7 @@ class Coordinator:
             prior_progress = workflow.progress_key(self.evidence_receipts(task_id), manifest()) if guided else None
             if active['calls'] >= MAX_CALLS or active['tokens'] >= MAX_TOKENS:
                 self.budget_pause(task_id, 'Cumulative model-call or token budget exhausted; progress saved.')
+            control_generation = self.store.control_generation()
             try:
                 budget = self.budget(history, schemas)
                 required_edit_paths = set(active.get('workflow', {}).get('required_edit_paths', []))
@@ -826,28 +842,23 @@ class Coordinator:
             prompt_tokens = getattr(budget, 'prompt_tokens', 12288 - output_tokens)
             if type(prompt_tokens) is not int or prompt_tokens < 0:
                 raise ValueError('Invalid prompt-token estimate; inference was not dispatched.')
-            remaining = MAX_TOKENS - active['tokens']
-            output_tokens = min(output_tokens, remaining - prompt_tokens)
-            if output_tokens < MIN_OUTPUT_TOKENS:
-                self.budget_pause(task_id, 'Remaining cumulative token budget cannot fit the prompt and a useful bounded response.')
-            reserved_tokens = prompt_tokens + output_tokens
-            self.check_deadline(task_id)
-            # Commit before dispatch. Failed/uncertain calls retain their entire reservation.
-            self.store.update(task_id, calls=active['calls'] + 1, tokens=active['tokens'] + reserved_tokens)
-            self.check_deadline(task_id)
-            answer = self.model(history, offered, output_tokens)
-            usage = answer.get('usage') if isinstance(answer, dict) else None
-            counters = [usage.get(key) for key in ('prompt_eval_count', 'eval_count')] if isinstance(usage, dict) else []
-            valid_usage = len(counters) == 2 and all(type(n) is int and n >= 0 for n in counters) and sum(counters) > 0
-            consumed = sum(counters) if valid_usage else reserved_tokens
-            self.store.update(task_id, tokens=active['tokens'] + consumed)
-            if not valid_usage or consumed > reserved_tokens:
-                self.store.update(task_id, status='PAUSED_USAGE_ERROR',
-                    reason='Invalid or over-reservation inference usage; reservation retained for invalid counters. Inspect receipts before resuming.')
-                return  # Never execute tool calls from an unaccountable response.
-            if self.paused(task_id):
+            reservation = self.store.reserve_inference(
+                task_id, phase=state['phase'], prompt_digest=inference_digest(history),
+                tools_digest=inference_digest(offered), prompt_tokens=prompt_tokens,
+                output_tokens=output_tokens, expected_control_generation=control_generation,
+                session_id=session_id, max_calls=MAX_CALLS, max_tokens=MAX_TOKENS,
+                max_seconds=MAX_SECONDS, min_output_tokens=MIN_OUTPUT_TOKENS)
+            if reservation is None:
                 return
-            self.check_deadline(task_id)
+            try:
+                answer = self.model(history, offered, reservation['reserved_output_tokens'])
+            except Exception as exc:
+                self.store.finalize_inference(reservation['request_id'], terminal_error=type(exc).__name__)
+                raise
+            finalized = self.store.finalize_inference(reservation['request_id'], answer)
+            if not finalized['tools_allowed']:
+                return
+            usage = answer['usage']
             message = answer['message']
             calls = message.get('tool_calls', [])
             if guided and len(calls) > 1:

@@ -35,3 +35,9 @@ Exact edit scopes, audited operator scope expansion, pinned original test/config
 Roadmap review found the raw host mutation tool treated a missing scope context as unrestricted. The coordinator path was scoped, but this default could permit a future bypass. Group4 remains open until missing context rejects mutations; the authenticated manual shared-checkout route will provide explicit request-scoped authority. Scope digest/version also must be retained in independent acceptance receipts.
 
 Group4 ACCEPTED after all corrections: independent13/13, combined35/35, full214/214, actual OS-sandbox check PASS. Group5 now active with fresh inference-reservation implementation lane and independent verifier. No production changes.
+
+## Finding5 independent verification
+
+Atomic inference reservations, a serialized worker-session lease, exactly-once usage reconciliation and durable redacted model receipts implemented. Uncertain requests globally block later companies and re-enabling scheduling, including after restart. Independent13/13 and combined84/84 passed; corrected concurrent session double-count race. Legacy migrations reject unresolved inference; exact102 rehearsals still pass. Final full suite running. Group4 backup3289365 pushed.
+
+Group5 ACCEPTED: final full231/231 and roadmap highest-risk5/5 passed. Group6 durable reconciliation/reporting now active.

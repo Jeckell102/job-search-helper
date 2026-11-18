@@ -193,13 +193,13 @@ Practical implementation gates from design review:
 - Run acceptance from a disposable copy of the immutable bundle so ordinary cache/temp writes do not alter the sealed original. Verify the sealed bundle hash before and after, and bind the receipt to the current edited-source manifest, scope digest/version, and acceptance-bundle digest. Any later source or scope change invalidates the receipt.
 - AST assertion checks are a supplemental floor for editable tests, not semantic proof. Frozen host-owned assertions remain the independent gate; a simplistic count of `assert` nodes cannot certify behavior.
 
-### 5. Atomic inference reservation and safe pilot startup — IN PROGRESS
+### 5. Atomic inference reservation and safe pilot startup — ACCEPTED IN STAGING
 
-- [ ] Atomically recheck controls and reserve model budget immediately before inference dispatch.
-- [ ] Block inference when pause, stop, deadline, or ownership wins first.
-- [ ] Complete pilot validation before atomically publishing pilot/task state.
-- [ ] Add pause-before-inference, deadline, failed-pilot, and restart tests.
-- [ ] Focused and full suites pass; roadmap review approves group 5.
+- [x] Atomically recheck controls and reserve model budget immediately before inference dispatch.
+- [x] Block inference when pause, stop, deadline, or ownership wins first.
+- [x] Complete pilot validation before atomically publishing pilot/task state.
+- [x] Add pause-before-inference, deadline, failed-pilot, and restart tests.
+- [x] Focused and full suites pass; roadmap review approves group 5.
 
 Acceptance criteria:
 
@@ -226,6 +226,8 @@ The finalize transaction also rechecks stop, deadline, task status, canonical id
 
 Transport timeout, process crash, malformed response, or database uncertainty after `DISPATCHING` becomes `UNCERTAIN` with the full reservation retained. Restart/recovery never resends it and never executes its response. It pauses the task for operator inspection unless a future provider-specific reconciliation can prove the exact request result. Session-start accounting must use the same serialized ownership/deadline checks so session, call, and token counters remain cumulative across fresh contexts and restarts.
 
+An unresolved `DISPATCHING` or `UNCERTAIN` receipt is a global inference barrier, not only a task-local pause. The Jetson request may still be running, so every reservation for every other task/company must fail before model invocation while such a receipt exists. Recovery converts stale dispatch to `UNCERTAIN`, disables campaign/queue scheduling, and exposes the request/task/company identity and reserved budget for operator reconciliation without exposing the prompt. Only an explicit provider-backed or operator-reviewed reconciliation transition may terminally resolve that barrier; ordinary retry, campaign advance, restart, or budget exception handling cannot clear it.
+
 Required focused tests:
 
 1. Deterministic pause-versus-dispatch race: if pause commits first, model invocation count is zero; if dispatch commits first, it is recorded as already started and returned tools are dropped after pause.
@@ -236,8 +238,11 @@ Required focused tests:
 6. Pause or deadline after model return but before the first and subsequent tool intents yields zero new tool receipts after control loss.
 7. Request/response digests, identity/run binding, and cumulative session/call/token totals survive restart and appear in operator evidence without exposing prompt secrets.
 8. Existing pilot startup, action-intent, resilience, and cumulative-budget tests remain passing with no live inference.
+9. Task A timeout/crash leaves one global uncertainty barrier; after restart or attempted campaign advance, task B creates no reservation and invokes the model zero times until explicit reconciliation.
 
-### 6. Campaign completion and truthful reporting — WAITING
+Current gate status: **ACCEPTED IN STAGING.** A durable inference receipt and budget reservation now commit immediately before the existing three-argument model callback. Pause/deadline/ownership/identity/budget races that commit first create no receipt and invoke no model; a dispatch that commits first is accounted once, and later control loss drops its tools. Valid usage adjusts only its reservation; invalid, missing, zero, or excessive usage fails closed without counter reset. Timeout/crash/malformed response becomes nonreplayable `UNCERTAIN`, disables controls, and globally blocks sessions, selectors, activations, reservations, and tool intents for every company. Attempts to re-enable queue/campaign while unresolved now reject; lower-level tampered controls still cannot bypass the receipt barrier. Both legacy migrations reject unresolved inference. Independent Group-5 QA passed 13/13, combined focused coverage passed 84, the final frozen host suite passed 231/231, and an additional roadmap rerun of the five highest-risk pause/dispatch/global-barrier/concurrency/migration cases passed. Production remains unchanged and no live inference ran.
+
+### 6. Campaign completion and truthful reporting — IN PROGRESS
 
 - [ ] Persist campaign totals and terminal `DRAINED` or `DRAINED_WITH_EXCEPTIONS` outcomes.
 - [ ] Report company identity, current stage, exception reason, and next allowed action.
@@ -258,13 +263,17 @@ Persist campaign-level reconciliation separately from task lifecycle state. Add 
 
 Retire a selected task only through one store transaction that rereads its current registry ownership and run ID. Operator-gate statuses become explicit nonexception outcomes such as `OFFLINE_READY_AWAITING_LIVE_VALIDATION`, `REVIEW_COMPLETE_AWAITING_LIVE_VALIDATION`, or `LIVE_VALIDATED_AWAITING_INSTALLATION`; none means installed or that all jobs were downloaded. `PAUSED_BUDGET`, `PAUSED_ERROR`, `PAUSED_BLOCKED`, `PAUSED_TEST_FAILURE`, `PAUSED_FILES_CHANGED`, `PAUSED_RECOVERY`, authorization failures, and other nonresumable scheduler stops become named exception outcomes with the exact reason and receipt pointer. A selected task paused only by the global campaign stop remains `SELECTED` and blocks advance. A per-task user pause is already `USER_PAUSED`; it frees the lane, is an explicit campaign exception, and remains individually resumable. `EXCLUDED` is also an explicit exception.
 
-After retirement and before selection, reconcile all current registry owners in one transaction. If any `HELD_FOR_CAMPAIGN` member remains, select exactly one as usual. If a valid `SELECTED` member remains, do not advance or finish. When neither remains, require every current company to map to exactly one recognized success/operator-gate or exception category. Persist `DRAINED` only when there are zero exception categories; persist `DRAINED_WITH_EXCEPTIONS` otherwise, atomically turn campaign and queue scheduling OFF, retain the active campaign ID for audit, and bump the control generation. An unknown disposition/status, missing registry owner, duplicate company, stale retry owner, or count mismatch is a reconciliation error: controls turn OFF and the campaign reports `PAUSED_RECONCILIATION`, never drained.
+Do not classify `LIVE_VALIDATED` from the status string alone. Require a matching recorded operator live-validation receipt and structured `live_validation` evidence bound to the same company identity and configured URL. Validate the recorded dispatch/result, complete status, job count/posting evidence, full-description coverage, unique IDs/URLs, and stable reread according to the receipt schema version actually stored. The two historical live pilots use the existing `operator_live_validation` receipt plus `live_validation` dictionary and are not campaign members; keep them as historical evidence without adding them to campaign totals. Future schema changes need an explicit compatibility validator rather than silently rejecting or trusting those records. Installation remains a separate operator receipt and category; live validation alone never implies installation.
+
+After retirement and before selection, reconcile all current registry owners in one transaction. If any unresolved `DISPATCHING` or `UNCERTAIN` inference receipt exists anywhere, do not retire its task, select another company, or declare a terminal campaign result; turn controls OFF and report `PAUSED_RECONCILIATION` with the uncertainty barrier. Otherwise, if any `HELD_FOR_CAMPAIGN` member remains, select exactly one as usual. If a valid `SELECTED` member remains, do not advance or finish. When neither remains, require every current company to map to exactly one recognized success/operator-gate or exception category. Persist `DRAINED` only when there are zero exception categories; persist `DRAINED_WITH_EXCEPTIONS` otherwise, atomically turn campaign and queue scheduling OFF, retain the active campaign ID for audit, and bump the control generation. An unknown disposition/status, missing registry owner, duplicate company, stale retry owner, or count mismatch is a reconciliation error: controls turn OFF and the campaign reports `PAUSED_RECONCILIATION`, never drained.
 
 `DRAINED` is a scheduler result, not an integration certification. Its summary must say that Python processed all current campaign members to their recorded boundary and give separate counts for offline-ready, review-only, live-validated, installed-with-explicit-receipt if that concept is later added, and exceptions. `DRAINED_WITH_EXCEPTIONS` must list each exception's company ID/name, task ID, stage/status, reason, and next allowed action. Bound long human output while preserving complete machine-readable JSON and a durable report artifact.
 
 Any later explicit include, resume, or reviewed retry of a current exception atomically reopens the campaign as a new reconciliation revision before making work eligible. Preserve the earlier terminal snapshot. A retry transfers current registry ownership to the new task, so later totals still contain one company. Campaign start with no work must return the existing reconciled result rather than poll forever; a changed membership digest requires a new reviewed campaign/import transition.
 
 Correct command text at the same time. Batch import says assignments were imported and held. Direct start says whether it is queued or saved behind paused controls. Task status names company and exact stage; operator-gate tasks show live validation or installation as the next action and never print a rejected resume command. Held, selected, user-paused, excluded, offline-ready, live-validated, and installed states remain distinct in both human text and JSON.
+
+Worker checkpoint and phase-result publication must use a guarded store transition, not an unconditional `Store.update`. In one transaction reread task identity, phase, session/run ownership, stop flag, controls, deadline, and current status. Only an active owner may publish `QUEUED`, advance phase, or promote to an operator gate. If per-task pause or global control loss committed first, save bounded checkpoint evidence if safe but preserve `PAUSING`/`PAUSED`, pause reason, disposition, phase, and budgets; never overwrite it with `QUEUED`. Apply the same guard to baseline results, editable/frozen verification promotion, phase-done requests, and scheduler exception results. A delayed result cannot reopen or rewrite a reached operator gate. This is a reporting/state-integrity race fix; it does not change the model protocol.
 
 Required focused tests:
 
@@ -276,7 +285,10 @@ Required focused tests:
 6. Explicit resume/include/retry after a terminal snapshot creates a new campaign revision before work becomes eligible and later redrains with one outcome for that company.
 7. Unknown state, missing/stale registry ownership, duplicate company, or nonexhaustive totals produces `PAUSED_RECONCILIATION` with controls OFF, never `DRAINED`.
 8. Human and JSON status tests cover held import, paused direct start, active company, each operator gate, every exception, exact next action, and absence of invalid resume guidance.
-9. Existing campaign isolation, pause, atomic controls, identity, scope, inference, restart, and cumulative-budget tests remain passing without live inference.
+9. `LIVE_VALIDATED` without matching identity-bound operator evidence is an exception/reconciliation failure; a valid current-schema receipt is classified as live-validated. Historical noncampaign pilot evidence remains readable but does not change campaign membership or totals.
+10. An unresolved inference for company A pauses reconciliation globally; company B does not select/reserve, and the campaign cannot report `DRAINED` or `DRAINED_WITH_EXCEPTIONS` until the uncertainty is explicitly resolved.
+11. Deterministic pause/control races at final worker checkpoint, phase-done, baseline completion, verification promotion, and scheduler error preserve the committed pause/operator gate; no delayed result changes `PAUSING`/`PAUSED` to `QUEUED` or launders a terminal status.
+12. Existing campaign isolation, pause, atomic controls, identity, scope, inference, restart, and cumulative-budget tests remain passing without live inference.
 
 ### 7. Ownership, reproducibility, deployment, and final rehearsal — WAITING
 
@@ -294,6 +306,63 @@ Acceptance criteria:
 2. A change to any source, test, protocol, configuration, or list consumed by tests triggers baseline drift.
 3. A clean deployment from the saved script produces the same tested source set.
 4. Final rehearsal ends with a durable reconciled result and no cross-company context, file, counter, or receipt contamination.
+
+### Group 7 rollout and final-QA checklist
+
+Group 7 owns deployment code. Earlier groups may change staged coordinator behavior and tests but must not modify or execute the production rollout path. Root owns any final deployment. The current backup worktree is `/tmp/job-helper-wrapper-backup-20261118` on branch `backup/wrapper-pilot-20261118`, last reported commit `3289365`; verify that state again before use. Keep wrapper workflow commits isolated there and do not commit unrelated changes from the main job-search-helper checkout.
+
+#### Reproducible release manifest
+
+- [ ] Generate a canonical manifest of every staged host runtime module, migration/verification module, command parser, test, protocol, configuration/list input, service unit or launcher, and deployment/rollback script used by the release. Include `coordinator_workspace.py` explicitly and include the adjacent local `../jetson` forwarder mirror used by parity tests; do not treat files omitted by an old deploy script as implicitly installed.
+- [ ] Exclude caches, tokens, runtime databases, task workspaces, receipts, and secrets. Record relative path, mode, size, and SHA-256 for every included file plus a digest of the manifest itself.
+- [ ] Treat the installed `resources/qwen35` tokenizer assets (about 13 MB), `coordinator_vendor` runtime dependencies (about 48 MB), and service/unit files as explicit runtime prerequisites. They are absent from the staged host source and must not disappear during atomic release publication. Record and verify a pinned prerequisite tree manifest and run the installed tokenizer/context-budget smoke test before service start. Do not copy these vendor binaries into GitHub; commit their reviewed hashes/version manifest and installation provenance instead.
+- [ ] Make tests and deployment consume the same manifest. A missing, extra, substituted, or changed host/forwarder file fails before installation. Pin the reviewed queue-baseline root, all frozen tests/fixtures/configs, `pyproject.toml`, title lists, protocol, and their manifest hash as tracked release inputs.
+- [ ] Pin a whole-workspace assignment baseline, separate from the frozen acceptance-test bundle. At direct task creation hash the actual checkout; at campaign import hash the reviewed frozen queue base. Persist the full `src/`, `tests/`, `docs/`, and consumed root-input manifest/digest in task state. Before first activation or isolated-workspace publication, require the current source root to match that assignment digest exactly. The 102 legacy members receive only the separately reviewed queue-base digest through migration. An empty preactivation `state.manifest` never authorizes copying whatever source happens to exist later.
+- [ ] Build a clean disposable installation from the saved source release plus the hash-verified installed prerequisites and prove byte parity with the staged source and test inputs. A safe builder may copy the old tools tree to a temporary release, but it must then overlay every staged Python/runtime source, remove or reject stale source files outside the reviewed source manifest, preserve only manifest-listed vendor/resources/unit prerequisites, and verify the combined release manifest. No test may pass merely because it imports an unmanifested file from the development checkout.
+
+#### Ownership and process lifetime
+
+- [ ] Move scheduler-lock acquisition/verification into a shared guard that every public `run()` and `start()` path must hold. Direct `run()` without ownership fails before task selection, control mutation, inference reservation, or tool intent.
+- [ ] Close the lock file on failed acquisition, normal stop, exception, and test teardown. Add cross-process and same-process tests for a single owner, direct-run rejection, restart acquisition, and no leaked-descriptor warnings.
+
+#### Predeployment gate and backup
+
+- [ ] Require a fresh independent **staged PASS** for all seven groups, every original reproduction, the full suite, and the bounded two-company fake-model rehearsal before touching installed files or the production database. A skipped or failed check creates a new QA report and returns to repair; it does not become a deployment exception.
+- [ ] Recheck production immediately before backup: queue/campaign/autopilot OFF, pilot null, no RUNNING/QUEUED/PAUSING task, no unfinished tool or inference receipt, SQLite `quick_check=ok`, and service at a safe stopped boundary. Abort with zero changes on any mismatch.
+- [ ] Save a timestamped rollback bundle containing the exact installed source/forwarder manifest and bytes, service/unit definitions and enabled state, a SQLite online backup that includes WAL state, settings/control snapshot, task/registry/batch counts and hashes, and deployment metadata. Preserve existing task directories and isolated campaign workspaces in place; never use the old destructive campaign `rmtree` behavior.
+- [ ] If a Jetson command forwarder changes, read and hash its current remote bytes into the rollback bundle before replacement. Deployment and rollback may update the command forwarder but must not start inference or change the one-lane model policy.
+
+#### Atomic paused installation and migration
+
+- [ ] Stage the complete new release in a sibling temporary directory, verify its manifest, permissions, imports, and offline smoke tests, fsync it, then publish through an atomic release-directory or symlink switch. Do not perform an untracked sequence of in-place file overwrites.
+- [ ] Keep services stopped and all controls OFF while source and state versions differ. Run membership, canonical identity/registry, edit-scope, and reviewed acceptance-baseline migrations against a fresh copy first, requiring the exact 102-member cohort, reviewed cohort hash, original batch rows, identity manifest, baseline-root manifest, second-run no-op, and integrity checks already accepted in Groups 1, 3, and 4.
+- [ ] Apply production migrations only after the copied rehearsal matches the exact predeployment database hash and expected report. Prefer one migration transaction; if separate transactions are unavoidable, treat the stopped-service database backup as the transaction boundary and automatically restore it on any later failure. Save dry-run/apply/idempotence reports outside the runtime database, without secrets.
+- [ ] Recheck exact 102 membership, 102 current identity registry rows, baseline/scope bindings, predecessor exclusions, nonmember preservation, all controls OFF, no active task or unfinished receipt, and `quick_check=ok` before service start.
+- [ ] Restart only the installed coordinator service at the paused boundary. Verify process ownership, health, command transport, local host/Jetson-forwarder parity, installed release-manifest parity, database schema/migration version, and a read-only campaign status. Do not enable queue/campaign/pilot and do not perform live inference, live scraper validation, or installation of generated wrappers as part of this rollout.
+
+#### Failure and rollback
+
+- [ ] Any source-copy, manifest, migration, service, health, or parity failure stops rollout. With services stopped, atomically repoint/restore the prior release, restore the SQLite online backup and prior service/unit state, restore the previous Jetson forwarder if it changed, fsync, then start only the prior paused service.
+- [ ] Rollback verification requires installed hashes equal the predeployment manifest, database hash/counts/settings equal the captured state, controls OFF, pilot null, no active task, `quick_check=ok`, and healthy prior command transport. Preserve the failed release and audit reports for diagnosis; do not delete task or campaign directories.
+
+#### Final independent QA and GitHub evidence
+
+- [ ] After paused deployment, run a fresh independent installed-state review: source/test/config/forwarder parity, service health and single-owner lock, exact migration accounting, controls OFF, pilot null, no active work, database integrity, and read-only command/status truthfulness. This installed check is required before the final QA report can say PASS.
+- [ ] The bounded two-company behavioral rehearsal stays disposable and fake-model only. Production remains paused; the final report must repeat that live scraper validation, generated-wrapper installation, and complete-job download evidence are separate operator gates.
+- [ ] Save one dated final report with staged and installed manifest digests, test/reproduction evidence, migration and rollback-bundle locations, health/integrity results, production-off proof, and an explicit PASS/FAIL. A failure reopens the affected group with fresh implementation and verification lanes.
+- [ ] Commit and push only the reviewed workflow source, tests, deployment code, manifests, and sanitized QA reports from the dedicated backup worktree/branch. Never commit tokens, runtime databases, production task exports, or unrelated main-repository files. Verify the pushed tree digest equals the installed reviewed release and record the commit ID.
+
+Required focused tests:
+
+1. Direct `run()` without the scheduler lock fails before any state change; one owner succeeds; all exit paths close the lock and a restart can acquire it.
+2. Removing or changing `coordinator_workspace.py`, any local Jetson-forwarder mirror, a fixture/config/list/protocol, or another manifest member makes clean-build, test, and deploy verification fail.
+3. A task queued before its first workspace copy blocks if any pinned source/test/doc/root input changes; exact unchanged input publishes the workspace, and the reviewed legacy-102 baseline migration is idempotent.
+4. A disposable clean deployment reproduces the staged source manifest exactly, preserves the pinned installed vendor/tokenizer/unit prerequisite manifest, passes a tokenizer smoke test and the full suite, and imports no development-checkout leftovers.
+5. Deployment aborts before mutation when controls, active tasks, receipts, DB integrity, cohort hash, baseline manifest, installed hash, or backup creation disagrees.
+6. Injected failure after release publication and after each migration boundary restores exact old source, DB/settings, service state, and remote forwarder while preserving task/workspace directories.
+7. Exact-102 migration rehearsal/apply/second-run reports agree, nonmembers and historical pilots remain unchanged, and all controls remain OFF.
+8. Installed read-only health/parity/status checks pass after rollout without model invocation or campaign activation.
+9. Git packaging rejects secrets/runtime state/unrelated paths and proves pushed commit, staged release, and installed manifest parity.
 
 ## Group 1 minimal design
 

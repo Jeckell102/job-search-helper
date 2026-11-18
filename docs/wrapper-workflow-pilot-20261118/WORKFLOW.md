@@ -79,3 +79,11 @@ The worker can edit only its exact assigned source and test files. A scope reque
 Before any edit, Python captures original tests, fixtures and test configuration outside the editable repository. Final offline verification runs both the current editable tests and those frozen assertions against the edited source in the offline OS sandbox. Both must pass, and receipts retain the acceptance bundle and source digests. Changed or missing baseline assertions stop the task; the worker cannot supply its own replacement acceptance authority. A separately reviewed new baseline and assignment are required in that case.
 
 The legacy identity backfill additionally needs `--baseline-root QUEUE_BASE --baseline-manifest REVIEWED_JSON` to pin the original acceptance inputs for the exact untouched cohort. Review and rehearse this source manifest before deployment. It does not alter existing workspace tests or bless tests from a task that already ran.
+
+## Inference accounting
+
+MuleLab reserves each model call in a database transaction immediately before dispatch. The reservation rechecks pause controls, company ownership, identity, deadline and cumulative budget. Its commit is the start boundary: a pause that commits earlier prevents dispatch; a later pause cannot promise cancellation of that already-reserved call, but its returned tools must be discarded.
+
+Model receipts contain request, tool and response digests and accounting evidence, rather than prompt contents. Finalization adjusts a reservation once using valid observed usage; invalid usage retains the reservation and stops for inspection. A crash or uncertain transport result never triggers an automatic resend of that request. Restart preserves counters and unresolved evidence. The existing Jetson endpoint is not claimed to provide provider-side idempotency.
+
+An unresolved model receipt is a global safety stop across companies. A timed-out request may still be running on the Jetson. Python therefore blocks later inference reservations and pauses scheduling rather than assuming that a timeout freed the lane. Inspect the recorded request and reconcile the provider state explicitly; elapsed time or a new chat does not authorize replay or clear the uncertainty.

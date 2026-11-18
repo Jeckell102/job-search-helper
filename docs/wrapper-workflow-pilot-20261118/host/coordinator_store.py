@@ -8,6 +8,7 @@ import time
 import uuid
 from contextlib import contextmanager
 import threading
+from coordinator_inference import InferenceStore
 from coordinator_identity import bind_identity, validate_bound_identity
 from coordinator_acceptance import initial_scope, validate_scope, exact_paths, digest as scope_digest
 
@@ -48,7 +49,7 @@ def reached_operator_gate(state):
             or state.get('campaign_disposition') == CAMPAIGN_FINISHED)
 
 
-class Store:
+class Store(InferenceStore):
     def __init__(self, base):
         self.base = Path(base)
         self.base.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -62,6 +63,8 @@ class Store:
                     id INTEGER PRIMARY KEY, task TEXT NOT NULL, phase TEXT NOT NULL,
                     name TEXT NOT NULL, arguments TEXT NOT NULL, result TEXT,
                     signature TEXT NOT NULL, created REAL NOT NULL);
+                CREATE TABLE IF NOT EXISTS inference_receipts(
+                    request_id TEXT PRIMARY KEY, task TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS batches(digest TEXT PRIMARY KEY, task_ids TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS campaign_company_registry(
@@ -331,6 +334,8 @@ class Store:
             raise ValueError('Campaign ID must be a nonempty string.')
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if enabled and self._inference_pending(db):
+                raise ValueError('Unresolved inference blocks the single model lane; inspect and reconcile its receipt before enabling work.')
             pilot = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
             if enabled and pilot and json.loads(pilot[0]) is not None:
                 raise ValueError('Stop the single-company pilot before starting the backlog campaign.')
@@ -355,6 +360,8 @@ class Store:
     def configure_queue(self, enabled):
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if enabled and self._inference_pending(db):
+                raise ValueError('Unresolved inference blocks the single model lane; inspect and reconcile its receipt before enabling work.')
             pilot = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
             if enabled and pilot and json.loads(pilot[0]) is not None:
                 raise ValueError('Stop the single-company pilot before resuming the global queue.')
@@ -403,6 +410,8 @@ class Store:
                 raise ValueError('Task or scheduler controls changed during activation preparation; retry from current status.')
             if state['status'] in ('RUNNING', 'QUEUED', 'PAUSING'):
                 raise ValueError('Task is already active or still pausing.')
+            if self._inference_pending(db):
+                raise ValueError('Uncertain inference requires inspection; automatic replay is blocked.')
             if reached_operator_gate(state):
                 raise ValueError('This task reached its operator gate. Review the receipts before a new assignment.')
             if state['mode'] == 'develop' and state.get('authorization_version') != 1:
@@ -485,6 +494,8 @@ class Store:
         """Select exactly one held member of the active campaign."""
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if self._inference_pending(db):
+                return None
             controls = dict(db.execute(
                 "SELECT key,value FROM settings WHERE key IN ('campaign_enabled','active_campaign_id','pilot_task')"
             ).fetchall())
@@ -571,6 +582,8 @@ class Store:
         """
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if self._inference_pending(db):
+                return None
             rows = db.execute('SELECT id,state FROM tasks ORDER BY rowid').fetchall()
             decoded = [(current_id, json.loads(raw)) for current_id, raw in rows]
             if any(state['status'] in ('RUNNING', 'PAUSING') for _, state in decoded):
@@ -591,6 +604,8 @@ class Store:
     def claim_campaign(self, campaign_id=None):
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if self._inference_pending(db):
+                return None
             controls = dict(db.execute(
                 "SELECT key,value FROM settings WHERE key IN ('campaign_enabled','active_campaign_id')"
             ).fetchall())
@@ -620,6 +635,8 @@ class Store:
         """Targeted compatibility path; it never discovers another task."""
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if self._inference_pending(db):
+                return None
             pilot = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
             if not pilot or json.loads(pilot[0]) != task_id:
                 return None
@@ -778,28 +795,14 @@ class Store:
         signature = hashlib.sha256((name + encoded).encode()).hexdigest()
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if self._inference_pending(db):
+                return None
             row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
             if not row:
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
             self._require_current_identity(db, state)
-            queue = db.execute("SELECT value FROM settings WHERE key='queue_enabled'").fetchone()
-            pilot = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
-            campaign = db.execute("SELECT value FROM settings WHERE key='campaign_enabled'").fetchone()
-            active_campaign = db.execute("SELECT value FROM settings WHERE key='active_campaign_id'").fetchone()
-            queue_enabled = queue is None or json.loads(queue[0])
-            pilot_task = json.loads(pilot[0]) if pilot else None
-            campaign_enabled = bool(campaign and json.loads(campaign[0]))
-            active_campaign_id = json.loads(active_campaign[0]) if active_campaign else None
-            campaign_owner = (campaign_enabled
-                              and state.get('campaign_id') == active_campaign_id
-                              and state.get('campaign_disposition') == SELECTED)
-            pilot_owner = pilot_task == task_id
-            generic_owner = (queue_enabled and not campaign_enabled
-                             and not state.get('campaign_id')
-                             and not state.get('campaign_disposition'))
-            if (state['status'] != 'RUNNING' or state.get('stop_requested')
-                    or not (campaign_owner or pilot_owner or generic_owner)):
+            if state['phase'] != phase or not self._inference_allowed(db, state):
                 return None
             cursor = db.execute('INSERT INTO receipts(task,phase,name,arguments,signature,created) VALUES (?,?,?,?,?,?)',
                                 (task_id, phase, name, encoded, signature, time.time()))
@@ -817,7 +820,18 @@ class Store:
                  'result': json.loads(row['result']) if row['result'] else None} for row in rows]
 
     def recover(self):
+        if self.unresolved_inferences():
+            self.configure_queue(False)
+        for task in self.all():
+            for receipt in self.inference_receipts(task['id']):
+                if receipt['status'] == 'DISPATCHING':
+                    self.finalize_inference(receipt['request_id'], terminal_error='Service restarted with dispatched inference; no replay.')
         for state in self.all():
+            self.end_inference_session(state['id'], state.get('inference_session_id'))
+            if any(r['status'] == 'UNCERTAIN' for r in self.inference_receipts(state['id'])):
+                if not reached_operator_gate(state):
+                    self.update(state['id'], status='PAUSED_RECOVERY', reason='Uncertain inference requires operator inspection; no replay.')
+                continue
             uncertain = (state['status'] in ('RUNNING', 'PAUSING', 'QUEUED') and
                          any(r['result'] is None for r in self.receipts(state['id'])))
             if uncertain:
@@ -849,6 +863,7 @@ class Store:
                 "Live scraper validation, installation and GitHub delivery of generated wrappers require operator review.\n")
         for name, payload in [('checkpoint.json', json.dumps(state, indent=2)),
                               ('receipts.json', json.dumps(self.receipts(task_id), indent=2)),
+                              ('inference_receipts.json', json.dumps(self.inference_receipts(task_id), indent=2)),
                               ('HANDOFF.md', text)]:
             temporary = folder / (name + '.new')
             temporary.write_text(payload)
