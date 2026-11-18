@@ -359,8 +359,8 @@
       ]
     }
   },
-  "db_before_sha256": "46dcc98ed6b0f70b873d2eff42009f998bd397c731076530a66ee7950e3c6178",
-  "db_after_dry_run_sha256": "46dcc98ed6b0f70b873d2eff42009f998bd397c731076530a66ee7950e3c6178",
+  "db_before_sha256": "276588512aa76adab61e9756260ee23c38d94096ca555c924bccb28fdc69d58d",
+  "db_after_dry_run_sha256": "276588512aa76adab61e9756260ee23c38d94096ca555c924bccb28fdc69d58d",
   "first_apply": {
     "campaign_id": "integration-backlog-20261118",
     "clean": true,
@@ -598,7 +598,7 @@
       ]
     }
   },
-  "db_after_apply_sha256": "5dba4126e84a57edff70d0e694e32b5503f0a0acb0b9ce01b6a46a6f5dadce69",
+  "db_after_apply_sha256": "e5470ad7ab61f4d6064bd1afb4b72980354cb8295ad4a0258d358f6a22ccb89e",
   "second_apply": {
     "campaign_id": "integration-backlog-20261118",
     "clean": true,
@@ -733,7 +733,7 @@
       ]
     }
   },
-  "db_after_second_apply_sha256": "5dba4126e84a57edff70d0e694e32b5503f0a0acb0b9ce01b6a46a6f5dadce69",
+  "db_after_second_apply_sha256": "e5470ad7ab61f4d6064bd1afb4b72980354cb8295ad4a0258d358f6a22ccb89e",
   "integrity": "ok",
   "controls": {
     "queue_enabled": "false",

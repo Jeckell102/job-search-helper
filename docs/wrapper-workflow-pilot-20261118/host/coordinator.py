@@ -13,6 +13,7 @@ import urllib.error
 import coding_tools as code
 import public_tools as web
 from coordinator_store import (DEFAULT_CAMPAIGN_ID, SELECTED, Store, reached_operator_gate)
+from coordinator_identity import canonical_identity, worker_assignment, canonical_requirements, validate_bound_identity
 from coordinator_permissions import resolve_mode
 from coordinator_evidence import build_requirements, phase_evidence, evidence_fingerprint, manifest_digest
 import coordinator_workflow as workflow
@@ -182,7 +183,18 @@ class Coordinator:
         max_sessions = data.get('max_sessions', 10)
         if type(max_sessions) is not int or not 1 <= max_sessions <= 20:
             raise ValueError('max_sessions must be 1..20.')
-        requirements = build_requirements(objective, tests, code.root())
+        integration = data.get('integration') or {}
+        assignment_text = worker_assignment(integration) if integration else objective
+        if integration:
+            identity_tests = canonical_identity(integration)['tests']
+            if tests != identity_tests:
+                raise ValueError('integration tests must exactly match the requested tests.')
+            tests = identity_tests
+            for path in tests:
+                code.path_for(path)
+        requirements = build_requirements(assignment_text, tests, code.root())
+        if integration:
+            requirements = canonical_requirements(integration, requirements)
         if len(requirements['required_files']) > 32 or len(requirements['source_targets']) > 12:
             raise ValueError('Use one bounded company assignment with at most 32 files and 12 source URLs.')
         integration = data.get('integration') or {}
@@ -209,6 +221,11 @@ class Coordinator:
         return dict(objective=objective, tests=tests, mode=mode, max_sessions=max_sessions,
                     authorization_version=1, evidence_requirements=requirements,
                     workflow_version=self.workflow_version, integration=integration)
+
+    def requirements(self, state):
+        validate_bound_identity(state)
+        result = build_requirements(state.get('worker_assignment', state['objective']), state['tests'], code.root())
+        return canonical_requirements(state['integration'], result) if state.get('integration') else result
 
     def budget_pause(self, task_id, reason):
         self.store.update(task_id, status='PAUSED_BUDGET', reason=reason)
@@ -300,6 +317,8 @@ class Coordinator:
             state = self.store.exclude_campaign_task(state['id'])
         elif action == 'include':
             state = self.store.include_campaign_task(state['id'])
+        elif action == 'retry':
+            state = self.store.retry_campaign_task(state['id'])
         elif action == 'resume':
             snapshot = self.store.activation_snapshot(state['id'])
             state = snapshot['state']
@@ -320,7 +339,7 @@ class Coordinator:
             # first worker step pause on a false external-file change.
             with workspace(self.store, state, create=True):
                 current_manifest = manifest()
-                requirements = build_requirements(state['objective'], state['tests'], code.root())
+                requirements = self.requirements(state)
             changed = bool(state['manifest'] and current_manifest != state['manifest'])
             fields = dict(stop_requested=False, status='QUEUED', errors=0,
                           reason='Resumed by operator.', manifest=current_manifest)
@@ -344,6 +363,7 @@ class Coordinator:
         return {'ok': True, 'state': {k: v for k, v in state.items() if k != 'manifest'}, 'text': self.describe(state)}
 
     def describe(self, state):
+        validate_bound_identity(state)
         cp = state['checkpoint']
         receipts = self.store.receipts(state['id'])
         last = receipts[-1] if receipts else None
@@ -355,7 +375,8 @@ class Coordinator:
                    + str((plan.get('next') or {}).get('label', plan.get('assignment', 'baseline or verification'))) + '.\n') if state.get('workflow_version') == 2 else ''
         certification = ('Operator live-validation receipt saved.' if state['status'] == 'LIVE_VALIDATED'
                          else 'Live validation and installation are not certified by the worker.')
-        return (f"{state['id']}: {state['status']}\nStage: {state['phase']} ({state['mode']})\n"
+        return (f"{state['id']}: {state['status']}\nStage: {state['phase']} ({state['mode']})\n" +
+                (f"Company: {state['integration_identity']['company_id']} {state['integration_identity']['company']} | {state['integration_identity']['configured_url']} | identity {state['integration_identity_digest']}\n" if state.get('integration_identity') else '') +
                 f"Worker sessions: {state['sessions']}/{state['max_sessions']}; model calls: {state['calls']}/{MAX_CALLS}.\n"
                 f"Accounted tokens: {state['tokens']}/{MAX_TOKENS}. " +
                 ('One hour from first assignment; initial queue wait is excluded. ' if state.get('workflow_version') == 2 else 'One hour from creation including queue time. ') +
@@ -532,6 +553,7 @@ class Coordinator:
 
     def _step(self, task_id):
         state = self.store.get(task_id)
+        validate_bound_identity(state)
         if self.paused(task_id):
             return
         if state.get('workflow_version') == 2 and state.get('activated_at') is None:
@@ -542,7 +564,7 @@ class Coordinator:
             self.export(task_id)
             return
         if not state.get('evidence_requirements'):
-            state = self.store.update(task_id, evidence_requirements=build_requirements(state['objective'], state['tests'], code.root()))
+            state = self.store.update(task_id, evidence_requirements=self.requirements(state))
         self.check_deadline(task_id)
         current_manifest = manifest()
         if state['manifest'] and current_manifest != state['manifest']:
@@ -606,6 +628,7 @@ class Coordinator:
         return True
 
     def messages(self, state, protocol):
+        validate_bound_identity(state)
         receipts = self.store.receipts(state['id'])
         if state.get('workflow_version') == 2:
             system = ('You are a bounded wrapper worker. Python on MuleLab owns the plan, evidence collection, permissions and budgets. '
@@ -621,7 +644,9 @@ class Coordinator:
             work = state.get('workflow', {})
             current = manifest()
             reads = workflow.current_reads(receipts, current)
-            data = {'objective': state['objective'], 'mode': state['mode'], 'phase': state['phase'],
+            data = {'objective': state.get('worker_assignment', state['objective']),
+                    'integration_identity': state.get('integration_identity'),
+                    'integration_identity_digest': state.get('integration_identity_digest'), 'mode': state['mode'], 'phase': state['phase'],
                     'operator_guidance': work.get('operator_guidance'),
                     'assignment': work.get('plan', {}).get('assignment'), 'plan': work.get('plan', {}),
                     'checkpoint': state['checkpoint'], 'baseline_passed': state.get('baseline_passed'),
@@ -658,7 +683,9 @@ class Coordinator:
             "Use worker_checkpoint to record a concise summary and concrete next action before stopping. "
             "phase_done is a request for verification, never proof of live validation or delivery. "
             "Do not expose private reasoning. Preserve explicit incomplete states.\n\nRequired protocol:\n" + protocol)
-        data = {'objective': state['objective'], 'mode': state['mode'], 'phase': state['phase'],
+        data = {'objective': state.get('worker_assignment', state['objective']),
+                    'integration_identity': state.get('integration_identity'),
+                    'integration_identity_digest': state.get('integration_identity_digest'), 'mode': state['mode'], 'phase': state['phase'],
                 'assignment': phase, 'checkpoint': state['checkpoint'], 'recent_receipts': recent,
                 'evidence_requirements': state.get('evidence_requirements', {}),
                 'requested_tests': state['tests'], 'baseline_passed': state.get('baseline_passed'),

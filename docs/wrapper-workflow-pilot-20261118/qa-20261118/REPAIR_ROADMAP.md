@@ -35,13 +35,13 @@ Acceptance criteria:
 5. Migration is fail-closed and idempotent. It reports exact matched, held, user-paused, excluded, skipped, and conflicting task IDs.
 6. Production controls remain OFF after migration and deployment.
 
-### 2. Atomic pilot, campaign, queue, and activation transitions — IN PROGRESS
+### 2. Atomic pilot, campaign, queue, and activation transitions — ACCEPTED IN STAGING
 
-- [ ] Serialize pilot start/stop, campaign start/stop, generic queue control, and task activation in SQLite transactions.
-- [ ] Validate a pilot completely before publishing the pilot slot.
-- [ ] Prevent pilot and campaign modes from being enabled together under concurrent requests.
-- [ ] Add the recorded race, stale pilot slot, and concurrent control tests.
-- [ ] Focused and full suites pass; roadmap review approves group 2.
+- [x] Serialize pilot start/stop, campaign start/stop, generic queue control, and task activation in SQLite transactions.
+- [x] Validate a pilot completely before publishing the pilot slot.
+- [x] Prevent pilot and campaign modes from being enabled together under concurrent requests.
+- [x] Add the recorded race, stale pilot slot, and concurrent control tests.
+- [x] Focused and full suites pass; roadmap review approves group 2.
 
 Acceptance criteria:
 
@@ -85,31 +85,31 @@ Group 2 does not certify the separate inference-dispatch reservation race. That 
 
 ### Group 2 acceptance checklist
 
-- [ ] One store-level transaction owns complete pilot validation and publication; command code does not publish the pilot slot separately.
-- [ ] Pilot publication and the exact task's QUEUED/resume state commit together or both roll back.
-- [ ] Pilot stop clears the slot and publishes the task stop boundary atomically.
-- [ ] Campaign start/stop and queue resume/pause use the same database-serialized mode invariants.
-- [ ] No correctness claim relies only on the coordinator instance's Python `control_lock`.
-- [ ] Failed pilot preparation or validation leaves control and task rows unchanged and consumes no task budget.
-- [ ] Concurrent pilot/campaign, pilot/queue, and pilot/pilot tests prove exactly one allowed result without mixed controls.
-- [ ] Global pause precedence retains an existing selected campaign member and starts no replacement.
-- [ ] Restart and injected rollback tests prove only committed state is visible.
-- [ ] Focused verifier passes against two independent store/coordinator instances.
-- [ ] Full host suite passes with no regression to accepted Group 1 behavior.
-- [ ] Roadmap review approves Group 2 before Group 3 begins.
+- [x] One store-level transaction owns complete pilot validation and publication; command code does not publish the pilot slot separately.
+- [x] Pilot publication and the exact task's QUEUED/resume state commit together or both roll back.
+- [x] Pilot stop clears the slot and publishes the task stop boundary atomically.
+- [x] Campaign start/stop and queue resume/pause use the same database-serialized mode invariants.
+- [x] No correctness claim relies only on the coordinator instance's Python `control_lock`.
+- [x] Failed pilot preparation or validation leaves control and task rows unchanged and consumes no task budget.
+- [x] Concurrent pilot/campaign, pilot/queue, and pilot/pilot tests prove exactly one allowed result without mixed controls.
+- [x] Global pause precedence retains an existing selected campaign member and starts no replacement.
+- [x] Restart and injected rollback tests prove only committed state is visible.
+- [x] Focused verifier passes against two independent store/coordinator instances.
+- [x] Full host suite passes with no regression to accepted Group 1 behavior.
+- [x] Roadmap review approves Group 2 before Group 3 begins.
 
-Current gate status: **SOURCE REVIEW PASSED; FINAL SUITE PENDING**. The terminal-state bypass was corrected. Public pause preserves `AWAITING_LIVE_VALIDATION`, `REVIEW_COMPLETE_LIVE_NOT_VALIDATED`, and `LIVE_VALIDATED`; resume and pilot-start reject them; exclude/include preserves the terminal status; `CAMPAIGN_FINISHED` is also treated as a gate. Legacy resume and control setters now delegate to the canonical guarded transitions. Independent review reran all 12 transition tests successfully, including the prior `LIVE_VALIDATED -> PAUSED -> QUEUED` reproduction as a command-level rejection. Accept Group 2 when the implementation owner reports its final focused and full suites on this same source snapshot.
+Current gate status: **ACCEPTED IN STAGING**. The terminal-state bypass was corrected. Public pause preserves `AWAITING_LIVE_VALIDATION`, `REVIEW_COMPLETE_LIVE_NOT_VALIDATED`, and `LIVE_VALIDATED`; resume and pilot-start reject them; exclude/include preserves the terminal status; `CAMPAIGN_FINISHED` is also treated as a gate. Legacy resume and control setters delegate to the canonical guarded transitions. Independent review passed all 12 transition tests, including the prior `LIVE_VALIDATED -> PAUSED -> QUEUED` reproduction as a command-level rejection. The implementation owner's final focused suite passed 70/70 and the full host suite passed 174/174 on the frozen corrected source. Production and inference remained untouched.
 
 Final-QA reproduction note: the original `check_scheduler.py` race harness instrumented `set_pilot_task`. The corrected design replaces that multi-step publication path with one atomic transition, so final QA must reproduce the same adversarial pilot-versus-campaign outcome at the new transaction boundary. It must coordinate concurrent public commands or an explicit transaction test seam and assert the committed mode/task invariants. Failure to reach the obsolete hook, a harness timeout, or absence of the old method call is not a pass. Preserve the old result as historical evidence, and save the equivalent new reproduction with its exact final settings and task state.
 
-### 3. Canonical identity and duplicate-company prevention — WAITING
+### 3. Canonical identity and duplicate-company prevention — ACCEPTED IN STAGING
 
-- [ ] Make structured company identity authoritative for assignment text, evidence requirements, worker packets, and reporting.
-- [ ] Validate the identity again at activation and bind it with a stable digest.
-- [ ] Enforce unique campaign/company membership and explicit retry lineage.
-- [ ] Reject changed-batch duplicates and partial or conflicting backfill records atomically.
-- [ ] Add contradictory identity, duplicate batch, retry lineage, and migration tests.
-- [ ] Focused and full suites pass; roadmap review approves group 3.
+- [x] Make structured company identity authoritative for assignment text, evidence requirements, worker packets, and reporting.
+- [x] Validate the identity again at activation and bind it with a stable digest.
+- [x] Enforce unique campaign/company membership and explicit retry lineage.
+- [x] Reject changed-batch duplicates and partial or conflicting backfill records atomically.
+- [x] Add contradictory identity, duplicate batch, retry lineage, and migration tests.
+- [x] Focused and full suites pass; roadmap review approves group 3.
 
 Acceptance criteria:
 
@@ -121,7 +121,7 @@ Acceptance criteria:
 
 Define one canonical integration identity object with exactly `company_id`, `company`, `configured_url`, `tests`, and `source_targets`. Normalize and validate it once at assignment/import, serialize it as sorted compact JSON, and store its SHA-256 as `integration_identity_digest`. The digest and structured identity are immutable task fields. Evidence requirements, editable targets, worker packets, status output, and activation checks must read these fields directly.
 
-Do not let a free-form objective redefine the company. For campaign imports, generate the worker assignment from the canonical identity using one host-owned template, or require an exact host-generated assignment field. The model packet must include the full structured identity and digest. Company ID, name, URL, tests, and source targets mentioned in instructions must therefore come from one source. Activation recomputes the digest and rejects any mismatch before queueing or inference.
+Do not let a free-form objective redefine the company. Retain the original objective unchanged as audited import/migration history, and add a separate immutable `worker_assignment` generated by one host-owned template from the canonical identity. Worker packets and evidence discovery use `worker_assignment`, the structured identity, and its digest; they never use the original objective as identity authority. Company ID, name, URL, tests, and source targets mentioned in executable instructions therefore come from one source. Activation recomputes the identity and worker-assignment digests and rejects any mismatch before queueing or inference.
 
 Enforce campaign/company uniqueness in SQLite rather than by scanning task JSON. Add a campaign-assignment registry with a unique `(campaign_id, company_id)` key, the current task ID, identity digest, and lineage metadata. Batch import and registry insertion occur in one immediate transaction:
 
@@ -144,7 +144,9 @@ Required focused tests:
 6. Explicit retry preserves predecessor receipts/budgets, records `retry_of`, and cannot coexist as a second active assignment.
 7. Existing 102-member migration gains exact identity registry rows on a disposable copy with a no-op second run and controls remaining off.
 
-### 4. Edit scope and independent acceptance assertions — WAITING
+Current gate status: **ACCEPTED IN STAGING**. `commit_activation()` now validates the complete bound identity after applying activation fields and before publishing either task state or pilot controls; the replacement-evidence regression proves rollback. Independent review passed all 15 identity/backfill/registry tests, including concurrency, immutable packet identity, changed-batch conflicts, retry lineage, and activation mutation. The frozen full host suite passed 189/189. The disposable production-snapshot rehearsal bound exactly 102 campaign identities and registry rows, changed nothing during dry run, changed zero rows on its second apply with byte-identical post-apply database hash, preserved prior status/budget/history and nonmembers, retained controls OFF, and finished with `quick_check=ok`. Production was not modified.
+
+### 4. Edit scope and independent acceptance assertions — IN PROGRESS
 
 - [ ] Enforce the assigned editable file set at the host tool boundary.
 - [ ] Add an explicit reviewed scope-expansion transition.
@@ -158,6 +160,27 @@ Acceptance criteria:
 1. A worker cannot modify a file outside the current approved scope.
 2. Editable regression tests are never the sole proof of correctness.
 3. Offline-ready requires both editable regression tests and immutable host-owned acceptance checks.
+
+### Group 4 minimal design
+
+Persist an exact per-task write allowlist and digest. Its initial paths are the canonical integration `source_targets` and editable `tests`, plus any exact output document path declared by the reviewed campaign manifest. Host `code_edit` and `code_create` must receive the active task scope and reject every normalized path not exactly listed before opening or creating it. Directory-wide grants and model-supplied paths do not expand scope. Existing path traversal, symlink, hardlink, hidden-file, size, and single-edit guards remain additional checks.
+
+Scope expansion is a dedicated operator transition, never a worker tool. It requires the task ID, exact added paths, reason, expected task/scope digest, a paused safe boundary, no unfinished receipt, and no active claim. In one transaction it appends an audit record, increments `edit_scope_version`, stores the new digest, and invalidates affected reads/baseline verification. Company identity, canonical tests, and canonical source targets remain immutable; a change to those fields requires an explicit reviewed retry/new assignment. Auxiliary source or documentation paths may be added to the separate write scope without redefining company identity. A worker may checkpoint a scope request, but Python cannot approve it automatically.
+
+Before any worker edit, build a host-owned acceptance bundle outside the editable workspace. Copy the original assigned tests and every local fixture/config input they consume, store a hash manifest in task state, and expose the bundle read-only to verification. At acceptance time, run those frozen original tests in a disposable sandbox against the task's edited source tree. The test path and fixtures come from the immutable bundle; the import path points to edited workspace source. Verify bundle hashes before and after execution and save the exact command, source manifest, bundle digest, and result receipt.
+
+Run current editable regression tests separately. Offline-ready requires both current tests and the immutable acceptance bundle to pass. If an assigned test did not exist at baseline or its frozen assertion cannot represent the reviewed requirement, the task remains blocked until an operator supplies or revises a host-owned acceptance check through a separate audited transition. A worker-created or worker-edited test is never the sole acceptance proof. This design relies on the existing OS sandbox for arbitrary test-process containment; Group 4's contract is exact host-tool writes and independent assertions, not a new hostile-code sandbox.
+
+Required focused tests:
+
+1. Edits and creates succeed for every exact assigned path and fail without filesystem change for an unassigned source, test, document, traversal, symlink, or hardlink path.
+2. A worker scope request does not grant access; only the explicit operator transition expands scope, and concurrent/stale expansion fails by digest.
+3. Scope expansion is rejected while running, claimed, or carrying an unfinished receipt and records a durable reason/version/history when accepted.
+4. Weakening the current test to `pass` cannot reach offline-ready when the frozen original assertion fails against the edited source.
+5. A correct edited source passes both the frozen original tests and current editable tests; receipts prove the frozen test path and edited source import path.
+6. Missing, changed, or substituted acceptance bundle/config/fixture hashes fail closed before test execution.
+7. A task with no baseline independent assertion cannot become offline-ready until an operator-owned acceptance bundle is recorded.
+8. Existing read, diff, evidence, source-drift, and Jetson/host scope-parity tests remain passing.
 
 ### 5. Atomic inference reservation and safe pilot startup — WAITING
 

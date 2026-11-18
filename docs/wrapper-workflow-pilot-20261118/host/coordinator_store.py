@@ -8,6 +8,7 @@ import time
 import uuid
 from contextlib import contextmanager
 import threading
+from coordinator_identity import bind_identity, validate_bound_identity
 
 
 DEFAULT_CAMPAIGN_ID = 'integration-backlog-20261118'
@@ -62,6 +63,11 @@ class Store:
                     signature TEXT NOT NULL, created REAL NOT NULL);
                 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS batches(digest TEXT PRIMARY KEY, task_ids TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS campaign_company_registry(
+                    campaign_id TEXT NOT NULL, company_id TEXT NOT NULL,
+                    current_task_id TEXT NOT NULL, identity_digest TEXT NOT NULL,
+                    import_digest TEXT NOT NULL, retry_of TEXT,
+                    PRIMARY KEY(campaign_id, company_id));
             ''')
 
     @contextmanager
@@ -98,34 +104,103 @@ class Store:
                      campaign_run_id=None, campaign_manifest_digest=None)
         if workflow_version == 2:
             state.update(activated_at=None, time_budget_policy='one_hour_from_first_assignment_including_pauses')
-        return state
+        return bind_identity(state)
 
     def enqueue_batch(self, digest, specs, held=False, campaign_id=DEFAULT_CAMPAIGN_ID):
-        """Atomic and idempotent: a retried submission never duplicates work."""
+        """Import a complete batch or reject it without changing any task."""
+        scoped_digest = hashlib.sha256(json.dumps([campaign_id if held else None, digest]).encode()).hexdigest()
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            existing = db.execute('SELECT task_ids FROM batches WHERE digest=?', (digest,)).fetchone()
-            if existing:
-                return json.loads(existing[0]), True
+            existing = db.execute('SELECT task_ids FROM batches WHERE digest=?', (scoped_digest,)).fetchone()
             states = [self.new_state(**spec) for spec in specs]
+            if held and (not isinstance(campaign_id, str) or not campaign_id.strip()):
+                raise ValueError('Held campaign imports require a stable campaign ID.')
             for state in states:
                 state['isolated_workspace'] = True
                 if held:
                     company_id = state.get('integration', {}).get('company_id')
-                    if not isinstance(campaign_id, str) or not campaign_id.strip():
-                        raise ValueError('Held campaign imports require a stable campaign ID.')
-                    if not isinstance(company_id, str) or not company_id:
+                    if not company_id:
                         raise ValueError('Held campaign imports require structured company identity.')
                     state.update(status='PAUSED', stop_requested=False,
                                  reason='Held for one-company campaign selection.',
-                                 campaign_id=campaign_id,
-                                 campaign_company_id=company_id,
+                                 campaign_id=campaign_id, campaign_company_id=company_id,
                                  campaign_disposition=HELD_FOR_CAMPAIGN,
                                  campaign_manifest_digest=campaign_manifest_digest(state))
+                    state.update(bind_identity(state))
+            if existing:
+                ids = json.loads(existing[0])
+                if len(ids) != len(states):
+                    raise ValueError('Batch provenance conflicts with imported assignments.')
+                for task_id, proposed in zip(ids, states):
+                    row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+                    old = json.loads(row[0]) if row else {}
+                    validate_bound_identity(old)
+                    if (campaign_manifest_digest(old) != campaign_manifest_digest(proposed)
+                            or old.get('campaign_id') != proposed.get('campaign_id')
+                            or any(old.get(key) != proposed.get(key) for key in ('mode', 'max_sessions', 'authorization_version', 'workflow_version'))):
+                        raise ValueError('Batch provenance conflicts with imported assignments.')
+                    self._require_current_identity(db, old)
+                    if held:
+                        provenance = db.execute('SELECT import_digest FROM campaign_company_registry WHERE campaign_id=? AND company_id=?', (campaign_id, old['campaign_company_id'])).fetchone()
+                        if not provenance or provenance[0] != scoped_digest:
+                            raise ValueError('Registry import provenance conflicts with batch replay.')
+                return ids, True
+            for state in states:
+                if held:
+                    if db.execute('SELECT 1 FROM campaign_company_registry WHERE campaign_id=? AND company_id=?',
+                                  (campaign_id, state['campaign_company_id'])).fetchone():
+                        raise ValueError('Campaign company already imported; changed batch duplicates require explicit retry.')
+                    db.execute('INSERT INTO campaign_company_registry VALUES (?,?,?,?,?,?)',
+                               (campaign_id, state['campaign_company_id'], state['id'],
+                                state['integration_identity_digest'], scoped_digest, None))
                 db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
             ids = [s['id'] for s in states]
-            db.execute('INSERT INTO batches VALUES (?,?)', (digest, json.dumps(ids)))
+            db.execute('INSERT INTO batches VALUES (?,?)', (scoped_digest, json.dumps(ids)))
             return ids, False
+
+    @staticmethod
+    def _require_current_identity(db, state):
+        validate_bound_identity(state)
+        if state.get('campaign_id'):
+            if state.get('campaign_manifest_digest') != campaign_manifest_digest(state):
+                raise ValueError('Campaign manifest binding changed.')
+            row = db.execute('SELECT current_task_id,identity_digest FROM campaign_company_registry WHERE campaign_id=? AND company_id=?',
+                             (state['campaign_id'], state.get('campaign_company_id'))).fetchone()
+            if not row or row != (state['id'], state.get('integration_identity_digest')):
+                raise ValueError('Campaign assignment is unregistered or superseded; reviewed identity migration or retry required.')
+
+    def retry_campaign_task(self, task_id):
+        """Explicit operator transition; keep predecessor and receipts untouched."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise ValueError('Task not found.')
+            old = json.loads(row[0])
+            if not old.get('campaign_id'):
+                raise ValueError('Retry requires a campaign assignment.')
+            self._require_current_identity(db, old)
+            controls = {key: json.loads(value) for key, value in db.execute('SELECT key,value FROM settings')}
+            if (controls.get('queue_enabled', True) or controls.get('campaign_enabled', False)
+                    or controls.get('pilot_task') is not None):
+                raise ValueError('Stop queue, campaign and pilot before explicit retry.')
+            if old['status'] in ('RUNNING', 'QUEUED', 'PAUSING'):
+                raise ValueError('Active assignment cannot be retried.')
+            if db.execute('SELECT 1 FROM receipts WHERE task=? AND result IS NULL', (task_id,)).fetchone():
+                raise ValueError('Inspect unfinished receipts before retry.')
+            state = self.new_state(**{key: old[key] for key in (
+                'objective', 'tests', 'mode', 'max_sessions', 'authorization_version',
+                'evidence_requirements', 'workflow_version', 'integration')})
+            state.update(campaign_id=old['campaign_id'], campaign_company_id=old['campaign_company_id'],
+                         campaign_manifest_digest=old['campaign_manifest_digest'],
+                         campaign_disposition=HELD_FOR_CAMPAIGN, isolated_workspace=True,
+                         status='PAUSED', retry_of=task_id, reason='Explicit operator retry held for campaign selection.')
+            state = bind_identity(state)
+            db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
+            db.execute('UPDATE campaign_company_registry SET current_task_id=?, retry_of=? WHERE campaign_id=? AND company_id=?',
+                       (state['id'], task_id, state['campaign_id'], state['campaign_company_id']))
+            self._bump_control_generation(db)
+            return state
 
     def queue_enabled(self):
         with self.connect() as db:
@@ -250,6 +325,7 @@ class Store:
             if not row:
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
+            self._require_current_identity(db, state)
             if (task_state_digest(state) != expected_state_digest
                     or self._control_generation(db) != expected_control_generation):
                 raise ValueError('Task or scheduler controls changed during activation preparation; retry from current status.')
@@ -303,6 +379,9 @@ class Store:
                               campaign_run_id=uuid.uuid4().hex)
             state.update(fields)
             state.update(status='QUEUED', stop_requested=False)
+            # Activation fields must preserve the complete immutable binding.
+            # Validate before publishing either task state or the pilot slot.
+            validate_bound_identity(state)
             if pilot:
                 db.execute("INSERT INTO settings VALUES ('pilot_task',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                            (json.dumps(task_id),))
@@ -352,6 +431,11 @@ class Store:
             selected_count = 0
             for task_id, raw in rows:
                 state = json.loads(raw)
+                if state.get('campaign_id') == selected_campaign and state.get('campaign_disposition') in (HELD_FOR_CAMPAIGN, SELECTED):
+                    registry = db.execute('SELECT current_task_id FROM campaign_company_registry WHERE campaign_id=? AND company_id=?', (selected_campaign, state.get('campaign_company_id'))).fetchone()
+                    if registry and registry[0] != task_id:
+                        continue
+                    self._require_current_identity(db, state)
                 if state['status'] in ('RUNNING', 'PAUSING'):
                     active.append(task_id)
                 if state.get('campaign_disposition') == SELECTED:
@@ -424,6 +508,7 @@ class Store:
                     continue
                 if state.get('campaign_id') or state.get('campaign_disposition'):
                     continue
+                self._require_current_identity(db, state)
                 state.update(status='RUNNING', scheduler_claimed_at=time.time())
                 db.execute('UPDATE tasks SET state=? WHERE id=?',
                            (json.dumps(state), current_id))
@@ -453,6 +538,7 @@ class Store:
             if len(matches) != 1:
                 return None
             task_id, state = matches[0]
+            self._require_current_identity(db, state)
             state.update(status='RUNNING', scheduler_claimed_at=time.time())
             db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
             self._bump_control_generation(db)
@@ -471,6 +557,7 @@ class Store:
                 return None
             for current_id, state in decoded:
                 if current_id == task_id and state['status'] == 'QUEUED' and not state.get('stop_requested'):
+                    self._require_current_identity(db, state)
                     state.update(status='RUNNING', scheduler_claimed_at=time.time())
                     db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), current_id))
                     self._bump_control_generation(db)
@@ -592,7 +679,12 @@ class Store:
             if not row:
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
+            validate_bound_identity(state)
+            protected = {'integration', 'integration_identity', 'integration_identity_digest', 'worker_assignment', 'worker_assignment_digest', 'identity_binding_digest', 'evidence_requirements_digest', 'objective', 'tests', 'campaign_manifest_digest', 'campaign_id', 'campaign_company_id', 'retry_of'}
+            if any(key in fields and fields[key] != state.get(key) for key in protected):
+                raise ValueError('Immutable assignment identity cannot be changed.')
             state.update(fields)
+            validate_bound_identity(state)
             db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
         return state
 
@@ -618,6 +710,7 @@ class Store:
             if not row:
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
+            self._require_current_identity(db, state)
             queue = db.execute("SELECT value FROM settings WHERE key='queue_enabled'").fetchone()
             pilot = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
             campaign = db.execute("SELECT value FROM settings WHERE key='campaign_enabled'").fetchone()
@@ -673,7 +766,7 @@ class Store:
         folder.mkdir(exist_ok=True, mode=0o700)
         checkpoint = state['checkpoint']
         text = (f"# {task_id}\n\nStatus: {state['status']}\nPhase: {state['phase']}\n\n"
-                f"Objective: {state['objective']}\n\nReason: {state['reason']}\n\n" +
+                f"Audited original objective: {state['objective']}\n\nCanonical assignment: {state.get('worker_assignment', state['objective'])}\n\nIdentity: {json.dumps(state.get('integration_identity'))}\nIdentity digest: {state.get('integration_identity_digest')}\n\nReason: {state['reason']}\n\n" +
                 ('Budgets: One hour from first assignment, including pauses; initial queue wait is excluded. ' if state.get('workflow_version') == 2 else 'Budgets: One-hour lifetime from creation, including queued and paused time. ') +
                 'Resume does not reset time, calls, sessions or tokens. Already-started actions may finish; the next action is checked before dispatch.\n\n' +
                 f"Worker summary (model-authored, verify against receipts):\n{checkpoint.get('summary', '')}\n\n"

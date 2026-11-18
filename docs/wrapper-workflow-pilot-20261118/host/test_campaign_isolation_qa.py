@@ -1,6 +1,7 @@
 """Independent finding-1 QA: campaign isolation and fail-closed migration."""
 import tempfile
 import threading
+import json
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -164,19 +165,26 @@ class CampaignMigrationQATests(unittest.TestCase):
         self.assertIsNone(self.store.get(duplicate['id']).get('campaign_id'))
 
         other_task, other_item = self.legacy(2)
-        self.store.update(other_task, integration=dict(other_item['integration'], company='Wrong Company'))
+        self.corrupt(other_task, integration=dict(other_item['integration'], company='Wrong Company'))
         report = self.migrate([other_item], [other_task])
         self.assertFalse(report['clean'])
         self.assertIn(other_task, report['conflicting'])
 
+    def corrupt(self, task_id, **fields):
+        # Simulate an old/corrupted database; public updates now reject mutation.
+        state = self.store.get(task_id)
+        state.update(fields)
+        with self.store.connect() as db:
+            db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+
     def test_partial_existing_membership_and_changed_campaign_are_conflicts(self):
         task, item = self.legacy()
-        self.store.update(task, campaign_id=CAMPAIGN, campaign_company_id='COMP-0001')
+        self.corrupt(task, campaign_id=CAMPAIGN, campaign_company_id='COMP-0001')
         report = self.migrate([item], [task])
         self.assertFalse(report['clean'])
         self.assertIn(task, report['conflicting'])
 
-        self.store.update(
+        self.corrupt(
             task, campaign_id='different-campaign',
             campaign_company_id='COMP-0001',
             campaign_disposition='HELD_FOR_CAMPAIGN',

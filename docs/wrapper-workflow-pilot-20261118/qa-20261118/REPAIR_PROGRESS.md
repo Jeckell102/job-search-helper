@@ -10,9 +10,13 @@ Campaign membership, individual pause/exclusion, selection and claim isolation a
 
 GitHub backup: `backup/wrapper-pilot-20261118`, commit `cf7a227` (push succeeded).
 
-## Current finding 2
+## Accepted finding 2
 
-Atomic pilot/campaign/queue transitions. Initial 10 independent race/failure tests and full 171-test suite passed. Review then reproduced terminal-status laundering through pause and resume; this is a mandatory remaining blocker before group 2 acceptance. Implementation lane owns coordinator/Store. Independent verifier owns race/failure tests. Roadmap lane manages acceptance; primary coordinates and records evidence. No later finding implementation begins before this group passes.
+Atomic pilot/campaign/queue transitions accepted after the terminal-status bypass was fixed. Independent transition tests12/12 and full host suite174/174 passed. GitHub backup `4ef6dde` pushed successfully.
+
+## Accepted finding 3
+
+Canonical identity and company registry implemented. Exact102-member identity migration passed on a disposable database: dry run unchanged; first apply102; second apply0 and byte-identical; old budgets, statuses and history preserved; integrity OK; controls OFF. Independent testing caught an activation-fields mutation bypass after the initial188-test pass; post-update validation now rolls it back. Final independent full suite190/190 and focused45/45 passed. Roadmap accepted. Group4 exact edit scope and independent acceptance assertions now in progress.
 
 ## Remaining
 

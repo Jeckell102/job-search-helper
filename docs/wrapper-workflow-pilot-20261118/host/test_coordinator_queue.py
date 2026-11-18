@@ -84,14 +84,12 @@ class QueueTests(WorkflowTests):
         )
         for index, (status, disposition) in enumerate(cases, 1):
             with self.subTest(status=status, disposition=disposition):
-                task = self.co.store.create(
-                    f'Terminal company {index}', ['tests/test_a.py'], 'develop',
-                    authorization_version=1, workflow_version=2,
-                    integration={'company_id': f'COMP-{index:04}'})['id']
-                self.co.store.update(
-                    task, isolated_workspace=True, status=status,
-                    campaign_id='terminal-gate-test',
-                    campaign_disposition=disposition)
+                spec = self.co.assignment({'objective': f'Terminal company {index} src/a.py tests/test_a.py',
+                    'mode': 'develop', 'integration': {'company_id': f'COMP-{index:04}',
+                    'company': f'Company {index}', 'configured_url': f'https://example.com/{index}',
+                    'tests': ['tests/test_a.py'], 'source_targets': ['src/a.py']}})
+                task = self.co.store.enqueue_batch(str(index), [spec], held=True, campaign_id='terminal-gate-test')[0][0]
+                self.co.store.update(task, status=status, campaign_disposition=disposition)
                 paused = self.co.command({'action': 'pause', 'id': task})['state']
                 self.assertEqual(paused['status'], status)
                 expected_disposition = (CAMPAIGN_FINISHED if disposition == CAMPAIGN_FINISHED
@@ -102,13 +100,11 @@ class QueueTests(WorkflowTests):
                 with self.assertRaisesRegex(ValueError, 'operator gate'):
                     self.co.command({'action': 'pilot-start', 'id': task})
 
-        terminal = self.co.store.create(
-            'Excluded terminal company', ['tests/test_a.py'], 'develop',
-            authorization_version=1, workflow_version=2,
-            integration={'company_id': 'COMP-9999'})['id']
-        self.co.store.update(
-            terminal, isolated_workspace=True, status='LIVE_VALIDATED',
-            campaign_id='terminal-gate-test', campaign_disposition=SELECTED)
+        spec = self.co.assignment({'objective': 'Excluded terminal company src/a.py tests/test_a.py',
+            'mode': 'develop', 'integration': {'company_id': 'COMP-9999', 'company': 'Excluded Company',
+            'configured_url': 'https://example.com/excluded', 'tests': ['tests/test_a.py'], 'source_targets': ['src/a.py']}})
+        terminal = self.co.store.enqueue_batch('excluded', [spec], held=True, campaign_id='terminal-gate-test')[0][0]
+        self.co.store.update(terminal, status='LIVE_VALIDATED', campaign_disposition=SELECTED)
         excluded = self.co.command({'action': 'exclude', 'id': terminal})['state']
         self.assertEqual(excluded['status'], 'LIVE_VALIDATED')
         included = self.co.command({'action': 'include', 'id': terminal})['state']
