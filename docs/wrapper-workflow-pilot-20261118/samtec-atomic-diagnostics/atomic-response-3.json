@@ -1,0 +1,30 @@
+{
+  "message": {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "type": "function",
+        "function": {
+          "name": "code_edit",
+          "arguments": {
+            "path": "src/job_search_helper/shared_boards.py",
+            "sha256": "f8ae5b420e11623e88dab381f8de19f069bad4ab6be341dff2845800b88391cf",
+            "old": "        name,slug='Jobvite',parts[0];path='/'+slug+'/jobs'",
+            "new": "        name,slug='Jobvite',parts[0];path='/'+slug+'/search'"
+          }
+        }
+      }
+    ]
+  },
+  "usage": {
+    "done_reason": "stop",
+    "prompt_eval_count": 593,
+    "eval_count": 162
+  },
+  "context_tokens": 12288,
+  "diagnostic_only": true,
+  "tools_executed": false,
+  "seconds": 11.719971346989041,
+  "utc": "2026-11-18T22:22:46.032355+00:00"
+}

@@ -1,0 +1,30 @@
+{
+  "message": {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "type": "function",
+        "function": {
+          "name": "code_edit",
+          "arguments": {
+            "path": "src/job_search_helper/shared_boards.py",
+            "sha256": "f8ae5b420e11623e88dab381f8de19f069bad4ab6be341dff2845800b88391cf",
+            "old": "    else:\n        if not parts or not re.fullmatch(SLUG,parts[0]):raise ValueError('Invalid Jobvite board.')\n        name,slug='Jobvite',parts[0];path='/'+slug+'/jobs'\n        if len(parts)==3 and parts[1]=='job':ident=parts[2]\n        elif len(parts)>1 and parts[1:] not in (['jobs'],['search']):raise ValueError('Invalid Jobvite scope.')",
+            "new": "    else:\n        if not parts or not re.fullmatch(SLUG,parts[0]):raise ValueError('Invalid Jobvite board.')\n        name,slug='Jobvite',parts[0];path='/'+slug+'/jobs'\n        if host=='samtec':\n            path='/'+slug+'/search'\n        if len(parts)==3 and parts[1]=='job':ident=parts[2]\n        elif len(parts)>1 and parts[1:] not in (['jobs'],['search']):raise ValueError('Invalid Jobvite scope.')"
+          }
+        }
+      }
+    ]
+  },
+  "usage": {
+    "done_reason": "stop",
+    "prompt_eval_count": 1732,
+    "eval_count": 339
+  },
+  "context_tokens": 12288,
+  "diagnostic_only": true,
+  "tools_executed": false,
+  "seconds": 23.772281202021986,
+  "utc": "2026-11-18T22:22:03.917041+00:00"
+}

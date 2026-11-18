@@ -1,0 +1,40 @@
+{
+  "status": "FAILED_PROPOSALS_NO_EDITS",
+  "classification": "operator-assisted atomic diagnostic; not autonomous integration acceptance",
+  "task": "WRAP-756e8b251b",
+  "controls": "main queue paused; each diagnostic uses authenticated single Jetson inference gate",
+  "attempts": [
+    {
+      "attempt": 1,
+      "usage": {
+        "done_reason": "stop",
+        "prompt_eval_count": 1246,
+        "eval_count": 381
+      },
+      "seconds": 34.98346911498811,
+      "tools_executed": false
+    },
+    {
+      "attempt": 2,
+      "usage": {
+        "done_reason": "stop",
+        "prompt_eval_count": 1732,
+        "eval_count": 339
+      },
+      "seconds": 23.772281202021986,
+      "tools_executed": false
+    },
+    {
+      "attempt": 3,
+      "usage": {
+        "done_reason": "stop",
+        "prompt_eval_count": 593,
+        "eval_count": 162
+      },
+      "seconds": 11.719971346989041,
+      "tools_executed": false
+    }
+  ],
+  "accounted_diagnostic_tokens": 4453,
+  "next_step": "Evaluate bounded reasoning-enabled native inference comparison; no wrapper proposal is approved or applied."
+}

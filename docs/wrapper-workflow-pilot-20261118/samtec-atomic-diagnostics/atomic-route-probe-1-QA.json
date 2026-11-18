@@ -1,0 +1,201 @@
+{
+  "result": "FAIL_BOUNDED_PROPOSAL",
+  "exact_current_sha": true,
+  "unique_original_substring": true,
+  "syntax_valid": true,
+  "source_unchanged": true,
+  "tools_executed": false,
+  "cases": [
+    {
+      "url": "https://jobs.jobvite.com/samtec/jobs",
+      "expected": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "samtec",
+        "path": "/samtec/search",
+        "ident": ""
+      },
+      "actual": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "samtec",
+        "path": "/samtec/jobs",
+        "ident": ""
+      },
+      "pass": false
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/search",
+      "expected": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "samtec",
+        "path": "/samtec/search",
+        "ident": ""
+      },
+      "actual": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "samtec",
+        "path": "/samtec/jobs",
+        "ident": ""
+      },
+      "pass": false
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oExample",
+      "expected": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "samtec",
+        "path": "/samtec/search",
+        "ident": "oExample"
+      },
+      "actual": {
+        "error": "ValueError",
+        "message": "Invalid Jobvite scope."
+      },
+      "pass": false
+    },
+    {
+      "url": "https://jobs.jobvite.com/other/jobs",
+      "expected": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "other",
+        "path": "/other/jobs",
+        "ident": ""
+      },
+      "actual": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "other",
+        "path": "/other/jobs",
+        "ident": ""
+      },
+      "pass": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/other/search",
+      "expected": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "other",
+        "path": "/other/jobs",
+        "ident": ""
+      },
+      "actual": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "other",
+        "path": "/other/jobs",
+        "ident": ""
+      },
+      "pass": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/other/job/oExample",
+      "expected": {
+        "name": "Jobvite",
+        "root": "https://jobs.jobvite.com",
+        "slug": "other",
+        "path": "/other/jobs",
+        "ident": "oExample"
+      },
+      "actual": {
+        "error": "ValueError",
+        "message": "Invalid Jobvite scope."
+      },
+      "pass": false
+    },
+    {
+      "url": "https://jobs.jobvite.com/",
+      "expected": {
+        "error": "ValueError",
+        "message": "Invalid Jobvite board."
+      },
+      "actual": {
+        "error": "IndexError",
+        "message": "list index out of range"
+      },
+      "pass": false
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/private",
+      "expected": {
+        "error": "ValueError",
+        "message": "Invalid Jobvite scope."
+      },
+      "actual": {
+        "error": "ValueError",
+        "message": "Invalid Jobvite scope."
+      },
+      "pass": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/search?q=filtered",
+      "expected": {
+        "error": "ValueError",
+        "message": "Filtered board URL requires explicit company scope support."
+      },
+      "actual": {
+        "error": "ValueError",
+        "message": "Filtered board URL requires explicit company scope support."
+      },
+      "pass": true
+    },
+    {
+      "url": "http://jobs.jobvite.com/samtec/search",
+      "expected": {
+        "error": "ValueError",
+        "message": "A verified public HTTPS careers board is required."
+      },
+      "actual": {
+        "error": "ValueError",
+        "message": "A verified public HTTPS careers board is required."
+      },
+      "pass": true
+    },
+    {
+      "url": "https://apply.workable.com/example/",
+      "expected": {
+        "name": "Workable",
+        "root": "https://apply.workable.com",
+        "slug": "example",
+        "path": "/example/",
+        "ident": ""
+      },
+      "actual": {
+        "name": "Workable",
+        "root": "https://apply.workable.com",
+        "slug": "example",
+        "path": "/example/",
+        "ident": ""
+      },
+      "pass": true
+    },
+    {
+      "url": "https://careers.smartrecruiters.com/Example",
+      "expected": {
+        "name": "SmartRecruiters",
+        "root": "https://careers.smartrecruiters.com",
+        "slug": "Example",
+        "path": "/Example",
+        "ident": ""
+      },
+      "actual": {
+        "name": "SmartRecruiters",
+        "root": "https://careers.smartrecruiters.com",
+        "slug": "Example",
+        "path": "/Example",
+        "ident": ""
+      },
+      "pass": true
+    }
+  ],
+  "passed": 7,
+  "total": 12,
+  "source_sha256": "f8ae5b420e11623e88dab381f8de19f069bad4ab6be341dff2845800b88391cf",
+  "response_sha256": "742fa0a19bc143c174e455456db11a7c6558f8be3552ca5626ba828adae7b82a",
+  "boundary": "No proposal applied. Not an integration test."
+}

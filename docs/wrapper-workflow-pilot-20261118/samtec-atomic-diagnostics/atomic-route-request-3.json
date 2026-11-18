@@ -1,0 +1,46 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are proposing one small Python patch. Return exactly ONE code_edit tool call using the supplied file hash and an exact unique old excerpt from the provided source. Do not return a checkpoint, explanation, or private reasoning. This call is a proposal only; a separate reviewer will evaluate and test it before any execution."
+    },
+    {
+      "role": "user",
+      "content": "{\"instruction\": \"Change only the path assignment on the supplied line. slug is the employer identifier (samtec or another employer); host is jobs.jobvite.com and must not be used to identify the employer. For slug samtec, assign its /search path. For every other slug, retain its /jobs path. Preserve name and slug assignments. Return one exact code_edit proposal; do not change any other line.\", \"path\": \"src/job_search_helper/shared_boards.py\", \"sha256\": \"f8ae5b420e11623e88dab381f8de19f069bad4ab6be341dff2845800b88391cf\", \"source_excerpt_exact\": \"        name,slug='Jobvite',parts[0];path='/'+slug+'/jobs'\", \"source_start_line\": 125, \"source_end_line\": 125}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "code_edit",
+        "description": "Replace one exact unique excerpt in an existing file after checking its SHA256. Read first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "old": {
+              "type": "string"
+            },
+            "new": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "old",
+            "new"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "max_tokens": 1000
+}
