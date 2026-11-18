@@ -1,0 +1,3978 @@
+{
+  "result": "PASS_BOUNDED_PROPOSAL",
+  "passed": 305,
+  "total": 305,
+  "source_sha256": "f14ccecd76181d183f29c46e281514f6606cc17e1d3b892323cc36850c6924ab",
+  "response_sha256": "1dd2db488896351cc368ea7931cded7a08d5536399cd1de4749186bf85fba265",
+  "source_unchanged": true,
+  "only_jobvite_guard_ast_changed": true,
+  "syntax_valid": true,
+  "cases": [
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=0",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=0",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=12",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=12",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=01",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=01",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=99999",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=99999",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=-1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=-1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1.0",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1.0",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=+1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=+1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=%31",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=%31",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?%70=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?%70=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=\uff11",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=\uff11",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=\u0661",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=\u0661",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1&p=2",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1&p=2",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1&q=engineer",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1&q=engineer",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?q=engineer&p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?q=engineer&p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?page=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?page=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1;foo=2",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1;foo=2",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1&",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1&",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1%26q=x",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1%26q=x",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=0",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=0",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=12",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=12",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=01",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=01",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=99999",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=99999",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=-1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=-1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1.0",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1.0",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=+1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=+1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=%31",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=%31",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?%70=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?%70=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=\uff11",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=\uff11",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=\u0661",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=\u0661",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1&p=2",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1&p=2",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1&q=engineer",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1&q=engineer",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?q=engineer&p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?q=engineer&p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?page=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?page=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1;foo=2",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1;foo=2",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1&",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1&",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1%26q=x",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/?p=1%26q=x",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/jobs",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/jobs/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/jobs/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/job/oAb123",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/job/oAb123?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/job/o_123",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/job/o_123?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/job/oAb123/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/job/oAb123/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/extra",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search/extra?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/Search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/Search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/SAMTEC/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/SAMTEC/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/%73earch",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/%73earch?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/../other/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/../other/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/other/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/other/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/other/jobs",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/other/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/other/job/oAb123",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/other/job/oAb123?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "http://jobs.jobvite.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://evil.test/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com.evil.test/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://user:pass@jobs.jobvite.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com:444/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1#x",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1\n",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search\\?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec",
+        "/samtec/search"
+      ],
+      "url": "https://jobs.jobvite.com:443/samtec/search/?p=1",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/other/jobs",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/other/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/other/job/oAb123",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/other/job/oAb123?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/other/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/other/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/other/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/other/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "other",
+        "/other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/Samtec/jobs",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/Samtec/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/Samtec/job/oAb123",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/Samtec/job/oAb123?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/Samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/Samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/Samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/Samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "Samtec",
+        "/Samtec/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec-other/jobs",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec-other/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec-other/job/oAb123",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec-other/job/oAb123?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec-other/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec-other/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec-other/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec-other/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jobvite",
+        "https://jobs.jobvite.com",
+        "samtec-other",
+        "/samtec-other/jobs"
+      ],
+      "url": "https://jobs.jobvite.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/v1/companies/BoschGroup/postings",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/v1/companies/BoschGroup/postings",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/v1/companies/BoschGroup/postings?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/v1/companies/BoschGroup/postings?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "SmartRecruiters",
+        "https://api.smartrecruiters.com",
+        "BoschGroup",
+        "/v1/companies/BoschGroup/postings"
+      ],
+      "url": "https://api.smartrecruiters.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/api/jobs",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/api/jobs",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/api/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/api/jobs?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Jibe",
+        "https://test.jibeapply.com",
+        "test",
+        "/api/jobs"
+      ],
+      "url": "https://test.jibeapply.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/v1/x",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/v1/x",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/v1/x?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/v1/x?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ClearCompany",
+        "https://careers-api.clearcompany.com",
+        "x",
+        "/v1/x"
+      ],
+      "url": "https://careers-api.clearcompany.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/example",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/example",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/example?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/example?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Workable",
+        "https://apply.workable.com",
+        "example",
+        "/example"
+      ],
+      "url": "https://apply.workable.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/jobs",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/jobs",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/jobs?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Pinpoint",
+        "https://test.pinpointhq.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.pinpointhq.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/apply",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/apply",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/apply?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/apply?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "JazzHR",
+        "https://test.applytojob.com",
+        "test",
+        "/apply"
+      ],
+      "url": "https://test.applytojob.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/test/client/jobs",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/test/client/jobs",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/test/client/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/test/client/jobs?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Dayforce",
+        "https://jobs.dayforcehcm.com",
+        "test/client",
+        "/test/client/jobs"
+      ],
+      "url": "https://jobs.dayforcehcm.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/test/jobs",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/test/jobs",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/test/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/test/jobs?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Rippling",
+        "https://ats.rippling.com",
+        "test",
+        "/test/jobs"
+      ],
+      "url": "https://ats.rippling.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/jobs/test",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/jobs/test",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/jobs/test?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/jobs/test?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Comeet",
+        "https://www.comeet.com",
+        "test",
+        "/jobs/test"
+      ],
+      "url": "https://www.comeet.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/jobs/",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/jobs/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/jobs/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/jobs/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "ApplicantPro",
+        "https://test.applicantpro.com",
+        "test",
+        "/jobs/"
+      ],
+      "url": "https://test.applicantpro.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Breezy HR",
+        "https://test.breezy.hr",
+        "test",
+        "/"
+      ],
+      "url": "https://test.breezy.hr/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/career/CareerHome.action",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/career/CareerHome.action",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/career/CareerHome.action?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/career/CareerHome.action?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "Paycor Recruiting",
+        "https://recruitingbypaycor.com",
+        "test",
+        "/career/CareerHome.action"
+      ],
+      "url": "https://recruitingbypaycor.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/jobs",
+      "payload": null,
+      "expected": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/jobs",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/jobs?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/jobs?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/samtec/search",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/samtec/search",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/samtec/search?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/samtec/search?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/samtec/search/",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/samtec/search/",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/samtec/search/?p=1",
+      "payload": null,
+      "expected": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "board": [
+        "isolved",
+        "https://test.isolvedhire.com",
+        "test",
+        "/jobs"
+      ],
+      "url": "https://test.isolvedhire.com/samtec/search/?p=1",
+      "payload": {},
+      "expected": false,
+      "actual": false,
+      "pass": true
+    }
+  ],
+  "boundary": "In-memory guard proposal only; no network, source edits, or integration claim."
+}

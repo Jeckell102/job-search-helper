@@ -1,0 +1,12 @@
+{
+  "author": "Jetson qwen-wrapper:4b, thinking enabled",
+  "classification": "AI-selected configuration, host-authored trusted compiler",
+  "response_sha256": "927d682b9477ccbec7a94f6ccba1f1f7236f8f1e6c5844b6ab0825093688991d",
+  "usage": {
+    "done_reason": "stop",
+    "prompt_eval_count": 740,
+    "eval_count": 561
+  },
+  "tools_executed": false,
+  "identity_is_host_bound": true
+}

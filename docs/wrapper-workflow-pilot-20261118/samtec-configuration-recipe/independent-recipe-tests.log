@@ -1,0 +1,11 @@
+test_actual_receipt_selection_deterministically_builds_identical_output (__main__.IndependentRecipeTests) ... ok
+test_exact_base_hash_required (__main__.IndependentRecipeTests) ... ok
+test_helper_tamper_rejected (__main__.IndependentRecipeTests) ... ok
+test_only_bound_guard_and_samtec_helper_dispatch_added (__main__.IndependentRecipeTests) ... ok
+test_raw_json_duplicate_keys_size_and_nonobject_rejected (__main__.IndependentRecipeTests) ... ok
+test_strict_unknown_missing_wrong_and_code_values (__main__.IndependentRecipeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.097s
+
+OK

@@ -1,0 +1,26 @@
+{
+  "recipe_version": "samtec-public-html-v1",
+  "authorship": "Python recipe and listing/transport implementation are host-written. AI selected bounded evidence IDs; the previously approved route patch remains AI-authored.",
+  "binding": {
+    "company_id": "COMP-0739",
+    "company": "Samtec",
+    "ats": "Jobvite",
+    "host": "jobs.jobvite.com",
+    "slug": "samtec"
+  },
+  "selected_evidence": {
+    "listing": "full_search",
+    "container": "job_list",
+    "pagination": "next_link",
+    "range": "displayed_range"
+  },
+  "selection_sha256": "8d29e2db6a5f2f5bd49cbcc9fe64f1ad72a5e517293a5e40b0f2de03515460d7",
+  "source_sha256": "f14ccecd76181d183f29c46e281514f6606cc17e1d3b892323cc36850c6924ab",
+  "helper_sha256": "dd4482b25bc02b9d6b8e3ac6031162912b00ab16c8a2d1459f0efc8f02117487",
+  "output_sha256": "1bb6a807ca3e6356be29385d0ab3346dd94ef7fa81332a95d98de6a5f26258ef",
+  "target_path": "src/job_search_helper/shared_boards.py",
+  "installed": false,
+  "live_validated": false,
+  "ai_selection_response_path": "/home/chris/job-search-helper_old/temp/pilot-samtec-20261118/recipe-selection-1/response.json",
+  "ai_selection_response_sha256": "927d682b9477ccbec7a94f6ccba1f1f7236f8f1e6c5844b6ab0825093688991d"
+}

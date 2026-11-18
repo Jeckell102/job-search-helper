@@ -1,0 +1,11 @@
+{
+  "saved_public_pages": 3,
+  "jobs": 148,
+  "exact_observed_ids_match": true,
+  "calls": [
+    "https://jobs.jobvite.com/samtec/search",
+    "https://jobs.jobvite.com/samtec/search/?p=1",
+    "https://jobs.jobvite.com/samtec/search/?p=2"
+  ],
+  "live_detail_validation": false
+}

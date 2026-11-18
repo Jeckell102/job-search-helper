@@ -1,0 +1,46 @@
+{
+  "result": "PASS_CONFIGURATION_SELECTION_ONLY",
+  "independent": true,
+  "request_sha256": "193811d0591e366f7c64975a6c1af2a07e36499ad5cd2c42a7c05832934eef60",
+  "response_sha256": "927d682b9477ccbec7a94f6ccba1f1f7236f8f1e6c5844b6ab0825093688991d",
+  "public_evidence_sha256": "042555212cbf0e04d20dd74520f068944272bca3bdee0624eb0d5b41c77e61d6",
+  "selected": {
+    "listing": "full_search",
+    "container": "job_list",
+    "pagination": "next_link",
+    "range": "displayed_range"
+  },
+  "pages": [
+    {
+      "sha256": "8fe2f22e5310db3e9238334060ac7919ae26f4fa7d91b8b2044d7bdd39b183ea",
+      "range": [
+        "1-50 of 148"
+      ],
+      "unique_jobs": 50,
+      "next": [
+        "https://jobs.jobvite.com/samtec/search/?p=1"
+      ]
+    },
+    {
+      "sha256": "d9bf60ef5f3dde91ccd756c064693828712849aa49ddf7d1789d562f76dd138e",
+      "range": [
+        "51-100 of 148"
+      ],
+      "unique_jobs": 50,
+      "next": [
+        "https://jobs.jobvite.com/samtec/search/?p=2"
+      ]
+    },
+    {
+      "sha256": "c88d0f84c0362aaf61383127ef59b4392e2e61b22e47b4158730b5ec35ff19ac",
+      "range": [
+        "101-148 of 148"
+      ],
+      "unique_jobs": 48,
+      "next": []
+    }
+  ],
+  "unique_observed_jobs": 148,
+  "source_files_written": false,
+  "boundary": "Selection matches independently parsed saved public HTML. No code compilation, live scraper validation, installation, or autonomous coding claim."
+}
