@@ -1,0 +1,30 @@
+{
+  "result": "PASS",
+  "independent": true,
+  "reviewer": "final_v3_review",
+  "manifest_digest": "245d082e77390f61675892c4ee333a1043aed309242eb514a5ddfad6bc0a0ab3",
+  "scope": "Independent installed coordinator QA; scheduling remains OFF; live scraper validation and generated-wrapper installation are separate gates",
+  "installed_tests": 287,
+  "installed_tests_seconds": 52.894,
+  "staged_qa": "PASS",
+  "production_mutations_by_reviewer": 0,
+  "live_inference_calls_by_reviewer": 0,
+  "github_source_parity": "PASS_PER_COORDINATING_REVIEWER_EVIDENCE",
+  "final_report_backup": "PENDING_FINAL_REPORT_PUBLICATION",
+  "reviewed_at_utc": "2026-11-18T20:55:58.366782+00:00",
+  "evidence_sha256": {
+    "FINAL_STAGED_QA_V3.json": "3d3ceef6de03370114c44fd2556b4bd740c33b5f7249958d7c2a135d0549d95a",
+    "installed-v3-independent-verification.json": "be88040269c7a4f3f6830f6829ccee6c2ab8e90e6878b0e98e2df95767e8cd50",
+    "verify_installed_v3_independent.py": "8214ab71268fe55fb69483b22ec2c7373298f25647ed94b5c724e7d7c73ea12a",
+    "installed-v3-host-suite.log": "26f411079003efdf2df9ff20b3cff8b7bc2e27990f92c4aaeadc5e1c1456c318",
+    "github-v3-source-parity.json": "481faa087e038e9c1128503c0c738d98e90aee5ea1157bb243ae500227702d3b"
+  },
+  "archive_evidence_sha256": {
+    "journal.json": "b13a8e03d03d0b19018d9f694799c13a7c13a115c3c8b65bad732512d1bbd3cc",
+    "migration.json": "dd4f1284f400b1659be72a7bdce041961cea27274b614ddafec6342fb689c717",
+    "rehearsal.json": "dd4f1284f400b1659be72a7bdce041961cea27274b614ddafec6342fb689c717",
+    "stopped-verification.json": "f6c59d170ef1b4deaf1d7be035eb9cddd984386a07c723b9b88cb80491c62b59",
+    "running-verification.json": "ade8b144e2882b168899dbf64c090405f4db0db4170eaad1c65c7c70535c13ff",
+    "reviewed-binding.json": "1f8dfed755e54dfa1c045961288c018cf2927e50d37c3c908e59f9ac3773d797"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "result": "PASS",
+  "independent": true,
+  "manifest_digest": "245d082e77390f61675892c4ee333a1043aed309242eb514a5ddfad6bc0a0ab3",
+  "verified_at_utc": "2026-11-18T20:54:10.774329+00:00",
+  "installed_trees_exact": true,
+  "source_files": 67,
+  "prerequisite_files": 682,
+  "service": {
+    "MainPID": "554281",
+    "ActiveState": "active",
+    "SubState": "running",
+    "UnitFileState": "enabled"
+  },
+  "health": {
+    "ok": true,
+    "status": "healthy",
+    "worker_alive": true,
+    "authoritative_state": "SQLite",
+    "snapshot_errors": {},
+    "control_failures": 0,
+    "control_error": "",
+    "fatal_error": "",
+    "text": "Coordinator healthy; worker alive: True; snapshot failures: 0."
+  },
+  "single_owner": true,
+  "paused": {
+    "digest": "8066ae82dc442027587724f7dff9453c42c90ce31fbe07d26e775d1fc2c40ecf",
+    "controls": {
+      "autopilot_enabled": false,
+      "pilot_task": null,
+      "queue_enabled": false
+    },
+    "task_count": 111,
+    "integrity": "ok"
+  },
+  "migration_equals_rehearsal": true,
+  "startup_database_equals_stopped_and_rehearsal": true,
+  "reviewed_members": 102,
+  "registry_rows": 102,
+  "identities_and_baselines_valid": true,
+  "nonmember_tasks_preserved": 9,
+  "budgets_and_historical_receipts_preserved": true,
+  "remote_forwarder_sha256": "0bdef715ad92b7f9a7d571ed42b98c3c18df0ea819e23ce5dcf167483f7ab11f",
+  "service_units_unchanged": true,
+  "journal_phase": "INSTALLED_PAUSED",
+  "production_mutations": 0,
+  "live_inference_calls": 0,
+  "deployment_pending_marker_cleared": true
+}

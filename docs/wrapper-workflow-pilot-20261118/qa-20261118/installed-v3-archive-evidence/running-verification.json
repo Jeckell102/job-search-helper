@@ -1,0 +1,22 @@
+{
+  "healthy": true,
+  "live_inference_performed": false,
+  "paused": {
+    "controls": {
+      "autopilot_enabled": false,
+      "pilot_task": null,
+      "queue_enabled": false
+    },
+    "digest": "8066ae82dc442027587724f7dff9453c42c90ce31fbe07d26e775d1fc2c40ecf",
+    "integrity": "ok",
+    "task_count": 111
+  },
+  "result": "PASS",
+  "service": {
+    "ActiveState": "active",
+    "MainPID": "554281",
+    "SubState": "running",
+    "UnitFileState": "enabled"
+  },
+  "single_owner": true
+}

@@ -1,0 +1,10 @@
+{
+  "controls": {
+    "autopilot_enabled": false,
+    "pilot_task": null,
+    "queue_enabled": false
+  },
+  "digest": "8066ae82dc442027587724f7dff9453c42c90ce31fbe07d26e775d1fc2c40ecf",
+  "integrity": "ok",
+  "task_count": 111
+}

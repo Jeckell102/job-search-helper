@@ -1,0 +1,9 @@
+{
+  "result": "PASS",
+  "commit": "b1b48d7f7a9481ccc3ee65d1c8a027a8a52b59de",
+  "remote_tracking_commit": "b1b48d7f7a9481ccc3ee65d1c8a027a8a52b59de",
+  "source_files_verified": 67,
+  "installed_host_and_mirror_files_verified": 60,
+  "scope": "Git source bytes match approved manifest and installed host/mirror; runtime dependencies checked separately by installed QA",
+  "no_credentials_or_runtime_databases_added": true
+}
