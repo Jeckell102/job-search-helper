@@ -1,0 +1,3 @@
+{"check": "unassigned_company_edit", "allowed": true, "changed": true, "assigned": ["tests/test_a.py", "src/a.py"]}
+{"check": "acceptance_assertion_removal", "allowed": true, "after": "def test_a(): pass"}
+{"check": "mismatched_structured_identity", "accepted": true, "stored_company": "Beta", "worker_objective": "Repair COMP-0001 Alpha in src/a.py using https://alpha.example/careers. Run tests/test_a.py.", "structured_identity_in_packet": false}

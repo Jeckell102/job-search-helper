@@ -1,0 +1,4 @@
+{"paused_task_selected": true, "selected_status": "QUEUED", "stop_requested_after": false, "stop_requested_before": true}
+{"contradictory_identity_accepted": true, "objective": "Develop COMP-0001 Correct Company at https://correct.example/jobs. Inspect src/a.py. Run tests/test_a.py.", "structured_identity": {"company": "Different Company", "company_id": "COMP-9999", "configured_url": "https://different.example/jobs", "source_targets": ["src/a.py"], "tests": ["tests/test_a.py"]}}
+{"company_ids": ["COMP-0001", "COMP-0001"], "duplicate_company_tasks": ["WRAP-f6960b22ed", "WRAP-4141d75ed0"], "task_count": 2}
+{"campaign_selection_while_direct_queued": null, "campaign_task_remained": "PAUSED", "claimed_task": "WRAP-1e24994d89", "claimed_unrelated_direct_task": true}

@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-18",
+  "verdict": "NOT_READY_FOR_UNATTENDED_CAMPAIGN",
+  "review_type": "read_only_production_with_isolated_fault_reproductions",
+  "existing_test_executions_passed": 144,
+  "production_controls": {
+    "queue_enabled": false,
+    "autopilot_enabled": false,
+    "pilot": null,
+    "active_tasks": 0,
+    "eligible_untouched_integrations": 102
+  },
+  "database_quick_check": "ok",
+  "unfinished_tool_receipts": 0,
+  "deployed_staged_backup_host_files_match": true,
+  "reviewed_remote_commit": "89a563dc7cf2105d3470bff10bfed7e93ca08d5b",
+  "production_modified": false,
+  "new_live_inference_or_integration_executed": false,
+  "limitations": [
+    "Live validation and production installation remain operator gates",
+    "Existing tests use simulated model responses; no new company was executed",
+    "Fresh contexts and normal service process lock passed; campaign controls did not clear QA"
+  ],
+  "artifacts": {
+    "QA_ASSESSMENT.md": "c74419e08ec71248206ec0a4175079f8d3e1713825d179fa1de3b3f943adc1b1",
+    "campaign-results.jsonl": "4941d3dd73a3c4c6ecc7cdb24c39ce5c9774476fdb11527d4b82e8ecf4604995",
+    "check_campaign.py": "17f7b1c6499e3e4d4f2b5098d175bde5ff37200c827da82b56db695d7cd8d6fc",
+    "check_process_lock.py": "659295beb0d369a63a69b7ed5f3997e01af51f3eedc7f12870cb89089b456a12",
+    "check_scheduler.py": "8626a1b3b42924ab70920b0fd95c8e9856eafc8010843e174439857e2a944e8f",
+    "check_scope_and_identity.py": "91eccdcd5bfe215cd7d9d73b68f3edf9286e47cf335f6b7d08e27f721886f5d3",
+    "scheduler-results.json": "2f21592f67b892f585bf190f7556b369268b5e52392ab8b6e02195b9be26420e",
+    "scope-identity-results.jsonl": "8cae63ebccba5e942454efcd6643ff0d2615723d13121b10ae57f84e46a872fc"
+  }
+}

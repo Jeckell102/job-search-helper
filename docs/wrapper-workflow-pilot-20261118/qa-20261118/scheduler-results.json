@@ -1,0 +1,50 @@
+{
+  "pause_before_model_dispatch": {
+    "calls_counter": 1,
+    "final_status": "PAUSED",
+    "model_calls": [
+      {
+        "limit": 2000,
+        "state_at_dispatch": "PAUSING",
+        "stop_requested": true
+      }
+    ],
+    "pause_result_status": [
+      "PAUSING"
+    ],
+    "task": "WRAP-471a88482f"
+  },
+  "pilot_autopilot_race": {
+    "autopilot_command": {
+      "autopilot": true,
+      "enabled": true,
+      "ok": true,
+      "pilot": null
+    },
+    "final": {
+      "autopilot": true,
+      "pilot": "WRAP-14d78440b0",
+      "queue": true,
+      "task_status": "QUEUED"
+    },
+    "pilot_thread_errors": [],
+    "task": "WRAP-14d78440b0"
+  },
+  "rejected_pilot_keeps_slot": {
+    "errors": {
+      "autopilot-start": "Stop the single-company pilot before starting the backlog autopilot.",
+      "pilot-start": "Task budget exhausted. Review the checkpoint and start a new bounded assignment.",
+      "queue-resume": "Stop the single-company pilot before resuming the global queue."
+    },
+    "pilot_remains_set": true,
+    "task_status": "PAUSED"
+  },
+  "run_bypasses_scheduler_lock": {
+    "contender_visited": [
+      "WRAP-c88e0b376a"
+    ],
+    "final_status": "PAUSED_BLOCKED",
+    "holder_thread_alive": true,
+    "task": "WRAP-c88e0b376a"
+  }
+}
