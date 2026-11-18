@@ -1,0 +1,14 @@
+{
+  "result": "PASS_FOCUSED_INDEPENDENT",
+  "independent": true,
+  "tests_passed": 7,
+  "seconds": 0.018,
+  "hashes": {
+    "host/public_web_types.py": "03ee9a4cccf327f56dd3e7a0f6781184dd189c8fed110f23aefceb4160d92237",
+    "host/public_web.py": "7dff780405d42743932852dfe40538cb9a6c205c57faf21fe884d33113ebf117",
+    "host/coordinator_workflow.py": "4cad5294829ee212fa4b2da40dbefcddff45a52559b5a3baffc26db5d4202d6c",
+    "host/coordinator.py": "446ad58166a9769649106f886feb701c8b0223d541e7394b8fb93135e106f572",
+    "qa_tests/test_structure_boundaries.py": "cbb2bd52f08da80e23bf7bb1b6cf7adcd01db6551ed7824e80650ed324c66a49"
+  },
+  "scope": "Raw source HTML attributes and bounded packet representation; no rendered DOM or inventory certification."
+}

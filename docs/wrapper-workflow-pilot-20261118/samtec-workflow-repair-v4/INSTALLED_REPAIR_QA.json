@@ -1,0 +1,49 @@
+{
+  "result": "PASS",
+  "independent": true,
+  "manifest_digest": "d58edd548fecb24db53faa73596f604e4d3dfdd528639560ef3a7238392f5319",
+  "installed_parity": "exact tools and jetson mirror metadata",
+  "database": {
+    "digest": "6b25d317f223cb254075333e81fa159317ca19d323bd9f661eb522a072ff0740",
+    "controls": {
+      "autopilot_enabled": false,
+      "control_generation": 67,
+      "pilot_task": null,
+      "queue_enabled": false
+    },
+    "task_count": 114,
+    "integrity": "ok"
+  },
+  "database_identical_to_preinstall_backup": true,
+  "table_counts": {
+    "batches": 4,
+    "campaign_company_registry": 102,
+    "campaign_seals": 0,
+    "campaign_snapshots": 0,
+    "campaigns": 0,
+    "inference_receipts": 13,
+    "receipts": 211,
+    "settings": 4,
+    "tasks": 114
+  },
+  "health": {
+    "ok": true,
+    "status": "healthy",
+    "worker_alive": true,
+    "authoritative_state": "SQLite",
+    "snapshot_errors": {},
+    "control_failures": 0,
+    "control_error": "",
+    "fatal_error": "",
+    "text": "Coordinator healthy; worker alive: True; snapshot failures: 0."
+  },
+  "service": {
+    "MainPID": "569177",
+    "ActiveState": "active",
+    "SubState": "running",
+    "UnitFileState": "enabled"
+  },
+  "journal_phase": "INSTALLED_PAUSED",
+  "live_inference_performed": false,
+  "archive": "/home/chris/job-search-helper_old/dev/wrapper-coder/repairs/samtec-workflow-v4-rollout-20261118"
+}

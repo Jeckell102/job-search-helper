@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "independent": true,
+  "manifest_digest": "d58edd548fecb24db53faa73596f604e4d3dfdd528639560ef3a7238392f5319",
+  "source_count": 72,
+  "prerequisite_count": 682,
+  "full_suite": {
+    "passed": 320,
+    "seconds": 26.75,
+    "log_sha256": "2954109be3095782aba27a1efd6df28b3d2e6be1f1ee780c21afa15e43a8ae1e"
+  },
+  "independent_focused_tests": 7,
+  "reviewed_hashes": {
+    "host/public_web_types.py": "03ee9a4cccf327f56dd3e7a0f6781184dd189c8fed110f23aefceb4160d92237",
+    "host/public_web.py": "7dff780405d42743932852dfe40538cb9a6c205c57faf21fe884d33113ebf117",
+    "host/coordinator_workflow.py": "4cad5294829ee212fa4b2da40dbefcddff45a52559b5a3baffc26db5d4202d6c",
+    "host/coordinator.py": "446ad58166a9769649106f886feb701c8b0223d541e7394b8fb93135e106f572",
+    "qa_tests/test_structure_boundaries.py": "cbb2bd52f08da80e23bf7bb1b6cf7adcd01db6551ed7824e80650ed324c66a49"
+  },
+  "protected_rollout_unchanged": true,
+  "empty_migration_inputs": true,
+  "limitations": [
+    "Staged candidate only, no installed or live integration certification."
+  ]
+}

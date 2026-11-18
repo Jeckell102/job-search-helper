@@ -1,0 +1,111 @@
+{
+  "simulation_only": true,
+  "packet_chars": 11852,
+  "items": [
+    {
+      "arguments": {
+        "path": "docs/backlog/COMP-0739.md",
+        "start_line": 1
+      },
+      "has_guard": true,
+      "has_resolver": false,
+      "html_structure": null
+    },
+    {
+      "arguments": {
+        "url": "https://jobs.jobvite.com/samtec/search"
+      },
+      "has_guard": false,
+      "has_resolver": false,
+      "html_structure": {
+        "kind": "source_html_attributes",
+        "complete": true,
+        "truncated": false,
+        "verified_inventory": false,
+        "warning": "Untrusted source HTML attributes, not rendered DOM. Truncated structure cannot prove absence; structure never proves complete job inventory.",
+        "classes": [
+          "jv-job-list",
+          "jv-job-list-location",
+          "jv-job-list-name",
+          "jv-page-search",
+          "jv-pagination",
+          "jv-pagination-next",
+          "jv-pagination-text",
+          "jv-search-filter",
+          "jv-search-list",
+          "icon",
+          "icon-arrow3",
+          "icon-powered-by",
+          "jv-cws-sr-only",
+          "jv-desktop",
+          "jv-footer",
+          "jv-logo",
+          "jv-meta",
+          "jv-page",
+          "jv-page-body",
+          "jv-page-container",
+          "jv-page-content",
+          "jv-page-header",
+          "jv-powered-by",
+          "jv-text-center",
+          "jv-wrapper",
+          "lightbox",
+          "no-js",
+          "orange"
+        ],
+        "ids": [
+          "jualightbox",
+          "jv-TPWMessage",
+          "jv-TPWTitle",
+          "jv-widgetContainer"
+        ],
+        "forms": [],
+        "pagination": [
+          {
+            "url": "https://jobs.jobvite.com/samtec/search/?p=1",
+            "text": "Next",
+            "rel": "",
+            "aria_label": "",
+            "class": "jv-pagination-next"
+          }
+        ]
+      }
+    },
+    {
+      "arguments": {
+        "path": "src/job_search_helper/shared_boards.py",
+        "start_line": 565
+      },
+      "has_guard": true,
+      "has_resolver": false,
+      "html_structure": null
+    },
+    {
+      "arguments": {
+        "path": "src/job_search_helper/shared_boards.py",
+        "start_line": 117
+      },
+      "has_guard": false,
+      "has_resolver": true,
+      "html_structure": null
+    },
+    {
+      "arguments": {
+        "path": "tests/test_shared_boards.py",
+        "start_line": 1
+      },
+      "has_guard": false,
+      "has_resolver": false,
+      "html_structure": null
+    },
+    {
+      "arguments": {
+        "path": "src/job_search_helper/ats.py",
+        "start_line": 60
+      },
+      "has_guard": false,
+      "has_resolver": false,
+      "html_structure": null
+    }
+  ]
+}
