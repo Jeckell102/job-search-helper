@@ -1,0 +1,47 @@
+{
+  "result": "PASS_FINAL_INSTALLED_QA",
+  "independent": true,
+  "utc": "2026-11-18T23:06:48.568448+00:00",
+  "installed_sha256": "2c08149e746b98f970d6ed98f2944dde3c51db0e3cb4b2f69c728b7a3c706847",
+  "all_source_files_match_live_snapshot": true,
+  "source_count": 185,
+  "backup_sha256": "f8ae5b420e11623e88dab381f8de19f069bad4ab6be341dff2845800b88391cf",
+  "install_receipt_sha256": "c40edb02bfc5054480160093db49eab7dfb4c5f451c1fb0de6c4bbb0818c88d9",
+  "installed_tests": [
+    {
+      "path": "/home/chris/job-search-helper_old/tests/test_shared_boards.py",
+      "count": 16,
+      "log_sha256": "a8528a9e0e25f035f73dba2ec229f1fa9b7740bd10a85d02751f63d4e8f45195"
+    },
+    {
+      "path": "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/pilot-samtec-20261118/test_samtec_pagination_independent.py",
+      "count": 19,
+      "log_sha256": "27ea101839400a591239a96f4b99cf545a140382ec0eb0148f23ff25e89fefa5"
+    },
+    {
+      "path": "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/pilot-samtec-20261118/test_samtec_html_boundaries_independent.py",
+      "count": 10,
+      "log_sha256": "658ee8f6638e043f6c54394b34e4db8d602800e29e7a22d408d54348127930fd"
+    },
+    {
+      "path": "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/pilot-samtec-20261118/test_samtec_real_details_independent.py",
+      "count": 15,
+      "log_sha256": "bd72b64afdda1b1b9ba757490855544a04d9b65926e56f4f2a67f7f1ff089c4f"
+    }
+  ],
+  "installed_test_count": 60,
+  "controls": {
+    "autopilot_enabled": false,
+    "control_generation": 77,
+    "pilot_task": null,
+    "queue_enabled": false
+  },
+  "campaign_enabled_effective": false,
+  "database_integrity": "ok",
+  "task_count": 114,
+  "database_digest": "97c498c1ce067c78e271735a54dadbb5b78c5e9bab349974ca3ec3f474503ca8",
+  "limitations": [
+    "Two successful live runs were against an isolated exact source snapshot. Installed checks were offline; all185 installed source hashes match that live snapshot.",
+    "No queue enablement, Sheet publication or additional inference/network requests performed."
+  ]
+}

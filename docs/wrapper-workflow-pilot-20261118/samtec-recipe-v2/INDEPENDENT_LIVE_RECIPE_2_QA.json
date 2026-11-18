@@ -1,0 +1,36 @@
+{
+  "result": "PASS_INDEPENDENT_LIVE_QA",
+  "independent": true,
+  "candidate_sha256": "2c08149e746b98f970d6ed98f2944dde3c51db0e3cb4b2f69c728b7a3c706847",
+  "live_report_sha256": "0e08438c13877af39a3ca28a02ce3f835463f2262c470db3f057209671648bc0",
+  "invocation_sha256": "f6efb3bc08193c43cfc15919f0dc4605462a59bf26126ec5daa150adc387b68f",
+  "source_files_verified": 185,
+  "passes": [
+    {
+      "pass": 1,
+      "jobs": 148,
+      "requests": 154,
+      "listing_pages": 3,
+      "listing_reads_per_page": 2,
+      "fresh_detail_reads": 148,
+      "full_description_matches": 148,
+      "inventory_sha256": "68ab0fcf27a738a32bc94464e2a1269d17276b689882559472f7a9113a2b3eb0"
+    },
+    {
+      "pass": 2,
+      "jobs": 148,
+      "requests": 154,
+      "listing_pages": 3,
+      "listing_reads_per_page": 2,
+      "fresh_detail_reads": 148,
+      "full_description_matches": 148,
+      "inventory_sha256": "f9b7982e898d80fd3a57b060e78f4c21ac82e268c9129fffea4c47a188cad18e"
+    }
+  ],
+  "unique_public_jobs": 148,
+  "total_captured_requests": 308,
+  "production_transport": "Normal ats.fetch_inventory with no injected transport. Observer delegates unchanged to original shared_boards.Transport.request.",
+  "public_reconciliation": "Independent saved public listing IDs and every captured full HTML description, title, location and department checked again offline. No new requests.",
+  "scope": "All public Samtec postings before personal filtering. Isolated candidate only, not installed or published.",
+  "authorship": "AI selected bounded configuration IDs; trusted host-written Python recipe generated listing and transport code."
+}

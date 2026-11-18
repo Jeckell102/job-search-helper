@@ -1,0 +1,20 @@
+{
+  "purpose": "Test reviewed Samtec change atop current production source; no production writes",
+  "files": [
+    {
+      "path": "src/job_search_helper/ats.py",
+      "previous_candidate_sha256": "ebc4014f02f196bde59742e4bb6295d4760cf4cf1e10b60979e5b56feefa47d8",
+      "current_main_sha256": "71df6c2590034708e5801156b6abf6d6e0b3d2dcdf6a918770241e53d83fe4df"
+    },
+    {
+      "path": "src/job_search_helper/scrape_first_pass.py",
+      "previous_candidate_sha256": "717b26accd316b8707432c59a5cb451f3f531767e4bc520fe3763ea6f92afa02",
+      "current_main_sha256": "9b7709a83754b2eb49322bc76b1e921d7a3e0aba598dd4b56fb7f2cd18a3ca94"
+    },
+    {
+      "path": "src/job_search_helper/videoray.py",
+      "previous_candidate_sha256": "665ee2cb4b7f21568d2fe3afbf86f9c97646690733624545040bda2499fde4cf",
+      "current_main_sha256": "bbd335f2322140639decd49146254747190436186c4aa47cf53cb67cdc1bd8f7"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "utc": "2026-11-18T23:04:52.340261+00:00",
+  "main_before": "f8ae5b420e11623e88dab381f8de19f069bad4ab6be341dff2845800b88391cf",
+  "candidate_sha256": "2c08149e746b98f970d6ed98f2944dde3c51db0e3cb4b2f69c728b7a3c706847",
+  "live_report_sha256": "0e08438c13877af39a3ca28a02ce3f835463f2262c470db3f057209671648bc0",
+  "final_qa_sha256": "772a75591d84587125724f65062a302513b4b1ade0d06dc6ab02e7f9907a13cf",
+  "installed": true,
+  "rollback": false,
+  "tests": [
+    {
+      "path": "/home/chris/job-search-helper_old/tests/test_shared_boards.py",
+      "sha256": "c6f43b04e5ae26b0185b34f453154e80430f2515ac24ac43266ca55219987d5f",
+      "exit_code": 0,
+      "log": "test-1.log"
+    },
+    {
+      "path": "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/pilot-samtec-20261118/test_samtec_pagination_independent.py",
+      "sha256": "d0fb96c22446fcb5e048ebf9666e645ce6196297f3ca6027f7cd3ad61f8ee105",
+      "exit_code": 0,
+      "log": "test-2.log"
+    },
+    {
+      "path": "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/pilot-samtec-20261118/test_samtec_html_boundaries_independent.py",
+      "sha256": "8462a5fbf0e2fe6e2de26b2e43e7e79e4154d83e5acacda69cdd21e0ae6ca6c0",
+      "exit_code": 0,
+      "log": "test-3.log"
+    },
+    {
+      "path": "/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/pilot-samtec-20261118/test_samtec_real_details_independent.py",
+      "sha256": "064c687d8164ebf485a35f160bae7e1c322f4ab80f719f04e186bcc2aec76918",
+      "exit_code": 0,
+      "log": "test-4.log"
+    }
+  ],
+  "result": "PASS_INSTALLED_OFFLINE_VERIFICATION"
+}
