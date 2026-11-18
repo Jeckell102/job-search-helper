@@ -2,6 +2,49 @@
 
 Prepared 2026-11-18. This is a development plan, not activation of unattended work.
 
+## Coordinator restart card — maintain at every checkpoint
+
+**Role:** You are the senior engineering coordinator and release owner for Job Search Helper integration automation. You own this roadmap, task assignments, evidence review and completion decisions. Implementation workers own bounded changes; an independent QA worker verifies acceptance. Keep Jetson inference to one lane.
+
+**Current project status:** PLANNED — this development project has not been started by preparation of this handoff. The preceding Samtec pilot is complete; it does not complete this roadmap. Verify live state before assuming these facts remain current.
+
+**Current focus:** Milestone 1, the complete company-only scrape-to-storage path. First inspect the current repository, active scrape/writer locks, coordinator controls and saved receipts; then identify the smallest implementation gap.
+
+**Active development workers:** None assigned by this handoff. Discover any surviving workers or processes before assigning new work.
+
+**Last verified baseline:** Samtec pilot passed two 148-job live inventories and 60 installed tests on 2026-11-18. Pilot implementation and QA were backed up through commit `5dc9511`; the initial automation roadmap was backed up in `042d3f9` on `backup/wrapper-pilot-20261118`. Counts, installed hashes and queue controls require fresh verification. The pilot did not prove the complete company-event-to-normal-storage chain.
+
+**Immediate next action:** Start or resume a persistent goal whose objective is all six milestones below; reconcile current state and assign independent implementation and QA work for Milestone 1. Do not reopen the completed pilot goal or substitute another objective silently.
+
+**Goal and timer:** Record the actual goal ID/status and start time here when created. No arbitrary token or elapsed-time limit is requested. Track elapsed time. Keep per-attempt resource limits separate from the overall development goal.
+
+**Pending decisions/blockers:** No implementation blocker established yet. The authoritative intake source and safe scheduling boundary must be confirmed from current code/configuration. External site blocks are explicit exceptions, not proof of broken code.
+
+**Resume instructions:** Read this card and the current milestone's acceptance gate. Verify active owners, processes, locks, source hashes and latest receipts. Reconcile unfinished actions before retrying them. Resume the next unmet gate; do not recreate completed work or reset budgets. Update this card with your current coordinator role/focus, assignments, evidence and next action before dispatch and after each meaningful result.
+
+The coordinator maintains this card as a short current snapshot, replacing stale entries rather than appending contradictory current-status paragraphs. Put chronological detail in a separate progress log. After a context reset, rereading this card restores the coordinator's role and current responsibilities; it does not authorize scope expansion or override the user's instructions.
+
+## Development team and execution contract
+
+- The main ChatGPT/Codex agent is the coordinator. Use up to three worker lanes when independent work warrants it and capacity permits: implementation of scraping/intake, implementation of coordinator/repair/release, and independent QA. These are development lanes on the assistant side, not additional Jetson inference lanes. Start fewer workers when dependencies leave no useful parallel work.
+- Assign each worker an ID, role, milestone, owned files/worktree, deliverable, acceptance checks and dependencies. One worker owns any given file at a time. Shared dispatcher/schema edits have one explicit owner; other workers supply findings or patches for integration.
+- Keep a task ledger in this folder with status, owner, latest evidence, blocker and next action. Check worker progress at meaningful boundaries and on missed checkpoints; use appropriate waits rather than busy polling. Reassign stale work only after reconciling ownership and unfinished side effects.
+- Give user-facing updates about every five minutes, and promptly for failures, major milestones or required decisions; follow the app's more frequent commentary requirements during active work. Use supported progress automations only when available. A goal timer records persistent intent and elapsed time; do not promise execution while the app/host is unavailable.
+- Persist state after each accepted change or failure and before context exhaustion, pause or handoff. Do not rely on a model recognizing its context limit at the last moment. Save goals, task state and receipts incrementally; never save private chain-of-thought.
+- Keep the development source of truth in this roadmap on MuleLab. All scratch work and receipts belong inside the Job Search Helper development/temp folders. Publish sanitized source, tests and plan updates to GitHub at meaningful checkpoints without committing unrelated dirty files, credentials or private runtime data.
+- Extend the existing Python coordinator. Each runtime company task gets fresh model context; its durable attempts and budgets remain intact. Python controls progress and validation independently of the model.
+- Implementation authorization covers this roadmap, tests, bounded real-company pilot runs, supported normal storage/synchronization and guarded deployment of verified changes. Roll out automatic releases only for families that have passed the defined gates. Do not drain the historical backlog or enable unqualified repair types merely to demonstrate activity.
+- Preserve manual decisions, existing Opportunities, unrelated edits, active scrape cycles and locks. Deliberately broken integrations and synthetic company records belong in isolated test environments, not the production database. Use real eligible companies for scoped production demonstrations.
+- Stop on a user pause. For a genuine external blocker, preserve evidence and continue independent work where possible; if no useful in-scope work remains, report exactly what is blocked and the smallest required user action. Follow the goal tool's rules for terminal status. Never fabricate success to close a timer.
+
+## Development completion contract
+
+The development goal is complete only when all six milestone gates and the end-to-end acceptance demonstration pass for the declared supported integration families; independent final QA approves the actual deployed version; the company-specific scrape-to-storage and synchronization outcomes are verified; restart/duplicate/rollback behavior is tested; operator status/pause/resume documentation is usable; and source, tests, roadmap and QA reports are backed up to GitHub.
+
+A system that correctly holds an externally blocked or unsupported company can pass that exception-handling test. That company itself remains incomplete. Completing this development project does not mean every company in the historical backlog is fixed, or that the Jetson can autonomously invent integrations for arbitrary websites.
+
+If final QA fails, create a new QA report with reproducible findings, severity, affected version and unmet acceptance criteria. Assign new bounded repair tasks and rerun the affected checks plus the final acceptance gates. Do not erase failed reports, lower the gates or count fixture-only success as live delivery.
+
 ## Intended outcome
 
 Adding an active company creates a durable request to scrape only that company. The normal scraper first tries the integrations it already has. When evidence shows that an integration is missing or broken, Python creates a repair task. The Jetson assists with the repair; MuleLab builds and tests it, validates real public jobs, installs the approved version, and runs that company's scraper again. Jobs are saved through the normal Job Search Helper storage and synchronization path.
