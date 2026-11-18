@@ -1,0 +1,84 @@
+diff --git a/src/job_search_helper/ats.py b/src/job_search_helper/ats.py
+--- a/src/job_search_helper/ats.py
++++ b/src/job_search_helper/ats.py
+@@ -892,8 +892,10 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
+         from .machinemetrics import fetch_machinemetrics
+         return fetch_machinemetrics(careers_url, company_id, company, html_transport)
+     if company_id == "COMP-0348" and company.casefold() == "videoray":
++        from .discovery import CareersTransport
+         from .videoray import fetch_videoray
+-        return fetch_videoray(careers_url, company_id, company, transport or HTTPTransport(), html_transport)
++        return fetch_videoray(careers_url, company_id, company, transport or HTTPTransport(),
++                              html_transport or CareersTransport())
+     if company_id == "COMP-0240" and company.casefold() == "komatsu":
+         from .komatsu import fetch_komatsu
+         return fetch_komatsu(careers_url, company_id, company, transport or discovery_transport or HTTPTransport())
+diff --git a/src/job_search_helper/videoray.py b/src/job_search_helper/videoray.py
+--- a/src/job_search_helper/videoray.py
++++ b/src/job_search_helper/videoray.py
+@@ -104,7 +104,13 @@ def _local_jobs(transport):
+ def _attributed_parent(row):
+     values = [row.get(key, "") for key in ("employer", "legal_entity", "organization")]
+     joined = " ".join(text(value) for value in values).casefold()
+-    return "videoray" in joined
++    if "videoray" in joined:
++        return True
++    # AVAV currently omits employer/legal-entity metadata from this tenant's
++    # public details.  Accept only explicit segment/product ownership text; a
++    # free-text mention of VideoRay alone is not attribution.
++    description = text(row.get("description", "")).casefold()
++    return any(marker in description for marker in ("videoray segment", "videoray products"))
+ 
+ 
+ def _deduplicate(local_jobs, parent_jobs):
+diff --git a/tests/test_videoray.py b/tests/test_videoray.py
+--- a/tests/test_videoray.py
++++ b/tests/test_videoray.py
+@@ -1,6 +1,8 @@
+ import copy
+ import json
+ 
++import job_search_helper.ats as ats_module
++import job_search_helper.discovery as discovery_module
+ from job_search_helper.ats import HTTPResponse, fetch_inventory
+ from job_search_helper.videoray import SOURCE, fetch_videoray
+ 
+@@ -56,6 +58,18 @@ def test_parent_roles_require_video_ray_legal_entity_attribution():
+     assert "attribution" in result.reason
+ 
+ 
++def test_parent_role_accepts_explicit_segment_attribution_without_metadata():
++    info = {**detail()["jobPostingInfo"],
++            "jobDescription": "This position supports UXS / VideoRay products."}
++    info.pop("legalEntityName")
++    transport = Transport([HTTPResponse(200, LOCAL_INDEX), HTTPResponse(200, LOCAL_DETAIL),
++                           response({"total": 1, "jobPostings": [listing()], "facets": []}),
++                           response({"jobPostingInfo": info})])
++    result = fetch_videoray(SOURCE, "COMP-0348", "VideoRay", transport)
++    assert result.status == "complete", result.reason
++    assert len(result.jobs) == 1
++
++
+ def test_local_parent_overlap_is_deduplicated_with_parent_canonical_id():
+     transport = Transport([HTTPResponse(200, LOCAL_INDEX), HTTPResponse(200, LOCAL_DETAIL),
+                            response({"total": 1, "jobPostings": [listing()], "facets": []}), response(detail())])
+@@ -76,3 +90,19 @@ def test_normal_dispatch_uses_videoray_adapter():
+     result = fetch_inventory("Workday (shared parent board)", SOURCE, "COMP-0348", "VideoRay", transport)
+     assert result.status == "complete", result.reason
+     assert result.ats == "VideoRay local + AVAV Workday"
++
++
++def test_normal_dispatch_builds_separate_default_transports(monkeypatch):
++    api = Transport([response({"total": 1, "jobPostings": [listing()], "facets": []}), response(detail())])
++    local = Transport([HTTPResponse(200, LOCAL_INDEX), HTTPResponse(200, LOCAL_DETAIL)])
++    monkeypatch.setattr(ats_module, "HTTPTransport", lambda: api)
++    monkeypatch.setattr(discovery_module, "CareersTransport", lambda: local)
++
++    result = fetch_inventory("Workday (shared parent board)", SOURCE, "COMP-0348", "VideoRay")
++
++    assert result.status == "complete", result.reason
++    assert len(result.jobs) == 1
++    assert len(api.posts) == 1
++    assert not local.posts
++    assert not api.responses
++    assert not local.responses

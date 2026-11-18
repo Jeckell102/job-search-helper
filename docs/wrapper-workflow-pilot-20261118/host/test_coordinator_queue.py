@@ -26,6 +26,16 @@ class QueueTests(WorkflowTests):
         self.assertEqual(first['ids'], second['ids'])
         self.assertEqual(self.co.store.get(first['ids'][0])['tokens'], 123)
 
+    def test_first_pilot_start_creates_and_snapshots_isolated_workspace(self):
+        task = self.batch(1)['ids'][0]
+        self.co.store.update(task, status='PAUSED')
+        self.co.command({'action': 'queue-pause'})
+        self.co.command({'action': 'pilot-start', 'id': task})
+        state = self.co.store.get(task)
+        self.assertTrue((self.co.store.base / task / 'repo').is_dir())
+        with workspace(self.co.store, state):
+            self.assertEqual(state['manifest'], c.manifest())
+
     def test_initial_wait_does_not_expire_but_active_pause_does(self):
         task = self.task()
         self.co.store.update(task, created=time.time()-7200)

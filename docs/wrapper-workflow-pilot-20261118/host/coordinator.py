@@ -266,7 +266,11 @@ class Coordinator:
             if (state['sessions'] >= state['max_sessions'] or state['calls'] >= MAX_CALLS or
                     state['tokens'] >= MAX_TOKENS or self.expired(state)):
                 raise ValueError('Task budget exhausted. Review the checkpoint and start a new bounded assignment.')
-            with workspace(self.store, state) if state.get('activated_at') is not None else workspace(self.store, {}):
+            # Imported assignments have no workspace until their first
+            # activation.  Create and fingerprint that isolated checkout here;
+            # fingerprinting the shared compatibility checkout would make the
+            # first worker step pause on a false external-file change.
+            with workspace(self.store, state, create=True):
                 current_manifest = manifest()
                 requirements = build_requirements(state['objective'], state['tests'], code.root())
             changed = bool(state['manifest'] and current_manifest != state['manifest'])
