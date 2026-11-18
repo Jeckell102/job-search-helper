@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-11-18T20:47:05.154400+00:00",
+  "journal_phase": "ROLLED_BACK",
+  "install_error": "ValueError: Database changed during paused service startup",
+  "manifest_digest": "3fb8c7ce00a4bed1ca7a6c93784eba04678552b4b35ca0ad1dcfbf21e919a17f",
+  "tools_match_before": true,
+  "jetson_mirror_matches_before": true,
+  "config_hashes_match_before": true,
+  "paused": {
+    "digest": "77fda4b0f1d2b9af39399898b075735931c8d09c1d245a33158867a3aeb5215f",
+    "controls": {
+      "autopilot_enabled": false,
+      "pilot_task": null,
+      "queue_enabled": false
+    },
+    "task_count": 111,
+    "integrity": "ok"
+  },
+  "database_matches_before": true,
+  "database_matches_backup": true,
+  "durable_pending_exists": false,
+  "scheduler_owner_present": true,
+  "service": {
+    "MainPID": "551967",
+    "ActiveState": "active",
+    "SubState": "running",
+    "UnitFileState": "enabled"
+  },
+  "health": {
+    "ok": true,
+    "status": "healthy",
+    "worker_alive": true,
+    "authoritative_state": "SQLite",
+    "snapshot_errors": {},
+    "control_failures": 0,
+    "control_error": "",
+    "fatal_error": "",
+    "text": "Coordinator healthy; worker alive: True; snapshot failures: 0."
+  },
+  "remote_jetson_sha256": "0bdef715ad92b7f9a7d571ed42b98c3c18df0ea819e23ce5dcf167483f7ab11f",
+  "live_units_match_before": true,
+  "remote_jetson_matches_before": true
+}

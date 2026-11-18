@@ -1,0 +1,49 @@
+test_dispatch_becomes_uncertain_and_stays_open_without_replay (test_startup_session_noop.StartupPendingRecoveryTests) ... ok
+test_111_legacy_tasks_and_closed_session_unchanged_on_two_recoveries (test_startup_session_noop.StartupSessionNoopTests) ... ok
+test_absent_empty_mismatched_and_closed_sessions_are_noops (test_startup_session_noop.StartupSessionNoopTests) ... ok
+test_pending_receipts_protect_open_session (test_startup_session_noop.StartupSessionNoopTests) ... ok
+test_resolved_open_session_closes_once_across_recovery (test_startup_session_noop.StartupSessionNoopTests) ... ok
+test_crash_recovery_retains_full_charge_and_prevents_new_session (test_inference_store.InferenceStoreTests) ... ok
+test_finalize_once_adjusts_current_totals_not_old_snapshot (test_inference_store.InferenceStoreTests) ... ok
+test_malformed_tools_are_uncertain_without_consumption_refund (test_inference_store.InferenceStoreTests) ... ok
+test_control_loss_after_first_tool_prevents_every_later_tool_intent (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_deadline_after_dispatch_before_finalize_drops_tools (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_dispatch_wins_then_pause_drops_response_and_executes_no_tool (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_global_stop_during_prompt_preparation_prevents_dispatch (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_pause_after_finalize_before_first_tool_still_executes_no_tool (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_pause_committed_during_budget_prevents_reservation_and_callback (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_pilot_stop_after_session_start_prevents_reservation (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_receipt_digests_binding_and_counters_survive_restart_without_secrets (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_reservation_rechecks_deadline_budget_ownership_and_identity (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_timeout_is_uncertain_reserved_and_restart_never_redispatches (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_two_store_instances_create_one_session_and_one_reservation (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_uncertain_dispatch_blocks_every_other_task_and_global_lane (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_usage_accounting_is_exactly_once_and_fail_closed (test_inference_reservation_qa.InferenceReservationQATests) ... ok
+test_database_failure_after_edit_never_replays_uncertain_mutation (test_coordinator_resilience.ResilienceTests) ... ok
+test_database_failure_inside_error_handler_is_also_contained (test_coordinator_resilience.ResilienceTests) ... ok
+test_deadline_expiring_during_model_prevents_returned_tool_action (test_coordinator_resilience.ResilienceTests) ... ok
+test_deadline_expiring_during_tool_prevents_next_tool_in_batch (test_coordinator_resilience.ResilienceTests) ... ok
+test_expired_queued_task_runs_no_baseline_and_cannot_resume (test_coordinator_resilience.ResilienceTests) ... ok
+test_failed_call_keeps_full_reserved_tokens (test_coordinator_resilience.ResilienceTests) ... ok
+test_missing_negative_boolean_and_zero_usage_retain_reservation_and_block_tools (test_coordinator_resilience.ResilienceTests) ... ok
+test_over_reservation_usage_pauses_and_preserves_observed_usage (test_coordinator_resilience.ResilienceTests) ... ok
+test_persistent_database_failure_is_visible_and_stops_for_supervisor (test_coordinator_resilience.ResilienceTests) ... ok
+test_repeated_snapshot_failures_degrade_health_without_replaying_actions (test_coordinator_resilience.ResilienceTests) ... ok
+test_supervisor_exits_process_when_scheduler_is_dead (test_coordinator_resilience.ResilienceTests) ... ok
+test_token_reservation_caps_generation_to_remaining_allowance (test_coordinator_resilience.ResilienceTests) ... ok
+test_transient_database_failure_reconciles_before_continuing (test_coordinator_resilience.ResilienceTests) ... ok
+test_all_observational_commands_allow_actual_callback_response (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_closed_session_or_orphan_or_multiple_dispatches_fail_closed (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_duplicate_pending_receipt_stops_controls_and_cannot_advance (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_expired_reservation_stops_controls (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_explicit_pause_still_drops_callback_response (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_healthy_reservation_is_observational_but_still_blocks_selection (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_malformed_receipt_fails_closed_without_status_exception (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_mismatched_reservation_fields_fail_closed (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_orphaned_dispatch_stops_controls (test_campaign_inflight_status.InflightStatusTests) ... ok
+test_restart_converts_dispatch_to_uncertain_and_never_replays (test_campaign_inflight_status.InflightStatusTests) ... ok
+
+----------------------------------------------------------------------
+Ran 44 tests in 6.412s
+
+OK

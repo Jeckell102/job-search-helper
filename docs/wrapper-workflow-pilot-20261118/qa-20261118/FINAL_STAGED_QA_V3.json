@@ -1,0 +1,69 @@
+{
+  "result": "PASS",
+  "independent": true,
+  "reviewer": "final_v3_review",
+  "scope": "Final staged QA only; installed-state QA remains mandatory",
+  "manifest_digest": "245d082e77390f61675892c4ee333a1043aed309242eb514a5ddfad6bc0a0ab3",
+  "release_digest": "ef40c3b7adddfbfec20220e8b625832bb15513b1412944bd36065831f29e4a0d",
+  "clean_release": "/tmp/wrapper-final-v3-pc17zqkl/release",
+  "source_files": 67,
+  "prerequisite_files": 682,
+  "original_finding_groups": {
+    "1": "PASS_IN_STAGING",
+    "2": "PASS_IN_STAGING",
+    "3": "PASS_IN_STAGING",
+    "4": "PASS_IN_STAGING",
+    "5": "PASS_IN_STAGING",
+    "6": "PASS_IN_STAGING",
+    "7": "PASS_IN_STAGING"
+  },
+  "latest_repairs": {
+    "legacy_startup_noop": "PASS",
+    "healthy_inflight_status": "PASS",
+    "durable_rollout_ownership": "PASS"
+  },
+  "tests": {
+    "fresh_clean_host": 287,
+    "independent_startup_repair": 44,
+    "counts_overlap": true
+  },
+  "migration_exact_102": true,
+  "migration_evidence_reused_with_unchanged_inputs_and_implementation": true,
+  "real_migrated_database_startup": {
+    "tasks": 111,
+    "registry_rows": 102,
+    "recoveries": 2,
+    "mutation_statements": 0,
+    "all_tables_exactly_preserved": true
+  },
+  "production_mutations_by_reviewer": 0,
+  "live_inference_calls_by_reviewer": 0,
+  "installed_qa": "PENDING_NEW_V3_ROLLOUT",
+  "final_github_parity": "PENDING",
+  "evidence_sha256": {
+    "FINAL_QA_PLAN.md": "704aea5fb930de4bef9b95abc03edecbd60b74d6488c9292708f238a944e903c",
+    "QA_ASSESSMENT.md": "c74419e08ec71248206ec0a4175079f8d3e1713825d179fa1de3b3f943adc1b1",
+    "ORIGINAL_REPRODUCTION_COVERAGE.md": "bafa0706cd3400151ccbc6303210b3bbe963e3207046d1f5e3af2d3ac43a3f5f",
+    "FINAL_QA_FAILURE_20261118_SCHEDULER.md": "0389ac95e54eea3da948bfb06c5b3ee92fe609bcf66ecc4a81a4982e14836c8d",
+    "FINAL_QA_ROLLOUT.md": "7cd9e51c5184ff1843c5efac4c8100c4667bc764ae644282053a183cadafc0f7",
+    "INDEPENDENT_STATUS_REPAIR_ACCEPTANCE.md": "34a267613ebb70634d0dc94ded021fb8419aa0cdb49bf4fa109922c6ea8b0a91",
+    "ROLLOUT_OWNERSHIP_INDEPENDENT_QA.md": "70d2b76cf05f65ab6dc9c9f46a74771f682453fc05e8fd88e9f45ebe4a434023",
+    "independent-status-repair-tests.log": "b136052ba1f050e4f77912a12a30a897499f1018fe1fb1894b16ee89226f3330",
+    "rollout-ownership-independent-tests.log": "54873dfebbe9369dd8ed3f635291adb2a5a08272263f0172675861051abd88b1",
+    "final-v2-host-suite.log": "1204471e809b9558208830712ae31231b99061ce9fca2e0bb21653406dd9beb0",
+    "two-company-rehearsal.json": "363623d2df4dbb6375f5c14d23e47e5b0b795ee7f7f16b9528f4d00dfa4fffbc",
+    "real-acceptance-verification.json": "1b6e3413b975d27895dfabf8ba0dcaa5752d1f48763a7fa270b8dfcd88ecad04",
+    "final-v2-controller-migration-rehearsal.json": "a067267cdee042fd4a67053d55e1d0c990c8b852d11757c45303f1283650307f",
+    "final-v2-migration-parity.json": "fdca05578f7da69d43a936b864db7be1c6f933dc3889b888fcf4febca3279cf5",
+    "final-staged-v2-independent-binding.json": "636dccdedbe1068d2beb1ddb9702045cdc56f874fb61d404bbb0f02b3262608f",
+    "FINAL_STAGED_QA_V2.json": "45bc237a4be7b371399b6745bc5b4465ed7cef7fcf9613bd27ca5429278fbd50",
+    "FINAL_QA_FAILURE_20261118_INSTALLED_STARTUP.md": "af1339098d5de02c2cb8d86cf6d771a4d8d18364ab864a2512f43f316ddd66d7",
+    "installed-v2-rollback-independent.json": "648356d81deb6d030d3ddee0e02ae13a9031a5a34d929f650863fb40a116deca",
+    "INDEPENDENT_STARTUP_NOOP_ACCEPTANCE.md": "139290d1b9c006cfe36e1d3eaad18917df48968954cc915868528255dfbcc286",
+    "independent-startup-noop-verification.json": "13975a0e61c388f56933a965e051b78fac9ab25ca08fc35257d42101bec22d46",
+    "independent-startup-noop-tests.log": "ed45d1697157a4171bd316987d8b80ba1a1805c72ad1e324e9a9bdff3fb8cdfc",
+    "final-v3-host-suite.log": "8e67645277dd418603c10800f9fdfffa73472d501ed1a031e4d3fd3623ac7ed0",
+    "final-staged-v3-independent-binding.json": "54e30fc4d4f589e208991528c5e0ed8e3fe89eb7d414b75d83accf40980b4609"
+  },
+  "reviewed_at_utc": "2026-11-18T20:51:04.720743+00:00"
+}

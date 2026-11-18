@@ -6,19 +6,19 @@
   "pause_restart_verified": true,
   "real_test_results": [
     {
-      "workspace": "WRAP-476070c3ef",
+      "workspace": "WRAP-09ab7e4804",
       "exit_code": 1
     },
     {
-      "workspace": "WRAP-476070c3ef",
+      "workspace": "WRAP-09ab7e4804",
       "exit_code": 0
     },
     {
-      "workspace": "WRAP-476070c3ef",
+      "workspace": "WRAP-09ab7e4804",
       "exit_code": 0
     },
     {
-      "workspace": "WRAP-bb843e9f11",
+      "workspace": "WRAP-8a0d4c7773",
       "exit_code": 1
     }
   ],
@@ -36,7 +36,7 @@
       {
         "company_id": "COMP-9001",
         "company": "Alpha Rehearsal",
-        "task_id": "WRAP-476070c3ef",
+        "task_id": "WRAP-09ab7e4804",
         "status": "AWAITING_LIVE_VALIDATION",
         "phase": "verify",
         "disposition": "CAMPAIGN_FINISHED",
@@ -62,7 +62,7 @@
       {
         "company_id": "COMP-9002",
         "company": "Beta Rehearsal",
-        "task_id": "WRAP-bb843e9f11",
+        "task_id": "WRAP-8a0d4c7773",
         "status": "PAUSED_BLOCKED",
         "phase": "inspect",
         "disposition": "CAMPAIGN_FINISHED",
@@ -83,7 +83,7 @@
       {
         "company_id": "COMP-9002",
         "company": "Beta Rehearsal",
-        "task_id": "WRAP-bb843e9f11",
+        "task_id": "WRAP-8a0d4c7773",
         "status": "PAUSED_BLOCKED",
         "phase": "inspect",
         "disposition": "CAMPAIGN_FINISHED",
@@ -102,15 +102,15 @@
     ],
     "errors": [],
     "state": "DRAINED_WITH_EXCEPTIONS",
-    "reconciliation_digest": "6059696c1bdbbfbd61966d5e5e409de21227aba443cd0fbed54e49ca96e01d82",
+    "reconciliation_digest": "ffd4f4372d91fdaf7131307a4dbbe92e8b669b580728380b3d3340c34bd40474",
     "revision": 1,
-    "created_at": 1795034255.6146588,
-    "updated_at": 1795034257.9462428,
+    "created_at": 1795035001.905393,
+    "updated_at": 1795035004.240521,
     "control_generation": 23
   },
   "states": [
     {
-      "id": "WRAP-476070c3ef",
+      "id": "WRAP-09ab7e4804",
       "status": "AWAITING_LIVE_VALIDATION",
       "phase": "verify",
       "calls": 3,
@@ -118,7 +118,7 @@
       "sessions": 2
     },
     {
-      "id": "WRAP-bb843e9f11",
+      "id": "WRAP-8a0d4c7773",
       "status": "PAUSED_BLOCKED",
       "phase": "inspect",
       "calls": 1,

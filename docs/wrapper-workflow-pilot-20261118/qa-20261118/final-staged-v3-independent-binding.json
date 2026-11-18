@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "manifest_digest": "245d082e77390f61675892c4ee333a1043aed309242eb514a5ddfad6bc0a0ab3",
+  "release_digest": "ef40c3b7adddfbfec20220e8b625832bb15513b1412944bd36065831f29e4a0d",
+  "changed_sources": [
+    "host/coordinator_inference.py"
+  ],
+  "added_sources": [
+    "host/test_startup_session_noop.py"
+  ],
+  "source_files": 67,
+  "prerequisite_files": 682,
+  "complete_clean_tree_matches": true,
+  "source_manifest_matches": true,
+  "migration_inputs_match": true,
+  "prior_evidence_unchanged_except_fresh_two_company_rehearsal": true,
+  "independent_startup_full_host_map_matches": true,
+  "prerequisites_migration_and_database_binding_unchanged": true,
+  "verified_at_utc": "2026-11-18T20:51:04.719836+00:00"
+}

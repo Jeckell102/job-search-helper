@@ -58,7 +58,9 @@ class InferenceStore:
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             state = self._inference_state(db, task_id)
-            if state.get('inference_session_id') == session_id and not self._inference_pending(db, task_id):
+            if (session_id and state.get('inference_session_id') == session_id
+                    and state.get('inference_session_open') is True
+                    and not self._inference_pending(db, task_id)):
                 state['inference_session_open'] = False
                 self._inference_save(db, state)
 

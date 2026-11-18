@@ -1,0 +1,30 @@
+{
+  "result": "FAIL",
+  "independent": true,
+  "scope": "Installed final QA v2; automatic rollback verified",
+  "manifest_digest": "3fb8c7ce00a4bed1ca7a6c93784eba04678552b4b35ca0ad1dcfbf21e919a17f",
+  "blocker": "Paused service startup changed logical database",
+  "root_cause_evidence": {
+    "result": "FAIL",
+    "changed_task_count": 111,
+    "changed_fields": [
+      "inference_session_open"
+    ],
+    "tables_changed": [
+      "tasks"
+    ],
+    "real_inference_calls": 0
+  },
+  "rollback_result": "PASS",
+  "rollback_evidence": "installed-v2-rollback-independent.json",
+  "archive": "/home/chris/job-search-helper_old/dev/wrapper-coder/repairs/rollout-v2-20261118",
+  "production_state": "Original release restored, healthy, controls OFF, pilot null, no active work",
+  "evidence_sha256": {
+    "installed-v2-rollback-independent.json": "648356d81deb6d030d3ddee0e02ae13a9031a5a34d929f650863fb40a116deca",
+    "startup-recovery-drift-reproduction.json": "ecc03e43b3a07cdf33c27f26b91a720a3bfd448c8736978c6bf0273ddc8bb335"
+  },
+  "source_sha256": {
+    "host/coordinator_inference.py": "0abce9be80411e913531c2bf3470e5f8a3110a9af062e2cf5f8578116b3a3f42"
+  },
+  "live_inference_performed": false
+}

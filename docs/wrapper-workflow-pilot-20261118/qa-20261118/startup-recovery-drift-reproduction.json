@@ -1,0 +1,11 @@
+{
+  "result": "FAIL",
+  "changed_task_count": 111,
+  "changed_fields": [
+    "inference_session_open"
+  ],
+  "tables_changed": [
+    "tasks"
+  ],
+  "real_inference_calls": 0
+}
