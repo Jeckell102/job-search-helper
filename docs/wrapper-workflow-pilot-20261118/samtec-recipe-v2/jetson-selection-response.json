@@ -1,0 +1,28 @@
+{
+  "message": {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "type": "function",
+        "function": {
+          "name": "code_create",
+          "arguments": {
+            "path": "docs/samtec-recipe-selection.json",
+            "content": "{\"listing\": \"full_search\", \"container\": \"job_list\", \"pagination\": \"next_link\", \"range\": \"displayed_range\", \"detail\": \"full_description\", \"detail_title\": \"listing_heading\", \"detail_identity\": \"company_and_apply_id\", \"detail_location\": \"detail_meta\"}"
+          }
+        }
+      }
+    ]
+  },
+  "usage": {
+    "done_reason": "stop",
+    "prompt_eval_count": 1052,
+    "eval_count": 1782
+  },
+  "context_tokens": 12288,
+  "diagnostic_only": true,
+  "tools_executed": false,
+  "seconds": 126.93503341899486,
+  "utc": "2026-11-18T22:55:14.750379+00:00"
+}

@@ -1,0 +1,21 @@
+test_duplicates (test_shared_boards.SharedTests.test_duplicates) ... ok
+test_full_inventory (test_shared_boards.SharedTests.test_full_inventory) ... ok
+test_html_empty_unproven (test_shared_boards.SharedTests.test_html_empty_unproven) ... ok
+test_isolved_verified_empty_inventory (test_shared_boards.SharedTests.test_isolved_verified_empty_inventory) ... ok
+test_jazz_and_jobvite (test_shared_boards.SharedTests.test_jazz_and_jobvite) ... ok
+test_parent_scope (test_shared_boards.SharedTests.test_parent_scope) ... ok
+test_pinned_transport (test_shared_boards.SharedTests.test_pinned_transport) ... ok
+test_rippling_false_public_flag_is_valid_schema (test_shared_boards.SharedTests.test_rippling_false_public_flag_is_valid_schema) ... ok
+test_rippling_query_key_rejects_invalid_scope_and_shape (test_shared_boards.SharedTests.test_rippling_query_key_rejects_invalid_scope_and_shape) ... ok
+test_rippling_trailing_locale_query_key_paginates_all_pages (test_shared_boards.SharedTests.test_rippling_trailing_locale_query_key_paginates_all_pages) ... ok
+test_rippling_trailing_locale_query_key_uses_normal_dispatch (test_shared_boards.SharedTests.test_rippling_trailing_locale_query_key_uses_normal_dispatch) ... ok
+test_routing (test_shared_boards.SharedTests.test_routing) ... ok
+test_scope (test_shared_boards.SharedTests.test_scope) ... ok
+test_single_posting_not_complete (test_shared_boards.SharedTests.test_single_posting_not_complete) ... ok
+test_smart_scope_identifier_case_is_insensitive (test_shared_boards.SharedTests.test_smart_scope_identifier_case_is_insensitive) ... ok
+test_smart_total_mismatch (test_shared_boards.SharedTests.test_smart_total_mismatch) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.023s
+
+OK

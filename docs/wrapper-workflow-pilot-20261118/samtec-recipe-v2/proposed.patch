@@ -1,0 +1,254 @@
+--- a/src/job_search_helper/shared_boards.py
++++ b/src/job_search_helper/shared_boards.py
+@@ -218,6 +218,8 @@
+     if b.name=='Workable':
+         return ((payload is not None and p.path=='/api/v3/accounts/'+b.slug+'/jobs') or (payload is None and (p.path in {b.path} or bool(re.fullmatch('/api/v2/accounts/'+re.escape(b.slug)+r'/jobs/[A-Z0-9]+',p.path))))) and not p.query
+     if b.name=='JazzHR':return payload is None and (p.path in {'/','/apply','/apply/'} or bool(re.fullmatch(r'/apply/[A-Za-z0-9]+/[A-Za-z0-9_-]+',p.path))) and not p.query
++    if b.name=='Jobvite' and b.slug=='samtec' and b.root=='https://jobs.jobvite.com' and p.hostname=='jobs.jobvite.com' and p.path in {'/samtec/search','/samtec/search/'}:
++        return payload is None and (not p.query or bool(re.fullmatch(r'p=[0-9]+',p.query)))
+     if b.name=='Jobvite':return payload is None and bool(re.fullmatch('/'+re.escape(b.slug)+r'/(?:jobs|job/[A-Za-z0-9]+)',p.path)) and not p.query
+     return False
+ 
+@@ -568,7 +570,134 @@
+         if tag=='meta' and a.get('property')=='og:url':self.urls.append(a.get('content',''))
+ 
+ 
++class _SamtecListingPage(HTMLParser):
++    """Read actual listing/range elements; scripts and CSS are not evidence."""
++    _void = {'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'}
++
++    def __init__(self, body):
++        super().__init__(convert_charrefs=True)
++        self.stack = []
++        self.ranges = []
++        self.links = []
++        self.next_links = []
++        self.visible = []
++        self.anchor = None
++        self.has_list = False
++        self.feed(body)
++        self.close()
++        if any(frame[1] or frame[2] is not None for frame in self.stack) or self.anchor:
++            raise FetchError('partial', 'Samtec listing structure is unfinished.')
++
++    def handle_starttag(self, tag, attrs):
++        a = dict(attrs)
++        inherited = self.stack[-1] if self.stack else ('', False, None, False)
++        ignored = inherited[3] or tag in {'script', 'style'}
++        in_list, range_index = inherited[1], inherited[2]
++        if not ignored:
++            if len(a) != len(attrs):
++                raise FetchError('partial', 'Samtec HTML has ambiguous attributes.')
++            classes = a.get('class', '').split()
++            if 'jv-job-list' in classes:
++                in_list = self.has_list = True
++            if 'jv-pagination-text' in classes:
++                range_index = len(self.ranges)
++                self.ranges.append('')
++            if tag == 'a' and (in_list or 'jv-pagination-next' in classes):
++                if self.anchor is not None:
++                    raise FetchError('partial', 'Samtec listing contains nested anchors.')
++                self.anchor = {'href': a.get('href'), 'title': '', 'job': in_list,
++                               'next': 'jv-pagination-next' in classes}
++        if tag not in self._void:
++            self.stack.append((tag, in_list, range_index, ignored))
++
++    def handle_data(self, data):
++        if self.stack and self.stack[-1][3]:
++            return
++        self.visible.append(data)
++        if self.stack and self.stack[-1][2] is not None:
++            self.ranges[self.stack[-1][2]] += data
++        if self.anchor is not None:
++            self.anchor['title'] += data
++
++    def handle_endtag(self, tag):
++        if tag in self._void:
++            return
++        if not self.stack or self.stack[-1][0] != tag:
++            raise FetchError('partial', 'Samtec HTML nesting is ambiguous.')
++        if tag == 'a' and self.anchor is not None:
++            if self.anchor['job']:
++                self.links.append(self.anchor.copy())
++            if self.anchor['next']:
++                self.next_links.append(self.anchor.copy())
++            self.anchor = None
++        self.stack.pop()
++
++
++def _samtec_html_listing(b, t):
++    if b.name != 'Jobvite' or b.slug != 'samtec' or b.root != 'https://jobs.jobvite.com' or b.path not in {'/samtec/search', '/samtec/search/'}:
++        raise FetchError('unsupported', 'Samtec listing identity is not the bound public board.')
++    url, visited, entries, total, end = b.url, set(), [], None, 0
++    for page_number in range(20):
++        if url in visited or not allowed(b, url):
++            raise FetchError('partial', 'Samtec pagination URL is repeated or outside its scope.')
++        visited.add(url)
++        parsed = _SamtecListingPage(checked(t.get(url), True))
++        if not parsed.has_list or len(parsed.ranges) != 1:
++            raise FetchError('partial', 'Samtec listing container or unique displayed range is missing.')
++        match = re.fullmatch(r'([0-9]+)-([0-9]+) of ([0-9]+)', ' '.join(parsed.ranges[0].split()))
++        if not match:
++            raise FetchError('partial', 'Samtec displayed range is malformed.')
++        start, stop, count = map(int, match.groups())
++        if count > MAX_JOBS or (total is not None and count != total):
++            raise FetchError('partial', 'Samtec displayed total changed or exceeds the job limit.')
++        total = count
++        if len(parsed.next_links) > 1:
++            raise FetchError('partial', 'Samtec advertises multiple next pages.')
++        rows = []
++        for anchor in parsed.links:
++            if not isinstance(anchor['href'], str) or not anchor['href']:
++                raise FetchError('partial', 'Samtec job link has no target.')
++            job_url = urljoin(url, anchor['href'])
++            if not allowed(b, job_url):
++                raise FetchError('partial', 'Samtec job link leaves its pinned scope.')
++            try:
++                linked = board_link(job_url)
++            except ValueError as exc:
++                raise FetchError('partial', 'Samtec job link is invalid.') from exc
++            if linked.name != b.name or linked.root != b.root or linked.slug != b.slug or not linked.ident or not text(anchor['title']):
++                raise FetchError('partial', 'Samtec job identity or title is invalid.')
++            rows.append({'id': linked.ident, 'title': text(anchor['title']), 'url': job_url})
++        unique(entries + rows)
++        if total == 0:
++            if page_number or start or stop or rows or parsed.next_links or not re.search(r'\bno (?:current |open )?(?:jobs|positions|openings)\b', ' '.join(parsed.visible), re.I):
++                raise FetchError('partial', 'Samtec zero inventory lacks explicit consistent evidence.')
++            return []
++        if start != end + 1 or stop < start or stop > total or len(rows) != stop - start + 1:
++            raise FetchError('partial', 'Samtec displayed range is not contiguous or disagrees with its rows.')
++        entries.extend(rows)
++        end = stop
++        if end == total:
++            if parsed.next_links or len(entries) != total:
++                raise FetchError('partial', 'Samtec terminal page disagrees with the full inventory.')
++            return unique(entries)
++        if not parsed.next_links:
++            raise FetchError('partial', 'Samtec inventory is incomplete without its next page.')
++        href = parsed.next_links[0]['href']
++        if not isinstance(href, str) or not href:
++            raise FetchError('partial', 'Samtec next link has no target.')
++        next_url = urljoin(url, href)
++        parts = urlsplit(next_url)
++        if (not allowed(b, next_url) or parts.hostname != 'jobs.jobvite.com'
++                or parts.path not in {'/samtec/search', '/samtec/search/'}
++                or parts.query != 'p=' + str(page_number + 1) or next_url in visited):
++            raise FetchError('partial', 'Samtec next page is not the scoped consecutive page.')
++        url = next_url
++    raise FetchError('partial', 'Samtec inventory exceeds the twenty-page bound.')
++
++
+ def html_listing(b,t):
++    if b.name=='Jobvite' and b.slug=='samtec':
++        return _samtec_html_listing(b,t)
+     body=checked(t.get(b.url),True);p=Links(body)
+     marker='jobs-list' if b.name=='JazzHR' else 'jv-job-list'
+     if marker not in p.containers:
+@@ -607,8 +736,107 @@
+     return row
+ 
+ 
++class _SamtecDetailPage(HTMLParser):
++    """Collect complete actual HTML targets; never use script/style content."""
++    _void = _SamtecListingPage._void
++    _targets = {'jv-job-detail-description': 'description', 'jv-job-detail-meta': 'location', 'jv-header': 'title', 'jv-meta': 'employer'}
++
++    def __init__(self, body):
++        super().__init__(convert_charrefs=True)
++        self.active = []
++        self.values = {key: [] for key in self._targets.values()}
++        self.apply = []
++        self.ignored = None
++        self.feed(body)
++        self.close()
++        if self.active or self.ignored:
++            raise FetchError('partial', 'Samtec detail target is unfinished.')
++
++    def handle_starttag(self, tag, attrs):
++        if self.ignored:
++            return
++        if tag in {'script', 'style'}:
++            self.ignored = tag
++            return
++        a = dict(attrs)
++        classes = (a.get('class') or '').split()
++        targets = [value for key, value in self._targets.items() if key in classes]
++        if (targets or self.active or 'jv-button-apply' in classes) and len(a) != len(attrs):
++            raise FetchError('partial', 'Samtec detail has duplicate attributes.')
++        for target in self.active:
++            if target['key'] == 'location' and 'jv-inline-separator' in classes:
++                target['parts'].append(' SAMTEC_META_SEPARATOR ')
++            target['parts'].append(self.get_starttag_text())
++            if tag not in self._void:
++                target['stack'].append(tag)
++        for key in targets:
++            if (key == 'title' and tag != 'h2') or (key != 'title' and tag not in {'div', 'p'}):
++                raise FetchError('partial', 'Samtec detail target tag is unexpected.')
++            if key == 'employer' and not any(x['key'] == 'description' for x in self.active):
++                continue
++            self.active.append({'key': key, 'stack': [tag], 'parts': []})
++        if 'jv-button-apply' in classes:
++            if tag != 'a':
++                raise FetchError('partial', 'Samtec apply target is not a link.')
++            self.apply.append(a.get('href'))
++
++    def handle_data(self, data):
++        if self.ignored:
++            return
++        from html import escape
++        for target in self.active:
++            target['parts'].append(escape(data))
++
++    def handle_endtag(self, tag):
++        if self.ignored:
++            if tag == self.ignored:
++                self.ignored = None
++            return
++        if tag in self._void:
++            return
++        for target in list(self.active):
++            if not target['stack'] or target['stack'][-1] != tag:
++                raise FetchError('partial', 'Samtec detail target nesting is ambiguous.')
++            target['stack'].pop()
++            if target['stack']:
++                target['parts'].append('</' + tag + '>')
++            else:
++                self.values[target['key']].append(text(''.join(target['parts'])))
++                self.active.remove(target)
++
++
++def _samtec_html_posting(body, b, e, cid, company):
++    if (b.name != 'Jobvite' or b.root != 'https://jobs.jobvite.com' or b.slug != 'samtec'
++            or cid != 'COMP-0739' or company != 'Samtec' or not allowed(b, e['url'])):
++        raise FetchError('partial', 'Samtec detail binding does not match the assigned company.')
++    linked = board_link(e['url'])
++    if linked.ident != e['id'] or linked.slug != 'samtec':
++        raise FetchError('partial', 'Samtec requested detail identity differs from its listing.')
++    parsed = _SamtecDetailPage(body)
++    values = parsed.values
++    if (len(values['description']) != 1 or len(values['description'][0]) < 100
++            or values['title'] != [text(e['title'])]
++            or values['employer'] != ['Position at Samtec, Inc']
++            or len(values['location']) != 1 or not values['location'][0]
++            or len(parsed.apply) != 1 or not isinstance(parsed.apply[0], str)):
++        raise FetchError('partial', 'Samtec full description, title, employer, location or apply identity is missing or ambiguous.')
++    apply = urljoin(e['url'], parsed.apply[0])
++    if apply != 'https://jobs.jobvite.com/samtec/job/' + e['id'] + '/apply':
++        raise FetchError('partial', 'Samtec apply link disagrees with its exact listing identity.')
++    meta = values['location'][0].split('SAMTEC_META_SEPARATOR')
++    if len(meta) < 2 or not all(part.strip() for part in meta):
++        raise FetchError('partial', 'Samtec department and location separator is missing or ambiguous.')
++    department = meta[0].strip()
++    location = '; '.join(part.strip() for part in meta[1:])
++    row = _base({'id': e['id']}, b.name, cid, company)
++    row.update(title=text(e['title']), url=e['url'], description=values['description'][0], location=location, department=department)
++    return row
++
++
+ def html_posting(b,t,e,cid,company):
+     body=checked(t.get(e['url']),True);p=Links(body);jobs=Scripts(body).jobs()
++    if not jobs and b.name=='Jobvite' and b.slug=='samtec':
++        return _samtec_html_posting(body,b,e,cid,company)
+     if not jobs and b.name=='JazzHR':
+         from .shared_extended import Elements
+         descriptions=Elements(body,{'id:job-description'}).values

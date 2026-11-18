@@ -1,0 +1,2833 @@
+{
+  "result": "FAIL_LIVE_INTEGRATION",
+  "independent": true,
+  "live_report_sha256": "c2de6218583d1504129df9c66de16e1a9c8f001078773c916bdc45ec637d61d9",
+  "requests": 154,
+  "details_fetched": 148,
+  "listing_reads": 6,
+  "jobs_returned": 0,
+  "diagnosis": "Listing traversal works; generic Jobvite detail handler requires structured JSON-LD, absent from these actual Samtec detail pages. Synthetic pagination fixtures used JSON-LD and did not model this source contract. Existing fixture Jobvite details belong to another employer.",
+  "detail_structure_summary": {
+    "zero_jsonld": 148,
+    "unique_description": 148,
+    "unique_heading": 148,
+    "matching_apply_links": 148,
+    "minimum_description_characters": 1164
+  },
+  "details": [
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oELYAfwH",
+      "body_file": "response-0004.body",
+      "sha256": "46a724fb912224c285459da48721d19f1bc9832fb2453e88f73a1d9675668c1a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3509
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "1st Shift Manufacturing Production Operator"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for 1st Shift Manufacturing Production Operator."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/obvQAfwQ",
+      "body_file": "response-0005.body",
+      "sha256": "6ce278de3f57e4cde417034ddba7cc3b17ea9716ad94af0202004e58f5076894",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4730
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "2nd shift Manufacturing Production Operator (Fiber Attach)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for 2nd shift Manufacturing Production Operator (Fiber Attach)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o6X6Afwt",
+      "body_file": "response-0006.body",
+      "sha256": "79646e2e2ce73c2c43801aced7e4efab3fa9e3ad94c210e70520086dd4f4e230",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3403
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "3rd Shift Repair Maintenance Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for 3rd Shift Repair Maintenance Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oVCRAfwI",
+      "body_file": "response-0007.body",
+      "sha256": "6800dd838999ec1bd4cefeee766f98de4d902ce5f5cd856b9ab40225f12d3732",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4186
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Applications & Technical Product Support Engineer (Optics)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Applications & Technical Product Support Engineer (Optics)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oCEsxfwZ",
+      "body_file": "response-0008.body",
+      "sha256": "bb1a41078f402b17402f802365a9e3e20380e0a4020d587a183bf508238458ea",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2763
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Applications Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Applications Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oscAAfwy",
+      "body_file": "response-0009.body",
+      "sha256": "9b386b50880c784fead9a6271ce013b69e6bd6813b9d6ab3f0da6ea158b9e04b",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3324
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Automated Manufacturing Vision Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Automated Manufacturing Vision Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oc3BAfwa",
+      "body_file": "response-0010.body",
+      "sha256": "49516627d7cf8075c55a9161b722b637861b4f03f5c0952188aabe3440d1d040",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4612
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Automation / Machine Design Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Automation / Machine Design Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ooZ3AfwK",
+      "body_file": "response-0011.body",
+      "sha256": "386fcdcef38c03ba00b8ea456aa14e0798ad04edff6239a3c0df2d4120686eae",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2729
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "China Regional Sales Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for China Regional Sales Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oAepAfwx",
+      "body_file": "response-0012.body",
+      "sha256": "21610c99b4bfe1da54e7ddb969e7c6a8c15094e1164ddd87568c66269f21cf23",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4965
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Connector Product Design Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Connector Product Design Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oZLBAfwF",
+      "body_file": "response-0013.body",
+      "sha256": "3a134faf5a884c77eef47adcf2d8a7c66d3a197b7a5ff6b6c1e16a51969c920b",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4552
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Controls Vision Engineer_Co-op"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Controls Vision Engineer_Co-op."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o78mAfwV",
+      "body_file": "response-0014.body",
+      "sha256": "72556229862d98c71c5832254ba636ef48f56c25eadc649752d3aef7bdfdb94f",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4579
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Customer Quality Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Customer Quality Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oVfUAfwo",
+      "body_file": "response-0015.body",
+      "sha256": "5edc74e51571d94cf11c6728c21bd3399c8de368d461788194f40665baf26539",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3159
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Customer Quality Engineer (CQE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Customer Quality Engineer (CQE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oJCAAfwf",
+      "body_file": "response-0016.body",
+      "sha256": "bd7e61d075c42c8b555baf8e2271a01e99a8358ab565633186b4b1e3a8c93dbd",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3079
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Deputy Plant Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Deputy Plant Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oiRHAfwa",
+      "body_file": "response-0017.body",
+      "sha256": "1b153a7f5fb05d6f68784a7c27b4e6c18839f8560100516001b9e7378946e004",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2375
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Deputy Plant Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Deputy Plant Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oH7FAfwN",
+      "body_file": "response-0018.body",
+      "sha256": "3b59269df8a8264373ebdf6672fb49f2464d0f6f5745850a8d88083494327d6a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2389
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Deputy Plant Manager (TH)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Deputy Plant Manager (TH)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/og5KAfwp",
+      "body_file": "response-0019.body",
+      "sha256": "d4d153ae8d4611d2f294829a00d8799e231336b0e63c9aa7b01b9e782daca52e",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3587
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Director Connector Product Development"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Director Connector Product Development."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oau4Afw2",
+      "body_file": "response-0020.body",
+      "sha256": "2195b4aa244482f6f4a97638dbb93d76c4c86c842173dc5d0a8925dd0a857af7",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3403
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Engineering Buyer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Engineering Buyer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oaY6Afwy",
+      "body_file": "response-0021.body",
+      "sha256": "18fcc34a77cd4eb0f4116a2af05df66df33c179718f6b2b2f80087baba057f96",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3948
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Engineering Manager - PAC"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Engineering Manager - PAC."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/obu4Afw3",
+      "body_file": "response-0022.body",
+      "sha256": "436dad99d7e9e2732e85f355771cc720d89f240c9dcb03c39656bcafef069d10",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2911
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Engineering Project Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Engineering Project Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oeuNAfwP",
+      "body_file": "response-0023.body",
+      "sha256": "bcafd2320ced60b6715fb4566061df6c63ad23086c61def549dc62b18f988a62",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3672
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "ESG Lab Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for ESG Lab Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oF15Afw5",
+      "body_file": "response-0024.body",
+      "sha256": "75d2b0417d9d58892f63eaa51a5d24d3ab65837693f7ec99cee94675dcf59678",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5561
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "ESG Lab Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for ESG Lab Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oaZOAfwh",
+      "body_file": "response-0025.body",
+      "sha256": "3362fc1b77ca178cd14d900fe10abb5ee4afb0bb03a638e4153a3f28ae9a7b45",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4740
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Facilities Supervisor/\u8bbe\u65bd\u4e3b\u7ba1"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Facilities Supervisor/\u8bbe\u65bd\u4e3b\u7ba1."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o6lXAfwI",
+      "body_file": "response-0026.body",
+      "sha256": "c1418609df157b55dc9f67d84d86eaeeb72f95ecdb92afe42b2af56675f8acd9",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        1782
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Facilities Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Facilities Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/omCEzfwV",
+      "body_file": "response-0027.body",
+      "sha256": "5b645d9ba483aec832496897d96834301a082949112163c85b67589a7c1ca3ae",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6115
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Field Application Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Field Application Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oCpEAfwZ",
+      "body_file": "response-0028.body",
+      "sha256": "c003f587a71307d775ca383a4de823783a03ddd86da193962a62c9bb396b1711",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2386
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Field Sales Engineer (FSE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Field Sales Engineer (FSE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/orZ3AfwN",
+      "body_file": "response-0029.body",
+      "sha256": "fe23aca002b354eec33ccfe48117081e31a1e792c7b56809244fea6566f30935",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2385
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Field Sales Engineer (FSE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Field Sales Engineer (FSE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ohGZzfwf",
+      "body_file": "response-0030.body",
+      "sha256": "f8ba337864b92cc746e7d8e29c9dc02a8097a422a91f39680e66e190ce7ae0e1",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2105
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Field Sales Engineer (FSE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Field Sales Engineer (FSE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oNz0AfwG",
+      "body_file": "response-0031.body",
+      "sha256": "87036dc6c900bd80033a3b4c8f7a9a5bf656369477980b3d032d46575efd26b7",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        1930
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Field Sales Engineer (FSE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Field Sales Engineer (FSE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/osZ3AfwO",
+      "body_file": "response-0032.body",
+      "sha256": "6cdc08b6b623d531f188991ae5b15332739c32993bace3d98c99570698761901",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2385
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Field Sales Engineer (FSE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Field Sales Engineer (FSE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oAh4Afwf",
+      "body_file": "response-0033.body",
+      "sha256": "b2fb2f6a65023ebbd0db73f81ab728d63ac26f70588300e716ac7b5d7fa73637",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4236
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Field Sales Engineer (FSE) - Rome"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Field Sales Engineer (FSE) - Rome."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oDtZAfwp",
+      "body_file": "response-0034.body",
+      "sha256": "755e1109b3b8cb244b1c43f241f70b6f16ce59768e389e3552d0626879bd9131",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2182
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Finished Goods Inspector"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Finished Goods Inspector."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oTJXAfwT",
+      "body_file": "response-0035.body",
+      "sha256": "05fd92240ab919fb76c27a74a94d7b975a58f9c731063208dc356f21a2262daf",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2025
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Finished Goods Inspector"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Finished Goods Inspector."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oFGYAfwD",
+      "body_file": "response-0036.body",
+      "sha256": "f46b969e858d5217cc5ef5b91b1c8cbadeb5ed1b35fa125cd420d94a0908b70a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4771
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Global Sustaining Controls and Vision Engineering Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Global Sustaining Controls and Vision Engineering Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/obZ5Afwz",
+      "body_file": "response-0037.body",
+      "sha256": "7fff5ea26359f0ba23c64f3e2cc01d4887f94680d4b2cc06cb2ca6e04d5bab13",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6465
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Hardware Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Hardware Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/omNhzfwJ",
+      "body_file": "response-0038.body",
+      "sha256": "ee7beda161ce3ed09b7fb356edfcd87cd1a6a48d2100fae6777b68895ae18fa3",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4306
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "HDR OSS (Operation Support Specialist)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for HDR OSS (Operation Support Specialist)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o0SSzfw3",
+      "body_file": "response-0039.body",
+      "sha256": "a1af27c1f7693b5cd75f0ac8fc70b2f840cdef00ceaa2634e8b4e83309e7bd41",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6067
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "High Speed Cable Applications Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for High Speed Cable Applications Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oZGZzfwX",
+      "body_file": "response-0040.body",
+      "sha256": "0d0aa901172bb21521af241fb7f4c699af5f0d2513a70bab800b0b5ccb95c60e",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3710
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "HR Generalist"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for HR Generalist."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/okWwAfw6",
+      "body_file": "response-0041.body",
+      "sha256": "03ce4faadb4aaaddff5f38f837330b36639531617243f66be657a8c9bdf3911d",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        7253
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Inside Sales Representative"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Inside Sales Representative."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/opl5Afw9",
+      "body_file": "response-0042.body",
+      "sha256": "0dccd558bbfd605ff19d988e26da7d2d8c65321f7d86742c5027b944bcdf2c47",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4202
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Integrated Circuits (IC) Sr. Design Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Integrated Circuits (IC) Sr. Design Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oIf4Afwl",
+      "body_file": "response-0043.body",
+      "sha256": "70dddd3280d3f99d0a34272add597c223d1608f6bd2f3121aa1954eba7e9e68b",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3181
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "IT Co op - Programa Student to Tiger"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for IT Co op - Programa Student to Tiger."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/okQJAfwd",
+      "body_file": "response-0044.body",
+      "sha256": "b5c4ff3214a03ceb4cc1e05660769664f692d00a3d9c6d8c81afe922bf82b15c",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3385
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "IT Co-Op- UofL"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for IT Co-Op- UofL."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o6DkAfwn",
+      "body_file": "response-0045.body",
+      "sha256": "6395e3996e237fd63c259eb68e6b82f18a5f77d3b1a9cfee464eb084ec3d2ac4",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5494
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Japan Senior Technologist"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Japan Senior Technologist."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/osQZAfwB",
+      "body_file": "response-0046.body",
+      "sha256": "7615e43c55afe0c9fc80ed9e5bcfda73c74246b6c0738bb38d34114ccbc9cccf",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2703
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "LPM Engineer/\u6a21\u5177\u5de5\u7a0b\u5e08"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for LPM Engineer/\u6a21\u5177\u5de5\u7a0b\u5e08."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o100Afwl",
+      "body_file": "response-0047.body",
+      "sha256": "fe2611f0edf549ca1b1a7079e0002fc83306a00cc80cba05fa156ef3c02d7c70",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4118
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Machine Operator - Extrusion (Sun-Tues night shift,3x12hrs)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Machine Operator - Extrusion (Sun-Tues night shift,3x12hrs)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oPBEAfwo",
+      "body_file": "response-0048.body",
+      "sha256": "93a8c560c8603885de2c22415689b1737f2d9a8f6574e6d864b82e264796b23f",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4941
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Machine Repair/Maintenance Technician (3x12hrs) - Night shift (Wed-Fri)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Machine Repair/Maintenance Technician (3x12hrs) - Night shift (Wed-Fri)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oEMLAfwv",
+      "body_file": "response-0049.body",
+      "sha256": "319c1d3b459f15616cc339bafa708aa193adb2512b270492390edb000ba17e4e",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3484
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Maintenance Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Maintenance Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oTaRzfwd",
+      "body_file": "response-0050.body",
+      "sha256": "6f4c850797a276bcb9115b597f248e42d2b7bf656f432e09417fd07dffc5758c",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3484
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Maintenance Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Maintenance Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/odGZzfwb",
+      "body_file": "response-0051.body",
+      "sha256": "f75d7f72828a423b8cc6c13c6087a7d8d0b25e9162badb5a84cad23f35e5db41",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3484
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Maintenance Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Maintenance Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/on8YAfwN",
+      "body_file": "response-0052.body",
+      "sha256": "699811bdd74450ab9b96c8c5d0401b6d01fe2ba20548ec201a3d3a7c3cfca0c9",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4295
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Engineer (MEG)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Engineer (MEG)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oYJuAfwv",
+      "body_file": "response-0053.body",
+      "sha256": "1b79c5bc29e74b9093a04535f2e06aa628f2e77ae0f5f23ad3885756e1357a39",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3322
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Planner"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Planner."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oodTAfwO",
+      "body_file": "response-0054.body",
+      "sha256": "21386dd54f1d7b3f41e4280f9dbc3bbbf7d7a1b7351a1302c5f496202dbe4c94",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3912
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Process Engineer CM Support (Optic)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Process Engineer CM Support (Optic)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oVj2AfwA",
+      "body_file": "response-0055.body",
+      "sha256": "0219e64ff7cc8398adcb97079d833974e79ddbc272721960d824a8a925637b09",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        1889
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Production Operator"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Production Operator."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oJo6Afwx",
+      "body_file": "response-0056.body",
+      "sha256": "f766c28472c79ad5dc055dcc423f57d597b5f5cf08456d0e3cbad4073ad0086d",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4781
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Production Operator"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Production Operator."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/onv4Afwg",
+      "body_file": "response-0057.body",
+      "sha256": "1057797324bae97a0fa98013843c06727415b537292257215688ea9ccfbaf598",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        8223
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Production Operator (C\u00f4ng nh\u00e2n s\u1ea3n xu\u1ea5t)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Production Operator (C\u00f4ng nh\u00e2n s\u1ea3n xu\u1ea5t)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ogqUAfwU",
+      "body_file": "response-0058.body",
+      "sha256": "9080358fe1cf4ee8650eebf856d9fe8a4ccb94a3a5dc68291c85d643fd229a21",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4653
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Production Operator (Fiber Attach)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Production Operator (Fiber Attach)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ob82AfwF",
+      "body_file": "response-0059.body",
+      "sha256": "280a374ebbb70c3d2519bd6ebd60686191249a47f64f4d23194646c27fb24887",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        1164
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Production Operator \u591c\u73ed (Night shift)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Production Operator \u591c\u73ed (Night shift)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oF9JAfwR",
+      "body_file": "response-0060.body",
+      "sha256": "a1b5a2caafc9ee102da7b9d95c67fec5b18d6d762017e86d4f893d92a05207a2",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        1164
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Production Operator \u591c\u73ed (Night shift)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Production Operator \u591c\u73ed (Night shift)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oam3AfwT",
+      "body_file": "response-0061.body",
+      "sha256": "db278d5f262c706d74a57034619499a44cda99ccf9611b27e8d110e96542c0cc",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4159
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Production Operator/HDR\u64cd\u4f5c\u5458(for testing)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Production Operator/HDR\u64cd\u4f5c\u5458(for testing)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/owV1AfwM",
+      "body_file": "response-0062.body",
+      "sha256": "1b5400469b9151ba652905214b90a6c99bac991ab6fa2f068fbc39d84fd69a9c",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3985
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Quality Engineer (MQE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Quality Engineer (MQE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ont3zfwc",
+      "body_file": "response-0063.body",
+      "sha256": "68ea0abfa2a0ed9a9b6f8074d8ca6a029dd6e7013316b9b5a8e8548980363d8a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3403
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Quality Engineer (MQE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Quality Engineer (MQE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ot6YAfwR",
+      "body_file": "response-0064.body",
+      "sha256": "a9f99b6ae5ac879defd13607aa6e9a2db1984cf2bd0b6b32f8161e9145648da6",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4920
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Quality Engineer (MQE)-HOTDAM"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Quality Engineer (MQE)-HOTDAM."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oWPwAfwB",
+      "body_file": "response-0065.body",
+      "sha256": "21e5cd44af655ebd374c9b0bbe5719d31ffe3da93a250db9b9d6ecf56b59d95f",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4272
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Quality Support (MQS)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Quality Support (MQS)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/obbAAfwg",
+      "body_file": "response-0066.body",
+      "sha256": "e788a9658767043cc456dd52bd5e8b26be5f72f497836cdf0becfe27110ba55d",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5864
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Quality Support (MQS)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Quality Support (MQS)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o6GZzfw4",
+      "body_file": "response-0067.body",
+      "sha256": "374c0d26827e3a6af8f5f984c7de1b9ea9777f55acc55d91de9e64967df8a3c4",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5223
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Quality Support (MQS) \u2013 Senior Quality Coordinator (Day & Night Shift)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Quality Support (MQS) \u2013 Senior Quality Coordinator (Day & Night Shift)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ovbvAfwv",
+      "body_file": "response-0068.body",
+      "sha256": "d7ff73a71789d906b6c27f796f0bf5dfdc5c1fdc3bf5f57c90da340014e38073",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2225
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Manufacturing Test Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Manufacturing Test Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oBaRAfwW",
+      "body_file": "response-0069.body",
+      "sha256": "80d32ff5a07e0b08ddcaaa2469ef8d64f7c89920aa4a4ec05378ca1b3ce59072",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4107
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Mechanical Engineering Co-Op (UCCS)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Mechanical Engineering Co-Op (UCCS)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oc4PAfwp",
+      "body_file": "response-0070.body",
+      "sha256": "6326924feb491d3bea78a4c730884b4376c8cac55c74475fa2114614f3e4576e",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2865
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Mechanical Engineering Co-Op- Penn State Behrend"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Mechanical Engineering Co-Op- Penn State Behrend."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ogt5Afw8",
+      "body_file": "response-0071.body",
+      "sha256": "edc0f01a34eabd8a830c667c213f3a9973b83620beb501c74e9bd929b33696aa",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3078
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Molding Engineer/\u6a21\u5177\u7ec4\u88c5\u5de5\u7a0b\u5e08"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Molding Engineer/\u6a21\u5177\u7ec4\u88c5\u5de5\u7a0b\u5e08."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oZTSzfw3",
+      "body_file": "response-0072.body",
+      "sha256": "9ee0d5b09aecda09994801b28827551fe3e2e88218493849d2fef8216da91c7d",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6886
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "New Product Design Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for New Product Design Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/otYWAfwH",
+      "body_file": "response-0073.body",
+      "sha256": "feeb4f2248c711abf0e2cbca2a969374f437dc64b33ac91a735709d6bbacc86a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3332
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "New Product Development Engineer (IG)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for New Product Development Engineer (IG)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ohxnAfwv",
+      "body_file": "response-0074.body",
+      "sha256": "398cf28b3390d4096bcc3037bb3f67fe8ce65e26c6df5eebc4901b902ce3edff",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5823
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Operations Support Specialist (OSS)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Operations Support Specialist (OSS)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ordTAfwR",
+      "body_file": "response-0075.body",
+      "sha256": "6e7b387f91807d708166ad97e6401c6f982fdf7c8e307865a6da3a2020eed350",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5823
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Operations Support Specialist (OSS)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Operations Support Specialist (OSS)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ou9WAfwT",
+      "body_file": "response-0076.body",
+      "sha256": "9ac9a16ae1856dad38deb941e95b355728f21b00d74d7f692e49c282fd8d9489",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3038
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Optics Process Engineering Co-Op- San Diego State University"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Optics Process Engineering Co-Op- San Diego State University."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oxOUAfwz",
+      "body_file": "response-0077.body",
+      "sha256": "e4b5f3343c53f151aae275fb33a094b8353b81987d760f3ec194154028bd3fa5",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4563
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Optics Product Manufacturing Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Optics Product Manufacturing Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o3kWAfwD",
+      "body_file": "response-0078.body",
+      "sha256": "da815f181ea87667c563d2df8990c50618660dfb332553ddb27eaae55563c4cd",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3082
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Opto-Mechanical Design Engineering Co-Op- San Diego State University"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Opto-Mechanical Design Engineering Co-Op- San Diego State University."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/olVKAfwk",
+      "body_file": "response-0079.body",
+      "sha256": "9c28f49398b8f794e234b2b8425a233660f332f5418a9cb20420943eb281b14f",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6313
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Optoelectronics R&D Technical Leader"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Optoelectronics R&D Technical Leader."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/otSVAfwA",
+      "body_file": "response-0080.body",
+      "sha256": "2f96a7d30bab4b8f3a45ec4d271341712334b7b4bf3a54a5a413b1dbca9f6ffb",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        7092
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "PCB Fabrication & Supplier Engineer (Eng III)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for PCB Fabrication & Supplier Engineer (Eng III)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oW74Afwr",
+      "body_file": "response-0081.body",
+      "sha256": "e8033f9b2f58986bc15974bb1e27620086061e423effb7000f4675df4e334e4e",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2085
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Plating Associate"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Plating Associate."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oNh2Afwq",
+      "body_file": "response-0082.body",
+      "sha256": "51935b16919a17c5de9746a32800ecd94ce57fcb42098fac34c92e81ed0a860d",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2720
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Plating Operator- 3rd Shift (FULL TIME)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Plating Operator- 3rd Shift (FULL TIME)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ojAIvfwQ",
+      "body_file": "response-0083.body",
+      "sha256": "e849083fe1ed11bda99c5dd6bcc07d3deedb5524d4265e1b787db897e227e8ef",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        8234
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Plating Process Development Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Plating Process Development Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o5N3Afwf",
+      "body_file": "response-0084.body",
+      "sha256": "d31d2c38483d8a41b67db0c213ede52ae294ee98b146557a7d447b6e3da71bdb",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3247
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Practicante de Ingenier\u00eda"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Practicante de Ingenier\u00eda."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oKB3AfwI",
+      "body_file": "response-0085.body",
+      "sha256": "5cc27365ec3756d97a676f825d9425fb0a162c471a5e8e47e3143c1e349cfbf2",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3616
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Practicante en Datos (Programa Student to tiger)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Practicante en Datos (Programa Student to tiger)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ovaVAfwU",
+      "body_file": "response-0086.body",
+      "sha256": "fbecbe75530bbf1fa274c3dc3d77f3d5cd542e3f80770fe8424e8bdd0ed3ab70",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3225
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "PRF SUSTAINING ENGINEER"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for PRF SUSTAINING ENGINEER."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oD86Afwb",
+      "body_file": "response-0087.body",
+      "sha256": "26e530a817e53d4efa0ab20b9fd138bae58ef0e05fcf30401a6936daf7783a5b",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4608
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Process Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Process Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oqjJAfwM",
+      "body_file": "response-0088.body",
+      "sha256": "544b3d00b6f7704e737e72289c4de10ec1bd58dc717ccee9741cd6dfc1a8461a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4235
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Process Engineer (HDR)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Process Engineer (HDR)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oT82Afwn",
+      "body_file": "response-0089.body",
+      "sha256": "c394f7cfad0c0126a0198e1bc581ab7d8166d151f5806518abc2b9111e87c920",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3071
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Process Engineer (Optic)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Process Engineer (Optic)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oxqOAfw5",
+      "body_file": "response-0090.body",
+      "sha256": "610c3fb4548592ca3b1fffd523f88dbb28ba199311de3ce9065b6fc38e2f0a9e",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3080
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Process Engineering Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Process Engineering Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oSXSAfw1",
+      "body_file": "response-0091.body",
+      "sha256": "0e4ebea4429563e72f74048666c4b17ddac9566c49c52ed18b366fe454326fec",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5334
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Process Metrology Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Process Metrology Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oyqtAfwL",
+      "body_file": "response-0092.body",
+      "sha256": "eff1831cdeaffee75c796cfe76e0cf45abca5e7245606387c078cd7d588b517e",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2860
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Product Design Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Product Design Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oAFEAfwd",
+      "body_file": "response-0093.body",
+      "sha256": "a8c5a558d7b08c5c614eeac2e27685f716cbd9d66593ded5a6058d46c6d2d8da",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2808
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Product Design Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Product Design Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o0zwxfwm",
+      "body_file": "response-0094.body",
+      "sha256": "e0d43f90a1d397d8f6c59080e2700533869d98021d8d8c5b65095143f1aa15c6",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2773
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Product Design Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Product Design Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/obxvAfwx",
+      "body_file": "response-0095.body",
+      "sha256": "df68711949515070029d43e9c7bb7b757a3027c9347520b9112a3a24d5951025",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4136
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Product Development Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Product Development Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/olu5Afwe",
+      "body_file": "response-0096.body",
+      "sha256": "ffea8a506da454500bb111350e1378d9d962703ce1f6a97785015b2c4a434da4",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4476
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Product Engineering Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Product Engineering Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o5PZAfwd",
+      "body_file": "response-0097.body",
+      "sha256": "ea2dee10283088fb42603065e3e379b7c0b83d4ff7e34d1e31c92af5bf3f0f4b",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        1939
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Associate (6 Months Contract) Night Shift"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Associate (6 Months Contract) Night Shift."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o9Q5Afwo",
+      "body_file": "response-0098.body",
+      "sha256": "22d64e2a549f9395194499873db7ea36d87d48d4c71ed2089cfc07be3b3a1e8b",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        1939
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Associate (6 Months Contract) Night Shift"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Associate (6 Months Contract) Night Shift."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oRk1zfwv",
+      "body_file": "response-0099.body",
+      "sha256": "d6f6f641103159e154bd0ff5a33625fdd41bdbe33c9cfd811fa235135bee48c0",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4666
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Coordinator/Production Planner/Scheduler/OSS - Night Shift"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Coordinator/Production Planner/Scheduler/OSS - Night Shift."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oBMLAfws",
+      "body_file": "response-0100.body",
+      "sha256": "13fbacea404197ccced84e378d355f13b0a0f3122571f4ccf8c1649f89f2c952",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4666
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Coordinator/Production Planner/Scheduler/OSS - Night Shift"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Coordinator/Production Planner/Scheduler/OSS - Night Shift."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oRaRzfwb",
+      "body_file": "response-0101.body",
+      "sha256": "68ef33f548bc767f10882acfed0d3ce4d894b526199b526a45cb4c9bda4cec59",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4666
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Coordinator/Production Planner/Scheduler/OSS - Night Shift"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Coordinator/Production Planner/Scheduler/OSS - Night Shift."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ohBAAfwM",
+      "body_file": "response-0102.body",
+      "sha256": "e77918159213614d10b4bee54b0caf41717a93ca034522aec88eac50524544c9",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5741
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Engineering Manager/\u5de5\u7a0b\u7ecf\u7406"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Engineering Manager/\u5de5\u7a0b\u7ecf\u7406."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ozg3Afwc",
+      "body_file": "response-0103.body",
+      "sha256": "b22376d03dc627858e7f666c766d061abf89a81c5a07185c3344ec1eb9baec28",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3075
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Operator - Cable Manufacturing"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Operator - Cable Manufacturing."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oeo3AfwZ",
+      "body_file": "response-0104.body",
+      "sha256": "ceaba56b3419eb1c5ff629c05ae9cb99afe8c79e9b4478c75bf1d52f9b3dd4b9",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3005
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Operator HDR (6months contract)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Operator HDR (6months contract)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oqdTAfwQ",
+      "body_file": "response-0105.body",
+      "sha256": "d4e8529b33c11d97f682234b11f6872950258ee0125231edde51da439ddfef41",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6180
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ozlPAfw3",
+      "body_file": "response-0106.body",
+      "sha256": "409974cfafdff0ee6eee450784a194322cbd41253161c7a05c1ac55849f78616",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4126
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor (Auto)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor (Auto)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/orw6Afwn",
+      "body_file": "response-0107.body",
+      "sha256": "de366c410ca901232c38c8c6d9027a9505bd885dbc74479e834b54933d18e8bd",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4238
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor (HDR)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor (HDR)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oNHxAfwl",
+      "body_file": "response-0108.body",
+      "sha256": "d0d54112334e7f921a81e69f48583b60d75f89299959ea809448d2190871ebfa",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3191
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor (Night Shift)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor (Night Shift)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oE50zfw2",
+      "body_file": "response-0109.body",
+      "sha256": "f02c24df4eba6ec9f06f61a8024ddf52de102996e230a69e13938668247cf49f",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5015
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor (Night Shift)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor (Night Shift)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ozMLAfwq",
+      "body_file": "response-0110.body",
+      "sha256": "5095cdc15fac6875e5150524665e88e45fd216583a04c9e335b0c099fd79531a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5015
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor (Night Shift)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor (Night Shift)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oFrDAfw3",
+      "body_file": "response-0111.body",
+      "sha256": "94e6db7fce0f8fb893beffa861603c7eef4d3427ac99e23719d8dc19cd4ec683",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6336
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor/\u751f\u4ea7\u4e3b\u7ba1"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor/\u751f\u4ea7\u4e3b\u7ba1."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oURKAfwP",
+      "body_file": "response-0112.body",
+      "sha256": "d804313b537098181435ebeafcde30be7d0da7f5ac161c5645e02b8ed55e8e16",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6336
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor/\u751f\u4ea7\u4e3b\u7ba1-[HOTDAM]"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor/\u751f\u4ea7\u4e3b\u7ba1-[HOTDAM]."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o4LoAfwx",
+      "body_file": "response-0113.body",
+      "sha256": "f93fb78b95e5161458d41c34c2da6761ca641e23c4c40396235362ba37bec03d",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        6180
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Production Supervisor_"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Production Supervisor_."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/opgYAfwX",
+      "body_file": "response-0114.body",
+      "sha256": "12db61727dc3582c458cf1b68fe5e2423ae997ebc6b04016e1b8016d8c67d5c2",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5587
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Quality Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Quality Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oO53Afwg",
+      "body_file": "response-0115.body",
+      "sha256": "8bc828aa7c45e92b0420a57080e65de78c8aec2a27213b514d383929a46d213c",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4626
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Quality Manager TOLP"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Quality Manager TOLP."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oTzCAfwo",
+      "body_file": "response-0116.body",
+      "sha256": "aded0799a80da8463e96b5e2eb34b87b70b66d70145e1ce42beb65f479ad0bea",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3570
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Recruiting Coordinator _ 14-month Contract"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Recruiting Coordinator _ 14-month Contract."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/okXWAfwx",
+      "body_file": "response-0117.body",
+      "sha256": "b6dd3ab36ce46b6f6f666c2ef6eb4f1ea177b6d8dba5faa9ec006bf01452f89f",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        7155
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Regional Technical Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Regional Technical Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ohj1AfwV",
+      "body_file": "response-0118.body",
+      "sha256": "f5d99dbbc4003422806b131134c0302eb406a3068cdd61253029f336bfe3ab77",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        7121
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Regional Technical Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Regional Technical Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oqaVAfwP",
+      "body_file": "response-0119.body",
+      "sha256": "1b3d24bd77a1e806d6e827a0bc5e902678c76df711e105ed628ddb2c723fde40",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        7065
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Regional Technical Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Regional Technical Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o9J1Afwd",
+      "body_file": "response-0120.body",
+      "sha256": "b4e133662421929b0fa911a87e42fd235ce8f91b84a4874e278f98847f66d0ec",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        7120
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Regional Technical Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Regional Technical Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/okhTAfwO",
+      "body_file": "response-0121.body",
+      "sha256": "72a50cf77a9073167a36896de49f2caa7d7df092f17019cbe10386fc29bfe811",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4317
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Repair Maintenance Technician"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Repair Maintenance Technician."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oN82Afwh",
+      "body_file": "response-0122.body",
+      "sha256": "3fd9f350898f37a44271b34c0537f05f75f707e2a9f0ba5fa673d3bd7d6b6d4b",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2877
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Repair Maintenance Technician (HDR)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Repair Maintenance Technician (HDR)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oYJXAfwY",
+      "body_file": "response-0123.body",
+      "sha256": "36aadf302dea23751dd951e6cdb7e2493e72738b6487527d93857a49b094a7cb",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2877
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Repair Maintenance Technician (HDR)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Repair Maintenance Technician (HDR)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oMYYzfw1",
+      "body_file": "response-0124.body",
+      "sha256": "7219108c20769e404a5a8d379ea582fd48e99d6336e0c96cf1bc22d572143f51",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4265
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Repair Maintenance Technician - 3rd Shift"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Repair Maintenance Technician - 3rd Shift."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oRlXAfwt",
+      "body_file": "response-0125.body",
+      "sha256": "83e5ef91fede73f7b51cc89e2a3ee8dbc27043220fe13e3b7fa645d58af3e694",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4203
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Repair Maintenance Technician/HDR\u6280\u672f\u5458"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Repair Maintenance Technician/HDR\u6280\u672f\u5458."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oo6YAfwM",
+      "body_file": "response-0126.body",
+      "sha256": "485aa57fc6d91fcb4c195e22bff94f88553c07968702e15396b833e3a6ee6373",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4203
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Repair Maintenance Technician/HDR\u6280\u672f\u5458"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Repair Maintenance Technician/HDR\u6280\u672f\u5458."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ocqtAfwp",
+      "body_file": "response-0127.body",
+      "sha256": "1136bcb734d0e96c91f9ca78536388f35af89863b91480ac1a87597f49d8b74f",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4203
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Repair Maintenance Technician/\u6280\u672f\u5458"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Repair Maintenance Technician/\u6280\u672f\u5458."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oK03Afw7",
+      "body_file": "response-0128.body",
+      "sha256": "7c319cc56e397dd88e2e7b626e9a823dca6dd17f52d99425908175d9ed9b03db",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2580
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Repair Maintenance Technician/\u6ce8\u5851\u6280\u672f\u5458"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Repair Maintenance Technician/\u6ce8\u5851\u6280\u672f\u5458."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o9hbAfwV",
+      "body_file": "response-0129.body",
+      "sha256": "0abf4b4eddf06484d98ef93c302fab787b64bf905af31250461e92f589c84ce4",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2669
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "RF Development Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for RF Development Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oZpVAfwD",
+      "body_file": "response-0130.body",
+      "sha256": "720ff6f5418e75b0aec4eb658b92f830e5f13c71313225a4fc5a3cae212f3379",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3590
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "RF Product Development Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for RF Product Development Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ozp3Afwl",
+      "body_file": "response-0131.body",
+      "sha256": "b07e620e475bf39f0ee40521ed487ee4cdf381b48840f3345e78f6284b9e6748",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3197
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "RF Tooling Design Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for RF Tooling Design Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oRA5AfwQ",
+      "body_file": "response-0132.body",
+      "sha256": "d473d3e3e45890840519343f3b5e96967144f95bd80ca1464c0d6342516930e9",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3497
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Seasonal Manufacturing Production Operator"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Seasonal Manufacturing Production Operator."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o8DkAfwp",
+      "body_file": "response-0133.body",
+      "sha256": "5e6ea41adb15368e638a166c41a7748e1baa74fa949ff6908076200206004ad9",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4950
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Senior System Architect"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Senior System Architect."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oSJ3AfwY",
+      "body_file": "response-0134.body",
+      "sha256": "00c6b239e4ac7e168fd2668e24ff38b6a41f195cb4f798b538c3c8968e5949da",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        1945
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Shipping Associate/ Operator (6 months) - Night Shift"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Shipping Associate/ Operator (6 months) - Night Shift."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/op83zfwT",
+      "body_file": "response-0135.body",
+      "sha256": "bd674b887e338f54b60182f93a513bb1355d1d5d012d11d929c253f4af706b6a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        5515
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Signal Integrity (SI) Applications Sales Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Signal Integrity (SI)  Applications Sales Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/osSLzfwo",
+      "body_file": "response-0136.body",
+      "sha256": "e5c731dc99d872eea75ef1beb1f846e6f8fd1c3b919da8c0065f590f82c3be78",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2554
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Signal Integrity (SI) Applications Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Signal Integrity (SI) Applications Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oIwJAfwh",
+      "body_file": "response-0137.body",
+      "sha256": "46301cd3fc9d64d8f5c5df4f71446d87b90882fea2182b4eb3d0d4bcebc05825",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4351
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Signal Integrity (SI) Global Test Lab Manager"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Signal Integrity (SI) Global Test Lab Manager."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o4SIxfwV",
+      "body_file": "response-0138.body",
+      "sha256": "e1d32799d36ddeea55ef92750d823d1377547a3d8a3f081d835b67055c08f0fb",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3586
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Signal Integrity (SI) Test Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Signal Integrity (SI) Test Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/ok1ZAfwE",
+      "body_file": "response-0139.body",
+      "sha256": "140058f670f11b4f3987f01320fedc7e7001a027ccb24022bc8931f83ddf3607",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        8288
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Sr. Hardware Test Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Sr. Hardware Test Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/om1ZAfwG",
+      "body_file": "response-0140.body",
+      "sha256": "46a8b5647f024ca0c1220dc70febbc12eb7006cb203b4e4df5abb68f4c811630",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        8324
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Sr. Optoelectronic (OE) Test Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Sr. Optoelectronic (OE) Test Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/on2ZAfwI",
+      "body_file": "response-0141.body",
+      "sha256": "9281040664645e37f8f235a7fdf54be76508603119ed8d8ed9cdd50e1ad029aa",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        7811
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Sr. Product Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Sr. Product Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oo2ZAfwJ",
+      "body_file": "response-0142.body",
+      "sha256": "d20c20d808e71faa8f731f38a25f7bcc52f8c81af735df467ab7ad277ce32b2d",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        8137
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Sr. Quality Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Sr. Quality Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o6sWAfwO",
+      "body_file": "response-0143.body",
+      "sha256": "c54ae049fbfc357aa78418b06e64eb71999bc017734b90d6ee926ee5910205e3",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3958
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Supplier Quality Engineer (SQE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Supplier Quality Engineer (SQE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/onjWAfwW",
+      "body_file": "response-0144.body",
+      "sha256": "2f89134c469374379744101d2aa17c23f190e48876acaab9f61cf96d2724e4d1",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        4735
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Supplier Quality Engineer (SQE)"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Supplier Quality Engineer (SQE)."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o6U6Afwq",
+      "body_file": "response-0145.body",
+      "sha256": "33f33d9832190b26a228d16187855c8ec773c486b5350252dce8867f5149e19a",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2732
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "TA specialist"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for TA specialist."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/orHsAfwU",
+      "body_file": "response-0146.body",
+      "sha256": "c77fb42148114036f5591113d635372ea7c3ba957a033e13072307fa33064e52",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3043
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Technical Maintenance Supervisor"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Technical Maintenance Supervisor."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oEIFAfwl",
+      "body_file": "response-0147.body",
+      "sha256": "d141eec267d2911cb3b641771294343cbcda3eb91af9174435e1c577714beb25",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3942
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Technical Manufacturing Manager - Development Program"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Technical Manufacturing Manager - Development Program."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o3hSAfww",
+      "body_file": "response-0148.body",
+      "sha256": "0134ccaee75775692e66a982d876823bd7311bbf3fc9ac9fc010c35d205fec58",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2075
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Technician Supervisor"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Technician Supervisor."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/o7NYAfwc",
+      "body_file": "response-0149.body",
+      "sha256": "997bd6969d0322ddd837d290c9d9ced20aa666e29dfecf0613a7db1efc861589",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2733
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Test Engineer"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Test Engineer."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oaQOAfw8",
+      "body_file": "response-0150.body",
+      "sha256": "c2bb6c90b900c758853a742db5cff28912e57c1a5ad2530725d1f5e7a4b95c43",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        2715
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Test Engineer/LSET\u5de5\u7a0b\u5e08"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Test Engineer/LSET\u5de5\u7a0b\u5e08."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    },
+    {
+      "url": "https://jobs.jobvite.com/samtec/job/oNbryfwH",
+      "body_file": "response-0151.body",
+      "sha256": "59838145b77d7216bfe0f3ff54205101309b3d9d48c62012a9a0c70dd63314c0",
+      "jsonld_blocks": 0,
+      "description_containers": 1,
+      "description_characters": [
+        3489
+      ],
+      "description_contains_samtec": true,
+      "headings": [
+        "Toolmaker"
+      ],
+      "opengraph_titles": [
+        "Samtec, Inc is looking for Toolmaker."
+      ],
+      "apply_links_match": true,
+      "description_closed": true
+    }
+  ],
+  "next_contract": "Review a Samtec-only HTML detail branch requiring one actual description container, one matching listing title, employer identity, and matching job-ID apply target; preserve generic Jobvite detail validation. Compare complete captured HTML description text independently. Replace synthetic-only confidence with replay of all captured live detail bodies before another live run.",
+  "boundary": "Source evidence inspection only. No detail implementation accepted; no production install or publication."
+}

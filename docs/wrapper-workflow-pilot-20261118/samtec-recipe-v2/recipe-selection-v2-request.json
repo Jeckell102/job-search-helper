@@ -1,0 +1,39 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "Select integration settings from verified public evidence. Return exactly one code_create proposal containing JSON only. Do not write Python code. This is a configuration proposal for a separate trusted Python compiler; no tool will execute automatically."
+    },
+    {
+      "role": "user",
+      "content": "{\"task\": \"Choose complete inventory and full detail settings for Samtec from captured public source evidence. Output docs/samtec-recipe-selection.json as exactly eight string fields: listing,container,pagination,range,detail,detail_title,detail_identity,detail_location. Select candidate IDs only.\", \"immutable_identity\": {\"company_id\": \"COMP-0739\", \"company\": \"Samtec\", \"provider\": \"Jobvite\", \"host\": \"jobs.jobvite.com\", \"slug\": \"samtec\"}, \"candidates\": {\"listing\": [{\"id\": \"featured_jobs\", \"path\": \"/samtec/jobs\", \"observed\": \"4 featured job links; no jv-job-list container\"}, {\"id\": \"full_search\", \"path\": \"/samtec/search\", \"observed\": \"3 pages, 50+50+48 unique jobs; displayed total148\"}], \"container\": [{\"id\": \"job_list\", \"class\": \"jv-job-list\", \"observed\": \"contains full search job rows\"}, {\"id\": \"featured_list\", \"class\": \"featured-jobs\", \"observed\": \"featured landing only\"}], \"pagination\": [{\"id\": \"next_link\", \"class\": \"jv-pagination-next\", \"observed\": \"forward links /samtec/search/?p=1 then?p=2; final page none\"}, {\"id\": \"previous_link\", \"class\": \"jv-pagination-prev\", \"observed\": \"backward navigation\"}], \"range\": [{\"id\": \"displayed_range\", \"class\": \"jv-pagination-text\", \"observed\": \"1-50 of148;51-100 of148;101-148 of148 on respective pages\"}, {\"id\": \"page_length\", \"observed\": \"50 on firstpage, does not represent total inventory\"}], \"detail\": [{\"id\": \"structured_description\", \"observed\": \"JSON-LD JobPosting absent in all 148 captured details\"}, {\"id\": \"full_description\", \"observed\": \"Exactly one completed jv-job-detail-description container in all148; full descriptions1164-8324 characters\"}, {\"id\": \"social_teaser\", \"observed\": \"og:description is a short promotional teaser\"}], \"detail_title\": [{\"id\": \"listing_heading\", \"observed\": \"Unique h2.jv-header matches listing title on all148\"}, {\"id\": \"browser_title\", \"observed\": \"Page title adds employer branding\"}], \"detail_identity\": [{\"id\": \"company_and_apply_id\", \"observed\": \"Position at Samtec, Inc marker and matching /samtec/job/<listingID>/apply link on all148\"}, {\"id\": \"http_success\", \"observed\": \"HTTP200 alone does not establish employer/job identity\"}], \"detail_location\": [{\"id\": \"detail_meta\", \"observed\": \"jv-job-detail-meta has department then jv-inline-separator then location\"}, {\"id\": \"company_headquarters\", \"observed\": \"Does not describe each job location\"}]}, \"source_receipt\": \"public-pagination-evidence-1/receipt.json\", \"detail_evidence\": \"Captured live-recipe-1/result:148 HTTP200 detail pages, independently inspected; no accepted jobs because current parser requires JSON-LD. Use full visible HTML, never teaser.\"}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "code_create",
+        "description": "Propose a JSON configuration artifact; this diagnostic does not execute the tool.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "max_tokens": 3072,
+  "think": true
+}

@@ -1,0 +1,97 @@
+class _SamtecDetailPage(HTMLParser):
+    """Collect complete actual HTML targets; never use script/style content."""
+    _void = _SamtecListingPage._void
+    _targets = {'jv-job-detail-description': 'description', 'jv-job-detail-meta': 'location', 'jv-header': 'title', 'jv-meta': 'employer'}
+
+    def __init__(self, body):
+        super().__init__(convert_charrefs=True)
+        self.active = []
+        self.values = {key: [] for key in self._targets.values()}
+        self.apply = []
+        self.ignored = None
+        self.feed(body)
+        self.close()
+        if self.active or self.ignored:
+            raise FetchError('partial', 'Samtec detail target is unfinished.')
+
+    def handle_starttag(self, tag, attrs):
+        if self.ignored:
+            return
+        if tag in {'script', 'style'}:
+            self.ignored = tag
+            return
+        a = dict(attrs)
+        classes = (a.get('class') or '').split()
+        targets = [value for key, value in self._targets.items() if key in classes]
+        if (targets or self.active or 'jv-button-apply' in classes) and len(a) != len(attrs):
+            raise FetchError('partial', 'Samtec detail has duplicate attributes.')
+        for target in self.active:
+            if target['key'] == 'location' and 'jv-inline-separator' in classes:
+                target['parts'].append(' SAMTEC_META_SEPARATOR ')
+            target['parts'].append(self.get_starttag_text())
+            if tag not in self._void:
+                target['stack'].append(tag)
+        for key in targets:
+            if (key == 'title' and tag != 'h2') or (key != 'title' and tag not in {'div', 'p'}):
+                raise FetchError('partial', 'Samtec detail target tag is unexpected.')
+            if key == 'employer' and not any(x['key'] == 'description' for x in self.active):
+                continue
+            self.active.append({'key': key, 'stack': [tag], 'parts': []})
+        if 'jv-button-apply' in classes:
+            if tag != 'a':
+                raise FetchError('partial', 'Samtec apply target is not a link.')
+            self.apply.append(a.get('href'))
+
+    def handle_data(self, data):
+        if self.ignored:
+            return
+        from html import escape
+        for target in self.active:
+            target['parts'].append(escape(data))
+
+    def handle_endtag(self, tag):
+        if self.ignored:
+            if tag == self.ignored:
+                self.ignored = None
+            return
+        if tag in self._void:
+            return
+        for target in list(self.active):
+            if not target['stack'] or target['stack'][-1] != tag:
+                raise FetchError('partial', 'Samtec detail target nesting is ambiguous.')
+            target['stack'].pop()
+            if target['stack']:
+                target['parts'].append('</' + tag + '>')
+            else:
+                self.values[target['key']].append(text(''.join(target['parts'])))
+                self.active.remove(target)
+
+
+def _samtec_html_posting(body, b, e, cid, company):
+    if (b.name != 'Jobvite' or b.root != 'https://jobs.jobvite.com' or b.slug != 'samtec'
+            or cid != 'COMP-0739' or company != 'Samtec' or not allowed(b, e['url'])):
+        raise FetchError('partial', 'Samtec detail binding does not match the assigned company.')
+    linked = board_link(e['url'])
+    if linked.ident != e['id'] or linked.slug != 'samtec':
+        raise FetchError('partial', 'Samtec requested detail identity differs from its listing.')
+    parsed = _SamtecDetailPage(body)
+    values = parsed.values
+    if (len(values['description']) != 1 or len(values['description'][0]) < 100
+            or values['title'] != [text(e['title'])]
+            or values['employer'] != ['Position at Samtec, Inc']
+            or len(values['location']) != 1 or not values['location'][0]
+            or len(parsed.apply) != 1 or not isinstance(parsed.apply[0], str)):
+        raise FetchError('partial', 'Samtec full description, title, employer, location or apply identity is missing or ambiguous.')
+    apply = urljoin(e['url'], parsed.apply[0])
+    if apply != 'https://jobs.jobvite.com/samtec/job/' + e['id'] + '/apply':
+        raise FetchError('partial', 'Samtec apply link disagrees with its exact listing identity.')
+    meta = values['location'][0].split('SAMTEC_META_SEPARATOR')
+    if len(meta) < 2 or not all(part.strip() for part in meta):
+        raise FetchError('partial', 'Samtec department and location separator is missing or ambiguous.')
+    department = meta[0].strip()
+    location = '; '.join(part.strip() for part in meta[1:])
+    row = _base({'id': e['id']}, b.name, cid, company)
+    row.update(title=text(e['title']), url=e['url'], description=values['description'][0], location=location, department=department)
+    return row
+
+
