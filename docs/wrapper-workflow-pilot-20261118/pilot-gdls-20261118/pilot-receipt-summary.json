@@ -1,0 +1,20 @@
+{
+  "task": "WRAP-8be410e6f4",
+  "status": "PAUSED_BLOCKED",
+  "calls": 4,
+  "tokens": 32025,
+  "controls": {
+    "queue_enabled": "false",
+    "pilot_task": "null",
+    "autopilot_enabled": "false",
+    "control_generation": "14"
+  },
+  "inference_statuses": [
+    "COMPLETED",
+    "COMPLETED",
+    "COMPLETED",
+    "COMPLETED"
+  ],
+  "baseline_unchanged": true,
+  "active_tasks": 0
+}
