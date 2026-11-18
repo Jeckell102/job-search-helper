@@ -74,6 +74,19 @@ class QueueTests(WorkflowTests):
             self.co.run()
         self.assertEqual(visited, [a, b])
 
+    def test_pause_during_final_test_prevents_following_diff(self):
+        task = self.task()
+        self.collect(task)
+        self.answers = [self.checkpoint('phase_done')]
+        self.co.step(task)
+        def finish_test(paths):
+            self.co.command({'action': 'queue-pause'})
+            return {'exit_code': 0, 'timed_out': False, 'output': '1 passed'}
+        with patch.object(c.code, 'run_tests', side_effect=finish_test):
+            self.co.step(task)
+        self.assertEqual(self.co.store.get(task)['status'], 'QUEUED')
+        self.assertEqual(self.co.store.receipts(task)[-1]['name'], 'code_test')
+
 
 if __name__ == '__main__':
     unittest.main()

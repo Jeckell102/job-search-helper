@@ -1,0 +1,42 @@
+{
+  "workflow": "persistent MuleLab FIFO with one Jetson inference slot",
+  "tests_passed": 125,
+  "real_acceptance": {
+    "company": "Scythe Robotics COMP-0506",
+    "baseline": "passed in isolated sandbox",
+    "automatic_preparation_receipts": 6,
+    "model_calls_before_preparation_complete": 0,
+    "model_calls": 3,
+    "accounted_tokens": 23086,
+    "final_status": "REVIEW_COMPLETE_LIVE_NOT_VALIDATED",
+    "verification": "offline tests rerun and passed"
+  },
+  "historical_scythe_redirect_replay": "observed redirect plus rendered employer evidence accepted at historical observation time; expired evidence rejected at current time",
+  "backlog": {
+    "register_entries": 334,
+    "queued": 104,
+    "recorded_complete": 26,
+    "existing_validation_or_claim": 11,
+    "adoption_verification": 1,
+    "needs_test_assignment": 192
+  },
+  "persistence": {
+    "host_service_enabled": true,
+    "tunnel_service_enabled": true,
+    "user_linger_enabled": true,
+    "queue_started": false,
+    "first_company": "Mass Virtual COMP-0344",
+    "first_observed_status": "RUNNING / inspect",
+    "host_health": "healthy",
+    "queue_enabled": false,
+    "backlog_tasks_held": 104
+  },
+  "limits": "Generated drafts still require live scraper validation and operator delivery. All file/work data are on MuleLab. Queue status is a point-in-time observation.",
+  "pilot_gate": {
+    "accepted": false,
+    "reason": "Coordinator acceptance did not prove a company repair. Backlog paused at user request.",
+    "company_started": "Mass Virtual COMP-0344",
+    "other_companies_started": 0,
+    "source_edits": 0
+  }
+}

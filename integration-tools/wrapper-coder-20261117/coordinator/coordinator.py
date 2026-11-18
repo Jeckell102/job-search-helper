@@ -425,6 +425,8 @@ class Coordinator:
                 reason='Baseline passed.' if passed else 'Baseline failed; worker must diagnose the recorded failures.')
         elif state['phase'] == 'verify':
             passed = self.tests(state)
+            if self.paused(task_id):
+                return
             self.execute(state, 'code_diff', {}, {'code_diff'})
             self.store.update(task_id,
                 status=('AWAITING_LIVE_VALIDATION' if state['mode'] == 'develop' else 'REVIEW_COMPLETE_LIVE_NOT_VALIDATED') if passed else 'PAUSED_TEST_FAILURE',
