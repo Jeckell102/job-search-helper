@@ -84,13 +84,24 @@ class QueueTests(WorkflowTests):
         other.command({'action': 'queue-resume'})
         self.assertEqual(other.store.get(a)['status'], 'PAUSED_BLOCKED')
         other.step(b)
+        self.assertEqual(other.store.get(b)['phase'], 'baseline')
+        other.command({'action': 'campaign-start'})
+        other.store.activate_next_campaign()
+        other.store.claim_campaign()
+        other.step(b)
         self.assertEqual(other.store.get(b)['phase'], 'inspect')
 
     def test_company_drafts_never_contaminate_each_other_or_base(self):
         a, b = self.batch()['ids']
+        self.co.command({'action': 'campaign-start'})
+        self.co.store.activate_next_campaign()
+        self.co.store.claim_campaign()
         self.co.step(a)
         with workspace(self.co.store, self.co.store.get(a)):
             (c.code.root() / 'src/a.py').write_text('draft from first company\n')
+        self.co.store.update(a, status='AWAITING_LIVE_VALIDATION')
+        self.co.store.activate_next_campaign()
+        self.co.store.claim_campaign()
         self.co.step(b)
         self.assertEqual((self.root / 'src/a.py').read_text(), 'value = 1\n')
         self.assertEqual((self.co.store.base / b / 'repo/src/a.py').read_text(), 'value = 1\n')
@@ -98,8 +109,7 @@ class QueueTests(WorkflowTests):
 
     def test_scheduler_advances_after_blocked_company_in_fifo_order(self):
         a, b = self.batch()['ids']
-        self.co.store.update(a, status='QUEUED')
-        self.co.store.update(b, status='QUEUED')
+        self.co.command({'action': 'autopilot-start'})
         visited = []
         def step(task):
             visited.append(task)
@@ -172,29 +182,50 @@ class QueueTests(WorkflowTests):
         self.assertFalse(other.store.autopilot_enabled())
         self.assertFalse(other.store.queue_enabled())
 
+    def test_global_queue_pause_stops_campaign_and_retains_selection(self):
+        task = self.batch(1)['ids'][0]
+        self.co.command({'action': 'campaign-start'})
+        self.assertEqual(self.co.store.activate_next_campaign()['id'], task)
+        self.assertEqual(self.co.store.claim_campaign()['id'], task)
+        self.co.command({'action': 'queue-pause'})
+        self.assertFalse(self.co.store.campaign_enabled())
+        self.assertIsNone(self.co.store.active_intent(task, 'inspect', 'code_read', {'path': 'src/a.py'}))
+        self.assertTrue(self.co.paused(task))
+        stopped = self.co.store.get(task)
+        self.assertEqual(stopped['status'], 'PAUSED')
+        self.assertEqual(stopped['campaign_disposition'], 'SELECTED')
+
+        self.co.command({'action': 'queue-resume'})
+        self.assertFalse(self.co.store.campaign_enabled())
+        self.assertIsNone(self.co.store.claim_queued())
+        self.co.command({'action': 'campaign-start'})
+        self.assertEqual(self.co.store.activate_next_campaign()['id'], task)
+        self.assertEqual(self.co.store.claim_campaign()['id'], task)
+
     def test_cross_process_claim_allows_only_one_scheduler(self):
         a, b = self.batch()['ids']
-        self.co.store.update(a, status='QUEUED')
-        self.co.store.update(b, status='QUEUED')
+        self.co.command({'action': 'autopilot-start'})
+        self.co.store.activate_next_campaign()
         other = c.Coordinator(self.co.store.base, self.co.model, self.co.budget)
-        first = self.co.store.claim_queued()
-        second = other.store.claim_queued()
+        first = self.co.store.claim_campaign()
+        second = other.store.claim_campaign()
         self.assertEqual(first['id'], a)
         self.assertIsNone(second)
         self.co.store.update(a, status='AWAITING_LIVE_VALIDATION')
-        self.assertEqual(other.store.claim_queued()['id'], b)
+        other.store.activate_next_campaign()
+        self.assertEqual(other.store.claim_campaign()['id'], b)
 
     def test_same_queued_task_cannot_be_claimed_twice(self):
         task = self.batch(1)['ids'][0]
-        self.co.store.update(task, status='QUEUED')
+        self.co.command({'action': 'autopilot-start'})
+        self.co.store.activate_next_campaign()
         other = c.Coordinator(self.co.store.base, self.co.model, self.co.budget)
-        self.assertEqual(self.co.store.claim_queued()['id'], task)
-        self.assertIsNone(other.store.claim_queued())
+        self.assertEqual(self.co.store.claim_campaign()['id'], task)
+        self.assertIsNone(other.store.claim_campaign())
 
     def test_each_autopilot_company_gets_a_new_worker_identity(self):
         a, b = self.batch()['ids']
-        for task in (a, b):
-            self.co.store.update(task, status='PAUSED', reason='Pause requested.')
+        self.co.command({'action': 'autopilot-start'})
         first = self.co.store.activate_next_untouched()
         self.co.store.update(a, status='AWAITING_LIVE_VALIDATION')
         second = self.co.store.activate_next_untouched()
@@ -206,9 +237,12 @@ class QueueTests(WorkflowTests):
 
     def test_selected_company_is_not_reselected_after_pause_before_first_step(self):
         task = self.batch(1)['ids'][0]
+        self.co.command({'action': 'autopilot-start'})
         first = self.co.store.activate_next_untouched()
-        self.co.store.update(task, status='PAUSED')
+        self.co.command({'action': 'pause', 'id': task})
         self.assertIsNotNone(first.get('selected_at'))
+        self.assertEqual(self.co.store.get(task)['campaign_disposition'], 'USER_PAUSED')
+        self.assertTrue(self.co.store.get(task)['stop_requested'])
         self.assertIsNone(self.co.store.activate_next_untouched())
 
 

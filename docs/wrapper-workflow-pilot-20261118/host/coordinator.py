@@ -12,7 +12,7 @@ import urllib.error
 
 import coding_tools as code
 import public_tools as web
-from coordinator_store import Store
+from coordinator_store import (DEFAULT_CAMPAIGN_ID, SELECTED, Store)
 from coordinator_permissions import resolve_mode
 from coordinator_evidence import build_requirements, phase_evidence, evidence_fingerprint, manifest_digest
 import coordinator_workflow as workflow
@@ -219,7 +219,8 @@ class Coordinator:
         if action == 'health':
             return self.health()
         if action in ('queue', 'queue-pause', 'queue-resume', 'pilot-stop',
-                      'autopilot-start', 'autopilot-stop', 'autopilot-status'):
+                      'autopilot-start', 'autopilot-stop', 'autopilot-status',
+                      'campaign-start', 'campaign-stop', 'campaign-status'):
             if action != 'queue':
                 if action == 'pilot-stop':
                     pilot = self.store.pilot_task()
@@ -230,10 +231,14 @@ class Coordinator:
                             self.store.update(pilot, stop_requested=True,
                                               status='PAUSING' if pilot_state['status'] == 'RUNNING' else 'PAUSED',
                                               reason='Pilot stop requested.')
-                elif action in ('autopilot-start', 'autopilot-stop'):
+                elif action in ('autopilot-start', 'autopilot-stop',
+                                'campaign-start', 'campaign-stop'):
                     with self.control_lock:
-                        self.store.configure_autopilot(action == 'autopilot-start')
-                elif action != 'autopilot-status':
+                        enabled = action in ('autopilot-start', 'campaign-start')
+                        self.store.configure_campaign(
+                            enabled, data.get('campaign_id') or
+                            self.store.active_campaign_id() or DEFAULT_CAMPAIGN_ID)
+                elif action not in ('autopilot-status', 'campaign-status'):
                     with self.control_lock:
                         self.store.configure_queue(action == 'queue-resume')
                 self.wake.set()
@@ -243,15 +248,17 @@ class Coordinator:
                 counts[state['status']] = counts.get(state['status'], 0) + 1
             enabled = self.store.queue_enabled()
             autopilot = self.store.autopilot_enabled()
+            campaign = self.store.campaign_control()
             upcoming = [s['id'] for s in states if s['status'] in ('QUEUED', 'RUNNING')]
-            untouched = sum(bool(s.get('isolated_workspace')) and s['status'] == 'PAUSED'
-                            and s['phase'] == 'baseline' and s.get('activated_at') is None
+            untouched = sum(s.get('campaign_id') == campaign.get('campaign_id')
+                            and s.get('campaign_disposition') == 'HELD_FOR_CAMPAIGN'
                             for s in states)
             pilot = self.store.pilot_task()
-            return {'ok': True, 'enabled': enabled, 'autopilot': autopilot, 'pilot': pilot,
+            return {'ok': True, 'enabled': enabled, 'autopilot': autopilot,
+                    'campaign': campaign, 'pilot': pilot,
                     'untouched': untouched, 'counts': counts, 'upcoming': upcoming,
                     'text': 'Queue ' + ('running' if enabled else 'paused after the current action') + '. One company at a time.\n' +
-                    ('Autopilot: ON; Python will select one untouched company when the lane is free.\n' if autopilot else 'Autopilot: OFF.\n') +
+                    (f"Campaign: ON ({campaign['campaign_id']}); Python will select one held member when the lane is free.\n" if autopilot else 'Campaign: OFF.\n') +
                     ('Pilot only: ' + pilot + '.\n' if pilot else '') +
                     f'Untouched backlog: {untouched}.\n' + json.dumps(counts, sort_keys=True) +
                     '\nActive/next: ' + ', '.join(upcoming[:10])}
@@ -265,7 +272,9 @@ class Coordinator:
             finally:
                 code.WORKSPACE.reset(token)
             digest = hashlib.sha256(json.dumps(items, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-            ids, reused = self.store.enqueue_batch(digest, specs, held=True)
+            ids, reused = self.store.enqueue_batch(
+                digest, specs, held=True,
+                campaign_id=data.get('campaign_id') or DEFAULT_CAMPAIGN_ID)
             for task_id in ids:
                 self.export(task_id)
             self.wake.set()
@@ -292,8 +301,11 @@ class Coordinator:
             self.store.set_pilot_task(state['id'])
             action = 'resume'
         if action == 'pause':
-            state = self.store.update(state['id'], stop_requested=True,
-                                      status='PAUSING' if state['status'] == 'RUNNING' else 'PAUSED', reason='Pause requested.')
+            state = self.store.pause_task(state['id'])
+        elif action == 'exclude':
+            state = self.store.exclude_campaign_task(state['id'])
+        elif action == 'include':
+            state = self.store.include_campaign_task(state['id'])
         elif action == 'resume':
             if state['status'] in ('RUNNING', 'QUEUED', 'PAUSING'):
                 raise ValueError('Task is already active or still pausing.')
@@ -323,10 +335,13 @@ class Coordinator:
                     checkpoint={'summary': 'External file changes accepted on resume; prior receipts remain historical.',
                                 'next_action': 'Rerun the baseline and inspect the current assigned files before verification.', 'outcome': 'continue'},
                     reason='Files changed while paused. Rerun baseline and required inspection; budgets are unchanged.')
-            state = self.store.update(state['id'], **fields)
+            if state.get('campaign_id'):
+                state = self.store.resume_campaign_task(state['id'], **fields)
+            else:
+                state = self.store.update(state['id'], **fields)
             self.wake.set()
         elif action != 'status':
-            raise ValueError('Use start, status, list, pause, resume, pilot controls, autopilot controls, queue controls, or health.')
+            raise ValueError('Use start, status, list, pause, resume, exclude, include, pilot controls, campaign controls, queue controls, or health.')
         self.export(state['id'])
         return {'ok': True, 'state': {k: v for k, v in state.items() if k != 'manifest'}, 'text': self.describe(state)}
 
@@ -385,16 +400,18 @@ class Coordinator:
                 for task_id in pending_exports:
                     self.export(task_id)
                 states = self.store.all()
-                if self.store.autopilot_enabled() and self.store.queue_enabled():
-                    activated = self.store.activate_next_untouched()
+                campaign = self.store.campaign_control()
+                if campaign['enabled']:
+                    activated = self.store.activate_next_campaign(campaign['campaign_id'])
                     if activated:
                         self.export(activated['id'])
                         states = self.store.all()
-                if self.store.queue_enabled():
+                    task = self.store.claim_campaign(campaign['campaign_id'])
+                elif self.store.queue_enabled():
                     task = self.store.claim_queued()
                 else:
                     pilot = self.store.pilot_task()
-                    task = self.store.claim_queued(pilot) if pilot else None
+                    task = self.store.claim_pilot(pilot) if pilot else None
                 if task:
                     with self.workspace_lock:
                         try:
@@ -433,6 +450,25 @@ class Coordinator:
         if state['stop_requested'] or self.stop.is_set():
             self.store.update(task_id, status='PAUSED', reason='Stopped at a safe action boundary.')
             self.export(task_id)
+            return True
+        campaign = self.store.campaign_control()
+        if state.get('campaign_disposition') == SELECTED:
+            if self.store.pilot_task() == task_id:
+                return False
+            if (not campaign['enabled']
+                    or state.get('campaign_id') != campaign.get('campaign_id')):
+                self.store.update(task_id, status='PAUSED',
+                                  reason='Campaign stopped at an action boundary; selection retained.')
+                self.export(task_id)
+                return True
+            return False
+        if state.get('campaign_id'):
+            # A HELD, USER_PAUSED, EXCLUDED, or finished campaign record never
+            # becomes generic queue work, even when step() is called directly.
+            if state['status'] in ('RUNNING', 'QUEUED'):
+                self.store.update(task_id, status='PAUSED',
+                                  reason='Campaign member is not selected; retained for campaign control.')
+                self.export(task_id)
             return True
         if not self.store.queue_enabled() and self.store.pilot_task() != task_id:
             self.store.update(task_id, status='QUEUED', reason='Queue paused at an action boundary.')

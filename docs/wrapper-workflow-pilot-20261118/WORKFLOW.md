@@ -49,3 +49,11 @@ The model's compact packet can contain only excerpts of a retrieved file. Retrie
 ## Verification
 
 Run the coordinator, workflow, queue, importer, permissions, transport, and coding-tools tests before deployment. Queue acceptance covers long initial waits, cumulative budgets, duplicate submission, atomic rejection, FIFO advancement, global pause across restart, isolated drafts, and uncertain-action recovery. Import acceptance covers completed records, saved claims, missing test assignments, and identity disagreement.
+
+## QA repair rollout — campaign membership
+
+Campaign membership is explicit and separate from task progress. Imported work starts `HELD_FOR_CAMPAIGN`. Selecting it changes its disposition to `SELECTED`; a company pause changes it to `USER_PAUSED`, and exclusion changes it to `EXCLUDED`. Campaign start cannot undo a company pause or exclusion. The campaign scheduler claims only its selected member; generic queue tasks and other campaigns cannot enter that lane. Stopping the campaign preserves the selected company for an explicit restart.
+
+Legacy records must not be adopted by guessing from `PAUSED`. Use `migrate_campaign_membership.py` with the reviewed task-ID file and required expected-cohort evidence. The November 18 migration is bound to the exact 102-task cohort, canonical identity digest, and original batch membership. Controls must be off, pilot unset, no active tasks or unfinished receipts, and database integrity must pass. Rehearse on a backup copy before applying while the service is stopped. An unreviewed pause remains paused; conflicts abort the entire transaction. Migration never starts work or resets accumulated budgets.
+
+Repair rollout remains paused until all original QA findings and an independent final QA pass. A failed final QA creates a new report and a fresh repair/verification cycle. Passing coordinator QA does not replace live scraper validation or authorize automatic production installation.
