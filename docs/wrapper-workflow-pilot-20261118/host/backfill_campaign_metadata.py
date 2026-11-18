@@ -38,7 +38,7 @@ def backfill(store, items):
     return {'records': len(records), 'matched': matched, 'updated': updated}
 
 
-def backfill_campaign_identity(store, items, *, apply=False, baseline_root=None, expected_baseline_manifest=None):
+def backfill_campaign_identity(store, items, *, apply=False, baseline_root=None, expected_baseline_manifest=None, expected_assignment_manifest=None):
     """Bind only exact reviewed campaign members; never resume or reset work."""
     records = {}
     companies = set()
@@ -53,6 +53,12 @@ def backfill_campaign_identity(store, items, *, apply=False, baseline_root=None,
         companies.add(identity['company_id'])
     report = dict(matched=[], changed=[], skipped=[], registered=[])
     baseline_verified = False
+    assignment_verified = False
+    from coordinator_baseline import files as baseline_files, binding
+    if expected_assignment_manifest is not None:
+        if baseline_root is None or baseline_files(Path(baseline_root)) != expected_assignment_manifest:
+            raise ValueError('Reviewed whole baseline differs from current source.')
+        assignment_verified = True
     with store.connect() as db:
         db.execute('BEGIN IMMEDIATE')
         controls = {key: json.loads(value) for key, value in db.execute('SELECT key,value FROM settings')}
@@ -109,6 +115,17 @@ def backfill_campaign_identity(store, items, *, apply=False, baseline_root=None,
                     raise ValueError('Legacy acceptance binding requires an untouched task.')
                 baseline_verified = True
                 updated['acceptance_baseline_manifest'] = expected_baseline_manifest
+            if 'assignment_baseline' not in updated:
+                if (baseline_root is None or not expected_assignment_manifest
+                        or (not assignment_verified and baseline_files(Path(baseline_root)) != expected_assignment_manifest)):
+                    raise ValueError('Legacy assignment baseline requires a reviewed whole source manifest.')
+                if any(updated.get(k, 0) for k in ('calls', 'tokens', 'sessions')) or db.execute('SELECT 1 FROM receipts WHERE task=? LIMIT 1', (state['id'],)).fetchone():
+                    raise ValueError('Legacy assignment binding requires an untouched reviewed task.')
+                assignment_verified = True
+                updated['assignment_baseline'] = binding(expected_assignment_manifest)
+            elif (updated['assignment_baseline'] != binding(updated['assignment_baseline'].get('manifest', {}))
+                    or expected_assignment_manifest is not None and updated['assignment_baseline'] != binding(expected_assignment_manifest)):
+                raise ValueError('Existing assignment baseline binding differs from reviewed inputs.')
             digest = updated['integration_identity_digest']
             original_batch = provenance[state['id']][0]
             if existing and existing != (state['id'], digest, original_batch):
@@ -121,6 +138,8 @@ def backfill_campaign_identity(store, items, *, apply=False, baseline_root=None,
             pending.append((updated, key, digest, original_batch, existing))
         if baseline_verified and acceptance_files(Path(baseline_root)) != expected_baseline_manifest:
             raise ValueError('Reviewed baseline changed during migration.')
+        if assignment_verified and baseline_files(Path(baseline_root)) != expected_assignment_manifest:
+            raise ValueError('Reviewed whole baseline changed during migration.')
         if apply:
             for state, key, digest, original_batch, existing in pending:
                 if state['id'] in report['changed']:
@@ -139,13 +158,15 @@ def main():
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--baseline-root', type=Path)
     parser.add_argument('--baseline-manifest', type=Path)
+    parser.add_argument('--assignment-manifest', type=Path)
     args = parser.parse_args()
     items = []
     for path in args.batches:
         items.extend(json.loads(path.read_text()))
     if args.identity:
         result = backfill_campaign_identity(Store(args.tasks), items, apply=args.apply, baseline_root=args.baseline_root,
-            expected_baseline_manifest=json.loads(args.baseline_manifest.read_text()) if args.baseline_manifest else None)
+            expected_baseline_manifest=json.loads(args.baseline_manifest.read_text()) if args.baseline_manifest else None,
+            expected_assignment_manifest=json.loads(args.assignment_manifest.read_text()) if args.assignment_manifest else None)
     else:
         result = backfill(Store(args.tasks), items)
     print(json.dumps(result, sort_keys=True))

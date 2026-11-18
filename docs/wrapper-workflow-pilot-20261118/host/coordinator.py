@@ -49,16 +49,8 @@ WEB_SCHEMAS = [code.spec(name, description, {key: code.S}, [key]) for name, key,
 
 
 def manifest():
-    result = {}
-    for folder in ('src', 'tests', 'docs'):
-        for path in (code.root() / folder).rglob('*'):
-            if path.suffix in code.EXTENSIONS and path.is_file() and not path.is_symlink():
-                try:
-                    safe = code.path_for(path.relative_to(code.root()).as_posix())
-                    result[safe.relative_to(code.root()).as_posix()] = hashlib.sha256(safe.read_bytes()).hexdigest()
-                except ValueError:
-                    continue
-    return result
+    from coordinator_baseline import files
+    return files(code.root())
 
 
 def compact(result):
@@ -136,6 +128,9 @@ class Coordinator:
         self.control_error = ''
         self.fatal_error = ''
         self.scheduler_lock = None
+        self.scheduler_guard = threading.Lock()
+        self.scheduler_token = None
+        self.scheduler_thread = None
 
     def export(self, task_id):
         """Readable snapshots are replaceable; SQLite is the authoritative record."""
@@ -399,22 +394,60 @@ class Coordinator:
                 
                 + certification)
 
+    def _acquire_scheduler(self):
+        with self.scheduler_guard:
+            if self.scheduler_token is not None:
+                raise RuntimeError('Another scheduler invocation owns this coordinator.')
+            handle = (self.store.base / 'scheduler.lock').open('a+')
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BaseException:
+                handle.close()
+                raise RuntimeError('Another coordinator process owns the scheduler.') from None
+            token = object()
+            self.scheduler_lock, self.scheduler_token = handle, token
+            self.scheduler_thread = threading.current_thread()
+            return token
+
+    def _release_scheduler(self, token):
+        with self.scheduler_guard:
+            if self.scheduler_token is token:
+                self.scheduler_lock.close()
+                self.scheduler_lock = self.scheduler_token = self.scheduler_thread = None
+
     def start(self):
         if getattr(self, 'thread', None) and self.thread.is_alive():
             return
-        lock_path = self.store.base / 'scheduler.lock'
-        self.scheduler_lock = lock_path.open('a+')
+        token = self._acquire_scheduler()
+        self.stop.clear()
+        self.fatal_error = ''
+        self.thread = threading.Thread(target=self._owned_run, args=(token,), name='mulelab-wrapper-coordinator', daemon=True)
+        with self.scheduler_guard:
+            self.scheduler_thread = self.thread
         try:
-            fcntl.flock(self.scheduler_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            self.scheduler_lock.close()
-            self.scheduler_lock = None
-            self.fatal_error = 'Another coordinator process owns the scheduler.'
-            raise RuntimeError(self.fatal_error) from None
-        self.thread = threading.Thread(target=self.run, name='mulelab-wrapper-coordinator', daemon=True)
-        self.thread.start()
+            self.thread.start()
+        except BaseException:
+            self._release_scheduler(token)
+            raise
 
     def run(self):
+        token = self._acquire_scheduler()
+        self._owned_run(token)
+
+    def _owned_run(self, token):
+        with self.scheduler_guard:
+            if (token is not self.scheduler_token or self.scheduler_lock is None
+                    or self.scheduler_thread is not threading.current_thread()):
+                raise RuntimeError('Scheduler ownership was not acquired.')
+        try:
+            self._run_loop()
+        finally:
+            self._release_scheduler(token)
+
+    def _run_loop(self):
+        with self.scheduler_guard:
+            if self.scheduler_lock is None or self.scheduler_thread is not threading.current_thread():
+                raise RuntimeError('Scheduler loop requires this thread to own the lock.')
         # Only the process holding scheduler.lock may reconcile RUNNING state.
         # Recovery happens in the supervised loop so transient database errors
         # use the same bounded retry/fail-visible policy as normal scheduling.
@@ -591,6 +624,9 @@ class Coordinator:
         validate_bound_identity(state)
         if self.paused(task_id):
             return
+        if not state.get('manifest'):
+            from coordinator_baseline import verify
+            verify(state, code.root())
         if state.get('workflow_version') == 2 and state.get('activated_at') is None:
             state = dict(self.store.update(task_id, activated_at=time.time()), result_control_generation=result_generation)
         if state['mode'] == 'develop' and state.get('authorization_version') != 1:

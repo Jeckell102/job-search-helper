@@ -97,3 +97,17 @@ Campaign status counts the current assignment for each registered company once. 
 When every current company has reached a recorded boundary and no action remains in flight, Python saves an immutable completion snapshot and turns scheduling off. `DRAINED_WITH_EXCEPTIONS` means some companies still need attention. Repeating a status request does not create a new revision. An explicit eligible resume, include, or retry reopens the campaign with its earlier completion snapshot preserved.
 
 A global pause retains the selected company and prevents automatic advancement. An unresolved inference receipt stops the entire lane for reconciliation. Results arriving after a pause or a changed control generation cannot advance the phase, publish success, or restore scheduling; saved evidence does not override the operator's control decision.
+
+## Scheduler ownership and frozen assignment inputs
+
+Every scheduler entry point acquires exclusive process ownership before recovery or selection. A competing scheduler cannot run against the same task store. Normal stops and failed starts release ownership so a later process can recover safely.
+
+Assignments pin the original source, tests, documentation, fixtures, and consumed root configuration. Campaign imports use the reviewed frozen queue baseline; direct assignments use their actual checkout. Python checks that baseline before first activation and before publishing an isolated company folder. A changed input requires a reviewed new assignment rather than an ordinary resume that silently accepts it. Later authorized edits inside a published company workspace remain governed by its edit scope and receipts.
+
+The legacy identity migration additionally takes `--assignment-manifest REVIEWED_WHOLE_BASELINE_JSON`. This whole-source manifest is separate from the original acceptance-test manifest. Review both against the chosen frozen queue baseline, rehearse the exact cohort migration on a copy, and require an unchanged second run.
+
+## Paused deployment
+
+A release consists of the complete reviewed host source, local Jetson command mirror, and pinned runtime prerequisites. Dependencies and tokenizer assets are verified by hash; runtime databases, credentials, and company workspaces are not release inputs. A clean assembly rejects missing, changed, or extra files.
+
+Deployment requires independent staged QA tied to the exact release manifest. The service is stopped while files and database versions differ. The rollout saves a database backup and a persistent progress journal, rehearses migration on a copy, and verifies all scheduling controls remain off. Failed checks restore the previous source, database, and service state. Interrupted publication is recovered from the journal before any campaign can run. Generated-wrapper installation and live scraper validation remain separate operator gates.

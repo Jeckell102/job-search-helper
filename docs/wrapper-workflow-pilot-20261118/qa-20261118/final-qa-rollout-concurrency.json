@@ -1,0 +1,15 @@
+{
+  "second_result": "INSTALLED_PAUSED",
+  "first_published_while_service_running": true,
+  "first_error": "Rollback failed; keep scheduling stopped and inspect /tmp/qa-rollout-race-8wh6mxfj/archive",
+  "first_journal": "ROLLBACK_FAILED",
+  "second_journal": "INSTALLED_PAUSED",
+  "final_actual_source": "new",
+  "final_database": [
+    [
+      "old"
+    ]
+  ],
+  "first_rollback_error": "AssertionError: ",
+  "second_installed_claim_now_false": true
+}

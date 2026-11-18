@@ -21,6 +21,9 @@ def batch_source():
 @contextmanager
 def workspace(store, state, create=False):
     if not state.get('isolated_workspace'):
+        if not state.get('manifest'):
+            from coordinator_baseline import verify
+            verify(state, code.root())
         yield
         return
     folder = store.base / state['id']
@@ -32,38 +35,33 @@ def workspace(store, state, create=False):
         with tempfile.TemporaryDirectory(prefix='prepare-', dir=folder) as tmp:
             staging = Path(tmp) / 'repo'
             staging.mkdir()
-            hashes = {}
+            from coordinator_baseline import verify, files
             source = batch_source()
-            for area in ('src', 'tests', 'docs'):
-                for path in (source / area).rglob('*'):
-                    if path.suffix not in code.EXTENSIONS or not path.is_file():
-                        continue
-                    name = path.relative_to(source).as_posix()
-                    if any(p.is_symlink() for p in (path, *path.parents)) or path.stat().st_nlink != 1 or path.stat().st_size > 2000000:
-                        raise ValueError('Unsafe or oversized baseline file: ' + name)
-                    content = path.read_bytes()
-                    dest = staging / name
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    dest.write_bytes(content)
-                    hashes[name] = hashlib.sha256(content).hexdigest()
-            for root_name in ('pyproject.toml', 'title-blacklist.txt', 'title-review-list.txt'):
-                config = source / root_name
-                if not config.exists():
-                    continue
-                if config.is_symlink() or not config.is_file() or config.stat().st_nlink != 1 or config.stat().st_size > 256000:
-                    raise ValueError('Unsafe test input: ' + root_name)
-                (staging / root_name).write_bytes(config.read_bytes())
+            hashes = verify(state, source)
+            for name in hashes:
+                dest = staging / name
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes((source / name).read_bytes())
+            verify(state, source)
+            if files(staging) != hashes:
+                raise ValueError('Assignment baseline changed while copying workspace.')
             token = code.WORKSPACE.set(staging)
             try:
                 code.git('init', '--quiet')
-                code.git('add', '--', 'src', 'tests', 'docs')
+                code.git('add', '--', *sorted(hashes))
                 code.git('commit', '--quiet', '-m', 'Company development baseline')
             finally:
                 code.WORKSPACE.reset(token)
             (staging / 'baseline-manifest.json').write_text(json.dumps(hashes, sort_keys=True))
+            verify(state, source)
+            if files(staging) != hashes:
+                raise ValueError('Staged assignment baseline changed before publication.')
             staging.rename(target)
     if not target.is_dir() or target.is_symlink():
         raise ValueError('Company workspace is missing; inspect its saved task before resuming.')
+    if not state.get('manifest'):
+        from coordinator_baseline import verify
+        verify(state, target)
     token = code.WORKSPACE.set(target)
     try:
         yield

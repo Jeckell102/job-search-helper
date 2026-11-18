@@ -97,6 +97,8 @@ class Store(CampaignStore, InferenceStore):
         import coding_tools as code
         from coordinator_acceptance import files
         state['acceptance_baseline_manifest'] = files(code.root())
+        from coordinator_baseline import binding, files as baseline_files
+        state['assignment_baseline'] = binding(baseline_files(code.root()))
         with self.connect() as db:
             db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
         return state
@@ -122,6 +124,8 @@ class Store(CampaignStore, InferenceStore):
         from coordinator_workspace import batch_source
         from coordinator_acceptance import files
         state['acceptance_baseline_manifest'] = files(batch_source())
+        from coordinator_baseline import binding, files as baseline_files
+        state['assignment_baseline'] = binding(baseline_files(batch_source()))
         return state
 
     def enqueue_batch(self, digest, specs, held=False, campaign_id=DEFAULT_CAMPAIGN_ID):
@@ -212,6 +216,8 @@ class Store(CampaignStore, InferenceStore):
             state = self.new_state(**{key: old[key] for key in (
                 'objective', 'tests', 'mode', 'max_sessions', 'authorization_version',
                 'evidence_requirements', 'workflow_version', 'integration')})
+            state['assignment_baseline'] = old.get('assignment_baseline')
+            state['acceptance_baseline_manifest'] = old.get('acceptance_baseline_manifest')
             state.update(campaign_id=old['campaign_id'], campaign_company_id=old['campaign_company_id'],
                          campaign_manifest_digest=old['campaign_manifest_digest'],
                          campaign_disposition=HELD_FOR_CAMPAIGN, isolated_workspace=True,
@@ -429,6 +435,8 @@ class Store(CampaignStore, InferenceStore):
                 raise ValueError('This task reached its operator gate. Review the receipts before a new assignment.')
             if state['mode'] == 'develop' and state.get('authorization_version') != 1:
                 raise ValueError('This older task lacks explicit development authorization.')
+            from coordinator_baseline import verify_initial
+            verify_initial(self, state)
             started = state.get('activated_at') if state.get('workflow_version') == 2 else state['created']
             exhausted = (state.get('sessions', 0) >= state.get('max_sessions', 0)
                          or state.get('calls', 0) >= max_calls
@@ -562,12 +570,16 @@ class Store(CampaignStore, InferenceStore):
                 if selected.get('campaign_id') != selected_campaign:
                     return None
                 if selected['status'] == 'PAUSED' and not selected.get('stop_requested'):
+                    from coordinator_baseline import verify_initial
+                    verify_initial(self, selected)
                     selected.update(status='QUEUED', reason='Campaign restarted; retained selected company.')
                     db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(selected), selected['id']))
                     return selected
                 return None
             if candidate is None:
                 return None
+            from coordinator_baseline import verify_initial
+            verify_initial(self, candidate)
             candidate.update(status='QUEUED', stop_requested=False, errors=0,
                              campaign_disposition=SELECTED,
                              campaign_selected_at=time.time(),
@@ -781,7 +793,7 @@ class Store(CampaignStore, InferenceStore):
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
             validate_bound_identity(state)
-            protected = {'integration', 'integration_identity', 'integration_identity_digest', 'worker_assignment', 'worker_assignment_digest', 'identity_binding_digest', 'evidence_requirements_digest', 'edit_scope', 'acceptance_bundle', 'acceptance_baseline_manifest', 'evidence_epoch', 'objective', 'tests', 'campaign_manifest_digest', 'campaign_id', 'campaign_company_id', 'retry_of'}
+            protected = {'integration', 'integration_identity', 'integration_identity_digest', 'worker_assignment', 'worker_assignment_digest', 'identity_binding_digest', 'evidence_requirements_digest', 'edit_scope', 'acceptance_bundle', 'acceptance_baseline_manifest', 'assignment_baseline', 'evidence_epoch', 'objective', 'tests', 'campaign_manifest_digest', 'campaign_id', 'campaign_company_id', 'retry_of'}
             if any(key in fields and fields[key] != state.get(key) for key in protected):
                 raise ValueError('Immutable assignment identity cannot be changed.')
             state.update(fields)
