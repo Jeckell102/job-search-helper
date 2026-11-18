@@ -1,0 +1,24 @@
+{
+  "before": {
+    "control": {
+      "enabled": true,
+      "campaign_id": "qa-campaign-completion"
+    },
+    "generation": 3,
+    "status": "RUNNING"
+  },
+  "after": {
+    "control": {
+      "enabled": true,
+      "campaign_id": "qa-campaign-completion"
+    },
+    "generation": 3,
+    "status": "RUNNING"
+  },
+  "campaign_state": "RUNNING",
+  "errors": [],
+  "receipt_status": "COMPLETED",
+  "final_task_status": "QUEUED",
+  "actual_coordinator_session": true,
+  "real_model_calls": 0
+}

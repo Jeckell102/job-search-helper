@@ -1,0 +1,19 @@
+{
+  "result": "REPAIR_FOCUSED_PASS_PENDING_INDEPENDENT_QA",
+  "source_sha256": {
+    "coordinator_campaign.py": "ce2db9aa56517bd516607c03c2f9f5ac1eaafd6c10f3f895bc5497e53cc14062",
+    "test_campaign_inflight_status.py": "900ab1b8dc76acf801e73eb4729d3801180c4647ca05544a5d78fad12001aea9",
+    "coordinator.py": "e38f3c859122f8763c77cbdb97e5c06a358c8f89723a5b43d497bd631f5282e1",
+    "coordinator_inference.py": "0abce9be80411e913531c2bf3470e5f8a3110a9af062e2cf5f8578116b3a3f42",
+    "coordinator_store.py": "66aebf37b7580bdf674598799762121146405e62f877e47b1159f01731c3e581"
+  },
+  "tests": {
+    "campaign_suite": 49,
+    "inference_control_resilience": 42,
+    "new_regression_tests": 10
+  },
+  "production_mutations": false,
+  "real_model_calls": 0,
+  "reproduction": "repair-status-inflight-reproduction.json",
+  "historical_evidence_note": "Original reproduction JSON was overwritten once; original independent Markdown failure report remains unchanged. JSON is explicitly marked reconstructed; no claim of retaining exact original raw error."
+}

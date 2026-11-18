@@ -123,6 +123,46 @@ class CampaignStore:
         with self.connect() as db:
             return [json.loads(row[0]) for row in db.execute('SELECT data FROM campaign_snapshots WHERE campaign_id=? ORDER BY revision', (campaign_id,))]
 
+    def _owned_inflight_dispatch(self, db, row, pending_count):
+        """Recognize one current reservation, without clearing its global barrier.
+
+        Recovery still converts interrupted dispatch to UNCERTAIN before scheduler
+        work. Observational commands must not revoke a live owner's generation.
+        """
+        request, task, status, raw = row
+        try:
+            proof = json.loads(raw)
+            state = self._inference_state(db, task)
+            active = [json.loads(r[0])['id'] for r in db.execute('SELECT state FROM tasks')
+                      if json.loads(r[0]).get('status') in ('RUNNING', 'PAUSING')]
+            if (pending_count != 1 or status != 'DISPATCHING'
+                    or proof['status'] != status or proof['request_id'] != request
+                    or proof['task'] != task or proof['finished'] is not None
+                    or active != [task] or not state.get('inference_session_open')
+                    or not proof['session_id']
+                    or not self._inference_allowed(db, state, proof['max_seconds'])
+                    or self._control_generation(db) != proof['control_generation']):
+                return False
+            bindings = {'session_id': 'inference_session_id', 'phase': 'phase',
+                        'campaign_id': 'campaign_id', 'campaign_run_id': 'campaign_run_id',
+                        'company_id': 'campaign_company_id',
+                        'identity_digest': 'identity_binding_digest',
+                        'integration_identity_digest': 'integration_identity_digest'}
+            if any(proof[k] != state.get(v) for k, v in bindings.items()):
+                return False
+            before = proof['pre_counters']
+            numeric = [before[k] for k in ('sessions', 'calls', 'tokens')]
+            numeric += [proof[k] for k in ('reserved_prompt_tokens', 'reserved_output_tokens', 'reserved_tokens')]
+            return (all(type(n) is int and n >= 0 for n in numeric)
+                    and 0 < before['sessions'] <= state['max_sessions']
+                    and proof['reserved_output_tokens'] > 0
+                    and proof['reserved_tokens'] == proof['reserved_prompt_tokens'] + proof['reserved_output_tokens']
+                    and state['sessions'] == before['sessions']
+                    and state['calls'] == before['calls'] + 1
+                    and state['tokens'] == before['tokens'] + proof['reserved_tokens'])
+        except (ValueError, KeyError, TypeError):
+            return False
+
     def _campaign_reconcile(self, db, campaign_id):
         controls = {k: json.loads(v) for k, v in db.execute('SELECT key,value FROM settings')}
         rows = db.execute('SELECT company_id,current_task_id,identity_digest FROM campaign_company_registry WHERE campaign_id=? ORDER BY company_id', (campaign_id,)).fetchall()
@@ -133,11 +173,17 @@ class CampaignStore:
         seal = db.execute('SELECT membership_digest FROM campaign_seals WHERE campaign_id=?', (campaign_id,)).fetchone()
         if seal and seal[0] != membership:
             errors.append('Reviewed campaign membership changed; a new reviewed campaign is required.')
-        pending = bool(self._inference_pending(db))
-        if pending:
-            for request, task, status, raw in db.execute("SELECT request_id,task,status,data FROM inference_receipts WHERE status IN ('DISPATCHING','UNCERTAIN')"):
-                proof = json.loads(raw)
-                errors.append(f'Unresolved {status} inference {request} task {task} company {proof.get("company_id")} blocks global reconciliation.')
+        dispatches = db.execute("SELECT request_id,task,status,data FROM inference_receipts WHERE status IN ('DISPATCHING','UNCERTAIN')").fetchall()
+        pending = bool(dispatches)
+        for row in dispatches:
+            if not self._owned_inflight_dispatch(db, row, len(dispatches)):
+                request, task, status, raw = row
+                try:
+                    proof = json.loads(raw)
+                    company = proof.get('company_id') if isinstance(proof, dict) else None
+                except (ValueError, TypeError):
+                    company = None
+                errors.append(f'Unresolved {status} inference {request} task {task} company {company} blocks global reconciliation.')
         unfinished = db.execute('SELECT id,task,name FROM receipts WHERE result IS NULL').fetchall()
         for receipt_id, task_id, name in unfinished:
             owner = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
@@ -212,7 +258,7 @@ class CampaignStore:
         exceptions = [m for m in members if m['exception']]
         if errors:
             result = 'PAUSED_RECONCILIATION'
-        elif seal and not active and not counts.get('HELD_FOR_CAMPAIGN') and not counts.get('SELECTED'):
+        elif seal and not pending and not active and not counts.get('HELD_FOR_CAMPAIGN') and not counts.get('SELECTED'):
             result = 'DRAINED_WITH_EXCEPTIONS' if exceptions else 'DRAINED'
         else:
             result = 'RUNNING' if controls.get('campaign_enabled') and controls.get('active_campaign_id') == campaign_id else 'PAUSED'

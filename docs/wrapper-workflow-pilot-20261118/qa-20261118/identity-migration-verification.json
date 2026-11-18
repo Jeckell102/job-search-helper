@@ -1,6 +1,7 @@
 {
   "snapshot_sha256": "46dcc98ed6b0f70b873d2eff42009f998bd397c731076530a66ee7950e3c6178",
   "acceptance_baseline_sha256": "05bb355c4aba09b3daf962f451e9972c5971aa700af53eaf865dcf999837884a",
+  "assignment_baseline_sha256": "42899033bb3d7398a7fb686e860eb9231201f5daa94a4d2cf9900d4b2deae1af",
   "dry_run": {
     "matched": [
       "WRAP-8be410e6f4",
@@ -777,7 +778,7 @@
     "pilot_task": "null",
     "autopilot_enabled": "false"
   },
-  "db_before_sha256": "9a822d8e7321bbf0aa86c7ba871890fb9138c9820cf93ba4688e110cbf879e44",
-  "db_after_sha256": "8b8b9e6208e2f39ba8e7897030bb5d0ec06e0f50dc820e62de32ebeba5d8e168",
+  "db_before_sha256": "7c071c3791614e19eaa25a1f8efc1c613f70edd50bd0636fe3fd00807722d3e5",
+  "db_after_sha256": "580a9a34b747f72a6ea92f031dbc58e7dc48342b99fd5ed272c7091ca34e6607",
   "result": "PASS"
 }
