@@ -1,0 +1,54 @@
+{
+  "result": "PASS",
+  "independent": true,
+  "reviewer": "final_v2_review",
+  "scope": "Final staged QA only; installed-state QA remains mandatory",
+  "manifest_digest": "3fb8c7ce00a4bed1ca7a6c93784eba04678552b4b35ca0ad1dcfbf21e919a17f",
+  "release_digest": "0322c36d5dcfea01e8d18a73895e9a8d5b84e1f5a69bb21189264f2f87a62c15",
+  "clean_release": "/tmp/wrapper-final-v2-ce6fjvrr/release",
+  "source_files": 66,
+  "prerequisite_files": 682,
+  "original_finding_groups": {
+    "1": "PASS_IN_STAGING",
+    "2": "PASS_IN_STAGING",
+    "3": "PASS_IN_STAGING",
+    "4": "PASS_IN_STAGING",
+    "5": "PASS_IN_STAGING",
+    "6": "PASS_IN_STAGING",
+    "7": "PASS_IN_STAGING"
+  },
+  "latest_repairs": {
+    "healthy_inflight_status": "PASS",
+    "durable_rollout_ownership": "PASS"
+  },
+  "tests": {
+    "fresh_clean_host": 282,
+    "independent_status_repair": 92,
+    "independent_rollout_repair": 27,
+    "counts_overlap": true
+  },
+  "migration_exact_102": true,
+  "same_process_migration_parity": true,
+  "production_mutations_by_reviewer": 0,
+  "live_inference_calls_by_reviewer": 0,
+  "installed_qa": "NOT_RUN",
+  "final_github_parity": "PENDING",
+  "evidence_sha256": {
+    "FINAL_QA_PLAN.md": "704aea5fb930de4bef9b95abc03edecbd60b74d6488c9292708f238a944e903c",
+    "QA_ASSESSMENT.md": "c74419e08ec71248206ec0a4175079f8d3e1713825d179fa1de3b3f943adc1b1",
+    "ORIGINAL_REPRODUCTION_COVERAGE.md": "bafa0706cd3400151ccbc6303210b3bbe963e3207046d1f5e3af2d3ac43a3f5f",
+    "FINAL_QA_FAILURE_20261118_SCHEDULER.md": "0389ac95e54eea3da948bfb06c5b3ee92fe609bcf66ecc4a81a4982e14836c8d",
+    "FINAL_QA_ROLLOUT.md": "7cd9e51c5184ff1843c5efac4c8100c4667bc764ae644282053a183cadafc0f7",
+    "INDEPENDENT_STATUS_REPAIR_ACCEPTANCE.md": "34a267613ebb70634d0dc94ded021fb8419aa0cdb49bf4fa109922c6ea8b0a91",
+    "ROLLOUT_OWNERSHIP_INDEPENDENT_QA.md": "70d2b76cf05f65ab6dc9c9f46a74771f682453fc05e8fd88e9f45ebe4a434023",
+    "independent-status-repair-tests.log": "b136052ba1f050e4f77912a12a30a897499f1018fe1fb1894b16ee89226f3330",
+    "rollout-ownership-independent-tests.log": "54873dfebbe9369dd8ed3f635291adb2a5a08272263f0172675861051abd88b1",
+    "final-v2-host-suite.log": "1204471e809b9558208830712ae31231b99061ce9fca2e0bb21653406dd9beb0",
+    "two-company-rehearsal.json": "cedd4877159e9572972be528e15f713d3d8050deab55886dc3865a8bcefc71e4",
+    "real-acceptance-verification.json": "1b6e3413b975d27895dfabf8ba0dcaa5752d1f48763a7fa270b8dfcd88ecad04",
+    "final-v2-controller-migration-rehearsal.json": "a067267cdee042fd4a67053d55e1d0c990c8b852d11757c45303f1283650307f",
+    "final-v2-migration-parity.json": "fdca05578f7da69d43a936b864db7be1c6f933dc3889b888fcf4febca3279cf5",
+    "final-staged-v2-independent-binding.json": "636dccdedbe1068d2beb1ddb9702045cdc56f874fb61d404bbb0f02b3262608f"
+  },
+  "reviewed_at_utc": "2026-11-18T20:44:39.786811+00:00"
+}

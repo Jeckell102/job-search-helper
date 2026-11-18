@@ -1,0 +1,21 @@
+{
+  "after_digest": "fb3a3c9c7288522820796c5d9a0bdaa66b2d92337a7fe74e8123dbabd88e50d4",
+  "before_digest": "77fda4b0f1d2b9af39399898b075735931c8d09c1d245a33158867a3aeb5215f",
+  "identity_changed": 102,
+  "membership_changed": 102,
+  "nonmembers_preserved": true,
+  "paused": {
+    "controls": {
+      "autopilot_enabled": false,
+      "pilot_task": null,
+      "queue_enabled": false
+    },
+    "digest": "fb3a3c9c7288522820796c5d9a0bdaa66b2d92337a7fe74e8123dbabd88e50d4",
+    "integrity": "ok",
+    "task_count": 111
+  },
+  "registry_created": 102,
+  "result": "PASS",
+  "reviewed_count": 102,
+  "second_apply_noop": true
+}

@@ -79,6 +79,11 @@ class Controller:
 
 
 class PausedRolloutTests(unittest.TestCase):
+    def pending(self, base, archive, journal):
+        (base / 'repairs').mkdir(exist_ok=True)
+        deployment.save_json(base / 'repairs/deployment-pending.json',
+            dict(version=1, base=str(base), archive=str(archive), initial_journal=journal))
+
     def fixture(self, path):
         base, prepared, archive = [path / s for s in ('base', 'prepared', 'archive')]
         for root, version in ((base, 'old'), (prepared, 'new')):
@@ -137,6 +142,7 @@ class PausedRolloutTests(unittest.TestCase):
                 journal = dict(version=1, phase='PUBLISHING', base=str(base), prepared=str(prepared),
                     published=['tools'], backup_ready=True, service_before=controller.service_state())
                 deployment.save_json(archive / 'journal.json', journal)
+                self.pending(base, archive, journal)
                 controller.stop()
                 (base / 'tools').rename(archive / 'tools-before')
                 if published_new:
@@ -157,6 +163,7 @@ class PausedRolloutTests(unittest.TestCase):
             journal = dict(version=1, phase='ROLLING_BACK', base=str(base), prepared=str(prepared),
                 published=['tools'], backup_ready=True, service_before=controller.service_state())
             deployment.save_json(archive / 'journal.json', journal)
+            self.pending(base, archive, journal)
             with sqlite3.connect(base / 'tasks/tasks.sqlite3') as db:
                 db.execute("update fixture set value='partial'")
             deployment.recover_archive(archive, controller)

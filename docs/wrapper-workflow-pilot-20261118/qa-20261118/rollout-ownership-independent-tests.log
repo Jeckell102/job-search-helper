@@ -1,0 +1,32 @@
+test_apply_excludes_apply_recover_prepare_rehearse_across_process (test_rollout_ownership_independent.IndependentOwnershipTests) ... ok
+test_crash_pending_blocks_cli_prepare_and_rehearse (test_rollout_ownership_independent.IndependentOwnershipTests) ... ok
+test_crash_pending_blocks_fresh_apply_and_wrong_recovery_then_matching_recovery (test_rollout_ownership_independent.IndependentOwnershipTests) ... ok
+test_existing_null_marker_is_not_treated_as_absent (test_rollout_ownership_independent.IndependentOwnershipTests) ... ok
+test_recover_excludes_apply_and_recover_across_process (test_rollout_ownership_independent.IndependentOwnershipTests) ... ok
+test_terminal_marker_is_retained_when_installed_verification_fails (test_rollout_ownership_independent.IndependentOwnershipTests) ... ok
+test_terminal_pending_verifies_current_install_without_undoing_it (test_rollout_ownership_independent.IndependentOwnershipTests) ... ok
+test_each_failure_restores_exact_source_database_and_service (test_paused_rollout.PausedRolloutTests) ... ok
+test_failed_preflight_writes_nothing_and_does_not_stop_service (test_paused_rollout.PausedRolloutTests) ... ok
+test_failed_running_check_also_rolls_back (test_paused_rollout.PausedRolloutTests) ... ok
+test_interrupted_recovery_can_resume_after_old_directory_already_restored (test_paused_rollout.PausedRolloutTests) ... ok
+test_interrupted_rename_and_partial_publication_recover (test_paused_rollout.PausedRolloutTests) ... ok
+test_malformed_recovery_journal_does_not_touch_service_or_files (test_paused_rollout.PausedRolloutTests) ... ok
+test_success_publishes_with_backup_and_preserves_workspace (test_paused_rollout.PausedRolloutTests) ... ok
+test_auth_token_is_used_only_in_header_and_never_appears_in_errors (test_rollout_controller_qa.RolloutControllerQATests) ... ok
+test_cli_allows_disposable_preparation_but_rejects_output_under_production (test_rollout_controller_qa.RolloutControllerQATests) ... ok
+test_controls_active_tasks_and_unfinished_work_always_fail_closed (test_rollout_controller_qa.RolloutControllerQATests) ... ok
+test_exact_102_migration_is_noop_on_second_apply_and_preserves_nonmembers (test_rollout_controller_qa.RolloutControllerQATests) ... ok
+test_preflight_is_read_only_and_rejects_every_unbound_input_before_callbacks (test_rollout_controller_qa.RolloutControllerQATests) ... ok
+test_rollback_verification_detects_source_or_database_mismatch (test_rollout_controller_qa.RolloutControllerQATests) ... ok
+test_running_verification_rejects_paused_database_drift_after_start (test_rollout_controller_qa.RolloutControllerQATests) ... ok
+test_stopped_and_running_checks_require_parity_health_lock_and_no_ai (test_rollout_controller_qa.RolloutControllerQATests) ... ok
+test_changed_or_missing_source_and_prerequisite_reject_before_build (test_release_bundle.ReleaseBundleTests) ... ok
+test_clean_release_reproduces_all_sources_and_preserves_only_pinned_prerequisites (test_release_bundle.ReleaseBundleTests) ... ok
+test_postbuild_missing_extra_substitution_and_mode_drift_fail (test_release_bundle.ReleaseBundleTests) ... ok
+test_source_mutation_during_copy_fails_and_installed_tree_is_unchanged (test_release_bundle.ReleaseBundleTests) ... ok
+test_symlink_and_existing_destination_rejected (test_release_bundle.ReleaseBundleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 2.007s
+
+OK

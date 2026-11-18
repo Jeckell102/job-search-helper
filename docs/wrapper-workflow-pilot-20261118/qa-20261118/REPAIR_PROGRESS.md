@@ -46,3 +46,19 @@ Two-company offline rehearsal passed using actual guarded edits, Git workspaces 
 Group6 final review: independent13/13, combined59/59, full250/250 and real two-company rehearsal passed before two additional boundary findings. Status was implicitly sealing a partial pre-start batch roster; also an old drained campaign could disable a separately started generic queue on a later status read. Group6 remains IN PROGRESS pending explicit activation sealing, atomic late-import rejection, observational terminal status, and new regression/full checks. Group7 remains waiting.
 
 Group6 ACCEPTED IN STAGING after final boundary fixes: independent15/15, campaign-focused39/39, implementation/control focused62/62, final frozen full254/254 (22.010s), and actual OS-sandbox two-company rehearsal PASS. Exact historical live receipt compatibility independently verified against both original pilots. Group7 is next; production remains paused and unchanged.
+
+## Finding7 in progress
+
+Group6 GitHub backup70fbb7f pushed successfully. Fresh ownership/baseline implementation lane plus independent verification and roadmap coordinator active; root owns deployment. Added pure release_bundle.py assembly with five passing fault/parity tests. Read-only runtime prerequisite inventory pins682 files (48,104,513 bytes), digestfe94a59fb6529f32b52730fa85e41116c88bc6ac29709cbbcfb0feef77a9ffcc; binaries are not copied into GitHub. Whole-assignment migration rehearsal updated for new reviewed manifest API but awaits worker implementation. Old deploy_campaign_update.py is NOT approved for execution and must be replaced before rollout. Production remains unchanged/paused.
+
+Group7 ownership/baseline independently accepted14/14 and focused73/73 with ResourceWarning-as-error. Complete disposable host installation passed272/272 tests24.480s and real tokenizer smoke (10,000 context,16 prompt,32 reserve,9,952 output capacity; no modelcall). Exacthost byteparity verified. Final two-company OSsandbox rehearsal and exact102 wholebaseline migration rerun both PASS. Releasebuilder5/5 and rollbackengine7/7 pass, including abruptinterruption and malformedjournal tests. Real reviewed controller/independent deployQA/final stagedQA/pausedinstallation remain pending.
+
+## Fresh final QA checkpoint
+
+Startup drift regression accepted: controller 8/8; release builder 5/5; rollout engine 7/7. Rebuilt complete clean candidate, manifest `ef9f1771c30572410f685de65d04b549d24404390b315bf71251dc256f9206b6`; host hashes still match all 272 previously passing tests. Read-only production backup rehearsal passed: exactly 102 membership and identity changes, second apply no-op, all nonmembers preserved, scheduling OFF, 111 total tasks. Evidence: final-controller-migration-rehearsal.json.
+
+Fresh independent final reviewers are reproducing two potential blockers: status reconciliation during healthy in-flight inference and concurrent deployment ownership. Candidate is NOT approved for installation. No production mutation or inference occurred.
+
+## Status repair independently accepted
+
+Healthy in-flight observational commands now preserve reservation ownership and generation. Independent acceptance:92/92; clean full host suite:282/282 in38.326seconds, strict resource warnings. Exact102 snapshot migration passed unchanged dry-run and repeat no-op. Bounded two-company real-sandbox/fake-model rehearsal passed after the change. Commit15f1789 pushed to GitHub backup branch. Deployment ownership repair assigned to rollout_controller; roadmap coordinator retains sequential acceptance gates. No production deployment, campaign activation, or real inference performed.

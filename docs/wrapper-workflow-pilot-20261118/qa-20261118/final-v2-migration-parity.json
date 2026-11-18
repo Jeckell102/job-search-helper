@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "same_process_two_copy_exact_parity": true,
+  "migration": {
+    "result": "PASS",
+    "reviewed_count": 102,
+    "before_digest": "77fda4b0f1d2b9af39399898b075735931c8d09c1d245a33158867a3aeb5215f",
+    "after_digest": "56dee01ca1b4d12073f5595528aa0da8cc003ae76047b38a01f7cf9313f15cb4",
+    "second_apply_noop": true,
+    "nonmembers_preserved": true,
+    "membership_changed": 102,
+    "identity_changed": 102,
+    "registry_created": 102,
+    "paused": {
+      "digest": "56dee01ca1b4d12073f5595528aa0da8cc003ae76047b38a01f7cf9313f15cb4",
+      "controls": {
+        "autopilot_enabled": false,
+        "pilot_task": null,
+        "queue_enabled": false
+      },
+      "task_count": 111,
+      "integrity": "ok"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "scope": "Independent staged rollout ownership repair; not deployment certification",
+  "tests": 27,
+  "seconds": 2.007,
+  "source_sha256": {
+    "deploy_campaign_update.py": "18a64009faf670adc60da9df944d18c0711a51f29b9dc07b3df020ee70548a40",
+    "rollout_controller.py": "d511d808bf85df0cacf9c97894430e3b154bf9164f647b119f85bf7ec6426a9a",
+    "release_bundle.py": "6b0e4a5c4d6db089f83aab0dc026eb4c4557d3df7f6948c6622d8c2f18b449ed"
+  },
+  "real_model_calls": 0,
+  "production_mutations": 0
+}

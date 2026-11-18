@@ -86,7 +86,7 @@ MuleLab reserves each model call in a database transaction immediately before di
 
 Model receipts contain request, tool and response digests and accounting evidence, rather than prompt contents. Finalization adjusts a reservation once using valid observed usage; invalid usage retains the reservation and stops for inspection. A crash or uncertain transport result never triggers an automatic resend of that request. Restart preserves counters and unresolved evidence. The existing Jetson endpoint is not claimed to provide provider-side idempotency.
 
-An unresolved model receipt is a global safety stop across companies. A timed-out request may still be running on the Jetson. Python therefore blocks later inference reservations and pauses scheduling rather than assuming that a timeout freed the lane. Inspect the recorded request and reconcile the provider state explicitly; elapsed time or a new chat does not authorize replay or clear the uncertainty.
+An uncertain or orphaned model receipt is a global safety stop across companies. A healthy, current dispatch keeps the inference lane occupied; status reads preserve its controls and allow its owned response to finish. A timed-out request may still be running on the Jetson. Python therefore blocks later inference reservations and pauses scheduling rather than assuming that a timeout freed the lane. Inspect the recorded request and reconcile the provider state explicitly; elapsed time or a new chat does not authorize replay or clear the uncertainty.
 
 ## Campaign completion and paused work
 
@@ -96,7 +96,7 @@ Campaign status counts the current assignment for each registered company once. 
 
 When every current company has reached a recorded boundary and no action remains in flight, Python saves an immutable completion snapshot and turns scheduling off. `DRAINED_WITH_EXCEPTIONS` means some companies still need attention. Repeating a status request does not create a new revision. An explicit eligible resume, include, or retry reopens the campaign with its earlier completion snapshot preserved.
 
-A global pause retains the selected company and prevents automatic advancement. An unresolved inference receipt stops the entire lane for reconciliation. Results arriving after a pause or a changed control generation cannot advance the phase, publish success, or restore scheduling; saved evidence does not override the operator's control decision.
+A global pause retains the selected company and prevents automatic advancement. An uncertain or orphaned inference receipt stops the entire lane for reconciliation. Reading status during a healthy current call does not pause it, and no other company can advance while that call is pending. Results arriving after a pause or a changed control generation cannot advance the phase, publish success, or restore scheduling; saved evidence does not override the operator's control decision.
 
 ## Scheduler ownership and frozen assignment inputs
 
@@ -111,3 +111,5 @@ The legacy identity migration additionally takes `--assignment-manifest REVIEWED
 A release consists of the complete reviewed host source, local Jetson command mirror, and pinned runtime prerequisites. Dependencies and tokenizer assets are verified by hash; runtime databases, credentials, and company workspaces are not release inputs. A clean assembly rejects missing, changed, or extra files.
 
 Deployment requires independent staged QA tied to the exact release manifest. The service is stopped while files and database versions differ. The rollout saves a database backup and a persistent progress journal, rehearses migration on a copy, and verifies all scheduling controls remain off. Failed checks restore the previous source, database, and service state. Interrupted publication is recovered from the journal before any campaign can run. Generated-wrapper installation and live scraper validation remain separate operator gates.
+
+Deployment preparation, rehearsal, application, and recovery share an exclusive process lock at `repairs/deployment.lock`. Never remove or replace that lock file. An interrupted application also leaves a durable `repairs/deployment-pending.json` record: new operations refuse to proceed until recovery matches its original archive and reviewed manifest. Recovery clears that record only after verifying the installed paused state or restored original state. The lock alone is not proof that an earlier interrupted operation completed.

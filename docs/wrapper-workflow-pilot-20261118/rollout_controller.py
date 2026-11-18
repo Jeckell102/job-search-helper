@@ -13,7 +13,7 @@ import urllib.request
 
 from release_bundle import (digest, metadata, tree, source_manifest, prerequisite_manifest,
                             build_release, verify_release, expected_release)
-from deploy_campaign_update import backup_database, save_json, rollout, recover_archive
+from deploy_campaign_update import backup_database, save_json, rollout, recover_archive, deployment_owner
 
 SERVICE = 'wrapper-development-host.service'
 INPUTS = ('reviewed-hold-ids.json', 'expected-legacy-cohort.json',
@@ -365,6 +365,13 @@ def main(argv=None):
     controller.archive = args.archive.resolve() if args.archive else None
     controller.inputs()
     validate_outputs(args.base, args.stage, args.qa, args.prepared, args.archive)
+    if args.action in ('prepare', 'rehearse'):
+        with deployment_owner(args.base):
+            return execute_action(args, controller, parser)
+    return execute_action(args, controller, parser)
+
+
+def execute_action(args, controller, parser):
     if args.action == 'prepare':
         if not args.prepared:
             parser.error('--prepared is required')

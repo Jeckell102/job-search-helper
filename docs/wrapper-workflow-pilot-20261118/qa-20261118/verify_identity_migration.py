@@ -3,6 +3,7 @@ from verify_membership_migration import *
 from backfill_campaign_metadata import backfill_campaign_identity
 from coordinator_identity import validate_bound_identity
 from coordinator_acceptance import files as acceptance_files
+from coordinator_baseline import files as assignment_files
 
 
 def verify(snapshot):
@@ -12,8 +13,12 @@ def verify(snapshot):
     baseline_root = Path('/home/chris/job-search-helper_old/dev/wrapper-coder/queue-base')
     baseline = acceptance_files(baseline_root)
     (HERE/'reviewed-acceptance-baseline.json').write_text(json.dumps(baseline,sort_keys=True,indent=2)+'\n')
-    binding = dict(baseline_root=baseline_root, expected_baseline_manifest=baseline)
-    audit = {'snapshot_sha256': sha(snapshot), 'acceptance_baseline_sha256': sha(HERE/'reviewed-acceptance-baseline.json')}
+    assignment = assignment_files(baseline_root)
+    (HERE/'reviewed-assignment-baseline.json').write_text(json.dumps(assignment,sort_keys=True,indent=2)+'\n')
+    binding = dict(baseline_root=baseline_root, expected_baseline_manifest=baseline,
+                   expected_assignment_manifest=assignment)
+    audit = {'snapshot_sha256': sha(snapshot), 'acceptance_baseline_sha256': sha(HERE/'reviewed-acceptance-baseline.json'),
+             'assignment_baseline_sha256': sha(HERE/'reviewed-assignment-baseline.json')}
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / 'tasks.sqlite3'
         shutil.copy2(snapshot, path)
@@ -31,7 +36,7 @@ def verify(snapshot):
         assert audit['second_apply']['changed'] == audit['second_apply']['registered'] == []
         assert sha(path) == after
         additions = {'integration_identity','integration_identity_digest','worker_assignment',
-                     'worker_assignment_digest','identity_binding_digest','evidence_requirements_digest','edit_scope','acceptance_baseline_manifest'}
+                     'worker_assignment_digest','identity_binding_digest','evidence_requirements_digest','edit_scope','acceptance_baseline_manifest','assignment_baseline'}
         for state in store.all():
             old = before_states[state['id']]
             if state['id'] not in ids:
