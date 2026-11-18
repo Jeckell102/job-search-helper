@@ -1,0 +1,37 @@
+{
+  "status": "PASS_STAGED_REPAIR_REVIEW",
+  "independent_review": "coordinator integration, workflow and evidence changes reviewed independently; reviewer implemented status CLI and store refresh so those portions require root cross-review",
+  "tests": {
+    "command": "python3 -m unittest -v test_retry_command_refresh test_retry_investigation_refresh test_status_response_cli test_progress_correction test_pilot_evidence_packet",
+    "passed": 22,
+    "seconds": 1.1
+  },
+  "hashes": {
+    "coordinator.py": "9347a7f742832ae9ca01e48ee34eaa0e85a2ff2392257a5fa08f67fce3db1aa8",
+    "coordinator_evidence.py": "56279ed2c5cbc53157155fa9ccd622a2044db9aaa823cd9136a2d4349fc95d58",
+    "coordinator_workflow.py": "d02c276ccb758fd67001bc283e3f1d418b2894b04fdd3ab4a61546ac0ff85544",
+    "coordinator_store.py": "6011d5c5f45937dc3c003c4e50f305eb92eb95de6e9ef93833836e12744a6759",
+    "wrapper_task.py": "481157495e911d8c5dff18d1f94baa5c0ad6aee39ab468744302d86750431828",
+    "test_retry_command_refresh.py": "248a5c23563be8945abe82ab7a3fef809ad7021c88871ec40a55acd506295beb",
+    "test_retry_investigation_refresh.py": "13f9a2331c7c2de2237d51c4a68463511196425570a9f7eeff9950b2a5d8312e",
+    "test_status_response_cli.py": "0c1c4ae87c6f05daa8fe33fa06bb2e5aaec26077cfabb35bf61082d08e42a03a",
+    "test_progress_correction.py": "4355131b3c974c156cbbb2ef870d10cc09b2855073a0e766dff9781b45c7028a",
+    "test_pilot_evidence_packet.py": "fe66c5e488780249817453459631cb1743c131e7e47b305b58da918450a5459c"
+  },
+  "limitations": [
+    "Staged repair PASS; no live wrapper certification. Installed paused checks and real AI pilot remain required."
+  ],
+  "result": "PASS",
+  "independent": true,
+  "manifest_digest": "a57b934866cb677e309af6f6bcfe16500f76547782e8df2941d4f28950defa5c",
+  "source_count": 69,
+  "prerequisite_count": 682,
+  "rollout_review": "ROLLOUT_PATCH_REVIEW.md",
+  "full_suite": {
+    "passed": 309,
+    "seconds": 26.699,
+    "log_sha256": "1483789a89c3784d1c24ac9be3bccb3a341ab452bec7f9162cf775fda8e8be8e",
+    "execution": "Root ran suite and reported terminal exit 0; reviewer independently inspected saved final log."
+  },
+  "cross_review": "Root confirmed independent cross-review of reviewer-authored status parser and store refresh/CAS. This reviewer independently reviewed coordinator command integration, workflow, evidence and exact manifest parity."
+}
