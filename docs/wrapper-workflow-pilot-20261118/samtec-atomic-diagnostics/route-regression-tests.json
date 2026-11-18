@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "result": {
+    "exit_code": 0,
+    "timed_out": false,
+    "command": [
+      "/usr/bin/systemd-run",
+      "--user",
+      "--quiet",
+      "--wait",
+      "--pipe",
+      "--collect",
+      "--unit=wrapper-test-099e53e9a56140e1b2a1525fb577e870",
+      "--property=MemoryMax=512M",
+      "--property=TasksMax=24",
+      "--property=RuntimeMaxSec=90",
+      "--property=KillMode=control-group",
+      "--property=NoNewPrivileges=true",
+      "--property=UMask=0077",
+      "/usr/bin/python3",
+      "-I",
+      "/home/chris/job-search-helper_old/dev/wrapper-coder/tools/coding_sandbox.py",
+      "/home/chris/job-search-helper_old/temp/pilot-samtec-20261118/assisted-candidate-1/repo",
+      "/home/chris/job-search-helper_old/.venv",
+      "/home/chris/job-search-helper_old/dev/wrapper-coder/runs/test-4m3e2yq7",
+      "tests/test_shared_boards.py"
+    ],
+    "seconds": 0.47,
+    "output": "................                                                         [100%]\n16 passed in 0.10s\n",
+    "truncated": false,
+    "sandbox": "Landlock + seccomp; offline; separate 512 MiB/24-task/90-second cgroup"
+  }
+}

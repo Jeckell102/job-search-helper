@@ -1,0 +1,69 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are proposing one small Python patch. Return exactly ONE code_edit tool call using the supplied file hash and an exact unique old excerpt from the provided source. Do not return a checkpoint, explanation, or private reasoning. This call is a proposal only; a separate reviewer will evaluate and test it before any execution."
+    },
+    {
+      "role": "user",
+      "content": "{\"instruction\": \"Modify only the shown Jobvite URL normalization behavior. For Samtec only, both https://jobs.jobvite.com/samtec/jobs and https://jobs.jobvite.com/samtec/search must canonicalize to the full /samtec/search listing. Keep all other Jobvite employers unchanged. Preserve valid Jobvite detail URL parsing and its job identifier. Keep existing input validation intact. Do not modify pagination, transports, or any other functions in this proposal. Produce the smallest supported exact replacement.\", \"path\": \"src/job_search_helper/shared_boards.py\", \"sha256\": \"f8ae5b420e11623e88dab381f8de19f069bad4ab6be341dff2845800b88391cf\", \"source_excerpt_exact\": \"            if len(parts)!=2 or not re.fullmatch(r'[0-9]+(?:-.+)?',parts[1]):raise ValueError('Invalid SmartRecruiters scope.')\\n            ident=parts[1].split('-')[0]\\n    elif host=='apply.workable.com':\\n        if not parts or not re.fullmatch(SLUG,parts[0]) or parts[0]=='api':raise ValueError('Invalid Workable board.')\\n        name,slug='Workable',parts[0];path='/'+slug+'/'\\n        if len(parts)>1:\\n            if len(parts)!=3 or parts[1]!='j' or not re.fullmatch(r'[A-Z0-9]+',parts[2]):raise ValueError('Invalid Workable posting.')\\n            ident=parts[2]\\n    elif host.endswith('.applytojob.com') or host in JAZZ_CUSTOM_HOSTS:\\n        name,slug='JazzHR',host.split('.')[0];path='/apply'\\n        if parts and parts!=['apply']:\\n            if len(parts)!=3 or parts[0]!='apply' or not re.fullmatch(r'[A-Za-z0-9]+',parts[1]):raise ValueError('Invalid JazzHR scope.')\\n            ident=parts[1]\\n    else:\\n        if not parts or not re.fullmatch(SLUG,parts[0]):raise ValueError('Invalid Jobvite board.')\\n        name,slug='Jobvite',parts[0];path='/'+slug+'/jobs'\\n        if len(parts)==3 and parts[1]=='job':ident=parts[2]\\n        elif len(parts)>1 and parts[1:] not in (['jobs'],['search']):raise ValueError('Invalid Jobvite scope.')\\n    seen=set()\\n    for k,v in parse_qsl(p.query,keep_blank_values=True,max_num_fields=30):\\n        if k in seen:raise ValueError('Duplicate board scope parameter.')\\n        seen.add(k)\\n        if k.startswith('utm_') or k in {'source','src','st','gh_src'}:continue\\n        if name=='Rippling' and ((k=='page' and v=='0') or (k=='jobBoardSlug' and v==slug) or (k=='s' and p.path.startswith('/embed/'))):continue\\n        if name=='Paycor Recruiting' and ((k=='clientId' and v==slug) or (k=='id' and re.fullmatch('[a-f0-9]{32}',v)) or (k in {'source','lang','parentUrl','gns'})):continue\\n        if name=='ClearCompany' and ((k=='search' and v=='true') or (k=='frameborder' and v=='0') or (k in {'req','req_loc'} and v.isdigit())):continue\\n        if name=='Workable' and k=='lng' and v=='en':continue\\n        if name=='Jobvite' and k in {'c','l','q'} and not v:continue\\n\", \"source_start_line\": 110, \"source_end_line\": 137}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_edit",
+            "arguments": {
+              "path": "src/job_search_helper/shared_boards.py",
+              "sha256": "f8ae5b420e11623e88dab381f8de19f069bad4ab6be341dff2845800b88391cf",
+              "old": "    else:\n        if not parts or not re.fullmatch(SLUG,parts[0]):raise ValueError('Invalid Jobvite board.')\n        name,slug='Jobvite',parts[0];path='/'+slug+'/jobs'\n        if len(parts)==3 and parts[1]=='job':ident=parts[2]\n        elif len(parts)>1 and parts[1:] not in (['jobs'],['search']):raise ValueError('Invalid Jobvite scope.')",
+              "new": "    else:\n        if not parts or not re.fullmatch(SLUG,parts[0]):raise ValueError('Invalid Jobvite board.')\n        name,slug='Jobvite',parts[0];path='/'+slug+'/jobs'\n        if slug=='samtec':\n            path='/'+slug+'/search'\n            if len(parts)==3 and parts[1]=='job':ident=parts[2]\n        elif len(parts)==3 and parts[1]=='job':ident=parts[2]\n        elif len(parts)>1 and parts[1:] not in (['jobs'],['search']):raise ValueError('Invalid Jobvite scope.')"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "Reviewer rejected this proposal; nothing applied. Correct slug comparison now routes Samtec, but your outer if slug==samtec makes existing invalid-scope validation unreachable for Samtec. /samtec/nonsense and /samtec/job/abc/extra must still raise ValueError. Keep existing scope-validation and detail-ID statements unchanged and outside the employer-specific path selection. Change only the canonical path choice, using the original file/hash. Return one smallest corrected code_edit proposal."
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "code_edit",
+        "description": "Replace one exact unique excerpt in an existing file after checking its SHA256. Read first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "old": {
+              "type": "string"
+            },
+            "new": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "old",
+            "new"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "max_tokens": 3072,
+  "think": true
+}

@@ -14,7 +14,7 @@ def extract(source):
 
 def main():
     response=Path(sys.argv[1]);source=Path(sys.argv[2]);output=Path(sys.argv[3]);raw=source.read_bytes();before=hashlib.sha256(raw).hexdigest();original=raw.decode()
-    proposal=json.loads(response.read_text());calls=proposal['message']['tool_calls'];assert len(calls)==1
+    proposal=json.loads(response.read_text());assert proposal.get('usage',{}).get('done_reason')=='stop', 'Truncated or nonterminal response';calls=proposal['message']['tool_calls'];assert len(calls)==1
     call=calls[0]['function'];assert call['name']=='code_edit';args=call['arguments'];assert set(args)=={'path','sha256','old','new'};assert args['path']=='src/job_search_helper/shared_boards.py';assert args['sha256']==before;assert original.count(args['old'])==1
     revised=original.replace(args['old'],args['new'],1);compile(revised,'<proposed-only>','exec')
     old,new=extract(original),extract(revised)
@@ -26,8 +26,15 @@ def main():
                 'https://jobs.jobvite.com/samtec/job/oExample','https://jobs.jobvite.com/other/jobs',
                 'https://jobs.jobvite.com/other/search','https://jobs.jobvite.com/other/job/oExample',
                 'https://jobs.jobvite.com/','https://jobs.jobvite.com/samtec/private',
+                'https://jobs.jobvite.com/samtec/nonsense','https://jobs.jobvite.com/samtec/job/abc/extra',
                 'https://jobs.jobvite.com/samtec/search?q=filtered','http://jobs.jobvite.com/samtec/search',
-                'https://apply.workable.com/example/','https://careers.smartrecruiters.com/Example']:
+                'https://apply.workable.com/example/','https://careers.smartrecruiters.com/Example',
+                'https://jobs.jobvite.com/samtec/jobs/extra','https://jobs.jobvite.com/samtec/search/extra',
+                'https://jobs.jobvite.com/samtec/job','https://jobs.jobvite.com/other/job',
+                'https://jobs.jobvite.com/other/job/abc/extra','https://jobs.jobvite.com/other/private',
+                'https://jobs.jobvite.com/samtec/search#fragment','https://user:pass@jobs.jobvite.com/samtec/search',
+                'https://jobs.jobvite.com:444/samtec/search','https://jobs.jobvite.com/samtec/search?l=filtered',
+                'https://jobs.jobvite.com/samtec/search?q=&q=', 'https://jobs.jobvite.com/samtec/search?page=2']:
         expected=outcome(old,url)
         if url in {'https://jobs.jobvite.com/samtec/jobs','https://jobs.jobvite.com/samtec/search'}:expected=dict(expected,path='/samtec/search')
         actual=outcome(new,url)

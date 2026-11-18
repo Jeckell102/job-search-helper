@@ -1,0 +1,17 @@
+{
+  "classification": "operator-assisted AI-authored route patch; not integration acceptance",
+  "parent_task": "WRAP-756e8b251b",
+  "source_task_unchanged": true,
+  "proposal_sha256": "185915dba5ec6101f08d0d480d51bd2d53689b3a8c6566bf9173a810643100ef",
+  "qa": "PASS_BOUNDED_PROPOSAL",
+  "tests": "26/26",
+  "result": {
+    "ok": true,
+    "result": {
+      "path": "src/job_search_helper/shared_boards.py",
+      "updated": true,
+      "sha256": "f14ccecd76181d183f29c46e281514f6606cc17e1d3b892323cc36850c6924ab"
+    }
+  },
+  "candidate": "/home/chris/job-search-helper_old/temp/pilot-samtec-20261118/assisted-candidate-1/repo"
+}
