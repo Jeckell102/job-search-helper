@@ -1,0 +1,14 @@
+{
+  "result": "PASS_FOCUSED_INDEPENDENT",
+  "independent": true,
+  "tests_passed": 9,
+  "seconds": 0.014,
+  "hashes": {
+    "host/coordinator_evidence.py": "f080b35226ab18f82e9c97acf9131a0946948fe106ee1d4b2692a485ad294639",
+    "host/coordinator_workflow.py": "beb462f298f99ccc06470ffba599108aae91c21c3fa3d830217415c302c49a3d",
+    "host/public_web.py": "ef4c1c050bf99f51d76d9749b4ad43ab1f7cd5c4e7babd05f9cd5e4e4dbbe05e",
+    "host/public_web_types.py": "d73b121f07c30433b6c75a24f6f22913225a6066747117bbb8224a6263a87174",
+    "qa_tests/test_diagnostic_boundaries.py": "bc3e7fbff5b11f98382536fbaeeac3f63a8d2ac299771301b4ab4170cade8b49"
+  },
+  "scope": "Independent observation gate and public link boundaries; no runtime edits, model calls, real web requests, or live wrapper certification."
+}

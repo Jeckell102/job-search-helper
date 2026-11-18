@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-11-18T21:34:27.543755+00:00",
+  "requested_url": "https://www.gdls.com/careers/",
+  "final_url": "https://www.gdls.com/careers/",
+  "status": 200,
+  "saved_response_sha256": "aa538ec73cef848e72b4d30d3d233b33f078c56bb01c9e624fef9721fed8b1b0",
+  "anchors": [
+    {
+      "url": "https://generaldynamics-us-careers.ttcportals.com/search/jobs",
+      "text": "Search Available Careers",
+      "raw_anchor": "<a class=\"elementor-button elementor-button-link elementor-size-sm\" href=\"https://generaldynamics-us-careers.ttcportals.com/search/jobs\">\n\t\t\t\t\t\t<span class=\"elementor-button-content-wrapper\">\n\t\t\t\t\t\t\t\t\t<span class=\"elementor-button-text\">Search Available Careers</span>\n\t\t\t\t\t</span>\n\t\t\t\t\t</a>"
+    },
+    {
+      "url": "https://generaldynamics-us-careers.ttcportals.com/search/jobs",
+      "text": "Discover Life at GDLS",
+      "raw_anchor": "<a class=\"elementor-button elementor-button-link elementor-size-sm\" href=\"https://generaldynamics-us-careers.ttcportals.com/search/jobs\">\n\t\t\t\t\t\t<span class=\"elementor-button-content-wrapper\">\n\t\t\t\t\t\t\t\t\t<span class=\"elementor-button-text\">Discover Life at GDLS</span>\n\t\t\t\t\t</span>\n\t\t\t\t\t</a>"
+    }
+  ]
+}

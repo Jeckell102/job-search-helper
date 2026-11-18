@@ -1,0 +1,49 @@
+{
+  "result": "PASS",
+  "independent": true,
+  "manifest_digest": "cd1c5371e0ea61ff63800dfff4c9e51eda07e230e7ec985d87958a044ba9b758",
+  "installed_parity": "exact tools and jetson mirror metadata",
+  "database": {
+    "digest": "e3bb1e61b4bc116a66929fa8601277483ef6655eb6d361dc89b61c142ceca850",
+    "controls": {
+      "autopilot_enabled": false,
+      "control_generation": 30,
+      "pilot_task": null,
+      "queue_enabled": false
+    },
+    "task_count": 112,
+    "integrity": "ok"
+  },
+  "database_identical_to_preinstall_backup": true,
+  "table_counts": {
+    "batches": 4,
+    "campaign_company_registry": 102,
+    "campaign_seals": 0,
+    "campaign_snapshots": 0,
+    "campaigns": 0,
+    "inference_receipts": 4,
+    "receipts": 186,
+    "settings": 4,
+    "tasks": 112
+  },
+  "health": {
+    "ok": true,
+    "status": "healthy",
+    "worker_alive": true,
+    "authoritative_state": "SQLite",
+    "snapshot_errors": {},
+    "control_failures": 0,
+    "control_error": "",
+    "fatal_error": "",
+    "text": "Coordinator healthy; worker alive: True; snapshot failures: 0."
+  },
+  "service": {
+    "MainPID": "563834",
+    "ActiveState": "active",
+    "SubState": "running",
+    "UnitFileState": "enabled"
+  },
+  "journal_phase": "INSTALLED_PAUSED",
+  "live_inference_performed": false,
+  "archive": "/home/chris/job-search-helper_old/dev/wrapper-coder/repairs/gdls-workflow-v2-rollout-20261118"
+}
