@@ -1,0 +1,7 @@
+[
+  {
+    "objective": "Continue the bounded COMP-0344 Mass Virtual repair after WRAP-9fc59eb8d7 exhausted its token budget with no diff. Limit edits to src/job_search_helper/ats.py and tests/test_massvirtual.py. Allow only the exact pinned Mass Virtual Paylocity feed through _safe_api_url. Assert the pinned SOURCE is allowed and a different feed UUID is rejected. Run tests/test_massvirtual.py tests/test_paylocity.py. Require a nonempty diff before phase_done.",
+    "mode": "develop",
+    "max_sessions": 10
+  }
+]

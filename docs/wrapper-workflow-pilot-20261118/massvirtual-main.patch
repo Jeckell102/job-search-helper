@@ -1,0 +1,40 @@
+diff --git a/src/job_search_helper/ats.py b/src/job_search_helper/ats.py
+--- a/src/job_search_helper/ats.py
++++ b/src/job_search_helper/ats.py
+@@ -246,10 +246,13 @@ def _safe_api_url(url: str) -> None:
+                    and hughes_query.get("page", [""])[0].isdigit()
+                    and 1 <= int(hughes_query["page"][0]) <= 1000
+                    and set(hughes_query) == {"tags4", "page"})
++    massvirtual_feed = (parsed.hostname == "recruiting.paylocity.com"
++                        and parsed.path == "/recruiting/v2/api/feed/jobs/2df5ac23-47b5-4c64-b536-e7f04caf6ffe"
++                        and not parsed.query and not parsed.fragment)
+     dover = (parsed.hostname == "app.dover.com" and not parsed.query and not parsed.fragment
+              and (parsed.path == "/jobs/scytherobotics"
+                   or bool(re.fullmatch(r"/Scythe%20Robotics/careers/[0-9a-f-]{36}/[A-Za-z0-9%_-]+", parsed.path))))
+-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search and not sick_search and not sick_detail and not hughes_jobs and not dover)
++    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search and not sick_search and not sick_detail and not hughes_jobs and not massvirtual_feed and not dover)
+             or parsed.username or parsed.password or parsed.port not in (None, 443)):
+         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
+     if parsed.hostname in {"l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com"} and not (ublox_algolia or ublox_detail):
+diff --git a/tests/test_massvirtual.py b/tests/test_massvirtual.py
+--- a/tests/test_massvirtual.py
++++ b/tests/test_massvirtual.py
+@@ -1,6 +1,6 @@
+ import unittest,json
+ from job_search_helper.massvirtual import fetch_massvirtual,SOURCE
+-from job_search_helper.ats import HTTPResponse
++from job_search_helper.ats import FetchError,HTTPResponse,_safe_api_url,fetch_inventory
+ class Fake:
+  def __init__(self,b): self.body=json.dumps({'jobs':b}).encode(); self.calls=0
+  def get(self,url): self.calls+=1; return HTTPResponse(200,self.body,{'content-type':'application/json'})
+@@ -11,4 +11,10 @@ class Tests(unittest.TestCase):
+  def test_foreign_rejected(self):
+   x=dict(ROW,companyName='Other');self.assertEqual(fetch_massvirtual(SOURCE,'COMP-0344','Mass Virtual',Fake([x])).status,'partial')
+  def test_wrong_scope(self): self.assertEqual(fetch_massvirtual(SOURCE,'COMP-0344','Other',Fake([ROW])).status,'unsupported')
++ def test_transport_guard_is_exact(self):
++  _safe_api_url(SOURCE)
++  with self.assertRaises(FetchError): _safe_api_url(SOURCE.rsplit('/',1)[0]+'/00000000-0000-0000-0000-000000000000')
++ def test_normal_dispatch_uses_massvirtual_adapter(self):
++  f=Fake([ROW]);r=fetch_inventory('Mass Virtual Paylocity','https://www.massvirtual.com/career','COMP-0344','Mass Virtual',f)
++  self.assertEqual(r.status,'complete');self.assertEqual(r.ats,'Mass Virtual Paylocity');self.assertEqual(r.source_url,SOURCE);self.assertEqual(len(r.jobs),1);self.assertEqual(f.calls,2)
+ if __name__=='__main__':unittest.main()
