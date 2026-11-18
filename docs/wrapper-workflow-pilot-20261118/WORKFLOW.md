@@ -57,3 +57,9 @@ Campaign membership is explicit and separate from task progress. Imported work s
 Legacy records must not be adopted by guessing from `PAUSED`. Use `migrate_campaign_membership.py` with the reviewed task-ID file and required expected-cohort evidence. The November 18 migration is bound to the exact 102-task cohort, canonical identity digest, and original batch membership. Controls must be off, pilot unset, no active tasks or unfinished receipts, and database integrity must pass. Rehearse on a backup copy before applying while the service is stopped. An unreviewed pause remains paused; conflicts abort the entire transaction. Migration never starts work or resets accumulated budgets.
 
 Repair rollout remains paused until all original QA findings and an independent final QA pass. A failed final QA creates a new report and a fresh repair/verification cycle. Passing coordinator QA does not replace live scraper validation or authorize automatic production installation.
+
+## Control transition contract
+
+Pilot startup prepares the isolated workspace before publishing scheduling ownership. It then rechecks the task, controls, unfinished actions, authorization, and remaining budgets in one SQLite transaction. If a pause, another start, a task change, or deadline expiration wins first, startup fails without creating a pilot slot or activating the task. Preparation alone never authorizes work.
+
+Pilot, campaign, and generic queue modes are mutually exclusive. A pilot stop clears its slot and records the task stop together. Failed commands preserve the previously committed mode; a service restart reads that mode rather than guessing whether startup succeeded. Pause, exclude, and include preserve completed or awaiting-validation states. They cannot make a task eligible to resume across its operator gate.

@@ -21,6 +21,11 @@ CAMPAIGN_FINISHED = 'CAMPAIGN_FINISHED'
 CAMPAIGN_DISPOSITIONS = frozenset({
     HELD_FOR_CAMPAIGN, SELECTED, USER_PAUSED, EXCLUDED, CAMPAIGN_FINISHED,
 })
+OPERATOR_GATE_STATUSES = frozenset({
+    'AWAITING_LIVE_VALIDATION',
+    'REVIEW_COMPLETE_LIVE_NOT_VALIDATED',
+    'LIVE_VALIDATED',
+})
 
 
 def campaign_manifest_digest(state):
@@ -28,6 +33,17 @@ def campaign_manifest_digest(state):
     entry = {key: state.get(key) for key in ('objective', 'tests', 'integration')}
     encoded = json.dumps(entry, sort_keys=True, separators=(',', ':')).encode()
     return hashlib.sha256(encoded).hexdigest()
+
+
+def task_state_digest(state):
+    encoded = json.dumps(state, sort_keys=True, separators=(',', ':')).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def reached_operator_gate(state):
+    """Terminal work cannot be reopened by pause/resume control transitions."""
+    return (state.get('status') in OPERATOR_GATE_STATUSES
+            or state.get('campaign_disposition') == CAMPAIGN_FINISHED)
 
 
 class Store:
@@ -116,9 +132,24 @@ class Store:
             value = db.execute("SELECT value FROM settings WHERE key='queue_enabled'").fetchone()
         return value is None or value[0] == 'true'
 
-    def set_queue_enabled(self, enabled):
+    @staticmethod
+    def _control_generation(db):
+        row = db.execute("SELECT value FROM settings WHERE key='control_generation'").fetchone()
+        return int(json.loads(row[0])) if row else 0
+
+    @classmethod
+    def _bump_control_generation(cls, db):
+        generation = cls._control_generation(db) + 1
+        db.execute("INSERT INTO settings VALUES ('control_generation',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                   (json.dumps(generation),))
+        return generation
+
+    def control_generation(self):
         with self.connect() as db:
-            db.execute("INSERT INTO settings VALUES ('queue_enabled',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (json.dumps(enabled),))
+            return self._control_generation(db)
+
+    def set_queue_enabled(self, enabled):
+        self.configure_queue(enabled)
 
     def autopilot_enabled(self):
         return self.campaign_enabled()
@@ -143,13 +174,13 @@ class Store:
     def active_campaign_id(self):
         return self.campaign_control()['campaign_id']
 
-    def configure_campaign(self, enabled, campaign_id=DEFAULT_CAMPAIGN_ID):
+    def configure_campaign(self, enabled, campaign_id=None):
         """Persist campaign identity and enabled state in one transaction.
 
         Queue state is kept for command compatibility, but campaign scheduling
         has its own selector and claim path and never falls through to it.
         """
-        if not isinstance(campaign_id, str) or not campaign_id.strip():
+        if campaign_id is not None and (not isinstance(campaign_id, str) or not campaign_id.strip()):
             raise ValueError('Campaign ID must be a nonempty string.')
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -158,14 +189,18 @@ class Store:
                 raise ValueError('Stop the single-company pilot before starting the backlog campaign.')
             current = db.execute("SELECT value FROM settings WHERE key='active_campaign_id'").fetchone()
             current_id = json.loads(current[0]) if current else None
-            if enabled and current_id not in (None, campaign_id):
+            selected_id = campaign_id or current_id or DEFAULT_CAMPAIGN_ID
+            if enabled and current_id not in (None, selected_id):
                 raise ValueError('Stop the active campaign before selecting another campaign.')
+            if not enabled and campaign_id is not None and current_id not in (None, campaign_id):
+                raise ValueError('The requested campaign is not the active campaign.')
             for key, value in (('campaign_enabled', bool(enabled)),
-                               ('active_campaign_id', campaign_id),
+                               ('active_campaign_id', selected_id),
                                ('autopilot_enabled', bool(enabled)),
                                ('queue_enabled', bool(enabled))):
                 db.execute('INSERT INTO settings VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
                            (key, json.dumps(value)))
+            self._bump_control_generation(db)
 
     def configure_autopilot(self, enabled):
         self.configure_campaign(enabled)
@@ -185,6 +220,115 @@ class Store:
                 for key in ('campaign_enabled', 'autopilot_enabled'):
                     db.execute('INSERT INTO settings VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
                                (key, json.dumps(False)))
+            self._bump_control_generation(db)
+
+    def activation_snapshot(self, task_id):
+        """Return the exact task/control generation to guard slow preparation."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise ValueError('Task not found.')
+            state = json.loads(row[0])
+            return {'state': state, 'state_digest': task_state_digest(state),
+                    'control_generation': self._control_generation(db)}
+
+    def commit_activation(self, task_id, fields, *, expected_state_digest,
+                          expected_control_generation, pilot=False,
+                          max_calls=48, max_tokens=120000, max_seconds=3600):
+        """CAS-style resume; validation and task/pilot publication are atomic."""
+        if not isinstance(fields, dict):
+            raise ValueError('Activation fields must be a dictionary.')
+        allowed_fields = {'stop_requested', 'status', 'errors', 'reason', 'manifest',
+                          'phase', 'baseline_passed', 'no_progress', 'workflow',
+                          'evidence_requirements', 'checkpoint'}
+        if set(fields) - allowed_fields:
+            raise ValueError('Activation attempted to replace protected task identity or budget fields.')
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise ValueError('Task not found.')
+            state = json.loads(row[0])
+            if (task_state_digest(state) != expected_state_digest
+                    or self._control_generation(db) != expected_control_generation):
+                raise ValueError('Task or scheduler controls changed during activation preparation; retry from current status.')
+            if state['status'] in ('RUNNING', 'QUEUED', 'PAUSING'):
+                raise ValueError('Task is already active or still pausing.')
+            if reached_operator_gate(state):
+                raise ValueError('This task reached its operator gate. Review the receipts before a new assignment.')
+            if state['mode'] == 'develop' and state.get('authorization_version') != 1:
+                raise ValueError('This older task lacks explicit development authorization.')
+            started = state.get('activated_at') if state.get('workflow_version') == 2 else state['created']
+            exhausted = (state.get('sessions', 0) >= state.get('max_sessions', 0)
+                         or state.get('calls', 0) >= max_calls
+                         or state.get('tokens', 0) >= max_tokens
+                         or started is not None and time.time() >= started + max_seconds)
+            if exhausted:
+                raise ValueError('Task budget exhausted. Review the checkpoint and start a new bounded assignment.')
+            if db.execute('SELECT 1 FROM receipts WHERE task=? AND result IS NULL LIMIT 1',
+                          (task_id,)).fetchone():
+                raise ValueError('An interrupted action has no receipt. Inspect it before starting a new assignment; automatic replay is blocked.')
+            rows = [(current_id, json.loads(raw)) for current_id, raw in
+                    db.execute('SELECT id,state FROM tasks ORDER BY rowid').fetchall()]
+            if any(current_id != task_id and other['status'] in ('RUNNING', 'PAUSING')
+                   for current_id, other in rows):
+                raise ValueError('Another task owns the execution lane.')
+            controls = {key: json.loads(value) for key, value in db.execute(
+                "SELECT key,value FROM settings WHERE key IN ('queue_enabled','campaign_enabled','active_campaign_id','pilot_task')"
+            )}
+            if pilot:
+                if (controls.get('queue_enabled', True) or controls.get('campaign_enabled', False)
+                        or controls.get('pilot_task') is not None):
+                    raise ValueError('Pause queue and campaign controls before starting a single-company pilot.')
+                if not state.get('isolated_workspace'):
+                    raise ValueError('Pilot-only scheduling requires an isolated imported assignment.')
+                active = [current_id for current_id, other in rows if current_id != task_id
+                          and other['status'] in ('RUNNING', 'QUEUED', 'PAUSING')]
+                if active:
+                    raise ValueError('Other imported assignments are active; hold them before starting the pilot.')
+            elif controls.get('pilot_task') not in (None, task_id):
+                raise ValueError('Another task owns the single-company pilot lane.')
+
+            if state.get('campaign_id'):
+                if state.get('campaign_disposition') == EXCLUDED:
+                    raise ValueError('Include the excluded campaign task before resuming it.')
+                conflicts = [other['id'] for current_id, other in rows if current_id != task_id
+                             and other.get('campaign_disposition') == SELECTED
+                             and other['status'] in ('QUEUED', 'RUNNING', 'PAUSING', 'PAUSED')]
+                if conflicts:
+                    raise ValueError('Another task owns the campaign lane.')
+                fields = dict(fields, campaign_disposition=SELECTED,
+                              campaign_selected_at=time.time(),
+                              campaign_run_id=uuid.uuid4().hex)
+            state.update(fields)
+            state.update(status='QUEUED', stop_requested=False)
+            if pilot:
+                db.execute("INSERT INTO settings VALUES ('pilot_task',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                           (json.dumps(task_id),))
+            db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+            self._bump_control_generation(db)
+            return state
+
+    def stop_pilot(self):
+        """Clear the pilot slot and stop its task in one transaction."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute("SELECT value FROM settings WHERE key='pilot_task'").fetchone()
+            task_id = json.loads(row[0]) if row else None
+            state = None
+            if task_id:
+                task_row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+                if task_row:
+                    state = json.loads(task_row[0])
+                    if state['status'] in ('RUNNING', 'QUEUED'):
+                        state.update(status='PAUSING' if state['status'] == 'RUNNING' else 'PAUSED',
+                                     stop_requested=state['status'] == 'RUNNING',
+                                     reason='Pilot stop requested.')
+                        db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+            db.execute("INSERT INTO settings VALUES ('pilot_task','null') ON CONFLICT(key) DO UPDATE SET value='null'")
+            self._bump_control_generation(db)
+            return state
 
     def activate_next_campaign(self, campaign_id=None, *, require_enabled=True):
         """Select exactly one held member of the active campaign."""
@@ -205,17 +349,18 @@ class Store:
             active = []
             candidate = None
             selected = None
+            selected_count = 0
             for task_id, raw in rows:
                 state = json.loads(raw)
                 if state['status'] in ('RUNNING', 'PAUSING'):
                     active.append(task_id)
-                if (state.get('campaign_id') == selected_campaign
-                        and state.get('campaign_disposition') == SELECTED):
+                if state.get('campaign_disposition') == SELECTED:
                     if state['status'] not in ('QUEUED', 'RUNNING', 'PAUSING', 'PAUSED'):
                         state['campaign_disposition'] = CAMPAIGN_FINISHED
                         db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
                     else:
                         selected = state
+                        selected_count += 1
                 if (candidate is None and state.get('campaign_id') == selected_campaign
                         and state.get('campaign_disposition') == HELD_FOR_CAMPAIGN
                         and not state.get('stop_requested')
@@ -234,6 +379,10 @@ class Store:
             if active:
                 return None
             if selected is not None:
+                if selected_count != 1:
+                    return None
+                if selected.get('campaign_id') != selected_campaign:
+                    return None
                 if selected['status'] == 'PAUSED' and not selected.get('stop_requested'):
                     selected.update(status='QUEUED', reason='Campaign restarted; retained selected company.')
                     db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(selected), selected['id']))
@@ -250,6 +399,7 @@ class Store:
                              reason='Selected by one-company campaign with a fresh integration worker.')
             db.execute('UPDATE tasks SET state=? WHERE id=?',
                        (json.dumps(candidate), candidate['id']))
+            self._bump_control_generation(db)
             return candidate
 
     def activate_next_untouched(self):
@@ -277,6 +427,7 @@ class Store:
                 state.update(status='RUNNING', scheduler_claimed_at=time.time())
                 db.execute('UPDATE tasks SET state=? WHERE id=?',
                            (json.dumps(state), current_id))
+                self._bump_control_generation(db)
                 return state
         return None
 
@@ -304,6 +455,7 @@ class Store:
             task_id, state = matches[0]
             state.update(status='RUNNING', scheduler_claimed_at=time.time())
             db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+            self._bump_control_generation(db)
             return state
 
     def claim_pilot(self, task_id):
@@ -321,6 +473,7 @@ class Store:
                 if current_id == task_id and state['status'] == 'QUEUED' and not state.get('stop_requested'):
                     state.update(status='RUNNING', scheduler_claimed_at=time.time())
                     db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), current_id))
+                    self._bump_control_generation(db)
                     return state
             return None
 
@@ -339,63 +492,78 @@ class Store:
             if not row:
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
-            if state.get('campaign_id'):
+            terminal = reached_operator_gate(state)
+            if state.get('campaign_id') and state.get('campaign_disposition') != CAMPAIGN_FINISHED:
                 state['campaign_disposition'] = USER_PAUSED
-            state.update(stop_requested=True,
-                         status='PAUSING' if state['status'] == 'RUNNING' else 'PAUSED',
-                         reason=reason)
+            state.update(stop_requested=True, reason=reason)
+            if not terminal:
+                state['status'] = 'PAUSING' if state['status'] == 'RUNNING' else 'PAUSED'
             db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+            self._bump_control_generation(db)
             return state
 
     def exclude_campaign_task(self, task_id):
-        state = self.get(task_id)
-        if not state.get('campaign_id'):
-            raise ValueError('Task is not a campaign member.')
-        status = 'PAUSING' if state['status'] == 'RUNNING' else 'PAUSED'
-        return self.update(task_id, campaign_disposition=EXCLUDED, stop_requested=True,
-                           status=status, reason='Excluded from campaign by operator.')
-
-    def include_campaign_task(self, task_id):
-        state = self.get(task_id)
-        if state.get('campaign_disposition') != EXCLUDED:
-            raise ValueError('Only an excluded campaign task can be included.')
-        untouched = (state['phase'] == 'baseline' and state.get('activated_at') is None
-                     and state.get('campaign_selected_at') is None
-                     and state.get('calls', 0) == 0 and state.get('sessions', 0) == 0
-                     and state.get('tokens', 0) == 0 and not self.receipts(task_id))
-        if untouched:
-            return self.update(task_id, campaign_disposition=HELD_FOR_CAMPAIGN,
-                               stop_requested=False, status='PAUSED',
-                               reason='Included in campaign; held for selection.')
-        return self.update(task_id, campaign_disposition=USER_PAUSED,
-                           stop_requested=True, status='PAUSED',
-                           reason='Included in campaign; explicit resume required for prior work.')
-
-    def resume_campaign_task(self, task_id, **fields):
-        """Explicitly reserve one user-paused member when the lane is free."""
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            rows = db.execute('SELECT id,state FROM tasks ORDER BY rowid').fetchall()
-            decoded = [(current_id, json.loads(raw)) for current_id, raw in rows]
-            target = next((state for current_id, state in decoded if current_id == task_id), None)
-            if target is None:
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
                 raise ValueError('Task not found.')
-            if target.get('campaign_disposition') == EXCLUDED:
-                raise ValueError('Include the excluded campaign task before resuming it.')
-            if not target.get('campaign_id'):
+            state = json.loads(row[0])
+            if not state.get('campaign_id'):
                 raise ValueError('Task is not a campaign member.')
-            conflicts = [state['id'] for _, state in decoded if state['id'] != task_id and (
-                state['status'] in ('RUNNING', 'PAUSING') or
-                (state.get('campaign_disposition') == SELECTED
-                 and state['status'] in ('QUEUED', 'PAUSED')))]
-            if conflicts:
-                raise ValueError('Another task owns the campaign lane.')
-            target.update(fields)
-            target.update(campaign_disposition=SELECTED, status='QUEUED',
-                          stop_requested=False, campaign_selected_at=time.time(),
-                          campaign_run_id=uuid.uuid4().hex)
-            db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(target), task_id))
-            return target
+            if state.get('campaign_disposition') == CAMPAIGN_FINISHED:
+                raise ValueError('This task reached its operator gate and cannot be excluded or reopened.')
+            terminal = reached_operator_gate(state)
+            state.update(campaign_disposition=EXCLUDED, stop_requested=True,
+                         reason='Excluded from campaign by operator.')
+            if not terminal:
+                state['status'] = 'PAUSING' if state['status'] == 'RUNNING' else 'PAUSED'
+            db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+            self._bump_control_generation(db)
+            return state
+
+    def include_campaign_task(self, task_id):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise ValueError('Task not found.')
+            state = json.loads(row[0])
+            if state.get('campaign_disposition') != EXCLUDED:
+                raise ValueError('Only an excluded campaign task can be included.')
+            if reached_operator_gate(state):
+                state.update(campaign_disposition=USER_PAUSED, stop_requested=True,
+                             reason='Included in campaign; operator gate retained.')
+                db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+                self._bump_control_generation(db)
+                return state
+            untouched = (state['phase'] == 'baseline' and state.get('activated_at') is None
+                         and state.get('campaign_selected_at') is None
+                         and state.get('calls', 0) == 0 and state.get('sessions', 0) == 0
+                         and state.get('tokens', 0) == 0
+                         and not db.execute('SELECT 1 FROM receipts WHERE task=? LIMIT 1',
+                                            (task_id,)).fetchone())
+            if untouched:
+                state.update(campaign_disposition=HELD_FOR_CAMPAIGN,
+                             stop_requested=False, status='PAUSED',
+                             reason='Included in campaign; held for selection.')
+            else:
+                state.update(campaign_disposition=USER_PAUSED,
+                             stop_requested=True, status='PAUSED',
+                             reason='Included in campaign; explicit resume required for prior work.')
+            db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+            self._bump_control_generation(db)
+            return state
+
+    def resume_campaign_task(self, task_id, **fields):
+        """Compatibility entry point using the canonical guarded activation."""
+        snapshot = self.activation_snapshot(task_id)
+        if not snapshot['state'].get('campaign_id'):
+            raise ValueError('Task is not a campaign member.')
+        return self.commit_activation(
+            task_id, fields,
+            expected_state_digest=snapshot['state_digest'],
+            expected_control_generation=snapshot['control_generation'])
 
     def pilot_task(self):
         with self.connect() as db:
@@ -403,11 +571,10 @@ class Store:
         return json.loads(value[0]) if value else None
 
     def set_pilot_task(self, task_id):
+        """Fixture cleanup helper; pilot publication requires commit_activation."""
         if task_id is not None:
-            self.get(task_id)
-        with self.connect() as db:
-            db.execute("INSERT INTO settings VALUES ('pilot_task',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-                       (json.dumps(task_id),))
+            raise ValueError('Use commit_activation to publish a validated pilot task.')
+        self.stop_pilot()
 
     def get(self, task_id):
         if not isinstance(task_id, str) or not re.fullmatch(r'WRAP-[a-f0-9]{10}', task_id):

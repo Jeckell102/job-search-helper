@@ -83,6 +83,25 @@ Required focused tests:
 
 Group 2 does not certify the separate inference-dispatch reservation race. That remains Group 5, but Group 2 must leave one transactional API that Group 5 can reuse immediately before model dispatch.
 
+### Group 2 acceptance checklist
+
+- [ ] One store-level transaction owns complete pilot validation and publication; command code does not publish the pilot slot separately.
+- [ ] Pilot publication and the exact task's QUEUED/resume state commit together or both roll back.
+- [ ] Pilot stop clears the slot and publishes the task stop boundary atomically.
+- [ ] Campaign start/stop and queue resume/pause use the same database-serialized mode invariants.
+- [ ] No correctness claim relies only on the coordinator instance's Python `control_lock`.
+- [ ] Failed pilot preparation or validation leaves control and task rows unchanged and consumes no task budget.
+- [ ] Concurrent pilot/campaign, pilot/queue, and pilot/pilot tests prove exactly one allowed result without mixed controls.
+- [ ] Global pause precedence retains an existing selected campaign member and starts no replacement.
+- [ ] Restart and injected rollback tests prove only committed state is visible.
+- [ ] Focused verifier passes against two independent store/coordinator instances.
+- [ ] Full host suite passes with no regression to accepted Group 1 behavior.
+- [ ] Roadmap review approves Group 2 before Group 3 begins.
+
+Current gate status: **SOURCE REVIEW PASSED; FINAL SUITE PENDING**. The terminal-state bypass was corrected. Public pause preserves `AWAITING_LIVE_VALIDATION`, `REVIEW_COMPLETE_LIVE_NOT_VALIDATED`, and `LIVE_VALIDATED`; resume and pilot-start reject them; exclude/include preserves the terminal status; `CAMPAIGN_FINISHED` is also treated as a gate. Legacy resume and control setters now delegate to the canonical guarded transitions. Independent review reran all 12 transition tests successfully, including the prior `LIVE_VALIDATED -> PAUSED -> QUEUED` reproduction as a command-level rejection. Accept Group 2 when the implementation owner reports its final focused and full suites on this same source snapshot.
+
+Final-QA reproduction note: the original `check_scheduler.py` race harness instrumented `set_pilot_task`. The corrected design replaces that multi-step publication path with one atomic transition, so final QA must reproduce the same adversarial pilot-versus-campaign outcome at the new transaction boundary. It must coordinate concurrent public commands or an explicit transaction test seam and assert the committed mode/task invariants. Failure to reach the obsolete hook, a harness timeout, or absence of the old method call is not a pass. Preserve the old result as historical evidence, and save the equivalent new reproduction with its exact final settings and task state.
+
 ### 3. Canonical identity and duplicate-company prevention — WAITING
 
 - [ ] Make structured company identity authoritative for assignment text, evidence requirements, worker packets, and reporting.
@@ -97,6 +116,33 @@ Acceptance criteria:
 1. Company ID, company name, configured URL, tests, and source targets cannot disagree across task state, evidence, worker packet, or report.
 2. One campaign cannot contain two active assignments for one company ID.
 3. A retry names its predecessor and cannot silently reset or replace historical evidence.
+
+### Group 3 minimal design
+
+Define one canonical integration identity object with exactly `company_id`, `company`, `configured_url`, `tests`, and `source_targets`. Normalize and validate it once at assignment/import, serialize it as sorted compact JSON, and store its SHA-256 as `integration_identity_digest`. The digest and structured identity are immutable task fields. Evidence requirements, editable targets, worker packets, status output, and activation checks must read these fields directly.
+
+Do not let a free-form objective redefine the company. For campaign imports, generate the worker assignment from the canonical identity using one host-owned template, or require an exact host-generated assignment field. The model packet must include the full structured identity and digest. Company ID, name, URL, tests, and source targets mentioned in instructions must therefore come from one source. Activation recomputes the digest and rejects any mismatch before queueing or inference.
+
+Enforce campaign/company uniqueness in SQLite rather than by scanning task JSON. Add a campaign-assignment registry with a unique `(campaign_id, company_id)` key, the current task ID, identity digest, and lineage metadata. Batch import and registry insertion occur in one immediate transaction:
+
+- an exact replay with the same identity digest and import provenance returns the existing task ID;
+- the same campaign/company with a changed identity or changed batch provenance is an atomic conflict with zero new tasks;
+- concurrent imports cannot create two assignments;
+- a different campaign may reference the company only as an explicitly separate campaign.
+
+A retry is a distinct explicit transition, not a batch re-import. It requires `retry_of`, verifies the predecessor belongs to the same campaign/company and is no longer active, preserves the predecessor and its receipts, and records a new run/task ID in lineage. Only the registry's current pointer may advance, atomically, to the reviewed retry. A retry cannot reset or overwrite prior budgets or evidence.
+
+Compatibility backfill must consume the reviewed campaign manifest. It may attach the identity digest and registry row only when objective mapping, full identity, tests, source targets, campaign membership, and manifest digest all agree exactly. Missing, partial, duplicate, or conflicting metadata aborts the entire backfill. Repeating the same backfill is a no-op; a changed identity requires a separate reviewed correction path.
+
+Required focused tests:
+
+1. Contradictory free-form company text versus structured identity is rejected or replaced by the exact host-generated assignment before task creation.
+2. Worker packet, evidence requirements, edit targets, status, and activation all expose the same identity and digest.
+3. Exact batch replay reuses IDs; changed-batch duplicate and partial/conflicting backfill abort atomically.
+4. Two concurrent imports for one campaign/company create exactly one registry assignment and one task.
+5. Activation rejects post-import mutation of any identity field, test, source target, assignment text, or digest.
+6. Explicit retry preserves predecessor receipts/budgets, records `retry_of`, and cannot coexist as a second active assignment.
+7. Existing 102-member migration gains exact identity registry rows on a disposable copy with a no-op second run and controls remaining off.
 
 ### 4. Edit scope and independent acceptance assertions — WAITING
 

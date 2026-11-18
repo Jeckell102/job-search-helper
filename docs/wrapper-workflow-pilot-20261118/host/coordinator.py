@@ -12,7 +12,7 @@ import urllib.error
 
 import coding_tools as code
 import public_tools as web
-from coordinator_store import (DEFAULT_CAMPAIGN_ID, SELECTED, Store)
+from coordinator_store import (DEFAULT_CAMPAIGN_ID, SELECTED, Store, reached_operator_gate)
 from coordinator_permissions import resolve_mode
 from coordinator_evidence import build_requirements, phase_evidence, evidence_fingerprint, manifest_digest
 import coordinator_workflow as workflow
@@ -223,21 +223,15 @@ class Coordinator:
                       'campaign-start', 'campaign-stop', 'campaign-status'):
             if action != 'queue':
                 if action == 'pilot-stop':
-                    pilot = self.store.pilot_task()
-                    self.store.set_pilot_task(None)
-                    if pilot:
-                        pilot_state = self.store.get(pilot)
-                        if pilot_state['status'] in ('RUNNING', 'QUEUED'):
-                            self.store.update(pilot, stop_requested=True,
-                                              status='PAUSING' if pilot_state['status'] == 'RUNNING' else 'PAUSED',
-                                              reason='Pilot stop requested.')
+                    self.store.stop_pilot()
                 elif action in ('autopilot-start', 'autopilot-stop',
                                 'campaign-start', 'campaign-stop'):
                     with self.control_lock:
                         enabled = action in ('autopilot-start', 'campaign-start')
                         self.store.configure_campaign(
-                            enabled, data.get('campaign_id') or
-                            self.store.active_campaign_id() or DEFAULT_CAMPAIGN_ID)
+                            enabled,
+                            (data.get('campaign_id') or DEFAULT_CAMPAIGN_ID) if enabled
+                            else data.get('campaign_id'))
                 elif action not in ('autopilot-status', 'campaign-status'):
                     with self.control_lock:
                         self.store.configure_queue(action == 'queue-resume')
@@ -288,17 +282,17 @@ class Coordinator:
         if action == 'list':
             return {'ok': True, 'text': '\n'.join(f"{s['id']}: {s['status']} / {s['phase']}" for s in self.store.all()[-30:]) or 'No coordinator tasks.'}
         state = self.store.get(data.get('id'))
+        pilot_start = action == 'pilot-start'
         if action == 'pilot-start':
-            if self.store.queue_enabled():
+            if self.store.queue_enabled() or self.store.campaign_enabled():
                 raise ValueError('Pause the global queue before starting a single-company pilot.')
             active = [s['id'] for s in self.store.all()
-                      if s.get('isolated_workspace') and s['id'] != state['id']
+                      if s['id'] != state['id']
                       and s['status'] in ('RUNNING', 'QUEUED', 'PAUSING')]
             if active:
                 raise ValueError('Other imported assignments are active; hold them before starting the pilot.')
             if not state.get('isolated_workspace'):
                 raise ValueError('Pilot-only scheduling requires an isolated imported assignment.')
-            self.store.set_pilot_task(state['id'])
             action = 'resume'
         if action == 'pause':
             state = self.store.pause_task(state['id'])
@@ -307,9 +301,11 @@ class Coordinator:
         elif action == 'include':
             state = self.store.include_campaign_task(state['id'])
         elif action == 'resume':
+            snapshot = self.store.activation_snapshot(state['id'])
+            state = snapshot['state']
             if state['status'] in ('RUNNING', 'QUEUED', 'PAUSING'):
                 raise ValueError('Task is already active or still pausing.')
-            if state['status'] in ('AWAITING_LIVE_VALIDATION', 'REVIEW_COMPLETE_LIVE_NOT_VALIDATED'):
+            if reached_operator_gate(state):
                 raise ValueError('This task reached its operator gate. Review the receipts before a new assignment.')
             if any(r['result'] is None for r in self.store.receipts(state['id'])):
                 raise ValueError('An interrupted action has no receipt. Inspect it before starting a new assignment; automatic replay is blocked.')
@@ -335,10 +331,12 @@ class Coordinator:
                     checkpoint={'summary': 'External file changes accepted on resume; prior receipts remain historical.',
                                 'next_action': 'Rerun the baseline and inspect the current assigned files before verification.', 'outcome': 'continue'},
                     reason='Files changed while paused. Rerun baseline and required inspection; budgets are unchanged.')
-            if state.get('campaign_id'):
-                state = self.store.resume_campaign_task(state['id'], **fields)
-            else:
-                state = self.store.update(state['id'], **fields)
+            state = self.store.commit_activation(
+                state['id'], fields,
+                expected_state_digest=snapshot['state_digest'],
+                expected_control_generation=snapshot['control_generation'],
+                pilot=pilot_start, max_calls=MAX_CALLS,
+                max_tokens=MAX_TOKENS, max_seconds=MAX_SECONDS)
             self.wake.set()
         elif action != 'status':
             raise ValueError('Use start, status, list, pause, resume, exclude, include, pilot controls, campaign controls, queue controls, or health.')

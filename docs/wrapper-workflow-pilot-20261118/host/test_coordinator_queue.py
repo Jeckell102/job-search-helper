@@ -4,6 +4,7 @@ import time
 import unittest
 from unittest.mock import patch
 import coordinator as c
+from coordinator_store import CAMPAIGN_FINISHED, SELECTED
 from coordinator_workspace import workspace
 from test_coordinator_workflow import WorkflowTests
 
@@ -72,6 +73,49 @@ class QueueTests(WorkflowTests):
         self.co.store.update(task, status='PAUSED', activated_at=time.time()-7200)
         with self.assertRaisesRegex(ValueError, 'budget exhausted'):
             self.co.command({'action': 'resume', 'id': task})
+
+    def test_terminal_controls_cannot_reopen_operator_gate(self):
+        self.co.command({'action': 'queue-pause'})
+        cases = (
+            ('AWAITING_LIVE_VALIDATION', SELECTED),
+            ('REVIEW_COMPLETE_LIVE_NOT_VALIDATED', SELECTED),
+            ('LIVE_VALIDATED', SELECTED),
+            ('PAUSED', CAMPAIGN_FINISHED),
+        )
+        for index, (status, disposition) in enumerate(cases, 1):
+            with self.subTest(status=status, disposition=disposition):
+                task = self.co.store.create(
+                    f'Terminal company {index}', ['tests/test_a.py'], 'develop',
+                    authorization_version=1, workflow_version=2,
+                    integration={'company_id': f'COMP-{index:04}'})['id']
+                self.co.store.update(
+                    task, isolated_workspace=True, status=status,
+                    campaign_id='terminal-gate-test',
+                    campaign_disposition=disposition)
+                paused = self.co.command({'action': 'pause', 'id': task})['state']
+                self.assertEqual(paused['status'], status)
+                expected_disposition = (CAMPAIGN_FINISHED if disposition == CAMPAIGN_FINISHED
+                                        else 'USER_PAUSED')
+                self.assertEqual(paused['campaign_disposition'], expected_disposition)
+                with self.assertRaisesRegex(ValueError, 'operator gate'):
+                    self.co.command({'action': 'resume', 'id': task})
+                with self.assertRaisesRegex(ValueError, 'operator gate'):
+                    self.co.command({'action': 'pilot-start', 'id': task})
+
+        terminal = self.co.store.create(
+            'Excluded terminal company', ['tests/test_a.py'], 'develop',
+            authorization_version=1, workflow_version=2,
+            integration={'company_id': 'COMP-9999'})['id']
+        self.co.store.update(
+            terminal, isolated_workspace=True, status='LIVE_VALIDATED',
+            campaign_id='terminal-gate-test', campaign_disposition=SELECTED)
+        excluded = self.co.command({'action': 'exclude', 'id': terminal})['state']
+        self.assertEqual(excluded['status'], 'LIVE_VALIDATED')
+        included = self.co.command({'action': 'include', 'id': terminal})['state']
+        self.assertEqual(included['status'], 'LIVE_VALIDATED')
+        self.assertEqual(included['campaign_disposition'], 'USER_PAUSED')
+        with self.assertRaisesRegex(ValueError, 'operator gate'):
+            self.co.command({'action': 'resume', 'id': terminal})
 
     def test_global_pause_survives_restart_and_never_resumes_blocked_tasks(self):
         a, b = self.batch()['ids']
