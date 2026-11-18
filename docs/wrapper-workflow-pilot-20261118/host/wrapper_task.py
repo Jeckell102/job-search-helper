@@ -17,14 +17,42 @@ class Once(argparse.Action):
 
 def parse_request(argv=None):
     parser = argparse.ArgumentParser(description='Persistent MuleLab wrapper tasks')
-    parser.add_argument('action', choices=('start', 'status', 'list', 'health', 'pause', 'resume', 'pilot-start', 'pilot-stop', 'queue', 'queue-pause', 'queue-resume', 'autopilot-start', 'autopilot-stop', 'autopilot-status', 'enqueue'))
+    parser.add_argument('action', choices=('start', 'status', 'list', 'health', 'pause', 'resume', 'pilot-start', 'pilot-stop', 'queue', 'queue-pause', 'queue-resume', 'autopilot-start', 'autopilot-stop', 'autopilot-status', 'enqueue', 'exclude', 'include', 'retry', 'scope-expand'))
     parser.add_argument('value', nargs='?', default='')
     parser.add_argument('--max-sessions', type=int, default=None, action=Once)
     parser.add_argument('--mode', choices=('review', 'develop'), default=None, action=Once,
                         help='Task permissions; defaults to review. Develop explicitly permits development edits.')
+    parser.add_argument('--approval-file', type=Path, default=None, action=Once,
+                        help='Reviewed JSON containing exact scope additions, reason and expected digests.')
+    parser.add_argument('--json', action='store_true', help='Print the complete status response for operator review.')
     args = parser.parse_intermixed_args(argv)
+    if args.approval_file is not None and args.action != 'scope-expand':
+        parser.error('--approval-file only applies to scope-expand.')
+    if args.json and args.action != 'status':
+        parser.error('--json only applies to status.')
     data = {'action': args.action}
-    if args.action == 'start':
+    if args.action == 'scope-expand':
+        if not args.value or args.mode is not None or args.max_sessions is not None or args.approval_file is None:
+            parser.error('scope-expand requires a task ID and --approval-file, without mode or session options.')
+        path = args.approval_file
+        if not path.is_file() or path.is_symlink() or path.stat().st_size > 20000:
+            parser.error('Provide a reviewed scope approval JSON file smaller than 20000 bytes.')
+        try:
+            approval = json.loads(path.read_text())
+        except (ValueError, OSError):
+            parser.error('Cannot read scope approval JSON.')
+        fields = {'paths', 'reason', 'expected_state_digest', 'expected_scope_digest'}
+        if not isinstance(approval, dict) or set(approval) != fields:
+            parser.error('Approval must contain exactly paths, reason, expected_state_digest and expected_scope_digest.')
+        if (not isinstance(approval['paths'], list) or not approval['paths']
+                or not all(isinstance(p, str) and p for p in approval['paths'])
+                or not isinstance(approval['reason'], str) or not approval['reason'].strip()
+                or any(not isinstance(approval[k], str) or len(approval[k]) != 64
+                       or any(c not in '0123456789abcdef' for c in approval[k])
+                       for k in ('expected_state_digest', 'expected_scope_digest'))):
+            parser.error('Approval needs exact paths, a reason, and the current SHA256 digests.')
+        data.update(id=args.value, **approval)
+    elif args.action == 'start':
         if not args.value.strip():
             parser.error('Start requires an objective.')
         data.update(objective=args.value, max_sessions=10 if args.max_sessions is None else args.max_sessions,
@@ -52,18 +80,21 @@ def parse_request(argv=None):
         data['id'] = args.value
     elif args.value:
         parser.error(args.action + ' does not accept an objective or task ID.')
+    if args.json:
+        data['_output_json'] = True
     return data
 
 
 def main(argv=None):
     data = parse_request(argv)
+    output_json = data.pop('_output_json', False)
     token = (Path(__file__).resolve().parent.parent / 'bridge-token').read_text().strip()
     request = urllib.request.Request('http://127.0.0.1:18789/coordinator',
         data=json.dumps(data).encode(), headers={'Authorization': 'Bearer ' + token,
                                                'Content-Type': 'application/json'})
     with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request, timeout=15) as response:
         result = json.loads(response.read(100000))
-    print(result.get('text') or result.get('error'))
+    print(json.dumps(result, indent=2) if output_json else result.get('text') or result.get('error'))
     return 0 if result.get('ok') else 1
 
 

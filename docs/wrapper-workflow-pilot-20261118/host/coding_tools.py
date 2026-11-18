@@ -15,6 +15,7 @@ from contextvars import ContextVar
 BASE = Path(__file__).resolve().parent.parent
 ROOT = BASE / 'repo'
 WORKSPACE = ContextVar('wrapper_workspace', default=None)
+EDIT_SCOPE = ContextVar('wrapper_edit_scope', default=None)
 
 
 def root():
@@ -140,7 +141,7 @@ def run_tests(paths):
                 process.wait()
         with log.open('rb') as f:
             raw = f.read(12001)
-        return {'exit_code': process.returncode, 'timed_out': timed_out,
+        return {'exit_code': process.returncode, 'timed_out': timed_out, 'command': cmd,
                 'seconds': round(time.monotonic()-start, 2), 'output': raw[:12000].decode(errors='replace'),
                 'truncated': len(raw)>12000, 'sandbox': 'Landlock + seccomp; offline; separate 512 MiB/24-task/90-second cgroup'}
 
@@ -163,6 +164,14 @@ def execute(name, args, names):
 
 
 def _execute(name, args):
+    if name in ('code_edit', 'code_create'):
+        scope = EDIT_SCOPE.get()
+        if scope is None:
+            raise ValueError('Mutation requires an explicit approved edit scope.')
+        paths = scope.get('paths', []) if isinstance(scope, dict) else scope
+        path = args['path']
+        if PurePosixPath(path).as_posix() != path or path not in paths:
+            raise ValueError('Path is outside this task exact approved edit scope.')
     if name in ('code_edit', 'code_create') and PurePosixPath(args['path']).as_posix() == 'docs/wrapper-development-test-protocol.md':
         raise ValueError('The required test protocol is operator-maintained and read-only to coding tools.')
     if name == 'code_list':

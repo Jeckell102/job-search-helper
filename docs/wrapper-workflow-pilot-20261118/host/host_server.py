@@ -17,6 +17,22 @@ SLOTS = threading.BoundedSemaphore(4)
 COORDINATOR = None
 
 
+def execute_manual(name, args, names):
+    """Authenticated manual requests grant only their exact shared-checkout path.
+
+    The caller retains the existing tool-name authorization and workspace lock.
+    No task scope or isolated workspace can be inherited by this compatibility path.
+    """
+    if coding_tools.WORKSPACE.get() is not None:
+        raise ValueError('Manual edits cannot inherit a task workspace.')
+    paths = [args.get('path')] if isinstance(args, dict) and name in ('code_edit', 'code_create') else []
+    token = coding_tools.EDIT_SCOPE.set(paths)
+    try:
+        return coding_tools.execute(name, args, names)
+    finally:
+        coding_tools.EDIT_SCOPE.reset(token)
+
+
 def supervise(coordinator, exit_process=os._exit, interval=1):
     """A dead scheduler must fail the service so Restart=on-failure can recover it."""
     while True:
@@ -62,7 +78,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError('Invalid allowed tools')
             if not isinstance(body['name'], str):
                 raise ValueError('Invalid tool name')
-            executor = public_tools.execute if body['name'] in public_tools.NAMES else coding_tools.execute
+            executor = public_tools.execute if body['name'] in public_tools.NAMES else execute_manual
             mutation = body['name'] in ('code_edit', 'code_create', 'code_commit', 'code_test')
             acquired = not mutation or COORDINATOR.workspace_lock.acquire(blocking=False)
             if not acquired:

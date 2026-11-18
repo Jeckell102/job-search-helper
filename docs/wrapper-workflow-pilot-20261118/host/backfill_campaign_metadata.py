@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from coordinator_store import Store, campaign_manifest_digest
+from coordinator_acceptance import initial_scope, validate_scope, files as acceptance_files
 from coordinator_identity import canonical_identity, canonical_requirements, bind_identity, validate_bound_identity
 
 
@@ -37,7 +38,7 @@ def backfill(store, items):
     return {'records': len(records), 'matched': matched, 'updated': updated}
 
 
-def backfill_campaign_identity(store, items, *, apply=False):
+def backfill_campaign_identity(store, items, *, apply=False, baseline_root=None, expected_baseline_manifest=None):
     """Bind only exact reviewed campaign members; never resume or reset work."""
     records = {}
     companies = set()
@@ -51,6 +52,7 @@ def backfill_campaign_identity(store, items, *, apply=False):
         records[objective] = item
         companies.add(identity['company_id'])
     report = dict(matched=[], changed=[], skipped=[], registered=[])
+    baseline_verified = False
     with store.connect() as db:
         db.execute('BEGIN IMMEDIATE')
         controls = {key: json.loads(value) for key, value in db.execute('SELECT key,value FROM settings')}
@@ -92,6 +94,19 @@ def backfill_campaign_identity(store, items, *, apply=False):
                 validate_bound_identity(state)
                 if updated != state:
                     raise ValueError('Existing immutable identity differs from reviewed binding.')
+            if not updated.get('edit_scope'):
+                if any(updated.get(k, 0) for k in ('calls', 'tokens', 'sessions')) or db.execute('SELECT 1 FROM receipts WHERE task=? LIMIT 1', (state['id'],)).fetchone():
+                    raise ValueError('Legacy edit-scope binding requires an untouched reviewed task.')
+                updated['edit_scope'] = initial_scope(updated)
+            validate_scope(updated)
+            if 'acceptance_baseline_manifest' not in updated:
+                if (baseline_root is None or not expected_baseline_manifest
+                        or (not baseline_verified and acceptance_files(Path(baseline_root)) != expected_baseline_manifest)):
+                    raise ValueError('Legacy acceptance baseline requires a reviewed exact source manifest.')
+                if any(updated.get(k, 0) for k in ('calls', 'tokens', 'sessions')) or db.execute('SELECT 1 FROM receipts WHERE task=? LIMIT 1', (state['id'],)).fetchone():
+                    raise ValueError('Legacy acceptance binding requires an untouched task.')
+                baseline_verified = True
+                updated['acceptance_baseline_manifest'] = expected_baseline_manifest
             digest = updated['integration_identity_digest']
             original_batch = provenance[state['id']][0]
             if existing and existing != (state['id'], digest, original_batch):
@@ -102,6 +117,8 @@ def backfill_campaign_identity(store, items, *, apply=False):
             if not existing:
                 report['registered'].append(state['id'])
             pending.append((updated, key, digest, original_batch, existing))
+        if baseline_verified and acceptance_files(Path(baseline_root)) != expected_baseline_manifest:
+            raise ValueError('Reviewed baseline changed during migration.')
         if apply:
             for state, key, digest, original_batch, existing in pending:
                 if state['id'] in report['changed']:
@@ -118,12 +135,15 @@ def main():
     parser.add_argument('batches', nargs='+', type=Path)
     parser.add_argument('--identity', action='store_true')
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--baseline-root', type=Path)
+    parser.add_argument('--baseline-manifest', type=Path)
     args = parser.parse_args()
     items = []
     for path in args.batches:
         items.extend(json.loads(path.read_text()))
     if args.identity:
-        result = backfill_campaign_identity(Store(args.tasks), items, apply=args.apply)
+        result = backfill_campaign_identity(Store(args.tasks), items, apply=args.apply, baseline_root=args.baseline_root,
+            expected_baseline_manifest=json.loads(args.baseline_manifest.read_text()) if args.baseline_manifest else None)
     else:
         result = backfill(Store(args.tasks), items)
     print(json.dumps(result, sort_keys=True))

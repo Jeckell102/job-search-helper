@@ -9,6 +9,7 @@ import uuid
 from contextlib import contextmanager
 import threading
 from coordinator_identity import bind_identity, validate_bound_identity
+from coordinator_acceptance import initial_scope, validate_scope, exact_paths, digest as scope_digest
 
 
 DEFAULT_CAMPAIGN_ID = 'integration-backlog-20261118'
@@ -84,6 +85,11 @@ class Store:
                evidence_requirements=None, workflow_version=1, integration=None):
         state = self.new_state(objective, tests, mode, max_sessions, authorization_version,
                                evidence_requirements, workflow_version, integration)
+        # Direct tasks execute in the active checkout; imported campaign tasks
+        # instead pin the frozen batch source used for isolated workspaces.
+        import coding_tools as code
+        from coordinator_acceptance import files
+        state['acceptance_baseline_manifest'] = files(code.root())
         with self.connect() as db:
             db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
         return state
@@ -104,7 +110,12 @@ class Store:
                      campaign_run_id=None, campaign_manifest_digest=None)
         if workflow_version == 2:
             state.update(activated_at=None, time_budget_policy='one_hour_from_first_assignment_including_pauses')
-        return bind_identity(state)
+        state = bind_identity(state)
+        state['edit_scope'] = initial_scope(state)
+        from coordinator_workspace import batch_source
+        from coordinator_acceptance import files
+        state['acceptance_baseline_manifest'] = files(batch_source())
+        return state
 
     def enqueue_batch(self, digest, specs, held=False, campaign_id=DEFAULT_CAMPAIGN_ID):
         """Import a complete batch or reject it without changing any task."""
@@ -161,6 +172,7 @@ class Store:
     @staticmethod
     def _require_current_identity(db, state):
         validate_bound_identity(state)
+        validate_scope(state)
         if state.get('campaign_id'):
             if state.get('campaign_manifest_digest') != campaign_manifest_digest(state):
                 raise ValueError('Campaign manifest binding changed.')
@@ -199,6 +211,66 @@ class Store:
             db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
             db.execute('UPDATE campaign_company_registry SET current_task_id=?, retry_of=? WHERE campaign_id=? AND company_id=?',
                        (state['id'], task_id, state['campaign_id'], state['campaign_company_id']))
+            self._bump_control_generation(db)
+            return state
+
+    def record_acceptance_bundle(self, task_id, bundle):
+        """Host-only first capture; never replace an existing acceptance bundle."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise ValueError('Task not found.')
+            state = json.loads(row[0])
+            if state.get('acceptance_bundle'):
+                raise ValueError('Acceptance bundle is already recorded.')
+            if db.execute("SELECT 1 FROM receipts WHERE task=? AND name IN ('code_edit','code_create')", (task_id,)).fetchone():
+                raise ValueError('Cannot capture acceptance after an edit attempt.')
+            state['acceptance_bundle'] = bundle
+            db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+            return state
+
+    def expand_edit_scope(self, task_id, paths, reason, *, expected_state_digest, expected_scope_digest):
+        if not isinstance(reason, str) or not reason.strip() or len(reason) > 2000:
+            raise ValueError('Scope expansion requires a bounded operator reason.')
+        added = exact_paths(paths)
+        if len(added) != len(paths):
+            raise ValueError('Scope expansion contains duplicate paths.')
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise ValueError('Task not found.')
+            state = json.loads(row[0])
+            self._require_current_identity(db, state)
+            scope = validate_scope(state)
+            if task_state_digest(state) != expected_state_digest or scope['digest'] != expected_scope_digest:
+                raise ValueError('Task or scope changed; review current state before expansion.')
+            controls = {k: json.loads(v) for k, v in db.execute('SELECT key,value FROM settings')}
+            if (not state['status'].startswith('PAUSED') or reached_operator_gate(state)
+                    or state.get('campaign_disposition') == SELECTED
+                    or controls.get('queue_enabled', True) or controls.get('campaign_enabled', False)
+                    or controls.get('pilot_task') is not None
+                    or db.execute('SELECT 1 FROM receipts WHERE task=? AND result IS NULL', (task_id,)).fetchone()):
+                raise ValueError('Scope expansion requires a stopped, paused safe boundary without unfinished receipts.')
+            if any(path in scope['paths'] for path in added):
+                raise ValueError('Scope expansion must add new exact paths.')
+            # Filesystem validation uses this task checkout, never model input roots.
+            import coding_tools as code
+            from coordinator_workspace import workspace
+            with workspace(self, state, create=True):
+                for path in added:
+                    code.path_for(path, create=True)
+            paths = exact_paths(scope['paths'] + added)
+            version = scope['version'] + 1
+            audit = dict(added=added, reason=reason.strip(), at=time.time(), version=version,
+                         previous_digest=scope['digest'], expected_task_digest=expected_state_digest)
+            state.update(edit_scope=dict(paths=paths, digest=scope_digest(paths), version=version,
+                                         history=scope['history'] + [audit]),
+                         phase='baseline', baseline_passed=None, workflow={}, checkpoint={},
+                         evidence_epoch=audit['at'],
+                         reason='Operator expanded exact edit scope; baseline and inspection required.')
+            db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
             self._bump_control_generation(db)
             return state
 
@@ -680,7 +752,7 @@ class Store:
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
             validate_bound_identity(state)
-            protected = {'integration', 'integration_identity', 'integration_identity_digest', 'worker_assignment', 'worker_assignment_digest', 'identity_binding_digest', 'evidence_requirements_digest', 'objective', 'tests', 'campaign_manifest_digest', 'campaign_id', 'campaign_company_id', 'retry_of'}
+            protected = {'integration', 'integration_identity', 'integration_identity_digest', 'worker_assignment', 'worker_assignment_digest', 'identity_binding_digest', 'evidence_requirements_digest', 'edit_scope', 'acceptance_bundle', 'acceptance_baseline_manifest', 'evidence_epoch', 'objective', 'tests', 'campaign_manifest_digest', 'campaign_id', 'campaign_company_id', 'retry_of'}
             if any(key in fields and fields[key] != state.get(key) for key in protected):
                 raise ValueError('Immutable assignment identity cannot be changed.')
             state.update(fields)

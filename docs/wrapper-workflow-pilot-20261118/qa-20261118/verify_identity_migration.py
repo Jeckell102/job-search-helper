@@ -2,13 +2,18 @@
 from verify_membership_migration import *
 from backfill_campaign_metadata import backfill_campaign_identity
 from coordinator_identity import validate_bound_identity
+from coordinator_acceptance import files as acceptance_files
 
 
 def verify(snapshot):
     items = [item for path in sorted((STAGE / 'backlog').glob('batch-*.json')) for item in json.loads(path.read_text())]
     ids = json.loads((HERE / 'reviewed-hold-ids.json').read_text())
     expected = json.loads((HERE / 'expected-legacy-cohort.json').read_text())
-    audit = {'snapshot_sha256': sha(snapshot)}
+    baseline_root = Path('/home/chris/job-search-helper_old/dev/wrapper-coder/queue-base')
+    baseline = acceptance_files(baseline_root)
+    (HERE/'reviewed-acceptance-baseline.json').write_text(json.dumps(baseline,sort_keys=True,indent=2)+'\n')
+    binding = dict(baseline_root=baseline_root, expected_baseline_manifest=baseline)
+    audit = {'snapshot_sha256': sha(snapshot), 'acceptance_baseline_sha256': sha(HERE/'reviewed-acceptance-baseline.json')}
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / 'tasks.sqlite3'
         shutil.copy2(snapshot, path)
@@ -17,16 +22,16 @@ def verify(snapshot):
                                     reviewed_hold_ids=ids, expected_cohort=expected)
         before_states = {s['id']: s for s in store.all()}
         before = sha(path)
-        audit['dry_run'] = backfill_campaign_identity(store, items)
+        audit['dry_run'] = backfill_campaign_identity(store, items, **binding)
         assert sha(path) == before
         assert set(audit['dry_run']['matched']) == set(ids)
-        audit['first_apply'] = backfill_campaign_identity(store, items, apply=True)
+        audit['first_apply'] = backfill_campaign_identity(store, items, apply=True, **binding)
         after = sha(path)
-        audit['second_apply'] = backfill_campaign_identity(store, items, apply=True)
+        audit['second_apply'] = backfill_campaign_identity(store, items, apply=True, **binding)
         assert audit['second_apply']['changed'] == audit['second_apply']['registered'] == []
         assert sha(path) == after
         additions = {'integration_identity','integration_identity_digest','worker_assignment',
-                     'worker_assignment_digest','identity_binding_digest','evidence_requirements_digest'}
+                     'worker_assignment_digest','identity_binding_digest','evidence_requirements_digest','edit_scope','acceptance_baseline_manifest'}
         for state in store.all():
             old = before_states[state['id']]
             if state['id'] not in ids:

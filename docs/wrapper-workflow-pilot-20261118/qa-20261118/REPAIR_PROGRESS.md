@@ -16,7 +16,7 @@ Atomic pilot/campaign/queue transitions accepted after the terminal-status bypas
 
 ## Accepted finding 3
 
-Canonical identity and company registry implemented. Exact102-member identity migration passed on a disposable database: dry run unchanged; first apply102; second apply0 and byte-identical; old budgets, statuses and history preserved; integrity OK; controls OFF. Independent testing caught an activation-fields mutation bypass after the initial188-test pass; post-update validation now rolls it back. Final independent full suite190/190 and focused45/45 passed. Roadmap accepted. Group4 exact edit scope and independent acceptance assertions now in progress.
+Canonical identity and company registry implemented. Exact102-member identity migration passed on a disposable database: dry run unchanged; first apply102; second apply0 and byte-identical; old budgets, statuses and history preserved; integrity OK; controls OFF. Independent testing caught an activation-fields mutation bypass after the initial188-test pass; post-update validation now rolls it back. Final independent full suite190/190 and focused45/45 passed. Roadmap accepted. Group4 exact edit scope and independent acceptance assertions now in progress. Group3 GitHub backup b71c399 pushed.
 
 ## Remaining
 
@@ -27,3 +27,11 @@ Canonical identity and company registry implemented. Exact102-member identity mi
 7. Scheduler ownership, baseline inputs, reproducible deployment.
 
 Then: independent final QA using fresh reviewers. Any failure creates a new report and fresh repair/verification lanes; the goal remains active until re-QA passes. Live scraper validation and installing generated wrappers remain separate gates.
+
+## Finding4 verification in progress
+
+Exact edit scopes, audited operator scope expansion, pinned original test/config/fixture bundles, and separate acceptance sandbox implemented. CLI supports reviewed approval JSON and structured status. Real OS sandbox rehearsal passed: editable stub passed, immutable assertion failed on broken source, then passed on correct source. Legacy102 identity/scope/baseline migration rehearse remained idempotent. Direct shared-checkout versus imported frozen-checkout baseline regression fixed. Independent verifier is completing receipt-scope binding checks; full combined suite running. Production stays unchanged and paused.
+
+Roadmap review found the raw host mutation tool treated a missing scope context as unrestricted. The coordinator path was scoped, but this default could permit a future bypass. Group4 remains open until missing context rejects mutations; the authenticated manual shared-checkout route will provide explicit request-scoped authority. Scope digest/version also must be retained in independent acceptance receipts.
+
+Group4 ACCEPTED after all corrections: independent13/13, combined35/35, full214/214, actual OS-sandbox check PASS. Group5 now active with fresh inference-reservation implementation lane and independent verifier. No production changes.

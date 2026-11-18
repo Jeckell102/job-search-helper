@@ -146,14 +146,14 @@ Required focused tests:
 
 Current gate status: **ACCEPTED IN STAGING**. `commit_activation()` now validates the complete bound identity after applying activation fields and before publishing either task state or pilot controls; the replacement-evidence regression proves rollback. Independent review passed all 15 identity/backfill/registry tests, including concurrency, immutable packet identity, changed-batch conflicts, retry lineage, and activation mutation. The frozen full host suite passed 189/189. The disposable production-snapshot rehearsal bound exactly 102 campaign identities and registry rows, changed nothing during dry run, changed zero rows on its second apply with byte-identical post-apply database hash, preserved prior status/budget/history and nonmembers, retained controls OFF, and finished with `quick_check=ok`. Production was not modified.
 
-### 4. Edit scope and independent acceptance assertions — IN PROGRESS
+### 4. Edit scope and independent acceptance assertions — ACCEPTED IN STAGING
 
-- [ ] Enforce the assigned editable file set at the host tool boundary.
-- [ ] Add an explicit reviewed scope-expansion transition.
-- [ ] Protect host-owned acceptance assertions from worker edits.
-- [ ] Detect weakened or removed required tests before offline completion.
-- [ ] Add unassigned-edit, weakened-test, scope-expansion, and verification tests.
-- [ ] Focused and full suites pass; roadmap review approves group 4.
+- [x] Enforce the assigned editable file set at the host tool boundary.
+- [x] Add an explicit reviewed scope-expansion transition.
+- [x] Protect host-owned acceptance assertions from worker edits.
+- [x] Detect weakened or removed required tests before offline completion.
+- [x] Add unassigned-edit, weakened-test, scope-expansion, and verification tests.
+- [x] Focused and full suites pass; roadmap review approves group 4.
 
 Acceptance criteria:
 
@@ -162,6 +162,8 @@ Acceptance criteria:
 3. Offline-ready requires both editable regression tests and immutable host-owned acceptance checks.
 
 ### Group 4 minimal design
+
+Gate status (2026-11-18): **ACCEPTED IN STAGING.** The host tool now rejects create/edit when mutation authority is absent; an isolated `/tmp` reproduction confirmed both operations fail and leave the filesystem unchanged. The authenticated manual bridge grants only the exact requested path in the shared checkout and refuses inherited task workspaces, while coordinator dispatch installs the persisted task scope. Frozen-acceptance receipts bind source manifest, scope digest/version, and bundle digest, and promotion rechecks those bindings plus the complete editable manifest and test/config inventory. A deterministic post-acceptance source mutation now ends `PAUSED_FILES_CHANGED`. Independent verification passed 13/13, the three roadmap blocker regressions passed independently, and the corrected full host suite passed 214/214. The reviewed exact-102 baseline migration and real systemd/Landlock/seccomp frozen-acceptance rehearsal also passed. Production remains unchanged and paused.
 
 Persist an exact per-task write allowlist and digest. Its initial paths are the canonical integration `source_targets` and editable `tests`, plus any exact output document path declared by the reviewed campaign manifest. Host `code_edit` and `code_create` must receive the active task scope and reject every normalized path not exactly listed before opening or creating it. Directory-wide grants and model-supplied paths do not expand scope. Existing path traversal, symlink, hardlink, hidden-file, size, and single-edit guards remain additional checks.
 
@@ -182,7 +184,16 @@ Required focused tests:
 7. A task with no baseline independent assertion cannot become offline-ready until an operator-owned acceptance bundle is recorded.
 8. Existing read, diff, evidence, source-drift, and Jetson/host scope-parity tests remain passing.
 
-### 5. Atomic inference reservation and safe pilot startup — WAITING
+Practical implementation gates from design review:
+
+- Mutation scope must fail closed when task scope context is absent. Every MuleLab tool-dispatch path must install the persisted scope; Jetson suggestions never carry authority.
+- `scope-expand` may authorize auxiliary exact paths, but it must not mutate the canonical company tests/source targets established in Group 3. Revising those fields requires a reviewed retry/new assignment.
+- Existing untouched campaign members need acceptance bundles before their first activation. Any legacy task with prior edits, tool receipts, or unverifiable workspace provenance must block rather than snapshot its current tests as “original.”
+- Freezing all tests and configuration is useful only if local fixtures/data/conftest inputs are also included. The bundle manifest must cover every copied input consumed by the acceptance command; Group 7 later broadens global baseline reproducibility.
+- Run acceptance from a disposable copy of the immutable bundle so ordinary cache/temp writes do not alter the sealed original. Verify the sealed bundle hash before and after, and bind the receipt to the current edited-source manifest, scope digest/version, and acceptance-bundle digest. Any later source or scope change invalidates the receipt.
+- AST assertion checks are a supplemental floor for editable tests, not semantic proof. Frozen host-owned assertions remain the independent gate; a simplistic count of `assert` nodes cannot certify behavior.
+
+### 5. Atomic inference reservation and safe pilot startup — IN PROGRESS
 
 - [ ] Atomically recheck controls and reserve model budget immediately before inference dispatch.
 - [ ] Block inference when pause, stop, deadline, or ownership wins first.
@@ -195,6 +206,36 @@ Acceptance criteria:
 1. No inference begins after a committed pause or stop.
 2. A rejected or failed pilot start leaves no stale slot and consumes no task budget.
 3. An uncertain dispatched inference remains accounted for and cannot execute returned tools after control loss.
+
+### Group 5 minimal design
+
+Add a durable `inference_receipts` table separate from tool receipts. Each row binds a unique request ID to task ID, campaign/run/session identity, phase, canonical identity digest, prompt digest, offered-tool digest, reserved prompt/output/total tokens, pre-reservation counters, timestamps, provider request ID when available, status, observed usage, response digest, and terminal reason. Valid statuses are `DISPATCHING`, `COMPLETED`, `RESPONSE_DROPPED`, and `UNCERTAIN`; no dispatched request is deleted or replayed.
+
+Budget calculation and request construction may happen outside the database transaction. Immediately before calling the Jetson/model transport, use one `BEGIN IMMEDIATE` transition to:
+
+1. reread the task, controls, registry ownership, control generation, deadline, cumulative counters, and unfinished inference receipts;
+2. require RUNNING state, no stop/pause, current campaign/pilot/generic owner, current canonical identity, remaining session/call/token allowance, and no prior in-flight or uncertain inference;
+3. recompute the allowed reservation from current counters and the prepared prompt estimate;
+4. insert one `DISPATCHING` receipt and increment call/token counters exactly once.
+
+That commit is the inference-start linearization point. A pause committed first makes the transition fail and the existing three-argument model callback is never invoked. A pause committed after it records a stop boundary against an already-started call; the coordinator cannot promise cancellation of that reserved call and must discard its tools. MuleLab's durable receipt and no-replay rule provide the required safety without a Jetson change. A request ID may be forwarded only after the endpoint schema explicitly supports it; do not claim Jetson idempotency or deduplication otherwise.
+
+When a response returns, finalize it in another immediate transaction. Record valid observed usage and response digest exactly once. If usage is valid and within reservation, replace only that receipt's reserved amount with observed usage. Invalid/missing usage retains the full reservation; over-reservation records at least the observed amount and pauses for inspection. Counters are derived from the receipt's saved pre-reservation values/current serialized state, never a stale in-memory task snapshot.
+
+The finalize transaction also rechecks stop, deadline, task status, canonical identity, registry/control ownership, and receipt state. It returns an explicit `tools_allowed` decision. Any control loss produces `RESPONSE_DROPPED`; the response may be retained by digest for audit but no tool call is executed. Every tool still passes the existing atomic `active_intent` gate, so loss after response finalization but before a tool also fails closed.
+
+Transport timeout, process crash, malformed response, or database uncertainty after `DISPATCHING` becomes `UNCERTAIN` with the full reservation retained. Restart/recovery never resends it and never executes its response. It pauses the task for operator inspection unless a future provider-specific reconciliation can prove the exact request result. Session-start accounting must use the same serialized ownership/deadline checks so session, call, and token counters remain cumulative across fresh contexts and restarts.
+
+Required focused tests:
+
+1. Deterministic pause-versus-dispatch race: if pause commits first, model invocation count is zero; if dispatch commits first, it is recorded as already started and returned tools are dropped after pause.
+2. Deadline expiry, campaign/pilot ownership loss, identity mutation, or budget exhaustion during prompt preparation prevents receipt creation and model invocation.
+3. Two coordinator/store instances racing one task create exactly one `DISPATCHING` receipt and one call/token reservation.
+4. Crash/timeout after dispatch retains one uncertain receipt and full reservation; restart performs zero redispatches and zero tool actions.
+5. Valid usage adjusts only the reserved receipt; missing/negative/zero/over-reservation usage follows the documented fail-closed accounting without counter reset.
+6. Pause or deadline after model return but before the first and subsequent tool intents yields zero new tool receipts after control loss.
+7. Request/response digests, identity/run binding, and cumulative session/call/token totals survive restart and appear in operator evidence without exposing prompt secrets.
+8. Existing pilot startup, action-intent, resilience, and cumulative-budget tests remain passing with no live inference.
 
 ### 6. Campaign completion and truthful reporting — WAITING
 
@@ -210,6 +251,32 @@ Acceptance criteria:
 1. Every campaign member is reconciled exactly once into an explicit result bucket.
 2. Zero eligible tasks cannot be reported merely as an active autopilot waiting forever.
 3. No status offers a command that the service will reject or claims evidence that has no receipt.
+
+### Group 6 minimal design
+
+Persist campaign-level reconciliation separately from task lifecycle state. Add a current campaign record plus append-only terminal snapshots/revisions containing campaign ID, reviewed membership digest, unique current-company total, mutually exclusive category counts and task/company IDs, state (`RUNNING`, `PAUSED`, `DRAINED`, or `DRAINED_WITH_EXCEPTIONS`), reconciliation digest, timestamps, and control generation. Build the denominator only from `campaign_company_registry.current_task_id`, one row per canonical company. A superseded predecessor and its receipts remain audit history but never count as another company or outcome.
+
+Retire a selected task only through one store transaction that rereads its current registry ownership and run ID. Operator-gate statuses become explicit nonexception outcomes such as `OFFLINE_READY_AWAITING_LIVE_VALIDATION`, `REVIEW_COMPLETE_AWAITING_LIVE_VALIDATION`, or `LIVE_VALIDATED_AWAITING_INSTALLATION`; none means installed or that all jobs were downloaded. `PAUSED_BUDGET`, `PAUSED_ERROR`, `PAUSED_BLOCKED`, `PAUSED_TEST_FAILURE`, `PAUSED_FILES_CHANGED`, `PAUSED_RECOVERY`, authorization failures, and other nonresumable scheduler stops become named exception outcomes with the exact reason and receipt pointer. A selected task paused only by the global campaign stop remains `SELECTED` and blocks advance. A per-task user pause is already `USER_PAUSED`; it frees the lane, is an explicit campaign exception, and remains individually resumable. `EXCLUDED` is also an explicit exception.
+
+After retirement and before selection, reconcile all current registry owners in one transaction. If any `HELD_FOR_CAMPAIGN` member remains, select exactly one as usual. If a valid `SELECTED` member remains, do not advance or finish. When neither remains, require every current company to map to exactly one recognized success/operator-gate or exception category. Persist `DRAINED` only when there are zero exception categories; persist `DRAINED_WITH_EXCEPTIONS` otherwise, atomically turn campaign and queue scheduling OFF, retain the active campaign ID for audit, and bump the control generation. An unknown disposition/status, missing registry owner, duplicate company, stale retry owner, or count mismatch is a reconciliation error: controls turn OFF and the campaign reports `PAUSED_RECONCILIATION`, never drained.
+
+`DRAINED` is a scheduler result, not an integration certification. Its summary must say that Python processed all current campaign members to their recorded boundary and give separate counts for offline-ready, review-only, live-validated, installed-with-explicit-receipt if that concept is later added, and exceptions. `DRAINED_WITH_EXCEPTIONS` must list each exception's company ID/name, task ID, stage/status, reason, and next allowed action. Bound long human output while preserving complete machine-readable JSON and a durable report artifact.
+
+Any later explicit include, resume, or reviewed retry of a current exception atomically reopens the campaign as a new reconciliation revision before making work eligible. Preserve the earlier terminal snapshot. A retry transfers current registry ownership to the new task, so later totals still contain one company. Campaign start with no work must return the existing reconciled result rather than poll forever; a changed membership digest requires a new reviewed campaign/import transition.
+
+Correct command text at the same time. Batch import says assignments were imported and held. Direct start says whether it is queued or saved behind paused controls. Task status names company and exact stage; operator-gate tasks show live validation or installation as the next action and never print a rejected resume command. Held, selected, user-paused, excluded, offline-ready, live-validated, and installed states remain distinct in both human text and JSON.
+
+Required focused tests:
+
+1. Two offline-ready current companies yield one durable `DRAINED` snapshot, controls OFF, exact total two, and no claim of live validation, installation, or complete job download.
+2. Offline-ready plus `USER_PAUSED`, `EXCLUDED`, budget, blocked, and error examples yields `DRAINED_WITH_EXCEPTIONS` with exhaustive mutually exclusive totals and correct next actions.
+3. A selected budget/error stop is retired as an exception and the next held company advances; a globally stopped `SELECTED`/`PAUSED` task is retained and prevents advance/drain.
+4. Reconciliation counts only registry `current_task_id`: a retry predecessor and its terminal receipts do not increase totals or appear as the current outcome.
+5. Concurrent scheduler instances cannot retire/select/finalize twice; restart returns the same terminal snapshot and does not resume polling or alter counts.
+6. Explicit resume/include/retry after a terminal snapshot creates a new campaign revision before work becomes eligible and later redrains with one outcome for that company.
+7. Unknown state, missing/stale registry ownership, duplicate company, or nonexhaustive totals produces `PAUSED_RECONCILIATION` with controls OFF, never `DRAINED`.
+8. Human and JSON status tests cover held import, paused direct start, active company, each operator gate, every exception, exact next action, and absence of invalid resume guidance.
+9. Existing campaign isolation, pause, atomic controls, identity, scope, inference, restart, and cumulative-budget tests remain passing without live inference.
 
 ### 7. Ownership, reproducibility, deployment, and final rehearsal — WAITING
 

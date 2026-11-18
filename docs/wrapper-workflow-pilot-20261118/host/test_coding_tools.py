@@ -11,7 +11,48 @@ class CodingTests(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory(); self.root=Path(self.temp.name)
         for name in ['src','tests','docs']:(self.root/name).mkdir()
         self.p=patch.object(c,'ROOT',self.root);self.p.start()
-    def tearDown(self):self.p.stop();self.temp.cleanup()
+        self.scope_token = c.EDIT_SCOPE.set(['src/a.py', 'src/b.py', 'docs/wrapper-development-test-protocol.md'])
+    def tearDown(self):
+        c.EDIT_SCOPE.reset(self.scope_token)
+        self.p.stop();self.temp.cleanup()
+    def test_missing_scope_cannot_create_or_edit(self):
+        source = self.root / 'src/a.py'
+        source.write_text('value = 1')
+        token = c.EDIT_SCOPE.set(None)
+        try:
+            for name, args in (
+                ('code_create', {'path': 'src/b.py', 'content': 'bad'}),
+                ('code_edit', {'path': 'src/a.py', 'sha256': hashlib.sha256(source.read_bytes()).hexdigest(), 'old': '1', 'new': '2'}),
+            ):
+                result = c.execute(name, args, c.NAMES)
+                self.assertFalse(result['ok'])
+                self.assertIn('explicit approved edit scope', result['error'])
+            self.assertEqual(source.read_text(), 'value = 1')
+            self.assertFalse((self.root / 'src/b.py').exists())
+        finally:
+            c.EDIT_SCOPE.reset(token)
+
+    def test_authenticated_manual_bridge_sets_and_clears_exact_scope(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('manual_scope_bridge', Path(c.__file__).with_name('host_server.py'))
+        bridge = importlib.util.module_from_spec(spec)
+        with patch.object(Path, 'read_text', return_value='test-token'):
+            spec.loader.exec_module(bridge)
+        token = c.EDIT_SCOPE.set(None)
+        try:
+            self.assertTrue(bridge.execute_manual('code_create', {'path': 'src/a.py', 'content': 'value = 1'}, {'code_create'})['ok'])
+            self.assertIsNone(c.EDIT_SCOPE.get())
+            self.assertFalse(bridge.execute_manual('code_create', {'path': 'src/b.py', 'content': 'bad'}, set())['ok'])
+            self.assertFalse((self.root / 'src/b.py').exists())
+            workspace = c.WORKSPACE.set(self.root)
+            try:
+                with self.assertRaisesRegex(ValueError, 'inherit'):
+                    bridge.execute_manual('code_create', {'path': 'src/b.py', 'content': 'bad'}, {'code_create'})
+            finally:
+                c.WORKSPACE.reset(workspace)
+        finally:
+            c.EDIT_SCOPE.reset(token)
+
     def test_required_protocol_is_readable_but_not_model_editable(self):
         p=self.root/'docs/wrapper-development-test-protocol.md';p.write_text('required steps')
         r=c.execute('code_read', {'path': 'docs/wrapper-development-test-protocol.md'}, c.NAMES)

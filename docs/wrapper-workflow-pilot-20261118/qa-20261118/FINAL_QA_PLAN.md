@@ -20,3 +20,5 @@ Required acceptance:
 If any mandatory acceptance fails, save a new dated QA report with reproduction, expected/actual behavior, severity, and affected source hashes. Assign fresh repair and independent verification lanes, repair one finding at a time, and repeat final QA. Do not mark the goal complete with a failing or skipped mandatory gate.
 
 Deliberate gates remain: generated integrations require separate live scraper validation and production installation approval/evidence. Final coordinator QA is not a claim that every job has been downloaded.
+
+Execution order: independent staged QA must pass before the paused deployment. Then install the exact reviewed source with backups and migrations while scheduling remains OFF, and run installed parity/health/integrity checks. The final report is not PASS until both stages pass. A failed deployed check requires rollback or a documented safe paused state, a new failure report, and fresh repair/verification lanes. No campaign enablement is part of this repair goal.

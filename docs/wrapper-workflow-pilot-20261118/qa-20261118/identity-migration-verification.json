@@ -1,5 +1,6 @@
 {
   "snapshot_sha256": "46dcc98ed6b0f70b873d2eff42009f998bd397c731076530a66ee7950e3c6178",
+  "acceptance_baseline_sha256": "05bb355c4aba09b3daf962f451e9972c5971aa700af53eaf865dcf999837884a",
   "dry_run": {
     "matched": [
       "WRAP-8be410e6f4",
@@ -777,6 +778,6 @@
     "autopilot_enabled": "false"
   },
   "db_before_sha256": "e5470ad7ab61f4d6064bd1afb4b72980354cb8295ad4a0258d358f6a22ccb89e",
-  "db_after_sha256": "7bc0130e38d81a5c433e0624591ae8276af54c8a138dcc1e8dc06c2a846dd77c",
+  "db_after_sha256": "b9b7f602a3db449a84cc1ae3109a5424b383e10290a098c12f257dde0e12f770",
   "result": "PASS"
 }
