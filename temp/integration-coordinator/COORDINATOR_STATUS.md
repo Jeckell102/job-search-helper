@@ -1571,3 +1571,9 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   values could overwrite manual Decision/Review Status fields. Repair remains
   isolated with adversarial regression tests required before installation.
   Evidence: `GENERIC_LEGACY_V2_CANDIDATE_QA_HOLD_20261119.md`.
+- Independent re-review accepts the repaired isolated generic recovery
+  primitive: it rejects foreign prefix/suffix records, preserves manual
+  Decision/Review Status fields, and resumes only Saronic's verified suffix.
+  It remains local-only and uninstalled pending signer, receipt, remote-intent,
+  and readback integration. Evidence:
+  `GENERIC_LEGACY_V2_CANDIDATE_QA_ACCEPTANCE_20261119.md`.
