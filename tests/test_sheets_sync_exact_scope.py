@@ -220,9 +220,6 @@ class ExactScopeSheetsTests(unittest.TestCase):
             exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
             plan_digest=plan['plan_digest'], receipt_id=receipt_id,
             intent_id=intent_id)
-        readback = result['readback']
-        self.confirm_remote('CYC-1', 'COMP-1', plan, exact, readback,
-                            receipt_id, intent_id)
         self.local.commit([{
             'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
             'values': {'Next Action': 'Newer local decision'},
@@ -242,10 +239,10 @@ class ExactScopeSheetsTests(unittest.TestCase):
         unrelated_before = list(self.local.db.execute(
             'SELECT * FROM delivery_attempts WHERE row_id=2'))
 
-        acknowledged = self.sync.acknowledge_exact_scope(
-            exact, readback, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
-            plan_digest=plan['plan_digest'], receipt_id=receipt_id, intent_id=intent_id,
-            acknowledgement_id=readback['acknowledgement_id'])
+        acknowledged = self.sync.confirm_and_acknowledge_exact_scope(
+            exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+            intent_id=intent_id)
         self.assertFalse(acknowledged['recovered'])
         dirty = set(self.local.db.execute('SELECT tab,row_id,header FROM dirty'))
         self.assertNotIn(('Companies', 1, 'Last Checked'), dirty)
@@ -262,10 +259,10 @@ class ExactScopeSheetsTests(unittest.TestCase):
             'Notes': 'unrelated attempt'})
         self.assertEqual(list(self.local.db.execute(
             'SELECT * FROM delivery_attempts WHERE row_id=2')), unrelated_before)
-        repeated = self.sync.acknowledge_exact_scope(
-            exact, readback, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
-            plan_digest=plan['plan_digest'], receipt_id=receipt_id, intent_id=intent_id,
-            acknowledgement_id=readback['acknowledgement_id'])
+        repeated = self.sync.confirm_and_acknowledge_exact_scope(
+            exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+            intent_id=intent_id)
         self.assertTrue(repeated['recovered'])
 
     def test_tampered_readback_or_missing_local_journal_cannot_acknowledge(self):
@@ -296,12 +293,7 @@ class ExactScopeSheetsTests(unittest.TestCase):
         }
         before = list(self.local.db.execute(
             'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header'))
-        with self.assertRaisesRegex(ValueError, 'durably confirmed'):
-            self.sync.acknowledge_exact_scope(
-                exact, fabricated, inbox=self.inbox, cycle_id='CYC-1',
-                company_id='COMP-1', plan_digest=plan['plan_digest'],
-                receipt_id=receipt_id, intent_id=intent_id,
-                acknowledgement_id=fabricated['acknowledgement_id'])
+        self.assertFalse(hasattr(self.sync, 'acknowledge_exact_scope'))
         self.assertEqual(len(self.service.batches), 0)
         self.assertEqual(list(self.local.db.execute(
             'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header')), before)
@@ -310,28 +302,63 @@ class ExactScopeSheetsTests(unittest.TestCase):
             exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
             plan_digest=plan['plan_digest'], receipt_id=receipt_id,
             intent_id=intent_id)
-        self.confirm_remote('CYC-1', 'COMP-1', plan, exact, delivered['readback'],
-                            receipt_id, intent_id)
-        tampered = copy.deepcopy(delivered['readback'])
-        tampered['rows'][0]['actual']['Next Action'] = 'not confirmed'
-        with self.assertRaisesRegex(ValueError, 'binding'):
-            self.sync.acknowledge_exact_scope(
-                exact, tampered, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
-                plan_digest=plan['plan_digest'], receipt_id=receipt_id,
-                intent_id=intent_id,
-                acknowledgement_id=tampered['acknowledgement_id'])
-        self.assertEqual(list(self.local.db.execute(
-            'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header')), before)
-
         with self.local.transaction():
             self.local.db.execute('DELETE FROM exact_local_applications')
         with self.assertRaisesRegex(ValueError, 'verified local plan binding'):
-            self.sync.acknowledge_exact_scope(
-                exact, delivered['readback'], inbox=self.inbox,
-                cycle_id='CYC-1', company_id='COMP-1',
+            self.sync.confirm_and_acknowledge_exact_scope(
+                exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
                 plan_digest=plan['plan_digest'], receipt_id=receipt_id,
-                intent_id=intent_id,
-                acknowledgement_id=delivered['acknowledgement_id'])
+                intent_id=intent_id)
+
+    def test_claim_without_remote_write_cannot_forge_confirmation_or_clear_dirty(self):
+        plan, scope, remote_operation = self.company_plan()
+        exact = self.sync.plan_exact_scope(scope, [remote_operation])
+        receipt_id, intent_id = self.remote_authority(
+            'CYC-1', 'COMP-1', plan, exact, intent_id='intent-zero-write')
+        claim = self.inbox.claim_exact_remote_attempt(
+            'CYC-1', 'COMP-1', local_plan_digest=plan['plan_digest'],
+            projection_digest=exact['projection_digest'], receipt_id=receipt_id,
+            intent_id=intent_id, cursor=0, count=len(exact['operations']),
+            chunk_digest=exact['projection_digest'],
+            timestamp='2026-11-19T00:00:02Z')
+        self.assertTrue(claim['first_attempt'])
+        import job_search_helper.inbox as inbox_module
+        self.assertEqual(
+            [name for name in dir(inbox_module) if 'confirm_exact_remote' in name], [])
+        self.assertEqual(
+            [name for name in dir(self.inbox) if 'confirm_exact_remote' in name], [])
+
+        fabricated_rows = [{
+            'tab': evidence['tab'], 'row_id': evidence['row_id'],
+            'identity': copy.deepcopy(evidence['identity']),
+            'fields': list(evidence['fields']),
+            'sent': copy.deepcopy(evidence['sent']),
+            'actual': {header: evidence['sent'].get(header, '')
+                       for header in evidence['fields']},
+        } for evidence in exact['rows']]
+        fabricated_ack = _digest({
+            'receipt_id': receipt_id, 'intent_id': intent_id,
+            'projection_digest': exact['projection_digest'],
+            'observed': fabricated_rows,
+        })
+        fabricated = {
+            'receipt_id': receipt_id, 'intent_id': intent_id,
+            'intent_projection_digest': exact['projection_digest'],
+            'projection_digest': exact['projection_digest'],
+            'rows': fabricated_rows, 'acknowledgement_id': fabricated_ack,
+        }
+        before = list(self.local.db.execute(
+            'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header'))
+        with self.assertRaisesRegex(ValueError, 'readback'):
+            self.sync.confirm_and_acknowledge_exact_scope(
+                exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+                plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+                intent_id=intent_id)
+        self.assertEqual(len(self.service.batches), 0)
+        self.assertEqual(list(self.local.db.execute(
+            'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header')), before)
+        self.assertEqual(self.inbox.exact_remote_state(
+            'CYC-1', 'COMP-1')['state'], 'SYNC_PENDING')
 
     def test_manual_source_and_salary_controls_are_not_weakened(self):
         local_operation = {

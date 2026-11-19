@@ -104,7 +104,7 @@ ten-minute user update. Update it immediately after any material result.
   duplicate jobs. Owner-reviewed protected integration is complete: the
   protected integration selection passes 202 checks and exact rollback/source
   hashes are recorded. The live release-to-saved-jobs proof remains.
-- Milestone 6: 69% — F4 receipt/recovery source review and controlled Jetson
+- Milestone 6: 72% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. An isolated F8 candidate now extends the existing
   coordinator with one maintenance owner, durable boot/reconnect catch-up,
   disk-pressure holds, explicit evidence-retention counts, and planned
@@ -1103,3 +1103,41 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   receives exactly one attempt while a repeat at the same cursor receives
   none. Git checkpoint/remote-hash verification remains open; no live action
   occurred.
+- A later adversarial review **rejected** the first confirmation hardening:
+  its module-private capability token was importable and therefore could not
+  prove a real Sheet read. That token and every Inbox confirmation method are
+  now removed. The only remaining confirmation operations live inside
+  `SheetsSynchronizer`; each performs the exact remote read itself before the
+  durable transition, and no callable accepts caller-supplied observed
+  records. A zero-write forged-record/acknowledgement regression enumerates
+  all Inbox/module confirmation names, finds none, and proves state stays
+  `SYNC_PENDING` with dirty fields intact. The repaired candidate passes 170
+  strict focused checks, 270 adjacent runner/sync/local-pipeline checks, and
+  52 pause/terminal/SQLite integration checks. Independent re-review is in
+  progress. The pushed `d7eb1ab` remains a non-final checkpoint until this
+  boundary is accepted and a follow-up hash is verified. No live action
+  occurred.
+- An intermediate source checkpoint was created as `d7eb1ab` and the local
+  remote-tracking ref currently names the same commit. It is a recoverable
+  private-branch backup, **not an accepted release**: its committed final-QA
+  report correctly rejects the importable `_SHEETS_CONFIRMATION_CAPABILITY`
+  design because arbitrary in-process code can import the same object and call
+  the private inbox transition with fabricated readback. A subsequent
+  uncommitted patch improves confirmed-chunk recovery but does not remove that
+  fundamental bypass. Production and Google remain untouched. A dedicated
+  higher-reasoning read-only architecture lane now owns the replacement design;
+  implementation remains paused only at this confirmation boundary while
+  independent QA and other non-mutating verification continue.
+- The confirmation-boundary replacement is now independently **ACCEPTED**.
+  The importable token and all Inbox remote-confirmation methods are gone;
+  only the Sheets synchronizer can advance durable confirmation, and it first
+  performs the actual exact remote readback itself. A zero-write adversarial
+  test proves fabricated rows and acknowledgement data cannot advance
+  `SYNC_PENDING` or clear dirty state. A final legacy-reconcile guard also
+  refuses to confirm an enrolled exact receipt through the older public
+  recovery API. Root freshly reproduced 176 strict focused checks, source/test
+  compilation, and whitespace validation. The
+  earlier rejection notes remain as history but are superseded by this result.
+  A final follow-up commit and three-way private-branch hash verification are
+  now the active checkpoint; production, Google, Jetson, and live queues
+  remain untouched.

@@ -26,6 +26,31 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=src:tests \
 
 Result: **169 passed in 18.90s**. `git diff --check` also passed.
 
+Final hardening rerun of the same focused/adjacent matrix passed **170 tests
+in 15.25s** with warnings treated as errors. `git diff --check` also passed.
+
+## Final confirmation-boundary re-review
+
+The prior P0 is repaired. `InventoryInbox` now has neither an importable
+`confirm_exact_remote` symbol nor an importable confirmation-token object.
+The durable state transitions are implemented inside
+`SheetsSynchronizer._readback_and_confirm_chunk` and
+`SheetsSynchronizer._readback_and_confirm_full`; both begin by calling the
+actual exact-scope remote readback and do not accept caller-supplied observed
+records or acknowledgement data.
+
+The fresh zero-write adversarial test claims an intent, enumerates Inbox and
+module names containing `confirm_exact_remote` (both empty), fabricates
+otherwise matching rows/acknowledgement, and proves that acknowledgement is
+refused, no remote batch occurs, dirty state is unchanged, and remote intent
+state remains `SYNC_PENDING`.
+
+The retained legacy `InventoryInbox.confirm_exact_chunk` cannot bypass this
+boundary: it does not advance `exact_remote_plans.remote_cursor`, cannot set
+the receipt or remote plan to `SYNC_CONFIRMED`, and
+`acknowledge_exact_scope` requires the full confirmed receipt/plan binding.
+It therefore cannot clear selected dirty state after a zero-write claim.
+
 ## Evidence reviewed
 
 - `exact_cycle_recovery._prepare_exact_v2_local` applies at most 100 local
@@ -59,7 +84,7 @@ Result: **169 passed in 18.90s**. `git diff --check` also passed.
   v2 dispatch occurs only for `exact_plan_version == 2` and legacy plans do
   not use v2 remote progress semantics.
 
-## Required documentation follow-up (non-blocking source defect)
+## Documentation follow-up
 
 `EXACT_V2_RECOVERY_INTEGRATION_QA_20261119.md` still says that multi-chunk
 remote publication is not enabled. That statement is now obsolete: the

@@ -520,16 +520,11 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
             remote_cursor = start + len(chunk['operations'])
         if remote_cursor != len(exact_plan['operations']):
             raise ValueError('exact_plan_v2_remote_cursor_incomplete')
-    readback = sync.confirm_exact_scope(
+    acknowledged = sync.confirm_and_acknowledge_exact_scope(
         exact_plan, inbox=inbox, cycle_id=cycle_id, company_id=company_id,
         plan_digest=plan['plan_digest'], receipt_id=receipt_id,
         intent_id=intent_id)
-    acknowledgement_id = readback['acknowledgement_id']
-    acknowledged = sync.acknowledge_exact_scope(
-        exact_plan, readback, inbox=inbox, cycle_id=cycle_id, company_id=company_id,
-        plan_digest=plan['plan_digest'], receipt_id=receipt_id,
-        intent_id=intent_id,
-        acknowledgement_id=acknowledgement_id)
+    acknowledgement_id = acknowledged['acknowledgement_id']
     inbox.mark_exact_remote_locally_acknowledged(
         cycle_id, company_id, local_plan_digest=plan['plan_digest'],
         projection_digest=exact_plan['projection_digest'], receipt_id=receipt_id,

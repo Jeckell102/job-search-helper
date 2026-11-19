@@ -55,6 +55,17 @@ class PublicationReceiptTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "confirmed receipt"):
             mark_sync_pending(self.db, self.binding, timestamp="t4")
 
+    def test_public_reconcile_cannot_confirm_an_enrolled_exact_receipt(self):
+        receipt_id = local_committed(
+            self.db, self.binding, self.records, self.schedule, timestamp="t1")
+        mark_sync_pending(self.db, self.binding, timestamp="t2")
+        self.db.execute('CREATE TABLE exact_remote_plans(receipt_id TEXT NOT NULL)')
+        self.db.execute('INSERT INTO exact_remote_plans VALUES (?)', (receipt_id,))
+        with self.assertRaisesRegex(ValueError, 'trusted Sheets confirmation'):
+            reconcile_sync(
+                self.db, self.binding, self.records, 'forged', timestamp='t3')
+        self.assertEqual(receipt(self.db, self.binding)['state'], SYNC_PENDING)
+
 
 if __name__ == "__main__":
     unittest.main()

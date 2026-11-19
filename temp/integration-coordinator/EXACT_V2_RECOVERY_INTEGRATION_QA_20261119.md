@@ -7,6 +7,10 @@ Status: implementation complete in the isolated integration worktree; coordinato
 - Added a durable `InventoryInbox` remote-intent authority bound to cycle, company, local plan digest, exact Sheets projection digest, receipt ID, and intent ID.
 - The first remote attempt is claimed atomically with receipt `SYNC_PENDING` and the exact chunk journal. `first_attempt_claimed` and `attempted_at` are durable and monotonic; duplicate claims return `first_attempt: false`.
 - Receipt, chunk, and remote-plan confirmation are one transaction and retain the observed acknowledgement ID. Sheets local acknowledgement must prove the same stored `SYNC_CONFIRMED` binding.
+- QA's forged zero-write path is closed: `InventoryInbox` exposes no remote
+  confirmation method or token. `SheetsSynchronizer` owns live readback plus
+  the durable transition as one operation; no callable accepts caller-supplied
+  observed records.
 - Exact v2 recovery applies and verifies bounded local chunks through `SQLiteRepository` APIs, advances only the local inbox cursor after chunk verification, mirrors `LOCAL_APPLIED`/`LOCAL_VERIFIED`, then publishes only the frozen selected projection.
 - Recovery after a synthetic post-write uncertain result performs exact readback and makes zero additional remote commits.
 - The accepted full-profile sealed-plan publisher remains enabled. The v2 path is separate; no legacy cursor is treated as Sheets progress.
@@ -32,7 +36,13 @@ Focused plus adjacent command:
 
 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=src:tests /home/chris/job-search-helper_old/.venv/bin/python -m pytest -q tests/test_durable_inbox.py tests/test_exact_cycle_sync.py tests/test_exact_cycle_recovery.py tests/test_exact_cycle_planner.py tests/test_exact_local_plan.py tests/test_sheets_sync_exact_scope.py tests/test_sqlite_migration.py`
 
-Result: **167 passed in 13.38s**.
+Result after the confirmation-boundary repair: **170 passed in 15.43s**.
+
+Additional recovery/pause/terminal/SQLite integration matrix:
+
+`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=src:tests /home/chris/job-search-helper_old/.venv/bin/python -m pytest -q tests/test_exact_recovery_pause.py tests/test_exact_recovery_pause_apply.py tests/test_exact_recovery_pause_executor.py tests/test_exact_recovery_terminal.py tests/test_sqlite_integration.py`
+
+Result: **52 passed in 10.53s**.
 
 Additional checks:
 
@@ -40,6 +50,10 @@ Additional checks:
 - `git diff --check` passed for the owned source and test files.
 - Full-profile legacy exact publisher: **all existing focused expectations pass**.
 - Durable inbox tests reproduce duplicate publish-claim refusal and forged acknowledgement refusal.
+- An adversarial Sheets test directly claims the only attempt, confirms there
+  is no importable inbox/module confirmation symbol, performs zero remote
+  batches, fabricates matching fingerprints and an acknowledgement, and proves
+  it cannot set `SYNC_CONFIRMED` or clear any dirty field.
 - Recovery test reproduces a remote mutation followed by a synthetic `UncertainWriteError`; restart confirms by readback with the remote commit count unchanged at one.
 - Compact v2 isolation test preserves unrelated dirty rows, company-event outbox rows, unselected inventory, and unselected State.
 

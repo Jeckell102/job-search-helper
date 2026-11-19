@@ -17,6 +17,7 @@ from typing import Mapping
 from .repository import RepositoryError, USER_FIELDS, _equivalent, _identity_key
 from .sqlite_repository import REVIEW_FIELDS, encode, identity_for, timestamp
 from .sheet_profile import COMPACT_PULL_FIELDS, profile_schemas, prune_local_only_delivery
+from . import publication_receipts
 
 PULL_FIELDS = {
     'Companies': None,
@@ -637,6 +638,9 @@ class SheetsSynchronizer:
             if len(matches) != 1:
                 raise ValueError('Exact Sheets remote identity is missing or ambiguous.')
             actual = self.remote.read_row(tab, matches[0])
+            if any(not _equivalent(header, actual.get(header, ''), value)
+                   for header, value in identity.items()):
+                raise ValueError('Exact Sheets remote row moved during readback.')
             for values in (operation.get('on_insert', {}), operation.get('values', {})):
                 if any(not _equivalent(header, actual.get(header, ''), value)
                        for header, value in values.items()):
@@ -685,6 +689,134 @@ class SheetsSynchronizer:
             raise ValueError('Exact Sheets inventory inbox belongs to another workbook.')
         return inbox
 
+    def _readback_and_confirm_chunk(self, exact_plan, inbox, *, cycle_id,
+                                    company_id, plan_digest, receipt_id,
+                                    intent_id, remote_projection_digest,
+                                    remote_cursor):
+        """Perform the remote read and consume its chunk evidence internally."""
+        readback = self.readback_exact_scope(
+            exact_plan, receipt_id=receipt_id, intent_id=intent_id,
+            intent_projection_digest=exact_plan['projection_digest'])
+        stamp = timestamp()
+        with inbox.lock, inbox.connection:
+            remote = inbox.connection.execute(
+                'SELECT local_plan_digest,projection_digest,receipt_id,intent_id,'
+                'remote_cursor,state,first_attempt_claimed,projection FROM exact_remote_plans '
+                'WHERE cycle=? AND company=?', (cycle_id, company_id)).fetchone()
+            expected = (plan_digest, remote_projection_digest, receipt_id, intent_id)
+            if remote is None or tuple(remote[:4]) != expected:
+                raise ValueError('Exact remote chunk does not match its frozen intent.')
+            frozen = json.loads(remote[7])
+            if (remote_cursor + len(exact_plan['operations']) > len(frozen)
+                    or frozen[remote_cursor:remote_cursor + len(exact_plan['operations'])]
+                    != exact_plan['operations']
+                    or _digest(frozen) != remote_projection_digest):
+                raise ValueError('Exact remote projection changed during chunk readback.')
+            chunk = inbox.connection.execute(
+                'SELECT count,digest,state FROM exact_sync_chunks '
+                'WHERE cycle=? AND company=? AND cursor=?',
+                (cycle_id, company_id, remote_cursor)).fetchone()
+            if chunk is None or chunk[1] != exact_plan['projection_digest']:
+                raise ValueError('Exact remote chunk confirmation evidence is missing.')
+            if chunk[0] != len(exact_plan['operations']):
+                raise ValueError('Exact remote chunk count changed during confirmation.')
+            next_cursor = remote_cursor + chunk[0]
+            if chunk[2] == 'CONFIRMED' and remote[4] == next_cursor:
+                return readback
+            if (remote[4] != remote_cursor or remote[5] != 'SYNC_PENDING'
+                    or not remote[6] or chunk[2] != 'PENDING'):
+                raise ValueError('Exact remote chunk confirmation cursor/state is invalid.')
+            inbox.connection.execute(
+                "UPDATE exact_sync_chunks SET state='CONFIRMED' "
+                'WHERE cycle=? AND company=? AND cursor=?',
+                (cycle_id, company_id, remote_cursor))
+            updated = inbox.connection.execute(
+                "UPDATE exact_remote_plans SET remote_cursor=?,updated_at=? "
+                "WHERE cycle=? AND company=? AND state='SYNC_PENDING' "
+                'AND remote_cursor=?',
+                (next_cursor, stamp, cycle_id, company_id, remote_cursor)).rowcount
+            if updated != 1:
+                raise ValueError('Exact remote chunk cursor changed during confirmation.')
+        return readback
+
+    def _readback_and_confirm_full(self, exact_plan, inbox, *, cycle_id,
+                                   company_id, plan_digest, receipt_id,
+                                   intent_id):
+        """Perform full remote readback and atomically confirm its receipt."""
+        readback = self.readback_exact_scope(
+            exact_plan, receipt_id=receipt_id, intent_id=intent_id,
+            intent_projection_digest=exact_plan['projection_digest'])
+        acknowledgement_id = readback['acknowledgement_id']
+        stamp = timestamp()
+        with inbox.lock, inbox.connection:
+            remote = inbox.connection.execute(
+                'SELECT local_plan_digest,projection_digest,receipt_id,intent_id,'
+                'remote_cursor,state,first_attempt_claimed,acknowledgement_id,projection '
+                'FROM exact_remote_plans WHERE cycle=? AND company=?',
+                (cycle_id, company_id)).fetchone()
+            expected = (plan_digest, exact_plan['projection_digest'],
+                        receipt_id, intent_id)
+            if remote is None or tuple(remote[:4]) != expected:
+                raise ValueError('Exact remote confirmation does not match frozen intent.')
+            frozen = json.loads(remote[8])
+            if (frozen != exact_plan['operations']
+                    or _digest(frozen) != exact_plan['projection_digest']):
+                raise ValueError('Exact remote projection changed during full readback.')
+            if (remote[5] not in {'SYNC_PENDING', 'SYNC_CONFIRMED'}
+                    or remote[4] != len(exact_plan['operations'])
+                    or not remote[6]):
+                raise ValueError('Exact remote confirmation cursor/state is invalid.')
+            if remote[7] is not None and remote[7] != acknowledgement_id:
+                raise ValueError('Exact remote acknowledgement changed after confirmation.')
+            receipt = inbox.connection.execute(
+                'SELECT binding,state,acknowledgement_id FROM publication_receipts '
+                'WHERE receipt_id=?', (receipt_id,)).fetchone()
+            if receipt is None:
+                raise ValueError('Exact remote confirmation receipt is missing.')
+            observed_records = self._exact_readback_records(exact_plan, readback)
+            stored_records = inbox.connection.execute(
+                'SELECT records FROM publication_receipts WHERE receipt_id=?',
+                (receipt_id,)).fetchone()
+            if stored_records is None or publication_receipts._records(
+                    observed_records) != json.loads(stored_records[0]):
+                raise ValueError('Exact remote readback does not match its receipt.')
+            if receipt[1] != publication_receipts.SYNC_CONFIRMED:
+                if receipt[1] != publication_receipts.SYNC_PENDING:
+                    raise ValueError('Exact remote receipt is not pending confirmation.')
+                updated_receipt = inbox.connection.execute(
+                    'UPDATE publication_receipts SET state=?,acknowledgement_id=?,updated_at=? '
+                    'WHERE receipt_id=? AND state=?',
+                    (publication_receipts.SYNC_CONFIRMED, acknowledgement_id, stamp,
+                     receipt_id, publication_receipts.SYNC_PENDING)).rowcount
+                if updated_receipt != 1:
+                    raise ValueError('Exact remote receipt changed during confirmation.')
+            elif receipt[2] != acknowledgement_id:
+                raise ValueError('Exact remote receipt acknowledgement changed.')
+            total = len(json.loads(remote[8]))
+            chunks = inbox.connection.execute(
+                'SELECT cursor,count,state FROM exact_sync_chunks '
+                'WHERE cycle=? AND company=? ORDER BY cursor',
+                (cycle_id, company_id)).fetchall()
+            covered = 0
+            for chunk_cursor, count, state in chunks:
+                if chunk_cursor != covered or state != 'CONFIRMED':
+                    break
+                covered += count
+            if remote[4] != total or covered != total:
+                raise ValueError('Exact remote confirmation cursor/state is invalid.')
+            updated = inbox.connection.execute(
+                "UPDATE exact_remote_plans SET state='SYNC_CONFIRMED',"
+                'acknowledgement_id=?,updated_at=? WHERE cycle=? AND company=?',
+                (acknowledgement_id, stamp, cycle_id, company_id)).rowcount
+            if updated != 1:
+                raise ValueError('Exact remote plan disappeared during confirmation.')
+        inbox.require_exact_remote_confirmed(
+            cycle_id, company_id, local_plan_digest=plan_digest,
+            projection_digest=exact_plan['projection_digest'],
+            receipt_id=receipt_id, intent_id=intent_id,
+            acknowledgement_id=acknowledgement_id)
+        return readback
+
     def publish_exact_scope(self, exact_plan, *, inbox, cycle_id, company_id,
                             plan_digest, receipt_id, intent_id,
                             remote_projection_digest=None, remote_cursor=0,
@@ -720,6 +852,18 @@ class SheetsSynchronizer:
         # acknowledgement path deliberately preserves it.  A never-attempted
         # intent is checked both before and immediately after its atomic claim.
         remote_state = inbox.exact_remote_state(cycle_id, company_id)
+        prior_chunk = inbox.exact_chunk(cycle_id, company_id, remote_cursor)
+        if prior_chunk is not None and prior_chunk.get('state') == 'CONFIRMED':
+            if (prior_chunk.get('count') != len(operations)
+                    or prior_chunk.get('digest') != exact_plan['projection_digest']
+                    or not isinstance(remote_state, Mapping)
+                    or remote_state.get('remote_cursor') < remote_cursor + len(operations)):
+                raise ValueError('Exact Sheets confirmed chunk binding is invalid.')
+            readback = self.readback_exact_scope(
+                exact_plan, receipt_id=receipt_id, intent_id=intent_id,
+                intent_projection_digest=exact_plan['projection_digest'])
+            return {'commit': None, 'readback': readback, 'first_attempt': False,
+                    'acknowledgement_id': readback['acknowledgement_id']}
         if not isinstance(remote_state, Mapping) or not remote_state.get(
                 'first_attempt_claimed'):
             self._revalidate_exact_rows(exact_plan)
@@ -735,16 +879,12 @@ class SheetsSynchronizer:
         if claim['first_attempt']:
             self._revalidate_exact_rows(exact_plan)
             result = self.remote.commit(copy.deepcopy(operations))
-        readback = self.readback_exact_scope(
-            exact_plan, receipt_id=receipt_id, intent_id=intent_id,
-            intent_projection_digest=exact_plan['projection_digest'])
-        from .inbox import _SHEETS_CONFIRMATION_CAPABILITY
-        inbox._confirm_exact_remote_chunk(
-            cycle_id, company_id, local_plan_digest=plan_digest,
-            projection_digest=remote_projection_digest,
-            receipt_id=receipt_id, intent_id=intent_id, cursor=remote_cursor,
-            chunk_digest=exact_plan['projection_digest'], timestamp=timestamp(),
-            _capability=_SHEETS_CONFIRMATION_CAPABILITY)
+        readback = self._readback_and_confirm_chunk(
+            exact_plan, inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id,
+            remote_projection_digest=remote_projection_digest,
+            remote_cursor=remote_cursor)
         return {'commit': result, 'readback': readback,
                 'first_attempt': claim['first_attempt'],
                 'acknowledgement_id': readback['acknowledgement_id']}
@@ -767,25 +907,37 @@ class SheetsSynchronizer:
                 or remote_state.get('intent_id') != intent_id
                 or remote_state.get('remote_cursor') != len(exact_plan['operations'])):
             raise ValueError('Exact Sheets complete remote journal is unavailable.')
-        readback = self.readback_exact_scope(
-            exact_plan, receipt_id=receipt_id, intent_id=intent_id,
-            intent_projection_digest=exact_plan['projection_digest'])
-        from .inbox import _SHEETS_CONFIRMATION_CAPABILITY
-        inbox._confirm_exact_remote(
-            cycle_id, company_id, local_plan_digest=plan_digest,
-            projection_digest=exact_plan['projection_digest'],
-            receipt_id=receipt_id, intent_id=intent_id,
-            cursor=len(exact_plan['operations']),
-            observed_records=self._exact_readback_records(exact_plan, readback),
-            acknowledgement_id=readback['acknowledgement_id'],
-            timestamp=timestamp(),
-            _capability=_SHEETS_CONFIRMATION_CAPABILITY)
-        return readback
+        return self._readback_and_confirm_full(
+            exact_plan, inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
 
-    def acknowledge_exact_scope(self, exact_plan, readback, *, inbox, cycle_id,
-                                company_id, plan_digest, receipt_id,
-                                intent_id, acknowledgement_id):
-        """Acknowledge only confirmed visible fields and preserve later edits."""
+    def confirm_and_acknowledge_exact_scope(self, exact_plan, *, inbox, cycle_id,
+                                            company_id, plan_digest, receipt_id,
+                                            intent_id):
+        """Fresh-read, durably confirm, then acknowledge only the exact scope."""
+        exact_plan = self._validate_exact_plan(exact_plan)
+        inbox = self._require_exact_inbox(inbox)
+        cycle_id = _required_id(cycle_id, 'cycle ID')
+        company_id = _required_id(company_id, 'Company ID')
+        plan_digest = _required_id(plan_digest, 'plan digest')
+        receipt_id = _required_id(receipt_id, 'receipt ID')
+        intent_id = _required_id(intent_id, 'intent ID')
+        readback = self._readback_and_confirm_full(
+            exact_plan, inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
+        result = self._acknowledge_exact_readback(
+            exact_plan, readback, inbox=inbox, cycle_id=cycle_id,
+            company_id=company_id, plan_digest=plan_digest,
+            receipt_id=receipt_id, intent_id=intent_id,
+            acknowledgement_id=readback['acknowledgement_id'])
+        return {**result, 'readback': readback}
+
+    def _acknowledge_exact_readback(self, exact_plan, readback, *, inbox, cycle_id,
+                                    company_id, plan_digest, receipt_id,
+                                    intent_id, acknowledgement_id):
+        """Consume only readback created inside the combined trusted operation."""
         exact_plan = self._validate_exact_plan(exact_plan)
         inbox = self._require_exact_inbox(inbox)
         cycle_id = _required_id(cycle_id, 'cycle ID')
