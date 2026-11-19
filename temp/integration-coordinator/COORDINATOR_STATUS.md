@@ -148,9 +148,11 @@ ten-minute user update. Update it immediately after any material result.
   narrowed to the 13 actually changed/new Python files, reconciled with the
   latest protected receipt binding, and resealed with 13 candidate hashes plus
   10 exact protected-before hashes; the three new targets must be absent. A
-  disposable reconstruction over the current protected baseline passed 247
-  focused and adjacent checks with warnings treated as errors. Final
-  independent source-installation acceptance is pending. No protected source,
+  disposable reconstruction over the current protected baseline passed 248
+  focused and adjacent checks with warnings treated as errors. The higher-
+  model independent review accepted this exact package for source installation
+  after 40 additional altered-evidence, recovery, compatibility, and package
+  checks passed. No protected source,
   live database, Google Sheet, service, queue, lock, scraper, or Jetson state
   changed in this checkpoint.
 
@@ -1444,6 +1446,17 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   `F2_LIFECYCLE_LEDGER_QA_FAILURE_20261119.md`. Worker
   `f2_lifecycle_ledger_impl` is preparing a fresh isolated repair; no ledger
   candidate may be installed until both cases pass independent QA.
+- M2 terminal event admission is now independently accepted and installed.
+  Its five-file guarded installation recorded
+  `/tmp/jsh-m2-terminal-bridge-20261119T203206Z-2qy6x41s/manifest.json` as
+  `INSTALLED_HASH_VERIFIED`; the protected expanded suite passed 73 checks.
+  A final Company-control reconciliation now occurs while the existing outer
+  scraper lock remains held, after the current run has reached its terminal
+  boundary, then the existing bridge may write exactly one next-run scoped
+  request/receipt. It cannot launch another scrape, supersede current work, or
+  overwrite a competing request. No run, queue release, Google mutation, or
+  job-data change occurred during installation. M2 still needs guarded live
+  idle/busy and end-to-end evidence before its exit gate closes.
 - Davidson legacy-to-v2 migration remains source-only and uninstalled. A
   higher-model review rejected the first candidate after reproducing three
   real gaps: guard-only Google readback could falsely confirm after a refused
