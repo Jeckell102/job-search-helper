@@ -444,8 +444,10 @@ partial Google Sheets write alone is not completion.
   action test proves planned shutdown makes the watchdog stand down, waits for
   scheduler ownership to end, and only then records a durable pause; a timeout
   remains explicitly recovery-required. Independent QA accepted the corrected
-  exact source; it is not deployed and operational evidence remains open. See
-  `F8_SUPERVISION_CANDIDATE.md`.
+  exact source. It is now installed through the rollback-backed protected
+  integration and its restart, planned-stop, live disk-hold and recovery
+  evidence is independently accepted. See `F8_SUPERVISION_CANDIDATE.md` and
+  `PROTECTED_INTEGRATION_REPORT_20261119.md`.
 - A second fresh preflight confirmed the same active services, 200 health, and
   terminal-only receipt aggregate. A `sudo -n` restart attempt returned 1
   without changing service state, confirming that only an interactive
@@ -470,17 +472,26 @@ partial Google Sheets write alone is not completion.
    `ollama.service` twice. Record the resulting bounded evidence or failure,
    independently verify the authoritative receipt and service state, and leave
    any uncertain receipt lane-blocking. Do not rerun blindly after a failure.
-2. Using the independently accepted exact hashes in
-   `M5_PRODUCTION_RECONCILIATION_REPORT.md`, freeze the protected baseline and
-   perform an owner-reviewed integration; rerun current production-owned tests
-   on the exact installed set before any guarded activation.
-3. Use the accepted M1-M4 reconciliation candidate only through an explicit,
-   hash-recorded integration review; do not mechanically apply it to the
-   protected checkout.
-4. After interactive Google authorization is completed, run the bounded normal
+2. Keep the protected queue paused while the final three-company readiness
+   matrix is refreshed from current local evidence. Select distinct source
+   structures plus the shared-adapter regression control; do not start work
+   from historical candidate names alone.
+3. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
-5. Only after publication is clean, freshly recheck processes, locks,
+4. Only after publication is clean, freshly recheck processes, locks,
    local/workbook cycle identity, deployed source identity, and sync health;
-   then consider the guarded recovery command only if every preflight guard
-   remains true.
+   then perform the final demonstration one Company at a time, proving normal
+   company-scoped dispatch, wrapper/adapter handling, confirmed Sheets
+   publication and managed FIRST PASS start before advancing to the next.
+
+The refreshed matrix is recorded in
+`FINAL_ACCEPTANCE_READINESS_20261119.md`. It freezes Forterra/Rippling and
+Allen Control/Greenhouse as conditional completion candidates, General
+Atomics/BrassRing as the first hold-control, and PDW as the mandatory shared
+Rippling regression. General Atomics cannot count as a completed Company while
+its legal-entity/membership proof remains absent. Fresh process inspection also
+confirmed that the scraper, writer and scrape/FIRST-PASS controller lock files
+name absent PIDs `485601`, `634767` and `283795`; the files remain untouched.
+Historical broad cycles and the empty automatic profile registry prevent a
+safe company-only run until an exact guarded recovery is owner-reviewed.
