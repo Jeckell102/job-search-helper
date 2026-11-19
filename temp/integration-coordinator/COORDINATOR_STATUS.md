@@ -39,14 +39,16 @@ ten-minute user update. Update it immediately after any material result.
   pre-existing documentation changes are preserved; it has no GitHub remote.
 - Milestone 1: 65% — implementation is present; guarded operational proof is
   still required.
-- Milestone 2: 70% — durable Company revisions, reconciliation, and scoped
+- Milestone 2: 75% — durable Company revisions, reconciliation, and scoped
   request provenance are implemented and independently reviewed. A narrow
   current-Company revision lookup now exists for the coordinator boundary;
-  guarded live proof remains.
-- Milestone 3: 50% — bounded outcome classification, local immutable records,
+  the active local store now has the additive event/outbox foundation. Guarded
+  normal-runner wiring and live proof remain.
+- Milestone 3: 55% — bounded outcome classification, local immutable records,
   and independently reviewed intake into the existing coordinator are
-  implemented. The active Job Search Helper source now has the shared
-  classifier; qualified defects are held once for triage, never dispatched.
+  implemented. The active Job Search Helper source now persists classifier
+  results idempotently; qualified defects are held once for triage, never
+  dispatched.
 - Milestone 4: 35% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
@@ -94,6 +96,9 @@ partial Google Sheets write alone is not completion.
 - The MuleLab coordinator host now supplies a local SQLite-only Company
   resolver. Syntax and safe-failure checks passed; activation/restart and any
   live task remain deliberately deferred.
+- The active local repository now has additive Company-event and scrape-outcome
+  tables. An isolated temporary database proved one event and one idempotent
+  classified outcome; no live database or Company record was changed.
 
 ## Safety boundaries
 
