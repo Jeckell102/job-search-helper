@@ -62,9 +62,11 @@ evidence, not a live process. Nineteen historical cycles are also recorded as
 
 The sole pending delivery is the `Last Checked` update for a Saronic
 Technologies opportunity. It is blocked because the same row has a protected
-remote `Salary / Range` conflict; the remote value is retained and the local
-delivery receipt is absent. The normal publisher correctly refuses to send a
-partial row around that conflict.
+  remote `Salary / Range` conflict; the remote value is retained and the local
+  delivery receipt is absent. The normal publisher correctly refuses to send a
+  partial row around that conflict. The permitted owner choices and required
+  guarded evidence are defined in
+  `PUBLISHER_RECONCILIATION_DECISION_RECORD_20261119.md`.
 
 ## Guarded sequence
 

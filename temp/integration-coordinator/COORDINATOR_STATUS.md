@@ -546,5 +546,6 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   record-by-record reconciliation gate; no bulk import, overwrite, restore,
   or conflict clearing is permitted.
 - QA lane ownership is complete for this checkpoint. Coordinator next action:
-  prepare the bounded reconciliation decision record without mutation, then
-  obtain the required owner direction before Google publication can proceed.
+  obtain the required owner direction recorded in
+  `PUBLISHER_RECONCILIATION_DECISION_RECORD_20261119.md` before Google
+  publication can proceed.
