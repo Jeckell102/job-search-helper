@@ -549,3 +549,11 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   obtain the required owner direction recorded in
   `PUBLISHER_RECONCILIATION_DECISION_RECORD_20261119.md` before Google
   publication can proceed.
+- A separate read-only scope proposal now identifies `COMP-0024` Draper as a
+  possible Workday third distinct-structure candidate. Its historical evidence
+  includes a human-verification block and no current-cycle inventory, so it is
+  not qualified or substituted. Independent QA accepted it only as an
+  owner-reviewed scope-amendment proposal; it did not authorize activation,
+  qualification, or completion. Owner approval, a matrix amendment, fresh
+  public preflight, and the separate publisher gate remain mandatory. See
+  `THIRD_STRUCTURE_SCOPE_PROPOSAL_20261119.md`.

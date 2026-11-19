@@ -15,7 +15,9 @@ repair, release, FIRST PASS, lock deletion, or Company/Job change.
 The set must not be silently substituted. If the General Atomics case remains a
 hold, the roadmap still needs a third independently approved completion case or
 an explicit scope decision; safe hold behavior alone does not satisfy three
-completed Companies.
+completed Companies. Independent QA has accepted a Draper/Workday scope
+proposal only; it is not part of this frozen matrix until owner approval and a
+documented matrix amendment.
 
 ## Current blockers
 
