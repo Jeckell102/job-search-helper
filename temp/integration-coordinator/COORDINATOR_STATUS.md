@@ -1361,3 +1361,18 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   projection is not approved because it still contains the two superseded
   decisions. The required CAS, journal, guard, and preview contract is in
   `DAVIDSON_LOCAL_MIGRATION_ASSESSMENT_20261119.md`.
+- F1 periodic external-intake candidate is independently accepted in its
+  isolated source copy: a bounded scheduled pull/reconciliation observes
+  post-start Company changes without turning two-second local polling into
+  Google reads. It preserves the outbox/baseline on a failed pull and produces
+  one event without a historical flood. The original private `_publish`
+  callable seam was restored after QA caught a compatibility regression; the
+  corrected 74-test suite passes. It is source-only pending guarded protected
+  reconciliation and does not yet admit mid-run events into a scrape.
+- F2/F3 exact release-binding admission candidate passed isolated logic QA but
+  remains source-only: matching `COMPLETE` release bindings admit a retry;
+  missing, mismatched, nonterminal, or rolled-back bindings hold its durable
+  request before cycle creation or consumption. Its five required files were
+  initially untracked in the copied source, so an exact sealed source package
+  is now stored on private GitHub commit `8d5e805`. Full retry lifecycle,
+  stale-result precedence, and live acceptance remain open.
