@@ -16,6 +16,8 @@ from .title_audit import TITLE_AUDIT_SCHEMA, remember_title_audit
 from .browser_progress import SCHEMA as BROWSER_PROGRESS_SCHEMA
 from . import publication_receipts
 
+_SHEETS_CONFIRMATION_CAPABILITY = object()
+
 
 class InventoryInbox:
     @staticmethod
@@ -104,15 +106,27 @@ class InventoryInbox:
                     cycle TEXT NOT NULL, company TEXT NOT NULL,
                     local_plan_digest TEXT NOT NULL,
                     projection TEXT NOT NULL, projection_digest TEXT NOT NULL,
+                    receipt_id TEXT NOT NULL, intent_id TEXT NOT NULL,
                     remote_cursor INTEGER NOT NULL DEFAULT 0,
                     state TEXT NOT NULL CHECK(state IN
                       ('FROZEN','SYNC_PENDING','SYNC_CONFIRMED','LOCAL_ACKNOWLEDGED')),
-                    acknowledgement_id TEXT,
+                    first_attempt_claimed INTEGER NOT NULL DEFAULT 0,
+                    attempted_at TEXT, acknowledgement_id TEXT,
                     created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
                     PRIMARY KEY(cycle, company))""")
                 columns = {row[1] for row in self.connection.execute('PRAGMA table_info(exact_sync_chunks)')}
                 if 'digest' not in columns:
                     self.connection.execute("ALTER TABLE exact_sync_chunks ADD COLUMN digest TEXT NOT NULL DEFAULT ''")
+                remote_columns = {row[1] for row in self.connection.execute(
+                    'PRAGMA table_info(exact_remote_plans)')}
+                for name, ddl in (
+                        ('receipt_id', "TEXT NOT NULL DEFAULT ''"),
+                        ('intent_id', "TEXT NOT NULL DEFAULT ''"),
+                        ('first_attempt_claimed', 'INTEGER NOT NULL DEFAULT 0'),
+                        ('attempted_at', 'TEXT')):
+                    if name not in remote_columns:
+                        self.connection.execute(
+                            f'ALTER TABLE exact_remote_plans ADD COLUMN {name} {ddl}')
                 publication_receipts.initialize(self.connection)
         except BaseException:
             self.connection.close()
@@ -442,6 +456,296 @@ class InventoryInbox:
                 if updated != 1:
                     raise ValueError('Exact sync cursor changed before acknowledged advance.')
         self.checkpoint_seconds += time.monotonic() - started
+
+    def exact_remote_state(self, cycle, company):
+        """Return the trusted remote-intent journal for one frozen exact plan."""
+        with self.lock:
+            row = self.connection.execute(
+                'SELECT local_plan_digest,projection,projection_digest,receipt_id,intent_id,'
+                'remote_cursor,state,first_attempt_claimed,attempted_at,acknowledgement_id,'
+                'created_at,updated_at FROM exact_remote_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+        if row is None:
+            return None
+        keys = ('local_plan_digest', 'projection', 'projection_digest', 'receipt_id',
+                'intent_id', 'remote_cursor', 'state', 'first_attempt_claimed',
+                'attempted_at', 'acknowledgement_id', 'created_at', 'updated_at')
+        result = dict(zip(keys, row))
+        result['projection'] = json.loads(result['projection'])
+        result['first_attempt_claimed'] = bool(result['first_attempt_claimed'])
+        return {'cycle_id': cycle, 'company_id': company, **result}
+
+    def freeze_exact_remote_plan(self, cycle, company, *, local_plan_digest,
+                                 projection, projection_digest, receipt_id,
+                                 intent_id, timestamp):
+        """Bind an immutable Sheets projection to its receipt and intent."""
+        from .exact_cycle_planner import _digest
+        values = tuple(str(value).strip() for value in (
+            local_plan_digest, projection_digest, receipt_id, intent_id, timestamp))
+        if not all(values) or not isinstance(projection, list):
+            raise ValueError('Exact remote plan binding is incomplete.')
+        if _digest(projection) != values[1]:
+            raise ValueError('Exact remote projection digest is invalid.')
+        encoded = json.dumps(projection, ensure_ascii=False, sort_keys=True,
+                             separators=(',', ':'))
+        with self.lock, self.connection:
+            local = self.connection.execute(
+                'SELECT l.plan_digest,l.remote_projection_digest,l.state,p.payload '
+                'FROM exact_plan_local_state l JOIN sync_plans p '
+                'ON p.cycle=l.cycle AND p.company=l.company '
+                'WHERE l.cycle=? AND l.company=?', (cycle, company)).fetchone()
+            receipt = self.connection.execute(
+                'SELECT binding,state FROM publication_receipts WHERE receipt_id=?',
+                (values[2],)).fetchone()
+            if local is None or (local[0], local[2]) != (values[0], 'LOCAL_VERIFIED'):
+                raise ValueError('Exact remote plan requires matching LOCAL_VERIFIED evidence.')
+            if receipt is None:
+                raise ValueError('Exact remote plan requires its durable receipt.')
+            receipt_binding = json.loads(receipt[0])
+            if (receipt_binding.get('request_id') != cycle
+                    or receipt_binding.get('company_id') != company):
+                raise ValueError('Exact remote receipt names another request or company.')
+            row = self.connection.execute(
+                'SELECT local_plan_digest,projection,projection_digest,receipt_id,intent_id '
+                'FROM exact_remote_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            expected = (values[0], encoded, values[1], values[2], values[3])
+            if row is None:
+                self.connection.execute(
+                    'INSERT INTO exact_remote_plans('
+                    'cycle,company,local_plan_digest,projection,projection_digest,'
+                    'receipt_id,intent_id,remote_cursor,state,first_attempt_claimed,'
+                    'attempted_at,acknowledgement_id,created_at,updated_at) '
+                    "VALUES (?,?,?,?,?,?,?,0,'FROZEN',0,NULL,NULL,?,?)",
+                    (cycle, company, *expected, values[4], values[4]))
+            elif tuple(row) != expected:
+                raise ValueError('Exact remote plan conflicts with frozen binding.')
+        return self.exact_remote_state(cycle, company)
+
+    def claim_exact_remote_attempt(self, cycle, company, *, local_plan_digest,
+                                   projection_digest, receipt_id, intent_id,
+                                   cursor, count, chunk_digest, timestamp):
+        """Atomically journal pending state and claim the sole remote attempt."""
+        if (type(cursor) is not int or type(count) is not int
+                or cursor < 0 or count < 1):
+            raise ValueError('Exact remote chunk cursor/count is invalid.')
+        binding = tuple(str(value).strip() for value in (
+            local_plan_digest, projection_digest, receipt_id, intent_id,
+            chunk_digest, timestamp))
+        if not all(binding):
+            raise ValueError('Exact remote attempt binding is incomplete.')
+        with self.lock, self.connection:
+            remote = self.connection.execute(
+                'SELECT local_plan_digest,projection_digest,receipt_id,intent_id,'
+                'remote_cursor,state,first_attempt_claimed FROM exact_remote_plans '
+                'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            if remote is None or tuple(remote[:4]) != binding[:4]:
+                raise ValueError('Exact remote attempt does not match its frozen intent.')
+            if remote[4] != cursor or remote[5] not in {'FROZEN', 'SYNC_PENDING'}:
+                raise ValueError('Exact remote attempt cursor/state is invalid.')
+            receipt = self.connection.execute(
+                'SELECT binding,state FROM publication_receipts WHERE receipt_id=?',
+                (binding[2],)).fetchone()
+            if receipt is None or receipt[1] not in {
+                    publication_receipts.LOCAL_COMMITTED,
+                    publication_receipts.SYNC_PENDING}:
+                raise ValueError('Exact remote attempt requires an unconfirmed durable receipt.')
+            existing = self.connection.execute(
+                'SELECT count,digest,state FROM exact_sync_chunks '
+                'WHERE cycle=? AND company=? AND cursor=?',
+                (cycle, company, cursor)).fetchone()
+            expected_chunk = (count, binding[4])
+            if existing is not None and tuple(existing[:2]) != expected_chunk:
+                raise ValueError('Exact remote chunk conflicts with durable evidence.')
+            if receipt[1] == publication_receipts.LOCAL_COMMITTED:
+                publication_receipts.mark_sync_pending(
+                    self.connection, json.loads(receipt[0]), timestamp=binding[5])
+            self.connection.execute(
+                'INSERT OR IGNORE INTO exact_sync_chunks'
+                '(cycle,company,cursor,count,digest,state) VALUES (?,?,?,?,?,?)',
+                (cycle, company, cursor, count, binding[4], 'PENDING'))
+            # The durable chunk row is the one-shot authority for this exact
+            # cursor.  A later chunk may make its own first attempt after the
+            # prior chunk was confirmed; a restart at the same cursor may not.
+            first_attempt = existing is None
+            if first_attempt:
+                self.connection.execute(
+                    "UPDATE exact_remote_plans SET state='SYNC_PENDING',"
+                    'first_attempt_claimed=1,'
+                    'attempted_at=COALESCE(attempted_at,?),updated_at=? '
+                    "WHERE cycle=? AND company=? AND state IN ('FROZEN','SYNC_PENDING')",
+                    (binding[5], binding[5], cycle, company))
+            else:
+                self.connection.execute(
+                    "UPDATE exact_remote_plans SET state='SYNC_PENDING',updated_at=? "
+                    'WHERE cycle=? AND company=?', (binding[5], cycle, company))
+        result = self.exact_remote_state(cycle, company)
+        return {**result, 'first_attempt': first_attempt}
+
+    def _confirm_exact_remote_chunk(self, cycle, company, *, local_plan_digest,
+                                    projection_digest, receipt_id, intent_id,
+                                    cursor, chunk_digest, timestamp, _capability):
+        """Advance one read-back exact chunk without confirming the receipt."""
+        if _capability is not _SHEETS_CONFIRMATION_CAPABILITY:
+            raise ValueError('Exact remote chunk confirmation requires trusted Sheets readback.')
+        binding = tuple(str(value).strip() for value in (
+            local_plan_digest, projection_digest, receipt_id, intent_id,
+            chunk_digest, timestamp))
+        if (not all(binding) or type(cursor) is not int or cursor < 0):
+            raise ValueError('Exact remote chunk confirmation binding is incomplete.')
+        with self.lock, self.connection:
+            remote = self.connection.execute(
+                'SELECT local_plan_digest,projection_digest,receipt_id,intent_id,'
+                'remote_cursor,state,first_attempt_claimed FROM exact_remote_plans '
+                'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            if remote is None or tuple(remote[:4]) != binding[:4]:
+                raise ValueError('Exact remote chunk does not match its frozen intent.')
+            chunk = self.connection.execute(
+                'SELECT count,digest,state FROM exact_sync_chunks '
+                'WHERE cycle=? AND company=? AND cursor=?',
+                (cycle, company, cursor)).fetchone()
+            if chunk is None or chunk[1] != binding[4]:
+                raise ValueError('Exact remote chunk confirmation evidence is missing.')
+            next_cursor = cursor + chunk[0]
+            if chunk[2] == 'CONFIRMED' and remote[4] == next_cursor:
+                return self.exact_remote_state(cycle, company)
+            if (remote[4] != cursor or remote[5] != 'SYNC_PENDING'
+                    or not remote[6] or chunk[2] != 'PENDING'):
+                raise ValueError('Exact remote chunk confirmation cursor/state is invalid.')
+            self.connection.execute(
+                "UPDATE exact_sync_chunks SET state='CONFIRMED' "
+                'WHERE cycle=? AND company=? AND cursor=?',
+                (cycle, company, cursor))
+            updated = self.connection.execute(
+                "UPDATE exact_remote_plans SET remote_cursor=?,updated_at=? "
+                "WHERE cycle=? AND company=? AND state='SYNC_PENDING' "
+                'AND remote_cursor=?',
+                (next_cursor, binding[5], cycle, company, cursor)).rowcount
+            if updated != 1:
+                raise ValueError('Exact remote chunk cursor changed during confirmation.')
+        return self.exact_remote_state(cycle, company)
+
+    def _confirm_exact_remote(self, cycle, company, *, local_plan_digest,
+                              projection_digest, receipt_id, intent_id, cursor,
+                              observed_records, acknowledgement_id, timestamp,
+                              _capability):
+        """Atomically confirm receipt, exact chunk, and bound remote plan."""
+        if _capability is not _SHEETS_CONFIRMATION_CAPABILITY:
+            raise ValueError('Exact remote confirmation requires trusted Sheets readback.')
+        binding = tuple(str(value).strip() for value in (
+            local_plan_digest, projection_digest, receipt_id, intent_id,
+            acknowledgement_id, timestamp))
+        if not all(binding) or type(cursor) is not int or cursor < 0:
+            raise ValueError('Exact remote confirmation binding is incomplete.')
+        with self.lock, self.connection:
+            remote = self.connection.execute(
+                'SELECT local_plan_digest,projection_digest,receipt_id,intent_id,'
+                'remote_cursor,state,first_attempt_claimed,acknowledgement_id,projection '
+                'FROM exact_remote_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            if remote is None or tuple(remote[:4]) != binding[:4]:
+                raise ValueError('Exact remote confirmation does not match frozen intent.')
+            if remote[5] not in {'SYNC_PENDING', 'SYNC_CONFIRMED'}:
+                raise ValueError('Exact remote confirmation cursor/state is invalid.')
+            if cursor != remote[4]:
+                raise ValueError('Exact remote confirmation cursor/state is invalid.')
+            if not remote[6]:
+                raise ValueError('Exact remote confirmation requires a claimed attempt.')
+            if remote[7] is not None and remote[7] != binding[4]:
+                raise ValueError('Exact remote acknowledgement changed after confirmation.')
+            receipt = self.connection.execute(
+                'SELECT binding,state,acknowledgement_id FROM publication_receipts '
+                'WHERE receipt_id=?', (binding[2],)).fetchone()
+            if receipt is None:
+                raise ValueError('Exact remote confirmation receipt is missing.')
+            if receipt[1] != publication_receipts.SYNC_CONFIRMED:
+                if not publication_receipts.reconcile_sync(
+                        self.connection, json.loads(receipt[0]), observed_records,
+                        binding[4], timestamp=binding[5]):
+                    raise ValueError('Exact remote readback does not match its receipt.')
+            elif receipt[2] != binding[4]:
+                raise ValueError('Exact remote receipt acknowledgement changed.')
+            total = len(json.loads(remote[8]))
+            next_cursor = remote[4]
+            if next_cursor < total:
+                chunk = self.connection.execute(
+                    'SELECT count,state FROM exact_sync_chunks '
+                    'WHERE cycle=? AND company=? AND cursor=?',
+                    (cycle, company, next_cursor)).fetchone()
+                if (chunk is None or chunk[1] != 'PENDING'
+                        or next_cursor + chunk[0] != total):
+                    raise ValueError('Exact remote confirmation chunk is missing.')
+                self.connection.execute(
+                    "UPDATE exact_sync_chunks SET state='CONFIRMED' "
+                    'WHERE cycle=? AND company=? AND cursor=?',
+                    (cycle, company, next_cursor))
+                next_cursor += chunk[0]
+            chunks = self.connection.execute(
+                'SELECT cursor,count,state FROM exact_sync_chunks '
+                'WHERE cycle=? AND company=? ORDER BY cursor',
+                (cycle, company)).fetchall()
+            covered = 0
+            for chunk_cursor, count, state in chunks:
+                if chunk_cursor != covered or state != 'CONFIRMED':
+                    break
+                covered += count
+            if next_cursor != total or covered != total:
+                raise ValueError('Exact remote confirmation cursor/state is invalid.')
+            updated = self.connection.execute(
+                "UPDATE exact_remote_plans SET remote_cursor=?,state='SYNC_CONFIRMED',"
+                'acknowledgement_id=?,updated_at=? WHERE cycle=? AND company=?',
+                (next_cursor, binding[4], binding[5], cycle, company)).rowcount
+            if updated != 1:
+                raise ValueError('Exact remote plan disappeared during confirmation.')
+        return self.require_exact_remote_confirmed(
+            cycle, company, local_plan_digest=binding[0],
+            projection_digest=binding[1], receipt_id=binding[2],
+            intent_id=binding[3], acknowledgement_id=binding[4])
+
+    def require_exact_remote_confirmed(self, cycle, company, *, local_plan_digest,
+                                       projection_digest, receipt_id, intent_id,
+                                       acknowledgement_id):
+        """Verify the stored remote and receipt acknowledgement binding."""
+        expected = tuple(str(value).strip() for value in (
+            local_plan_digest, projection_digest, receipt_id, intent_id,
+            acknowledgement_id))
+        if not all(expected):
+            raise ValueError('Exact confirmed binding is incomplete.')
+        with self.lock:
+            remote = self.connection.execute(
+                'SELECT local_plan_digest,projection_digest,receipt_id,intent_id,'
+                'acknowledgement_id,state FROM exact_remote_plans '
+                'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            receipt = self.connection.execute(
+                'SELECT acknowledgement_id,state FROM publication_receipts '
+                'WHERE receipt_id=?', (expected[2],)).fetchone()
+        if (remote is None or tuple(remote[:5]) != expected
+                or remote[5] not in {'SYNC_CONFIRMED', 'LOCAL_ACKNOWLEDGED'}
+                or receipt != (expected[4], publication_receipts.SYNC_CONFIRMED)):
+            raise ValueError('Exact remote acknowledgement is not durably confirmed.')
+        return self.exact_remote_state(cycle, company)
+
+    def mark_exact_remote_locally_acknowledged(self, cycle, company, *,
+                                               local_plan_digest,
+                                               projection_digest, receipt_id,
+                                               intent_id, acknowledgement_id,
+                                               timestamp):
+        self.require_exact_remote_confirmed(
+            cycle, company, local_plan_digest=local_plan_digest,
+            projection_digest=projection_digest, receipt_id=receipt_id,
+            intent_id=intent_id, acknowledgement_id=acknowledgement_id)
+        with self.lock, self.connection:
+            updated = self.connection.execute(
+                "UPDATE exact_remote_plans SET state='LOCAL_ACKNOWLEDGED',updated_at=? "
+                'WHERE cycle=? AND company=? AND local_plan_digest=? '
+                'AND projection_digest=? AND receipt_id=? AND intent_id=? '
+                'AND acknowledgement_id=? '
+                "AND state IN ('SYNC_CONFIRMED','LOCAL_ACKNOWLEDGED')",
+                (str(timestamp).strip(), cycle, company, local_plan_digest,
+                 projection_digest, receipt_id, intent_id, acknowledgement_id)).rowcount
+        if updated != 1:
+            raise ValueError('Exact remote local acknowledgement binding changed.')
+        return self.exact_remote_state(cycle, company)
 
     def exact_chunk(self, cycle, company, cursor):
         with self.lock:

@@ -393,22 +393,26 @@ class SheetsSynchronizer:
         normalized = []
         seen = set()
         for item in row_scope:
-            required = {'tab', 'identity', 'fields'}
+            required = {'tab', 'identity', 'fields', 'append_if_missing'}
             if (not isinstance(item, Mapping) or not required <= set(item)
-                    or set(item) - required - {'row_id', 'guards'}):
+                    or set(item) - required - {'row_id', 'guards', 'expected'}):
                 raise ValueError('Exact Sheets row scope has an invalid shape.')
             tab, row_id = item['tab'], item.get('row_id')
             identity, fields = item['identity'], item['fields']
+            append_if_missing = item['append_if_missing']
             guards = item.get('guards', {})
+            expected = item.get('expected', {})
             if (tab not in ORDER or (row_id is not None and
                                      (type(row_id) is not int or row_id < 1))
                     or not isinstance(identity, Mapping) or not identity
                     or any(not str(value).strip() for value in identity.values())
                     or not isinstance(fields, (list, tuple)) or not fields
+                    or type(append_if_missing) is not bool
                     or any(not isinstance(header, str) or not header for header in fields)
                     or len(fields) != len(set(fields))
                     or not isinstance(guards, Mapping)
-                    or set(guards) - set(self.local.schemas.get(tab, ()))):
+                    or set(guards) - set(self.local.schemas.get(tab, ()))
+                    or not isinstance(expected, Mapping)):
                 raise ValueError('Exact Sheets row scope contains an invalid row.')
             matches = self.local.matches(tab, identity)
             if len(matches) != 1:
@@ -420,8 +424,12 @@ class SheetsSynchronizer:
             if self.publication is not None:
                 if tab not in self.publication or set(fields) - set(self.publication[tab]):
                     raise ValueError('Exact Sheets scope contains a non-publishable field.')
+                if set(expected) - set(self.publication[tab]):
+                    raise ValueError('Exact Sheets expected guard contains a non-publishable field.')
             elif tab not in self.local.schemas or set(fields) - set(self.local.schemas[tab]):
                 raise ValueError('Exact Sheets scope contains an unknown field.')
+            elif set(expected) - set(self.local.schemas[tab]):
+                raise ValueError('Exact Sheets expected guard contains an unknown field.')
             label = (tab, row_id)
             if label in seen:
                 raise ValueError('Exact Sheets row scope repeats a local row.')
@@ -430,11 +438,14 @@ class SheetsSynchronizer:
                                'identity': {str(key): copy.deepcopy(value)
                                             for key, value in sorted(identity.items())},
                                'fields': sorted(fields),
+                               'append_if_missing': append_if_missing,
                                'guards': {str(key): copy.deepcopy(value)
-                                          for key, value in sorted(guards.items())}})
+                                          for key, value in sorted(guards.items())},
+                               'expected': {str(key): copy.deepcopy(value)
+                                            for key, value in sorted(expected.items())}})
         return sorted(normalized, key=lambda item: (ORDER[item['tab']], item['row_id']))
 
-    def _plan_exact_row(self, item):
+    def _plan_exact_row(self, item, frozen_operation=None):
         """Derive one operation from only one explicitly named local row."""
         tab, row_id = item['tab'], item['row_id']
         current = self.local.row(tab, row_id)
@@ -456,9 +467,17 @@ class SheetsSynchronizer:
         dirty = {header for (header,) in self.local.db.execute(
             'SELECT header FROM dirty WHERE tab=? AND row_id=?', (tab, row_id))}
         fields = set(item['fields'])
-        if not (fields - set(item['identity'])) <= dirty:
-            raise ValueError('Exact Sheets frozen scope is no longer dirty.')
+        missing_dirty = (fields - set(item['identity'])) - dirty
+        # A new row has no baseline yet.  Empty frozen insert cells may not
+        # appear in SQLite's dirty table because writing blank over blank is
+        # not a cell change; the verified exact local journal is the authority
+        # for the whole insert.  Existing rows still require every selected
+        # mutable field to remain dirty.
         base = self.local.baseline(tab, row_id)
+        if not item['append_if_missing'] and base is not None and missing_dirty:
+            raise ValueError(
+                'Exact Sheets frozen scope is no longer dirty: '
+                + ', '.join(sorted(missing_dirty)))
 
         # A blank scraper salary must not replace a user estimate.  Removing
         # the field here makes an unsafe frozen projection fail equality.
@@ -469,7 +488,8 @@ class SheetsSynchronizer:
         if not fields:
             raise ValueError('Exact Sheets scoped operation became empty.')
 
-        identity = identity_for(tab, base or current)
+        identity = (copy.deepcopy(frozen_operation['identity'])
+                    if frozen_operation is not None else identity_for(tab, base or current))
         if tab == 'Job History' and base and not _equivalent(
                 'Job Key', base.get('Job Key', ''), current.get('Job Key', '')):
             stable = ('Company', 'Official Job URL')
@@ -484,8 +504,12 @@ class SheetsSynchronizer:
         if tab == 'Companies' and base and not base.get('Company ID'):
             identity = {'Company': base['Company']}
 
-        values = {header: current.get(header, '') for header in fields
-                  if header not in identity}
+        value_fields = fields - set(identity)
+        if frozen_operation is not None:
+            value_fields = set(frozen_operation.get('values', {}))
+            value_fields.update(frozen_operation.get('append_notes', {}))
+        values = {header: current.get(header, '') for header in value_fields
+                  if frozen_operation is not None or header not in identity}
         notes = {}
         if base and tab == 'Opportunities':
             forbidden = set(values) & set(USER_FIELDS)
@@ -498,22 +522,37 @@ class SheetsSynchronizer:
                 suffix = after[len(before):].strip()
                 if suffix:
                     notes['Notes'] = suffix
-        expected = {header: base.get(header, '')
-                    for header in set(values) | set(notes)} if base else {}
-        if base and tab == 'Job History':
-            expected['Added to Opportunities?'] = base.get('Added to Opportunities?', '')
-        inserted = current if base is None else {}
-        if self.publication is not None:
-            inserted = {header: value for header, value in inserted.items()
-                        if header in self.publication[tab]}
+        expected = copy.deepcopy(item['expected'])
+        if base and not item['append_if_missing']:
+            required_expected = set(values) | set(notes)
+            if tab == 'Job History':
+                required_expected.add('Added to Opportunities?')
+            if not required_expected <= set(expected):
+                raise ValueError('Exact Sheets scope omits a required remote expected guard.')
+            if any(not _equivalent(header, base.get(header, ''), expected[header])
+                   for header in required_expected):
+                raise ValueError('Exact Sheets remote expected guard differs from the local baseline.')
+        # For a not-yet-baselined insert, frozen expected values are remote
+        # no-clobber guards.  They are not asserted as a local baseline; the
+        # exact projection seal and the remote commit enforce them if the
+        # stable identity unexpectedly already exists.
+        if frozen_operation is not None and item['append_if_missing']:
+            inserted = {header: current.get(header, '')
+                        for header in frozen_operation.get('on_insert', {})}
+        else:
+            inserted = current if base is None and item['append_if_missing'] else {}
+            if self.publication is not None:
+                inserted = {header: value for header, value in inserted.items()
+                            if header in self.publication[tab]}
         if not values and not notes and not inserted:
             raise ValueError('Exact Sheets scoped operation has no remote mutation.')
         operation = {'tab': tab, 'identity': identity, 'values': values,
-                     'append_if_missing': base is None, 'on_insert': inserted,
+                     'append_if_missing': item['append_if_missing'], 'on_insert': inserted,
                      'expected': expected, 'append_notes': notes}
         return {'tab': tab, 'row_id': row_id, 'identity': item['identity'],
                 'fields': sorted(fields), 'sent': copy.deepcopy(current),
-                'guards': copy.deepcopy(item['guards']), 'operation': operation}
+                'guards': copy.deepcopy(item['guards']),
+                'expected': copy.deepcopy(item['expected']), 'operation': operation}
 
     def plan_exact_scope(self, row_scope, frozen_projection):
         """Plan only explicit rows and require exact frozen-projection equality.
@@ -523,7 +562,16 @@ class SheetsSynchronizer:
         """
         if not isinstance(frozen_projection, list) or not frozen_projection:
             raise ValueError('Exact Sheets frozen projection must be a nonempty operation list.')
-        rows = [self._plan_exact_row(item) for item in self._normalize_exact_scope(row_scope)]
+        normalized = self._normalize_exact_scope(row_scope)
+        if len(normalized) != len(frozen_projection):
+            raise ValueError('Exact Sheets scope and frozen projection lengths differ.')
+        if any(not isinstance(operation, Mapping)
+               or type(operation.get('append_if_missing')) is not bool
+               or item['append_if_missing'] != operation['append_if_missing']
+               for item, operation in zip(normalized, frozen_projection)):
+            raise ValueError('Exact Sheets sealed insert semantics differ from the frozen projection.')
+        rows = [self._plan_exact_row(item, operation)
+                for item, operation in zip(normalized, frozen_projection)]
         operations = [row['operation'] for row in rows]
         if encode(operations) != encode(frozen_projection):
             raise ValueError('Exact Sheets scoped plan differs from the frozen projection.')
@@ -561,7 +609,9 @@ class SheetsSynchronizer:
             dirty = {header for (header,) in self.local.db.execute(
                 'SELECT header FROM dirty WHERE tab=? AND row_id=?',
                 (evidence['tab'], evidence['row_id']))}
-            if not (set(evidence['fields']) - set(evidence['identity'])) <= dirty:
+            baseline = self.local.baseline(evidence['tab'], evidence['row_id'])
+            if (baseline is not None
+                    and not (set(evidence['fields']) - set(evidence['identity'])) <= dirty):
                 raise ValueError('Exact Sheets selected field was acknowledged before remote write.')
 
     def readback_exact_scope(self, exact_plan, *, receipt_id, intent_id,
@@ -610,24 +660,55 @@ class SheetsSynchronizer:
                 'projection_digest': exact_plan['projection_digest'],
                 'rows': observed, 'acknowledgement_id': acknowledgement_id}
 
-    def publish_exact_scope(self, exact_plan, *, receipt_id, intent_id,
-                            intent_projection_digest, intent_state, first_attempt,
+    @staticmethod
+    def _exact_readback_records(exact_plan, readback):
+        from .publication_receipts import record_fingerprints
+        rows = {}
+        for operation, observed in zip(exact_plan['operations'], readback['rows']):
+            identity = dict(operation['identity'])
+            for values in (operation.get('on_insert', {}), operation.get('values', {})):
+                identity.update({key: value for key, value in values.items()
+                                 if key in identity})
+            row = dict(identity)
+            row.update(observed['actual'])
+            rows.setdefault(operation['tab'], []).append(row)
+        return record_fingerprints(exact_plan['operations'], rows)
+
+    def _require_exact_inbox(self, inbox):
+        """Require the concrete durable authority for this exact workbook."""
+        from .inbox import InventoryInbox
+        if not isinstance(inbox, InventoryInbox):
+            raise ValueError('Exact Sheets requires a real durable inventory inbox.')
+        with inbox.lock:
+            destinations = inbox.connection.execute('SELECT id FROM destination').fetchall()
+        if destinations != [(self.local.spreadsheet_id,)]:
+            raise ValueError('Exact Sheets inventory inbox belongs to another workbook.')
+        return inbox
+
+    def publish_exact_scope(self, exact_plan, *, inbox, cycle_id, company_id,
+                            plan_digest, receipt_id, intent_id,
+                            remote_projection_digest=None, remote_cursor=0,
                             max_operations=100,
                             max_bytes=500_000):
-        """Perform one externally journaled, bounded first remote attempt.
+        """Claim one durable intent, then write once or perform readback only.
 
-        Recovery from an uncertain attempt must call ``readback_exact_scope``;
-        passing ``first_attempt=False`` can never issue a Google write.
+        The inbox, not the caller, decides whether this is the one permitted
+        remote attempt.  Once claimed, every retry is readback-only, including
+        recovery from a timeout after a successful Google request.
         """
         exact_plan = self._validate_exact_plan(exact_plan)
+        inbox = self._require_exact_inbox(inbox)
+        cycle_id = _required_id(cycle_id, 'cycle ID')
+        company_id = _required_id(company_id, 'Company ID')
+        plan_digest = _required_id(plan_digest, 'plan digest')
         receipt_id = _required_id(receipt_id, 'receipt ID')
         intent_id = _required_id(intent_id, 'intent ID')
-        intent_projection_digest = _required_id(
-            intent_projection_digest, 'intent projection digest')
-        if intent_projection_digest != exact_plan['projection_digest']:
-            raise ValueError('Exact Sheets pending intent names another projection.')
-        if intent_state != 'SYNC_PENDING' or first_attempt is not True:
-            raise ValueError('Exact Sheets write requires an authorized first pending intent.')
+        if remote_projection_digest is None:
+            remote_projection_digest = exact_plan['projection_digest']
+        remote_projection_digest = _required_id(
+            remote_projection_digest, 'remote projection digest')
+        if type(remote_cursor) is not int or remote_cursor < 0:
+            raise ValueError('Exact Sheets remote cursor is invalid.')
         if (type(max_operations) is not int or not 1 <= max_operations <= 100
                 or type(max_bytes) is not int or not 1 <= max_bytes <= 500_000):
             raise ValueError('Exact Sheets remote bounds are invalid.')
@@ -635,23 +716,83 @@ class SheetsSynchronizer:
         size = len(encode(operations).encode('utf-8'))
         if len(operations) > max_operations or size > max_bytes:
             raise ValueError('Exact Sheets frozen projection exceeds the remote bound.')
-        self._revalidate_exact_rows(exact_plan)
-        result = self.remote.commit(copy.deepcopy(operations))
+        # Avoid blocking readback-only recovery on a newer local edit: the
+        # acknowledgement path deliberately preserves it.  A never-attempted
+        # intent is checked both before and immediately after its atomic claim.
+        remote_state = inbox.exact_remote_state(cycle_id, company_id)
+        if not isinstance(remote_state, Mapping) or not remote_state.get(
+                'first_attempt_claimed'):
+            self._revalidate_exact_rows(exact_plan)
+        claim = inbox.claim_exact_remote_attempt(
+            cycle_id, company_id, local_plan_digest=plan_digest,
+            projection_digest=remote_projection_digest,
+            receipt_id=receipt_id, intent_id=intent_id, cursor=remote_cursor,
+            count=len(operations), chunk_digest=exact_plan['projection_digest'],
+            timestamp=timestamp())
+        if not isinstance(claim, Mapping) or type(claim.get('first_attempt')) is not bool:
+            raise ValueError('Exact Sheets durable intent claim is invalid.')
+        result = None
+        if claim['first_attempt']:
+            self._revalidate_exact_rows(exact_plan)
+            result = self.remote.commit(copy.deepcopy(operations))
         readback = self.readback_exact_scope(
             exact_plan, receipt_id=receipt_id, intent_id=intent_id,
-            intent_projection_digest=intent_projection_digest)
+            intent_projection_digest=exact_plan['projection_digest'])
+        from .inbox import _SHEETS_CONFIRMATION_CAPABILITY
+        inbox._confirm_exact_remote_chunk(
+            cycle_id, company_id, local_plan_digest=plan_digest,
+            projection_digest=remote_projection_digest,
+            receipt_id=receipt_id, intent_id=intent_id, cursor=remote_cursor,
+            chunk_digest=exact_plan['projection_digest'], timestamp=timestamp(),
+            _capability=_SHEETS_CONFIRMATION_CAPABILITY)
         return {'commit': result, 'readback': readback,
+                'first_attempt': claim['first_attempt'],
                 'acknowledgement_id': readback['acknowledgement_id']}
 
-    def acknowledge_exact_scope(self, exact_plan, readback, *, cycle_id,
-                                company_id, plan_digest, receipt_id,
-                                acknowledgement_id):
-        """Acknowledge only confirmed visible fields and preserve later edits."""
+    def confirm_exact_scope(self, exact_plan, *, inbox, cycle_id, company_id,
+                            plan_digest, receipt_id, intent_id):
+        """Read back the complete scope and durably confirm it as one operation."""
         exact_plan = self._validate_exact_plan(exact_plan)
+        inbox = self._require_exact_inbox(inbox)
         cycle_id = _required_id(cycle_id, 'cycle ID')
         company_id = _required_id(company_id, 'Company ID')
         plan_digest = _required_id(plan_digest, 'plan digest')
         receipt_id = _required_id(receipt_id, 'receipt ID')
+        intent_id = _required_id(intent_id, 'intent ID')
+        remote_state = inbox.exact_remote_state(cycle_id, company_id)
+        if (not isinstance(remote_state, Mapping)
+                or remote_state.get('local_plan_digest') != plan_digest
+                or remote_state.get('projection_digest') != exact_plan['projection_digest']
+                or remote_state.get('receipt_id') != receipt_id
+                or remote_state.get('intent_id') != intent_id
+                or remote_state.get('remote_cursor') != len(exact_plan['operations'])):
+            raise ValueError('Exact Sheets complete remote journal is unavailable.')
+        readback = self.readback_exact_scope(
+            exact_plan, receipt_id=receipt_id, intent_id=intent_id,
+            intent_projection_digest=exact_plan['projection_digest'])
+        from .inbox import _SHEETS_CONFIRMATION_CAPABILITY
+        inbox._confirm_exact_remote(
+            cycle_id, company_id, local_plan_digest=plan_digest,
+            projection_digest=exact_plan['projection_digest'],
+            receipt_id=receipt_id, intent_id=intent_id,
+            cursor=len(exact_plan['operations']),
+            observed_records=self._exact_readback_records(exact_plan, readback),
+            acknowledgement_id=readback['acknowledgement_id'],
+            timestamp=timestamp(),
+            _capability=_SHEETS_CONFIRMATION_CAPABILITY)
+        return readback
+
+    def acknowledge_exact_scope(self, exact_plan, readback, *, inbox, cycle_id,
+                                company_id, plan_digest, receipt_id,
+                                intent_id, acknowledgement_id):
+        """Acknowledge only confirmed visible fields and preserve later edits."""
+        exact_plan = self._validate_exact_plan(exact_plan)
+        inbox = self._require_exact_inbox(inbox)
+        cycle_id = _required_id(cycle_id, 'cycle ID')
+        company_id = _required_id(company_id, 'Company ID')
+        plan_digest = _required_id(plan_digest, 'plan digest')
+        receipt_id = _required_id(receipt_id, 'receipt ID')
+        intent_id = _required_id(intent_id, 'intent ID')
         acknowledgement_id = _required_id(acknowledgement_id, 'acknowledgement ID')
         expected_acknowledgement = _digest({
             'receipt_id': receipt_id,
@@ -661,6 +802,7 @@ class SheetsSynchronizer:
         })
         if (not isinstance(readback, Mapping)
                 or readback.get('receipt_id') != receipt_id
+                or readback.get('intent_id') != intent_id
                 or readback.get('intent_projection_digest') != exact_plan['projection_digest']
                 or readback.get('projection_digest') != exact_plan['projection_digest']
                 or readback.get('acknowledgement_id') != expected_acknowledgement
@@ -668,6 +810,11 @@ class SheetsSynchronizer:
                 or not isinstance(readback.get('rows'), list)
                 or len(readback['rows']) != len(exact_plan['rows'])):
             raise ValueError('Exact Sheets acknowledgement binding is unavailable or invalid.')
+        inbox.require_exact_remote_confirmed(
+            cycle_id, company_id, local_plan_digest=plan_digest,
+            projection_digest=exact_plan['projection_digest'],
+            receipt_id=receipt_id, intent_id=intent_id,
+            acknowledgement_id=acknowledgement_id)
         if not self.local.db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='exact_local_applications'").fetchone():
             raise ValueError('Exact Sheets acknowledgement lacks a verified local plan binding.')

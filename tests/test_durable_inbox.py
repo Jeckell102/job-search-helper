@@ -369,5 +369,131 @@ class DurablePipelineTests(unittest.TestCase):
         self.assertTrue(self.inbox.get(self.cycle, 'C-0')[1])
 
 
+class ExactRemoteIntentJournalTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.inbox = InventoryInbox(Path(self.temp.name) / 'inbox.db', 'fixture')
+        self.addCleanup(self.inbox.close)
+        self.cycle, self.company = 'CYC-exact', 'COMP-exact'
+        self.plan_digest = 'plan-digest'
+        self.projection = [{
+            'tab': 'Companies', 'identity': {'Company ID': self.company},
+            'values': {'Scan State': 'Complete'},
+        }]
+        from job_search_helper.exact_cycle_planner import _digest
+        self.projection_digest = _digest(self.projection)
+        self.binding = {'request_id': self.cycle, 'company_id': self.company,
+                        'source_revision': 'source', 'release_id': 'release'}
+        records = record_fingerprints(self.projection)
+        with self.inbox.lock, self.inbox.connection:
+            frozen = {'plan_digest': self.plan_digest,
+                      'remote_projection': self.projection,
+                      'remote_projection_digest': self.projection_digest}
+            self.inbox.connection.execute(
+                'INSERT INTO sync_plans VALUES (?,?,?,0)',
+                (self.cycle, self.company, json.dumps(
+                    frozen, sort_keys=True, separators=(',', ':'))))
+            self.inbox.connection.execute(
+                'INSERT INTO exact_plan_local_state VALUES (?,?,?,?,?,?,?,?,?,?)',
+                (self.cycle, self.company, self.plan_digest, 'local-digest',
+                 self.projection_digest, 'LOCAL_VERIFIED', 'apply', 'records', 't0', 't0'))
+            from job_search_helper import publication_receipts
+            self.receipt_id = publication_receipts.local_committed(
+                self.inbox.connection, self.binding, records,
+                {'boundary': 'idle', 'enqueued_at': 't0'}, timestamp='t0')
+        self.intent_id = 'intent-1'
+        self.inbox.freeze_exact_remote_plan(
+            self.cycle, self.company, local_plan_digest=self.plan_digest,
+            projection=self.projection, projection_digest=self.projection_digest,
+            receipt_id=self.receipt_id, intent_id=self.intent_id, timestamp='t1')
+
+    def claim(self, timestamp):
+        return self.inbox.claim_exact_remote_attempt(
+            self.cycle, self.company, local_plan_digest=self.plan_digest,
+            projection_digest=self.projection_digest, receipt_id=self.receipt_id,
+            intent_id=self.intent_id, cursor=0, count=1,
+            chunk_digest=self.projection_digest, timestamp=timestamp)
+
+    def test_duplicate_claim_never_authorizes_second_publish(self):
+        self.assertTrue(self.claim('t2')['first_attempt'])
+        replay = self.claim('t3')
+        self.assertFalse(replay['first_attempt'])
+        self.assertTrue(replay['first_attempt_claimed'])
+        self.assertEqual(replay['attempted_at'], 't2')
+
+    def test_confirmed_ack_binding_refuses_forgery(self):
+        self.claim('t2')
+        observed = record_fingerprints(self.projection)
+        confirmed = self.inbox.confirm_exact_remote(
+            self.cycle, self.company, local_plan_digest=self.plan_digest,
+            projection_digest=self.projection_digest, receipt_id=self.receipt_id,
+            intent_id=self.intent_id, cursor=0, observed_records=observed,
+            acknowledgement_id='ack-real', timestamp='t3')
+        self.assertEqual(confirmed['state'], 'SYNC_CONFIRMED')
+        with self.assertRaisesRegex(ValueError, 'not durably confirmed'):
+            self.inbox.require_exact_remote_confirmed(
+                self.cycle, self.company, local_plan_digest=self.plan_digest,
+                projection_digest=self.projection_digest, receipt_id=self.receipt_id,
+                intent_id=self.intent_id, acknowledgement_id='ack-forged')
+
+    def test_each_new_chunk_has_one_attempt_but_restart_at_same_cursor_has_none(self):
+        from job_search_helper.exact_cycle_planner import _digest
+        from job_search_helper import publication_receipts
+
+        cycle, company = 'CYC-chunks', 'COMP-chunks'
+        projection = [
+            {'tab': 'Companies', 'identity': {'Company ID': company},
+             'values': {'Scan State': 'Complete'}},
+            {'tab': 'Companies', 'identity': {'Company ID': company},
+             'values': {'Next Action': 'Saved'}},
+        ]
+        projection_digest = _digest(projection)
+        binding = {'request_id': cycle, 'company_id': company,
+                   'source_revision': 'source', 'release_id': 'release'}
+        with self.inbox.lock, self.inbox.connection:
+            self.inbox.connection.execute(
+                'INSERT INTO sync_plans VALUES (?,?,?,0)',
+                (cycle, company, json.dumps({'plan_digest': 'plan-chunks'},
+                                            sort_keys=True, separators=(',', ':'))))
+            self.inbox.connection.execute(
+                'INSERT INTO exact_plan_local_state VALUES (?,?,?,?,?,?,?,?,?,?)',
+                (cycle, company, 'plan-chunks', 'local-digest', projection_digest,
+                 'LOCAL_VERIFIED', 'apply-chunks', 'records', 't0', 't0'))
+            receipt_id = publication_receipts.local_committed(
+                self.inbox.connection, binding, record_fingerprints(projection),
+                {'boundary': 'idle', 'enqueued_at': 't0'}, timestamp='t0')
+        self.inbox.freeze_exact_remote_plan(
+            cycle, company, local_plan_digest='plan-chunks',
+            projection=projection, projection_digest=projection_digest,
+            receipt_id=receipt_id, intent_id='intent-chunks', timestamp='t1')
+
+        first = self.inbox.claim_exact_remote_attempt(
+            cycle, company, local_plan_digest='plan-chunks',
+            projection_digest=projection_digest, receipt_id=receipt_id,
+            intent_id='intent-chunks', cursor=0, count=1,
+            chunk_digest=_digest(projection[:1]), timestamp='t2')
+        self.assertTrue(first['first_attempt'])
+        self.inbox.confirm_exact_remote_chunk(
+            cycle, company, local_plan_digest='plan-chunks',
+            projection_digest=projection_digest, receipt_id=receipt_id,
+            intent_id='intent-chunks', cursor=0,
+            chunk_digest=_digest(projection[:1]), timestamp='t3')
+
+        second = self.inbox.claim_exact_remote_attempt(
+            cycle, company, local_plan_digest='plan-chunks',
+            projection_digest=projection_digest, receipt_id=receipt_id,
+            intent_id='intent-chunks', cursor=1, count=1,
+            chunk_digest=_digest(projection[1:]), timestamp='t4')
+        replay = self.inbox.claim_exact_remote_attempt(
+            cycle, company, local_plan_digest='plan-chunks',
+            projection_digest=projection_digest, receipt_id=receipt_id,
+            intent_id='intent-chunks', cursor=1, count=1,
+            chunk_digest=_digest(projection[1:]), timestamp='t5')
+        self.assertTrue(second['first_attempt'])
+        self.assertFalse(replay['first_attempt'])
+        self.assertEqual(replay['remote_cursor'], 1)
+
+
 if __name__ == '__main__':
     unittest.main()

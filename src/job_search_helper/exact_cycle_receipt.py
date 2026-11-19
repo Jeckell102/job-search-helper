@@ -22,7 +22,12 @@ def derive_receipt(cycle, company_id, payload, plan, timestamp):
     the immutable schedule, so interrupted plans with incomplete date fields
     remain recoverable under every exact-cycle consumer.
     """
-    records = record_fingerprints(plan['operations'])
+    operations = (plan.get('remote_projection')
+                  if plan.get('exact_plan_version') == 2
+                  else plan.get('operations'))
+    if not isinstance(operations, list) or not operations:
+        raise ValueError('Exact receipt requires a frozen remote operation stream.')
+    records = record_fingerprints(operations)
     item = cycle['companies'][company_id]
     request = cycle.get('request', {})
     candidates = (cycle.get('source_revision'),

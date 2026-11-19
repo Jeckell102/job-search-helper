@@ -37,6 +37,8 @@ def sealed_plan(*, operations=None):
         'tab': op['tab'], 'identity': copy.deepcopy(op['identity']),
         'values': {key: value for key, value in op.get('values', {}).items()
                    if key in {'Last Checked', 'Next Action', 'Job Title', 'Salary / Range'}},
+        'append_if_missing': bool(op.get('append_if_missing')),
+        'on_insert': {}, 'expected': {}, 'append_notes': {},
     } for op in local]
     plan = {
         'exact_plan_version': 2, 'cycle_id': 'CYC-1', 'company_id': 'COMP-1',

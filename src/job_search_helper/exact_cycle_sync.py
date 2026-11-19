@@ -32,7 +32,14 @@ def _canonical(value):
 
 def _fallback_receipt(cycle, company_id, plan, payload):
     """Compatibility name for the shared exact receipt contract."""
-    return derive_receipt(cycle, company_id, payload, plan, timestamp())
+    if isinstance(plan, Mapping) and plan.get('exact_plan_version') == 2:
+        receipt_plan = {
+            'operations': copy.deepcopy(plan.get('remote_projection')),
+            'final': copy.deepcopy(plan.get('final', {})),
+        }
+    else:
+        receipt_plan = plan
+    return derive_receipt(cycle, company_id, payload, receipt_plan, timestamp())
 
 
 def _readback(remote, operations):
@@ -314,8 +321,227 @@ def _checkpoint_matches_final(checkpoint, plan):
     return {key: checkpoint.get(key) for key in projection} == dict(projection)
 
 
+
+def _validate_exact_plan_v2(plan, payload, remote, cycle_id, company_id):
+    """Validate every immutable v2 seal against the current remote schema."""
+    from .exact_cycle_planner import _exact_plan_digest
+    from .exact_local_plan import _validate_plan
+    from .sheet_profile import COMPACT_PROFILE, profile_schemas
+
+    plan, local_operations, remote_projection = _validate_plan(
+        plan, cycle_id, company_id)
+    schema = profile_schemas(COMPACT_PROFILE)
+    normalized = {tab: list(headers) for tab, headers in sorted(schema.items())}
+    remote_schema = getattr(remote, 'schemas', None)
+    current_remote = ({tab: list(headers) for tab, headers in sorted(remote_schema.items())}
+                      if isinstance(remote_schema, Mapping) else None)
+    final = plan.get('final')
+    final_projection = plan.get('final_projection')
+    if (plan.get('publication_profile') != COMPACT_PROFILE
+            or plan.get('publication_schema') != normalized
+            or current_remote != normalized
+            or plan.get('publication_schema_digest') != _digest(normalized)
+            or plan.get('inventory_payload_digest') != _digest(payload)
+            or plan.get('plan_digest') != _exact_plan_digest(plan)
+            or plan.get('remote_projection_digest') != _digest(remote_projection)
+            or plan.get('remote_records') != record_fingerprints(remote_projection)
+            or plan.get('remote_records_digest') != _digest(plan.get('remote_records'))
+            or not isinstance(final, Mapping)
+            or plan.get('local_finalization_digest') != _digest({
+                'operations': local_operations, 'final': final,
+            })
+            or not isinstance(final_projection, Mapping)
+            or final_projection != {key: final[key] for key in sorted(final)}
+            or plan.get('final_projection_digest') != _digest(final_projection)):
+        raise ValueError('exact_plan_v2_seal_or_schema_invalid')
+    _validate_controls(plan, plan.get('control_evidence', {}))
+    return plan, local_operations, remote_projection
+
+
+def _remote_intent_id(cycle_id, company_id, plan_digest, projection_digest):
+    return 'ERI-' + _digest({
+        'cycle_id': cycle_id, 'company_id': company_id,
+        'plan_digest': plan_digest, 'projection_digest': projection_digest,
+    })[:32]
+
+
+def _readback_records(exact_plan, readback):
+    rows = {}
+    for operation, observed in zip(exact_plan['operations'], readback['rows']):
+        identity = dict(operation['identity'])
+        for values in (operation.get('on_insert', {}), operation.get('values', {})):
+            identity.update({key: value for key, value in values.items() if key in identity})
+        row = dict(identity)
+        row.update(observed['actual'])
+        rows.setdefault(operation['tab'], []).append(row)
+    return record_fingerprints(exact_plan['operations'], rows)
+
+
+def _bounded_exact_chunks(exact_plan, *, max_operations=100, max_bytes=500_000):
+    """Split an exact plan without separating its operation/row evidence."""
+    operations = exact_plan['operations']
+    rows = exact_plan['rows']
+    chunks = []
+    start = 0
+    while start < len(operations):
+        stop = start
+        while stop < len(operations) and stop - start < max_operations:
+            candidate = operations[start:stop + 1]
+            if len(_canonical(candidate).encode('utf-8')) > max_bytes:
+                break
+            stop += 1
+        if stop == start:
+            raise ValueError('Exact Sheets single operation exceeds the remote byte bound.')
+        selected = copy.deepcopy(operations[start:stop])
+        chunks.append((start, {
+            'operations': selected,
+            'rows': copy.deepcopy(rows[start:stop]),
+            'projection_digest': _digest(selected),
+        }))
+        start = stop
+    return chunks
+
+
+def _local_acknowledgement(local, cycle_id, company_id, plan_digest,
+                           receipt_id, acknowledgement_id):
+    if not hasattr(local, 'db'):
+        return None
+    parent = local.db.execute(
+        'SELECT apply_id,state FROM exact_local_applications '
+        'WHERE cycle=? AND company=? AND plan_digest=?',
+        (cycle_id, company_id, plan_digest)).fetchone()
+    if parent is None or parent[1] != 'VERIFIED':
+        return None
+    row = local.db.execute(
+        'SELECT acknowledgement_id FROM exact_local_acknowledgements '
+        'WHERE apply_id=? AND receipt_id=?', (parent[0], receipt_id)).fetchone()
+    return bool(row and row[0] == acknowledgement_id)
+
+
+def _save_inventory_checkpoint(state, cycle_id, company_id, payload):
+    refreshed = state.cycle(cycle_id)
+    if refreshed is None or company_id not in refreshed.get('companies', {}):
+        raise ValueError('state_cycle_or_company_missing_before_inventory_checkpoint')
+    refreshed = copy.deepcopy(refreshed)
+    item = refreshed['companies'][company_id]
+    item.update({key: copy.deepcopy(value) for key, value in payload.items()
+                 if key != 'jobs'})
+    item.update(stage='inventory', durable_inventory=True, locally_processed=True)
+    item.pop('jobs', None)
+    state.save_cycle(refreshed)
+
+
+def _finalize_exact_company(inbox, state, cycle_id, company_id, plan):
+    finalized = state.cycle(cycle_id)
+    if finalized is None or company_id not in finalized.get('companies', {}):
+        raise RuntimeError('state_cycle_or_company_missing_before_finalization')
+    finalized = copy.deepcopy(finalized)
+    final = plan.get('final', {})
+    finalized['companies'][company_id].update(final)
+    state.save_cycle(finalized)
+    if final.get('stage') in {'complete', 'partial'}:
+        inbox.acknowledge(cycle_id, company_id)
+    else:
+        inbox.block(cycle_id, company_id)
+
+
+def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote,
+                      state, company_guard, local, synchronizer):
+    """Publish one v2 plan through only accepted exact-scope primitives."""
+    from .exact_local_plan import VERIFIED, exact_local_plan
+    from .sheets_sync import SheetsSynchronizer
+
+    plan, local_operations, remote_projection = _validate_exact_plan_v2(
+        plan, payload, remote, cycle_id, company_id)
+    if local is None:
+        raise ValueError('exact_plan_v2_requires_local_repository')
+    if cursor != len(local_operations):
+        raise ValueError('local_plan_not_durably_applied')
+    inbox_local = inbox.exact_local_state(cycle_id, company_id)
+    authoritative = exact_local_plan(local, cycle_id, company_id)
+    verified = local.verify_exact_local_plan(
+        cycle_id, company_id, plan, cursor=None)
+    if (inbox_local is None or inbox_local['state'] != 'LOCAL_VERIFIED'
+            or authoritative is None or authoritative['state'] != VERIFIED
+            or inbox_local['plan_digest'] != plan['plan_digest']
+            or inbox_local['local_apply_id'] != authoritative['apply_id']
+            or inbox_local['local_records_digest'] != verified['records_digest']
+            or verified['apply_id'] != authoritative['apply_id']
+            or authoritative['plan_digest'] != plan['plan_digest']
+            or authoritative['remote_projection_digest'] != plan['remote_projection_digest']):
+        raise ValueError('exact_plan_v2_local_verification_mismatch')
+    controls = company_guard(company_id, plan.get('requested_url'))
+    _validate_controls(plan, controls)
+    cycle = state.cycle(cycle_id)
+    receipt = _fallback_receipt(cycle, company_id, plan, payload)
+    receipt_id = inbox.ensure_receipt(receipt)
+    current = inbox.receipt(receipt)
+    if current is None:
+        raise ValueError('exact_plan_v2_receipt_not_durable')
+    remote_state = inbox.exact_remote_state(cycle_id, company_id)
+    if (current['state'] == SYNC_CONFIRMED and remote_state is not None
+            and current['acknowledgement_id']
+            and _local_acknowledgement(
+                local, cycle_id, company_id, plan['plan_digest'], receipt_id,
+                current['acknowledgement_id'])):
+        inbox.mark_exact_remote_locally_acknowledged(
+            cycle_id, company_id, local_plan_digest=plan['plan_digest'],
+            projection_digest=remote_state['projection_digest'],
+            receipt_id=receipt_id, intent_id=remote_state['intent_id'],
+            acknowledgement_id=current['acknowledgement_id'], timestamp=timestamp())
+        _finalize_exact_company(inbox, state, cycle_id, company_id, plan)
+        return {'confirmed': True, 'acknowledgement_id': current['acknowledgement_id']}
+
+    _save_inventory_checkpoint(state, cycle_id, company_id, payload)
+    sync = synchronizer or SheetsSynchronizer(local, remote)
+    exact_plan = sync.plan_exact_scope(authoritative['row_scope'], remote_projection)
+    intent_id = _remote_intent_id(
+        cycle_id, company_id, plan['plan_digest'], exact_plan['projection_digest'])
+    remote_state = inbox.freeze_exact_remote_plan(
+        cycle_id, company_id, local_plan_digest=plan['plan_digest'],
+        projection=exact_plan['operations'],
+        projection_digest=exact_plan['projection_digest'], receipt_id=receipt_id,
+        intent_id=intent_id, timestamp=timestamp())
+    if remote_state['state'] not in {'SYNC_CONFIRMED', 'LOCAL_ACKNOWLEDGED'}:
+        chunks = _bounded_exact_chunks(exact_plan)
+        starts = {start for start, _chunk in chunks}
+        remote_cursor = remote_state['remote_cursor']
+        if remote_cursor not in starts and remote_cursor != len(exact_plan['operations']):
+            raise ValueError('exact_plan_v2_remote_cursor_not_at_chunk_boundary')
+        for start, chunk in chunks:
+            if start < remote_cursor:
+                continue
+            delivered = sync.publish_exact_scope(
+                chunk, inbox=inbox, cycle_id=cycle_id, company_id=company_id,
+                plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+                intent_id=intent_id,
+                remote_projection_digest=exact_plan['projection_digest'],
+                remote_cursor=start)
+            remote_cursor = start + len(chunk['operations'])
+        if remote_cursor != len(exact_plan['operations']):
+            raise ValueError('exact_plan_v2_remote_cursor_incomplete')
+    readback = sync.confirm_exact_scope(
+        exact_plan, inbox=inbox, cycle_id=cycle_id, company_id=company_id,
+        plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+        intent_id=intent_id)
+    acknowledgement_id = readback['acknowledgement_id']
+    acknowledged = sync.acknowledge_exact_scope(
+        exact_plan, readback, inbox=inbox, cycle_id=cycle_id, company_id=company_id,
+        plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+        intent_id=intent_id,
+        acknowledgement_id=acknowledgement_id)
+    inbox.mark_exact_remote_locally_acknowledged(
+        cycle_id, company_id, local_plan_digest=plan['plan_digest'],
+        projection_digest=exact_plan['projection_digest'], receipt_id=receipt_id,
+        intent_id=intent_id, acknowledgement_id=acknowledgement_id,
+        timestamp=timestamp())
+    _finalize_exact_company(inbox, state, cycle_id, company_id, plan)
+    return {'confirmed': True, 'acknowledgement_id': acknowledgement_id,
+            'local_ack_recovered': acknowledged['recovered']}
+
+
 def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=False, state,
-                        company_guard=None):
+                        company_guard=None, local=None, synchronizer=None):
     """Deliver only the frozen plans for ``cycle_id``.
 
     Failures are intentionally contained per company.  No failure clears a
@@ -361,6 +587,23 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
             report['skipped'].append({'company_id': company_id, 'reason': 'no_frozen_plan'})
             continue
         plan, cursor = plan_state
+        if isinstance(plan, Mapping) and plan.get('exact_plan_version') == 2:
+            try:
+                result = _publish_exact_v2(
+                    inbox, cycle_id, company_id, plan, cursor, payload, remote,
+                    state, company_guard, local, synchronizer)
+                if result['confirmed']:
+                    report['confirmed'].append(company_id)
+            except UncertainWriteError:
+                report['held'].append({'company_id': company_id,
+                                       'reason': 'uncertain_write'})
+            except ValueError as exc:
+                report['held'].append({'company_id': company_id,
+                                       'reason': str(exc) or 'ValueError'})
+            except Exception as exc:
+                report['held'].append({'company_id': company_id,
+                                       'reason': type(exc).__name__})
+            continue
         operations = plan.get('operations')
         if not isinstance(operations, list) or not operations:
             report['held'].append({'company_id': company_id, 'reason': 'empty_frozen_plan'})

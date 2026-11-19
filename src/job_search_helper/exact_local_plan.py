@@ -128,6 +128,14 @@ def _row_scope(plan):
     scope = []
     guarded = {'Source Hash', 'Added to Opportunities?', 'Salary / Range'}
     for operation in plan['remote_projection']:
+        append_if_missing = operation.get('append_if_missing')
+        if append_if_missing is None:
+            # Older already-sealed test/compatibility projections omitted the
+            # flag and could only express inserts through nonempty on_insert.
+            # Materialize that deterministic meaning into the durable scope.
+            append_if_missing = bool(operation.get('on_insert'))
+        if type(append_if_missing) is not bool:
+            raise ValueError('Exact remote scope requires sealed insert semantics.')
         fields = set()
         for key in ('on_insert', 'values', 'append_notes'):
             fields.update(operation.get(key, {}))
@@ -146,7 +154,9 @@ def _row_scope(plan):
         scope.append({'tab': operation['tab'],
                       'identity': identity,
                       'fields': sorted(fields),
-                      'guards': guards})
+                      'append_if_missing': append_if_missing,
+                      'guards': guards,
+                      'expected': copy.deepcopy(operation.get('expected', {}))})
     return scope
 
 

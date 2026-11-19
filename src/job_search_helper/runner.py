@@ -438,7 +438,11 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         @contextmanager
         def exact_dependencies():
             spreadsheet_id = InventoryInbox.destination_id(database.parent / 'inventories.sqlite3')
-            local = SQLiteRepository(job_database_path(), spreadsheet_id, readonly=True)
+            # Exact compact recovery owns the normal scraper lock and needs a
+            # writable connection for its local apply/readback journal.  It
+            # still never starts the global Sheets synchronizer or discovers
+            # unrelated dirty work.
+            local = SQLiteRepository(job_database_path(), spreadsheet_id, readonly=False)
             state = inbox = None
             try:
                 schemas = profile_schemas(local.get_meta('sheets_profile'))

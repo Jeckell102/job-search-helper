@@ -162,6 +162,18 @@ def _project_operations(operations, publication):
     return projected
 
 
+def _canonical_remote_projection(operations):
+    return [{
+        'tab': operation['tab'],
+        'identity': copy.deepcopy(operation['identity']),
+        'values': copy.deepcopy(operation.get('values', {})),
+        'append_if_missing': bool(operation.get('append_if_missing')),
+        'on_insert': copy.deepcopy(operation.get('on_insert', {})),
+        'expected': copy.deepcopy(operation.get('expected', {})),
+        'append_notes': copy.deepcopy(operation.get('append_notes', {})),
+    } for operation in operations]
+
+
 def _target_label(operation):
     """Return the stable final identity of one frozen operation."""
     identity = operation.get('identity')
@@ -223,6 +235,36 @@ def _normalize_salary_fallback(operations, originals):
                 mapping.pop('Salary / Range', None)
 
 
+def _remove_noop_values(operations, originals):
+    """Make a compact frozen projection equal the actual dirty-cell result."""
+    from .repository import _equivalent
+
+    retained = []
+    for operation in operations:
+        identity = operation.get('identity', {})
+        prior_rows = [row for (tab, _number), row in originals.items()
+                      if tab == operation.get('tab') and all(
+                          _equivalent(key, row.get(key, ''), value)
+                          for key, value in identity.items())]
+        if len(prior_rows) == 1:
+            prior = prior_rows[0]
+            values = operation.get('values', {})
+            if isinstance(values, dict):
+                for header in tuple(values):
+                    if _equivalent(header, prior.get(header, ''), values[header]):
+                        values.pop(header)
+            expected = operation.setdefault('expected', {})
+            for header in set(values) | set(operation.get('append_notes', {})):
+                expected.setdefault(header, copy.deepcopy(prior.get(header, '')))
+            if not operation.get('append_if_missing'):
+                operation.pop('on_insert', None)
+        mutations = any(operation.get(key) for key in (
+            'values', 'on_insert', 'append_notes'))
+        if operation.get('append_if_missing') or mutations:
+            retained.append(operation)
+    operations[:] = retained
+
+
 def _seal_plan(plan, payload, repository):
     from .publication_receipts import record_fingerprints
     local_operations = copy.deepcopy(plan['operations'])
@@ -261,6 +303,10 @@ def _seal_exact_plan_v2(plan, payload, repository, cycle_id, company_id):
     if profile == 'full':
         raise ValueError('exact_plan_v2_requires_projected_profile')
     remote_projection = _project_operations(local_operations, publication)
+    # Exact Sheets planning emits a total, canonical operation shape.  Freeze
+    # that same shape so equality is structural rather than dependent on
+    # whether an empty optional mapping was omitted during projection.
+    remote_projection = _canonical_remote_projection(remote_projection)
     schema_evidence = {tab: list(headers) for tab, headers in sorted(publication.items())}
     local_records = record_fingerprints(local_operations)
     remote_records = record_fingerprints(remote_projection)
@@ -319,7 +365,8 @@ def _validate_existing_exact_plan_v2(plan, payload, repository, cycle_id,
             or plan.get('local_operations_digest') != _digest(local_operations)
             or not isinstance(remote_projection, list) or not remote_projection
             or plan.get('remote_projection_digest') != _digest(remote_projection)
-            or _project_operations(local_operations, publication) != remote_projection
+            or _canonical_remote_projection(
+                _project_operations(local_operations, publication)) != remote_projection
             or plan.get('local_expected_records') != record_fingerprints(local_operations)
             or plan.get('local_expected_records_digest') != _digest(plan.get('local_expected_records'))
             or plan.get('remote_records') != record_fingerprints(remote_projection)
@@ -452,7 +499,7 @@ def _validate_cycle(engine, cycle_id):
     return cycle_id, cycle
 
 
-def _freeze(engine, planner, cycle, company_id, payload):
+def _freeze(engine, planner, cycle, company_id, payload, *, drop_noops=False):
     """Compute a frozen plan entirely in memory, with no repository commit."""
     company = _company_from(planner, company_id)
     engine._verify_same_board({'Official Careers URL': payload['requested_url']}, company)
@@ -482,6 +529,8 @@ def _freeze(engine, planner, cycle, company_id, payload):
         engine._finish_company(local_cycle, company)
         _normalize_history_guards(planner, originals)
         _normalize_salary_fallback(planner.operations, originals)
+        if drop_noops:
+            _remove_noop_values(planner.operations, originals)
         return {
             'operations': copy.deepcopy(planner.operations),
             'final': {key: value for key, value in local_item.items() if key != 'jobs'},
@@ -555,7 +604,9 @@ def freeze_exact_cycle_plans(engine, cycle_id: str, company_ids: Iterable[str], 
             existing = engine.inbox.plan(cycle_id, company_id)
             if existing is None:
                 profile, _publication = _publication_schema(engine.repo)
-                plan = _freeze(engine, planner, cycle, company_id, payload)
+                plan = _freeze(
+                    engine, planner, cycle, company_id, payload,
+                    drop_noops=profile != 'full')
                 plan['control_evidence'] = evidence
                 plan['control_evidence_version'] = CONTROL_EVIDENCE_VERSION
                 plan['control_evidence_digest'] = evidence_digest

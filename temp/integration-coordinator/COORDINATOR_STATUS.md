@@ -104,7 +104,7 @@ ten-minute user update. Update it immediately after any material result.
   duplicate jobs. Owner-reviewed protected integration is complete: the
   protected integration selection passes 202 checks and exact rollback/source
   hashes are recorded. The live release-to-saved-jobs proof remains.
-- Milestone 6: 61% — F4 receipt/recovery source review and controlled Jetson
+- Milestone 6: 69% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. An isolated F8 candidate now extends the existing
   coordinator with one maintenance owner, durable boot/reconnect catch-up,
   disk-pressure holds, explicit evidence-retention counts, and planned
@@ -998,6 +998,27 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   `775a79ec10f4b36bbf6af5e3b48a7559411c9048`. Later local-durability and
   exact-Sheets work is still in progress and is not covered by that verified
   remote hash yet.
+- The version-2 local durability journal is accepted at `565b798`, and the
+  exact selected-scope Sheets primitives are accepted at `332b2f9`. Root
+  reproduced 111 exact planner/inbox/sync/recovery checks, 87 SQLite/local-
+  pipeline checks, and 80 scoped-Sheets/compact integration checks. Both
+  checkpoints are backed up to the private branch; local `HEAD` and
+  `git ls-remote` matched
+  `332b2f90fd16d6c3bdd776f07c9aaa561c20ab85`. Recovery orchestration wiring is
+  active in a separately owned lane, while an independent lane audits the two
+  accepted components read-only. Production and broad processing remain held.
+- Independent combined-boundary QA has now **REJECTED activation** despite 166
+  passing boundary checks and 87 passing SQLite/local-pipeline checks. It
+  reproduced two missing adversarial gates: caller-asserted first-attempt and
+  acknowledgement values could replay a remote commit or clear selected local
+  dirty fields from fabricated readback without a confirmed receipt; and a
+  valid blank-posting salary fallback plan could not equal the reconstructed
+  remote projection because its visible estimated-salary guard was omitted.
+  Repair ownership is explicit: inbox/sync/recovery owns a durable single-use
+  remote-intent claim plus confirmed-receipt authority, while sheets_sync owns
+  mandatory use of that authority and visible salary-guard reconstruction.
+  Duplicate-write and zero-write-forged-ack cases are required tests. No live
+  or production state was accessed by this QA or repair assignment.
 - Independent QA accepted the source-level exact local-durability and
   exact-selected-Sheets candidate. Version-2 plans freeze the complete local
   stream and compact remote projection before mutation; every bounded local
@@ -1021,3 +1042,64 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   Sheets, planner, publisher, recovery, inbox, and SQLite matrix passes 177
   checks with strict warnings. Normal-command orchestration remains the next
   open boundary; no live or production action occurred.
+- The accepted exact-local and exact-Sheets primitive checkpoints are backed
+  up to the private GitHub feature branch. Local HEAD, the local remote-tracking
+  ref, and an independent `git ls-remote` query all returned
+  `332b2f90fd16d6c3bdd776f07c9aaa561c20ab85`. The worktree was clean at that
+  verification point. Normal-command orchestration remains unimplemented and
+  is the active next task.
+- Normal-command exact-v2 orchestration is now implemented and under final
+  independent review. Offline recovery freezes, applies, and completely
+  verifies the selected local stream before any remote attempt; then publishes
+  only the exact compact projection through a durable per-chunk intent. A
+  synthetic ambiguous write, a crash after remote confirmation/local
+  acknowledgement, and an uncertain second chunk in a 105-job/106-operation
+  company all recovered by readback without repeating local or remote work.
+  The bounded recovery/publisher/local/Sheets/inbox matrix passes 104 checks,
+  and the adjacent planner/migration/runner/scoped-sync/local-pipeline matrix
+  passes 269 checks with warnings treated as errors. Full-suite and independent
+  final QA is accepted. No production, Google, Jetson, or broad queue action
+  occurred; the last verified private GitHub backup remains `332b2f9` until
+  this candidate is independently accepted and committed.
+- The combined repair for the durable remote-intent authority, forged-
+  acknowledgement refusal, retained estimated-salary guard, and version-2
+  recovery orchestration reached coordinator verification. Root independently
+  reproduced 167 focused checks and 126 adjacent compact/SQLite checks with no
+  failures. A broader 394-check regression matrix then exposed one relevant
+  unaccepted edge: a compact version-2 recovery containing 105 new jobs could
+  not reconstruct the frozen remote insert operations after local SQLite apply,
+  because local post-apply baseline state was incorrectly used to infer remote
+  insert shape. The candidate is therefore still **REJECTED for activation**;
+  no commit, production install, Google write, or backlog release occurred.
+  A scoped Sheets/row-scope lane owns that repair while independent QA reviews
+  the entire uncommitted candidate. The same broad run also reproduced one
+  unrelated pre-existing direct-sheet title-filter expectation failure; it is
+  not being conflated with this integration repair.
+- The compact insert-semantics repair removed the 105-job failure; root then
+  reproduced 169 focused/adjacent checks and a 390-test broad integration
+  matrix with no integration failures. Fresh independent adversarial QA still
+  **REJECTED** the stable candidate on a remaining P0 trust boundary: a caller
+  could claim a remote attempt, supply fabricated observed records and an
+  acknowledgement directly to the public inbox confirmation method, and then
+  clear selected local dirty fields with zero remote batches and unchanged
+  Google state. The normal flow's readback does not cure that bypass. A narrow
+  inbox/exact-Sheets/sync repair lane now owns removal of the public caller-
+  asserted confirmation shortcut and must bind actual remote readback to the
+  durable confirmation operation. The exact zero-write exploit is a required
+  regression test. No commit, production install, Google write, or queue
+  release has occurred.
+- The preceding 105-job insert-shape rejection is **superseded by repair and
+  independent ACCEPT**. Exact row scope now seals explicit insert semantics
+  and reconstructs the frozen values/on-insert/expected split rather than
+  inferring it from post-apply baseline state. The 105-job case publishes 106
+  operations in bounded chunks, injects uncertainty after the second physical
+  write, and completes on restart with every remote commit forbidden. Final
+  independent QA reproduced 169 strict focused/adjacent checks and accepted
+  local no-replay, per-chunk remote authority, exact guards, scoped
+  acknowledgement, unrelated-state preservation, and full-profile legacy
+  separation. The coordinator's final focused matrix passes 170 checks, and
+  its adjacent runner/scoped-sync/local-pipeline matrix passes 270 checks with
+  warnings treated as errors. One additional direct journal regression proves each new chunk
+  receives exactly one attempt while a repeat at the same cursor receives
+  none. Git checkpoint/remote-hash verification remains open; no live action
+  occurred.

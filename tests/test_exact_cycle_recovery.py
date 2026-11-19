@@ -16,18 +16,26 @@ from job_search_helper.exact_cycle_planner import freeze_exact_cycle_plans
 from job_search_helper.exact_cycle_sync import _company_guard
 from job_search_helper.engine import Engine, State
 from job_search_helper.inbox import InventoryInbox
-from job_search_helper.repository import MemoryRepository, SCHEMAS
+from job_search_helper.repository import MemoryRepository, SCHEMAS, UncertainWriteError
+from job_search_helper.sheet_profile import COMPACT_PROFILE, COMPACT_SCHEMAS
 from job_search_helper.sqlite_repository import SQLiteRepository
 
 
 class RecordingRemote(MemoryRepository):
-    def __init__(self, companies=None):
+    def __init__(self, companies=None, *, schemas=None):
         companies = companies or [{
             'Company ID': 'COMP-1', 'Company': 'Fixture',
             'Company Status': 'Active',
             'Official Careers URL': 'https://boards.example.test/fixture',
         }]
-        super().__init__({'Companies': companies}, schemas=copy.deepcopy(SCHEMAS))
+        selected_schemas = copy.deepcopy(schemas or SCHEMAS)
+        companies = [{key: value for key, value in row.items()
+                      if key in selected_schemas['Companies']}
+                     for row in companies]
+        super().__init__(
+            {'Companies': companies},
+            schemas=selected_schemas)
+        self.spreadsheet_id = 'fixture'
         self.commits = []
         self._inside_commit = False
 
@@ -310,6 +318,220 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         self.assertEqual(local_snapshot(), before)
         self.assertIsNotNone(inbox.get('CYC', 'COMP-Z'))
         self.assertEqual(state.cycle('CYC')['companies']['COMP-Z']['stage'], 'queued')
+
+    def test_compact_v2_normal_recovery_applies_publishes_and_preserves_unrelated_work(self):
+        root = Path(self.temporary.name) / 'compact-v2'
+        root.mkdir()
+        local = SQLiteRepository(root / 'jobs.db', 'fixture', initialize=True)
+        self.addCleanup(local.close)
+        local.ensure_columns('Opportunities', ['Opportunity ID'])
+        local_companies = [company('COMP-1'), company('COMP-Z')]
+        for tab in SCHEMAS:
+            local.import_rows(
+                tab, enumerate(local_companies if tab == 'Companies' else [], 2))
+        with local.transaction():
+            local.set_meta('ready', 'yes')
+            local.set_meta('sheets_profile', COMPACT_PROFILE)
+        local.commit([{
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-Z'},
+            'values': {'Notes': 'unrelated dirty publisher value'},
+        }])
+        local.mutate_company_with_event({
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-Z'},
+            'values': {'Notes': 'unrelated coordinator event value'},
+        })
+        unrelated_dirty = list(local.db.execute(
+            'SELECT tab,row_id,header FROM dirty WHERE row_id=2 ORDER BY header'))
+        unrelated_outbox = list(local.db.execute(
+            'SELECT event_id,company_id,revision,source_revision,kind,payload,created_at '
+            'FROM company_event_outbox ORDER BY event_id'))
+        state = State(root / 'state.db')
+        inbox = InventoryInbox(root / 'inbox.db', 'fixture')
+        self.addCleanup(state.close)
+        self.addCleanup(inbox.close)
+        engine = Engine(local, state, inbox=inbox, error_log_path=root / 'errors.jsonl')
+        state.save_cycle({
+            'id': 'CYC', 'status': 'In Progress',
+            'started_at': '2026-11-19T00:00:00Z',
+            'companies': {
+                'COMP-1': {'stage': 'queued'},
+                'COMP-Z': {'stage': 'queued'},
+            },
+        })
+        inbox.save('CYC', 'COMP-1', inventory('COMP-1'))
+        inbox.save('CYC', 'COMP-Z', inventory('COMP-Z'))
+        remote = RecordingRemote(
+            [company('COMP-1'), company('COMP-Z')], schemas=COMPACT_SCHEMAS)
+
+        result = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+
+        self.assertEqual(result['planned'], ['COMP-1'], result)
+        self.assertEqual(result['confirmed'], ['COMP-1'], result)
+        self.assertEqual(result['held'], [], result)
+        self.assertEqual(inbox.pending('CYC', include_blocked=True), ['COMP-Z'])
+        self.assertEqual(state.cycle('CYC')['companies']['COMP-1']['stage'], 'complete')
+        self.assertEqual(state.cycle('CYC')['companies']['COMP-Z']['stage'], 'queued')
+        self.assertEqual(list(local.db.execute(
+            'SELECT tab,row_id,header FROM dirty WHERE row_id=2 ORDER BY header')),
+            unrelated_dirty)
+        self.assertEqual(list(local.db.execute(
+            'SELECT event_id,company_id,revision,source_revision,kind,payload,created_at '
+            'FROM company_event_outbox ORDER BY event_id')), unrelated_outbox)
+        self.assertEqual(len(remote.commits), 1)
+
+    def test_compact_v2_uncertain_write_recovers_by_readback_without_replay(self):
+        root = Path(self.temporary.name) / 'compact-v2-uncertain'
+        root.mkdir()
+        local = SQLiteRepository(root / 'jobs.db', 'fixture', initialize=True)
+        self.addCleanup(local.close)
+        local.ensure_columns('Opportunities', ['Opportunity ID'])
+        for tab in SCHEMAS:
+            local.import_rows(
+                tab, enumerate([company('COMP-1')] if tab == 'Companies' else [], 2))
+        with local.transaction():
+            local.set_meta('ready', 'yes')
+            local.set_meta('sheets_profile', COMPACT_PROFILE)
+        state = State(root / 'state.db')
+        inbox = InventoryInbox(root / 'inbox.db', 'fixture')
+        self.addCleanup(state.close)
+        self.addCleanup(inbox.close)
+        engine = Engine(local, state, inbox=inbox, error_log_path=root / 'errors.jsonl')
+        state.save_cycle({
+            'id': 'CYC', 'status': 'In Progress',
+            'started_at': '2026-11-19T00:00:00Z',
+            'companies': {'COMP-1': {'stage': 'queued'}},
+        })
+        inbox.save('CYC', 'COMP-1', inventory('COMP-1'))
+        remote = RecordingRemote([company('COMP-1')], schemas=COMPACT_SCHEMAS)
+        original_commit = remote.commit
+
+        def uncertain_commit(operations):
+            original_commit(operations)
+            raise UncertainWriteError('synthetic uncertain write')
+
+        with patch.object(remote, 'commit', side_effect=uncertain_commit):
+            first = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+        self.assertEqual(first['confirmed'], [], first)
+        self.assertEqual(first['held'], [{
+            'company_id': 'COMP-1', 'reason': 'uncertain_write',
+        }])
+        self.assertEqual(len(remote.commits), 1)
+        journal = inbox.exact_remote_state('CYC', 'COMP-1')
+        self.assertEqual(journal['state'], 'SYNC_PENDING')
+        self.assertTrue(journal['first_attempt_claimed'])
+
+        with patch.object(remote, 'commit', side_effect=AssertionError('remote replay')):
+            second = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+        self.assertEqual(second['confirmed'], ['COMP-1'], second)
+        self.assertEqual(second['held'], [], second)
+        self.assertEqual(len(remote.commits), 1)
+
+    def test_compact_v2_post_confirmation_crash_recovers_without_local_or_remote_replay(self):
+        root = Path(self.temporary.name) / 'compact-v2-post-confirmation'
+        root.mkdir()
+        local = SQLiteRepository(root / 'jobs.db', 'fixture', initialize=True)
+        self.addCleanup(local.close)
+        local.ensure_columns('Opportunities', ['Opportunity ID'])
+        for tab in SCHEMAS:
+            local.import_rows(
+                tab, enumerate([company('COMP-1')] if tab == 'Companies' else [], 2))
+        with local.transaction():
+            local.set_meta('ready', 'yes')
+            local.set_meta('sheets_profile', COMPACT_PROFILE)
+        state = State(root / 'state.db')
+        inbox = InventoryInbox(root / 'inbox.db', 'fixture')
+        self.addCleanup(state.close)
+        self.addCleanup(inbox.close)
+        engine = Engine(local, state, inbox=inbox, error_log_path=root / 'errors.jsonl')
+        state.save_cycle({
+            'id': 'CYC', 'status': 'In Progress',
+            'started_at': '2026-11-19T00:00:00Z',
+            'companies': {'COMP-1': {'stage': 'queued'}},
+        })
+        inbox.save('CYC', 'COMP-1', inventory('COMP-1'))
+        remote = RecordingRemote([company('COMP-1')], schemas=COMPACT_SCHEMAS)
+
+        with patch.object(
+                inbox, 'mark_exact_remote_locally_acknowledged',
+                side_effect=OSError('synthetic post-confirmation crash')):
+            first = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+        self.assertEqual(first['confirmed'], [], first)
+        self.assertEqual(first['held'], [{
+            'company_id': 'COMP-1', 'reason': 'OSError',
+        }])
+        self.assertEqual(len(remote.commits), 1)
+        self.assertEqual(inbox.exact_remote_state('CYC', 'COMP-1')['state'],
+                         'SYNC_CONFIRMED')
+
+        with patch.object(
+                local, 'apply_exact_local_plan',
+                side_effect=AssertionError('local replay')):
+            with patch.object(
+                    remote, 'commit', side_effect=AssertionError('remote replay')):
+                second = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+        self.assertEqual(second['confirmed'], ['COMP-1'], second)
+        self.assertEqual(second['held'], [], second)
+        self.assertEqual(len(remote.commits), 1)
+        self.assertEqual(inbox.pending('CYC', include_blocked=True), [])
+        self.assertEqual(state.cycle('CYC')['companies']['COMP-1']['stage'], 'complete')
+
+    def test_compact_v2_large_company_uses_bounded_remote_chunks(self):
+        root = Path(self.temporary.name) / 'compact-v2-large-company'
+        root.mkdir()
+        local = SQLiteRepository(root / 'jobs.db', 'fixture', initialize=True)
+        self.addCleanup(local.close)
+        local.ensure_columns('Opportunities', ['Opportunity ID'])
+        for tab in SCHEMAS:
+            local.import_rows(
+                tab, enumerate([company('COMP-1')] if tab == 'Companies' else [], 2))
+        with local.transaction():
+            local.set_meta('ready', 'yes')
+            local.set_meta('sheets_profile', COMPACT_PROFILE)
+        state = State(root / 'state.db')
+        inbox = InventoryInbox(root / 'inbox.db', 'fixture')
+        self.addCleanup(state.close)
+        self.addCleanup(inbox.close)
+        engine = Engine(local, state, inbox=inbox, error_log_path=root / 'errors.jsonl')
+        state.save_cycle({
+            'id': 'CYC', 'status': 'In Progress',
+            'started_at': '2026-11-19T00:00:00Z',
+            'companies': {'COMP-1': {'stage': 'queued'}},
+        })
+        payload = inventory('COMP-1')
+        payload['jobs'] = [{
+            'title': f'Fixture Role {number}',
+            'posting_id': str(number),
+            'url': f'https://boards.example.test/comp-1/jobs/{number}',
+            'location': 'Remote',
+            'description': 'Customer-facing implementation and deployment work.',
+            'ats': 'Greenhouse',
+        } for number in range(105)]
+        inbox.save('CYC', 'COMP-1', payload)
+        remote = RecordingRemote([company('COMP-1')], schemas=COMPACT_SCHEMAS)
+        original_commit = remote.commit
+
+        def uncertain_second_chunk(operations):
+            result = original_commit(operations)
+            if len(remote.commits) == 2:
+                raise UncertainWriteError('synthetic second-chunk uncertainty')
+            return result
+
+        with patch.object(remote, 'commit', side_effect=uncertain_second_chunk):
+            first = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+        self.assertEqual(first['confirmed'], [], first)
+        self.assertEqual(first['held'], [{
+            'company_id': 'COMP-1', 'reason': 'uncertain_write',
+        }])
+        self.assertEqual(len(remote.commits), 2)
+
+        with patch.object(remote, 'commit', side_effect=AssertionError('chunk replay')):
+            result = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+
+        self.assertEqual(result['confirmed'], ['COMP-1'], result)
+        self.assertEqual(result['held'], [], result)
+        self.assertGreater(len(remote.commits), 1)
+        self.assertTrue(all(1 <= len(chunk) <= 100 for chunk in remote.commits))
+        self.assertEqual(sum(map(len, remote.commits)), 106)
 
     def test_normal_scraper_lock_contention_prevents_all_state_inbox_remote_access(self):
         engine = MagicMock()

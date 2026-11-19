@@ -1,6 +1,6 @@
 # Exact-Scope Sheets Primitives QA — 2026-11-19
 
-Status: **STAGED / OFFLINE TESTED / NOT YET ORCHESTRATOR-WIRED**
+Status: **QA REPAIRED / OFFLINE TESTED / INTEGRATION REVIEW REQUIRED**
 
 ## Ownership and safety boundary
 
@@ -27,32 +27,41 @@ runner, inbox, local-application implementation, Jetson, or any live job data.
   ambiguous identities, stale row hints, missing dirty mutations, unsafe
   identity changes, user-owned application-field writes, non-append note
   changes, missing Source Hash guards, and changed manual/source guards.
+- Requires the row scope to carry every frozen remote-visible `expected`
+  guard. It reconstructs those guards exactly, including Salary / Range and
+  the manual Added-to-Opportunities choice. Local-only Source Hash remains a
+  prewrite/local-ack guard and compact-v1 rejects it in remote `expected`.
 - Applies the existing salary fallback rule: a blank/known-empty extracted
-  salary cannot replace a plausible baseline estimate.
+  salary cannot replace a plausible baseline estimate, while the estimate is
+  retained as a remote compare-before-write guard.
 - Canonically requires the derived selected operations to equal the immutable
   frozen projection before any remote intent or write.
 
 ### `publish_exact_scope(...)` and `readback_exact_scope(...)`
 
-- Require nonblank receipt and intent IDs plus an intent projection digest
-  equal to the exact scoped plan.
-- The write API accepts only an explicitly authorized first `SYNC_PENDING`
-  attempt, revalidates selected local values/guards immediately before write,
-  and enforces 100-operation/500,000-byte maximum bounds.
+- Require a concrete `InventoryInbox` whose durable destination equals the
+  synchronizer workbook, plus nonblank cycle/company/plan/receipt/intent IDs.
+- The write API atomically calls `claim_exact_remote_attempt` before commit.
+  Only the inbox-derived first claim can issue one Google commit; every later
+  call is readback-only. Caller-supplied `first_attempt` and `intent_state`
+  authority has been removed.
+- A never-attempted intent revalidates selected local values/guards before and
+  immediately after its durable claim. Recovery of an already-attempted intent
+  does not reject a newer local edit; acknowledgement preserves it as dirty.
+- The API enforces 100-operation/500,000-byte maximum bounds.
 - The recovery API performs readback only and never calls commit.
 - Readback uses only each selected stable identity and exact row, verifies
   frozen values/append-only suffixes, and produces a deterministic
   receipt/intent/projection-bound acknowledgement ID.
-- A timeout after a synthetic real mutation is recovered by readback with zero
-  additional commits.
-
-The durable external intent journal remains the authority that decides whether
-the first attempt is authorized. A pending/uncertain restart must call only
-`readback_exact_scope`; this primitive does not invent replay permission.
+- Two calls using the same real durable intent produce exactly one remote
+  commit and identical readback acknowledgement evidence.
 
 ### `acknowledge_exact_scope(...)`
 
-- Fails closed unless the selected `(cycle, company, plan_digest)` has a
+- Requires the same concrete destination-bound `InventoryInbox` and calls
+  `require_exact_remote_confirmed` for the exact plan/projection/receipt/
+  intent/acknowledgement tuple before changing any local field.
+- Fails closed unless the selected `(cycle, company, plan_digest)` also has a
   matching `VERIFIED` row in `exact_local_applications`.
 - Requires untampered receipt, intent, projection, readback rows, and
   acknowledgement ID.
@@ -72,41 +81,47 @@ the first attempt is authorized. A pending/uncertain restart must call only
 
 Focused command:
 
-`PYTHONPATH=src:tests python3.11 -m unittest tests.test_sheets_sync_exact_scope -v`
+`PYTHONPATH=src:tests python -m unittest test_sheets_sync_exact_scope -v`
 
-Result: **PASS — 6 tests**.
+Result: **PASS — 7 tests in 0.645s** (repeat: 7 in 0.648s).
 
 Focused coverage includes explicit-scope isolation, optional row hint
-revalidation, frozen-projection mismatch before write, bounded first-attempt
-authorization, synthetic lost acknowledgement with readback-only recovery,
+revalidation, frozen-projection mismatch before write, exact blank-salary
+projection equality with the estimate preserved in `expected`, durable
+first-attempt authorization, duplicate-call readback-only recovery,
 scoped baseline/dirty acknowledgement with a newer edit, local-only and
 unrelated-state preservation, manual/source/salary controls, tampered
-readback, missing verified local journal, missing receipt binding, mismatched
-intent projection, and oversized projection.
+readback, fabricated exact-shape readback with zero remote writes, missing
+verified local journal, wrong inbox type, missing receipt binding, mismatched
+durable plan binding, and oversized projection.
 
 Adjacent command:
 
-`PYTHONPATH=src:tests python3.11 -m unittest tests.test_sheets_sync_exact_scope tests.test_compact_sheets tests.test_sqlite_integration tests.test_run_scoped_sync tests.test_exact_local_plan -q`
+`PYTHONPATH=src:tests python -m unittest test_compact_sheets test_sheet_read_optimization test_sqlite_integration test_sqlite_migration test_durable_inbox test_exact_local_plan -v`
 
-Result: **PASS — 80 tests in 12.873s**.
+Result: **PASS — 126 tests in 20.903s**.
+
+An earlier broad command also exposed concurrent integration-suite churn: 50
+legacy exact-cycle expectation failures plus three nonexistent module names.
+Those failures consistently predated this Sheets boundary in the current
+shared worktree (`legacy_exact_plan_requires_migration`) and belong to the
+coordinator/integration lane. They were not hidden or weakened here.
 
 Syntax and whitespace checks also passed:
 
-- `python3.11 -m py_compile src/job_search_helper/sheets_sync.py tests/test_sheets_sync_exact_scope.py`
+- `python -m py_compile src/job_search_helper/sheets_sync.py tests/test_sheets_sync_exact_scope.py`
 - `git diff --check -- src/job_search_helper/sheets_sync.py tests/test_sheets_sync_exact_scope.py`
 
 ## Remaining integration work
 
-- The recovery/publisher orchestrator must supply the immutable v2
-  `remote_projection`, the explicit local-journal row scope, frozen local
-  Source Hash/manual guards, receipt ID, and durable pending intent ID/digest.
-- It must call `plan_exact_scope` before journaling a remote intent, use
-  `publish_exact_scope` only for the first authorized attempt, and use
-  `readback_exact_scope` exclusively after an uncertain/pending attempt.
-- It must call `acknowledge_exact_scope` only after remote confirmation and
-  before selected State/inbox cleanup.
+- The recovery/publisher orchestrator must supply the immutable v2 remote
+  projection, explicit local-journal row scope including remote `expected`
+  and local `guards`, and the matching durable inbox IDs.
+- Its owned call sites must use the repaired signatures. Sheets now performs
+  the atomic durable claim internally; orchestration must durably call
+  `confirm_exact_remote` from exact readback evidence before acknowledgement.
+- It must call `acknowledge_exact_scope` before selected State/inbox cleanup.
 - Legacy local cursors remain local-application cursors and are not accepted
   by these APIs as remote progress.
 - No production pilot is authorized by this lane alone. Broad backlog and
   automatic release must remain disabled until end-to-end independent QA.
-

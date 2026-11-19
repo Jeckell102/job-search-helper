@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import copy
 import stat
 
 from .exact_cycle_planner import freeze_exact_cycle_plans
@@ -50,6 +51,85 @@ def _normalize_request(cycle_id, company_ids):
             or len(selected) != len(set(selected))):
         raise ValueError('exact_recovery_selection_must_be_unique_and_bounded_to_1_5')
     return cycle_id, selected
+
+
+def _prepare_exact_v2_local(engine, cycle_id, company_id, plan, payload):
+    """Apply and prove one frozen v2 local stream before any remote write."""
+    from .exact_cycle_planner import _checkpoint_item
+    from .exact_cycle_receipt import derive_receipt
+    from .exact_local_plan import VERIFIED
+    from .sqlite_repository import timestamp
+
+    frozen = engine.inbox.plan(cycle_id, company_id)
+    if frozen is None or frozen[0].get('plan_digest') != plan['plan_digest']:
+        raise ValueError('exact_v2_frozen_plan_changed_before_local_apply')
+    cursor = frozen[1]
+    local_count = len(plan['local_operations'])
+    if type(cursor) is not int or not 0 <= cursor <= local_count:
+        raise ValueError('exact_v2_local_cursor_invalid')
+    while cursor < local_count:
+        chunk = engine.repo.apply_exact_local_plan(
+            cycle_id, company_id, plan, cursor, max_operations=100)
+        verified_chunk = engine.repo.verify_exact_local_plan(
+            cycle_id, company_id, plan, cursor=cursor)
+        if (verified_chunk['state'] != VERIFIED
+                or verified_chunk['apply_id'] != chunk['apply_id']
+                or verified_chunk['count'] != chunk['count']):
+            raise ValueError('exact_v2_local_chunk_verification_mismatch')
+        next_cursor = cursor + chunk['count']
+        engine.inbox.advance_exact_local_cursor(
+            cycle_id, company_id, next_cursor, expected=cursor)
+        cursor = next_cursor
+    applied = engine.repo.verify_exact_local_plan(
+        cycle_id, company_id, plan, cursor=None)
+    if applied['state'] != VERIFIED:
+        raise ValueError('exact_v2_local_application_not_verified')
+    stamp = timestamp()
+    mirrored = engine.inbox.exact_local_state(cycle_id, company_id)
+    if mirrored is None or mirrored['plan_digest'] != plan['plan_digest']:
+        raise ValueError('exact_v2_frozen_local_mirror_missing')
+    if mirrored['state'] == 'FROZEN':
+        mirrored = engine.inbox.mark_exact_local_applied(
+            cycle_id, company_id, plan_digest=plan['plan_digest'],
+            apply_id=applied['apply_id'], records_digest=applied['records_digest'],
+            timestamp=stamp)
+    if mirrored['state'] == 'LOCAL_APPLIED':
+        mirrored = engine.inbox.mark_exact_local_verified(
+            cycle_id, company_id, plan_digest=plan['plan_digest'],
+            apply_id=applied['apply_id'], records_digest=applied['records_digest'],
+            timestamp=stamp)
+    if (mirrored['state'] != 'LOCAL_VERIFIED'
+            or mirrored['local_apply_id'] != applied['apply_id']
+            or mirrored['local_records_digest'] != applied['records_digest']):
+        raise ValueError('exact_v2_local_verification_mirror_mismatch')
+
+    frozen = engine.inbox.plan(cycle_id, company_id)
+    if frozen is None or frozen[0].get('plan_digest') != plan['plan_digest']:
+        raise ValueError('exact_v2_frozen_plan_changed_after_local_apply')
+    cursor = frozen[1]
+    if cursor != local_count:
+        raise ValueError('exact_v2_local_cursor_invalid')
+
+    refreshed = engine.state.cycle(cycle_id)
+    if refreshed is None or company_id not in refreshed.get('companies', {}):
+        raise RuntimeError('exact_v2_state_company_missing_after_local_apply')
+    item = refreshed['companies'][company_id]
+    if item.get('stage') == 'queued':
+        refreshed = copy.deepcopy(refreshed)
+        refreshed['companies'][company_id] = _checkpoint_item(item, payload)
+        engine.state.save_cycle(refreshed)
+    elif item.get('stage') == 'inventory':
+        if (item.get('durable_inventory') is not True
+                or item.get('locally_processed') is not True):
+            raise ValueError('exact_v2_inventory_checkpoint_invalid')
+    elif item.get('stage') not in {'complete', 'partial'}:
+        raise ValueError('exact_v2_state_checkpoint_not_recoverable')
+
+    receipt_cycle = engine.state.cycle(cycle_id)
+    receipt = derive_receipt(
+        receipt_cycle, company_id, payload, plan, timestamp())
+    engine.inbox.ensure_receipt(receipt)
+    return applied
 
 
 def recover_exact_cycle(engine, remote, cycle_id, company_ids):
@@ -146,9 +226,23 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected):
             report['held'].extend(planned['held'])
             if planned['held']:
                 continue
+        plan_state = engine.inbox.plan(cycle_id, company_id)
+        if (plan_state is not None and isinstance(plan_state[0], dict)
+                and plan_state[0].get('exact_plan_version') == 2):
+            try:
+                _prepare_exact_v2_local(
+                    engine, cycle_id, company_id, plan_state[0],
+                    engine.inbox.get(cycle_id, company_id)[0])
+            except Exception as exc:
+                report['held'].append({
+                    'company_id': company_id,
+                    'reason': str(exc) or type(exc).__name__,
+                })
+                continue
         delivered = publish_exact_cycle(
             engine.inbox, cycle_id, remote, company_ids=[company_id],
             retry_blocked=False, state=engine.state, company_guard=guard,
+            local=getattr(engine, 'repo', None),
         )
         report['confirmed'].extend(delivered['confirmed'])
         report['held'].extend(delivered['held'])
