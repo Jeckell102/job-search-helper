@@ -24,7 +24,7 @@ from job_search_helper.core import (
     unpack_snapshot, validate_decision,
 )
 from job_search_helper.engine import Engine, State
-from job_search_helper.repository import MemoryRepository
+from job_search_helper.repository import MemoryRepository, SCHEMAS
 
 
 POSTING = {
@@ -392,6 +392,27 @@ class CliTests(unittest.TestCase):
             self.assertEqual(source.tables, before)
             self.assertFalse((Path(temporary) / ".state").exists())
             repository.assert_called_once_with(write=False, interactive=False)
+
+    def test_dry_start_with_compact_opportunity_id_reaches_cycle_guard(self):
+        """A read-only compact-profile snapshot keeps its local schema extension."""
+        schemas = copy.deepcopy(SCHEMAS)
+        schemas['Opportunities'].append('Opportunity ID')
+        source = MemoryRepository({
+            'Companies': [{'Company': 'Fixture Company', 'Company ID': 'COMP-1',
+                           'Company Status': 'Active', 'ATS / Source': 'Greenhouse',
+                           'Official Careers URL': 'https://boards.greenhouse.io/fixture'}],
+            'Opportunities': [{'Company': 'Fixture Company', 'Job Title': 'Existing role',
+                               'Job URL': 'https://jobs.example.com/existing',
+                               'Opportunity ID': 'OPP-1'}],
+            'Scan Cycles': [{'Cycle ID': 'CYCLE-HELD', 'Cycle Status': 'Running'}],
+        }, schemas=schemas)
+        before = copy.deepcopy(source.tables)
+        with tempfile.TemporaryDirectory() as temporary, patch.object(cli, 'PROJECT_ROOT', Path(temporary)), \
+                patch.dict(os.environ, {}, clear=True), patch.object(cli, 'get_repository', return_value=source), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as error:
+            self.assertEqual(cli.main(['start', '--company-id', 'COMP-1', '--dry-run']), 1)
+        self.assertIn('An unfinished workbook cycle exists', error.getvalue())
+        self.assertEqual(source.tables, before)
 
     def test_dry_resume_clones_and_preserves_saved_state(self):
         source = MemoryRepository()

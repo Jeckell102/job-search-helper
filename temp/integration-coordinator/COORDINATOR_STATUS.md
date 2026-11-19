@@ -565,6 +565,14 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   held missing `Prepared` Company conflict. No scraper, broad recovery, or
   automatic queue was enabled. See
   `SALARY_FALLBACK_LIVE_RECONCILIATION_20261119.md`.
+- Milestone 1 read-only Samtec preflight exposed two still-open gates. The
+  legacy `CYC-B639C6D864EC` cannot be paused while its 47 saved inventories
+  and eight partial plans remain unreconciled, and the direct normal CLI
+  currently rejects the compact-profile `Opportunity ID` column before it can
+  prove its safe queue refusal. No Samtec request or scrape was created.
+  Intake lane owns the minimal CLI/profile compatibility repair; coordinator
+  owns the read-only cycle reconciliation decision. See
+  `M1_READONLY_BLOCKERS_20261119.md`.
 - A separate read-only scope proposal now identifies `COMP-0024` Draper as a
   possible Workday third distinct-structure candidate. Its historical evidence
   includes a human-verification block and no current-cycle inventory, so it is

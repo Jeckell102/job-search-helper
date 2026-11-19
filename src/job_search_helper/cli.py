@@ -111,7 +111,12 @@ def get_remote_repository(write: bool = False, interactive: bool = False, min_re
 
 def detached_repository(repo: GoogleRepository) -> MemoryRepository:
     """A dry run may read Sheets, but all proposed changes go to memory only."""
-    return MemoryRepository(repo.read_many(OPERATIONAL_TABS))
+    # The local SQLite authority can carry a deliberately published schema
+    # extension (currently ``Opportunity ID`` in the compact profile).  A
+    # dry-run snapshot must retain that schema rather than silently falling
+    # back to the legacy global schema, or a harmless read-only command fails
+    # before it can report its normal scope/cycle guard.
+    return MemoryRepository(repo.read_many(OPERATIONAL_TABS), schemas=repo.schemas)
 
 
 def print_json(value: object) -> None:
