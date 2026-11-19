@@ -47,7 +47,8 @@ class IntegrationReleaseTests(unittest.TestCase):
                         "after": metadata(self.candidate / name)} for name in self.paths}
         self.verification = {"result": "PASS", "tests": 3}
         self.manifest = {
-            "schema": MANIFEST_SCHEMA, "company_id": "C-1",
+            "schema": MANIFEST_SCHEMA, "failed_request_id": "REQ-failed-1",
+            "company_id": "C-1",
             "source_revision": "revision-1", "files": files,
             "before_source_manifest_sha256": source_tree_digest(self.project),
             "source_manifest_sha256": source_tree_digest(self.candidate),

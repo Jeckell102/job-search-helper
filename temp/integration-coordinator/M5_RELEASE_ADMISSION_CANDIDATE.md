@@ -17,10 +17,16 @@ Eleven release-specific checks cover successful multi-file activation, shared-lo
 
 The combined request, event, release, storage, publication and outcome regression selection passes 162 tests on Python 3.11. Static compilation and whitespace checks pass.
 
+## Maintained release-to-retry controller
+
+`release_controller.py` now consumes the completed exact release receipt and creates the durable retry intent from that receipt only. The failed request identity is part of the reviewed release manifest, so a caller cannot substitute a different failure after activation. A crash immediately after activation is recoverable: the next invocation reuses the byte-identical completed receipt and derives the same retry attempt without reinstalling. An existing normal scrape request remains untouched while the release intent waits. A Company revision change after activation produces a visible stale hold and no retry request.
+
+Five controller checks cover the successful handoff, crash-after-activation recovery, idempotent replay, occupied scan boundary, post-activation Company drift, and immutable failed-request lineage. With this controller included, the combined focused selection passes 178 checks.
+
 ## Explicit remaining gates
 
 - The candidate has not been independently reviewed, deployed or exercised against the protected checkout.
-- A maintained release controller must construct the full manifest and dependency digest from reviewed validation artifacts, invoke activation, then create the durable repaired-company retry intent from the returned receipt.
-- F2 still needs downstream stale-result precedence and end-to-end controller integration.
+- The deployed release entry point must construct the full manifest and dependency digest from reviewed validation artifacts and invoke this maintained controller; no production command is wired yet.
+- F2 still needs downstream stale-result precedence and independent end-to-end review.
 - F3 still needs independent QA, a disposable production-snapshot race rehearsal, guarded deployment, and live old-or-new version receipt evidence.
 - Automatic release controls remain disabled. The induced integration-failure-to-confirmed-Sheets demonstration remains open.

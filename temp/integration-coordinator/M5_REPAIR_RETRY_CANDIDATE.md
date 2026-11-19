@@ -18,6 +18,6 @@ The focused scraper, request, event, storage, receipt, and outcome suite passed 
 ## Explicit remaining gates
 
 - This candidate does not install or activate a release and does not enable production automation.
-- F2 still needs integration with the maintained release controller plus independent QA and guarded operational evidence.
-- F3 remains open: shared scraper/release admission, lock ordering, atomic complete-version activation, concurrent start/activation/rollback tests, and rollback receipts are not implemented by this candidate.
+- The maintained release controller now produces the retry from the exact completed release receipt and recovers a crash after activation without reinstalling. F2 still needs downstream stale-result precedence, independent QA and guarded operational evidence.
+- F3 now has a separate source candidate for shared admission, complete-version activation, interruption blocking and rollback receipts. Independent QA, disposable production-snapshot races and guarded deployment remain open.
 - The full induced-failure-to-release-to-fresh-scrape-to-confirmed-Sheets demonstration remains required.

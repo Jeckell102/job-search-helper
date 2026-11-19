@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 import shutil
 import stat
@@ -103,7 +104,7 @@ def _file_binding(value, *, before):
 
 
 def canonical_manifest(value):
-    required = {"schema", "release_id", "company_id", "source_revision", "files",
+    required = {"schema", "release_id", "failed_request_id", "company_id", "source_revision", "files",
                 "before_source_manifest_sha256", "source_manifest_sha256",
                 "dependency_manifest_sha256", "before_config_sha256", "config_sha256",
                 "validation_receipt_sha256"}
@@ -126,6 +127,7 @@ def canonical_manifest(value):
         canonical_files[name] = {"before": before, "after": after}
     result = {
         "schema": MANIFEST_SCHEMA,
+        "failed_request_id": _bounded(value.get("failed_request_id"), "failed request ID"),
         "company_id": _bounded(value.get("company_id"), "Company ID"),
         "source_revision": _bounded(value.get("source_revision"), "source revision"),
         "files": canonical_files,
@@ -147,7 +149,8 @@ def manifest_release_id(value_without_id):
     value = dict(value_without_id)
     value.pop("release_id", None)
     canonical = {
-        "schema": value["schema"], "company_id": value["company_id"],
+        "schema": value["schema"], "failed_request_id": value["failed_request_id"],
+        "company_id": value["company_id"],
         "source_revision": value["source_revision"],
         "files": {name: value["files"][name] for name in sorted(value["files"])},
         "before_source_manifest_sha256": value["before_source_manifest_sha256"],
@@ -243,6 +246,10 @@ def activate_release(project_root, candidate_root, database, record_root, manife
             _verify_installed(project_root, manifest, use_after=True)
             receipt = {
                 "state": "COMPLETE", "release_id": manifest["release_id"],
+                "failed_request_id": manifest["failed_request_id"],
+                "company_id": manifest["company_id"],
+                "source_revision": manifest["source_revision"],
+                "activated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "manifest_sha256": digest(manifest), "release": release_binding(manifest),
                 "verification": evidence,
             }

@@ -73,17 +73,19 @@ ten-minute user update. Update it immediately after any material result.
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
   service was restarted and no scheduler has been started in this work.
-- Milestone 5: 35% — source candidates now provide crash-durable,
+- Milestone 5: 45% — source candidates now provide crash-durable,
   Company-version-bound release-to-retry intent, exact complete-release pins,
   normal company-only admission/recovery, stale-source refusal at admission
   and storage, and release/attempt identity through publication and outcomes.
   The same existing scraper lock now gates release activation; a durable
   journal blocks startup after a partial install, complete source/configuration/
   dependency versions and validation evidence are pinned, and exact guarded
-  rollback is implemented. One hundred sixty-two focused checks pass.
-  Independent QA, maintained controller wiring, disposable race rehearsal,
-  guarded deployment, downstream stale-result precedence, and the live
-  release-to-saved-jobs proof remain.
+  rollback is implemented. A maintained controller now turns only the exact
+  completed release receipt into one retry and recovers a crash after
+  activation without reinstalling. One hundred seventy-eight focused checks
+  pass. Independent QA, disposable race rehearsal, guarded deployment,
+  downstream stale-result precedence, and the live release-to-saved-jobs
+  proof remain.
 - Milestone 6: 15% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. The administrator-authenticated live interruption
   proof and independent post-run verification remain, as do F8 supervised
@@ -373,6 +375,12 @@ partial Google Sheets write alone is not completion.
   fault checks and 162 combined focused checks pass. It remains isolated,
   unreviewed source; no production release or automation was enabled. See
   `M5_RELEASE_ADMISSION_CANDIDATE.md`.
+- The maintained M5 controller now binds the reviewed failed request into the
+  release manifest, activates the release, and creates the retry only from the
+  completed receipt. Crash-after-activation, occupied-queue and post-activation
+  source-drift checks pass without reinstalling or duplicating the attempt.
+  The combined focused selection passes 178 checks. This is still isolated
+  source and has not changed protected production.
 - A second fresh preflight confirmed the same active services, 200 health, and
   terminal-only receipt aggregate. A `sudo -n` restart attempt returned 1
   without changing service state, confirming that only an interactive
