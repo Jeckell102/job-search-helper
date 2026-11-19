@@ -82,8 +82,8 @@ class OutcomeIntakeTests(unittest.TestCase):
         self.assertEqual(self.store.held_repair_intake(), [])
 
     def test_repeated_attempts_attach_evidence_to_one_held_repair(self):
-        first = self.store.ingest_scrape_outcome(facts(attempt_id='ATT-1'))
-        second = self.store.ingest_scrape_outcome(facts(attempt_id='ATT-2'))
+        first = self.store.ingest_scrape_outcome(facts(request_id='REQ-1'))
+        second = self.store.ingest_scrape_outcome(facts(request_id='REQ-2'))
         self.assertTrue(first['recorded'])
         self.assertTrue(second['recorded'])
         self.assertEqual(first['repair_key'], second['repair_key'])
@@ -125,6 +125,60 @@ class OutcomeIntakeTests(unittest.TestCase):
             'action': 'ingest-scrape-outcome-record', 'record': record,
         })['recorded'])
         self.assertEqual(self.coordinator.store.all(), [])
+
+    def test_repaired_retry_supersedes_original_repair_even_when_original_arrived_first(self):
+        original = self.store.ingest_scrape_outcome(facts())
+        retry = self.store.ingest_scrape_outcome(facts(
+            request_id='company-retry:RTRY-1', failed_request_id='company-event:CEV-1',
+            attempt_id='RTRY-1', release_version='REL-1', inventory_status='complete',
+            failure={'category': 'none'}))
+        self.assertEqual(retry['status'], 'RECORDED_NO_REPAIR')
+        held = {item['repair_key']: item for item in self.store.held_repair_intake()}
+        self.assertEqual(held[original['repair_key']]['status'], 'SUPERSEDED_BY_REPAIRED_RETRY')
+        replay = self.store.ingest_scrape_outcome(facts())
+        self.assertFalse(replay['recorded'])
+        self.assertEqual(replay['status'], 'SUPERSEDED_BY_REPAIRED_RETRY')
+
+    def test_late_original_failure_cannot_reopen_after_repaired_retry(self):
+        retry = self.store.ingest_scrape_outcome(facts(
+            request_id='company-retry:RTRY-1', failed_request_id='company-event:CEV-1',
+            attempt_id='RTRY-1', release_version='REL-1', inventory_status='complete',
+            failure={'category': 'none'}))
+        late = self.store.ingest_scrape_outcome(facts())
+        self.assertTrue(late['recorded'])
+        self.assertEqual(late['status'], 'SUPERSEDED_BY_REPAIRED_RETRY')
+        self.assertIsNone(late['repair_key'])
+        self.assertEqual(self.store.held_repair_intake(), [])
+
+    def test_competing_successor_for_same_failed_request_is_rejected(self):
+        self.store.ingest_scrape_outcome(facts(
+            request_id='company-retry:RTRY-1', failed_request_id='company-event:CEV-1',
+            attempt_id='RTRY-1', release_version='REL-1', inventory_status='complete',
+            failure={'category': 'none'}))
+        with self.assertRaisesRegex(ValueError, 'different repaired retry'):
+            self.store.ingest_scrape_outcome(facts(
+                request_id='company-retry:RTRY-2', failed_request_id='company-event:CEV-1',
+                attempt_id='RTRY-2', release_version='REL-2', inventory_status='complete',
+                failure={'category': 'none'}))
+
+    def test_failed_repaired_attempt_gets_fresh_repair_identity(self):
+        original = self.store.ingest_scrape_outcome(facts())
+        retry = self.store.ingest_scrape_outcome(facts(
+            request_id='company-retry:RTRY-1', failed_request_id='company-event:CEV-1',
+            attempt_id='RTRY-1', release_version='REL-1'))
+        self.assertEqual(retry['status'], 'HELD_FOR_REPAIR_TRIAGE')
+        self.assertNotEqual(retry['repair_key'], original['repair_key'])
+        held = {item['repair_key']: item for item in self.store.held_repair_intake()}
+        self.assertEqual(held[original['repair_key']]['status'], 'SUPERSEDED_BY_REPAIRED_RETRY')
+        self.assertEqual(held[retry['repair_key']]['status'], 'HELD_FOR_REPAIR_TRIAGE')
+
+    def test_partial_retry_lineage_is_rejected(self):
+        item = outcome(identity={'attempt_id': 'RTRY-1', 'release_version': 'REL-1'})
+        with self.assertRaisesRegex(ValueError, 'must bind attempt'):
+            canonical_scrape_outcome(item)
+        self.assertEqual(canonical_scrape_outcome(
+            outcome(identity={'attempt_id': 'legacy-attempt'}))['identity']['attempt_id'],
+            'legacy-attempt')
 
 
 class HeldRepairPromotionTests(coordinator_fixture.CoordinatorTests):

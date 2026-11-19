@@ -27,6 +27,6 @@ Five controller checks cover the successful handoff, crash-after-activation reco
 
 - The candidate has not been independently reviewed, deployed or exercised against the protected checkout.
 - The deployed release entry point must construct the full manifest and dependency digest from reviewed validation artifacts and invoke this maintained controller; no production command is wired yet.
-- F2 still needs downstream stale-result precedence and independent end-to-end review.
+- The coordinator now has source-level downstream stale-result precedence; independent end-to-end review and protected-store reconciliation remain.
 - F3 still needs independent QA, a disposable production-snapshot race rehearsal, guarded deployment, and live old-or-new version receipt evidence.
 - Automatic release controls remain disabled. The induced integration-failure-to-confirmed-Sheets demonstration remains open.

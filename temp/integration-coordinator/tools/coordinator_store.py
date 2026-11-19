@@ -45,7 +45,8 @@ OUTCOME_ACTIONS = {
 }
 OUTCOME_IDENTITY_REQUIRED = frozenset({'request_id', 'company_id', 'source_revision'})
 OUTCOME_IDENTITY_OPTIONAL = frozenset({
-    'company_event_id', 'cycle_id', 'attempt_id', 'provider', 'adapter_version', 'release_version',
+    'company_event_id', 'cycle_id', 'attempt_id', 'failed_request_id',
+    'provider', 'adapter_version', 'release_version',
 })
 
 
@@ -87,6 +88,12 @@ def canonical_scrape_outcome(value):
         if not isinstance(item, str) or not item.strip() or len(item.strip()) > 256:
             raise ValueError('Scrape outcome identity must be bounded text.')
         bounded[key] = item.strip()
+    retry_fields = ('attempt_id', 'failed_request_id', 'release_version')
+    present = [key for key in retry_fields if key in bounded]
+    if any(key in bounded for key in ('failed_request_id', 'release_version')) and set(present) != set(retry_fields):
+        raise ValueError('Scrape outcome retry identity must bind attempt, failed request, and release together.')
+    if all(key in bounded for key in retry_fields) and bounded['request_id'] == bounded['failed_request_id']:
+        raise ValueError('Scrape outcome retry must use a fresh request identity.')
     outcome, action, fingerprint = value['outcome'], value['action'], value['failure_fingerprint']
     if (not isinstance(outcome, str) or OUTCOME_ACTIONS.get(outcome) != action
             or not isinstance(fingerprint, str) or not re.fullmatch(r'[0-9a-f]{64}', fingerprint)):
@@ -152,6 +159,14 @@ class Store(CampaignStore, InferenceStore):
                     PRIMARY KEY(repair_key, outcome_id),
                     FOREIGN KEY(repair_key) REFERENCES repair_intake(repair_key),
                     FOREIGN KEY(outcome_id) REFERENCES scrape_outcome_intake(outcome_id));
+                CREATE TABLE IF NOT EXISTS repair_retry_lineage(
+                    failed_request_id TEXT PRIMARY KEY,
+                    successor_request_id TEXT NOT NULL,
+                    company_id TEXT NOT NULL,
+                    source_revision TEXT NOT NULL,
+                    attempt_id TEXT NOT NULL,
+                    release_version TEXT NOT NULL,
+                    outcome_id TEXT NOT NULL);
             ''')
             columns = {row[1] for row in db.execute('PRAGMA table_info(repair_intake)')}
             if 'task_id' not in columns:
@@ -178,22 +193,32 @@ class Store(CampaignStore, InferenceStore):
         """Persist a previously classified immutable outcome without reclassifying it."""
         canonical = canonical_scrape_outcome(record)
         identity = canonical['identity']
-        repair_key = None
-        status = 'RECORDED_NO_REPAIR'
-        if canonical['outcome'] == 'QUALIFIED_INTEGRATION_REPAIR':
-            provider, adapter = identity.get('provider'), identity.get('adapter_version')
-            if provider and adapter:
-                repair_key = hashlib.sha256(json.dumps({
-                    'company_id': identity['company_id'], 'source_revision': identity['source_revision'],
-                    'provider': provider, 'adapter_version': adapter,
-                    'failure_fingerprint': canonical['failure_fingerprint'],
-                }, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-                status = 'HELD_FOR_REPAIR_TRIAGE'
-            else:
-                status = 'HELD_MISSING_REPAIR_CAPABILITY'
         encoded = json.dumps(canonical, sort_keys=True, separators=(',', ':'))
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            retry = all(identity.get(key) for key in ('attempt_id', 'failed_request_id', 'release_version'))
+            lineage = db.execute(
+                'SELECT successor_request_id,company_id,source_revision FROM repair_retry_lineage '
+                'WHERE failed_request_id=?', (identity['request_id'],)).fetchone()
+            superseded = bool(lineage and lineage[1:] == (
+                identity['company_id'], identity['source_revision']))
+            repair_key = None
+            status = 'SUPERSEDED_BY_REPAIRED_RETRY' if superseded else 'RECORDED_NO_REPAIR'
+            if not superseded and canonical['outcome'] == 'QUALIFIED_INTEGRATION_REPAIR':
+                provider, adapter = identity.get('provider'), identity.get('adapter_version')
+                if provider and adapter:
+                    repair_identity = {
+                        'company_id': identity['company_id'], 'source_revision': identity['source_revision'],
+                        'provider': provider, 'adapter_version': adapter,
+                        'failure_fingerprint': canonical['failure_fingerprint'],
+                    }
+                    if retry:
+                        repair_identity['attempt_id'] = identity['attempt_id']
+                    repair_key = hashlib.sha256(json.dumps(
+                        repair_identity, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+                    status = 'HELD_FOR_REPAIR_TRIAGE'
+                else:
+                    status = 'HELD_MISSING_REPAIR_CAPABILITY'
             prior = db.execute('SELECT payload FROM scrape_outcome_intake WHERE outcome_id=?',
                                (canonical['outcome_id'],)).fetchone()
             if prior:
@@ -204,6 +229,31 @@ class Store(CampaignStore, InferenceStore):
             db.execute('INSERT INTO scrape_outcome_intake VALUES (?,?,?,?,?,?)',
                        (canonical['outcome_id'], identity['company_id'], identity['source_revision'],
                         canonical['outcome'], encoded, time.time()))
+            if retry:
+                existing = db.execute(
+                    'SELECT successor_request_id,company_id,source_revision,attempt_id,release_version '
+                    'FROM repair_retry_lineage WHERE failed_request_id=?',
+                    (identity['failed_request_id'],)).fetchone()
+                expected = (identity['request_id'], identity['company_id'], identity['source_revision'],
+                            identity['attempt_id'], identity['release_version'])
+                if existing and existing != expected:
+                    raise ValueError('A different repaired retry already owns this failed request lineage.')
+                db.execute('INSERT OR IGNORE INTO repair_retry_lineage VALUES (?,?,?,?,?,?,?)',
+                           (identity['failed_request_id'], *expected, canonical['outcome_id']))
+                # An original failure may have reached intake before its
+                # repaired retry.  Retain its evidence but prevent it from
+                # reopening work after the successor is authoritative.
+                old_ids = []
+                for outcome_id, payload in db.execute(
+                        'SELECT outcome_id,payload FROM scrape_outcome_intake '
+                        'WHERE company_id=? AND source_revision=?',
+                        (identity['company_id'], identity['source_revision'])).fetchall():
+                    prior_identity = json.loads(payload).get('identity', {})
+                    if prior_identity.get('request_id') == identity['failed_request_id']:
+                        old_ids.append(outcome_id)
+                for outcome_id in old_ids:
+                    db.execute('UPDATE repair_intake SET status=? WHERE outcome_id=?',
+                               ('SUPERSEDED_BY_REPAIRED_RETRY', outcome_id))
             if repair_key:
                 db.execute('INSERT OR IGNORE INTO repair_intake('
                            'repair_key,outcome_id,company_id,source_revision,status,payload,received) '

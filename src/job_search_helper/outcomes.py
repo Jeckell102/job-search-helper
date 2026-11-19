@@ -78,7 +78,8 @@ def classify_outcome(facts):
 def _identity(facts):
     required = ("request_id", "company_id", "source_revision")
     identity = {key: _required_text(facts, key) for key in required}
-    optional = ("company_event_id", "cycle_id", "attempt_id", "provider", "adapter_version", "release_version")
+    optional = ("company_event_id", "cycle_id", "attempt_id", "failed_request_id",
+                "provider", "adapter_version", "release_version")
     identity.update({key: _text(facts.get(key), key) for key in optional if _text(facts.get(key), key)})
     return identity
 

@@ -65,6 +65,7 @@ def _facts(cycle, company, item, *, storage_confirmed):
     retry = cycle.get('repair_retry')
     if isinstance(retry, dict):
         facts['attempt_id'] = _optional_text(retry.get('attempt_id'))
+        facts['failed_request_id'] = _optional_text(retry.get('failed_request_id'))
         release = retry.get('release') or {}
         facts['release_version'] = _optional_text(release.get('release_id'))
     return facts
