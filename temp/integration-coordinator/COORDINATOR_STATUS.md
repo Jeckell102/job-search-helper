@@ -124,8 +124,8 @@ partial Google Sheets write alone is not completion.
   or live scrape was started.
 - Fresh live-state inspection found no running scraper or coordinator process,
   but the authoritative local state contains multiple historical cycles still
-  marked In Progress (including the latest broad cycle with 764 queued
-  Companies). The retained scraper/writer locks name absent PID 485601. No
+  marked In Progress (including the latest broad cycle with 800 Companies).
+  The retained scraper/writer locks name absent PID 485601. No
   lock, cycle, request, Company, or Sheets data was changed. This prevents a
   safe live company-only demonstration until the documented recovery path is
   reviewed and exercised without discarding existing work.
@@ -160,6 +160,13 @@ partial Google Sheets write alone is not completion.
   it requires the exact cycle ID, a reason, and `--apply`, uses the normal
   writer/synchronization boundary, and cannot start/resume a scrape or delete
   locks. Forty focused recovery/scheduling checks passed.
+- A fresh publication preflight found 60 pending system-field updates in the
+  local outbox. Live read-only comparison confirmed that 59 already match the
+  workbook and identified one remaining `Last Checked` date for Saronic
+  Technologies / Product Manager. The bounded normal publisher reached the
+  Google authorization boundary and made no change because interactive sign-in
+  is still required. No scrape, recovery, lock, Company record, or user review
+  choice was changed.
 
 ## Safety boundaries
 
@@ -174,8 +181,12 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Save the independently accepted recovery-command checkpoint to the scoped
-   GitHub branch without disturbing unrelated feature-worktree changes.
-2. Freshly recheck processes, locks, local/workbook cycle identity and sync
-   health; then use the guarded recovery command only if every preflight guard
+1. After interactive Google authorization is completed, run the bounded normal
+   publisher only, then independently recheck the outbox receipt and the one
+   remaining workbook date. Do not start a scrape.
+2. Continue offline-safe repair workflow and release-gate work in the isolated
+   feature copy.
+3. Only after publication is clean, freshly recheck processes, locks,
+   local/workbook cycle identity, deployed source identity, and sync health;
+   then consider the guarded recovery command only if every preflight guard
    remains true.
