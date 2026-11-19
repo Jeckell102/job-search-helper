@@ -95,3 +95,10 @@ lacks its separately registered terminal remote plan.  The complete
 `tests/test_exact_local_plan.py` gate now passes: **11 passed in 0.78s**.
 This is temporary-source evidence only.  The remote-plan registration,
 Sheets readback/confirmation, and runner entry remain unmerged and disabled.
+
+The planner compatibility gate now also passes: **21 passed in 0.82s** for
+`tests/test_exact_cycle_planner.py`.  The remaining Inbox recovery seam was an
+exact receipt lookup, added to the temporary copy with an ambiguity refusal.
+The compact-profile planner recovery and frozen-plan receipt tests therefore
+run against the retained protected behavior.  This proves local planning only;
+no Sheets publisher or runner path is merged or enabled.
