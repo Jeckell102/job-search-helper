@@ -1327,3 +1327,11 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   proposed. The next safe gate is a separately approved, selected-row,
   read-only Google preview with no commit, receipt, cleanup, or local state
   change; the approval packet has been corrected accordingly.
+- The terminal-proof security repair is now installed in the protected source
+  through the existing lock.  It changed exactly two files and retained a
+  rollback receipt at
+  `/tmp/job-search-terminal-repair-20261119T191420Z-aire17hb/manifest.json`;
+  its status is `INSTALLED_HASH_VERIFIED`.  Protected offline verification
+  passed 168 tests.  A bytecode-cache compile attempt could not write to the
+  protected read-only mount, but all tested imports succeeded.  No Google,
+  scraper, job-data, queue, service, lock-deletion, or Jetson action occurred.

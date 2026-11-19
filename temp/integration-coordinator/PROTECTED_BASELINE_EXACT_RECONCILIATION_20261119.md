@@ -208,6 +208,15 @@ candidate has no callback/proof parameter; completed frozen plans qualify only
 with their exactly matching durable `SYNC_CONFIRMED` receipt.  All residual
 `*.rej` artifacts are removed.  Independent read-only QA passed 168 tests
 across terminal/pause/executor, exact Sheets, receipts, planning, local
-journals, and recovery.  The remaining protected source still contains the
-old one-file implementation and requires a rollback-backed targeted repair;
-no Google or live recovery action is authorized by this evidence.
+journals, and recovery.
+
+The targeted protected repair is now installed through the existing
+integration lock.  It changed only `exact_recovery_terminal.py` and
+`test_exact_recovery_terminal.py`, with durable rollback receipt
+`/tmp/job-search-terminal-repair-20261119T191420Z-aire17hb/manifest.json`.
+The receipt is `INSTALLED_HASH_VERIFIED`, and a fresh protected offline matrix
+passed 168 terminal/pause/executor/receipt/exact-Sheets/planner/local/recovery
+tests.  Module imports succeeded; a separate bytecode-cache compile attempt
+could not create cache files because the protected mount is read-only.  There
+was no Google access or live job, database, queue, service, lock, or Jetson
+change.  The live legacy recovery command remains disabled.
