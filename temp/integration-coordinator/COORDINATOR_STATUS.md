@@ -37,7 +37,7 @@ ten-minute user update. Update it immediately after any material result.
 - Coordinator development checkout: `/home/chris/job-search-helper_old/dev/wrapper-coder/repo`
   is on `development/wrapper-coder` at `0c45d61`. Its code is clean, but four
   pre-existing documentation changes are preserved; it has no GitHub remote.
-- Milestone 1: 85% — the normal request consumer now validates and admits one
+- Milestone 1: 88% — the normal request consumer now validates and admits one
   immutable Company-only request, runs only that Company, and refuses to
   supersede unfinished work or accept an altered retry. Independent source
   review accepted the offline proof; guarded operational proof is still
@@ -128,6 +128,11 @@ partial Google Sheets write alone is not completion.
   lock, cycle, request, Company, or Sheets data was changed. This prevents a
   safe live company-only demonstration until the documented recovery path is
   reviewed and exercised without discarding existing work.
+- Independent review accepted the new read-only Company queue-status surface:
+  it exposes the exact single Company, queue age, local/remote blocking cycles,
+  timing targets, and recovery guidance without opening Sheets in local-only
+  mode, altering the request, touching locks, or starting a scrape. The active
+  source passed 25 focused request/runner checks; no live state changed.
 
 ## Safety boundaries
 
@@ -145,9 +150,8 @@ partial Google Sheets write alone is not completion.
 1. Reconcile the accepted active-source request contract and its evidence into
    the scoped GitHub backup without disturbing unrelated feature-worktree
    changes.
-2. Review the full changed-Company path from Sheets reconciliation through
-   the bridge and normal runner, and add remaining normal-path outcome and
-   publication-receipt wiring in isolated tests.
+2. Add remaining normal-path outcome and publication-receipt wiring in
+   isolated tests, then independently review it.
 3. Review the documented recovery path for the retained interrupted cycles;
    only then perform a guarded live Company-to-scrape test if it can preserve
    all existing work and Google state.
