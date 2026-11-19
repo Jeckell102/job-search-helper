@@ -1587,3 +1587,7 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   signed claims; altered/expired authorization rejects before a journal. It
   remains local-only with zero receipt/remote plan evidence. Evidence:
   `SELECTED_RECOVERY_AUTH_JOURNAL_QA_ACCEPTANCE_20261119.md`.
+- Independent QA accepts the isolated fake-remote receipt/readback candidate:
+  exact pre-existing remote results confirm zero-write, ambiguity holds without
+  replay, and terminal receipt states cannot reopen. Protected integration and
+  a guarded real pilot remain separate gates. Evidence:
