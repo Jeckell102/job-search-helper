@@ -8,6 +8,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'src'))
 from coordinator_store import Store, canonical_scrape_outcome
+from coordinator import Coordinator
 import test_coordinator as coordinator_fixture
 
 
@@ -46,6 +47,7 @@ class OutcomeIntakeTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.store = Store(self.temp.name)
+        self.coordinator = Coordinator(base=self.temp.name)
 
     def test_qualified_outcome_creates_one_held_repair_without_a_task(self):
         item = facts()
@@ -96,6 +98,21 @@ class OutcomeIntakeTests(unittest.TestCase):
             db.execute('DELETE FROM repair_intake_evidence WHERE repair_key=?', (result['repair_key'],))
         held = self.store.held_repair_intake()
         self.assertEqual(held[0]['evidence_outcome_ids'], [])
+
+    def test_command_intake_holds_a_qualified_repair_without_starting_worker(self):
+        result = self.coordinator.command({'action': 'ingest-scrape-outcome', 'facts': facts()})
+
+        self.assertTrue(result['ok'])
+        self.assertEqual(result['status'], 'HELD_FOR_REPAIR_TRIAGE')
+        self.assertTrue(result['repair_key'])
+        self.assertEqual(self.coordinator.store.all(), [])
+        self.assertEqual(len(self.coordinator.store.held_repair_intake()), 1)
+        self.assertIn('no worker was started', result['text'])
+
+    def test_command_intake_rejects_extra_untrusted_wrapper_fields(self):
+        with self.assertRaisesRegex(ValueError, 'exactly action and facts'):
+            self.coordinator.command({'action': 'ingest-scrape-outcome', 'facts': facts(), 'start': True})
+        self.assertEqual(self.coordinator.store.all(), [])
 
 
 class HeldRepairPromotionTests(coordinator_fixture.CoordinatorTests):

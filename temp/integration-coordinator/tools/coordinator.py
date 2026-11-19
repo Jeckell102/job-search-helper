@@ -233,6 +233,17 @@ class Coordinator:
         action = data.get('action')
         if action == 'health':
             return self.health()
+        if action == 'ingest-scrape-outcome':
+            # This is an intake-only boundary for the normal scraper.  It
+            # deliberately cannot create, resume, or claim a worker task; a
+            # later reviewed M4 promotion supplies the source-edit scope.
+            if set(data) != {'action', 'facts'} or not isinstance(data.get('facts'), dict):
+                raise ValueError('Scrape-outcome intake requires exactly action and facts.')
+            result = self.store.ingest_scrape_outcome(data['facts'])
+            text = ('Qualified repair held for triage; no worker was started.'
+                    if result.get('repair_key') else
+                    'Scrape outcome recorded; no repair worker was started.')
+            return {'ok': True, **result, 'text': text}
         if action in ('queue', 'queue-pause', 'queue-resume', 'pilot-stop',
                       'autopilot-start', 'autopilot-stop', 'autopilot-status',
                       'campaign-start', 'campaign-stop', 'campaign-status'):

@@ -49,7 +49,7 @@ ten-minute user update. Update it immediately after any material result.
   existing Sheets sync now baselines current Companies once without scheduling
   them, then reconciles later changes. The normal runner turns a confirmed
   change into an exact Company-only request. Guarded live proof remains.
-- Milestone 3: 55% — bounded outcome classification, local immutable records,
+- Milestone 3: 62% — bounded outcome classification, local immutable records,
   and independently reviewed intake into the existing coordinator are
   implemented. The active Job Search Helper source now persists classifier
   results idempotently; qualified defects are held once for triage, never
@@ -133,6 +133,11 @@ partial Google Sheets write alone is not completion.
   timing targets, and recovery guidance without opening Sheets in local-only
   mode, altering the request, touching locks, or starting a scrape. The active
   source passed 25 focused request/runner checks; no live state changed.
+- The normal-scraper-to-coordinator intake command is now independently
+  accepted in both active and isolated sources. It accepts only bounded facts,
+  reuses the shared classifier, creates at most a held repair record, and
+  cannot create, resume, claim, or start a coordinator task. Thirty focused
+  active and isolated coordinator checks passed; no service was activated.
 
 ## Safety boundaries
 
@@ -150,8 +155,9 @@ partial Google Sheets write alone is not completion.
 1. Reconcile the accepted active-source request contract and its evidence into
    the scoped GitHub backup without disturbing unrelated feature-worktree
    changes.
-2. Add remaining normal-path outcome and publication-receipt wiring in
-   isolated tests, then independently review it.
+2. Add the normal runtime producer that turns a completed scoped scrape into
+   bounded outcome facts and delivers them to the held-only coordinator intake,
+   with a durable retry receipt and no direct worker activation.
 3. Review the documented recovery path for the retained interrupted cycles;
    only then perform a guarded live Company-to-scrape test if it can preserve
    all existing work and Google state.
