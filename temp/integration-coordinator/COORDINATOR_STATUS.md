@@ -166,6 +166,7 @@ partial Google Sheets write alone is not completion.
 
 1. Save the accepted normal-run outcome-producer checkpoint to the scoped
    GitHub branch without disturbing unrelated feature-worktree changes.
-2. Review the documented recovery path for the retained interrupted cycles;
-   only then perform a guarded live Company-to-scrape test if it can preserve
-   all existing work and Google state.
+2. Design and independently review a reversible recovery procedure for the
+   retained 764-Company interrupted cycle. The current documented `--resume`
+   route would restart broad work and is not an acceptable shortcut to the
+   one-Company pilot. See `RECOVERY_ASSESSMENT.md`.
