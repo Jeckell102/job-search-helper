@@ -5,7 +5,8 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from job_search_helper.exact_cycle_sync import (publish_exact_cycle as _publish_exact_cycle, _chunk_digest,
-                                                 _digest, _fallback_receipt, _readback)
+                                                 _digest, _fallback_receipt, _local_operation_count,
+                                                 _readback)
 from job_search_helper.publication_receipts import record_fingerprints
 from job_search_helper.engine import State
 from job_search_helper.inbox import InventoryInbox
@@ -225,6 +226,19 @@ class ExactCyclePublisherTests(unittest.TestCase):
         }])
         self.assertEqual(remote.commits, [])
         self.assertEqual(self.receipt_count(), 0)
+
+    def test_projected_plan_local_cursor_count_uses_full_local_stream(self):
+        self.assertEqual(_local_operation_count({
+            'publication_profile': COMPACT_PROFILE,
+            'operations': [{'tab': 'Companies'}],
+            'local_operations': [
+                {'tab': 'Companies'}, {'tab': 'Job Evidence'}, {'tab': 'Job History'},
+            ],
+        }), 3)
+        self.assertEqual(_local_operation_count({
+            'publication_profile': 'full',
+            'operations': [{'tab': 'Companies'}, {'tab': 'Job History'}],
+        }), 2)
 
     def test_missing_trusted_local_guard_fails_closed_before_receipt_or_remote_access(self):
         self.add_plan('CYC-NO-GUARD', 'COMP-EXACT', 'job-exact', 'after-exact')

@@ -286,6 +286,24 @@ def _validate_sealed_plan(plan, payload, remote):
         raise ValueError('sealed_plan_digest_invalid')
 
 
+def _local_operation_count(plan):
+    """Select the only operation count that can authorize local durability.
+
+    Full-profile operations are both the local stream and remote projection.
+    A future projected plan must carry its complete immutable local stream;
+    its shorter remote operations list can never authorize the local cursor.
+    Current projected plans still fail earlier because no durable local commit
+    journal contract exists.
+    """
+    if plan.get('publication_profile') == 'full':
+        operations = plan.get('operations')
+    else:
+        operations = plan.get('local_operations')
+    if not isinstance(operations, list) or not operations:
+        raise ValueError('local_operation_stream_missing')
+    return len(operations)
+
+
 def _checkpoint_matches_final(checkpoint, plan):
     final = plan.get('final') if isinstance(plan, Mapping) else None
     projection = plan.get('final_projection') if isinstance(plan, Mapping) else None
@@ -360,7 +378,7 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
         # not a Sheets cursor and must never be reinterpreted as evidence that
         # any remote prefix was published.  Remote progress belongs solely to
         # the exact_sync_chunks journal plus the immutable receipt state.
-        if cursor != len(operations):
+        if cursor != _local_operation_count(plan):
             report['held'].append({'company_id': company_id,
                                    'reason': 'local_plan_not_durably_applied'})
             continue
