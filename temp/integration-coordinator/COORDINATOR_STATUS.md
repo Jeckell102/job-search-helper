@@ -55,7 +55,7 @@ ten-minute user update. Update it immediately after any material result.
   producer records bounded scrape facts without dispatching work; malformed
   checkpoint data is safely skipped. Qualified defects are held once for
   triage, never dispatched. The remaining gap is guarded live verification.
-- Milestone 4: 55% — a held repair can be promoted only into a paused,
+- Milestone 4: 58% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
@@ -186,6 +186,12 @@ partial Google Sheets write alone is not completion.
   Jetson request, and requires matching ownership to request cancellation.
   Nine focused local checks passed. It is not yet wired into host/Jetson routes,
   so this is an implementation component, not F4 closure.
+- Independent QA accepted the host-side F4 binding: each model call derives
+  its exact request ID, request fingerprint, and owner generation only after
+  the durable reservation is saved. Legacy calls remain unchanged until the
+  Jetson endpoint is upgraded, and an injected transport failure proved the
+  binding is cleared while the durable request enters `UNCERTAIN`. Twenty-three
+  focused host/inference checks passed. Jetson endpoint wiring is still open.
 - A fresh publication preflight found 60 pending system-field updates in the
   local outbox. Live read-only comparison confirmed that 59 already match the
   workbook and identified one remaining `Last Checked` date for Saronic

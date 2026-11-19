@@ -2,6 +2,7 @@ from coordinator_campaign import next_action, valid_live_evidence, campaign_text
 from coordinator_inference import digest as inference_digest
 """MuleLab-owned sequential worker scheduler; Jetson performs inference only."""
 import hashlib
+import contextvars
 import fcntl
 import json
 from pathlib import Path
@@ -28,6 +29,7 @@ MAX_SECONDS = 3600
 CONTROL_RETRIES = 3
 CONTROL_RETRY_SECONDS = 5
 MIN_OUTPUT_TOKENS = 256
+INFERENCE_CONTROL = contextvars.ContextVar('inference_control', default=None)
 
 
 class BudgetReached(Exception):
@@ -81,10 +83,25 @@ def compact(result):
     return output
 
 
+def inference_request_payload(messages, schemas, limit, control=None):
+    """Build the Jetson request without placing task content in its receipts."""
+    payload = {'messages': messages, 'tools': schemas, 'max_tokens': limit}
+    if control is None:
+        return payload
+    required = {'request_id', 'request_fingerprint', 'owner_generation'}
+    if not isinstance(control, dict) or set(control) != required:
+        raise ValueError('Invalid inference control binding.')
+    if (not re.fullmatch(r'[0-9a-f]{32}', control['request_id'])
+            or any(not re.fullmatch(r'[0-9a-f]{64}', control[key])
+                   for key in ('request_fingerprint', 'owner_generation'))):
+        raise ValueError('Invalid inference control binding.')
+    return {**payload, **control}
+
+
 def infer(messages, schemas, limit):
     token = (code.BASE / 'bridge-token').read_text().strip()
     request = urllib.request.Request('http://127.0.0.1:18790/api/wrapper-turn',
-        data=json.dumps({'messages': messages, 'tools': schemas, 'max_tokens': limit}).encode(),
+        data=json.dumps(inference_request_payload(messages, schemas, limit, INFERENCE_CONTROL.get())).encode(),
         headers={'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token})
     try:
         with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request, timeout=300) as response:
@@ -965,11 +982,25 @@ class Coordinator:
                 max_seconds=MAX_SECONDS, min_output_tokens=MIN_OUTPUT_TOKENS)
             if reservation is None:
                 return
+            control = {
+                'request_id': reservation['request_id'],
+                'request_fingerprint': inference_digest({
+                    'messages': history, 'tools': offered,
+                    'max_tokens': reservation['reserved_output_tokens']}),
+                'owner_generation': inference_digest({
+                    'task': task_id, 'session_id': session_id,
+                    'control_generation': reservation['control_generation'],
+                    'identity_digest': reservation['identity_digest'],
+                    'phase': reservation['phase']}),
+            }
+            control_token = INFERENCE_CONTROL.set(control)
             try:
                 answer = self.model(history, offered, reservation['reserved_output_tokens'])
             except Exception as exc:
                 self.store.finalize_inference(reservation['request_id'], terminal_error=type(exc).__name__)
                 raise
+            finally:
+                INFERENCE_CONTROL.reset(control_token)
             finalized = self.store.finalize_inference(reservation['request_id'], answer)
             if not finalized['tools_allowed']:
                 return
