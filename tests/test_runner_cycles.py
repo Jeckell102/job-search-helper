@@ -209,6 +209,39 @@ class FreshStartLifecycleTests(unittest.TestCase):
         self.assertIn('New jobs downloaded (new Job History rows): 0', self.output.getvalue())
         self.assertTrue(self.output.getvalue().endswith('Companies skipped: \n'))
 
+    def test_actual_runner_processes_company_events_at_the_existing_writer_boundary(self):
+        from unittest.mock import patch
+        from job_search_helper import runner
+        from job_search_helper import company_events
+        from job_search_helper.engine import Engine
+
+        calls = []
+
+        class Bridge:
+            def __init__(self, repo, directory):
+                self.repo = repo
+                self.directory = directory
+
+            def process_pending(self, **kwargs):
+                calls.append((self.repo, self.directory, kwargs))
+                return []
+
+        def make_engine(repo, state, **kwargs):
+            return Engine(repo, state, fetcher=self.engine.fetcher,
+                          error_log_path=self.root / 'errors.jsonl', **kwargs)
+
+        with patch.object(runner, '_load_environment'), \
+             patch.object(runner, 'load_title_blacklist'), patch.object(runner, 'load_title_review_list'), \
+             patch.object(runner, 'state_path', return_value=self.database), \
+             patch.object(runner, 'get_repository', return_value=self.repo), \
+             patch.object(runner, 'Engine', side_effect=make_engine), \
+             patch.object(runner, '_refresh_review_queue'), \
+             patch.object(self.repo, 'is_local', True, create=True), \
+             patch.object(company_events, 'CompanyEventBridge', Bridge):
+            self.assertEqual(runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=True), 0)
+
+        self.assertEqual(calls, [(self.repo, self.root, {'writer_lock_held': True})])
+
     def test_resume_never_falls_back_to_older_unfinished_scan(self):
         from job_search_helper.runner import resolve_cycle
         for cid, date, status in [('OLD', '2026-10-13T00:00:00+00:00', 'In Progress'),

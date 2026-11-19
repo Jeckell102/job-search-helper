@@ -503,6 +503,34 @@ class SQLiteRepository:
             (consumer.strip(), consumer.strip(), limit)).fetchall()
         return [json.loads(row[0]) for row in rows]
 
+    def pending_latest_company_events(self, consumer, *, limit=100):
+        """Return only the newest pending revision for each Company.
+
+        This is deliberately separate from ``pending_company_events``. Other
+        consumers may need history, while a scan request must never be created
+        from an old page when a newer durable revision already exists.
+        """
+        if not isinstance(consumer, str) or not consumer.strip():
+            raise RepositoryError('Company event consumer is required.')
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise RepositoryError('Company event limit must be between 1 and 1000.')
+        if not self._company_event_tables_present():
+            return []
+        rows = self.db.execute(
+            'WITH pending AS ('
+            ' SELECT o.payload,o.company_id,o.revision,o.created_at FROM company_event_outbox o '
+            ' LEFT JOIN company_event_deliveries d ON d.event_id=o.event_id AND d.consumer=? '
+            ' LEFT JOIN company_event_watermarks w ON w.consumer=? AND w.company_id=o.company_id '
+            ' WHERE d.event_id IS NULL AND (w.revision IS NULL OR o.revision>w.revision)'
+            '), latest AS ('
+            ' SELECT p.payload,p.company_id,p.revision,p.created_at FROM pending p '
+            ' WHERE NOT EXISTS (SELECT 1 FROM pending newer '
+            '                   WHERE newer.company_id=p.company_id AND newer.revision>p.revision)'
+            ') SELECT payload FROM latest ORDER BY created_at,company_id,revision LIMIT ?',
+            (consumer.strip(), consumer.strip(), limit),
+        ).fetchall()
+        return [json.loads(row[0]) for row in rows]
+
     def acknowledge_company_event(self, event_id, consumer, *, source_revision=None):
         """Durably acknowledge a consumer only when its immutable event matches."""
         if self.readonly:

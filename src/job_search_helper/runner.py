@@ -432,6 +432,21 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
             engine = Engine(repo, state, dry_run=False, batch_size=batch_size, inbox=inbox,
                             **({"fetcher": fetcher} if fetcher else {}))
             try:
+                if not sync_only and getattr(repo, 'is_local', False) is True:
+                    # The surrounding run_start writer lock is also used by
+                    # CompanyEventBridge when it runs on its own.  Processing
+                    # events here therefore shares the same safe boundary as
+                    # requested_scan() admission and cannot lose an update to
+                    # next-scan.json to a parallel scraper intake.
+                    from .company_events import CompanyEventBridge
+                    bridge_results = CompanyEventBridge(repo, database.parent).process_pending(
+                        writer_lock_held=True,
+                    )
+                    if bridge_results:
+                        print(
+                            f"Company changes: safely handled {len(bridge_results)} queued change(s).",
+                            flush=True,
+                        )
                 from .closed_jobs import stage_closed_pending
                 while True:
                     closed = stage_closed_pending(repo)
