@@ -38,7 +38,8 @@ ten-minute user update. Update it immediately after any material result.
   post-request checkpoints. Independent QA now accepts its source-level
   ordering: a durable `settlement_authorized` record precedes the only lane
   release, and a post-settlement evidence failure is recorded honestly. The
-  actual Jetson proof, records, and deployed QA remain separate open gates.
+  actual Jetson proof, records, and deployed QA remained separate open gates
+  until the verified 2026-11-19 live run described below.
 - Goal: complete all six roadmap milestones and the final independent
   acceptance demonstration, with safeguards and scoped GitHub backups.
 - Goal reference: `01a1f11f-e014-7493-8441-2f66502e23a9`; the persistent goal
@@ -467,6 +468,17 @@ partial Google Sheets write alone is not completion.
   without changing service state, confirming that only an interactive
   administrator-authenticated terminal can perform the deliberate Ollama
   interruption.
+- The guarded F4 proof was then run from that terminal and printed PASS. Fresh
+  independent verification found both services active, health 200, sanitized
+  terminal evidence (`UNCERTAIN` observed then `FAILED` settled), no active
+  lane, and aggregate receipts `CANCELLED=1`, `COMPLETED=1`, `FAILED=1`.
+  Jetson authoritative change records, rollback references, catalog, state,
+  roadmap, and a local sanitized-mirror commit `623a483` were updated. F4 is
+  verified with limits. Independent deployed QA accepted the F4 transport-
+  recovery sub-gate: the authoritative evidence is mode 0600 and sanitized,
+  receipts are terminal-only, deployed file hashes match their installation
+  record, and the authoritative records agree. Later MuleLab final-acceptance
+  gates remain open. See `F4_LIVE_PROOF_VERIFICATION.md`.
 
 ## Safety boundaries
 
@@ -481,19 +493,14 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Obtain an interactive administrator-authenticated Jetson terminal and run
-   only the installed `run_synthetic_http_recovery.py`. It will restart only
-   `ollama.service` twice. Record the resulting bounded evidence or failure,
-   independently verify the authoritative receipt and service state, and leave
-   any uncertain receipt lane-blocking. Do not rerun blindly after a failure.
-2. Keep the protected queue paused while the final three-company readiness
+1. Keep the protected queue paused while the final three-company readiness
    matrix is refreshed from current local evidence. Select distinct source
    structures plus the shared-adapter regression control; do not start work
    from historical candidate names alone.
-3. After interactive Google authorization is completed, run the bounded normal
+2. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
-4. Only after publication is clean, freshly recheck processes, locks,
+3. Only after publication is clean, freshly recheck processes, locks,
    local/workbook cycle identity, deployed source identity, and sync health;
    then perform the final demonstration one Company at a time, proving normal
    company-scoped dispatch, wrapper/adapter handling, confirmed Sheets
