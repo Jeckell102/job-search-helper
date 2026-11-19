@@ -286,6 +286,12 @@ partial Google Sheets write alone is not completion.
   entries in the Jetson CHANGELOG and change register. The G1/G2/G3 proof is
   pending only because `ollama.service` requires interactive administrator
   authorization to restart; no uncertain receipt was released or replayed.
+- Independent deployed QA rejected the first local G1/G2/G3 script as final
+  evidence: it manufactured an uncertain receipt directly in SQLite rather
+  than exercising the authenticated wrapper request and a bounded dropped
+  response. It remains only a settlement smoke check and must not be run for
+  F4 closure. A revised, source-reviewed synthetic fault-injection path is
+  required before any further Ollama restart.
 - Fresh MuleLab state verification found no scraper, coordinator, review, or
   Sheets process running. The retained scraper, writer, review-writeback, and
   first-pass controller lock owners are absent; their historical lock files
