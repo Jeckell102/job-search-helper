@@ -125,6 +125,26 @@ class InventoryInbox:
                     if name not in remote_columns:
                         self.connection.execute(
                             f'ALTER TABLE exact_remote_plans ADD COLUMN {name} {ddl}')
+                migration_columns = {row[1] for row in self.connection.execute(
+                    'PRAGMA table_info(exact_legacy_plan_migrations)')}
+                for name, ddl in (
+                        ('legacy_plan', 'TEXT'), ('successor_plan', 'TEXT'),
+                        ('successor_plan_digest', 'TEXT'),
+                        ('workbook_id_digest', 'TEXT'),
+                        ('current_local_snapshot_digest', 'TEXT'),
+                        ('selected_fields_readback_digest', 'TEXT'),
+                        ('protected_guard_digest', 'TEXT'),
+                        ('approved_conflicts', 'TEXT'),
+                        ('local_apply_id', 'TEXT'),
+                        ('local_records_digest', 'TEXT')):
+                    if name not in migration_columns:
+                        self.connection.execute(
+                            f'ALTER TABLE exact_legacy_plan_migrations ADD COLUMN {name} {ddl}')
+                self.connection.execute("""CREATE TABLE IF NOT EXISTS
+                    exact_legacy_plan_migration_archive (
+                      cycle TEXT NOT NULL, company TEXT NOT NULL,
+                      evidence TEXT NOT NULL, archived_at TEXT NOT NULL,
+                      PRIMARY KEY(cycle,company))""")
                 publication_receipts.initialize(self.connection)
         except BaseException:
             self.connection.close()
@@ -210,6 +230,13 @@ class InventoryInbox:
             local_exact = self.connection.execute(
                 'SELECT state,local_apply_id FROM exact_plan_local_state '
                 'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            migration_state = self.connection.execute(
+                'SELECT state FROM exact_legacy_plan_migrations '
+                'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            if (migration_state is not None
+                    and migration_state[0] != 'REMOTE_PLAN_FROZEN'):
+                raise ValueError(
+                    'Exact legacy migration cannot be cleaned up before successor freeze.')
             if local_exact is not None and exact is None:
                 raise ValueError(
                     'Exact v2 cleanup requires a registered, terminal remote plan.')
@@ -229,6 +256,24 @@ class InventoryInbox:
             self.connection.execute("DELETE FROM inventories WHERE cycle=? AND company=?", (cycle, company))
             self.connection.execute("DELETE FROM exact_sync_chunks WHERE cycle=? AND company=?", (cycle, company))
             self.connection.execute("DELETE FROM exact_remote_plans WHERE cycle=? AND company=?", (cycle, company))
+            migration = self.connection.execute(
+                'SELECT * FROM exact_legacy_plan_migrations '
+                'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            if migration is not None:
+                columns = [row[1] for row in self.connection.execute(
+                    'PRAGMA table_info(exact_legacy_plan_migrations)')]
+                evidence = json.dumps(
+                    dict(zip(columns, migration)), ensure_ascii=False,
+                    sort_keys=True, separators=(',', ':'))
+                archived = self.connection.execute(
+                    'SELECT evidence FROM exact_legacy_plan_migration_archive '
+                    'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+                if archived is not None and archived[0] != evidence:
+                    raise ValueError('Exact legacy migration archive conflicts with cleanup.')
+                self.connection.execute(
+                    'INSERT OR IGNORE INTO exact_legacy_plan_migration_archive '
+                    'VALUES (?,?,?,datetime(\'now\'))',
+                    (cycle, company, evidence))
             self.connection.execute("DELETE FROM exact_legacy_plan_migrations WHERE cycle=? AND company=?",
                                     (cycle, company))
             self.connection.execute("DELETE FROM exact_plan_local_state WHERE cycle=? AND company=?",
@@ -237,6 +282,10 @@ class InventoryInbox:
 
     def block(self, cycle, company):
         with self.lock, self.connection:
+            if self.connection.execute(
+                    'SELECT 1 FROM exact_legacy_plan_migrations '
+                    'WHERE cycle=? AND company=?', (cycle, company)).fetchone():
+                raise ValueError('Exact legacy migration inventory state is immutable.')
             self.connection.execute("UPDATE inventories SET blocked=1 WHERE cycle=? AND company=?", (cycle, company))
 
     def save_plan(self, cycle, company, plan, receipt=None):
@@ -270,10 +319,15 @@ class InventoryInbox:
                 or not plan['remote_projection_digest']
                 or plan.get('plan_digest') != _exact_plan_digest(plan)
                 or plan.get('local_operations_digest') != _digest(plan.get('local_operations'))
-                or plan.get('local_expected_records') != record_fingerprints(plan.get('local_operations', []))
+                or plan.get('record_fingerprint_version', 1) not in {1, 2}
+                or plan.get('local_expected_records') != record_fingerprints(
+                    plan.get('local_operations', []),
+                    include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
                 or plan.get('local_expected_records_digest') != _digest(plan.get('local_expected_records'))
                 or plan.get('remote_projection_digest') != _digest(plan.get('remote_projection'))
-                or plan.get('remote_records') != record_fingerprints(plan.get('remote_projection', []))
+                or plan.get('remote_records') != record_fingerprints(
+                    plan.get('remote_projection', []),
+                    include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
                 or plan.get('remote_records_digest') != _digest(plan.get('remote_records'))):
             raise ValueError('Exact v2 plan is missing immutable durability evidence.')
         if not isinstance(timestamp, str) or not timestamp.strip():
@@ -308,6 +362,305 @@ class InventoryInbox:
                  timestamp.strip(), timestamp.strip()))
         return {'cycle_id': cycle, 'company_id': company,
                 'state': 'FROZEN', 'created': True}
+
+    @staticmethod
+    def _legacy_migration_binding(plan):
+        migration = plan.get('legacy_migration') if isinstance(plan, dict) else None
+        keys = (
+            'cycle_id', 'company_id', 'workbook_id_digest',
+            'legacy_plan_digest', 'inventory_payload_digest',
+            'legacy_operation_count', 'original_local_cursor',
+            'inventory_blocked', 'current_local_snapshot_digest',
+            'selected_fields_readback_digest', 'protected_guard_digest',
+            'approved_conflicts', 'publication_profile',
+            'publication_schema_digest',
+        )
+        if (not isinstance(migration, dict)
+                or migration.get('version') != 'legacy-exact-plan-migration-v1'
+                or migration.get('protected_fields') != ['Decision', 'Review Status']
+                or migration.get('protected_conflicts') != migration.get('approved_conflicts')
+                or any(key not in migration for key in keys)):
+            raise ValueError('Exact legacy migration evidence is incomplete.')
+        return {key: migration[key] for key in keys}
+
+    def begin_exact_legacy_migration(self, cycle, company, plan, binding, *, timestamp):
+        """Persist immutable legacy/successor evidence without replacing work."""
+        from .exact_cycle_planner import _digest, _exact_plan_digest
+        expected = self._legacy_migration_binding(plan)
+        if (not isinstance(binding, dict) or binding != expected
+                or expected['cycle_id'] != cycle
+                or expected['company_id'] != company
+                or expected['inventory_blocked'] is not False
+                or expected['workbook_id_digest'] != _digest(
+                    self.connection.execute('SELECT id FROM destination').fetchone()[0])
+                or plan.get('plan_digest') != _exact_plan_digest(plan)
+                or not isinstance(timestamp, str) or not timestamp.strip()):
+            raise ValueError('Exact legacy migration binding is invalid.')
+        encoded_successor = json.dumps(
+            plan, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+        with self.lock, self.connection:
+            inventory = self.connection.execute(
+                'SELECT payload,blocked FROM inventories WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            existing = self.connection.execute(
+                'SELECT state,legacy_plan,successor_plan,successor_plan_digest,'
+                'workbook_id_digest,current_local_snapshot_digest,'
+                'selected_fields_readback_digest,protected_guard_digest,'
+                'approved_conflicts FROM exact_legacy_plan_migrations '
+                'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            if existing is not None:
+                if inventory is None:
+                    raise ValueError('Exact legacy migration retained work is missing.')
+                try:
+                    inventory_payload = json.loads(inventory[0])
+                    retained_legacy = json.loads(existing[1])
+                except (TypeError, ValueError) as error:
+                    raise ValueError(
+                        'Exact legacy migration retained JSON is invalid.') from error
+                conflicts = json.dumps(
+                    expected['approved_conflicts'], ensure_ascii=False,
+                    sort_keys=True, separators=(',', ':'))
+                evidence = (
+                    encoded_successor, plan['plan_digest'],
+                    expected['workbook_id_digest'],
+                    expected['current_local_snapshot_digest'],
+                    expected['selected_fields_readback_digest'],
+                    expected['protected_guard_digest'], conflicts)
+                if (_digest(inventory_payload) != expected['inventory_payload_digest']
+                        or bool(inventory[1]) != expected['inventory_blocked']
+                        or _digest(retained_legacy) != expected['legacy_plan_digest']
+                        or tuple(existing[2:]) != evidence):
+                    raise ValueError(
+                        'Exact legacy migration journal conflicts with retry.')
+                return {'cycle_id': cycle, 'company_id': company,
+                        'state': existing[0], 'created': False}
+            legacy = self.connection.execute(
+                'SELECT payload,cursor FROM sync_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            if inventory is None or legacy is None:
+                raise ValueError('Exact legacy migration retained work is missing.')
+            try:
+                inventory_payload = json.loads(inventory[0])
+                legacy_plan = json.loads(legacy[0])
+            except (TypeError, ValueError) as error:
+                raise ValueError('Exact legacy migration retained JSON is invalid.') from error
+            if (_digest(inventory_payload) != expected['inventory_payload_digest']
+                    or bool(inventory[1]) != expected['inventory_blocked']
+                    or _digest(legacy_plan) != expected['legacy_plan_digest']
+                    or not isinstance(legacy_plan.get('operations'), list)
+                    or len(legacy_plan['operations']) != expected['legacy_operation_count']
+                    or legacy[1] != expected['original_local_cursor']
+                    or legacy[1] != len(legacy_plan['operations'])):
+                raise ValueError('Exact legacy retained evidence changed before migration.')
+            if self.connection.execute(
+                    'SELECT 1 FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                    (cycle, company)).fetchone() or self.connection.execute(
+                    'SELECT 1 FROM exact_remote_plans WHERE cycle=? AND company=?',
+                    (cycle, company)).fetchone() or self.connection.execute(
+                    'SELECT 1 FROM exact_sync_chunks WHERE cycle=? AND company=?',
+                    (cycle, company)).fetchone():
+                raise ValueError('Exact legacy migration conflicts with exact durable work.')
+            for raw_binding, state in self.connection.execute(
+                    'SELECT binding,state FROM publication_receipts'):
+                try:
+                    receipt_binding = json.loads(raw_binding)
+                except (TypeError, ValueError) as error:
+                    raise ValueError('Exact legacy migration receipt binding is invalid.') from error
+                if (receipt_binding.get('request_id') == cycle
+                        and receipt_binding.get('company_id') == company):
+                    raise ValueError(
+                        'Exact legacy migration conflicts with a publication receipt.')
+            encoded_legacy = json.dumps(
+                legacy_plan, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+            conflicts = json.dumps(
+                expected['approved_conflicts'], ensure_ascii=False,
+                sort_keys=True, separators=(',', ':'))
+            evidence = (
+                encoded_legacy, encoded_successor, plan['plan_digest'],
+                expected['workbook_id_digest'],
+                expected['current_local_snapshot_digest'],
+                expected['selected_fields_readback_digest'],
+                expected['protected_guard_digest'], conflicts)
+            self.connection.execute(
+                'INSERT INTO exact_legacy_plan_migrations('
+                'cycle,company,legacy_plan_digest,inventory_payload_digest,'
+                'operation_count,original_local_cursor,verified_local_cursor,'
+                'row_scope,remote_projection,remote_projection_digest,state,'
+                'created_at,updated_at,legacy_plan,successor_plan,'
+                'successor_plan_digest,workbook_id_digest,'
+                'current_local_snapshot_digest,selected_fields_readback_digest,'
+                'protected_guard_digest,approved_conflicts,local_apply_id,'
+                'local_records_digest) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                (cycle, company, expected['legacy_plan_digest'],
+                 expected['inventory_payload_digest'],
+                 expected['legacy_operation_count'],
+                 expected['original_local_cursor'], 0, None, None,
+                 plan['remote_projection_digest'], 'FROZEN', timestamp.strip(),
+                 timestamp.strip(), *evidence, None, None))
+        return {'cycle_id': cycle, 'company_id': company,
+                'state': 'FROZEN', 'created': True}
+
+    def mark_exact_legacy_local_complete(self, cycle, company, plan, local,
+                                         *, timestamp):
+        """Record the separately verified local adoption; create no receipt."""
+        from .exact_local_plan import VERIFIED, exact_local_plan
+        if not isinstance(timestamp, str) or not timestamp.strip():
+            raise ValueError('Exact legacy local completion requires a timestamp.')
+        application = exact_local_plan(local, cycle, company)
+        if (application is None or application['state'] != VERIFIED
+                or application['plan_digest'] != plan.get('plan_digest')):
+            raise ValueError('Exact legacy local adoption is not verified.')
+        records_digest = plan.get('local_expected_records_digest')
+        row_scope = json.dumps(
+            application['row_scope'], ensure_ascii=False,
+            sort_keys=True, separators=(',', ':'))
+        projection = json.dumps(
+            plan.get('remote_projection'), ensure_ascii=False,
+            sort_keys=True, separators=(',', ':'))
+        with self.lock, self.connection:
+            row = self.connection.execute(
+                'SELECT state,successor_plan_digest,row_scope,remote_projection,'
+                'remote_projection_digest,local_apply_id,local_records_digest '
+                'FROM exact_legacy_plan_migrations WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            expected = (plan.get('plan_digest'), row_scope, projection,
+                        plan.get('remote_projection_digest'),
+                        application['apply_id'], records_digest)
+            if row is None:
+                raise ValueError('Exact legacy migration journal is missing.')
+            if row[0] in {'LOCAL_COMPLETE', 'REMOTE_PLAN_FROZEN'}:
+                if tuple(row[1:]) != expected:
+                    raise ValueError('Exact legacy local completion evidence changed.')
+                return {'cycle_id': cycle, 'company_id': company,
+                        'state': row[0], 'recovered': True}
+            if row[0] not in {'FROZEN', 'PREFIX_VERIFIED'} or row[1] != expected[0]:
+                raise ValueError('Exact legacy migration state cannot accept local evidence.')
+            updated = self.connection.execute(
+                "UPDATE exact_legacy_plan_migrations SET state='LOCAL_COMPLETE',"
+                'verified_local_cursor=?,row_scope=?,remote_projection=?,'
+                'remote_projection_digest=?,local_apply_id=?,local_records_digest=?,'
+                'updated_at=? WHERE cycle=? AND company=? AND state IN '
+                "('FROZEN','PREFIX_VERIFIED')",
+                (len(plan['local_operations']), row_scope, projection,
+                 plan['remote_projection_digest'], application['apply_id'],
+                 records_digest, timestamp.strip(), cycle, company)).rowcount
+            if updated != 1:
+                raise ValueError('Exact legacy local completion changed concurrently.')
+        return {'cycle_id': cycle, 'company_id': company,
+                'state': 'LOCAL_COMPLETE', 'recovered': False}
+
+    def freeze_exact_legacy_successor(self, cycle, company, plan, local,
+                                      *, timestamp):
+        """Atomically replace only the retained legacy plan with its successor."""
+        from .exact_local_plan import VERIFIED, exact_local_plan
+        application = exact_local_plan(local, cycle, company)
+        if (application is None or application['state'] != VERIFIED
+                or application['plan_digest'] != plan['plan_digest']):
+            raise ValueError('Exact legacy successor lacks verified local adoption.')
+        # Hold the local writer boundary for the entire inbox promotion.  This
+        # prevents a full-row edit from landing after the final snapshot but
+        # before the separately durable successor is committed.
+        with local.transaction():
+            return self._freeze_exact_legacy_successor_locked(
+                cycle, company, plan, local, application,
+                timestamp=timestamp)
+
+    def _freeze_exact_legacy_successor_locked(
+            self, cycle, company, plan, local, application, *, timestamp):
+        from .exact_cycle_planner import _digest, _exact_plan_digest
+        from .exact_legacy_migration import _capture_full_snapshot
+        if (not isinstance(timestamp, str) or not timestamp.strip()
+                or plan.get('plan_digest') != _exact_plan_digest(plan)):
+            raise ValueError('Exact legacy successor evidence is invalid.')
+        _rows, snapshot_digest = _capture_full_snapshot(
+            local, plan.get('local_operations', []))
+        if snapshot_digest != plan.get('legacy_migration', {}).get(
+                'current_local_snapshot_digest'):
+            raise ValueError('Exact legacy successor snapshot changed before freeze.')
+        encoded = json.dumps(
+            plan, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+        with self.lock, self.connection:
+            migration = self.connection.execute(
+                'SELECT state,legacy_plan,successor_plan,successor_plan_digest,'
+                'operation_count,original_local_cursor,local_apply_id,'
+                'local_records_digest FROM exact_legacy_plan_migrations '
+                'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            if migration is None or migration[2] != encoded or migration[3] != plan['plan_digest']:
+                raise ValueError('Exact legacy successor conflicts with its migration journal.')
+            if migration[0] == 'REMOTE_PLAN_FROZEN':
+                stored = self.connection.execute(
+                    'SELECT payload,cursor FROM sync_plans WHERE cycle=? AND company=?',
+                    (cycle, company)).fetchone()
+                mirrored = self.connection.execute(
+                    'SELECT plan_digest,state,local_apply_id,local_records_digest '
+                    'FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                    (cycle, company)).fetchone()
+                if (stored != (encoded, len(plan['local_operations']))
+                        or mirrored != (plan['plan_digest'], 'LOCAL_VERIFIED',
+                                        migration[6], migration[7])):
+                    raise ValueError('Exact legacy frozen successor changed after adoption.')
+                return {'cycle_id': cycle, 'company_id': company,
+                        'state': migration[0], 'recovered': True}
+            if migration[0] != 'LOCAL_COMPLETE':
+                raise ValueError('Exact legacy successor requires local completion.')
+            _rows, final_snapshot_digest = _capture_full_snapshot(
+                local, plan.get('local_operations', []))
+            if final_snapshot_digest != snapshot_digest:
+                raise ValueError('Exact legacy successor snapshot changed during freeze.')
+            current = self.connection.execute(
+                'SELECT payload,cursor FROM sync_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            try:
+                current_plan = json.loads(current[0]) if current is not None else None
+                legacy_plan = json.loads(migration[1])
+            except (TypeError, ValueError) as error:
+                raise ValueError('Exact legacy successor source plan is invalid.') from error
+            if (current is None or current[1] != migration[5]
+                    or _digest(current_plan) != _digest(legacy_plan)
+                    or len(legacy_plan.get('operations', [])) != migration[4]
+                    or self.connection.execute(
+                        'SELECT 1 FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                        (cycle, company)).fetchone()
+                    or self.connection.execute(
+                        'SELECT 1 FROM exact_remote_plans WHERE cycle=? AND company=?',
+                        (cycle, company)).fetchone()):
+                raise ValueError('Exact legacy successor source evidence changed.')
+            self.connection.execute(
+                'UPDATE sync_plans SET payload=?,cursor=? WHERE cycle=? AND company=?',
+                (encoded, len(plan['local_operations']), cycle, company))
+            self.connection.execute(
+                'INSERT INTO exact_plan_local_state VALUES (?,?,?,?,?,?,?,?,?,?)',
+                (cycle, company, plan['plan_digest'],
+                 plan['local_operations_digest'], plan['remote_projection_digest'],
+                 'LOCAL_VERIFIED', migration[6], migration[7],
+                 timestamp.strip(), timestamp.strip()))
+            updated = self.connection.execute(
+                "UPDATE exact_legacy_plan_migrations SET state='REMOTE_PLAN_FROZEN',"
+                'verified_local_cursor=?,updated_at=? '
+                "WHERE cycle=? AND company=? AND state='LOCAL_COMPLETE'",
+                (len(plan['local_operations']), timestamp.strip(), cycle, company)).rowcount
+            if updated != 1:
+                raise ValueError('Exact legacy successor state changed concurrently.')
+        return {'cycle_id': cycle, 'company_id': company,
+                'state': 'REMOTE_PLAN_FROZEN', 'recovered': False}
+
+    def exact_legacy_migration_state(self, cycle, company):
+        with self.lock:
+            row = self.connection.execute(
+                'SELECT state,legacy_plan_digest,inventory_payload_digest,'
+                'operation_count,original_local_cursor,verified_local_cursor,'
+                'successor_plan_digest,current_local_snapshot_digest,'
+                'local_apply_id,local_records_digest,created_at,updated_at '
+                'FROM exact_legacy_plan_migrations WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+        if row is None:
+            return None
+        keys = ('state', 'legacy_plan_digest', 'inventory_payload_digest',
+                'operation_count', 'original_local_cursor',
+                'verified_local_cursor', 'successor_plan_digest',
+                'current_local_snapshot_digest', 'local_apply_id',
+                'local_records_digest', 'created_at', 'updated_at')
+        return {'cycle_id': cycle, 'company_id': company, **dict(zip(keys, row))}
 
     def exact_local_state(self, cycle, company):
         with self.lock:
@@ -779,6 +1132,11 @@ class InventoryInbox:
                     'SELECT 1 FROM exact_plan_local_state WHERE cycle=? AND company=?',
                     (cycle, company)).fetchone():
                 raise ValueError('Exact v2 frozen plans are immutable and cannot be discarded.')
+            if self.connection.execute(
+                    'SELECT 1 FROM exact_legacy_plan_migrations '
+                    'WHERE cycle=? AND company=?',
+                    (cycle, company)).fetchone():
+                raise ValueError('Exact legacy migration plans are immutable and cannot be discarded.')
             self.connection.execute("DELETE FROM sync_plans WHERE cycle=? AND company=?", (cycle, company))
 
     def unblock(self, cycle, company):

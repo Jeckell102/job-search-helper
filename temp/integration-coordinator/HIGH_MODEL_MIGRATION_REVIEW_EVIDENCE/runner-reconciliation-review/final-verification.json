@@ -1,0 +1,10 @@
+{
+  "checked_at_utc": "2026-11-19T20:42:21.034115+00:00",
+  "candidate_changed": [],
+  "protected_required_targets_changed": [],
+  "protected_source_inputs_changed": [],
+  "unexpected_new_targets": [],
+  "all_13_overlay_files_compile": true,
+  "supplied-tests.log": "Ran 282 tests in 39.135s",
+  "independent-probes.log": "Ran 40 tests in 12.571s"
+}

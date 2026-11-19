@@ -1,0 +1,98 @@
+{
+  "blocking_cycle_ids": [
+    "CYC-741EF0D69531"
+  ],
+  "company_ids": [
+    "C-1"
+  ],
+  "enqueued_at": "2026-11-18T00:00:00Z",
+  "intake_start_targets": {
+    "busy_boundary": "the last blocking cycle reaches Complete or Complete with exceptions; the next normal start command admits the durable request",
+    "busy_seconds_after_safe_boundary": 60,
+    "idle_seconds": 60
+  },
+  "queue_age_seconds": 160877,
+  "recovery": "Company-only request is waiting for safe boundary behind unfinished cycle(s): CYC-741EF0D69531. Keep next-scan.json unchanged; do not delete locks or supersede the cycle. Resume the blocking cycle with ./job-search-scraper start --resume. There is no automatic cancel path for an existing cycle.",
+  "request_id": "waiting-request",
+  "state": "WAITING_SAFE_BOUNDARY",
+  "visibility": "local-only"
+}
+Starting job scraping
+Configured: 1 fetch worker(s), assignment window 100.
+Storage: 1 local SQLite writer; Sheets sync is local-only/deferred.
+Company changes: safely handled 1 queued change(s).
+Company-only scan: CYC-1BE2A78E4376. Only 1 declared company ID(s) are queued.
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Fetching - Acme | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Fetching - Acme | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Saved locally - Acme - 1 jobs; complete | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:23
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:23
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:23
+Dashboard | Worker 1 - Idle | Writer - Saved locally - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:23
+Inventories saved locally. Run ./job-search-scraper sync to write the jobs to Sheets.
+Scraper invocation finished CYC-1BE2A78E4376: cycle_status=In Progress | company_stages={"inventory": 1}
+Job History (all cycles): needs_review_or_in_progress=0 | manual_review=0
+Cycle still has unfinished scraping or saved work to process. Use start --resume to continue it, or start for a fresh full scan. Job reviews run independently of scrape completion.
+Performance: {"checkpoint_payload_bytes": 7009, "checkpoint_seconds": 0.007874666998759494, "elapsed_seconds": 0.1655180690013367, "inventories_saved": 1, "local_cell_changes": 15, "local_transactions": 5, "staging_seconds": 0.0}
+
+Run summary:
+New jobs downloaded (new Job History rows): 0
+Companies successfully scanned: 0
+Companies partially scanned: 0
+Companies skipped: 
+Companies with saved work awaiting processing: 1
+Total run time: 0s
+Starting job scraping
+Configured: 1 fetch worker(s), assignment window 100.
+Storage: 1 local SQLite writer; Sheets sync belongs to this run.
+Fresh full scan: CYC-754FB3A7CCAB. All currently active companies are queued; previous checkpoints are retained.
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Fetching - Acme | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Fetching - Acme | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Saved locally - Acme - 1 jobs; complete | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Dashboard | Worker 1 - Idle | Writer - Processing locally - Acme - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Dashboard | Worker 1 - Idle | Writer - Processing locally - Acme - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Dashboard | Worker 1 - Idle | Writer - Processing locally - Acme - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 1 companies | Sync plans: 1 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Dashboard | Worker 1 - Idle | Writer - Syncing Sheets - 1 companies - 3 changes - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 1 companies | Sync plans: 1 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Dashboard | Worker 1 - Idle | Writer - Syncing Sheets - 1 companies - 3 changes - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 1 companies | Sync plans: 1 | New jobs written: 1
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Jobs | Field Application...
+Dashboard | Worker 1 - Idle | Writer - Syncing Sheets - 1 companies - 3 changes - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 1
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Jobs | Field Application...
+Dashboard | Worker 1 - Idle | Writer - Syncing Sheets - 1 companies - 3 changes - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 1
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Jobs | Field Application...
+Dashboard | Worker 1 - Idle | Writer - Complete - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 1
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:41:24
+Jobs | Field Application...
+Scrape outcomes: recorded 1 bounded result(s) for safe follow-up.
+Scraper invocation finished CYC-754FB3A7CCAB: cycle_status=Complete | company_stages={"complete": 1}
+Job History (all cycles): needs_review_or_in_progress=1 | manual_review=0
+The next start will scan all currently active companies again.
+Company changes: recorded 1 post-run change(s) for the next safe scan.
+Performance: {"checkpoint_payload_bytes": 6923, "checkpoint_seconds": 0.012754051000229083, "elapsed_seconds": 0.1944867290003458, "inventories_saved": 1, "local_cell_changes": 56, "local_transactions": 5, "locally_processed_jobs": 1, "staging_seconds": 0.0056238119996123714, "sync_batches": 1}
+
+Run summary:
+New jobs downloaded (new Job History rows): 1
+Companies successfully scanned: 1
+Companies partially scanned: 0
+Companies skipped: 
+Total run time: 0s
+----------------------------------------------------------------------
+Ran 282 tests in 39.135s
+
+OK

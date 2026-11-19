@@ -1,0 +1,17 @@
+test_changed_local_snapshot_before_adoption_refuses (adoption_probes.AdoptionChecks.test_changed_local_snapshot_before_adoption_refuses) ... ok
+test_each_durable_boundary_reopens_and_retries_without_replay (adoption_probes.AdoptionChecks.test_each_durable_boundary_reopens_and_retries_without_replay) ... ok
+test_local_journal_fault_rolls_back_parent_and_retries (adoption_probes.AdoptionChecks.test_local_journal_fault_rolls_back_parent_and_retries) ... ok
+test_remaining_gap_cleanup_can_delete_frozen_migration_without_publication (adoption_probes.AdoptionChecks.test_remaining_gap_cleanup_can_delete_frozen_migration_without_publication) ... ok
+test_remaining_gap_cleanup_can_delete_local_complete_migration (adoption_probes.AdoptionChecks.test_remaining_gap_cleanup_can_delete_local_complete_migration) ... ok
+test_remaining_gap_freeze_accepts_inventory_blocked_after_begin (adoption_probes.AdoptionChecks.test_remaining_gap_freeze_accepts_inventory_blocked_after_begin) ... ok
+test_remaining_gap_freeze_accepts_unrelated_local_drift_after_adoption (adoption_probes.AdoptionChecks.test_remaining_gap_freeze_accepts_unrelated_local_drift_after_adoption) ... ok
+test_successor_fault_rolls_back_old_plan_and_retries (adoption_probes.AdoptionChecks.test_successor_fault_rolls_back_old_plan_and_retries) ... ok
+test_v1_fingerprint_and_plan_validation_preserve_legacy_semantics (adoption_probes.AdoptionChecks.test_v1_fingerprint_and_plan_validation_preserve_legacy_semantics) ... ok
+test_adopted_migration_archives_after_valid_publication_and_local_acknowledgement (compatibility_probes.CompatibilityChecks.test_adopted_migration_archives_after_valid_publication_and_local_acknowledgement) ... ok
+test_remaining_gap_pre_guard_v1_confirmation_cannot_resume_acknowledgement (compatibility_probes.CompatibilityChecks.test_remaining_gap_pre_guard_v1_confirmation_cannot_resume_acknowledgement) ... ok
+test_v1_default_receipt_pending_restart_confirms_and_acknowledges (compatibility_probes.CompatibilityChecks.test_v1_default_receipt_pending_restart_confirms_and_acknowledges) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 26.532s
+
+OK

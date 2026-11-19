@@ -1,0 +1,19 @@
+test_nineteen_operations_two_conflicts_and_no_input_mutation (__main__.PositivePlanningChecks.test_nineteen_operations_two_conflicts_and_no_input_mutation) ... ok
+test_blank_remote_mismatch_holds_chunk_and_receipt_across_restart (__main__.SQLiteMigrationProbes.test_blank_remote_mismatch_holds_chunk_and_receipt_across_restart) ... ok
+test_company_first_legacy_order_now_reaches_exact_scope_planning (__main__.SQLiteMigrationProbes.test_company_first_legacy_order_now_reaches_exact_scope_planning) ... ok
+test_existing_legacy_plan_cannot_be_adopted_by_save_exact_plan (__main__.SQLiteMigrationProbes.test_existing_legacy_plan_cannot_be_adopted_by_save_exact_plan) ... ok
+test_matching_blank_remote_guard_confirms (__main__.SQLiteMigrationProbes.test_matching_blank_remote_guard_confirms) ... ok
+test_matching_nonblank_remote_guard_confirms_and_preserves_guard_dirty_fields (__main__.SQLiteMigrationProbes.test_matching_nonblank_remote_guard_confirms_and_preserves_guard_dirty_fields) ... ok
+test_nonblank_remote_mismatch_holds_chunk_and_receipt_across_restart (__main__.SQLiteMigrationProbes.test_nonblank_remote_mismatch_holds_chunk_and_receipt_across_restart) ... ok
+test_remaining_gap_reordered_remote_plan_fails_existing_plan_validator (__main__.SQLiteMigrationProbes.test_remaining_gap_reordered_remote_plan_fails_existing_plan_validator) ... ok
+test_revised_local_restart_refuses_guard_only_decision_changes (__main__.SQLiteMigrationProbes.test_revised_local_restart_refuses_guard_only_decision_changes) ... ok
+test_builder_refuses_foreign_company_label (__main__.SnapshotClosureTests.test_builder_refuses_foreign_company_label) ... ok
+test_builder_refuses_inactive_current_local_company (__main__.SnapshotClosureTests.test_builder_refuses_inactive_current_local_company) ... ok
+test_full_record_drift_refuses_prior_binding_and_changes_new_snapshot (__main__.SnapshotClosureTests.test_full_record_drift_refuses_prior_binding_and_changes_new_snapshot) ... ok
+test_revised_builder_refuses_changed_expected_only_source_hash (__main__.SnapshotClosureTests.test_revised_builder_refuses_changed_expected_only_source_hash) ... ok
+test_revised_builder_refuses_review_change_between_reads (__main__.SnapshotClosureTests.test_revised_builder_refuses_review_change_between_reads) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 10.750s
+
+OK

@@ -12,7 +12,7 @@ import json
 from typing import Mapping
 
 from .publication_receipts import record_fingerprints
-from .repository import RepositoryError
+from .repository import RepositoryError, _equivalent
 from .sqlite_repository import timestamp
 
 
@@ -52,15 +52,21 @@ def _validate_plan(plan, cycle_id=None, company_id=None):
         raise ValueError('Exact local application requires an immutable v2 plan.')
     local = plan.get('local_operations')
     remote = plan.get('remote_projection')
+    fingerprint_version = plan.get('record_fingerprint_version', 1)
+    if fingerprint_version not in {1, 2}:
+        raise ValueError('Exact v2 plan record fingerprint version is invalid.')
+    fingerprint_options = {'include_guard_only': fingerprint_version == 2}
     if not isinstance(local, list) or not local or not isinstance(remote, list) or not remote:
         raise ValueError('Exact v2 plan has no complete local/remote streams.')
     if not all((
         plan.get('plan_digest') == _exact_plan_digest(plan),
         plan.get('local_operations_digest') == _digest(local),
-        plan.get('local_expected_records') == record_fingerprints(local),
+        plan.get('local_expected_records') == record_fingerprints(
+            local, **fingerprint_options),
         plan.get('local_expected_records_digest') == _digest(plan.get('local_expected_records')),
         plan.get('remote_projection_digest') == _digest(remote),
-        plan.get('remote_records') == record_fingerprints(remote),
+        plan.get('remote_records') == record_fingerprints(
+            remote, **fingerprint_options),
         plan.get('remote_records_digest') == _digest(plan.get('remote_records')),
     )):
         raise ValueError('Exact v2 plan digest or frozen record evidence is invalid.')
@@ -100,7 +106,8 @@ def _rows_for_operations(repository, operations):
 
 
 def _expected_records(plan, operations):
-    expected = record_fingerprints(operations)
+    expected = record_fingerprints(
+        operations, include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
     if any(plan['local_expected_records'].get(key) != value
            for key, value in expected.items()):
         raise ValueError('Exact local chunk is not in the frozen record set.')
@@ -127,6 +134,14 @@ def _capture_before(repository, operations):
 def _row_scope(plan):
     scope = []
     guarded = {'Source Hash', 'Added to Opportunities?', 'Salary / Range'}
+    migration = plan.get('legacy_migration', {})
+    if migration:
+        protected = migration.get('protected_fields')
+        if (migration.get('version') != 'legacy-exact-plan-migration-v1'
+                or not isinstance(protected, list)
+                or protected != ['Decision', 'Review Status']):
+            raise ValueError('Exact legacy migration guards are invalid.')
+        guarded.update(protected)
     for operation in plan['remote_projection']:
         append_if_missing = operation.get('append_if_missing')
         if append_if_missing is None:
@@ -168,6 +183,10 @@ def _resolved_row_scope(repository, plan):
         if len(matches) != 1:
             raise ValueError('Exact row scope identity is missing or ambiguous.')
         item['row_id'] = matches[0][0]
+        row = matches[0][1]
+        if any(not _equivalent(header, row.get(header, ''), value)
+               for header, value in item.get('guards', {}).items()):
+            raise ValueError('Exact row scope guard changed before verification.')
     return scope
 
 
@@ -176,6 +195,10 @@ def _revalidate_row_scope(repository, scope):
         matches = repository.matches(item['tab'], item['identity'])
         if len(matches) != 1 or matches[0][0] != item.get('row_id'):
             raise ValueError('Exact row scope hint no longer matches its stable identity.')
+        row = matches[0][1]
+        if any(not _equivalent(header, row.get(header, ''), value)
+               for header, value in item.get('guards', {}).items()):
+            raise ValueError('Exact row scope guard changed after verification.')
 
 
 def _ensure_parent(repository, cycle_id, company_id, plan, stamp):
@@ -249,7 +272,9 @@ def apply_exact_local_chunk(repository, cycle_id, company_id, plan, cursor,
             raise ValueError('Exact local cursor is not the next verified boundary.')
         before, dirty = _capture_before(repository, chunk)
         repository._commit_in_transaction(chunk)
-        observed = record_fingerprints(chunk, _rows_for_operations(repository, chunk))
+        observed = record_fingerprints(
+            chunk, _rows_for_operations(repository, chunk),
+            include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
         if observed != expected:
             raise ValueError('Local mutation readback differs from the frozen plan.')
         repository.db.execute(
@@ -277,7 +302,9 @@ def verify_exact_local_chunk(repository, cycle_id, company_id, plan, cursor):
     chunk = local[cursor:cursor + row[0]]
     if row[1] != _digest(chunk) or row[2] != _canonical(_expected_records(plan, chunk)):
         raise ValueError('Exact local chunk changed after persistence.')
-    observed = record_fingerprints(chunk, _rows_for_operations(repository, chunk))
+    observed = record_fingerprints(
+        chunk, _rows_for_operations(repository, chunk),
+        include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
     if _canonical(observed) != row[2] or _digest(observed) != row[3]:
         raise ValueError('Exact local readback differs from APPLIED evidence.')
     if row[4] == VERIFIED:
@@ -315,7 +342,9 @@ def verify_exact_local_plan(repository, cycle_id, company_id, plan):
         boundary += count
     if boundary != len(local):
         raise ValueError('Exact local plan is not fully verified.')
-    observed = record_fingerprints(local, _rows_for_operations(repository, local))
+    observed = record_fingerprints(
+        local, _rows_for_operations(repository, local),
+        include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
     if observed != plan['local_expected_records']:
         raise ValueError('Complete local readback differs from the frozen plan.')
     if parent[1] == VERIFIED:
@@ -352,6 +381,96 @@ def commit_exact_local_plan(repository, cycle_id, company_id, plan, *, max_opera
     result = verify_exact_local_plan(repository, cycle_id, company_id, plan)
     result['recovered'] = recovered or result['recovered']
     return result
+
+
+def adopt_verified_legacy_local_plan(repository, cycle_id, company_id, plan,
+                                     *, timestamp_value):
+    """Journal already-applied legacy rows as v2 without replaying a mutation."""
+    cycle_id, company_id = _validate_identity(cycle_id, company_id)
+    plan, local, _remote = _validate_plan(plan, cycle_id, company_id)
+    migration = plan.get('legacy_migration')
+    if (not isinstance(migration, Mapping)
+            or migration.get('version') != 'legacy-exact-plan-migration-v1'
+            or migration.get('cycle_id') != cycle_id
+            or migration.get('company_id') != company_id
+            or migration.get('original_local_cursor') != len(local)
+            or migration.get('legacy_operation_count') != len(local)
+            or not isinstance(timestamp_value, str) or not timestamp_value.strip()
+            or len(local) > 100):
+        raise ValueError('Exact legacy local adoption evidence is invalid.')
+    _install(repository)
+    from .exact_legacy_migration import _capture_full_snapshot
+    apply_id = _apply_id(cycle_id, company_id, plan['plan_digest'])
+    with repository.transaction():
+        rows, snapshot_digest = _capture_full_snapshot(repository, local)
+        if snapshot_digest != migration.get('current_local_snapshot_digest'):
+            raise ValueError('Exact legacy local snapshot changed before adoption.')
+        rows_by_tab = {
+            tab: [row for operation, row in zip(local, rows)
+                  if operation.get('tab') == tab]
+            for tab in {operation.get('tab') for operation in local}
+        }
+        observed = record_fingerprints(
+            local, rows_by_tab,
+            include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
+        if observed != plan['local_expected_records']:
+            raise ValueError('Exact legacy local records differ before adoption.')
+        scope = _resolved_row_scope(repository, plan)
+        for item in scope:
+            baseline = repository.baseline(item['tab'], item['row_id'])
+            if baseline is None or item['append_if_missing']:
+                continue
+            dirty = {header for (header,) in repository.db.execute(
+                'SELECT header FROM dirty WHERE tab=? AND row_id=?',
+                (item['tab'], item['row_id']))}
+            missing = (set(item['fields']) - set(item['identity'])) - dirty
+            if missing:
+                raise ValueError(
+                    'Exact legacy selected field is no longer pending publication: '
+                    + ', '.join(sorted(missing)))
+        existing = repository.db.execute(
+            'SELECT plan_digest,inventory_payload_digest,local_operations_digest,'
+            'remote_projection_digest,row_scope,state FROM exact_local_applications '
+            'WHERE cycle=? AND company=?', (cycle_id, company_id)).fetchone()
+        expected_parent = (
+            plan['plan_digest'], plan['inventory_payload_digest'],
+            plan['local_operations_digest'], plan['remote_projection_digest'],
+            _canonical(scope), VERIFIED)
+        if existing is not None:
+            if tuple(existing) != expected_parent:
+                raise ValueError('Exact legacy local adoption conflicts with its journal.')
+            chunk = repository.db.execute(
+                'SELECT operation_count,operations_digest,expected_records,'
+                'expected_records_digest,state FROM exact_local_apply_chunks '
+                'WHERE apply_id=? AND start_cursor=0', (apply_id,)).fetchone()
+            expected_chunk = (len(local), _digest(local), _canonical(observed),
+                              _digest(observed), VERIFIED)
+            if chunk != expected_chunk:
+                raise ValueError('Exact legacy adopted chunk evidence changed.')
+            _revalidate_row_scope(repository, scope)
+            return {'apply_id': apply_id, 'state': VERIFIED,
+                    'records_digest': _digest(observed), 'recovered': True,
+                    'snapshot_digest': snapshot_digest}
+        if repository.db.execute(
+                'SELECT 1 FROM exact_local_applications WHERE apply_id=? OR plan_digest=?',
+                (apply_id, plan['plan_digest'])).fetchone():
+            raise ValueError('Exact legacy local adoption identity already exists.')
+        before, dirty_before = _capture_before(repository, local)
+        stamp = timestamp_value.strip()
+        repository.db.execute(
+            'INSERT INTO exact_local_applications VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+            (apply_id, cycle_id, company_id, plan['plan_digest'],
+             plan['inventory_payload_digest'], plan['local_operations_digest'],
+             plan['remote_projection_digest'], _canonical(scope), stamp, stamp,
+             VERIFIED))
+        repository.db.execute(
+            'INSERT INTO exact_local_apply_chunks VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+            (apply_id, 0, len(local), _digest(local), _canonical(before),
+             _canonical(observed), _digest(observed), _canonical(dirty_before),
+             stamp, stamp, VERIFIED))
+    return {'apply_id': apply_id, 'state': VERIFIED,
+            'records_digest': _digest(observed), 'recovered': False,
+            'snapshot_digest': snapshot_digest}
 
 
 def exact_local_plan(repository, cycle_id, company_id):

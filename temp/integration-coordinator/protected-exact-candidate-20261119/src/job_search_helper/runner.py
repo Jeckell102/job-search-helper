@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import os
+from pathlib import Path
 import sqlite3
 import sys
 import time
@@ -82,6 +83,13 @@ Commands:
   recover-interrupted-cycle-status
                Prove whether one exact inactive cycle can be paused safely.
                Read-only: applies no recovery and changes no workbook data.
+  legacy-migration-preview
+               Read one retained legacy Company plan and print sanitized,
+               approval-ready migration pins. Opens no Google connection.
+  legacy-migration-adopt
+               With --apply and an exact reviewed approval JSON file, journal
+               and adopt one completed legacy local plan without replay or a
+               Google write. The later sync remains a separate command/gate.
   errors       Show recent per-company scraper errors from the local log.
   reviews      Export the saved pending review queue to a local file.
   review-queue Build read-only FIRST PASS and SECOND PASS review queues.
@@ -623,6 +631,7 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         performance = {}
         performance_sources = [performance]
         run_counts = Counter()
+        sync = None
         # Registered first to print after final Sheets drain and performance.
         resources.callback(lambda: _print_run_summary(
             run_counts, elapsed_seconds=time.monotonic() - run_started))
@@ -650,6 +659,7 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                 fetcher = with_browser_fallback(fetch_inventory)
             engine = Engine(repo, state, dry_run=False, batch_size=batch_size, inbox=inbox,
                             **({"fetcher": fetcher} if fetcher else {}))
+            run_completed = False
             try:
                 if not sync_only and getattr(repo, 'is_local', False) is True:
                     # This writer lock is also the bridge's standalone boundary,
@@ -706,8 +716,25 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                 if defer_sync:
                     print("Inventories saved locally. Run ./job-search-scraper sync to write the jobs to Sheets.", flush=True)
                 _print_run_status(final)
+                run_completed = True
                 return 0
             finally:
+                if run_completed and sync is not None:
+                    # The final run-owned pull must settle before reading the
+                    # Company-event outbox.  We still own the normal scraper
+                    # lock, so this is a terminal safe boundary: no second
+                    # cycle is started here and no competing request can be
+                    # overwritten by the bridge.
+                    sync.__exit__(None, None, None)
+                    from .company_events import CompanyEventBridge
+                    terminal_bridge_results = CompanyEventBridge(
+                        repo, database.parent).process_pending(writer_lock_held=True)
+                    if terminal_bridge_results:
+                        print(
+                            f"Company changes: recorded {len(terminal_bridge_results)} "
+                            "post-run change(s) for the next safe scan.",
+                            flush=True,
+                        )
                 performance.update({**getattr(repo, "metrics", {}), **engine.performance,
                                "checkpoint_seconds": state.checkpoint_seconds + inbox.checkpoint_seconds,
                                "checkpoint_payload_bytes": state.checkpoint_bytes + inbox.payload_bytes,
@@ -944,6 +971,72 @@ def scrape_main(argv=None):
             show_interrupted_cycle_recovery_status(recovery_status_args.cycle_id)
             return 0
         except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+            print(f'ERROR: {exc}', file=sys.stderr)
+            return 1
+    if argv[0] == 'legacy-migration-preview':
+        parser = argparse.ArgumentParser(
+            prog='./job-search-scraper legacy-migration-preview')
+        parser.add_argument('--cycle-id', required=True)
+        parser.add_argument('--company-id', required=True)
+        try:
+            migration_args = parser.parse_args(argv[1:])
+        except SystemExit:
+            return 2
+        try:
+            _load_environment()
+            from .exact_legacy_migration_runner import (
+                preview_retained_legacy_migration,
+            )
+            database = state_path()
+            report = preview_retained_legacy_migration(
+                database.parent / 'inventories.sqlite3',
+                helper_cli.job_database_path(), migration_args.cycle_id,
+                migration_args.company_id)
+            print('Exact legacy migration preview: '
+                  + json.dumps(report, sort_keys=True))
+            return 0
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+            print(f'ERROR: {exc}', file=sys.stderr)
+            return 1
+    if argv[0] == 'legacy-migration-adopt':
+        parser = argparse.ArgumentParser(
+            prog='./job-search-scraper legacy-migration-adopt')
+        parser.add_argument('--cycle-id', required=True)
+        parser.add_argument('--company-id', required=True)
+        parser.add_argument('--approval-file', required=True)
+        parser.add_argument('--apply', action='store_true')
+        try:
+            migration_args = parser.parse_args(argv[1:])
+        except SystemExit:
+            return 2
+        if not migration_args.apply:
+            print('ERROR: legacy adoption is local-only but durable; rerun with '
+                  '--apply after reviewing the exact approval file.', file=sys.stderr)
+            return 2
+        try:
+            _load_environment()
+            approval_path = Path(migration_args.approval_file).resolve()
+            if not approval_path.is_file():
+                raise ValueError('Exact legacy migration approval file is missing.')
+            approval = json.loads(approval_path.read_text(encoding='utf-8'))
+            if isinstance(approval, dict) and isinstance(approval.get('binding'), dict):
+                approval = approval['binding']
+            from .exact_legacy_migration_runner import (
+                adopt_retained_legacy_migration,
+            )
+            database = state_path()
+            with writer_lock(database.parent / scraper_lock_name()):
+                from .integration_release import assert_release_settled
+                assert_release_settled(database.parent)
+                report = adopt_retained_legacy_migration(
+                    database.parent / 'inventories.sqlite3',
+                    helper_cli.job_database_path(), migration_args.cycle_id,
+                    migration_args.company_id, approval)
+            print('Exact legacy migration adopted: '
+                  + json.dumps(report, sort_keys=True))
+            return 0
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError,
+                json.JSONDecodeError) as exc:
             print(f'ERROR: {exc}', file=sys.stderr)
             return 1
     delegated = {"cleanup-blacklist", "cleanup-titles", "repair-careers-urls", "setup-evidence-tab", "preflight", "status", "reviews", "review-queue", "auth", "test", "demo"}

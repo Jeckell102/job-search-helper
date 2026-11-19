@@ -18,20 +18,28 @@ below and only through the existing integration install lock.
   protected-overlap checks passed. The legacy callback path, fabricated/stale
   terminal manifests, exact readback tampering, and pause-finalization bypass
   are all covered.
+- The independent migration re-review then passed 243 supplied checks and 29
+  independent checks. It rejected installation for one post-successor retry
+  defect and a stale package manifest. The retry is now an idempotent no-op,
+  its public regression passes, and the complete repaired overlay passes 248
+  focused and adjacent checks with warnings treated as errors. A final
+  independent acceptance rerun is still required before installation.
 - No candidate Python file contains a merge marker or `*.rej` artifact.
 - `SHA256SUMS` seals every packaged source and test file.
+- `PROTECTED_BASELINE_SHA256SUMS` seals every currently existing protected
+  target that this package would replace.
 
 ## Required protected pre-install hashes
 
-- `runner.py`: `db88178ec6e0a07779ea7216f5158604422bb072a93c4d3dd3c8aca8d6643df3`
-- `inbox.py`: `482895c72900ddcdfda1089090a6277af494bea7941b1f1289ac8f2ae5cb23cd`
-- `publication_receipts.py`: `68b029585948b9dcf99c6277f2fe5334eed38642f5679e072fd5375d93384ff2`
-- `sheets_sync.py`: `034c90e64f5d44767094a525ecb363826f40ec70eea3864e7e9ce19592934fa2`
-- `sqlite_repository.py`: `27b136135be61c185ea5d33a6c9830ff106d7e859aee9a3ec3ce5992bc889713`
+Every existing target must match `PROTECTED_BASELINE_SHA256SUMS`. These three
+new targets must be absent:
 
-The nine `exact_*` source modules are expected to be absent before install.
-Any hash mismatch or unexpected existing target is a stop, not permission to
-overwrite.
+- `src/job_search_helper/exact_legacy_migration.py`
+- `src/job_search_helper/exact_legacy_migration_runner.py`
+- `tests/test_exact_legacy_migration.py`
+
+Any hash mismatch, missing expected target, or unexpected existing new target
+is a stop, not permission to overwrite.
 
 ## Install and rollback boundary
 
@@ -39,8 +47,9 @@ overwrite.
    release state, and the exact pre-install hashes above.
 2. Acquire—not delete or bypass—`.integration-install.lock`.
 3. Save a new per-file rollback copy and before manifest outside job data.
-4. Install only files listed in `SHA256SUMS`; do not touch databases, `.state`,
-   locks, credentials, inventories, or unrelated dirty files.
+4. Install only Python source and test files listed in `SHA256SUMS`; do not
+   touch databases, `.state`, locks, credentials, inventories, package
+   metadata, or unrelated dirty files.
 5. Verify installed hashes, compile, and rerun the accepted focused and
    protected-adjacent matrices without Google access.
 6. On any mismatch or failure, restore only replaced files and remove only

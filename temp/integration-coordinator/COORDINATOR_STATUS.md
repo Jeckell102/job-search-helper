@@ -157,8 +157,10 @@ ten-minute user update. Update it immediately after any material result.
   The current protected runner and its terminal Company bridge were preserved,
   only the reviewed migration CLI hooks were reapplied, both manifests were
   resealed, and the reconstructed current-baseline overlay again passed 248
-  checks. Fresh independent acceptance of this reconciled runner/package is
-  pending. No protected source,
+  checks. The higher-model re-review then accepted the reconciled runner after
+  282 supplied checks and 40 independent migration checks passed; separate
+  installation QA accepted the resealed manifests, current baseline, durable
+  rollback installer, and a 13-file disposable install. No protected source,
   live database, Google Sheet, service, queue, lock, scraper, or Jetson state
   changed in this checkpoint.
 

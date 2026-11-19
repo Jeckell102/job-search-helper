@@ -100,6 +100,45 @@ class ExactScopeSheetsTests(unittest.TestCase):
         self.apply_verified_local('CYC-1', 'COMP-1', plan, scope)
         return plan, scope, remote_operation
 
+    def review_guard_plan(self, cycle_id, status):
+        current = self.local.read('Job History')[0]
+        if current.get('Review Status', '') != status:
+            current['Review Status'] = status
+            self.local.import_rows('Job History', [(2, current)])
+        local_operation = {
+            'tab': 'Job History', 'identity': {'Job Key': 'job-1'},
+            'values': {'Last Checked': '2026-11-19'},
+            'expected': {'Review Status': status,
+                         'Added to Opportunities?': 'Manual Review',
+                         'Source Hash': 'source-local'},
+        }
+        remote_operation = {
+            'tab': 'Job History', 'identity': {'Job Key': 'job-1'},
+            'values': {'Last Checked': '2026-11-19'},
+            'append_if_missing': False, 'on_insert': {},
+            'expected': {'Last Checked': '', 'Review Status': status,
+                         'Added to Opportunities?': 'Manual Review'},
+            'append_notes': {},
+        }
+        plan = sealed_plan([local_operation], [remote_operation])
+        plan.pop('plan_digest')
+        plan['record_fingerprint_version'] = 2
+        plan['plan_digest'] = _digest(plan)
+        scope = [{
+            'tab': 'Job History', 'row_id': 1,
+            'identity': {'Job Key': 'job-1'},
+            'fields': ['Last Checked'], 'append_if_missing': False,
+            'guards': {'Review Status': status,
+                       'Added to Opportunities?': 'Manual Review',
+                       'Source Hash': 'source-local'},
+            'expected': copy.deepcopy(remote_operation['expected']),
+        }]
+        self.apply_verified_local(cycle_id, 'COMP-1', plan, scope)
+        exact = self.sync.plan_exact_scope(scope, [remote_operation])
+        receipt_id, intent_id = self.remote_authority(
+            cycle_id, 'COMP-1', plan, exact, intent_id='intent-' + cycle_id)
+        return plan, exact, receipt_id, intent_id
+
     def remote_authority(self, cycle_id, company_id, plan, exact,
                          intent_id='intent-1'):
         self.inbox.save(cycle_id, company_id, {'jobs': []})
@@ -117,7 +156,9 @@ class ExactScopeSheetsTests(unittest.TestCase):
         receipt = {
             'binding': {'request_id': cycle_id, 'company_id': company_id,
                         'source_revision': plan['plan_digest'], 'release_id': 'test'},
-            'records': record_fingerprints(exact['operations']),
+            'records': record_fingerprints(
+                exact['operations'],
+                include_guard_only=plan.get('record_fingerprint_version', 1) == 2),
             'schedule': {'boundary': 'idle', 'enqueued_at': '2026-11-19T00:00:00Z'},
             'timestamp': '2026-11-19T00:00:00Z',
         }
@@ -633,6 +674,43 @@ class ExactScopeSheetsTests(unittest.TestCase):
                          '$130,000 estimated')
         self.assertNotIn('Source Hash', exact['operations'][0]['expected'])
         self.assertNotIn('Salary / Range', exact['operations'][0]['values'])
+
+    def test_blank_guard_mismatch_stays_pending_across_retry(self):
+        self.service.set_cell('Job History', 1, 'Review Status', 'Different')
+        self.service.set_cell('Job History', 1, 'Last Checked', '2026-11-19')
+        plan, exact, receipt_id, intent_id = self.review_guard_plan(
+            'CYC-BLANK-GUARD', '')
+        with self.assertRaises(RepositoryError):
+            self.sync.publish_exact_scope(
+                exact, inbox=self.inbox, cycle_id='CYC-BLANK-GUARD',
+                company_id='COMP-1', plan_digest=plan['plan_digest'],
+                receipt_id=receipt_id, intent_id=intent_id)
+        with self.assertRaisesRegex(ValueError, 'remote guard differs'):
+            self.sync.publish_exact_scope(
+                exact, inbox=self.inbox, cycle_id='CYC-BLANK-GUARD',
+                company_id='COMP-1', plan_digest=plan['plan_digest'],
+                receipt_id=receipt_id, intent_id=intent_id)
+        self.assertEqual(self.inbox.exact_remote_state(
+            'CYC-BLANK-GUARD', 'COMP-1')['state'], 'SYNC_PENDING')
+        self.assertEqual(self.inbox.exact_chunk(
+            'CYC-BLANK-GUARD', 'COMP-1', 0)['state'], 'PENDING')
+
+    def test_nonblank_matching_guard_can_confirm(self):
+        self.service.set_cell('Job History', 1, 'Review Status', 'Human Reviewed')
+        plan, exact, receipt_id, intent_id = self.review_guard_plan(
+            'CYC-MATCHING-GUARD', 'Human Reviewed')
+        delivered = self.sync.publish_exact_scope(
+            exact, inbox=self.inbox, cycle_id='CYC-MATCHING-GUARD',
+            company_id='COMP-1', plan_digest=plan['plan_digest'],
+            receipt_id=receipt_id, intent_id=intent_id)
+        self.assertTrue(delivered['first_attempt'])
+        confirmed = self.sync.confirm_exact_scope(
+            inbox=self.inbox, cycle_id='CYC-MATCHING-GUARD',
+            company_id='COMP-1', plan_digest=plan['plan_digest'],
+            receipt_id=receipt_id, intent_id=intent_id)
+        self.assertEqual(self.inbox.exact_remote_state(
+            'CYC-MATCHING-GUARD', 'COMP-1')['state'], 'SYNC_CONFIRMED')
+        self.assertTrue(confirmed['rows'][0]['remote_guards'])
 
     def test_new_local_row_preserves_sealed_remote_insert_semantics(self):
         local_insert = {

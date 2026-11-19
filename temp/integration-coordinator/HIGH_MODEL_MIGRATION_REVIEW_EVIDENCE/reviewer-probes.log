@@ -1,0 +1,17 @@
+test_builder_accepts_inactive_current_local_company (__main__.DefectReproductions.test_builder_accepts_inactive_current_local_company) ... ok
+test_builder_rebinds_another_company_and_cycle_without_matching_rows (__main__.DefectReproductions.test_builder_rebinds_another_company_and_cycle_without_matching_rows) ... ok
+test_full_record_drift_has_identical_plan_and_local_readback_digest (__main__.DefectReproductions.test_full_record_drift_has_identical_plan_and_local_readback_digest) ... ok
+test_revised_builder_refuses_changed_expected_only_source_hash (__main__.DefectReproductions.test_revised_builder_refuses_changed_expected_only_source_hash) ... ok
+test_revised_builder_refuses_review_change_between_reads (__main__.DefectReproductions.test_revised_builder_refuses_review_change_between_reads) ... ok
+test_nineteen_operations_two_conflicts_and_no_input_mutation (__main__.PositivePlanningChecks.test_nineteen_operations_two_conflicts_and_no_input_mutation) ... ok
+test_blank_remote_guard_still_confirms_after_rejection_without_any_write (__main__.SQLiteMigrationProbes.test_blank_remote_guard_still_confirms_after_rejection_without_any_write) ... ok
+test_company_first_legacy_order_is_sealed_but_exact_planning_refuses (__main__.SQLiteMigrationProbes.test_company_first_legacy_order_is_sealed_but_exact_planning_refuses) ... ok
+test_existing_legacy_plan_cannot_be_adopted_by_save_exact_plan (__main__.SQLiteMigrationProbes.test_existing_legacy_plan_cannot_be_adopted_by_save_exact_plan) ... ok
+test_matching_nonblank_remote_guard_cannot_confirm_successful_write (__main__.SQLiteMigrationProbes.test_matching_nonblank_remote_guard_cannot_confirm_successful_write) ... ok
+test_nonblank_remote_guard_blocks_final_confirmation_but_advances_chunk (__main__.SQLiteMigrationProbes.test_nonblank_remote_guard_blocks_final_confirmation_but_advances_chunk) ... ok
+test_revised_local_restart_refuses_guard_only_decision_changes (__main__.SQLiteMigrationProbes.test_revised_local_restart_refuses_guard_only_decision_changes) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.708s
+
+OK

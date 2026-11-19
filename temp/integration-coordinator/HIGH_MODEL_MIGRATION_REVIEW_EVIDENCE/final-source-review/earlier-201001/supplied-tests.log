@@ -1,0 +1,2041 @@
+======================================================================
+ERROR: test_compact_empty_inventory_company_projection_keeps_only_visible_final_fields (test_exact_cycle_planner.ExactCyclePlannerTests.test_compact_empty_inventory_company_projection_keeps_only_visible_final_fields)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_compact_identity_removal_and_empty_operation_fail_closed (test_exact_cycle_planner.ExactCyclePlannerTests.test_compact_identity_removal_and_empty_operation_fail_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_compact_job_history_projection_prunes_local_only_delivery (test_exact_cycle_planner.ExactCyclePlannerTests.test_compact_job_history_projection_prunes_local_only_delivery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_compact_new_plan_freezes_v2_before_local_mutation_or_receipt (test_exact_cycle_planner.ExactCyclePlannerTests.test_compact_new_plan_freezes_v2_before_local_mutation_or_receipt)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_completed_and_superseded_cycles_are_refused_before_guard (test_exact_cycle_planner.ExactCyclePlannerTests.test_completed_and_superseded_cycles_are_refused_before_guard)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_control_evidence_change_holds_existing_plan (test_exact_cycle_planner.ExactCyclePlannerTests.test_control_evidence_change_holds_existing_plan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_existing_plan_recovers_checkpoint_after_crash_between_databases (test_exact_cycle_planner.ExactCyclePlannerTests.test_existing_plan_recovers_checkpoint_after_crash_between_databases)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_freezes_selected_payload_without_fetch_publish_or_local_commit (test_exact_cycle_planner.ExactCyclePlannerTests.test_freezes_selected_payload_without_fetch_publish_or_local_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_frozen_plan_records_remote_control_evidence (test_exact_cycle_planner.ExactCyclePlannerTests.test_frozen_plan_records_remote_control_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_full_profile_projection_is_operation_compatible_and_sealed (test_exact_cycle_planner.ExactCyclePlannerTests.test_full_profile_projection_is_operation_compatible_and_sealed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_guard_failure_and_blocked_payload_leave_no_plan_or_checkpoint_change (test_exact_cycle_planner.ExactCyclePlannerTests.test_guard_failure_and_blocked_payload_leave_no_plan_or_checkpoint_change)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_invalid_existing_plan_or_payload_mismatch_is_held_without_replacement (test_exact_cycle_planner.ExactCyclePlannerTests.test_invalid_existing_plan_or_payload_mismatch_is_held_without_replacement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_local_hold_and_unplannable_payload_are_preserved (test_exact_cycle_planner.ExactCyclePlannerTests.test_local_hold_and_unplannable_payload_are_preserved)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_manual_review_and_legacy_job_identity_guards_are_frozen (test_exact_cycle_planner.ExactCyclePlannerTests.test_manual_review_and_legacy_job_identity_guards_are_frozen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_nonzero_cursor_legacy_plan_holds_without_mutation (test_exact_cycle_planner.ExactCyclePlannerTests.test_nonzero_cursor_legacy_plan_holds_without_mutation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_partial_payload_freezes_partial_final_without_touching_another_cycle (test_exact_cycle_planner.ExactCyclePlannerTests.test_partial_payload_freezes_partial_final_without_touching_another_cycle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_planning_exception_leaves_payload_and_checkpoint_unmodified (test_exact_cycle_planner.ExactCyclePlannerTests.test_planning_exception_leaves_payload_and_checkpoint_unmodified)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_projection_and_schema_digests_are_deterministic (test_exact_cycle_planner.ExactCyclePlannerTests.test_projection_and_schema_digests_are_deterministic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_rejects_unbounded_or_invalid_scope_without_mutation (test_exact_cycle_planner.ExactCyclePlannerTests.test_rejects_unbounded_or_invalid_scope_without_mutation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_same_url_plan_without_exact_receipt_or_with_altered_payload_holds_queued (test_exact_cycle_planner.ExactCyclePlannerTests.test_same_url_plan_without_exact_receipt_or_with_altered_payload_holds_queued)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_unknown_profile_holds_without_plan_or_checkpoint_mutation (test_exact_cycle_planner.ExactCyclePlannerTests.test_unknown_profile_holds_without_plan_or_checkpoint_mutation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_planner.py", line 56, in setUp
+    self.inbox.save(self.cycle, 'COMP-1', self.saved_payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_compact_v2_large_company_uses_bounded_remote_chunks (test_exact_cycle_recovery.ExactCycleRecoveryTests.test_compact_v2_large_company_uses_bounded_remote_chunks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_exact_cycle_recovery.py", line 509, in test_compact_v2_large_company_uses_bounded_remote_chunks
+    inbox.save('CYC', 'COMP-1', payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_company_change_after_retry_admission_blocks_storage (test_durable_inbox.DurablePipelineTests.test_company_change_after_retry_admission_blocks_storage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 138, in test_company_change_after_retry_admission_blocks_storage
+    self.engine.resume_local(self.cycle)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_company_error_status_failure_does_not_stop_other_companies (test_durable_inbox.DurablePipelineTests.test_company_error_status_failure_does_not_stop_other_companies)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 323, in test_company_error_status_failure_does_not_stop_other_companies
+    self.engine.resume_parallel(self.cycle, sync_only=True)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1486, in resume_parallel
+    self._commit(self._company_op(company, {"Scan State": "Blocked / Manual Review", "Blocked Reason": item.get("reason", ""),
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 214, in _commit
+    result = self.repo.commit(list(operations))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/unittest/mock.py", line 1124, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/unittest/mock.py", line 1128, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/unittest/mock.py", line 1189, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 320, in commit
+    raise RepositoryError('Company status formula is protected')
+job_search_helper.repository.RepositoryError: Company status formula is protected
+
+======================================================================
+ERROR: test_duplicate_resume_keeps_one_confirmed_receipt_per_frozen_company (test_durable_inbox.DurablePipelineTests.test_duplicate_resume_keeps_one_confirmed_receipt_per_frozen_company)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 245, in test_duplicate_resume_keeps_one_confirmed_receipt_per_frozen_company
+    self.engine.resume_local(self.cycle, defer_sync=True)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_file_backed_restart_reconciles_frozen_receipt_without_duplicate_rows (test_durable_inbox.DurablePipelineTests.test_file_backed_restart_reconciles_frozen_receipt_without_duplicate_rows)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 231, in test_file_backed_restart_reconciles_frozen_receipt_without_duplicate_rows
+    self.engine.resume_local(self.cycle, defer_sync=True)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_frozen_plan_and_local_receipt_commit_in_one_sqlite_transaction (test_durable_inbox.DurablePipelineTests.test_frozen_plan_and_local_receipt_commit_in_one_sqlite_transaction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 52, in test_frozen_plan_and_local_receipt_commit_in_one_sqlite_transaction
+    self.inbox.save(self.cycle, 'C-0', payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_inventory_survives_close_reopen_before_control_checkpoint (test_durable_inbox.DurablePipelineTests.test_inventory_survives_close_reopen_before_control_checkpoint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 157, in test_inventory_survives_close_reopen_before_control_checkpoint
+    self.inbox.save(self.cycle, 'C-0', payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_lost_acknowledgement_is_pending_across_restart_then_confirms_after_readback (test_durable_inbox.DurablePipelineTests.test_lost_acknowledgement_is_pending_across_restart_then_confirms_after_readback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 255, in test_lost_acknowledgement_is_pending_across_restart_then_confirms_after_readback
+    self.engine.resume_local(self.cycle, defer_sync=True)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_lost_acknowledgement_never_overwrites_a_manual_choice_during_recovery (test_durable_inbox.DurablePipelineTests.test_lost_acknowledgement_never_overwrites_a_manual_choice_during_recovery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 275, in test_lost_acknowledgement_never_overwrites_a_manual_choice_during_recovery
+    self.engine.resume_local(self.cycle, defer_sync=True)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_receipt_uses_authoritative_cycle_source_revision_when_available (test_durable_inbox.DurablePipelineTests.test_receipt_uses_authoritative_cycle_source_revision_when_available)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 83, in test_receipt_uses_authoritative_cycle_source_revision_when_available
+    self.engine.resume_local(self.cycle, defer_sync=True)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_receipt_write_exception_rolls_back_the_frozen_plan_insert (test_durable_inbox.DurablePipelineTests.test_receipt_write_exception_rolls_back_the_frozen_plan_insert)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 65, in test_receipt_write_exception_rolls_back_the_frozen_plan_insert
+    self.inbox.save(self.cycle, 'C-0', payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_repaired_retry_receipt_uses_admitted_release_and_source (test_durable_inbox.DurablePipelineTests.test_repaired_retry_receipt_uses_admitted_release_and_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 109, in test_repaired_retry_receipt_uses_admitted_release_and_source
+    self.engine.resume_local(self.cycle, defer_sync=True)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_runner_sync_uses_durable_data_and_reports_numeric_metrics (test_durable_inbox.DurablePipelineTests.test_runner_sync_uses_durable_data_and_reports_numeric_metrics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 342, in test_runner_sync_uses_durable_data_and_reports_numeric_metrics
+    self.assertEqual(runner.run_start(sync_only=True, browser_fallback=False), 0)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 645, in run_start
+    with _review_queue_lifecycle(repo, database):
+  File "/usr/lib/python3.11/contextlib.py", line 144, in __exit__
+    next(self.gen)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 497, in _review_queue_lifecycle
+    _refresh_review_queue(repo, database)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 372, in _refresh_review_queue
+    result = export_review_queues(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/review_queue.py", line 428, in export_review_queues
+    result = _export_review_queues_unlocked(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/review_queue.py", line 371, in _export_review_queues_unlocked
+    result = build_review_queues(repo, threshold=threshold, inventory_database=inventory_database, cache=cache)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/review_queue.py", line 241, in build_review_queues
+    policy = json.dumps(policy_fingerprint(), sort_keys=True) if cache else ""
+                        ^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/review_refresh.py", line 41, in policy_fingerprint
+    return {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in policy_files}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/review_refresh.py", line 41, in <dictcomp>
+    return {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in policy_files}
+                                   ^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1050, in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+======================================================================
+ERROR: test_actual_runner_finishes_with_summary_and_next_start_scans_again (test_runner_cycles.FreshStartLifecycleTests.test_actual_runner_finishes_with_summary_and_next_start_scans_again)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 283, in test_actual_runner_finishes_with_summary_and_next_start_scans_again
+    self.assertEqual(runner.run_start(fetch_workers=1, browser_fallback=False), 0)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 696, in run_start
+    result = _run_scan_with_retries(engine, cycle_id, partial_retries=partial_retries,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 444, in _run_scan_with_retries
+    result = engine.resume_local(cycle_id, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_explicit_resume_retries_partial_without_repeating_complete (test_runner_cycles.FreshStartLifecycleTests.test_explicit_resume_retries_partial_without_repeating_complete)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 188, in test_explicit_resume_retries_partial_without_repeating_complete
+    first, _ = self.start()
+               ^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 163, in start
+    result = self.engine.resume_local(cycle_id, fetch_workers=1, retry_partial=resume, retry_blocked=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_fresh_start_supersedes_old_queue_without_deleting_its_payload_or_plan (test_runner_cycles.FreshStartLifecycleTests.test_fresh_start_supersedes_old_queue_without_deleting_its_payload_or_plan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 204, in test_fresh_start_supersedes_old_queue_without_deleting_its_payload_or_plan
+    self.inbox.save(old, 'C-1', payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_interruption_keeps_unattempted_companies_resumable (test_runner_cycles.FreshStartLifecycleTests.test_interruption_keeps_unattempted_companies_resumable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 241, in test_interruption_keeps_unattempted_companies_resumable
+    resumed, result = self.start(resume=True)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 163, in start
+    result = self.engine.resume_local(cycle_id, fetch_workers=1, retry_partial=resume, retry_blocked=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_repeated_start_rechecks_successes_and_partials_and_adds_new_company (test_runner_cycles.FreshStartLifecycleTests.test_repeated_start_rechecks_successes_and_partials_and_adds_new_company)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 168, in test_repeated_start_rechecks_successes_and_partials_and_adds_new_company
+    first, result = self.start()
+                    ^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 163, in start
+    result = self.engine.resume_local(cycle_id, fetch_workers=1, retry_partial=resume, retry_blocked=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_resume_processes_durable_saved_inventory_without_fetching_it_again (test_runner_cycles.FreshStartLifecycleTests.test_resume_processes_durable_saved_inventory_without_fetching_it_again)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 222, in test_resume_processes_durable_saved_inventory_without_fetching_it_again
+    self.inbox.save(old, 'C-0', inventory_payload(inventory('C-0', c['Company'], c['Official Careers URL']), c))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_resume_recovers_latest_remote_scope_and_newest_remote_supersession (test_runner_cycles.FreshStartLifecycleTests.test_resume_recovers_latest_remote_scope_and_newest_remote_supersession)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 304, in test_resume_recovers_latest_remote_scope_and_newest_remote_supersession
+    new, _ = self.start()
+             ^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 163, in start
+    result = self.engine.resume_local(cycle_id, fetch_workers=1, retry_partial=resume, retry_blocked=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_summary_reports_run_counts_and_leaves_zero_skipped_blank (test_runner_cycles.FreshStartLifecycleTests.test_summary_reports_run_counts_and_leaves_zero_skipped_blank)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 261, in test_summary_reports_run_counts_and_leaves_zero_skipped_blank
+    _, result = self.start()
+                ^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_runner_cycles.py", line 163, in start
+    result = self.engine.resume_local(cycle_id, fetch_workers=1, retry_partial=resume, retry_blocked=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/engine.py", line 1180, in resume_local
+    return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 667, in run
+    future.result()
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 647, in worker
+    fetch_company(company, slot)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/local_pipeline.py", line 622, in fetch_company
+    self.inbox.save(self.cid, cid, inventory_payload(result, company))
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/inbox.py", line 166, in save
+    remember_title_audit(self.connection, company, payload)
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 28, in remember_title_audit
+    saved = dict(payload, jobs=[job for job in payload.get("jobs", [])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/title_audit.py", line 29, in <listcomp>
+    if classify_title(job.get("title", "")) == "reject"])
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 57, in classify_title
+    if any(pattern.search(value) for pattern in load_title_blacklist()):
+                                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_deferred_sqlite_run_never_constructs_sync (test_run_scoped_sync.RunnerSyncWiringTests.test_deferred_sqlite_run_never_constructs_sync)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_run_scoped_sync.py", line 639, in test_deferred_sqlite_run_never_constructs_sync
+    result,sync = self.run_empty(defer=True)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_run_scoped_sync.py", line 625, in run_empty
+    result = runner.run_start(sync_only=True,browser_fallback=False,defer_sync=defer)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 541, in run_start
+    load_title_blacklist()
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_direct_sheets_backend_keeps_existing_path (test_run_scoped_sync.RunnerSyncWiringTests.test_direct_sheets_backend_keeps_existing_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_run_scoped_sync.py", line 644, in test_direct_sheets_backend_keeps_existing_path
+    result,sync = self.run_empty(local=False)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_run_scoped_sync.py", line 625, in run_empty
+    result = runner.run_start(sync_only=True,browser_fallback=False,defer_sync=defer)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 541, in run_start
+    load_title_blacklist()
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_scraper_starts_while_reviewer_owns_review_and_remote_locks (test_run_scoped_sync.RunnerSyncWiringTests.test_scraper_starts_while_reviewer_owns_review_and_remote_locks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_run_scoped_sync.py", line 605, in test_scraper_starts_while_reviewer_owns_review_and_remote_locks
+    result, _ = self.run_empty()
+                ^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_run_scoped_sync.py", line 625, in run_empty
+    result = runner.run_start(sync_only=True,browser_fallback=False,defer_sync=defer)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 541, in run_start
+    load_title_blacklist()
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+ERROR: test_sqlite_sync_is_entered_and_exited_even_when_no_inventories (test_run_scoped_sync.RunnerSyncWiringTests.test_sqlite_sync_is_entered_and_exited_even_when_no_inventories)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 28, in _load_title_patterns
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_run_scoped_sync.py", line 630, in test_sqlite_sync_is_entered_and_exited_even_when_no_inventories
+    result,sync = self.run_empty()
+                  ^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_run_scoped_sync.py", line 625, in run_empty
+    result = runner.run_start(sync_only=True,browser_fallback=False,defer_sync=defer)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/runner.py", line 541, in run_start
+    load_title_blacklist()
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 18, in load_title_blacklist
+    return _load_title_patterns(BLACKLIST_PATH)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/src/job_search_helper/efficiency.py", line 30, in _load_title_patterns
+    raise ValueError(f"Cannot read title list: {path}. Restore it before starting.") from exc
+ValueError: Cannot read title list: /home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/title-blacklist.txt. Restore it before starting.
+
+======================================================================
+FAIL: test_deferred_sync_does_not_refetch_and_releases_acknowledged_data (test_durable_inbox.DurablePipelineTests.test_deferred_sync_does_not_refetch_and_releases_acknowledged_data)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 149, in test_deferred_sync_does_not_refetch_and_releases_acknowledged_data
+    self.assertEqual(self.inbox.cycles(), [self.cycle])
+AssertionError: Lists differ: [] != ['CYC-6C143383C64B']
+
+Second list contains 1 additional elements.
+First extra element 0:
+'CYC-6C143383C64B'
+
+- []
++ ['CYC-6C143383C64B']
+
+======================================================================
+FAIL: test_fetch_error_is_logged_and_other_companies_continue (test_durable_inbox.DurablePipelineTests.test_fetch_error_is_logged_and_other_companies_continue)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 370, in test_fetch_error_is_logged_and_other_companies_continue
+    self.assertEqual(len(self.repo.read('Job History')), 3)
+AssertionError: 0 != 3
+
+======================================================================
+FAIL: test_fresh_pause_preserves_saved_inventory_for_explicit_retry (test_durable_inbox.DurablePipelineTests.test_fresh_pause_preserves_saved_inventory_for_explicit_retry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 297, in test_fresh_pause_preserves_saved_inventory_for_explicit_retry
+    self.assertEqual(len(self.repo.read('Job History')), 3)
+AssertionError: 0 != 3
+
+======================================================================
+FAIL: test_interrupt_after_remote_ack_before_checkpoint_replays_saved_payload (test_durable_inbox.DurablePipelineTests.test_interrupt_after_remote_ack_before_checkpoint_replays_saved_payload)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 218, in test_interrupt_after_remote_ack_before_checkpoint_replays_saved_payload
+    with self.assertRaises(KeyboardInterrupt):
+AssertionError: KeyboardInterrupt not raised
+
+======================================================================
+FAIL: test_lost_write_response_keeps_inventory_and_retry_is_idempotent (test_durable_inbox.DurablePipelineTests.test_lost_write_response_keeps_inventory_and_retry_is_idempotent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 185, in test_lost_write_response_keeps_inventory_and_retry_is_idempotent
+    self.assertIsNotNone(self.inbox.get(self.cycle, 'C-0'))
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_workers_persist_results_and_take_assignments_during_write (test_durable_inbox.DurablePipelineTests.test_workers_persist_results_and_take_assignments_during_write)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/final-source-review/tests/test_durable_inbox.py", line 213, in test_workers_persist_results_and_take_assignments_during_write
+    self.assertEqual(len(self.repo.read('Job History')), 4)
+AssertionError: 0 != 4
+
+----------------------------------------------------------------------
+Ran 243 tests in 26.471s
+
+FAILED (failures=6, errors=46)
+{
+  "blocking_cycle_ids": [
+    "CYC-5E86ECE904C7"
+  ],
+  "company_ids": [
+    "C-1"
+  ],
+  "enqueued_at": "2026-11-18T00:00:00Z",
+  "intake_start_targets": {
+    "busy_boundary": "the last blocking cycle reaches Complete or Complete with exceptions; the next normal start command admits the durable request",
+    "busy_seconds_after_safe_boundary": 60,
+    "idle_seconds": 60
+  },
+  "queue_age_seconds": 159084,
+  "recovery": "Company-only request is waiting for safe boundary behind unfinished cycle(s): CYC-5E86ECE904C7. Keep next-scan.json unchanged; do not delete locks or supersede the cycle. Resume the blocking cycle with ./job-search-scraper start --resume. There is no automatic cancel path for an existing cycle.",
+  "request_id": "waiting-request",
+  "state": "WAITING_SAFE_BOUNDARY",
+  "visibility": "local-only"
+}

@@ -233,6 +233,14 @@ class SQLiteRepository:
             return verify_exact_local_plan(self, cycle_id, company_id, plan)
         return verify_exact_local_chunk(self, cycle_id, company_id, plan, cursor)
 
+    def adopt_verified_legacy_local_plan(self, cycle_id, company_id, plan,
+                                         *, timestamp_value):
+        """Journal a reviewed completed legacy prefix without replaying it."""
+        from .exact_local_plan import adopt_verified_legacy_local_plan
+        return adopt_verified_legacy_local_plan(
+            self, cycle_id, company_id, plan,
+            timestamp_value=timestamp_value)
+
     @contextmanager
     def transaction(self):
         if self.readonly:

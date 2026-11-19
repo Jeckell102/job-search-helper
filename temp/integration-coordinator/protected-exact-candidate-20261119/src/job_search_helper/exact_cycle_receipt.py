@@ -27,7 +27,11 @@ def derive_receipt(cycle, company_id, payload, plan, timestamp):
                   else plan.get('operations'))
     if not isinstance(operations, list) or not operations:
         raise ValueError('Exact receipt requires a frozen remote operation stream.')
-    records = record_fingerprints(operations)
+    fingerprint_version = plan.get('record_fingerprint_version', 1)
+    if fingerprint_version not in {1, 2}:
+        raise ValueError('Exact receipt fingerprint version is invalid.')
+    records = record_fingerprints(
+        operations, include_guard_only=fingerprint_version == 2)
     item = cycle['companies'][company_id]
     request = cycle.get('request', {})
     candidates = (cycle.get('source_revision'),

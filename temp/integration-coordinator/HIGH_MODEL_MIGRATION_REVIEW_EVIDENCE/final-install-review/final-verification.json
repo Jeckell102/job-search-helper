@@ -1,0 +1,13 @@
+{
+  "checked_at_utc": "2026-11-19T20:28:21.770169+00:00",
+  "candidate_package_changed": [],
+  "protected_required_targets_changed": [],
+  "protected_source_inputs_changed": [],
+  "unexpected_new_targets": [],
+  "all_13_overlay_files_compile": true,
+  "receipt_id_ast_identical_to_protected": true,
+  "package_manifest_sha256": "1f5e58e6cfb342102c712384fdf18911adc978343912fc399bb2e6c43ef9827d",
+  "baseline_manifest_sha256": "e44aa504a446d3859fcfb0228550da02003412275c0cfdb70ba3d932de32d82b",
+  "final_readme_sha256": "42354076391060af671f1098169660d1feef0ca5755cbd422f5b6f0b2e850028",
+  "latest_migration_test_sha256": "29129b18d713efa2b2dd1d235391d84ab6e3b5ccf0e56b2f3fce68cb106d3486"
+}

@@ -1,0 +1,23 @@
+----------------------------------------------------------------------
+Ran 243 tests in 36.116s
+
+OK
+{
+  "blocking_cycle_ids": [
+    "CYC-37707D113561"
+  ],
+  "company_ids": [
+    "C-1"
+  ],
+  "enqueued_at": "2026-11-18T00:00:00Z",
+  "intake_start_targets": {
+    "busy_boundary": "the last blocking cycle reaches Complete or Complete with exceptions; the next normal start command admits the durable request",
+    "busy_seconds_after_safe_boundary": 60,
+    "idle_seconds": 60
+  },
+  "queue_age_seconds": 159185,
+  "recovery": "Company-only request is waiting for safe boundary behind unfinished cycle(s): CYC-37707D113561. Keep next-scan.json unchanged; do not delete locks or supersede the cycle. Resume the blocking cycle with ./job-search-scraper start --resume. There is no automatic cancel path for an existing cycle.",
+  "request_id": "waiting-request",
+  "state": "WAITING_SAFE_BOUNDARY",
+  "visibility": "local-only"
+}

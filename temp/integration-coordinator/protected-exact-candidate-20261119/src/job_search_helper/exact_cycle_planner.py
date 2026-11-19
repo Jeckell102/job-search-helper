@@ -174,6 +174,19 @@ def _canonical_remote_projection(operations):
     } for operation in operations]
 
 
+def _projection_by_target(operations):
+    """Compare a frozen projection by exact record, independent of stream order."""
+    if not isinstance(operations, list) or not operations:
+        raise ValueError('remote_projection_operations_invalid')
+    keyed = {}
+    for operation in operations:
+        key = _target_label(operation)
+        if key in keyed:
+            raise ValueError('remote_projection_duplicate_target')
+        keyed[key] = copy.deepcopy(operation)
+    return keyed
+
+
 def _target_label(operation):
     """Return the stable final identity of one frozen operation."""
     identity = operation.get('identity')
@@ -365,11 +378,16 @@ def _validate_existing_exact_plan_v2(plan, payload, repository, cycle_id,
             or plan.get('local_operations_digest') != _digest(local_operations)
             or not isinstance(remote_projection, list) or not remote_projection
             or plan.get('remote_projection_digest') != _digest(remote_projection)
-            or _canonical_remote_projection(
-                _project_operations(local_operations, publication)) != remote_projection
-            or plan.get('local_expected_records') != record_fingerprints(local_operations)
+            or _projection_by_target(_canonical_remote_projection(
+                _project_operations(local_operations, publication)))
+            != _projection_by_target(remote_projection)
+            or plan.get('local_expected_records') != record_fingerprints(
+                local_operations,
+                include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
             or plan.get('local_expected_records_digest') != _digest(plan.get('local_expected_records'))
-            or plan.get('remote_records') != record_fingerprints(remote_projection)
+            or plan.get('remote_records') != record_fingerprints(
+                remote_projection,
+                include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
             or plan.get('remote_records_digest') != _digest(plan.get('remote_records'))
             or plan.get('local_finalization_digest') != _digest({
                 'operations': local_operations, 'final': plan.get('final'),

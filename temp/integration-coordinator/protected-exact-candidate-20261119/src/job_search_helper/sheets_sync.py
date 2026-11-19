@@ -708,7 +708,11 @@ class SheetsSynchronizer:
 
     def _validate_exact_plan(self, exact_plan):
         if (not isinstance(exact_plan, Mapping)
-                or set(exact_plan) != {'operations', 'rows', 'projection_digest'}
+                or not {'operations', 'rows', 'projection_digest'} <= set(exact_plan)
+                or set(exact_plan) - {
+                    'operations', 'rows', 'projection_digest',
+                    'record_fingerprint_version'}
+                or exact_plan.get('record_fingerprint_version', 1) not in {1, 2}
                 or not isinstance(exact_plan.get('operations'), list)
                 or not exact_plan['operations']
                 or not isinstance(exact_plan.get('rows'), list)
@@ -775,12 +779,33 @@ class SheetsSynchronizer:
             for header, suffix in operation.get('append_notes', {}).items():
                 if str(suffix) not in str(actual.get(header, '')):
                     raise ValueError('Exact Sheets remote note readback is missing its frozen suffix.')
-            observed.append({'tab': tab, 'row_id': evidence['row_id'],
-                             'identity': copy.deepcopy(evidence['identity']),
-                             'fields': list(evidence['fields']),
-                             'sent': copy.deepcopy(evidence['sent']),
-                             'actual': {header: actual.get(header, '')
-                                        for header in evidence['fields']}})
+            mutated = set(operation.get('on_insert', {}))
+            mutated.update(operation.get('values', {}))
+            mutated.update(operation.get('append_notes', {}))
+            guard_only = {header: value for header, value
+                          in operation.get('expected', {}).items()
+                          if header not in mutated}
+            if any(header not in actual for header in guard_only):
+                raise ValueError('Exact Sheets remote guard readback is incomplete.')
+            if any(not _equivalent(header, actual.get(header, ''), value)
+                   for header, value in guard_only.items()):
+                raise ValueError('Exact Sheets remote guard differs from the frozen projection.')
+            observed_row = {
+                'tab': tab, 'row_id': evidence['row_id'],
+                'identity': copy.deepcopy(evidence['identity']),
+                'fields': list(evidence['fields']),
+                'sent': copy.deepcopy(evidence['sent']),
+                'actual': {header: actual.get(header, '')
+                           for header in evidence['fields']},
+            }
+            # Preserve the byte-for-byte acknowledgement contract for v1
+            # plans that may already be durably confirmed.  Version 2 is the
+            # explicit format that carries guard values in its receipt proof.
+            if exact_plan.get('record_fingerprint_version', 1) == 2:
+                observed_row['remote_guards'] = {
+                    header: copy.deepcopy(actual[header])
+                    for header in sorted(guard_only)}
+            observed.append(observed_row)
         acknowledgement_id = _digest({
             'receipt_id': receipt_id, 'intent_id': intent_id,
             'projection_digest': exact_plan['projection_digest'],
@@ -802,8 +827,11 @@ class SheetsSynchronizer:
                                  if key in identity})
             row = dict(identity)
             row.update(observed['actual'])
+            row.update(observed.get('remote_guards', {}))
             rows.setdefault(operation['tab'], []).append(row)
-        return record_fingerprints(exact_plan['operations'], rows)
+        return record_fingerprints(
+            exact_plan['operations'], rows,
+            include_guard_only=exact_plan.get('record_fingerprint_version', 1) == 2)
 
     def _require_exact_inbox(self, inbox):
         """Require the concrete durable authority for this exact workbook."""
@@ -1112,7 +1140,9 @@ class SheetsSynchronizer:
                                   for header in item['fields']},
                          'operation': copy.deepcopy(operation)})
         exact_plan = {'operations': copy.deepcopy(projection), 'rows': rows,
-                      'projection_digest': remote[2]}
+                      'projection_digest': remote[2],
+                      'record_fingerprint_version': plan.get(
+                          'record_fingerprint_version', 1)}
         self._validate_exact_plan(exact_plan)
         return exact_plan
 

@@ -1,0 +1,251 @@
+--- work/migration-review/src/job_search_helper/exact_legacy_migration.py	2026-11-19 14:43:15.207476190 -0500
++++ /tmp/job-search-helper-integration-automation/temp/integration-coordinator/protected-exact-candidate-20261119/src/job_search_helper/exact_legacy_migration.py	2026-11-19 14:46:04.539628723 -0500
+@@ -15,13 +15,14 @@
+     _require_independent_targets,
+     _seal_exact_plan_v2,
+ )
+-from .exact_local_plan import _rows_for_operations
++from .exact_local_plan import _final_identity
+ from .publication_receipts import record_fingerprints
+ from .repository import _equivalent
+ 
+ 
+ MIGRATION_VERSION = "legacy-exact-plan-migration-v1"
+ PROTECTED_DRIFT_FIELDS = frozenset({"Review Status", "Decision"})
++_BINDING_PREVIEW = object()
+ 
+ 
+ def _legacy_shape(plan, payload, cursor):
+@@ -44,28 +45,96 @@
+     })
+ 
+ 
+-def _validate_binding(binding, cycle_id, company_id, payload, legacy_plan, cursor):
+-    """CAS-bind caller labels to the exact retained artifacts under review."""
+-    expected = {
++def _base_binding(repository, cycle_id, company_id, payload, legacy_plan, cursor):
++    """Return immutable identity pins supplied by the authoritative adopter."""
++    workbook = str(getattr(repository, "spreadsheet_id", "") or "").strip()
++    if not workbook:
++        raise ValueError("legacy_migration_workbook_identity_missing")
++    return {
+         "cycle_id": cycle_id,
+         "company_id": company_id,
++        "workbook_id_digest": _digest(workbook),
+         "legacy_plan_digest": _digest(legacy_plan),
+         "inventory_payload_digest": _digest(payload),
+         "legacy_operation_count": len(legacy_plan["operations"]),
+         "original_local_cursor": cursor,
+     }
+-    if not isinstance(binding, Mapping) or dict(binding) != expected:
+-        raise ValueError("legacy_migration_binding_mismatch")
+-    return expected
+ 
+ 
+-def _reconcile_local_operations(repository, operations):
++def _capture_full_snapshot(repository, operations):
++    """Read every selected row and digest its complete current local schema."""
++    schemas = getattr(repository, "schemas", None)
++    if not isinstance(schemas, Mapping):
++        raise ValueError("legacy_migration_local_schema_missing")
++    records, rows, seen = [], [], set()
++    for operation in operations:
++        tab = operation.get("tab")
++        identity = _final_identity(operation)
++        matches = repository.matches(tab, identity)
++        if len(matches) != 1:
++            raise ValueError("legacy_migration_identity_missing_or_ambiguous")
++        row_id, row = matches[0]
++        label = (tab, row_id)
++        if label in seen:
++            raise ValueError("legacy_migration_duplicate_local_target")
++        headers = schemas.get(tab)
++        if not isinstance(headers, (list, tuple)) or not headers:
++            raise ValueError("legacy_migration_local_schema_invalid")
++        normalized = {str(header): copy.deepcopy(row.get(header, ""))
++                      for header in headers}
++        records.append({"tab": tab, "identity": copy.deepcopy(identity),
++                        "record": normalized})
++        rows.append(normalized)
++        seen.add(label)
++    return rows, _digest(records)
++
++
++def _validate_operation_ownership(company_id, operations, rows):
++    company_rows = [(operation, row) for operation, row in zip(operations, rows)
++                    if operation.get("tab") == "Companies"]
++    if (len(company_rows) != 1
++            or company_rows[0][0].get("identity") != {"Company ID": company_id}
++            or str(company_rows[0][1].get("Company ID", "")).strip() != company_id):
++        raise ValueError("legacy_migration_company_operation_mismatch")
++    company_name = str(company_rows[0][1].get("Company", "")).strip()
++    history_keys, evidence_keys = set(), set()
++    for operation, row in zip(operations, rows):
++        if operation.get("tab") == "Job History":
++            if not company_name or str(row.get("Company", "")).strip() != company_name:
++                raise ValueError("legacy_migration_job_company_mismatch")
++            history_keys.add(str(row.get("Job Key", "")).strip())
++        elif operation.get("tab") == "Job Evidence":
++            evidence_keys.add(str(row.get("Job Key", "")).strip())
++    if "" in history_keys | evidence_keys or evidence_keys - history_keys:
++        raise ValueError("legacy_migration_job_evidence_ownership_mismatch")
++    return company_rows[0][1]
++
++
++def _validate_local_controls(company_row, controls):
++    expected = {
++        "company_id": company_row.get("Company ID", ""),
++        "official_careers_url": company_row.get("Official Careers URL", ""),
++        "company_status": company_row.get("Company Status", ""),
++        "claimed_by": company_row.get("Claimed By", ""),
++        "claim_token": company_row.get("Claim Token", ""),
++    }
++    if any(not _equivalent(header, controls.get(key, ""), value)
++           for key, header, value in (
++               ("company_id", "Company ID", expected["company_id"]),
++               ("official_careers_url", "Official Careers URL",
++                expected["official_careers_url"]),
++               ("company_status", "Company Status", expected["company_status"]),
++               ("claimed_by", "Claimed By", expected["claimed_by"]),
++               ("claim_token", "Claim Token", expected["claim_token"]),
++           )):
++        raise ValueError("legacy_migration_local_controls_mismatch")
++
++
++def _reconcile_local_operations(operations, rows):
+     """Preserve recognized later review decisions and reject all other drift."""
+     migrated, conflicts = [], []
+-    for source in operations:
++    for source, row in zip(operations, rows):
+         operation = copy.deepcopy(source)
+-        rows = _rows_for_operations(repository, [operation])
+-        row = rows[operation["tab"]][0]
+         changed = {}
+         for mapping_name in ("on_insert", "values"):
+             mapping = operation.get(mapping_name, {})
+@@ -97,13 +166,33 @@
+                     key: changed[key]["current_digest"] for key in sorted(changed)}),
+             })
+         migrated.append(operation)
++    return migrated, conflicts
+ 
+-    observed = record_fingerprints(
+-        migrated, _rows_for_operations(repository, migrated))
+-    expected = record_fingerprints(migrated)
+-    if observed != expected:
+-        raise ValueError("legacy_migrated_local_readback_mismatch")
+-    return migrated, conflicts, _digest(observed)
++
++def _protected_guard_digest(operations):
++    guards = []
++    for operation in operations:
++        protected = {header: copy.deepcopy(value)
++                     for header, value in operation.get("expected", {}).items()
++                     if header in PROTECTED_DRIFT_FIELDS}
++        if protected:
++            guards.append({"tab": operation["tab"],
++                           "identity": _final_identity(operation),
++                           "guards": protected})
++    return _digest(guards)
++
++
++def _order_remote_projection(repository, operations):
++    """Freeze the same tab/row order used by exact Sheets scope planning."""
++    from .sheets_sync import ORDER
++    ordered = []
++    for operation in operations:
++        matches = repository.matches(operation["tab"], _final_identity(operation))
++        if len(matches) != 1 or operation["tab"] not in ORDER:
++            raise ValueError("legacy_migration_remote_order_unresolvable")
++        ordered.append((ORDER[operation["tab"]], matches[0][0], operation))
++    return [copy.deepcopy(operation) for _tab_order, _row_id, operation
++            in sorted(ordered, key=lambda item: (item[0], item[1]))]
+ 
+ 
+ def build_legacy_v2_plan(repository, *, cycle_id, company_id, payload,
+@@ -119,12 +208,28 @@
+         raise ValueError("legacy_migration_inventory_invalid")
+     _legacy_shape(legacy_plan, payload, cursor)
+     cycle_id, company_id = cycle_id.strip(), company_id.strip()
+-    exact_binding = _validate_binding(
+-        binding, cycle_id, company_id, payload, legacy_plan, cursor)
++    base_binding = _base_binding(
++        repository, cycle_id, company_id, payload, legacy_plan, cursor)
+     evidence, evidence_digest = _control_evidence(
+         controls, company_id, payload["requested_url"])
+-    operations, conflicts, local_readback_digest = _reconcile_local_operations(
++    first_rows, first_snapshot_digest = _capture_full_snapshot(
++        repository, legacy_plan["operations"])
++    company_row = _validate_operation_ownership(
++        company_id, legacy_plan["operations"], first_rows)
++    _validate_local_controls(company_row, controls)
++    operations, conflicts = _reconcile_local_operations(
++        legacy_plan["operations"], first_rows)
++    final_rows, final_snapshot_digest = _capture_full_snapshot(
+         repository, legacy_plan["operations"])
++    if first_snapshot_digest != final_snapshot_digest:
++        raise ValueError("legacy_migration_local_snapshot_changed")
++    observed = record_fingerprints(
++        operations, {tab: [row for operation, row in zip(legacy_plan["operations"], final_rows)
++                           if operation.get("tab") == tab]
++                     for tab in {operation.get("tab") for operation in legacy_plan["operations"]}})
++    expected = record_fingerprints(operations)
++    if observed != expected:
++        raise ValueError("legacy_migrated_selected_fields_mismatch")
+     base = {
+         "operations": operations,
+         "final": copy.deepcopy(legacy_plan["final"]),
+@@ -135,10 +240,29 @@
+     }
+     sealed = _seal_exact_plan_v2(
+         base, payload, repository, cycle_id, company_id)
++    sealed["remote_projection"] = _order_remote_projection(
++        repository, sealed["remote_projection"])
++    sealed["remote_projection_digest"] = _digest(sealed["remote_projection"])
++    sealed["remote_records"] = record_fingerprints(sealed["remote_projection"])
++    sealed["remote_records_digest"] = _digest(sealed["remote_records"])
++    guard_digest = _protected_guard_digest(operations)
++    exact_binding = {
++        **base_binding,
++        "inventory_blocked": False,
++        "current_local_snapshot_digest": final_snapshot_digest,
++        "selected_fields_readback_digest": _digest(observed),
++        "protected_guard_digest": guard_digest,
++        "approved_conflicts": copy.deepcopy(conflicts),
++        "publication_profile": sealed["publication_profile"],
++        "publication_schema_digest": sealed["publication_schema_digest"],
++    }
++    if binding is _BINDING_PREVIEW:
++        return copy.deepcopy(exact_binding)
++    if not isinstance(binding, Mapping) or dict(binding) != exact_binding:
++        raise ValueError("legacy_migration_binding_mismatch")
+     migration = {
+         "version": MIGRATION_VERSION,
+         **exact_binding,
+-        "local_readback_digest": local_readback_digest,
+         "protected_fields": sorted(PROTECTED_DRIFT_FIELDS),
+         "protected_conflicts": conflicts,
+     }
+@@ -150,6 +274,9 @@
+         "company_id": company_id,
+         "legacy_plan_digest": migration["legacy_plan_digest"],
+         "inventory_payload_digest": migration["inventory_payload_digest"],
++        "current_local_snapshot_digest": final_snapshot_digest,
++        "selected_fields_readback_digest": migration["selected_fields_readback_digest"],
++        "protected_guard_digest": guard_digest,
+         "legacy_operation_count": migration["legacy_operation_count"],
+         "local_operation_count": len(sealed["local_operations"]),
+         "remote_operation_count": len(sealed["remote_projection"]),
+@@ -163,3 +290,12 @@
+         "mutation_performed": False,
+     }
+     return sealed, report
++
++
++def preview_legacy_migration_binding(repository, *, cycle_id, company_id,
++                                     payload, legacy_plan, cursor, controls):
++    """Return sanitized current pins for a separate human review/approval."""
++    return build_legacy_v2_plan(
++        repository, cycle_id=cycle_id, company_id=company_id, payload=payload,
++        legacy_plan=legacy_plan, cursor=cursor, controls=controls,
++        binding=_BINDING_PREVIEW)

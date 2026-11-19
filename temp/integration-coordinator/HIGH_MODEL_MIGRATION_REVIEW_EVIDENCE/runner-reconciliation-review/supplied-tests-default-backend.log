@@ -1,0 +1,113 @@
+{
+  "blocking_cycle_ids": [
+    "CYC-EAA5C8EBC2FA"
+  ],
+  "company_ids": [
+    "C-1"
+  ],
+  "enqueued_at": "2026-11-18T00:00:00Z",
+  "intake_start_targets": {
+    "busy_boundary": "the last blocking cycle reaches Complete or Complete with exceptions; the next normal start command admits the durable request",
+    "busy_seconds_after_safe_boundary": 60,
+    "idle_seconds": 60
+  },
+  "queue_age_seconds": 160792,
+  "recovery": "Company-only request is waiting for safe boundary behind unfinished cycle(s): CYC-EAA5C8EBC2FA. Keep next-scan.json unchanged; do not delete locks or supersede the cycle. Resume the blocking cycle with ./job-search-scraper start --resume. There is no automatic cancel path for an existing cycle.",
+  "request_id": "waiting-request",
+  "state": "WAITING_SAFE_BOUNDARY",
+  "visibility": "local-only"
+}
+Starting job scraping
+Configured: 1 fetch worker(s), assignment window 100.
+Storage: 1 Sheets writer.
+Company changes: safely handled 1 queued change(s).
+Company-only scan: CYC-F4EA384E35A5. Only 1 declared company ID(s) are queued.
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Fetching - Acme | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Fetching - Acme | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Saved locally - Acme - 1 jobs; complete | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:58
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:58
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:58
+Dashboard | Worker 1 - Idle | Writer - Saved locally - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:58
+Inventories saved locally. Run ./job-search-scraper sync to write the jobs to Sheets.
+Scraper invocation finished CYC-F4EA384E35A5: cycle_status=In Progress | company_stages={"inventory": 1}
+Job History (all cycles): needs_review_or_in_progress=0 | manual_review=0
+Cycle still has unfinished scraping or saved work to process. Use start --resume to continue it, or start for a fresh full scan. Job reviews run independently of scrape completion.
+Performance: {"checkpoint_payload_bytes": 7009, "checkpoint_seconds": 0.007141652999052894, "elapsed_seconds": 0.1574820969999564, "inventories_saved": 1, "local_cell_changes": 15, "local_transactions": 5, "staging_seconds": 0.0}
+
+Run summary:
+New jobs downloaded (new Job History rows): 0
+Companies successfully scanned: 0
+Companies partially scanned: 0
+Companies skipped: 
+Companies with saved work awaiting processing: 1
+Total run time: 0s
+Starting job scraping
+Configured: 1 fetch worker(s), assignment window 100.
+Storage: 1 Sheets writer.
+Fresh full scan: CYC-BA6AF41400E1. All currently active companies are queued; previous checkpoints are retained.
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Fetching - Acme | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Fetching - Acme | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Dashboard | Worker 1 - Saved locally - Acme - 1 jobs; complete | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Dashboard | Worker 1 - Idle | Writer - Idle - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Dashboard | Worker 1 - Idle | Writer - Processing locally - Acme - 0s | Inventory processed: 0 | Processed locally: 0 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Dashboard | Worker 1 - Idle | Writer - Processing locally - Acme - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 1 companies | Sync plans: 0 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Dashboard | Worker 1 - Idle | Writer - Processing locally - Acme - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 1 companies | Sync plans: 1 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Dashboard | Worker 1 - Idle | Writer - Syncing Sheets - 1 companies - 3 changes - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 1 companies | Sync plans: 1 | New jobs written: 0
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Dashboard | Worker 1 - Idle | Writer - Syncing Sheets - 1 companies - 3 changes - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 1 companies | Sync plans: 1 | New jobs written: 1
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Jobs | Field Application...
+Dashboard | Worker 1 - Idle | Writer - Syncing Sheets - 1 companies - 3 changes - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 1
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Jobs | Field Application...
+Dashboard | Worker 1 - Idle | Writer - Syncing Sheets - 1 companies - 3 changes - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 1
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Jobs | Field Application...
+Dashboard | Worker 1 - Idle | Writer - Complete - 0s | Inventory processed: 0 | Processed locally: 1 | Local queue: 0 companies | Sync plans: 0 | New jobs written: 1
+Workers | Worker 1 - complete - 1 jobs - Acme - 15:39:59
+Jobs | Field Application...
+Scrape outcomes: recorded 1 bounded result(s) for safe follow-up.
+Scraper invocation finished CYC-BA6AF41400E1: cycle_status=Complete | company_stages={"complete": 1}
+Job History (all cycles): needs_review_or_in_progress=1 | manual_review=0
+The next start will scan all currently active companies again.
+Company changes: recorded 1 post-run change(s) for the next safe scan.
+Performance: {"checkpoint_payload_bytes": 6923, "checkpoint_seconds": 0.014297691001047497, "elapsed_seconds": 0.19659826200040698, "inventories_saved": 1, "local_cell_changes": 56, "local_transactions": 5, "locally_processed_jobs": 1, "staging_seconds": 0.005641345998810721, "sync_batches": 1}
+
+Run summary:
+New jobs downloaded (new Job History rows): 1
+Companies successfully scanned: 1
+Companies partially scanned: 0
+Companies skipped: 
+Total run time: 0s
+======================================================================
+FAIL: test_standalone_bridge_takes_the_normal_scraper_writer_lock (test_company_event_bridge.CompanyEventBridgeTests.test_standalone_bridge_takes_the_normal_scraper_writer_lock)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/chris/Documents/Codex/2026-11-19/job-search-migration-review/work/runner-reconciliation-review/tests/test_company_event_bridge.py", line 57, in test_standalone_bridge_takes_the_normal_scraper_writer_lock
+    lock.assert_called_once_with(self.root / "state" / "scraper.lock")
+  File "/usr/lib/python3.11/unittest/mock.py", line 951, in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/unittest/mock.py", line 939, in assert_called_with
+    raise AssertionError(_error_message()) from cause
+AssertionError: expected call not found.
+Expected: writer_lock(PosixPath('/tmp/tmp1u_30f1i/state/scraper.lock'))
+  Actual: writer_lock(PosixPath('/tmp/tmp1u_30f1i/state/writer.lock'))
+
+----------------------------------------------------------------------
+Ran 282 tests in 38.254s
+
+FAILED (failures=1)

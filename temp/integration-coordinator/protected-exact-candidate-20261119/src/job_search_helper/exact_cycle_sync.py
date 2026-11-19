@@ -32,14 +32,7 @@ def _canonical(value):
 
 def _fallback_receipt(cycle, company_id, plan, payload):
     """Compatibility name for the shared exact receipt contract."""
-    if isinstance(plan, Mapping) and plan.get('exact_plan_version') == 2:
-        receipt_plan = {
-            'operations': copy.deepcopy(plan.get('remote_projection')),
-            'final': copy.deepcopy(plan.get('final', {})),
-        }
-    else:
-        receipt_plan = plan
-    return derive_receipt(cycle, company_id, payload, receipt_plan, timestamp())
+    return derive_receipt(cycle, company_id, payload, plan, timestamp())
 
 
 def _readback(remote, operations):
@@ -344,7 +337,9 @@ def _validate_exact_plan_v2(plan, payload, remote, cycle_id, company_id):
             or plan.get('inventory_payload_digest') != _digest(payload)
             or plan.get('plan_digest') != _exact_plan_digest(plan)
             or plan.get('remote_projection_digest') != _digest(remote_projection)
-            or plan.get('remote_records') != record_fingerprints(remote_projection)
+            or plan.get('remote_records') != record_fingerprints(
+                remote_projection,
+                include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
             or plan.get('remote_records_digest') != _digest(plan.get('remote_records'))
             or not isinstance(final, Mapping)
             or plan.get('local_finalization_digest') != _digest({
@@ -373,8 +368,11 @@ def _readback_records(exact_plan, readback):
             identity.update({key: value for key, value in values.items() if key in identity})
         row = dict(identity)
         row.update(observed['actual'])
+        row.update(observed.get('remote_guards', {}))
         rows.setdefault(operation['tab'], []).append(row)
-    return record_fingerprints(exact_plan['operations'], rows)
+    return record_fingerprints(
+        exact_plan['operations'], rows,
+        include_guard_only=exact_plan.get('record_fingerprint_version', 1) == 2)
 
 
 def _bounded_exact_chunks(exact_plan, *, max_operations=100, max_bytes=500_000):

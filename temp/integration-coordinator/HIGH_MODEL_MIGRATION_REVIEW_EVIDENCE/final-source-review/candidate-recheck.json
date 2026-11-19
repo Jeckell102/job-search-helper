@@ -1,0 +1,25 @@
+{
+  "verified_at_utc": "2026-11-19T20:13:31.889403+00:00",
+  "changed": [],
+  "unreviewed_python": [],
+  "package_manifest": {
+    "listed_count": 27,
+    "mismatches": [
+      "src/job_search_helper/exact_cycle_planner.py",
+      "src/job_search_helper/exact_cycle_receipt.py",
+      "src/job_search_helper/exact_cycle_sync.py",
+      "src/job_search_helper/exact_local_plan.py",
+      "src/job_search_helper/inbox.py",
+      "src/job_search_helper/publication_receipts.py",
+      "src/job_search_helper/runner.py",
+      "src/job_search_helper/sheets_sync.py",
+      "src/job_search_helper/sqlite_repository.py",
+      "tests/test_sheets_sync_exact_scope.py"
+    ],
+    "unlisted_python": [
+      "src/job_search_helper/exact_legacy_migration.py",
+      "src/job_search_helper/exact_legacy_migration_runner.py",
+      "tests/test_exact_legacy_migration.py"
+    ]
+  }
+}

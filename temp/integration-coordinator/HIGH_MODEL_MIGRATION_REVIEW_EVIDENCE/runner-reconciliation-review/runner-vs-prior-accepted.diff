@@ -1,0 +1,44 @@
+--- previous accepted runner.py
++++ candidate runner.py
+@@ -631,6 +631,7 @@
+         performance = {}
+         performance_sources = [performance]
+         run_counts = Counter()
++        sync = None
+         # Registered first to print after final Sheets drain and performance.
+         resources.callback(lambda: _print_run_summary(
+             run_counts, elapsed_seconds=time.monotonic() - run_started))
+@@ -658,6 +659,7 @@
+                 fetcher = with_browser_fallback(fetch_inventory)
+             engine = Engine(repo, state, dry_run=False, batch_size=batch_size, inbox=inbox,
+                             **({"fetcher": fetcher} if fetcher else {}))
++            run_completed = False
+             try:
+                 if not sync_only and getattr(repo, 'is_local', False) is True:
+                     # This writer lock is also the bridge's standalone boundary,
+@@ -714,8 +716,25 @@
+                 if defer_sync:
+                     print("Inventories saved locally. Run ./job-search-scraper sync to write the jobs to Sheets.", flush=True)
+                 _print_run_status(final)
++                run_completed = True
+                 return 0
+             finally:
++                if run_completed and sync is not None:
++                    # The final run-owned pull must settle before reading the
++                    # Company-event outbox.  We still own the normal scraper
++                    # lock, so this is a terminal safe boundary: no second
++                    # cycle is started here and no competing request can be
++                    # overwritten by the bridge.
++                    sync.__exit__(None, None, None)
++                    from .company_events import CompanyEventBridge
++                    terminal_bridge_results = CompanyEventBridge(
++                        repo, database.parent).process_pending(writer_lock_held=True)
++                    if terminal_bridge_results:
++                        print(
++                            f"Company changes: recorded {len(terminal_bridge_results)} "
++                            "post-run change(s) for the next safe scan.",
++                            flush=True,
++                        )
+                 performance.update({**getattr(repo, "metrics", {}), **engine.performance,
+                                "checkpoint_seconds": state.checkpoint_seconds + inbox.checkpoint_seconds,
+                                "checkpoint_payload_bytes": state.checkpoint_bytes + inbox.payload_bytes,
