@@ -141,6 +141,18 @@ ten-minute user update. Update it immediately after any material result.
   found zero mismatches, and 186 focused plus 180 adjacent protected checks
   passed. No live Google, scraper, service, database, queue, lock-deletion, or
   Jetson action was part of this install.
+- Current blocker repair checkpoint, 2026-11-19: the independently reviewed
+  legacy-to-compact adoption package now closes the final reported unchanged-
+  retry defect. The public post-successor retry is an idempotent no-op and
+  cannot replay local work or create a receipt. The install overlay was
+  narrowed to the 13 actually changed/new Python files, reconciled with the
+  latest protected receipt binding, and resealed with 13 candidate hashes plus
+  10 exact protected-before hashes; the three new targets must be absent. A
+  disposable reconstruction over the current protected baseline passed 247
+  focused and adjacent checks with warnings treated as errors. Final
+  independent source-installation acceptance is pending. No protected source,
+  live database, Google Sheet, service, queue, lock, scraper, or Jetson state
+  changed in this checkpoint.
 
 ## Definition of fully completed
 
@@ -1424,6 +1436,14 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   next exact request and receipt; it must not start a second scrape, supersede
   work, or replace a competing request. No protected state changed in the
   audit.
+- Independent QA rejected the first F2 lifecycle-ledger candidate. Its
+  three-file package was valid and no protected state changed, but it regressed
+  duplicate held-repair promotion (43/44 reconstituted coordinator checks) and
+  rolled back, rather than retained, a same-attempt changed-release-binding
+  conflict. Failure evidence is
+  `F2_LIFECYCLE_LEDGER_QA_FAILURE_20261119.md`. Worker
+  `f2_lifecycle_ledger_impl` is preparing a fresh isolated repair; no ledger
+  candidate may be installed until both cases pass independent QA.
 - Davidson legacy-to-v2 migration remains source-only and uninstalled. A
   higher-model review rejected the first candidate after reproducing three
   real gaps: guard-only Google readback could falsely confirm after a refused
