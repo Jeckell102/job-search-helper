@@ -103,7 +103,7 @@ ten-minute user update. Update it immediately after any material result.
   duplicate jobs. Owner-reviewed protected integration is complete: the
   protected integration selection passes 202 checks and exact rollback/source
   hashes are recorded. The live release-to-saved-jobs proof remains.
-- Milestone 6: 54% — F4 receipt/recovery source review and controlled Jetson
+- Milestone 6: 58% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. An isolated F8 candidate now extends the existing
   coordinator with one maintenance owner, durable boot/reconnect catch-up,
   disk-pressure holds, explicit evidence-retention counts, and planned
@@ -113,14 +113,20 @@ ten-minute user update. Update it immediately after any material result.
   safe pause on timeout. Independent QA accepted the corrected exact source
   and its real-host retention wiring. The protected host now runs this source;
   a controlled stop persisted `SHUTDOWN_PAUSED`, restart catch-up returned
-  `ACTIVE`, and the queue stayed paused. The administrator-authenticated
-  The live service has now entered `DISK_PRESSURE_HOLD` under a temporary
+  `ACTIVE`, and the queue stayed paused. The live service has now entered
+  `DISK_PRESSURE_HOLD` under a temporary
   threshold, preserved every tracked count without cleanup, then returned to
   `ACTIVE` after the override was removed. Independent QA accepted the final
   threshold control and independently confirmed both services healthy, no
   temporary override, no running work or open receipts, and unchanged
-  retention counts. The administrator-authenticated Jetson interruption proof
-  and the full sequential acceptance matrix remain.
+  retention counts. The interrupted-cycle recovery status candidate was
+  corrected after two independent reviews, installed under the protected
+  integration lock with an exact rollback, and passed 113 protected checks.
+  Its live read-only report safely refused the current cycle because 47 saved
+  inventories and eight partially applied plans still require publication or
+  explicit reconciliation; no recovery was applied. The
+  administrator-authenticated Jetson interruption proof and the full
+  sequential acceptance matrix remain.
 
 ## Definition of fully completed
 
