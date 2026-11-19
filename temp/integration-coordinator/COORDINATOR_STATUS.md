@@ -150,9 +150,15 @@ ten-minute user update. Update it immediately after any material result.
   10 exact protected-before hashes; the three new targets must be absent. A
   disposable reconstruction over the current protected baseline passed 248
   focused and adjacent checks with warnings treated as errors. The higher-
-  model independent review accepted this exact package for source installation
+  model independent review accepted that exact snapshot for source installation
   after 40 additional altered-evidence, recovery, compatibility, and package
-  checks passed. No protected source,
+  checks passed. A fresh installer dry run then safely stopped because another
+  authorized lane had updated protected `runner.py` after the accepted baseline.
+  The current protected runner and its terminal Company bridge were preserved,
+  only the reviewed migration CLI hooks were reapplied, both manifests were
+  resealed, and the reconstructed current-baseline overlay again passed 248
+  checks. Fresh independent acceptance of this reconciled runner/package is
+  pending. No protected source,
   live database, Google Sheet, service, queue, lock, scraper, or Jetson state
   changed in this checkpoint.
 
@@ -1487,3 +1493,10 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   scrape, or Jetson state changed. Milestones remain M1 92%, M2 92%, M3 88%,
   M4 78%, M5 76%, M6 76% (about 88% overall) until independent acceptance and
   protected install/live proof.
+- Frozen F5 hold case COMP-0072 (GA-ASI) completed its bounded public
+  read-only preflight. Official evidence links GA-ASI to General Atomics'
+  shared BrassRing `partnerid=25539/siteid=5313` board and confirms individual
+  GA-ASI jobs, but no stable entity-only filter or pagination boundary was
+  proven. It remains frozen and is not a company-only pilot candidate.
+  Evidence: `COMP-0072_GAASI_PUBLIC_PREFLIGHT_20261119.md`. No project or
+  external state changed.
