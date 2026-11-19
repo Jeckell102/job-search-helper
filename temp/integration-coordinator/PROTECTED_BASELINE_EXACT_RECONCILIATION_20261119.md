@@ -74,3 +74,15 @@ No live exact-cycle publisher, Google write, Samtec request, company-only
 scrape, broad backlog run, automatic repair, or automatic release is enabled.
 The next action is manual source-only seam reconciliation in the disposable
 copy.
+
+## Incremental merge evidence
+
+The first manual seam was SQLite only.  The disposable copy now installs the
+additive `exact_local_applications`, `exact_local_apply_chunks`, and
+`exact_local_acknowledgements` journals and exposes the exact local
+apply/verify wrappers, while retaining the protected Company-event and
+outcome schema.  `tests/test_exact_local_plan.py` then passed 9 of 11 tests.
+The two remaining failures are limited to missing Inbox v2 state methods
+(`save_exact_plan` and its local-state transitions).  This confirms the next
+manual seam is the Inbox v2 layer; it does not authorize a source install or
+any live action.
