@@ -133,13 +133,16 @@ behavior. Independent read-only review of this exact full-copy candidate is
 in progress. Production, Google, locks, job state, services, and Jetson remain
 untouched.
 
-Independent review is now **ACCEPTED at source level**. The reviewer reproduced
-196 focused exact/runner/sync checks and 110 adjacent SQLite, receipt,
-recovery-status, and CLI checks with warnings treated as errors. It confirmed
-that cleanup requires `LOCAL_ACKNOWLEDGED`, a matching confirmed receipt, and
-verified local acknowledgement evidence; zero-write fabrication, cross-company
-row metadata, premature cleanup, uncertain-write replay, moved rows, and exact
-flag widening all refuse safely. This does not constitute protected install or
+The initial source-level QA acceptance was superseded by a later independent
+review.  It found that terminal recovery could qualify a completed legacy plan
+from a caller-supplied readback-digest envelope when no confirmed receipt
+existed.  Because the resulting manifest can reach pause finalization, this is
+a release-blocking confirmation-boundary bypass.  The isolated repair removes
+the callback/proof route, requires the exact durable `SYNC_CONFIRMED` receipt
+for every completed frozen plan, and removes four residual `*.rej` artifacts
+from the candidate.  The repair matrix passed 122 focused checks and compile /
+artifact hygiene checks.  This replaces—not supplements—the earlier source
+acceptance; fresh independent QA is required before a protected install or any
 live Sheets acceptance.
 
 The sanitized overlay package and `SHA256SUMS` were committed and pushed to
@@ -195,3 +198,16 @@ fixture checks passed (3 passed, 0.264s):
 
 This is temporary-source evidence only.  It does not activate a publisher,
 runner, Samtec/company scrape, Google request, or any live release gate.
+
+## Terminal qualification repair
+
+Fresh independent QA found and then verified removal of a release-blocking
+terminal-recovery bypass: a legacy callback could supply a nonempty selected
+row digest even though it had not performed a remote read.  The repaired
+candidate has no callback/proof parameter; completed frozen plans qualify only
+with their exactly matching durable `SYNC_CONFIRMED` receipt.  All residual
+`*.rej` artifacts are removed.  Independent read-only QA passed 168 tests
+across terminal/pause/executor, exact Sheets, receipts, planning, local
+journals, and recovery.  The remaining protected source still contains the
+old one-file implementation and requires a rollback-backed targeted repair;
+no Google or live recovery action is authorized by this evidence.

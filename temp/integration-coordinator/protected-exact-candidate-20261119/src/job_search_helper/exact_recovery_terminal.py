@@ -52,36 +52,14 @@ def _company_receipts(inbox, company_id):
     return result
 
 
-def _legacy_proof(value, cycle_id, company_id, payload, plan, cursor, records, expected):
-    if not isinstance(value, dict):
-        raise ValueError('legacy_readback_proof_missing')
-    required = {'version', 'read_only', 'cycle_id', 'company_id', 'inventory_digest',
-                'plan_digest', 'cursor', 'count', 'records', 'selected_row_readback_digest',
-                'proposed_receipt'}
-    if set(value) != required or value.get('version') != 'legacy-selected-row-readback-v1':
-        raise ValueError('legacy_readback_proof_schema_invalid')
-    if (value['read_only'] is not True or value['cycle_id'] != cycle_id or value['company_id'] != company_id
-            or value['inventory_digest'] != _digest(payload) or value['plan_digest'] != _plan_digest(plan)
-            or value['cursor'] != cursor or value['count'] != len(plan['operations'])
-            or value['records'] != records or not isinstance(value['selected_row_readback_digest'], str)
-            or not value['selected_row_readback_digest']):
-        raise ValueError('legacy_readback_proof_mismatch')
-    proposed = value['proposed_receipt']
-    if (not isinstance(proposed, dict) or set(proposed) != {'state', 'binding', 'records', 'schedule'}
-            or proposed['state'] != 'PROPOSED' or proposed['binding'] != expected['binding']
-            or proposed['records'] != expected['records'] or proposed['schedule'] != expected['schedule']):
-        raise ValueError('legacy_readback_proof_receipt_invalid')
-    return value
-
-
-def qualify_terminal_holds(state, inbox, cycle_id, company_ids, *, readback_proof=None):
+def qualify_terminal_holds(state, inbox, cycle_id, company_ids):
     """Return immutable manifests or fail-closed refusals without mutations.
 
-    ``readback_proof`` is used only for legacy end-cursor plans with no receipt
-    evidence. It must return the closed, versioned, read-only proof envelope
-    validated by :func:`_legacy_proof`. The proposed receipt remains explicitly
-    non-confirmed audit evidence in the manifest; this function never creates
-    it, writes it, replays a plan, acknowledges an inventory, or saves State.
+    A completed frozen plan requires its own durable ``SYNC_CONFIRMED`` receipt.
+    There is deliberately no legacy callback or caller-supplied readback
+    metadata escape hatch: only the narrow Sheets confirmation path may create
+    that receipt after selected-row readback. This function never writes,
+    replays a plan, acknowledges an inventory, or saves State.
     """
     if not isinstance(cycle_id, str) or not cycle_id.strip():
         raise ValueError('exact_cycle_id_required')
@@ -117,21 +95,15 @@ def qualify_terminal_holds(state, inbox, cycle_id, company_ids, *, readback_proo
                 records = record_fingerprints(plan['operations'])
                 expected = _expected_receipt(cycle, company_id, payload, plan)
                 receipt_state, receipt = _confirmed_receipt(inbox, expected)
-                proof = None
                 if receipt_state == 'INVALID':
                     raise ValueError('receipt_evidence_not_confirmed_or_mismatched')
                 if receipt_state == 'ABSENT':
-                    if not callable(readback_proof):
-                        raise ValueError('confirmed_receipt_missing')
-                    proof = _legacy_proof(readback_proof(cycle_id, company_id, plan, payload),
-                                          cycle_id, company_id, payload, plan, cursor, records, expected)
+                    raise ValueError('confirmed_receipt_missing')
                 manifest['plan'] = {'digest': _plan_digest(plan), 'cursor': cursor,
                                     'count': len(plan['operations']), 'records': records}
                 if receipt:
                     manifest['receipt'] = {'binding': receipt['binding'], 'records': receipt['records'],
                                            'schedule': receipt['schedule'], 'state': receipt['state']}
-                elif proof is not None:
-                    manifest['legacy_readback_proof'] = proof
             elif _company_receipts(inbox, company_id):
                 # A receipt without a frozen plan is ambiguous remote work.
                 raise ValueError('receipt_exists_without_frozen_plan')
@@ -143,19 +115,15 @@ def qualify_terminal_holds(state, inbox, cycle_id, company_ids, *, readback_proo
     return report
 
 
-def revalidate_terminal_manifest(state, inbox, manifest, *, readback_proof=None):
+def revalidate_terminal_manifest(state, inbox, manifest):
     """Compare a pause consumer's manifest to fresh qualification (CAS gate).
 
-    A legacy manifest requires a new selected-row proof callable. Cached proof
-    in the manifest is audit evidence, never current readback evidence.
+    A completed frozen plan is valid only while its durable confirmed receipt
+    remains exactly bound to the frozen plan.
     """
     if not isinstance(manifest, dict) or manifest.get('version') != MANIFEST_VERSION:
         raise ValueError('terminal_manifest_invalid')
-    proof = readback_proof
-    if manifest.get('legacy_readback_proof') is not None and not callable(proof):
-        raise ValueError('fresh_legacy_readback_proof_required')
-    report = qualify_terminal_holds(state, inbox, manifest.get('cycle_id'), [manifest.get('company_id')],
-                                    readback_proof=proof)
+    report = qualify_terminal_holds(state, inbox, manifest.get('cycle_id'), [manifest.get('company_id')])
     if len(report['qualified']) != 1 or report['qualified'][0].get('manifest_digest') != manifest.get('manifest_digest'):
         raise ValueError('terminal_manifest_changed_before_pause')
     return report['qualified'][0]

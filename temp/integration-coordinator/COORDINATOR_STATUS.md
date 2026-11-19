@@ -1258,14 +1258,17 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   `PROTECTED_BASELINE_EXACT_RECONCILIATION_20261119.md`. Independent review of
   this exact candidate is active. No protected file, Google row, lock,
   process, database, queue, release, or Jetson state changed.
-- Independent QA **ACCEPTED** the exact protected-source candidate and
-  reproduced 196 focused plus 110 adjacent strict checks. It specifically
-  verified the terminal cleanup evidence, actual-readback confirmation,
-  zero-write and cross-company refusal, uncertain/multi-chunk no-replay,
-  compact manual/source-hash/salary safeguards, and exact-command containment.
-  Milestone 6 advances to 74%. The next gate is an exact private-branch backup
-  of this reconciled candidate, followed by rollback-backed protected install;
-  live Google publication remains separately approval-gated.
+- Independent QA subsequently **REJECTED** the candidate after finding that
+  terminal recovery could treat a caller-provided legacy readback-digest
+  envelope as remote confirmation.  That proof could reach later pause
+  finalization, so the prior source-level acceptance is superseded.  The
+  isolated repair removes the legacy callback route entirely: completed plans
+  now require their own durable `SYNC_CONFIRMED` receipt created by the narrow
+  Sheets confirmation path.  The four residual `*.rej` merge artifacts were
+  also removed from the disposable candidate.  The focused repair matrix
+  passes 122 checks, but fresh independent QA is still required before any
+  protected install.  Live Google publication remains separately
+  approval-gated.
 - A narrow additional Sheets planning seam was verified in that disposable
   copy: it constructs sealed exact operations from an explicit scope without
   any discovery, pull, prune, publish, remote read, or remote write.  It
@@ -1274,6 +1277,15 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   Three focused planning checks and compilation passed.  The goal remains
   active; next is an independent review of the assembled candidate followed
   by the still-required protected install and live acceptance gates.
+- Replacement-goal checkpoint: the terminal legacy-proof bypass repair is now
+  independently accepted in the disposable candidate.  It removes all
+  caller-supplied readback proof parameters, requires a matching durable
+  `SYNC_CONFIRMED` receipt before terminal qualification, and removes residual
+  `*.rej` artifacts.  Fresh independent QA passed 168 exact and
+  protected-overlap checks.  The next safe action is a rollback-backed,
+  one-file protected-source repair install; the former live recovery command
+  remains disabled because its legacy cursor proves only local application,
+  not Google publication.
 - The exact protected overlay is backed up and three-way hash verified on the
   private branch at `79dd7969abe9b0440ff815abe9bccbe038e1cc30`. A guarded
   installer with pre-hash checks, the existing install lock, durable per-file
@@ -1306,3 +1318,12 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   readback, confirmation, and local cleanup only. It has not been run and
   requires separate approval. The bounded payload and stop conditions are in
   `LIVE_GOOGLE_RECOVERY_APPROVAL_PACKET_20261119.md`.
+- Correction after source-level cursor review: the 92/141 split is local
+  SQLite application progress, not Google publication evidence. Davidson's
+  cursor is 19 of 19 locally, but its remote presence is unknown. Its retained
+  plan also predates the required publication seals, so the installed exact
+  publisher will refuse it with `publication_projection_version_invalid`
+  before remote access. The sync command has not been run and is no longer
+  proposed. The next safe gate is a separately approved, selected-row,
+  read-only Google preview with no commit, receipt, cleanup, or local state
+  change; the approval packet has been corrected accordingly.

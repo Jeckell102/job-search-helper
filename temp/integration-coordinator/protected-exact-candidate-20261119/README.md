@@ -1,20 +1,24 @@
 # Protected exact-cycle candidate — 2026-11-19
 
-This is the sanitized, source-and-tests-only overlay accepted for the current
-protected MuleLab baseline. It contains no credentials, databases, job data,
-locks, inventories, receipts, or runtime history. It is not a standalone
-checkout: apply it only to the protected baseline whose pre-install hashes are
-listed below and only through the existing integration install lock.
+This is the sanitized, source-and-tests-only overlay for the current protected
+MuleLab baseline. It contains no credentials, databases, job data, locks,
+inventories, receipts, or runtime history. It is not a standalone checkout:
+apply it only to the protected baseline whose pre-install hashes are listed
+below and only through the existing integration install lock.
 
 ## Evidence
 
 - Accepted source lifecycle input: `0a4691832a3364438fdb975fa03da58a1e3fbd70`.
 - Full sanitized-copy verification: 186 focused and 180 protected-adjacent
   checks passed with warnings treated as errors.
-- Independent verification: 196 focused and 110 adjacent checks passed with
-  warnings treated as errors.
-- No candidate Python file contains a merge marker. Preserved `*.rej` audit
-  files are not included in this package.
+- The earlier terminal-proof acceptance was superseded: the overlay removes
+  caller-provided legacy readback proof and requires a durable matching
+  `SYNC_CONFIRMED` receipt for every completed frozen plan.
+- Fresh independent verification after that repair: 168 focused and
+  protected-overlap checks passed. The legacy callback path, fabricated/stale
+  terminal manifests, exact readback tampering, and pause-finalization bypass
+  are all covered.
+- No candidate Python file contains a merge marker or `*.rej` artifact.
 - `SHA256SUMS` seals every packaged source and test file.
 
 ## Required protected pre-install hashes
