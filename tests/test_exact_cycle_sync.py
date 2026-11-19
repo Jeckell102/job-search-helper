@@ -11,6 +11,7 @@ from job_search_helper.engine import State
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.publication_receipts import SYNC_CONFIRMED, SYNC_PENDING
 from job_search_helper.repository import MemoryRepository, SCHEMAS, UncertainWriteError
+from job_search_helper.sheet_profile import COMPACT_SCHEMAS
 from job_search_helper.exact_cycle_receipt import derive_receipt
 from job_search_helper.exact_cycle_planner import _receipt as planner_receipt
 from job_search_helper.exact_recovery_terminal import _expected_receipt as terminal_receipt
@@ -74,17 +75,28 @@ def cycle_state(cycle, company='COMP-EXACT'):
 def publish_exact_cycle(inbox, cycle_id, remote, *, state, **kwargs):
     """Default fixture selection is explicit, matching production API use."""
     kwargs.setdefault('company_ids', list(state.cycle(cycle_id)['companies']))
+    kwargs.setdefault('company_guard', remote.company_guard)
     return _publish_exact_cycle(inbox, cycle_id, remote, state=state, **kwargs)
 
 
 class RecordingRemote(MemoryRepository):
-    def __init__(self, rows, *, tab='Job History', schemas=None, companies=None):
+    def __init__(self, rows, *, tab='Job History', schemas=None, companies=None,
+                 local_companies=None):
+        if companies is None:
+            companies = [{'Company ID': 'COMP-EXACT', 'Company': 'Acme',
+                          'Company Status': 'Active', 'Official Careers URL': CAREERS_URL}]
         super().__init__({
             tab: rows,
-            'Companies': companies or [{'Company ID': 'COMP-EXACT', 'Company': 'Acme',
-                                         'Company Status': 'Active', 'Official Careers URL': CAREERS_URL}],
+            'Companies': companies,
         }, schemas=schemas)
+        if local_companies is None:
+            local_companies = companies
+        self.local = MemoryRepository({'Companies': local_companies}, schemas=SCHEMAS)
         self.commits = []
+
+    def company_guard(self, company_id, requested_url):
+        from job_search_helper.exact_cycle_sync import _company_guard
+        return _company_guard(self.local, self, company_id, requested_url)
 
     def commit(self, operations):
         self.commits.append(operations)
@@ -152,6 +164,143 @@ class ExactCyclePublisherTests(unittest.TestCase):
         self.state.save_cycle(current)
         self.inbox.save(cycle, company, dict(PAYLOAD))
         self.inbox.save_plan(cycle, company, plan(key, value))
+
+    def receipt_count(self):
+        return self.inbox.connection.execute(
+            'SELECT count(*) FROM publication_receipts'
+        ).fetchone()[0]
+
+    def test_compact_profile_uses_local_only_controls_and_publishes(self):
+        self.add_plan('CYC-COMPACT', 'COMP-EXACT', 'job-exact', 'after-exact')
+        schemas = {tab: list(headers) for tab, headers in COMPACT_SCHEMAS.items()}
+        compact_job = {key: value for key, value in job('job-exact').items()
+                       if key in schemas['Job History']}
+        remote_company = {'Company ID': 'COMP-EXACT', 'Company': 'Acme',
+                          'Company Status': 'Active', 'Official Careers URL': CAREERS_URL}
+        local_company = dict(remote_company, **{
+            'Claimed By': '', 'Claim Token': '', 'Scan State': 'Queued',
+            'Automatic Retry?': 'Yes',
+        })
+        remote = RecordingRemote([compact_job], schemas=schemas,
+                                 companies=[remote_company], local_companies=[local_company])
+
+        report = publish_exact_cycle(self.inbox, 'CYC-COMPACT', remote, state=self.state)
+
+        self.assertEqual(report['confirmed'], ['COMP-EXACT'], report)
+        self.assertEqual(len(remote.commits), 1)
+
+    def test_missing_trusted_local_guard_fails_closed_before_receipt_or_remote_access(self):
+        self.add_plan('CYC-NO-GUARD', 'COMP-EXACT', 'job-exact', 'after-exact')
+        remote = RecordingRemote([job('job-exact')])
+        before = self.receipt_count()
+
+        with self.assertRaisesRegex(ValueError, 'trusted local Company controls'):
+            _publish_exact_cycle(self.inbox, 'CYC-NO-GUARD', remote,
+                                 company_ids=['COMP-EXACT'], state=self.state)
+
+        self.assertEqual(self.receipt_count(), before)
+        self.assertEqual(remote.commits, [])
+
+    def test_local_claim_change_after_planning_holds_without_commit_or_receipt(self):
+        self.add_plan('CYC-LOCAL-CLAIM', 'COMP-EXACT', 'job-exact', 'after-exact')
+        remote = RecordingRemote([job('job-exact')])
+        remote.local.commit([{
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-EXACT'},
+            'values': {'Claimed By': 'another-worker', 'Claim Token': 'new-claim'},
+        }])
+        before = self.receipt_count()
+
+        report = publish_exact_cycle(self.inbox, 'CYC-LOCAL-CLAIM', remote, state=self.state)
+
+        self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT',
+                                           'reason': 'local_company_claimed'}])
+        self.assertEqual(remote.commits, [])
+        self.assertEqual(self.receipt_count(), before)
+
+    def test_local_manual_hold_after_planning_holds_without_commit_or_receipt(self):
+        self.add_plan('CYC-LOCAL-HOLD', 'COMP-EXACT', 'job-exact', 'after-exact')
+        remote = RecordingRemote([job('job-exact')])
+        remote.local.commit([{
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-EXACT'},
+            'values': {'Automatic Retry?': 'No', 'Scan State': 'Blocked / Manual Review'},
+        }])
+        before = self.receipt_count()
+
+        report = publish_exact_cycle(self.inbox, 'CYC-LOCAL-HOLD', remote, state=self.state)
+
+        self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT',
+                                           'reason': 'local_company_manual_hold'}])
+        self.assertEqual(remote.commits, [])
+        self.assertEqual(self.receipt_count(), before)
+
+    def test_local_status_or_url_change_after_planning_holds_without_commit_or_receipt(self):
+        baseline = {'Company ID': 'COMP-EXACT', 'Company': 'Acme',
+                    'Company Status': 'Active', 'Official Careers URL': CAREERS_URL}
+        cases = (
+            (dict(baseline, **{'Company Status': 'Paused'}), 'local_company_not_active'),
+            (dict(baseline, **{'Official Careers URL': CAREERS_URL + '/changed'}),
+             'local_company_board_changed'),
+        )
+        for number, (changed, reason) in enumerate(cases):
+            with self.subTest(reason=reason):
+                cycle = f'CYC-LOCAL-DRIFT-{number}'
+                self.add_plan(cycle, 'COMP-EXACT', f'job-local-{number}', 'after')
+                remote = RecordingRemote([job(f'job-local-{number}')], companies=[changed],
+                                         local_companies=[changed])
+                before = self.receipt_count()
+
+                report = publish_exact_cycle(self.inbox, cycle, remote, state=self.state)
+
+                self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT',
+                                                   'reason': reason}])
+                self.assertEqual(remote.commits, [])
+                self.assertEqual(self.receipt_count(), before)
+
+    def test_local_remote_status_or_url_drift_holds_without_commit_or_receipt(self):
+        baseline = {'Company ID': 'COMP-EXACT', 'Company': 'Acme',
+                    'Company Status': 'Active', 'Official Careers URL': CAREERS_URL}
+        cases = (
+            dict(baseline, **{'Company Status': 'Paused'}),
+            dict(baseline, **{'Official Careers URL': CAREERS_URL + '/changed'}),
+        )
+        for number, remote_company in enumerate(cases):
+            with self.subTest(remote_company=remote_company):
+                cycle = f'CYC-REMOTE-DRIFT-{number}'
+                self.add_plan(cycle, 'COMP-EXACT', f'job-{number}', 'after')
+                remote = RecordingRemote([job(f'job-{number}')], companies=[remote_company],
+                                         local_companies=[baseline])
+                before = self.receipt_count()
+
+                report = publish_exact_cycle(self.inbox, cycle, remote, state=self.state)
+
+                self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT',
+                    'reason': 'local_remote_company_controls_changed'}])
+                self.assertEqual(remote.commits, [])
+                self.assertEqual(self.receipt_count(), before)
+
+    def test_missing_or_ambiguous_company_holds_without_commit_or_receipt(self):
+        baseline = {'Company ID': 'COMP-EXACT', 'Company': 'Acme',
+                    'Company Status': 'Active', 'Official Careers URL': CAREERS_URL}
+        cases = (
+            ([], [baseline]),
+            ([baseline], [baseline, dict(baseline)]),
+            ([baseline, dict(baseline)], [baseline]),
+        )
+        for number, (remote_companies, local_companies) in enumerate(cases):
+            with self.subTest(number=number):
+                cycle = f'CYC-COMPANY-IDENTITY-{number}'
+                self.add_plan(cycle, 'COMP-EXACT', f'job-id-{number}', 'after')
+                remote = RecordingRemote([job(f'job-id-{number}')],
+                                         companies=remote_companies,
+                                         local_companies=local_companies)
+                before = self.receipt_count()
+
+                report = publish_exact_cycle(self.inbox, cycle, remote, state=self.state)
+
+                self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT',
+                                                   'reason': 'company_missing_or_ambiguous'}])
+                self.assertEqual(remote.commits, [])
+                self.assertEqual(self.receipt_count(), before)
 
     def test_selected_plan_commits_and_confirms_only_after_exact_readback(self):
         self.add_plan('CYC-EXACT', 'COMP-EXACT', 'job-exact', 'after-exact')
@@ -415,7 +564,8 @@ class ExactCyclePublisherTests(unittest.TestCase):
             for company in ('COMP-ONE', 'COMP-TWO')])
         other_before = self.inbox.get(cycle, 'COMP-TWO'), self.inbox.plan(cycle, 'COMP-TWO')
 
-        report = _publish_exact_cycle(self.inbox, cycle, remote, company_ids=['COMP-ONE'], state=self.state)
+        report = _publish_exact_cycle(self.inbox, cycle, remote, company_ids=['COMP-ONE'],
+                                      state=self.state, company_guard=remote.company_guard)
 
         self.assertEqual(report['confirmed'], ['COMP-ONE'])
         self.assertEqual((self.inbox.get(cycle, 'COMP-TWO'), self.inbox.plan(cycle, 'COMP-TWO')), other_before)
@@ -429,7 +579,8 @@ class ExactCyclePublisherTests(unittest.TestCase):
             with self.subTest(selection=selection):
                 with self.assertRaisesRegex(ValueError, 'selection'):
                     _publish_exact_cycle(self.inbox, 'CYC-SELECTION', remote,
-                                         company_ids=selection, state=self.state)
+                                         company_ids=selection, state=self.state,
+                                         company_guard=remote.company_guard)
         self.assertEqual(remote.commits, [])
 
     def test_seeded_cursors_validate_prefix_then_publish_only_remaining_tail(self):

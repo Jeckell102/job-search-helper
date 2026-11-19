@@ -90,6 +90,9 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected):
         raise ValueError('exact_recovery_cycle_missing')
     if cycle.get('status') in {'Complete', 'Complete with exceptions'}:
         raise ValueError('exact_recovery_cycle_finished')
+    from .scan_request import superseded_cycle_ids
+    if cycle_id in superseded_cycle_ids(engine.state.cycles()):
+        raise ValueError('exact_recovery_cycle_superseded')
     # Complete all local validation before the first selected remote read.
     preflight = {}
     for company_id in selected:
@@ -119,11 +122,16 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected):
               'confirmed': [], 'held': [], 'skipped': []}
 
     def guard(company_id, requested_url):
-        # The publisher helper reads only the selected Company row and returns
-        # the exact six-field evidence required by the planner contract.
-        return _company_guard(remote, company_id, {'requested_url': requested_url})
+        # Claims/manual holds are local-only under compact-v1.  This fresh
+        # composite read occurs under the normal scraper lock and compares the
+        # three shared controls to Google's compact projection.
+        return _company_guard(engine.repo, remote, company_id, requested_url)
 
     for company_id in selected:
+        # Recheck immediately before each selected delivery.  Another saved
+        # cycle can supersede this one between companies without ending it.
+        if cycle_id in superseded_cycle_ids(engine.state.cycles()):
+            raise ValueError('exact_recovery_cycle_superseded')
         facts = preflight[company_id]
         # A queued checkpoint and plan is the deliberate plan-save/State-save
         # split: re-enter the planner to validate/reconcile it before delivery.
@@ -140,7 +148,7 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected):
                 continue
         delivered = publish_exact_cycle(
             engine.inbox, cycle_id, remote, company_ids=[company_id],
-            retry_blocked=False, state=engine.state,
+            retry_blocked=False, state=engine.state, company_guard=guard,
         )
         report['confirmed'].extend(delivered['confirmed'])
         report['held'].extend(delivered['held'])

@@ -94,11 +94,12 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         engine.state.path = str(self.fake_state_path)
         return engine
 
-    def real_fixture(self, company_ids=('COMP-1',), *, remote_claimed=()):
+    def real_fixture(self, company_ids=('COMP-1',), *, local_claimed=()):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
-        local_companies = [company(company_id) for company_id in company_ids]
+        local_companies = [company(company_id, claimed=company_id in set(local_claimed))
+                           for company_id in company_ids]
         local = MemoryRepository(
             {'Companies': local_companies}, schemas=copy.deepcopy(SCHEMAS),
         )
@@ -116,10 +117,8 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         })
         for company_id in company_ids:
             inbox.save('CYC', company_id, inventory(company_id))
-        remote = RecordingRemote([
-            company(company_id, claimed=company_id in set(remote_claimed))
-            for company_id in company_ids
-        ])
+        remote_rows = [company(company_id) for company_id in company_ids]
+        remote = RecordingRemote(remote_rows)
         return root, engine, state, inbox, remote
 
     def test_real_engine_queued_inventory_plans_and_publishes_end_to_end(self):
@@ -146,7 +145,7 @@ class ExactCycleRecoveryTests(unittest.TestCase):
             report = freeze_exact_cycle_plans(
                 engine, 'CYC', ['COMP-1'],
                 company_guard=lambda company_id, requested_url: _company_guard(
-                    remote, company_id, {'requested_url': requested_url},
+                    engine.repo, remote, company_id, requested_url,
                 ),
                 max_companies=1,
             )
@@ -179,7 +178,7 @@ class ExactCycleRecoveryTests(unittest.TestCase):
 
     def test_real_second_company_hold_preserves_first_and_unselected(self):
         root, engine, state, inbox, remote = self.real_fixture(
-            ('COMP-A', 'COMP-B', 'COMP-Z'), remote_claimed=('COMP-B',),
+            ('COMP-A', 'COMP-B', 'COMP-Z'), local_claimed=('COMP-B',),
         )
         inbox.save('OTHER-CYCLE', 'COMP-Z', inventory('COMP-Z'))
         request = root / 'next-scan.json'
@@ -198,6 +197,37 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         self.assertIsNone(inbox.get('CYC', 'COMP-A'))
         self.assertIsNotNone(inbox.get('CYC', 'COMP-B'))
         self.assertEqual(state.cycle('CYC')['companies']['COMP-Z']['stage'], 'queued')
+
+    def test_superseded_cycle_with_existing_plan_is_rejected_without_side_effects(self):
+        _root, engine, state, inbox, remote = self.real_fixture()
+        planned = freeze_exact_cycle_plans(
+            engine, 'CYC', ['COMP-1'],
+            company_guard=lambda company_id, requested_url: _company_guard(
+                remote, company_id, {'requested_url': requested_url},
+            ),
+            max_companies=1,
+        )
+        self.assertEqual(planned['planned'], ['COMP-1'])
+        self.assertEqual(state.cycle('CYC')['companies']['COMP-1']['stage'], 'inventory')
+        state.save_cycle({
+            'id': 'CYC-NEW', 'status': 'In Progress',
+            'started_at': '2026-11-19T00:01:00Z',
+            'Notes': '{"supersedes":["CYC"]}', 'companies': {},
+        })
+        cycle_before = state.cycle('CYC')
+        inventory_before = copy.deepcopy(inbox.get('CYC', 'COMP-1'))
+        plan_before = copy.deepcopy(inbox.plan('CYC', 'COMP-1'))
+        remote_before = remote.snapshot('Companies')
+        commits_before = len(remote.commits)
+
+        with self.assertRaisesRegex(ValueError, 'cycle_superseded'):
+            recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+
+        self.assertEqual(state.cycle('CYC'), cycle_before)
+        self.assertEqual(inbox.get('CYC', 'COMP-1'), inventory_before)
+        self.assertEqual(inbox.plan('CYC', 'COMP-1'), plan_before)
+        self.assertEqual(remote.snapshot('Companies'), remote_before)
+        self.assertEqual(len(remote.commits), commits_before)
 
     def test_real_sqlite_orchestration_preserves_unrelated_dirty_and_outbox_rows(self):
         temporary = tempfile.TemporaryDirectory()
@@ -468,6 +498,12 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         self.assertEqual(result['planned'], ['A']); self.assertEqual(result['confirmed'], ['A', 'B'])
         self.assertEqual([call.kwargs['company_ids'] for call in publisher.call_args_list], [['A'], ['B']])
         planner.assert_called_once()
+        # Planning and every publisher invocation receive the same composite
+        # local/compact-remote control reader; neither can silently fall back
+        # to remote-only claim fields.
+        guard = planner.call_args.kwargs['company_guard']
+        self.assertIs(publisher.call_args_list[0].kwargs['company_guard'], guard)
+        self.assertIs(publisher.call_args_list[1].kwargs['company_guard'], guard)
 
     def test_planner_hold_does_not_publish_that_company_and_unselected_is_untouched(self):
         engine = self.fake_engine({'A': {'stage': 'queued'}, 'Z': {'stage': 'queued'}},

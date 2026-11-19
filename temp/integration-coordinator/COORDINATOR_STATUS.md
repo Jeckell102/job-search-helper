@@ -912,3 +912,27 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   `test_run_scoped_sync.py`, and `test_runner_cycles.py` differ from the
   accepted branch. Reconciliation must preserve the newer production
   scrape-to-FIRST-PASS behavior; direct file replacement remains forbidden.
+- A second narrow Google read proved `Scan Cycles` has zero data rows (three
+  reads, zero writes), rather than only a missing target identity. Combined
+  with compact-v1 local-only Company controls, this disqualifies the accepted
+  full pause executor from production activation as written. It safely fails
+  before mutation, but a separate compact-profile repair must freeze and apply
+  local authoritative versus remote-visible projections and explicitly handle
+  empty-tab cycle insertion/finalization. This later gate does not broaden or
+  release the backlog; the executor remains undeployed.
+- Independent QA **passed the compact-profile Company control repair**. Exact
+  recovery now reads claims/manual-hold state from local SQLite under the real
+  normal lock, reads only remote-visible ID/status/URL from Google, requires
+  exact agreement on shared controls, and uses the same composite six-field
+  evidence for planning and every publisher path. Missing guard or any drift
+  fails before receipt persistence or commit. Root reproduced 54 focused
+  checks and independent QA reproduced the 158-test adjacent matrix.
+- Overall activation remains **REJECTED** on the next compact-profile boundary:
+  newly frozen plans still contain local-only Company/Job History fields that
+  compact Google cannot accept. Read-only shape inspection also proved each
+  of the three existing candidate plans ends with a Company operation
+  containing local-only fields; 0035 and 0052 are already at their legacy end
+  cursor, while 0054 is at 67/208. No legacy plan will be silently rewritten.
+  A separate planner-projection lane owns deterministic remote projection,
+  retained full local finalization evidence, manual/salary guards, and explicit
+  nonzero-cursor legacy refusal before any live action.

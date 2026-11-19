@@ -118,29 +118,58 @@ def _chunk_digest(chunk):
     return hashlib.sha256(_canonical(chunk).encode('utf-8')).hexdigest()
 
 
-def _company_guard(remote, company_id, plan):
-    headers = ['Company ID', 'Company Status', 'Claimed By', 'Claim Token',
-               'Official Careers URL']
-    numbered = remote.read_columns('Companies', headers)
+def _unique_company(repository, company_id, headers):
+    """Freshly read one exact Company using only explicitly named fields."""
+    numbered = repository.read_columns('Companies', headers)
     matches = [row_number for row_number, row in numbered
                if _equivalent('Company ID', row.get('Company ID', ''), company_id)]
     if len(matches) != 1:
         raise ValueError('company_missing_or_ambiguous')
-    company = remote.read_rows('Companies', matches)[matches[0]]
-    if str(company.get('Company Status', '')).strip().casefold() in {'pause', 'paused', 'remove'}:
-        raise ValueError('company_paused')
-    if company.get('Claimed By') or company.get('Claim Token'):
-        raise ValueError('company_claimed')
-    requested = str(plan.get('requested_url', '')).strip()
-    if not requested or not _equivalent('Official Careers URL', company.get('Official Careers URL', ''), requested):
+    # ``read_columns`` is itself the fresh bounded read and, unlike read_rows,
+    # cannot pull compact-profile-excluded fields from Google accidentally.
+    return next(row for row_number, row in numbered if row_number == matches[0])
+
+
+def _company_guard(local, remote, company_id, requested_url):
+    """Bind local-only controls to the compact remote Company projection.
+
+    Claims, scan state, and automatic-retry holds are authoritative only in
+    the local store under compact-v1.  Google is freshly read only for its
+    three visible shared controls.  The returned six fields are therefore a
+    composite snapshot, and the publisher can compare the exact same contract
+    that sealed the plan without pretending local-only columns exist remotely.
+    """
+    requested = str(requested_url or '').strip()
+    if not requested:
         raise ValueError('company_board_changed')
+    local_headers = ['Company ID', 'Company Status', 'Official Careers URL',
+                     'Claimed By', 'Claim Token', 'Scan State', 'Automatic Retry?']
+    remote_headers = ['Company ID', 'Company Status', 'Official Careers URL']
+    local_company = _unique_company(local, company_id, local_headers)
+    remote_company = _unique_company(remote, company_id, remote_headers)
+    local_status = str(local_company.get('Company Status', '')).strip()
+    local_url = str(local_company.get('Official Careers URL', '')).strip()
+    claimed_by = str(local_company.get('Claimed By', '')).strip()
+    claim_token = str(local_company.get('Claim Token', '')).strip()
+    if local_status.casefold() != 'active':
+        raise ValueError('local_company_not_active')
+    if claimed_by or claim_token:
+        raise ValueError('local_company_claimed')
+    if (str(local_company.get('Automatic Retry?', '')).strip().casefold() == 'no'
+            and str(local_company.get('Scan State', '')).strip() == 'Blocked / Manual Review'):
+        raise ValueError('local_company_manual_hold')
+    if not _equivalent('Official Careers URL', local_url, requested):
+        raise ValueError('local_company_board_changed')
+    for header in remote_headers:
+        if not _equivalent(header, remote_company.get(header, ''), local_company.get(header, '')):
+            raise ValueError('local_remote_company_controls_changed')
     return {
-        'company_id': str(company.get('Company ID', '')).strip(),
+        'company_id': str(local_company.get('Company ID', '')).strip(),
         'requested_url': requested,
-        'official_careers_url': str(company.get('Official Careers URL', '')).strip(),
-        'company_status': str(company.get('Company Status', '')).strip(),
-        'claimed_by': str(company.get('Claimed By', '')).strip(),
-        'claim_token': str(company.get('Claim Token', '')).strip(),
+        'official_careers_url': local_url,
+        'company_status': local_status,
+        'claimed_by': claimed_by,
+        'claim_token': claim_token,
     }
 
 
@@ -190,7 +219,8 @@ def _checkpoint_matches_final(checkpoint, plan):
     return {key: checkpoint.get(key) for key in projection} == dict(projection)
 
 
-def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=False, state):
+def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=False, state,
+                        company_guard=None):
     """Deliver only the frozen plans for ``cycle_id``.
 
     Failures are intentionally contained per company.  No failure clears a
@@ -203,6 +233,8 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
         raise ValueError('Exact selected-plan publication never retries blocked inventories.')
     if not isinstance(company_ids, (list, tuple)):
         raise ValueError('Exact selected-plan publication requires explicit company IDs.')
+    if not callable(company_guard):
+        raise ValueError('Exact selected-plan publication requires trusted local Company controls.')
     selected = [str(company_id).strip() for company_id in company_ids]
     if (not selected or len(selected) > 25 or any(not company_id for company_id in selected)
             or len(selected) != len(set(selected))):
@@ -264,7 +296,7 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
                     report['held'].append({'company_id': company_id,
                                            'reason': 'state_checkpoint_not_recoverable'})
                     continue
-                controls = _company_guard(remote, company_id, plan)
+                controls = company_guard(company_id, plan.get('requested_url'))
                 _validate_controls(plan, controls)
                 if _readback(remote, operations) != receipt['records']:
                     report['held'].append({'company_id': company_id,
@@ -276,7 +308,7 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
                     inbox.block(cycle_id, company_id)
                 report['confirmed'].append(company_id)
                 continue
-            controls = _company_guard(remote, company_id, plan)
+            controls = company_guard(company_id, plan.get('requested_url'))
             _validate_controls(plan, controls)
             inbox.ensure_receipt(receipt)
             current = inbox.receipt(receipt)
