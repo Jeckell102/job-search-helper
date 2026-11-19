@@ -83,9 +83,11 @@ partial Google Sheets write alone is not completion.
   source was missing the shared outcome-classifier module. That source module
   was reconciled and 142 focused MuleLab checks passed; the coordinator
   remained off and no repair task was started.
-- Candidate current-Company guard: the isolated coordinator and Company-side
-  lookup passed 144 focused coordinator checks and 74 Job Search Helper
-  contract checks. Independent review and MuleLab reconciliation are pending.
+- Current-Company guard accepted after re-review: the isolated coordinator
+  stops stale or unverifiable repairs before any direct worker step or tool
+  action, as well as on normal resume and every claim path. The repaired
+  implementation passed 145 focused coordinator checks and 13 focused
+  Company-event checks. MuleLab reconciliation remains pending.
 
 ## Safety boundaries
 
@@ -100,9 +102,8 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Independently review the current-Company guard, then reconcile it with the
-   MuleLab coordinator source without starting its scheduler or altering its
-   existing documentation.
+1. Reconcile the accepted current-Company guard with the MuleLab coordinator
+   source without starting its scheduler or altering its existing documentation.
 2. Reconcile the Company-side bridge with the active Job Search Helper source
    without overwriting the protected, pre-existing local worktree changes.
 3. Design the normal Company-to-scrape handoff with one durable owner, then

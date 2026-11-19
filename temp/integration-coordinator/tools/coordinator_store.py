@@ -291,6 +291,22 @@ class Store(CampaignStore, InferenceStore):
         if state.get('repair_provenance') and not self._repair_revision_is_current(state):
             raise ValueError('Held repair cannot resume until an authoritative current Company revision matches its promotion record.')
 
+    def ensure_current_repair_revision(self, task_id):
+        """Pause a stale held repair before any direct worker step can run."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT state FROM tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise ValueError('Task not found.')
+            state = json.loads(row[0])
+            if not state.get('repair_provenance') or self._repair_revision_is_current(state):
+                return True
+            state.update(status='PAUSED', stop_requested=True,
+                         reason='Company revision is no longer current; obtain a new held repair from the current Company record.')
+            db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+            self._bump_control_generation(db)
+            return False
+
     @contextmanager
     def connect(self):
         db = sqlite3.connect(self.path, timeout=20)
@@ -1098,6 +1114,12 @@ class Store(CampaignStore, InferenceStore):
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
             self._require_current_identity(db, state)
+            if state.get('repair_provenance') and not self._repair_revision_is_current(state):
+                state.update(status='PAUSED', stop_requested=True,
+                             reason='Company revision is no longer current; obtain a new held repair from the current Company record.')
+                db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+                self._bump_control_generation(db)
+                return None
             if state['phase'] != phase or not self._inference_allowed(db, state):
                 return None
             cursor = db.execute('INSERT INTO receipts(task,phase,name,arguments,signature,created) VALUES (?,?,?,?,?,?)',

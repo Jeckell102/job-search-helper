@@ -191,6 +191,16 @@ class HeldRepairPromotionTests(coordinator_fixture.CoordinatorTests):
         self.assertTrue(state['stop_requested'])
         self.assertIn('no longer current', state['reason'])
 
+    def test_stale_promoted_repair_cannot_bypass_freshness_with_direct_step(self):
+        repair, response = self.promoted()
+        self.co.store.company_revision_resolver = lambda company_id: 'rev-newer'
+        self.co.store.update(response['id'], status='QUEUED', stop_requested=False)
+        self.co.step(response['id'])
+        state = self.co.store.get(response['id'])
+        self.assertEqual(state['status'], 'PAUSED')
+        self.assertTrue(state['stop_requested'])
+        self.assertEqual(self.co.store.receipts(response['id']), [])
+
 
 if __name__ == '__main__':
     unittest.main()

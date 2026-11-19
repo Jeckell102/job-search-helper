@@ -532,6 +532,9 @@ class Coordinator:
                 self.stop.wait(CONTROL_RETRY_SECONDS)
 
     def paused(self, task_id):
+        if not self.store.ensure_current_repair_revision(task_id):
+            self.export(task_id)
+            return True
         state = self.store.get(task_id)
         if reached_operator_gate(state):
             return True
