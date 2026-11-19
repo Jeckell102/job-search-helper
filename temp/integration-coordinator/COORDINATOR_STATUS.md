@@ -243,6 +243,12 @@ partial Google Sheets write alone is not completion.
   inactivity proof exists for a post-restart orphan, so an `UNCERTAIN` receipt
   must keep the sole inference lane blocked. Deployment cannot close F4 until
   that proof is designed, implemented, and live-tested.
+- A read-only Jetson inspection confirmed that the missing proof can be bound
+  to `ollama.service` generation (main PID plus systemd monotonic start time),
+  not to an opaque HTTP timeout. `F4_BACKEND_INACTIVITY_CONTRACT.md` defines a
+  fail-closed, owner-bound settlement after a deliberate recorded Ollama
+  restart proves the original process generation ended. This is a proposed
+  contract, not yet source code, deployment, or F4 closure.
 
 ## Safety boundaries
 
@@ -257,9 +263,9 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Independently review the final F4 source checkpoint and its preflight plan;
-   then design the missing request-correlated backend-inactivity proof before
-   treating a retained Jetson orphan as terminal.
+1. Implement and independently review the fail-closed backend-generation
+   contract in `F4_BACKEND_INACTIVITY_CONTRACT.md`; live-test it only through
+   the controlled Jetson change path.
 2. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
