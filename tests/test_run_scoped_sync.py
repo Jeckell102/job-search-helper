@@ -605,53 +605,45 @@ class RunnerSyncWiringTests(unittest.TestCase):
         self.assertEqual(result,0)
         sync.assert_not_called()
 
-    def test_exact_cycle_sync_is_a_no_global_hold(self):
-        """Named recovery must never enter the global publisher or local pipeline."""
+    def test_exact_cycle_sync_is_conservatively_held_without_global_sync(self):
+        """Named recovery has no global pull/publish while planning is incomplete."""
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         repo = MagicMock(spreadsheet_id='fixture', metrics={})
         repo.is_local = True
-        state = MagicMock(checkpoint_seconds=0, checkpoint_bytes=0)
-        state.cycle.return_value = {'id': 'CYC-EXACT'}
-        inbox = MagicMock(checkpoint_seconds=0, payload_bytes=0, saved=0)
-        inbox.cycles.return_value = ['CYC-OTHER', 'CYC-EXACT']
-        engine = MagicMock(performance={})
-        engine.resume_local.return_value = {'run_counts': {}}
-        engine.status.return_value = {
-            'cycle_id': 'CYC-EXACT', 'status': 'Complete',
-            'pending_reviews': 0, 'manual_review': 0, 'companies': {},
-        }
-        # The State constructor is mocked here, while runner still retains
-        # the production permission hardening on its durable checkpoint.
-        (Path(directory.name) / 'state.db').touch()
         output = StringIO()
         with patch.object(runner, '_load_environment'), \
              patch.object(runner, 'storage_backend', return_value='sqlite'), \
              patch.object(runner, 'state_path', return_value=Path(directory.name) / 'state.db'), \
-             patch.object(runner, 'get_repository', return_value=repo), \
-             patch.object(runner, 'State', return_value=state), \
-             patch.object(runner, 'InventoryInbox', return_value=inbox), \
-             patch.object(runner, 'Engine', return_value=engine), \
+             patch.object(runner, 'get_repository') as get_repository, \
+             patch.object(runner, 'InventoryInbox') as inbox_class, \
              patch.object(runner, '_refresh_review_queue') as refresh, \
              patch.object(runner, '_save_performance') as save_performance, \
              patch.object(runner, '_print_run_summary') as print_summary, \
              patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
              patch('job_search_helper.closed_jobs.stage_closed_pending') as closed_jobs, \
              patch('job_search_helper.scrape_outcome_producer.record_cycle_outcomes') as outcomes, \
+             patch('job_search_helper.sqlite_repository.SQLiteRepository') as local_repository, \
+             patch('job_search_helper.cli.get_remote_repository') as remote_factory, \
+             patch('job_search_helper.exact_cycle_sync.publish_exact_cycle',
+                   return_value={'cycle_id': 'CYC-EXACT', 'confirmed': [], 'held': [], 'skipped': []}) as publish, \
              redirect_stdout(output):
-            sync.return_value.__enter__.return_value.totals = {}
+            inbox_class.has_unblocked_inventory.return_value = True
+            remote_factory.return_value = repo
+            local_repository.return_value.get_meta.return_value = 'compact-v1'
             self.assertEqual(runner.run_start(
                 sync_only=True, sync_cycle_id=' CYC-EXACT ', browser_fallback=False,
             ), 0)
 
-        inbox.cycles.assert_called_once_with(include_blocked=True)
-        inbox.close.assert_called_once()
+        inbox_class.has_unblocked_inventory.assert_called_once_with(
+            Path(directory.name) / 'inventories.sqlite3', 'CYC-EXACT')
+        inbox_class.assert_not_called()
         sync.assert_not_called()
-        self.assertIn('global Sheets pull/publish is disabled', output.getvalue())
-        self.assertIn('No inventory, workbook, review, or coordinator changes were applied.', output.getvalue())
-        engine.resume_local.assert_not_called()
-        state.purge_reviews.assert_not_called()
-        engine.sync_manual_opportunities.assert_not_called()
+        get_repository.assert_not_called()
+        publish.assert_not_called()
+        remote_factory.assert_not_called()
+        local_repository.assert_not_called()
+        self.assertIn('Exact cycle recovery held:', output.getvalue())
         closed_jobs.assert_not_called()
         outcomes.assert_not_called()
         refresh.assert_not_called()
@@ -663,20 +655,19 @@ class RunnerSyncWiringTests(unittest.TestCase):
         self.addCleanup(directory.cleanup)
         repo = MagicMock(spreadsheet_id='fixture', metrics={})
         repo.is_local = True
-        inbox = MagicMock()
-        inbox.cycles.return_value = []
         with patch.object(runner, '_load_environment'), \
              patch.object(runner, 'storage_backend', return_value='sqlite'), \
              patch.object(runner, 'state_path', return_value=Path(directory.name) / 'state.db'), \
              patch.object(runner, 'get_repository', return_value=repo), \
-             patch.object(runner, 'InventoryInbox', return_value=inbox), \
+             patch.object(runner, 'InventoryInbox') as inbox_class, \
              patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
              redirect_stdout(StringIO()):
+            inbox_class.has_unblocked_inventory.return_value = False
             self.assertEqual(runner.run_start(
                 sync_only=True, sync_cycle_id='CYC-MISSING', browser_fallback=False,
             ), 0)
         sync.assert_not_called()
-        inbox.close.assert_called_once()
+        inbox_class.assert_not_called()
 
     def test_exact_cycle_hold_leaves_unrelated_outbox_and_inbox_bytes_untouched(self):
         """A held exact recovery cannot publish, pull, or alter another cycle."""
@@ -735,7 +726,11 @@ class RunnerSyncWiringTests(unittest.TestCase):
              patch.object(runner, 'load_title_blacklist'), \
              patch.object(runner, 'load_title_review_list'), \
              patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
+             patch('job_search_helper.sqlite_repository.SQLiteRepository') as local_repository, \
+             patch('job_search_helper.cli.get_remote_repository') as remote_factory, \
              redirect_stdout(StringIO()):
+            remote_factory.return_value = MagicMock()
+            local_repository.return_value.get_meta.return_value = None
             self.assertEqual(runner.run_start(
                 sync_only=True, sync_cycle_id='CYC-EXACT', browser_fallback=False,
             ), 0)

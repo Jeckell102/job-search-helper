@@ -612,6 +612,148 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   action: design and independently test the dedicated identity-scoped remote
   publisher/readback; keep exact-cycle work, the Company-only request, queues,
   and broad processing held in the meantime.
+- Independent architecture review now fixes the actual recovery design: a new
+  selected-plan publisher must use the current remote repository's existing
+  identity/expected guards, persist `SYNC_PENDING` before its one selected
+  write, and require a fresh selected-row remote fingerprint match before any
+  plan advance or inventory acknowledgement. Pending receipts are readback-
+  only and never automatically replayed. The global synchronizer and local
+  pipeline receipt path are explicitly disqualified. Implementation lane owns
+  the isolated source/tests; independent QA owns the acceptance matrix in
+  `EXACT_CYCLE_SCOPED_PUBLISHER_DESIGN_20261119.md`.
+- Coordinator review rejected treating the first selected-publisher draft as
+  deployable. It initially used a full-tab readback, unbounded remaining-plan
+  commit, no Company control guard, inherited blocked-inventory retry, lacked
+  digest-bound chunk/CAS semantics, and could acknowledge without first
+  applying the frozen final state to the named cycle checkpoint. Those gaps
+  are assigned back to the implementation lane and production remains on the
+  accepted no-global hold. The live inbox audit further confirms that only
+  eight inventories have frozen plans; 39 unblocked inventories have no plan.
+  A separate read-only architecture lane now owns the exact local-planning
+  design. No refetch, Google write, live recovery, or blocked-inventory retry
+  has occurred.
+- The exact-planner architecture lane has completed its read-only design and
+  now owns an isolated module/test implementation. It will explicitly select
+  bounded Company IDs, consume the existing durable payloads without fetch,
+  use narrow local and remote Company guards, freeze an immutable plan and
+  `LOCAL_COMMITTED` receipt first, then update only that Company's cycle
+  checkpoint. It cannot reuse `LocalPipeline.run/stage`, publish, drain local
+  dirty rows, block on failure, or iterate the whole cycle implicitly. Shared
+  runner/inbox integration is deferred until the publisher and planner each
+  pass independent QA.
+- Independent QA **rejected** the first exact-planner implementation despite
+  its otherwise sound isolation. Existing-plan crash recovery did not bind
+  the retained plan and receipt to the exact saved inventory payload, so a
+  stale/fabricated same-URL plan could advance the local checkpoint. The
+  repair must persist and recheck payload/plan digests plus the full receipt
+  binding/records/schedule and strengthen current-control evidence. See
+  `EXACT_CYCLE_PLANNER_QA_FAILURE_20261119.md`. No production or live planning
+  was attempted.
+- Independent QA has now **passed the repaired exact planner**. New frozen
+  plans seal the exact inventory payload, operation-record fingerprint, plan
+  digest, typed active/unclaimed Company control evidence, and the exact
+  `LOCAL_COMMITTED` receipt binding before advancing only that Company's local
+  checkpoint. Crash recovery recomputes every digest and requires the full
+  cycle/request/source/release/records/schedule receipt identity; absent,
+  altered, ambiguous, pending, or confirmed receipts fail closed. The focused
+  planner suite passes 13 tests, including missing-receipt, wrong-binding,
+  changed-payload, and crash-after-save adversarial cases. No runner wiring,
+  production planning, Google access, or live mutation occurred. The
+  publisher lane is aligning to control-evidence version 1 and this exact
+  receipt contract before a combined orchestration can be reviewed.
+- Independent QA also **rejected** the first completed publisher candidate.
+  Its 127-test focused regression passed and runner remains safely unwired,
+  but invalid cursor domains, stale/missing Company provenance, terminal State
+  holds, and final-identity collisions were not all rejected. Coordinator
+  review additionally found cross-cycle receipt-binding ambiguity and a
+  possible in-memory State mutation leak after a failed save. The publisher
+  lane owns all six repairs and adversarial tests; see
+  `EXACT_CYCLE_PUBLISHER_QA_FAILURE_20261119.md`. No production/live publisher
+  action occurred.
+- Current worker ownership: the coordinator owns integration, release gates,
+  the restart card, and live safety; the publisher lane owns only
+  `exact_cycle_sync.py`, its inbox support, and focused tests while repairing
+  the six recorded publisher defects; independent QA owns acceptance or a new
+  failure report. The planner is accepted and frozen except for the additive
+  control-evidence version field needed by the shared publisher contract.
+- Independent QA **rejected** the first terminal-hold qualifier. It was
+  read-only, preserved blocked evidence, and passed four focused tests, but a
+  same-Company/same-record receipt from another cycle could qualify the hold;
+  the legacy proof was untyped, its cursor accepted booleans, and no live
+  manifest revalidation/CAS boundary existed. The isolated terminal lane owns
+  those repairs and adversarial tests. See
+  `EXACT_RECOVERY_TERMINAL_QA_FAILURE_20261119.md`. No live or production
+  action occurred.
+- Independent QA has now **passed the repaired terminal-hold qualifier**. It
+  requires exact terminal State and blocked inbox evidence, distinguishes
+  absent receipt evidence from pending/mismatched/ambiguous evidence, accepts
+  only the exact confirmed receipt, and permits legacy qualification only with
+  a closed read-only proof envelope. Fresh manifest revalidation cannot reuse
+  cached legacy evidence. Six focused tests pass, and no write/replay path
+  exists in the component. See
+  `EXACT_RECOVERY_TERMINAL_QA_PASS_20261119.md`. The exact pause adapter remains
+  unimplemented and unauthorized.
+- Coordinator integration review added an explicit bounded-selection gate:
+  the scoped publisher may not iterate every pending Company in the named
+  cycle. It must require a unique caller-selected Company list, reject empty,
+  duplicate, blocked, unknown, and over-bound requests before remote mutation,
+  and leave every unselected plan/inventory untouched. The combined
+  planner/publisher ordering, crash boundaries, isolation fixture, and
+  activation gates are frozen in
+  `EXACT_CYCLE_COMBINED_ORCHESTRATION_DESIGN_20261119.md`. The publisher lane
+  owns this API repair; runner wiring remains held.
+- The publisher's first six-defect repair and explicit-selection tests reached
+  152 passing focused regressions, but coordinator crash-ordering review found
+  two further blockers before independent QA. A fully matching remote plan can
+  reach final reconciliation while its receipt is still `LOCAL_COMMITTED`, and
+  a crash after State finalization but before inbox acknowledgement cannot yet
+  settle on restart. The lane is adding a readback-proven pending transition
+  with zero replay and a narrow confirmed-receipt/final-State acknowledgement
+  recovery path. Changed State or readback must still hold. Runner and live
+  recovery remain on the containment return.
+- Independent publisher re-review remains **REJECTED** after the crash repair:
+  a `SYNC_CONFIRMED` receipt with a pre-end cursor could still enter the normal
+  chunk loop and issue a remote commit when readback differed. Confirmed
+  receipt state must be zero-replay: only an end cursor, exact full readback,
+  exact frozen final-State projection, and cleanup are permissible. QA also
+  requires an explicit exact final projection/digest rather than an
+  under-specified subset comparison. The lane owns these adversarial repairs;
+  no publisher is wired or deployed.
+- Independent QA has now **passed the repaired scoped publisher component**.
+  Confirmed receipts cannot replay a pre-end cursor; nonrecoverable State is
+  receipt-lookup-only; full-plan readback can safely settle a local receipt
+  with zero commit; post-State-save cleanup requires the exact confirmed
+  receipt, end cursor, selected readback, current controls, and frozen final
+  projection. The planner, publisher, and terminal qualifier now share one
+  deterministic receipt derivation. The focused QA regression passed 159
+  tests, and the lane's broader set passed 163. See
+  `EXACT_CYCLE_PUBLISHER_QA_PASS_20261119.md`. Runner wiring and live recovery
+  remain held pending combined orchestration QA.
+- With terminal qualification accepted, a separate non-overlapping lane now
+  owns only the durable exact-pause journal freeze/store in new files. It must
+  refuse any residual unblocked saved inventory, bind the full remaining
+  queued/inventory candidate set and every accepted terminal manifest, record
+  State and request-file digests without mutation, and be idempotent only for
+  an identical payload. It has no remote apply or runner authority.
+- Independent QA has now **passed the phase-A exact-pause journal**. Seven
+  focused tests prove authentic fresh terminal-manifest coverage, zero
+  remaining unblocked saved work, State-ordered candidate derivation, full
+  cycle and request-file binding, mode-0600 immutable storage, corruption
+  refusal, and read-only pre-apply drift detection. The component has no
+  remote or apply path. See
+  `EXACT_RECOVERY_PAUSE_JOURNAL_QA_PASS_20261119.md`. Phase-B selected-row pause
+  application and exact Scan Cycles finalization remain unimplemented.
+- Fresh protected read-only status now supersedes the older multi-cycle note:
+  `CYC-B639C6D864EC` is the sole blocker, with 764 queued, three inventory,
+  three blocked, two unsupported, 20 complete, eight partial, 47 inventories,
+  eight plans, and 767 pause candidates. After the 42 unblocked saved items
+  reconcile, roughly 725 unsaved queued Companies need an explicit exact
+  recovery pause. Independent QA disqualified the existing pause apply path
+  because it invokes global synchronization. It designed a separate exact
+  terminal-hold manifest/readback and pause adapter that preserves the five
+  blocked/unsupported inventories in place, journals bounded selected Company
+  writes, and finalizes only the named cycle row. See
+  `EXACT_RECOVERY_TERMINAL_HOLD_AND_PAUSE_DESIGN_20261119.md`.
   See `EXACT_CYCLE_READONLY_RECONCILIATION_20261119.md`.
 - A separate read-only scope proposal now identifies `COMP-0024` Draper as a
   possible Workday third distinct-structure candidate. Its historical evidence

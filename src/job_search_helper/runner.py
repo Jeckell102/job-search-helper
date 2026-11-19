@@ -422,34 +422,28 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
     with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
         from .integration_release import assert_release_settled
         assert_release_settled(database.parent)
+        if exact_sync:
+            # A named recovery owns only frozen plans from one inbox cycle.
+            # It never starts RunSheetsSync, which pulls/publishes globally.
+            inventory_path = database.parent / "inventories.sqlite3"
+            # Named recovery never broad-retries manual holds.  This is a
+            # read-only probe, so even the conservative hold cannot create a
+            # migration, receipt, or cursor row in the shared inbox.
+            if not InventoryInbox.has_unblocked_inventory(inventory_path, sync_cycle_id):
+                print(f"No saved inventory for exact cycle {sync_cycle_id}.")
+                return 0
+            report = {
+                'cycle_id': sync_cycle_id,
+                'status': 'HELD_NO_EXACT_PLANNER',
+                'message': ('Selected-plan publishing is staged but is not wired to '
+                            'named recovery until every eligible inventory has a '
+                            'frozen exact plan.'),
+            }
+            print('Exact cycle recovery held: ' + json.dumps(report, sort_keys=True), flush=True)
+            return 0
         repo = get_repository(write=True, interactive=True, renew_both=True,
                               min_request_interval=sheet_request_interval)
         repo.validate_schema()
-        if exact_sync:
-            # Reject an absent ID before starting the run-owned publisher.
-            # Besides making a typo harmless, this prevents a named recovery
-            # command from opening the normal sync path when it has no exact
-            # inventory to own.
-            probe = InventoryInbox(database.parent / "inventories.sqlite3", repo.spreadsheet_id)
-            try:
-                if sync_cycle_id not in probe.cycles(include_blocked=retry_blocked):
-                    print(f"No saved inventory for exact cycle {sync_cycle_id}.")
-                    return 0
-            finally:
-                probe.close()
-            # RunSheetsSync owns a *global* local-to-Sheets pull/publish loop.
-            # It is therefore unsafe to reuse it for an exact-cycle recovery:
-            # startup alone could import or publish another cycle's work.  Do
-            # not quietly downgrade a named request into that broad behavior.
-            # A future scoped publisher must supply exact plan/readback guards
-            # before this command is allowed to write.  Until then this is an
-            # explicit no-global hold and leaves the inventory untouched.
-            print(
-                f"Exact cycle {sync_cycle_id} is held: global Sheets pull/publish is disabled "
-                "for named recovery. No inventory, workbook, review, or coordinator changes were applied.",
-                flush=True,
-            )
-            return 0
         performance = {}
         performance_sources = [performance]
         run_counts = Counter()
