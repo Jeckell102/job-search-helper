@@ -1344,10 +1344,20 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   verification passed 222 focused and 180 adjacent tests; independent QA
   separately accepted the source repair after 229 checks. No Google, scraper,
   job-data, queue, service, lock-deletion, or Jetson action occurred.
-- The authorized Davidson-only Google read preview has now completed. It
+- The Davidson-only Google read preview has now completed. It
   returned `REMOTE_PROFILE_INCOMPATIBLE`: current `Companies` lacks the legacy
   plan's required control fields. The result has `mutation_performed: false`;
   no write, receipt, cleanup, replay, migration, scrape, queue, or local state
   change occurred. Davidson and `CYC-B639C6D864EC` are retained as explicit
   legacy-profile holds. Evidence:
   `DAVIDSON_LEGACY_PLAN_PREVIEW_20261119.md`.
+- Post-preview state is unchanged at 47 inventories, 11,313 saved jobs, eight
+  plans, 92 total local-cursor operations, and 233 frozen operations. The
+  Davidson local migration assessment resolved all 19 identities: 17 still
+  match exactly, while two Job History rows differ only in the protected
+  human-review fields `Review Status` and `Decision`. The current compact
+  projection would contain one Companies and nine Job History operations,
+  with nine Job Evidence operations retained locally only. The unadjusted
+  projection is not approved because it still contains the two superseded
+  decisions. The required CAS, journal, guard, and preview contract is in
+  `DAVIDSON_LOCAL_MIGRATION_ASSESSMENT_20261119.md`.

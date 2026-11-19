@@ -31,9 +31,19 @@ digest, and no possible-write upper bound. No scrape, Google write, receipt,
 queue action, database mutation, lock deletion, service action, or Jetson
 action occurred.
 
+Fresh local verification after the preview found the cycle unchanged: 47
+inventories, 11,313 saved jobs, eight plans, local cursor total 92, and 233
+operations. Davidson remains at cursor 19 of 19. The read-only access token
+was refreshed to a later expiry under its existing `0600` token file; no
+write-scoped token was requested.
+
 ## Follow-up
 
 Retain Davidson and the broad cycle as an explicit legacy-profile hold. Any
 future migration needs a separately reviewed design that maps only verified
 legacy identities into the current compact profile and does not reinterpret
 the local cursor as remote delivery evidence.
+
+The subsequent local-only assessment found 17 exact local matches and two
+protected Job History conflicts limited to `Review Status` and `Decision`.
+See `DAVIDSON_LOCAL_MIGRATION_ASSESSMENT_20261119.md`.
