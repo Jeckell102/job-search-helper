@@ -497,9 +497,11 @@ partial Google Sheets write alone is not completion.
    matrix is refreshed from current local evidence. Select distinct source
    structures plus the shared-adapter regression control; do not start work
    from historical candidate names alone.
-2. After interactive Google authorization is completed, run the bounded normal
-   publisher only, then independently recheck the outbox receipt and the one
-   remaining workbook date. Do not start a scrape.
+2. The refreshed publisher preflight now shows one pending local Opportunities
+   `Last Checked` receipt and 21 protected remote-edit conflicts. Identify the
+   pending receipt and reconcile or explicitly retain every conflict under the
+   normal safeguards before requesting interactive Google authorization. Do not
+   start a scrape.
 3. Only after publication is clean, freshly recheck processes, locks,
    local/workbook cycle identity, deployed source identity, and sync health;
    then perform the final demonstration one Company at a time, proving normal
@@ -516,3 +518,24 @@ confirmed that the scraper, writer and scrape/FIRST-PASS controller lock files
 name absent PIDs `485601`, `634767` and `283795`; the files remain untouched.
 Historical broad cycles and the empty automatic profile registry prevent a
 safe company-only run until an exact guarded recovery is owner-reviewed.
+
+## Checkpoint — final-readiness independent audit, 2026-11-19
+
+- Independent QA rejected the prior readiness document only because it still
+  described F4 as open. This card and the readiness record now state the
+  independently accepted, limited F4 transport-recovery result accurately;
+  no later acceptance gate was closed by that correction.
+- Fresh read-only protected evidence: no active scraper/coordinator/review
+  process; queue, campaign, and autopilot disabled; empty automatic-profile
+  registry; retained absent-PID locks unchanged. `CYC-B639C6D864EC` is the
+  800-company in-progress broad cycle with 47 inventories (five blocked) and
+  eight partially-applied sync plans. Its absent-owner
+  RUNNING/SCRAPING workflow is recovery evidence only. Nineteen historical
+  cycles are also in progress.
+- Fresh local publisher preflight: one pending Opportunities `Last Checked`
+  cell and 21 protected remote-edit conflicts. No Google connection or write
+  was attempted. This is a new explicit blocker ahead of any bounded publisher
+  request.
+- QA lane ownership is complete for this checkpoint. Coordinator next action:
+  map the pending receipt and conflict protection paths without mutation, then
+  update the guarded recovery/publisher decision record.
