@@ -1591,3 +1591,13 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   exact pre-existing remote results confirm zero-write, ambiguity holds without
   replay, and terminal receipt states cannot reopen. Protected integration and
   a guarded real pilot remain separate gates. Evidence:
+- Current-baseline packaging rejects a direct overlay of the older selected-
+  recovery candidate because it would regress current delivery-evidence and
+  observation protections. An isolated adapter now ports only the verified
+  selected-prefix boundary, explicitly restricting a short recovered first
+  chunk to the sealed selected plan. Its combined selected-recovery and
+  current local-plan suite passes 28/28. The fake remote remains test-only;
+  no protected source, SQLite, Google, queue, scraper, lock, service, or
+  Jetson state changed. Next is a current-baseline journal/receipt adapter and
+  independent staged QA. Evidence:
+  `SELECTED_RECOVERY_CURRENT_BASELINE_ADAPTER_20261119.md`.
