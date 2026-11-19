@@ -1414,6 +1414,16 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   binding digest. This did not start any process or mutate job/Google/queue
   state. The durable coordinator lifecycle ledger, stale-event reconciliation,
   and guarded live acceptance remain open.
+- Independent M2 audit confirms the installed periodic intake durably records
+  one external Company event during a running scrape, but the bridge currently
+  dispatches only before start. The active-run event therefore waits for a
+  later manual start, which does not meet the M2 exit gate. Worker
+  `m2_midrun_event_repair` owns an isolated runner/test change that performs
+  the final sync pull and existing bridge dispatch at the terminal safe
+  boundary while the normal scraper lock remains held. It must only create the
+  next exact request and receipt; it must not start a second scrape, supersede
+  work, or replace a competing request. No protected state changed in the
+  audit.
 - Davidson legacy-to-v2 migration remains source-only and uninstalled. A
   higher-model review rejected the first candidate after reproducing three
   real gaps: guard-only Google readback could falsely confirm after a refused
