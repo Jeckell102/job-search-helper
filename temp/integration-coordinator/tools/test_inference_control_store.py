@@ -39,6 +39,17 @@ class InferenceControlStoreTests(unittest.TestCase):
         self.assertTrue(self.store.begin(REQUEST, FINGERPRINT, OWNER)['start'])
         self.assertEqual(self.store.begin('e' * 32, 'f' * 64, OWNER)['status'], 'BUSY')
 
+    def test_failed_turn_is_terminal_and_releases_the_one_turn_gate(self):
+        self.store.begin(REQUEST, FINGERPRINT, OWNER)
+        self.clock[0] += 1
+        self.assertEqual(self.store.fail(REQUEST)['status'], 'FAILED')
+        self.assertTrue(self.store.begin('e' * 32, 'f' * 64, OWNER)['start'])
+
+    def test_failed_turn_honors_an_already_requested_cancellation(self):
+        self.store.begin(REQUEST, FINGERPRINT, OWNER)
+        self.store.cancel(REQUEST, FINGERPRINT, OWNER)
+        self.assertEqual(self.store.fail(REQUEST)['status'], 'CANCELLED')
+
     def test_cancel_requires_ownership_then_reaches_terminal_acknowledgement(self):
         self.store.begin(REQUEST, FINGERPRINT, OWNER)
         with self.assertRaisesRegex(ValueError, 'does not own'):

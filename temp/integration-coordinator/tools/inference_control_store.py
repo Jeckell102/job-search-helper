@@ -98,6 +98,22 @@ class InferenceControlStore:
         current = self.status(request_id)
         return bool(current and current['status'] == 'RUNNING' and current['cancel_requested'])
 
+    def fail(self, request_id):
+        """Settle an interrupted turn without retaining exception details."""
+        if not isinstance(request_id, str) or not _ID.fullmatch(request_id):
+            raise ValueError('Invalid inference request ID.')
+        with self._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            current = self.status(request_id, _db=db)
+            if current is None:
+                raise ValueError('Unknown inference request.')
+            if current['status'] != 'RUNNING':
+                return current
+            status = 'CANCELLED' if current['cancel_requested'] else 'FAILED'
+            db.execute('UPDATE wrapper_inference_control SET status=?,updated=? WHERE request_id=?',
+                       (status, self.now(), request_id))
+            return self.status(request_id, _db=db)
+
     def finish(self, request_id, *, response_digest=None, usage=None, cancelled=False):
         if not isinstance(request_id, str) or not _ID.fullmatch(request_id):
             raise ValueError('Invalid inference request ID.')

@@ -55,7 +55,7 @@ ten-minute user update. Update it immediately after any material result.
   producer records bounded scrape facts without dispatching work; malformed
   checkpoint data is safely skipped. Qualified defects are held once for
   triage, never dispatched. The remaining gap is guarded live verification.
-- Milestone 4: 58% — a held repair can be promoted only into a paused,
+- Milestone 4: 65% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
@@ -192,6 +192,14 @@ partial Google Sheets write alone is not completion.
   Jetson endpoint is upgraded, and an injected transport failure proved the
   binding is cleared while the durable request enters `UNCERTAIN`. Twenty-three
   focused host/inference checks passed. Jetson endpoint wiring is still open.
+- Independent QA accepted the staged F4 receipt-settlement repair: a Jetson
+  model error now settles its receipt as `FAILED`, an already requested stop
+  settles it as `CANCELLED`, and either terminal state releases the one-turn
+  guard without retaining error text. Thirty-one host/store checks and six
+  staged wrapper checks passed. The staged HTTP control routes then passed two
+  local loopback checks: they require the existing wrapper token, reject a
+  mismatched owner, and accept only a matching status/stop request. This is
+  staged evidence only; no Jetson file, service, or live request changed.
 - A fresh publication preflight found 60 pending system-field updates in the
   local outbox. Live read-only comparison confirmed that 59 already match the
   workbook and identified one remaining `Last Checked` date for Saronic
@@ -216,8 +224,10 @@ partial Google Sheets write alone is not completion.
 1. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
-2. Implement and independently test the bounded F4 inference status/cancel
-   protocol in isolated source, before any Jetson deployment.
+2. Obtain the prepared higher-model design review, then perform the bounded F4
+   Jetson rollout only if its remaining checks are satisfied. First capture a
+   live preflight and backup; then record the exact change, verification, and
+   rollback evidence in the existing Jetson modification log.
 3. Only after publication is clean, freshly recheck processes, locks,
    local/workbook cycle identity, deployed source identity, and sync health;
    then consider the guarded recovery command only if every preflight guard
