@@ -121,6 +121,13 @@ partial Google Sheets write alone is not completion.
   focused request/runner checks passed locally; the independent reviewer also
   confirmed the active-source path with ten focused request checks. No service
   or live scrape was started.
+- Fresh live-state inspection found no running scraper or coordinator process,
+  but the authoritative local state contains multiple historical cycles still
+  marked In Progress (including the latest broad cycle with 764 queued
+  Companies). The retained scraper/writer locks name absent PID 485601. No
+  lock, cycle, request, Company, or Sheets data was changed. This prevents a
+  safe live company-only demonstration until the documented recovery path is
+  reviewed and exercised without discarding existing work.
 
 ## Safety boundaries
 
@@ -139,8 +146,8 @@ partial Google Sheets write alone is not completion.
    the scoped GitHub backup without disturbing unrelated feature-worktree
    changes.
 2. Review the full changed-Company path from Sheets reconciliation through
-   the bridge and normal runner, then determine the minimum safe guarded live
-   proof.
-3. Perform that guarded live
-   Company-to-scrape test only if current locks, source identity, and Google
-   state make that safe.
+   the bridge and normal runner, and add remaining normal-path outcome and
+   publication-receipt wiring in isolated tests.
+3. Review the documented recovery path for the retained interrupted cycles;
+   only then perform a guarded live Company-to-scrape test if it can preserve
+   all existing work and Google state.
