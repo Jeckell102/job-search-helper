@@ -402,6 +402,8 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
     database = state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
+        from .integration_release import assert_release_settled
+        assert_release_settled(database.parent)
         repo = get_repository(write=True, interactive=True, renew_both=True,
                               min_request_interval=sheet_request_interval)
         repo.validate_schema()
@@ -512,6 +514,8 @@ def pause_interrupted_cycle(cycle_id, reason, *, database=None):
     database = database or state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
+        from .integration_release import assert_release_settled
+        assert_release_settled(database.parent)
         repo = get_repository(write=True, interactive=True, renew_both=True)
         repo.validate_schema()
         if getattr(repo, 'is_local', False) is True:

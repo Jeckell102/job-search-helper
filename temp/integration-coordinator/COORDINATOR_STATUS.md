@@ -73,13 +73,17 @@ ten-minute user update. Update it immediately after any material result.
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
   service was restarted and no scheduler has been started in this work.
-- Milestone 5: 18% — a source candidate now provides crash-durable,
+- Milestone 5: 35% — source candidates now provide crash-durable,
   Company-version-bound release-to-retry intent, exact complete-release pins,
   normal company-only admission/recovery, stale-source refusal at admission
   and storage, and release/attempt identity through publication and outcomes.
-  One hundred fifty-one focused checks pass. Independent QA, maintained
-  release-controller wiring, F3 release locking/atomic activation, guarded
-  deployment, and the live release-to-saved-jobs proof remain.
+  The same existing scraper lock now gates release activation; a durable
+  journal blocks startup after a partial install, complete source/configuration/
+  dependency versions and validation evidence are pinned, and exact guarded
+  rollback is implemented. One hundred sixty-two focused checks pass.
+  Independent QA, maintained controller wiring, disposable race rehearsal,
+  guarded deployment, downstream stale-result precedence, and the live
+  release-to-saved-jobs proof remain.
 - Milestone 6: 15% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. The administrator-authenticated live interruption
   proof and independent post-run verification remain, as do F8 supervised
@@ -362,6 +366,13 @@ partial Google Sheets write alone is not completion.
   request/event/storage/outcome suite passes 151 checks. This is isolated
   source evidence only; F3 release admission and activation remain open and no
   production behavior was enabled. See `M5_REPAIR_RETRY_CANDIDATE.md`.
+- Milestone 5 F3 implementation candidate now shares the normal scraper lock,
+  pins complete source/configuration/dependency and reviewed-validation
+  identities, journals before replacement, blocks actual runner startup after
+  interrupted activation, and provides guarded exact rollback. Eleven release
+  fault checks and 162 combined focused checks pass. It remains isolated,
+  unreviewed source; no production release or automation was enabled. See
+  `M5_RELEASE_ADMISSION_CANDIDATE.md`.
 - A second fresh preflight confirmed the same active services, 200 health, and
   terminal-only receipt aggregate. A `sudo -n` restart attempt returned 1
   without changing service state, confirming that only an interactive
@@ -386,9 +397,11 @@ partial Google Sheets write alone is not completion.
    `ollama.service` twice. Record the resulting bounded evidence or failure,
    independently verify the authoritative receipt and service state, and leave
    any uncertain receipt lane-blocking. Do not rerun blindly after a failure.
-2. Independently review the M5 repaired-retry source candidate, then connect
-   it only through a maintained release controller that satisfies F3 shared
-   admission, complete-version activation and rollback tests.
+2. Independently review the combined M5 repaired-retry and shared-release
+   candidates, then add the maintained controller that builds the reviewed
+   manifest, activates one release, and creates its durable retry from the
+   returned receipt. Rehearse the startup/activation/rollback races on a
+   disposable production snapshot before any guarded deployment.
 3. Use the accepted M1-M4 reconciliation candidate only through an explicit,
    hash-recorded integration review; do not mechanically apply it to the
    protected checkout.
