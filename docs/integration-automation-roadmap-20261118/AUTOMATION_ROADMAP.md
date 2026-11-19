@@ -14,13 +14,15 @@ Prepared 2026-11-18. This is a development plan, not activation of unattended wo
 
 **Last verified baseline:** Samtec pilot passed two 148-job live inventories and 60 installed tests on 2026-11-18. Pilot implementation and QA were backed up through commit `5dc9511`; the initial automation roadmap was backed up in `042d3f9` on `backup/wrapper-pilot-20261118`. Counts, installed hashes and queue controls require fresh verification. The pilot did not prove the complete company-event-to-normal-storage chain.
 
-**Immediate next action:** Start or resume a persistent goal whose objective is all six milestones below; reconcile current state and assign independent implementation and QA work for Milestone 1. Do not reopen the completed pilot goal or substitute another objective silently.
+**Immediate next action:** Read this roadmap, both QA reports and `QA_FINDINGS_LEDGER.md` in this folder. Start or resume a persistent goal whose objective is all six milestones below; reconcile current state and assign independent implementation and QA work for Milestone 1, including F6/F7 contract decisions. Do not reopen the completed pilot goal or substitute another objective silently.
 
 **Goal and timer:** Record the actual goal ID/status and start time here when created. No arbitrary token or elapsed-time limit is requested. Track elapsed time. Keep per-attempt resource limits separate from the overall development goal.
 
-**Pending decisions/blockers:** No implementation blocker established yet. The authoritative intake source and safe scheduling boundary must be confirmed from current code/configuration. External site blocks are explicit exceptions, not proof of broken code.
+**Pending decisions/blockers:** F1–F8 remain OPEN for implementation and verification in `QA_FINDINGS_LEDGER.md`. Scoped Milestone 1 development may start; each affected boundary must have its contract recorded before dependent implementation and acceptance evidence before activation. The initial named support matrix remains to be filled from current evidence. External site blocks are explicit exceptions, not proof of broken code.
 
-**Resume instructions:** Read this card and the current milestone's acceptance gate. Verify active owners, processes, locks, source hashes and latest receipts. Reconcile unfinished actions before retrying them. Resume the next unmet gate; do not recreate completed work or reset budgets. Update this card with your current coordinator role/focus, assignments, evidence and next action before dispatch and after each meaningful result.
+**Selected approach:** Extend the existing Python coordinator and normal scraper. Routine automatic repair uses immutable, validated company configurations interpreted by reviewed executor capabilities. Prototype one small compatible family first. New executor behavior and custom code repairs stay in the reviewed engineering path until qualified; see the architecture decision below.
+
+**Resume instructions:** Read this card, the current milestone's acceptance gate, `QA_FINDINGS_LEDGER.md`, `ROADMAP_QA_AND_APPROACH_COMPARISON.md` and `FINAL_ROADMAP_QA.md`. The reports preserve the original review; this roadmap and the current ledger record adopted decisions and closure status. Verify active owners, processes, locks, source hashes and latest receipts. Reconcile unfinished actions before retrying them. Resume the next unmet gate; do not recreate completed work or reset budgets. Update this card with your current coordinator role/focus, assignments, evidence and next action before dispatch and after each meaningful result.
 
 The coordinator maintains this card as a short current snapshot, replacing stale entries rather than appending contradictory current-status paragraphs. Put chronological detail in a separate progress log. After a context reset, rereading this card restores the coordinator's role and current responsibilities; it does not authorize scope expansion or override the user's instructions.
 
@@ -39,7 +41,7 @@ The coordinator maintains this card as a short current snapshot, replacing stale
 
 ## Development completion contract
 
-The development goal is complete only when all six milestone gates and the end-to-end acceptance demonstration pass for the declared supported integration families; independent final QA approves the actual deployed version; the company-specific scrape-to-storage and synchronization outcomes are verified; restart/duplicate/rollback behavior is tested; operator status/pause/resume documentation is usable; and source, tests, roadmap and QA reports are backed up to GitHub.
+The development goal is complete only when all six milestone gates and the end-to-end acceptance demonstration pass for the predeclared supported integration families; all F1–F8 findings have verified closure evidence; independent final QA approves the actual deployed version; the company-specific scrape-to-storage and synchronization outcomes are verified; restart/duplicate/rollback behavior is tested; operator status/pause/resume documentation is usable; and source, tests, roadmap and QA reports are backed up to GitHub. Document revisions alone cannot close implementation findings.
 
 A system that correctly holds an externally blocked or unsupported company can pass that exception-handling test. That company itself remains incomplete. Completing this development project does not mean every company in the historical backlog is fixed, or that the Jetson can autonomously invent integrations for arbitrary websites.
 
@@ -49,7 +51,7 @@ If final QA fails, create a new QA report with reproducible findings, severity, 
 
 Adding an active company creates a durable request to scrape only that company. The normal scraper first tries the integrations it already has. When evidence shows that an integration is missing or broken, Python creates a repair task. The Jetson assists with the repair; MuleLab builds and tests it, validates real public jobs, installs the approved version, and runs that company's scraper again. Jobs are saved through the normal Job Search Helper storage and synchronization path.
 
-Failures during existing scrape runs enter the same repair workflow. Other companies continue wherever the existing writer and scraper locks permit. A blocked company cannot prevent the repair queue from progressing indefinitely.
+Failures during existing scrape runs enter the same repair workflow. Other companies continue wherever the existing writer and scraper locks permit. A company-specific block must not prevent unrelated safe work. An unknown outcome on the shared Jetson is a device-level hold: reconcile that request before issuing another inference; safe non-inference work may continue.
 
 Success means the company's applicable jobs were durably saved using the working integration. Creating a file, passing fixture tests, or installing code is an intermediate state. Database completion and any pending Google Sheets synchronization must be reported separately.
 
@@ -75,6 +77,18 @@ Correction to the earlier summary: a persistent Python coordinator and queue alr
 - Each integration receives fresh model context and an isolated workspace. Its durable history, budgets, evidence and retry relationships remain on MuleLab. Resuming does not erase expenditure or reopen an exhausted budget silently.
 - Model output is a proposal. Public website text is evidence, not instructions. The model cannot change the acceptance criteria, grant itself permissions, mark itself successful or directly install code.
 - No wrapper development files or job inventories are stored on Jetson. Existing runtime/model files remain there.
+
+## Architecture decision and QA gates — adopted 2026-11-18
+
+Use the hybrid recommended by the architecture review: keep the existing queue, normal `fetch_inventory` routing and storage pipeline; add immutable company configurations for reviewed executor capabilities. Each configuration binds exact company/source identity, executor version, permitted listing/detail/pagination behavior, resource limits and evidence. It contains no Python, arbitrary expressions, unrestricted URLs or overrides of validation rules. Python enforces identity, URL scope, pagination limits and full-description checks independently of the model.
+
+Prototype one configuration family alongside existing adapters. Pin a configuration and the complete executor/code/dependency version for each attempt. Activate validated versions for new attempts without changing the version used by an active attempt. New executor behavior and arbitrary source-code proposals remain engineering work; automatic release is restricted to qualified capabilities and the predeclared support matrix.
+
+If a small configuration prototype cannot preserve the existing transport, routing and storage contracts without a broad new framework, record the evidence and use constrained reviewed source templates temporarily. The same identity, validation, versioning and release gates apply. Do not create a second queue or migrate the whole adapter library as a prerequisite. This is a selected development approach, not proof of performance or autonomous coverage.
+
+`QA_FINDINGS_LEDGER.md` is the current finding register. Before workers implement an affected cross-component boundary, the coordinator records its contract, owner and acceptance checks. A design decision can permit implementation; only version-bound test/live evidence and independent QA can close the finding. F1–F8 must be closed before final unattended qualification. Milestone 1 can start now, with F6/F7 resolved and tested before its exit gate.
+
+Before general-loop qualification, populate an acceptance matrix in this folder using current backlog evidence: named company IDs, source structures, initial failures, permitted repair types, expected model contribution, expected stored results and engineering escalation boundaries. Include at least three currently unfinished companies with distinct source structures and a shared-adapter regression. Samtec is the known-good Milestone 1 baseline, not a substitute for an unfinished repair case. Freeze the cases before qualification; retain failures and explicitly record any scope change rather than replacing failed cases silently.
 
 ## Workflow and state model
 
@@ -110,6 +124,8 @@ Run Samtec through this path. Confirm the public inventory is complete, normal f
 
 When a main scrape is already running, persist the request and schedule it at a safe boundary. Initially serialize company-only runs with existing scraper locks; do not create a parallel writer or supersede the user's current scan.
 
+Before accepting this milestone, document the exact scheduling boundary, visible queue age/blocking cycle, and recovery policy for an old paused cycle (F7). Measure intake-to-start behavior while idle and busy against an explicit target. Define durable `LOCAL_COMMITTED`, `SYNC_PENDING` and `SYNC_CONFIRMED` receipts bound to request, company, source revision, release and exact record identities (F6). Prove a real confirmed synchronization and safe recovery from a lost write acknowledgement without scraping again or overwriting intervening manual decisions.
+
 **Exit gate:** one company requested, only that company fetched, expected stored records verified, repeated execution safe, and local-save versus Sheets-sync status explicit.
 
 ## Milestone 2 — Detect new companies reliably
@@ -119,6 +135,8 @@ Connect company creation/update to a durable request outbox. For direct database
 Record a stable company ID and a revision of integration-relevant fields. Trigger on first eligible addition and meaningful careers-source changes, not status timestamps or the coordinator's own progress writes. Incomplete entries wait for required identity/source fields; paused or removed companies remain excluded.
 
 Seed an initial watermark so enabling the watcher does not mistakenly treat the entire existing database as newly added. The historical backlog is imported separately and deliberately. At-least-once event delivery is acceptable when queue insertion and downstream writes are idempotent.
+
+Resolve F1 before connecting stores: identify the authoritative company revision and write supported application mutations/imports and their outbox events in one repository transaction. Define reconciliation for external changes, durable consumer acknowledgement/deduplication and bootstrap catch-up. Separate SQLite stores are not one atomic transaction. Test crashes on either side of delivery, duplicate events and reordered source revisions.
 
 **Exit gate:** adding a company while idle and during a running scrape creates one logical scoped request; duplicate delivery, restarts and repeated synchronization do not create duplicate work or miss additions.
 
@@ -131,7 +149,8 @@ Emit a structured outcome from both full runs and company-only runs. Use determi
 | Complete inventory, including verified zero openings | Save the result; no repair task. |
 | Timeout, rate limit or temporary provider error | Bounded retry with backoff; preserve partial evidence. |
 | Authentication problem, CAPTCHA/access block or uncertain employer | Hold with a clear reason; retry only under the defined policy or after relevant evidence changes. |
-| Unsupported source or proven parser/description/pagination regression | Create or update one integration repair task. |
+| Missing/broken integration within a qualified capability | Create or update one integration repair task. |
+| Source requires an unqualified executor capability | Record an engineering hold with evidence; do not repeatedly attempt automatic release. |
 | Jobs fetched but database/synchronization fails | Retry storage/publication; do not rewrite the integration. |
 | Company paused, removed or source changed during work | Cancel or supersede the stale request before installation or writes. |
 
@@ -147,12 +166,14 @@ Use a progression of repair capabilities:
 
 1. Reuse a proven adapter or correct an evidence-verified source mapping.
 2. Select a reviewed provider recipe with strict configuration validation.
-3. Make a bounded code proposal in an isolated workspace when supported by that repair policy.
+3. Make a bounded code proposal in an isolated workspace through the reviewed engineering path; qualification is required before that capability becomes automatic.
 4. Hold unfamiliar website structures or repeatedly failing proposals for engineering review.
 
 The Samtec recipe currently contains company-specific checks. Do not generalize it by removing identity guards. Build provider recipes with explicit, tested company/source bindings. A shared-provider change must identify and regression-test affected employers.
 
 Generate fixtures from independently captured actual pages, including failure and empty-state cases. Preserve baseline tests. The AI cannot weaken tests or substitute a self-authored assertion of success for public evidence.
+
+Freeze the F5 support matrix before general-loop qualification. Demonstrate a bounded AI decision from public evidence for ambiguous supported repairs without supplying per-company manual code during the acceptance run. Deterministic adapter reuse should avoid unnecessary inference. A hand-prepared recipe by itself does not establish general development capability.
 
 **Exit gate:** the coordinator can move a repair from failure evidence to a tested candidate without manual prompt copying; repeated no-progress reads stop with a checkpoint; an unsupported case is reported honestly.
 
@@ -168,6 +189,10 @@ Promote the pilot's reviewed scripts into maintained Python services with versio
 - Existing scraping processes are not hot-patched. A fresh worker loads the release at a safe boundary and proves which version it used.
 - Python creates a durable retry request for the original company and watches the ordinary storage result. A crash after install but before retry is recoverable without reinstalling blindly.
 
+Resolve F2 before wiring retry delivery: give a repaired attempt its own durable identity, linked to source revision and release, with explicit precedence over stale inventory and publication attempts. Preserve pending inventory/cursors and recovery history; do not reuse the failed attempt's key or delete pending data to force a retry.
+
+Resolve F3 before automatic release: scraper startup and release activation share a documented admission/lock-order contract. Pin the complete required code, dependency and configuration version for each attempt. Test concurrent start/activation/rollback so an attempt uses one complete version, never a mixture. A release-only lock or a paused coordinator is not proof that every scraper has stopped.
+
 Keep release, backup, company scrape and publication statuses distinct. Record and retry GitHub delivery failures without falsely reporting a backup or repeatedly scraping jobs. If the installed integration fails a post-release check, roll back only the affected release when safe and reopen a bounded repair attempt; preserve existing job data.
 
 **Exit gate:** an induced integration failure leads to a validated release, a fresh company-only scrape and verified saved jobs, without manual movement between the stages.
@@ -175,6 +200,10 @@ Keep release, backup, company scrape and publication statuses distinct. Record a
 ## Milestone 6 — Reliability, sequential operation and staged activation
 
 Use queue leases and crash reconciliation to guarantee one current repair owner and one Jetson inference request. Adopt explicit per-attempt time/token/tool limits, a bounded number of automatic successor attempts, cooldowns and a persistent failure history. Exhaustion becomes a visible exception; it does not stop every later company or trigger unlimited retries.
+
+Resolve F4 with durable inference request IDs, ownership generations, remote status/result retention and acknowledged completion/cancellation. Reconcile an unknown request and settle its resource accounting before issuing another. Lost connectivity holds the inference lane until safe resolution; it is not permission to retry an unaccounted request. Store only the minimal inference-control metadata needed on Jetson; development files, job inventories and authoritative workflow state remain on MuleLab.
+
+Resolve F8 by extending existing supervised services with one-instance ownership, boot/reconnect catch-up, pause/shutdown behavior and disk-pressure handling. Define retention that protects unacknowledged events, active releases and recovery receipts. Temporary Markdown supports development; production scheduler state belongs in maintained durable application storage.
 
 Prioritize newly added companies and regressions of working integrations, then work through the reconciled historical backlog without starving it. Shared-provider failures can share investigation, but each affected company's recovery still needs its own scoped scrape receipt.
 
@@ -193,7 +222,7 @@ Activation sequence:
 ## Acceptance demonstration for the complete system
 
 1. Add a company whose source already works: only that company is scraped and applicable jobs are saved.
-2. Add an unsupported company: initial failure creates one repair; AI/Python builds and validates it; release triggers the scoped retry; jobs are saved.
+2. Add a company with a missing/broken integration within a predeclared qualified capability: initial failure creates one repair; AI/Python builds and validates it; release triggers the scoped retry; jobs are saved. Separately, a source needing an unqualified capability must enter an honest engineering hold and must not count as a repaired company.
 3. Break a known integration in a controlled test: a normal scrape records the regression and the same recovery chain fixes it.
 4. Simulate a provider outage/access block: the system retries or holds appropriately without inventing a code repair.
 5. Interrupt and restart the coordinator: it resumes from receipts without duplicate inference, installation or job writes.
@@ -204,7 +233,7 @@ The final demonstration must run through the actual event-to-storage path. The n
 
 ## Recommended development order
 
-Build Milestone 1 first: it establishes the final delivery path every subsequent feature needs. Then implement intake and failure events (2–3), wire the bounded repair process (4), automate the proven validation/release/retry gates (5), and qualify unattended operation (6). Keep broad automatic releases disabled until the complete chain passes.
+Build Milestone 1 first: it establishes the final delivery path every subsequent feature needs. Next prove one minimal complete repair loop across Milestones 2–5 for a predeclared case, initially with an explicit event in an isolated test. Resolve each boundary contract before dependent implementation. Expand continuous intake and classification only after that loop works and bootstrap/deduplication are proved. Then qualify the diverse named cases, recovery behavior and unattended operation in Milestone 6. This order does not skip any milestone gate. Keep broad automatic releases and backlog processing disabled until the complete chain passes its applicable gates.
 
 This is several development milestones, not one switch. The largest uncertainty is how many source structures the small Jetson model can handle through strict recipes and bounded proposals. Queue automation cannot by itself fix that capability limit; unsupported cases need a visible engineering path.
 

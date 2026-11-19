@@ -1,5 +1,7 @@
 # Roadmap QA and alternative architecture comparison
 
+**Subsequent disposition — 2026-11-18:** Following the user's request to update the documents, the roadmap and handoff now adopt the hybrid development approach and require the QA finding ledger. The original assessment below is retained as review history; references to unchanged documents or a proposed/not-yet-adopted alternative describe the reviewed versions listed below. Current decisions and status are in `AUTOMATION_ROADMAP.md`, `QA_FINDINGS_LEDGER.md` and `FINAL_ROADMAP_QA.md`. F1–F8 remain open implementation/verification requirements; revising the documents does not close them or enable automation.
+
 Reviewed 2026-11-18. Scope: design and code inspection; no production changes, live scraping, inference requests or test-suite execution. Two independent review lanes examined the recovery contracts and alternative architecture while the coordinating reviewer inspected storage, intake and release boundaries.
 
 ## Verdict
