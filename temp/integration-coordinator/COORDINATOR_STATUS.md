@@ -1311,12 +1311,12 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
 - Fresh post-install read-only status confirms there is still no active
   scraper/reviewer process and no pending Company-only request. Exact cycle
   `CYC-B639C6D864EC` remains the sole blocker with 47 saved inventories,
-  11,313 saved jobs, and eight plans containing 233 operations: 92 already
-  applied and 141 pending. Davidson Technologies (`COMP-0035`) is the safest
-  first live recovery stage because all 19 of its frozen operations are
-  already applied and zero writes remain; the proposed action is exact
-  readback, confirmation, and local cleanup only. It has not been run and
-  requires separate approval. The bounded payload and stop conditions are in
+  11,313 saved jobs, and eight plans containing 233 operations: 92 reflected
+  by local-application cursors and 141 not yet locally applied. Remote Google
+  presence is not proven by those cursors. Davidson Technologies
+  (`COMP-0035`) is the narrow first preview candidate because its local cursor
+  is 19 of 19, but its legacy plan cannot be published until separately
+  reconciled. The bounded preview and stop conditions are in
   `LIVE_GOOGLE_RECOVERY_APPROVAL_PACKET_20261119.md`.
 - Correction after source-level cursor review: the 92/141 split is local
   SQLite application progress, not Google publication evidence. Davidson's
@@ -1331,7 +1331,9 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   through the existing lock.  It changed exactly two files and retained a
   rollback receipt at
   `/tmp/job-search-terminal-repair-20261119T191420Z-aire17hb/manifest.json`;
-  its status is `INSTALLED_HASH_VERIFIED`.  Protected offline verification
-  passed 168 tests.  A bytecode-cache compile attempt could not write to the
-  protected read-only mount, but all tested imports succeeded.  No Google,
-  scraper, job-data, queue, service, lock-deletion, or Jetson action occurred.
+  its status is `INSTALLED_HASH_VERIFIED`. The two protected hashes exactly
+  match private commit `ca5d5d472b06a6f219ff06f37a11ad0bff43f258`, while the
+  rollback copies match the prior installed hashes. Fresh protected offline
+  verification passed 222 focused and 180 adjacent tests; independent QA
+  separately accepted the source repair after 229 checks. No Google, scraper,
+  job-data, queue, service, lock-deletion, or Jetson action occurred.

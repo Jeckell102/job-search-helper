@@ -172,6 +172,19 @@ Google, start a scrape, restart a service, change the live database, delete a
 lock, release a queue, or modify the Jetson. Live exact publication and the
 final end-to-end company demonstration remain separately approval-gated.
 
+A later independent audit superseded one part of that acceptance: terminal
+hold qualification still allowed a caller-supplied legacy readback-proof
+envelope when no durable confirmed receipt existed. The repaired overlay at
+private commit `ca5d5d472b06a6f219ff06f37a11ad0bff43f258` removes that route
+and requires the exact durable `SYNC_CONFIRMED` receipt. Independent QA
+accepted the source repair after 229 strict checks. The repair was installed
+under the existing integration lock with exactly two files changed and a
+rollback receipt at
+`/tmp/job-search-terminal-repair-20261119T191420Z-aire17hb/manifest.json`.
+Installed hashes match the repaired package, rollback hashes match the prior
+installed version, and fresh protected verification passed **222 focused**
+plus **180 adjacent** checks. No Google or runtime workflow was accessed.
+
 Candidate core hashes:
 
 - `runner.py`: `28c05b612544eb51c073bbb784f508ec6a48343d3e4006a8545e17d514809aae`
