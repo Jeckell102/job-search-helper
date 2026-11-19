@@ -743,6 +743,77 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   remote or apply path. See
   `EXACT_RECOVERY_PAUSE_JOURNAL_QA_PASS_20261119.md`. Phase-B selected-row pause
   application and exact Scan Cycles finalization remain unimplemented.
+- Accepted planner, publisher, terminal-hold, pause-journal, containment,
+  tests, and evidence were committed as `6d2797a` and pushed to the private
+  GitHub branch `codex/integration-automation-20261118`. `git ls-remote`
+  independently returned the same full hash
+  `6d2797a5225bc8fdf64c7b6703e73b9439f7721a`. Unaccepted orchestration and
+  phase-B work were deliberately excluded from that checkpoint.
+- The source-only combined planner/publisher orchestrator now requires the
+  injected writer-lock assertion, an exact unfinished cycle, and one to five
+  explicit locally prevalidated unblocked inventories. Eleven focused tests
+  now include real Engine/State/Inbox/Memory and SQLite paths: normal
+  end-to-end settlement, plan-save/State-save recovery, post-State-save cleanup
+  with zero replay, second-Company hold isolation, unselected/other-cycle and
+  request preservation, and unchanged local dirty/outbox rows. It is in
+  independent QA and remains unwired.
+- Phase-B1 now has a storage-only apply ledger with an immutable journal-bound
+  run, predeclared chunk/State/Scan digests, monotonic acknowledgement-bound
+  confirmation, and strict phase ordering. Its first QA rejected a causal
+  `COMPLETE` gap; the repair now requires the full confirmed intent chain and
+  an exact `FROZEN -> COMPLETE` compare-and-swap. Eight tests cover the added
+  corruption/race cases. Independent re-review has now **passed** this repaired
+  storage ledger. A `COMPLETE` run must prove every frozen chunk plus the exact
+  State and Scan intents were confirmed at their frozen digests, and Scan
+  confirmation rolls back unless the same transaction performs the exact
+  `FROZEN -> COMPLETE` transition. This remains storage-only evidence and does
+  not authorize remote pause application.
+- Independent QA **rejected activation of the combined exact-cycle
+  orchestrator on one remaining containment defect**: its injected
+  `writer_lock_assertion` can be forged by a caller returning literal `True`,
+  so it does not prove ownership of the existing normal scraper/writer lock.
+  All other focused orchestration, planner, publisher, terminal, and pause
+  storage checks passed (68 tests in 2.408 seconds), including selected-only
+  behavior and crash recovery without replay. A dedicated lane now owns only
+  a real non-forgeable lock gate plus contention proof; runner wiring and live
+  recovery remain held.
+- Independent QA has now **passed the repaired combined exact-cycle
+  orchestrator**. Its public API internally acquires the real normal scraper
+  lock derived from file-backed State before any State, inbox, planner,
+  publisher, or remote access; fake assertion injection is no longer accepted.
+  Real lock contention raises `WriterLockBusy` with zero protected access.
+  Independent QA passed 170 recovery/planner/publisher/inbox/pipeline/sync/
+  runner tests in 26.249 seconds and `git diff --check`. The source remains
+  unwired, and no live or production data was accessed. See
+  `EXACT_CYCLE_ORCHESTRATOR_QA_PASS_20261119.md`.
+- The first full Phase-B executor lane completed its contract analysis but
+  deliberately created no partial implementation because the frozen-run,
+  intent, readback, State, and Scan crash boundaries require one continuous
+  implementation and interruption-test pass. A fresh dedicated lane now owns
+  only the new executor source and tests. The coordinator retains integration,
+  release gating, evidence, and live safety. Overall roadmap progress remains
+  approximately 82%; this is an active safety bottleneck, not an external
+  blocker, and no user action is required.
+- A fresh Phase-B executor candidate implemented the full frozen-run, selected
+  Company chunk, readback-only uncertain intent, State, and exact Scan Cycles
+  sequence and passed its own 77-test set. Independent QA **rejected** it on
+  two reproducible activation defects: its public API accepted an arbitrary
+  caller-selected lock path, and an individually oversized entry following a
+  small entry could escape the 500000-byte chunk bound. QA otherwise passed a
+  204-test adjacent regression and accepted the crash/scope/finalization
+  structure. The executor lane owns only these two repairs and adversarial
+  tests. See `EXACT_RECOVERY_PAUSE_EXECUTOR_QA_FAILURE_20261119.md`. Runner and
+  live recovery remain held.
+- Independent QA has now **passed the repaired Phase-B executor**. The public
+  API derives the normal scraper lock from a present regular file-backed State
+  database and actual contention proves zero protected access; caller path
+  injection is impossible. Every entry is singleton-size checked, the former
+  small-then-oversized case is rejected, and independent 75-entry evidence
+  stayed within both 50-Company and 500000-byte bounds. Focused QA passed 36
+  tests and the adjacent recovery matrix passed 206 tests in 28.11 seconds.
+  The accepted hashes and full boundary are recorded in
+  `EXACT_RECOVERY_PAUSE_EXECUTOR_QA_PASS_20261119.md`. Runner wiring and live
+  recovery remain held pending their own QA.
 - Fresh protected read-only status now supersedes the older multi-cycle note:
   `CYC-B639C6D864EC` is the sole blocker, with 764 queued, three inventory,
   three blocked, two unsupported, 20 complete, eight partial, 47 inventories,
