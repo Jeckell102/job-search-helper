@@ -1538,3 +1538,15 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   the adjacent shared-board/routing suite passed 26/26. No source rewrite is
   justified; live pilot/release/independent-QA gates remain open. Evidence:
   `COMP-0066_FORTERRA_LOCAL_NORMAL_DISPATCH_EVIDENCE_20261119.md`.
+- Fresh read-only recovery assessment for retained cycle `CYC-B639C6D864EC`
+  returns `SAVED_WORK_MUST_BE_PUBLISHED_OR_RECONCILED`: 47 saved inventories,
+  8 saved plans, and 8 partially applied plans make it ineligible for pause or
+  supersession. No M1 pilot may start until each retained item is explicitly
+  reconciled under its own safeguards. Evidence:
+  `CYCLE_B639_RECOVERY_STATUS_20261119.md`.
+- The legacy migration adoption CLI remains held pending a signer-bound
+  approval gate: canonical envelope, detached OpenPGP signature, root-owned
+  MuleLab public-key keyring, full under-lock scope revalidation, and immutable
+  authorization evidence in the migration journal. Binding-only JSON is not
+  human approval. Evidence:
+  `LEGACY_MIGRATION_APPROVAL_PROVENANCE_DESIGN_20261119.md`.
