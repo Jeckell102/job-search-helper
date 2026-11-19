@@ -77,3 +77,9 @@ inventory processing occurred. The remaining gate is explicit approval to
 publish only the 47 inventories and eight plans for `CYC-B639C6D864EC` through
 the guarded exact-cycle command. The normal Sheets synchronizer may also
 publish the one already-pending `Opportunities` cell in its local dirty queue.
+
+Independent post-install verification accepted the exact installed runner and
+unchanged engine hashes, confirmed local and remote Git checkpoint `f988efb`,
+rechecked the installed historical-cycle refusals, and independently observed
+the unchanged 47 inventories (five blocked) and eight positive-cursor plans.
+It performed no sync, scrape, recovery, Google access or file modification.

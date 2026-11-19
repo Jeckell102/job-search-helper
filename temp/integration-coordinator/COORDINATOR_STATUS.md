@@ -130,7 +130,9 @@ ten-minute user update. Update it immediately after any material result.
   inventory and selects only the active named blocker. Live publication did
   not start: the sandbox blocked the first attempt before lock acquisition and
   permission review requires explicit user approval for the concrete Google
-  Sheets payload. The
+  Sheets payload. Independent post-install verification accepted the exact
+  installed hashes, Git checkpoint, historical-cycle refusal, and unchanged
+  47-inventory/eight-plan live counts without accessing Google. The
   administrator-authenticated Jetson interruption proof and the full
   sequential acceptance matrix remain.
 
