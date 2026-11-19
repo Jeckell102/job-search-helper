@@ -1189,3 +1189,50 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   refuse confirmation when the frozen binding changes during readback. The
   expanded focused matrix passes 179 strict checks. A test/evidence-only
   follow-up backup is the active finalization step; live state is untouched.
+- Coordinator checkpoint, 2026-11-19 (current turn): role is release owner
+  and coordinator; current focus is source-only reconciliation of the accepted
+  exact finalization lifecycle into the protected MuleLab baseline.  The final
+  repair was committed as `0a4691832a3364438fdb975fa03da58a1e3fbd70` and
+  independently verified on private GitHub branch
+  `codex/integration-automation-20261118`.  Independent fixture QA passed
+  235 checks; coordinator reproductions passed 194 strict exact and 52
+  adjacent checks.  It is source/fixture evidence only, not deployment or
+  live acceptance.
+- Fresh read-only MuleLab snapshot: no scraper, coordinator, publisher, or
+  review process is running.  Retained controller (`283795`), scraper
+  (`5325`), writer (`717646`), and review-writeback (`4`) lock-owner PIDs are
+  absent; locks remain untouched.  `CYC-B639C6D864EC` still has 47 saved
+  inventories and eight partial durable plans, so it remains an active
+  recovery hold.  The protected checkout is broadly dirty and does not yet
+  contain `exact_cycle_sync.py`; its inbox, publication-receipt, and
+  sheets-sync sources differ materially from the accepted isolated candidate.
+  No job data, lock, queue, Google record, scraper, release, or Jetson state
+  was changed.
+- Milestones retain their existing operational status (M1 92%, M2 92%, M3
+  88%, M4 78%, M5 76%, M6 72%): live/company acceptance gates remain open.
+  Current worker assignments are isolated and read-only: the coordinator owns
+  protected-source/release reconciliation and the restart card;
+  `protected_reconciliation_plan` owns the semantic merge plan; and
+  `protected_compatibility_qa` owns independent compatibility and test-scope
+  assessment.  Goal reference remains
+  `01a1f11f-e014-7493-8441-2f66502e23a9` (active).
+- Current blocker/next action: no Samtec or exact-cycle publication is safe
+  while the stale broad-cycle records remain and the protected source lacks a
+  reviewed selected-plan publisher.  Await the two source-only assessments,
+  create a temporary protected-baseline reconciliation copy, then run only
+  independently selected fixture/temporary-state checks.  Google publication
+  still requires explicit approval of the concrete payload; broad backlog and
+  unqualified automatic releases remain disabled.
+- Both source-only assessments are complete.  The current protected source
+  cannot receive `0a46918` by cherry-pick or wholesale replacement: it lacks
+  the exact modules, while its newer compact-profile, Company-source,
+  baseline-token, and salary guards must be retained.  A disposable
+  source/tests-only copy at
+  `/tmp/job-search-helper-protected-reconciliation-o8XL4Q` contains nine
+  additive exact modules that compile.  A conflict-preserving seam pass left
+  visible rejects only for `inbox.py`, `runner.py`, `sheets_sync.py`, and
+  `sqlite_repository.py`; it did not replace protected behavior.  The first
+  temporary test evidence identifies the missing exact-local journal and
+  narrow Sheets APIs as the first real merge requirements.  See
+  `PROTECTED_BASELINE_EXACT_RECONCILIATION_20261119.md`.  The coordinator now
+  owns manual seam reconciliation; no worker owns production changes.
