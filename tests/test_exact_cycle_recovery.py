@@ -2,12 +2,16 @@
 from unittest.mock import MagicMock, patch
 import unittest
 import copy
+from contextlib import contextmanager
 import sqlite3
 import tempfile
 from pathlib import Path
 
 from job_search_helper.cli import WriterLockBusy, scraper_lock_name, writer_lock
-from job_search_helper.exact_cycle_recovery import recover_exact_cycle
+from job_search_helper.exact_cycle_recovery import (
+    recover_exact_cycle,
+    recover_exact_cycle_with_factory,
+)
 from job_search_helper.exact_cycle_planner import freeze_exact_cycle_plans
 from job_search_helper.exact_cycle_sync import _company_guard
 from job_search_helper.engine import Engine, State
@@ -83,6 +87,7 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.fake_state_path = Path(self.temporary.name) / 'state.db'
+        self.fake_state_path.touch()
 
     def fake_engine(self, companies, inventories, plans):
         engine = engine_for(companies, inventories, plans)
@@ -266,6 +271,141 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         remote.read_rows.assert_not_called()
         remote.commit.assert_not_called()
 
+    def test_factory_constructs_dependencies_inside_lock_once_and_closes_first(self):
+        root = Path(self.temporary.name) / 'constructed-under-lock'
+        root.mkdir()
+        state_path = root / 'state.db'
+        state_path.touch()
+        events = []
+
+        def assert_lock_held():
+            with self.assertRaises(WriterLockBusy):
+                with writer_lock(root / scraper_lock_name()):
+                    pass
+
+        def factory():
+            events.append('factory')
+            assert_lock_held()
+
+            @contextmanager
+            def dependencies():
+                events.append('enter')
+                local = MemoryRepository(
+                    {'Companies': [company('COMP-1')]}, schemas=copy.deepcopy(SCHEMAS),
+                )
+                state = State(state_path)
+                inbox = InventoryInbox(root / 'inbox.db', 'fixture')
+                try:
+                    engine = Engine(
+                        local, state, inbox=inbox, error_log_path=root / 'errors.jsonl',
+                    )
+                    state.save_cycle({
+                        'id': 'CYC', 'status': 'In Progress',
+                        'started_at': '2026-11-19T00:00:00Z',
+                        'companies': {'COMP-1': {'stage': 'queued'}},
+                    })
+                    inbox.save('CYC', 'COMP-1', inventory('COMP-1'))
+                    yield engine, RecordingRemote([company('COMP-1')])
+                    self.assertEqual(inbox.pending('CYC', include_blocked=True), [])
+                finally:
+                    inbox.close()
+                    state.close()
+                    events.append('exit')
+                    assert_lock_held()
+
+            return dependencies()
+
+        result = recover_exact_cycle_with_factory(
+            state_path, factory, 'CYC', ['COMP-1'],
+        )
+        self.assertEqual(result['confirmed'], ['COMP-1'])
+        self.assertEqual(events, ['factory', 'enter', 'exit'])
+        with writer_lock(root / scraper_lock_name()):
+            pass
+
+    def test_invalid_selection_factory_and_contention_never_invoke_factory(self):
+        factory = MagicMock()
+        for selected in ([], ['A', 'A'], ['C%s' % i for i in range(6)]):
+            with self.subTest(selected=selected):
+                with self.assertRaises(ValueError):
+                    recover_exact_cycle_with_factory(
+                        self.fake_state_path, factory, 'CYC', selected,
+                    )
+        factory.assert_not_called()
+
+        with self.assertRaisesRegex(ValueError, 'factory_required'):
+            recover_exact_cycle_with_factory(
+                self.fake_state_path, None, 'CYC', ['COMP'],
+            )
+        factory.assert_not_called()
+
+        lock_path = self.fake_state_path.parent / scraper_lock_name()
+        with writer_lock(lock_path):
+            with self.assertRaises(WriterLockBusy):
+                recover_exact_cycle_with_factory(
+                    self.fake_state_path, factory, 'CYC', ['COMP'],
+                )
+        factory.assert_not_called()
+
+    def test_factory_wrong_engine_path_rejects_before_protected_access_and_closes(self):
+        other_path = self.fake_state_path.parent / 'other-state.db'
+        other_path.touch()
+        engine = self.fake_engine({'COMP': {'stage': 'queued'}},
+                                  {'COMP': ({}, False)}, {'COMP': None})
+        engine.state.path = str(other_path)
+        remote = MagicMock()
+        events = []
+
+        @contextmanager
+        def dependencies():
+            events.append('enter')
+            try:
+                yield engine, remote
+            finally:
+                events.append('exit')
+
+        factory = MagicMock(side_effect=lambda: dependencies())
+        with self.assertRaisesRegex(RuntimeError, 'state_path_mismatch'):
+            recover_exact_cycle_with_factory(
+                self.fake_state_path, factory, 'CYC', ['COMP'],
+            )
+        factory.assert_called_once_with()
+        self.assertEqual(events, ['enter', 'exit'])
+        engine.state.cycle.assert_not_called()
+        engine.inbox.get.assert_not_called()
+        remote.read_columns.assert_not_called()
+        remote.read_rows.assert_not_called()
+        remote.commit.assert_not_called()
+
+    def test_factory_context_closes_on_recovery_exception_before_lock_release(self):
+        engine = self.fake_engine({'COMP': {'stage': 'queued'}},
+                                  {'COMP': ({}, False)}, {'COMP': None})
+        engine.state.cycle.side_effect = OSError('checkpoint unavailable')
+        remote = MagicMock()
+        events = []
+        lock_path = self.fake_state_path.parent / scraper_lock_name()
+
+        @contextmanager
+        def dependencies():
+            events.append('enter')
+            try:
+                yield engine, remote
+            finally:
+                events.append('exit')
+                with self.assertRaises(WriterLockBusy):
+                    with writer_lock(lock_path):
+                        pass
+
+        factory = MagicMock(side_effect=lambda: dependencies())
+        with self.assertRaisesRegex(OSError, 'checkpoint unavailable'):
+            recover_exact_cycle_with_factory(
+                self.fake_state_path, factory, 'CYC', ['COMP'],
+            )
+        factory.assert_called_once_with()
+        self.assertEqual(events, ['enter', 'exit'])
+        with writer_lock(lock_path):
+            pass
+
     def test_file_backed_state_required_before_state_inbox_or_remote_access(self):
         engine = MagicMock()
         engine.state.path = ':memory:'
@@ -276,7 +416,17 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         engine.inbox.get.assert_not_called()
         remote.read_columns.assert_not_called()
 
-    def test_callable_lock_assertion_is_not_an_accepted_capability(self):
+        factory = MagicMock()
+        for invalid in (self.fake_state_path.parent / 'missing.db',
+                        self.fake_state_path.parent):
+            with self.subTest(invalid=invalid), \
+                    self.assertRaisesRegex(RuntimeError, 'file_backed_state'):
+                recover_exact_cycle_with_factory(
+                    invalid, factory, 'CYC', ['COMP'],
+                )
+        factory.assert_not_called()
+
+    def test_callable_lock_assertion_is_not_accepted(self):
         engine = MagicMock()
         remote = MagicMock()
         with self.assertRaisesRegex(TypeError, 'writer_lock_assertion'):

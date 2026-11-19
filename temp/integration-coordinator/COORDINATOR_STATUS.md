@@ -814,6 +814,43 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   The accepted hashes and full boundary are recorded in
   `EXACT_RECOVERY_PAUSE_EXECUTOR_QA_PASS_20261119.md`. Runner wiring and live
   recovery remain held pending their own QA.
+- The accepted combined orchestrator, Phase-B1 ledger, full pause executor,
+  tests, retained failure reports, pass reports, and coordinator checkpoint
+  were committed as `c6504d6` and pushed to the private GitHub branch
+  `codex/integration-automation-20261118`. Local `HEAD` and an independent
+  `git ls-remote` both returned
+  `c6504d635e62a2993b632809a048efd65931a46b`. A dedicated runner lane now owns
+  only explicit bounded exact-sync command wiring and its tests; pause wiring,
+  production activation, and live recovery remain held.
+- Runner integration stopped without changes at a verified lock/API boundary:
+  the accepted recovery API owns the non-reentrant scraper lock but requires a
+  preconstructed Engine, State, inbox, local repository, and remote. Calling it
+  from the existing locked runner would deadlock; constructing those writable
+  dependencies outside the lock would weaken the accepted gate. A dedicated
+  lock lane now owns a narrow active-context capability that acquires the real
+  lock first, binds it to the canonical State path and current execution
+  context, permits dependency construction under that lock, and authorizes the
+  locked recovery core without reacquisition. This boundary must pass focused
+  independent QA before runner work resumes. No runner or live files changed.
+- Independent QA **rejected the first lock-capability design** because one live
+  capability was reusable and a context copied after issuance inherited it;
+  both cases reached State instead of failing before protected access. Other
+  lock/path/thread/expiry/isolation checks and 80 focused/adjacent tests passed.
+  The repair direction removes the escaping capability entirely: a public
+  lazy-factory entrypoint will acquire the real normal lock itself, construct
+  and close dependencies only within that lock, validate the exact canonical
+  Engine State path, and execute the existing locked core. See
+  `EXACT_RECOVERY_LOCK_CONTEXT_QA_FAILURE_20261119.md`.
+- Independent QA has now **passed the replacement lock-owned lazy factory**.
+  All capability/ContextVar/registry machinery was removed. The public factory
+  entrypoint validates the request and canonical regular State database,
+  acquires the exact normal scraper lock, invokes one dependency context only
+  inside that lock, validates the Engine's exact canonical State path before
+  protected access, and closes dependencies before release. Invalid inputs,
+  wrong paths, and real contention invoke neither the factory nor State/inbox/
+  remote access. Independent focused/adjacent verification passed 120 tests in
+  6.75 seconds. See `EXACT_RECOVERY_LOCK_FACTORY_QA_PASS_20261119.md`. Runner
+  wiring can resume; live recovery remains held.
 - Fresh protected read-only status now supersedes the older multi-cycle note:
   `CYC-B639C6D864EC` is the sole blocker, with 764 queued, three inventory,
   three blocked, two unsupported, 20 complete, eight partial, 47 inventories,
