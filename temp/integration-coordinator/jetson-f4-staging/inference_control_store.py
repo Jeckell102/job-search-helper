@@ -19,6 +19,15 @@ _DONE_REASONS = {'stop', 'length', 'tool_calls', 'cancelled', 'error'}
 _ACTIVE = ('RUNNING', 'UNCERTAIN')
 
 
+def _backend_generation(value):
+    if (not isinstance(value, dict) or set(value) != {'service', 'pid', 'start_monotonic'}
+            or value['service'] != 'ollama.service'
+            or type(value['pid']) is not int or value['pid'] <= 0
+            or type(value['start_monotonic']) is not int or value['start_monotonic'] <= 0):
+        raise ValueError('Invalid inference backend generation.')
+    return value
+
+
 class InferenceControlStore:
     def __init__(self, path, *, now=time.time):
         self.path = Path(path)
@@ -31,10 +40,14 @@ class InferenceControlStore:
                 owner_generation TEXT NOT NULL, status TEXT NOT NULL,
                 created REAL NOT NULL, updated REAL NOT NULL,
                 response_digest TEXT, usage TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0,
-                handler_instance TEXT)''')
+                handler_instance TEXT, backend_generation TEXT, recovery_generation TEXT)''')
             columns = {row[1] for row in db.execute('PRAGMA table_info(wrapper_inference_control)')}
             if 'handler_instance' not in columns:
                 db.execute('ALTER TABLE wrapper_inference_control ADD COLUMN handler_instance TEXT')
+            if 'backend_generation' not in columns:
+                db.execute('ALTER TABLE wrapper_inference_control ADD COLUMN backend_generation TEXT')
+            if 'recovery_generation' not in columns:
+                db.execute('ALTER TABLE wrapper_inference_control ADD COLUMN recovery_generation TEXT')
             # A prior service instance cannot prove that its in-flight backend
             # work stopped.  Keep that lane closed until reconciliation does.
             db.execute("UPDATE wrapper_inference_control SET status='UNCERTAIN',updated=?,handler_instance=NULL "
@@ -56,9 +69,11 @@ class InferenceControlStore:
         if not isinstance(owner_generation, str) or not _DIGEST.fullmatch(owner_generation):
             raise ValueError('Invalid inference owner generation.')
 
-    def begin(self, request_id, fingerprint, owner_generation):
+    def begin(self, request_id, fingerprint, owner_generation, *, backend_generation=None):
         """Atomically reserve one request; duplicates never trigger inference."""
         self._validate(request_id, fingerprint, owner_generation)
+        if backend_generation is not None:
+            _backend_generation(backend_generation)
         with self._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             row = db.execute('SELECT fingerprint,owner_generation,status FROM wrapper_inference_control WHERE request_id=?',
@@ -71,8 +86,9 @@ class InferenceControlStore:
             if active:
                 return {'start': False, 'request_id': request_id, 'status': 'BUSY'}
             now = self.now()
-            db.execute('INSERT INTO wrapper_inference_control(request_id,fingerprint,owner_generation,status,created,updated,handler_instance) '
-                       'VALUES (?,?,?,?,?,?,?)', (request_id, fingerprint, owner_generation, 'RUNNING', now, now, self.instance_id))
+            db.execute('INSERT INTO wrapper_inference_control(request_id,fingerprint,owner_generation,status,created,updated,handler_instance,backend_generation) '
+                       'VALUES (?,?,?,?,?,?,?,?)', (request_id, fingerprint, owner_generation, 'RUNNING', now, now, self.instance_id,
+                                                     json.dumps(backend_generation, sort_keys=True) if backend_generation else None))
         return {'start': True, **self.status(request_id)}
 
     def lane_blocked(self):
@@ -87,14 +103,16 @@ class InferenceControlStore:
         if _db is None:
             with self._connect() as db:
                 return self.status(request_id, _db=db)
-        row = _db.execute('SELECT request_id,fingerprint,owner_generation,status,created,updated,response_digest,usage,cancel_requested '
+        row = _db.execute('SELECT request_id,fingerprint,owner_generation,status,created,updated,response_digest,usage,cancel_requested,backend_generation,recovery_generation '
                           'FROM wrapper_inference_control WHERE request_id=?', (request_id,)).fetchone()
         if not row:
             return None
         usage = json.loads(row[7]) if row[7] else None
         return {'request_id': row[0], 'fingerprint': row[1], 'owner_generation': row[2],
                 'status': row[3], 'created': row[4], 'updated': row[5],
-                'response_digest': row[6], 'usage': usage, 'cancel_requested': bool(row[8])}
+                'response_digest': row[6], 'usage': usage, 'cancel_requested': bool(row[8]),
+                '_backend_generation': json.loads(row[9]) if row[9] else None,
+                '_recovery_generation': json.loads(row[10]) if row[10] else None}
 
     def owned_status(self, request_id, fingerprint, owner_generation):
         """Return only non-secret receipt facts to the request owner."""
@@ -142,16 +160,15 @@ class InferenceControlStore:
                        (self.now(), request_id))
             return self.status(request_id, _db=db)
 
-    def reconcile_orphan(self, request_id, fingerprint, owner_generation, *, execution_inactive):
-        """Settle an orphan only after an independent backend-inactivity check.
+    @staticmethod
+    def _public(current):
+        return {key: current[key] for key in ('request_id', 'status', 'created', 'updated',
+                                               'response_digest', 'usage', 'cancel_requested')}
 
-        This never replays work or treats a cancellation request as an
-        acknowledgement.  Callers must provide a positive, current proof that
-        the backend is no longer executing this lane.
-        """
+    def observe_orphan(self, request_id, fingerprint, owner_generation, *, backend_generation):
+        """Record the generation seen before a deliberate model-service restart."""
         self._validate(request_id, fingerprint, owner_generation)
-        if execution_inactive is not True:
-            return self.owned_status(request_id, fingerprint, owner_generation)
+        _backend_generation(backend_generation)
         with self._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             current = self.status(request_id, _db=db)
@@ -159,13 +176,55 @@ class InferenceControlStore:
                 return None
             if (current['fingerprint'], current['owner_generation']) != (fingerprint, owner_generation):
                 raise ValueError('Inference reconciliation does not own this request.')
+            if current['status'] != 'UNCERTAIN':
+                return self._public(current)
+            prior = current['_recovery_generation']
+            if prior is not None and prior != backend_generation:
+                raise ValueError('Inference recovery generation conflicts with prior observation.')
+            if prior is None:
+                db.execute('UPDATE wrapper_inference_control SET recovery_generation=?,updated=? WHERE request_id=?',
+                           (json.dumps(backend_generation, sort_keys=True), self.now(), request_id))
+                current = self.status(request_id, _db=db)
+            return self._public(current)
+
+    def orphan_generations(self, request_id, fingerprint, owner_generation):
+        """Return internal-only generations to the local service after ownership checks."""
+        self._validate(request_id, fingerprint, owner_generation)
+        current = self.status(request_id)
+        if current is None:
+            return None
+        if (current['fingerprint'], current['owner_generation']) != (fingerprint, owner_generation):
+            raise ValueError('Inference reconciliation does not own this request.')
+        if current['_backend_generation'] is None or current['_recovery_generation'] is None:
+            return None
+        return current['_backend_generation'], current['_recovery_generation']
+
+    def reconcile_orphan(self, request_id, fingerprint, owner_generation, *, backend_generation, execution_inactive):
+        """Settle an orphan only after an independent backend-inactivity check.
+
+        This never replays work or treats a cancellation request as an
+        acknowledgement.  Callers must provide a positive, current proof that
+        the backend is no longer executing this lane.
+        """
+        self._validate(request_id, fingerprint, owner_generation)
+        _backend_generation(backend_generation)
+        with self._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            current = self.status(request_id, _db=db)
+            if current is None:
+                return None
+            if (current['fingerprint'], current['owner_generation']) != (fingerprint, owner_generation):
+                raise ValueError('Inference reconciliation does not own this request.')
+            generations = (current['_backend_generation'], current['_recovery_generation'])
+            if (current['status'] != 'UNCERTAIN' or None in generations
+                    or backend_generation in generations or execution_inactive is not True):
+                return self._public(current)
             if current['status'] == 'UNCERTAIN':
                 status = 'CANCELLED' if current['cancel_requested'] else 'FAILED'
                 db.execute('UPDATE wrapper_inference_control SET status=?,updated=? WHERE request_id=?',
                            (status, self.now(), request_id))
             settled = self.status(request_id, _db=db)
-            return {key: settled[key] for key in ('request_id', 'status', 'created', 'updated',
-                                                   'response_digest', 'usage', 'cancel_requested')}
+            return self._public(settled)
 
     def finish(self, request_id, *, response_digest=None, usage=None, cancelled=False):
         if not isinstance(request_id, str) or not _ID.fullmatch(request_id):

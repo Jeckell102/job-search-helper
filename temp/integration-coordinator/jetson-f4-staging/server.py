@@ -11,6 +11,7 @@ import os
 import secrets
 import signal
 import socket
+import subprocess
 import threading
 import time
 import urllib.request
@@ -34,6 +35,15 @@ STOP=threading.Event(); WAKE=threading.Event(); STARTED=time.monotonic()
 MODEL_ID='Instant'
 VISIBLE_MODEL_IDS=tuple(VISIBLE_PROFILES)
 MODEL_IDS=VISIBLE_MODEL_IDS+tuple(PROFILES)+tuple(LEGACY_ALIASES)
+
+def ollama_generation():
+    result=subprocess.run(['systemctl','show','ollama.service','-p','MainPID','-p','ExecMainStartTimestampMonotonic','--value'],
+                          capture_output=True,text=True,timeout=3,check=True)
+    values=result.stdout.splitlines()
+    if len(values)!=2: raise ValueError('Ollama generation is unavailable.')
+    pid, started=(int(value) for value in values)
+    if pid<=0 or started<=0: raise ValueError('Ollama generation is unavailable.')
+    return {'service':'ollama.service','pid':pid,'start_monotonic':started}
 
 def worker(engine, wrapper_control=None):
     while not STOP.is_set():
@@ -101,7 +111,14 @@ class Server(ThreadingHTTPServer):
     def __init__(self,address,handler,engine):
         self.engine=engine; self.slots=threading.BoundedSemaphore(8)
         self.wrapper_control=InferenceControlStore(store.ROOT/'data/wrapper-inference-control.sqlite3')
+        self.backend_generation=ollama_generation
         super().__init__(address,handler)
+    def orphan_generations_inactive(self, request_id, fingerprint, owner_generation, current_generation):
+        """Prove both pre-restart generations exited without exposing them."""
+        generations=self.wrapper_control.orphan_generations(request_id, fingerprint, owner_generation)
+        if generations is None or current_generation in generations:
+            return False
+        return all(not os.path.exists('/proc/'+str(generation['pid'])) for generation in generations)
     def process_request(self,request,address):
         if not self.slots.acquire(blocking=False):
             with contextlib.suppress(OSError): request.sendall(b'HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\nContent-Length: 0\r\n\r\n')
@@ -179,7 +196,29 @@ class Handler(BaseHTTPRequestHandler):
                 if not self.wrapper_auth():
                     self.response(403, {'error':'Unauthorized'}); return
                 from wrapper_inference import infer
-                self.response(200, infer(self.server.engine, self.body(), self.server.wrapper_control)); return
+                self.response(200, infer(self.server.engine, self.body(), self.server.wrapper_control,
+                                         self.server.backend_generation)); return
+            recovery_prefix='/api/wrapper-control/'
+            recovery_suffix='/orphan-recovery'
+            if path.startswith(recovery_prefix) and path.endswith(recovery_suffix):
+                if not self.wrapper_auth():
+                    self.response(403, {'error':'Unauthorized'}); return
+                request_id=path[len(recovery_prefix):-len(recovery_suffix)]
+                data=self.body()
+                if set(data)!={'action'} or data['action'] not in ('observe','settle'):
+                    raise ValueError('Orphan recovery requires action observe or settle.')
+                fingerprint, owner_generation=self.wrapper_control_binding()
+                generation=self.server.backend_generation()
+                if data['action']=='observe':
+                    value=self.server.wrapper_control.observe_orphan(request_id, fingerprint, owner_generation,
+                                                                      backend_generation=generation)
+                else:
+                    inactive=self.server.orphan_generations_inactive(request_id, fingerprint, owner_generation,
+                                                                      generation)
+                    value=self.server.wrapper_control.reconcile_orphan(request_id, fingerprint, owner_generation,
+                                                                        backend_generation=generation,
+                                                                        execution_inactive=inactive)
+                self.response(200 if value else 404, value or {'error':'Unknown inference request.'}); return
             if path.startswith('/api/wrapper-control/'):
                 if not self.wrapper_auth():
                     self.response(403, {'error':'Unauthorized'}); return

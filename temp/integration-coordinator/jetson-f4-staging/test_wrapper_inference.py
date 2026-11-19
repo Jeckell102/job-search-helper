@@ -24,6 +24,7 @@ class InferenceTests(unittest.TestCase):
         self.module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.module)
         self.data = {'messages': [{'role': 'user', 'content': 'Inspect'}], 'tools': [], 'max_tokens': 500}
+        self.generation = lambda: {'service': 'ollama.service', 'pid': 101, 'start_monotonic': 202}
 
     def test_inference_uses_shared_background_gate_and_omits_private_reasoning(self):
         result = self.module.infer(object(), self.data)
@@ -47,10 +48,10 @@ class InferenceTests(unittest.TestCase):
     def test_controlled_turn_is_idempotent_and_keeps_only_a_digest(self):
         with tempfile.TemporaryDirectory() as temp:
             control = InferenceControlStore(Path(temp) / 'control.sqlite3')
-            result = self.module.infer(object(), self.controlled(), control)
+            result = self.module.infer(object(), self.controlled(), control, self.generation)
             self.assertEqual(result['control']['status'], 'COMPLETED')
             self.assertNotIn('content', result['control'])
-            duplicate = self.module.infer(object(), self.controlled(), control)
+            duplicate = self.module.infer(object(), self.controlled(), control, self.generation)
             self.assertNotIn('message', duplicate)
             self.assertEqual(duplicate['control']['status'], 'COMPLETED')
             self.assertEqual(self.native.call_count, 1)
@@ -61,7 +62,15 @@ class InferenceTests(unittest.TestCase):
             data = self.controlled()
             data['request_fingerprint'] = 'd' * 64
             with self.assertRaisesRegex(ValueError, 'fingerprint'):
-                self.module.infer(object(), data, control)
+                self.module.infer(object(), data, control, self.generation)
+            self.native.assert_not_called()
+
+    def test_controlled_turn_fails_closed_when_backend_generation_is_unavailable(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            with self.assertRaisesRegex(ValueError, 'generation'):
+                self.module.infer(object(), self.controlled(), control,
+                                  lambda: (_ for _ in ()).throw(ValueError('generation unavailable')))
             self.native.assert_not_called()
 
     def test_ambiguous_native_transport_error_blocks_the_lane_without_acknowledging_cancellation(self):
@@ -69,7 +78,7 @@ class InferenceTests(unittest.TestCase):
             control = InferenceControlStore(Path(temp) / 'control.sqlite3')
             self.native.side_effect = RuntimeError('backend unavailable')
             with self.assertRaisesRegex(RuntimeError, 'backend unavailable'):
-                self.module.infer(object(), self.controlled(), control)
+                self.module.infer(object(), self.controlled(), control, self.generation)
             self.assertEqual(control.status('a' * 32)['status'], 'UNCERTAIN')
             control.cancel('a' * 32, self.controlled()['request_fingerprint'], 'c' * 64)
             self.assertEqual(control.status('a' * 32)['status'], 'UNCERTAIN')
@@ -82,7 +91,7 @@ class InferenceTests(unittest.TestCase):
             control.begin(data['request_id'], data['request_fingerprint'], data['owner_generation'])
             control.uncertain(data['request_id'])
             with self.assertRaisesRegex(ValueError, 'Controlled'):
-                self.module.infer(object(), self.data, control)
+                self.module.infer(object(), self.data, control, self.generation)
             self.native.assert_not_called()
 
     def test_invalid_post_turn_usage_settles_terminal_without_replay(self):
@@ -92,9 +101,9 @@ class InferenceTests(unittest.TestCase):
                                         {'done_reason': 'stop'})
             data = self.controlled()
             with self.assertRaisesRegex(ValueError, 'usage'):
-                self.module.infer(object(), data, control)
+                self.module.infer(object(), data, control, self.generation)
             self.assertEqual(control.status(data['request_id'])['status'], 'COMPLETED')
-            self.module.infer(object(), data, control)
+            self.module.infer(object(), data, control, self.generation)
             self.assertEqual(self.native.call_count, 1)
             self.assertTrue(control.begin('b' * 32, 'd' * 64, 'c' * 64)['start'])
 
@@ -108,7 +117,7 @@ class InferenceTests(unittest.TestCase):
                         {'done_reason': 'stop', 'prompt_eval_count': 1, 'eval_count': 1})
             self.native.side_effect = cancelled_turn
             with self.assertRaisesRegex(ValueError, 'inference_cancelled'):
-                self.module.infer(object(), data, control)
+                self.module.infer(object(), data, control, self.generation)
             self.assertEqual(control.status('a' * 32)['status'], 'CANCELLED')
 
 

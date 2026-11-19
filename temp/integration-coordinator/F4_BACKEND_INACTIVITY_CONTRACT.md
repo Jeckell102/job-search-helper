@@ -22,23 +22,28 @@ be used as the proof either.
 
 A retained `UNCERTAIN` receipt stays lane-blocking by default. It may become
 terminal only if its owner supplies a current backend-generation observation
-that proves the exact Ollama process generation recorded at dispatch is gone.
+that proves every Ollama process generation that could have executed its
+request is gone.
 
 The first supported positive proof is a deliberate, recorded restart of only
 `ollama.service` after the orchestrator has observed a retained uncertain
 receipt:
 
-1. Record the old Ollama generation from `systemctl show ollama.service`:
-   `MainPID` plus `ExecMainStartTimestampMonotonic`.
+1. Record the dispatch-generation observation from `systemctl show
+   ollama.service`: `MainPID` plus `ExecMainStartTimestampMonotonic`.
 2. Request shutdown/cancellation of the wrapper receipt, but do not label it
    cancelled yet.
-3. Stop/restart `ollama.service` through the existing service manager.
-4. Confirm the old PID has exited and the new active Ollama generation differs
-   in both a process-liveness check and the recorded systemd generation.
-5. Submit the owner-bound settlement request containing the recorded old and
-   observed new backend generations. The Jetson independently re-reads the
-   current generation; it never trusts a client assertion.
-6. Persist `FAILED` or `CANCELLED` with the backend-generation proof receipt,
+3. On recovery, record the currently active Ollama generation before changing
+   the service. This covers the race where the service restarted after
+   dispatch-generation observation but before the model request was sent.
+4. Stop/restart `ollama.service` through the existing service manager.
+5. Confirm both earlier PIDs have exited and the new active Ollama generation
+   differs from both earlier observations in a process-liveness check and the
+   recorded systemd generation.
+6. Submit the owner-bound settlement request containing the recorded dispatch,
+   recovery, and observed replacement generations. The Jetson independently
+   re-reads the current generation; it never trusts a client assertion.
+7. Persist `FAILED` or `CANCELLED` with the backend-generation proof receipt,
    release the sole inference lane, and leave the MuleLab request in a visible
    recovery state. Never replay the original inference.
 
@@ -48,8 +53,8 @@ host reconciles the terminal Jetson receipt by its persisted ownership binding.
 
 ## Required implementation boundary
 
-The staged Jetson receipt store must persist a bounded `backend_generation`
-for each controlled request. It should be a validated object containing only
+The staged Jetson receipt store must persist a bounded dispatch-generation
+observation for each controlled request. It should be a validated object containing only
 the service name, positive PID, and positive systemd monotonic start timestamp.
 No prompt, response text, user data, environment data, command line, or token
 belongs in this receipt.
@@ -58,19 +63,32 @@ The server supplies the generation from a local `systemctl show` query at
 atomic admission time. If that query fails or reports no active Ollama main
 process, controlled inference fails closed before `native_turn` starts.
 
-Add an owner-bound `POST` endpoint for orphan reconciliation. It validates the
-recorded generation, independently queries the current service generation, and
-accepts settlement only when:
+### Admission-to-dispatch race
+
+An admission observation alone is insufficient: Ollama can restart after the
+server records generation G1 but before `native_turn` submits, leaving a lost
+request potentially executing on G2. Therefore an orphan recovery cannot use
+only proof that G1 exited. At recovery, the Jetson must record the currently
+observed generation, deliberately restart Ollama, and require the final active
+generation to differ from both the stored admission generation and the
+recovery-observed generation. The retained lane remains closed throughout.
+
+Add an owner-bound two-step `POST` endpoint for orphan reconciliation. The
+first call records the recovery-generation observation while preserving the
+lane hold; the second validates the recorded dispatch and recovery generations,
+independently queries the current service generation, and accepts settlement
+only when:
 
 - the receipt is `UNCERTAIN`;
 - the ownership binding matches;
-- the original PID is absent; and
-- the active Ollama PID/start generation differs from the stored generation.
+- the original dispatch and recovery-observed PIDs are absent; and
+- the active Ollama PID/start generation differs from both stored
+  observations.
 
-The endpoint returns a sanitized terminal receipt. It must reject same-
-generation, missing-service, malformed, stale-owner, and already-terminal
-requests. It must never start inference, restart Ollama, or accept arbitrary
-process IDs from MuleLab.
+The endpoint returns a sanitized receipt. It must reject same-generation,
+missing-service, malformed, stale-owner, and client-supplied process
+identifiers. A repeated settlement of an already terminal matching receipt is
+idempotent. It must never start inference or restart Ollama.
 
 MuleLab reconciliation can call the endpoint only after its existing retained
 status query returns `UNCERTAIN`; the caller must persist the terminal outcome
@@ -83,13 +101,15 @@ lost response from being replayed.
 2. Admission fails before native inference if the independent generation query
    is unavailable.
 3. Same-generation reconciliation fails closed and leaves `UNCERTAIN`.
-4. Changed generation plus absent old PID settles only the matching owned
-   uncertain receipt; a duplicate settlement is idempotent.
-5. Wrong owner, request ID, or source generation cannot settle another
+4. A dispatch-G1 / race-dispatch-G2 / recovery-restart-G3 sequence settles
+   only after G1 and G2 are both absent; G1-only proof must fail closed.
+5. Changed generation plus absent earlier generations settles only the matching
+   owned uncertain receipt; a duplicate settlement is idempotent.
+6. Wrong owner, request ID, or source generation cannot settle another
    receipt.
-6. Host recovery sends only the persisted ownership binding and records the
+7. Host recovery sends only the persisted ownership binding and records the
    returned terminal result without replaying a model call.
-7. Deployed-system test uses a synthetic controlled request, injects a
+8. Deployed-system test uses a synthetic controlled request, injects a
    bounded transport loss, then deliberately restarts only Ollama and proves
    the old generation ended before the lane reopens. It must not use a real
    Job Search Helper task or a user prompt.

@@ -249,6 +249,19 @@ partial Google Sheets write alone is not completion.
   fail-closed, owner-bound settlement after a deliberate recorded Ollama
   restart proves the original process generation ended. This is a proposed
   contract, not yet source code, deployment, or F4 closure.
+- Independent review rejected the first backend-generation admission slice: an
+  Ollama restart can occur between recorded generation G1 and native dispatch,
+  allowing the lost request to run on G2. A corrected isolated implementation
+  now records both G1 and recovery-observed G2, then settles only after a
+  distinct G3 is active and both earlier PIDs are absent. Sixteen focused
+  Jetson-stage checks and twenty-seven host checks pass; independent re-review
+  and all deployment gates remain open.
+- Independent source QA accepted the corrected G1/G2/G3 backend-inactivity
+  protocol: it does not expose receipt credentials, accepts no client-provided
+  process identity, rejects an owner mismatch, and keeps the lane blocked until
+  the distinct replacement generation proves both potentially executing
+  predecessors absent. The staged suite passed 16 checks and the focused
+  MuleLab suite passed 35 checks. This is not deployment approval.
 
 ## Safety boundaries
 

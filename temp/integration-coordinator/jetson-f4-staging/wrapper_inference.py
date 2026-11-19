@@ -15,7 +15,7 @@ def _digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
-def infer(engine, data, control_store=None):
+def infer(engine, data, control_store=None, backend_generation=None):
     allowed = {'messages', 'tools', 'max_tokens'}
     controlled = allowed | {'request_id', 'request_fingerprint', 'owner_generation'}
     if set(data) not in (allowed, controlled):
@@ -45,7 +45,10 @@ def infer(engine, data, control_store=None):
         expected = _digest({'messages': data['messages'], 'tools': schemas, 'max_tokens': limit})
         if data['request_fingerprint'] != expected:
             raise ValueError('Inference request fingerprint does not match payload.')
-        control = control_store.begin(data['request_id'], data['request_fingerprint'], data['owner_generation'])
+        if backend_generation is None:
+            raise ValueError('Inference backend generation is unavailable.')
+        control = control_store.begin(data['request_id'], data['request_fingerprint'], data['owner_generation'],
+                                      backend_generation=backend_generation())
         if not control['start']:
             return {'control': {key: value for key, value in control.items() if key != 'start'}}
     try:

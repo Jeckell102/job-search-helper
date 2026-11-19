@@ -110,6 +110,39 @@ class WrapperControlRouteTests(unittest.TestCase):
         self.assertNotIn('fingerprint', payload)
         self.assertNotIn('owner_generation', payload)
 
+    def test_orphan_recovery_requires_two_distinct_post_restart_generations(self):
+        request_id, fingerprint, owner = 'a' * 32, 'b' * 64, 'c' * 64
+        binding = {'request_fingerprint': fingerprint, 'owner_generation': owner}
+        g1 = {'service': 'ollama.service', 'pid': 101, 'start_monotonic': 201}
+        g2 = {'service': 'ollama.service', 'pid': 102, 'start_monotonic': 202}
+        g3 = {'service': 'ollama.service', 'pid': 103, 'start_monotonic': 203}
+        self.httpd.wrapper_control.begin(request_id, fingerprint, owner, backend_generation=g1)
+        control_path = self.httpd.wrapper_control.path
+        self.httpd.wrapper_control = self.server_module.InferenceControlStore(control_path)
+        generation = [g2]
+        self.httpd.backend_generation = lambda: generation[0]
+        path = '/api/wrapper-control/' + request_id + '/orphan-recovery'
+        with patch.object(self.server_module.os.path, 'exists', return_value=False):
+            status, _ = self.request('POST', path, authorized=True,
+                                     binding={'request_fingerprint': fingerprint, 'owner_generation': 'd' * 64},
+                                     data={'action': 'observe'})
+            self.assertEqual(status, 400)
+            status, _ = self.request('POST', path, authorized=True, binding=binding,
+                                     data={'action': 'observe', 'backend_generation': g3})
+            self.assertEqual(status, 400)
+            status, payload = self.request('POST', path, authorized=True, binding=binding,
+                                           data={'action': 'observe'})
+            self.assertEqual((status, payload['status']), (200, 'UNCERTAIN'))
+            status, payload = self.request('POST', path, authorized=True, binding=binding,
+                                           data={'action': 'settle'})
+            self.assertEqual((status, payload['status']), (200, 'UNCERTAIN'))
+            generation[0] = g3
+            status, payload = self.request('POST', path, authorized=True, binding=binding,
+                                           data={'action': 'settle'})
+        self.assertEqual((status, payload['status']), (200, 'FAILED'))
+        self.assertNotIn('fingerprint', payload)
+        self.assertNotIn('owner_generation', payload)
+
 
 if __name__ == '__main__':
     unittest.main()

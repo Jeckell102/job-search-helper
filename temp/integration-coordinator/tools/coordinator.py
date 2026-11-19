@@ -149,6 +149,34 @@ def inference_control_status(control):
     return value if isinstance(value, dict) else None
 
 
+def inference_control_orphan_recovery(control, action):
+    """Invoke one owner-bound, non-replaying Jetson orphan-recovery step."""
+    required = {'request_id', 'request_fingerprint', 'owner_generation'}
+    if not isinstance(control, dict) or set(control) != required:
+        raise ValueError('Invalid inference control binding.')
+    if action not in ('observe', 'settle'):
+        raise ValueError('Invalid inference orphan-recovery action.')
+    token = (code.BASE / 'bridge-token').read_text().strip()
+    body = json.dumps({'action': action}).encode()
+    request = urllib.request.Request(
+        'http://127.0.0.1:18790/api/wrapper-control/' + control['request_id'] + '/orphan-recovery',
+        data=body, headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
+                            'X-Wrapper-Request-Fingerprint': control['request_fingerprint'],
+                            'X-Wrapper-Owner-Generation': control['owner_generation']}, method='POST')
+    try:
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request, timeout=10) as response:
+            raw = response.read(10001)
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError, TimeoutError):
+        return None
+    if len(raw) > 10000:
+        return None
+    try:
+        value = json.loads(raw)
+    except ValueError:
+        return None
+    return value if isinstance(value, dict) else None
+
+
 def estimate(messages, schemas):
     from coordinator_budget import estimate_context
     return estimate_context(messages, 12288, thinking=False, tools=schemas, internal_tools=True)
@@ -181,6 +209,16 @@ class Coordinator:
         if not control:
             return None
         remote = inference_control_status(control)
+        if remote is None or remote.get('request_id') != receipt['request_id']:
+            return None
+        return self.store.reconcile_remote_inference(receipt['request_id'], remote)
+
+    def reconcile_orphan_inference(self, receipt, action):
+        """Persist a Jetson orphan recovery result; never replay its model turn."""
+        control = receipt.get('control_binding') if isinstance(receipt, dict) else None
+        if not control:
+            return None
+        remote = inference_control_orphan_recovery(control, action)
         if remote is None or remote.get('request_id') != receipt['request_id']:
             return None
         return self.store.reconcile_remote_inference(receipt['request_id'], remote)

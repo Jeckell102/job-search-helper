@@ -56,6 +56,23 @@ class InferenceControlCleanupTests(fixture.CoordinatorTests):
             status.assert_called_once_with(binding)
         self.assertEqual(self.co.store.inference_receipts(task)[0]['status'], 'DISPATCHING')
 
+    def test_orphan_recovery_uses_only_the_persisted_binding_and_never_replays(self):
+        task = self.task()
+        self.co.store.claim_queued(task)
+        state = self.co.store.start_inference_session(task)
+        receipt = self.co.store.reserve_inference(task, phase=state['phase'], prompt_digest='prompt',
+            tools_digest='tools', prompt_tokens=1, output_tokens=256,
+            expected_control_generation=self.co.store.control_generation(), session_id=state['inference_session_id'])
+        binding = {'request_id': receipt['request_id'], 'request_fingerprint': 'a' * 64,
+                   'owner_generation': 'b' * 64}
+        self.co.store.bind_inference_control(receipt['request_id'], binding)
+        saved = self.co.store.inference_receipts(task)[0]
+        with patch.object(coordinator, 'inference_control_orphan_recovery', return_value={
+                'request_id': receipt['request_id'], 'status': 'FAILED'}) as recovery:
+            self.co.reconcile_orphan_inference(saved, 'settle')
+            recovery.assert_called_once_with(binding, 'settle')
+        self.assertEqual(self.co.store.inference_receipts(task)[0]['status'], 'FAILED')
+
 
 if __name__ == '__main__':
     unittest.main()
