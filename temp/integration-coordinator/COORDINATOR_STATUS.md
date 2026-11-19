@@ -1512,3 +1512,17 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   the two new tables and automatic cleanup remains false. It does not dispatch
   work or execute rollback. No workers, scraper, queue, Google, job data, or
   release action started during installation.
+- Frozen F5 completion candidate COMP-0066 (Forterra) completed its bounded
+  public preflight and is qualified only for an isolated company-only
+  parser/fixture candidate. The official careers page embeds the exact
+  `forterra` Rippling tenant; public pages observed a 20/20/20/2/0 boundary
+  with an HTTP-200 empty terminal page and UUID detail paths. The current
+  snapshot is not a fixed inventory count or release authorization. Evidence:
+  `COMP-0066_FORTERRA_PUBLIC_PREFLIGHT_20261119.md`. No project state changed.
+- Frozen F5 completion candidate COMP-0164 (Allen Control Systems) completed
+  a bounded public preflight. Its historical Greenhouse tenant is now stale;
+  the official employer page instead provides direct evidence for an exact
+  Allen Control Systems Ashby board with a current 19-detail snapshot. It is
+  qualified only for a source-reviewed configuration proposal, not a release
+  or pilot. Evidence: `COMP-0164_ALLEN_CONTROL_PUBLIC_PREFLIGHT_20261119.md`.
+  No project or external state changed.
