@@ -39,10 +39,11 @@ ten-minute user update. Update it immediately after any material result.
 - Milestone 2: 65% — durable Company revisions, reconciliation, and scoped
   request provenance are implemented and independently reviewed; live proof
   remains.
-- Milestone 3: 35% — bounded outcome classification and local immutable
-  outcome records are implemented and independently reviewed. No repair is
+- Milestone 3: 42% — bounded outcome classification, local immutable records,
+  and independently reviewed intake into the existing coordinator are
+  implemented. Qualified defects are held once for triage; no repair is
   dispatched automatically yet.
-- Milestone 4: 15% — the existing coordinator source and its focused tests
+- Milestone 4: 17% — the existing coordinator source and its focused tests
   were copied here only as source/test material, independently reviewed, and
   passed 117 isolated checks. No scheduler is running from this copy.
 - Milestones 5–6: not started.
@@ -66,7 +67,9 @@ partial Google Sheets write alone is not completion.
 - `3179eba`: classified outcome records are bounded, idempotent, and local
   only; forged actions and private identity fields are not stored.
 - Pending checkpoint: source-only coordinator copy accepted after independent
-  review; its GitHub backup is the next action.
+  review and saved as `b002564`.
+- Pending checkpoint: classifier-derived, held-only repair intake accepted by
+  independent review; its GitHub backup is the next action.
 
 ## Safety boundaries
 
@@ -82,6 +85,6 @@ partial Google Sheets write alone is not completion.
 ## Next actions
 
 1. Save the accepted source-only coordinator copy to the scoped GitHub branch.
-2. Map its durable task/receipt interfaces to the Milestone 3 outcome contract
-   without enabling repair dispatch.
-3. Independently review that adapter boundary before connecting any live path.
+2. Save the accepted held-only outcome intake checkpoint to GitHub.
+3. Attach repeated evidence to an existing held repair and define the reviewed
+   M4 promotion from held repair to a single scoped coordinator task.

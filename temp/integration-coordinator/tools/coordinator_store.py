@@ -33,6 +33,21 @@ OPERATOR_GATE_STATUSES = frozenset({
     'LIVE_VALIDATED',
 })
 
+OUTCOME_ACTIONS = {
+    'STALE_OR_PAUSED': 'stop_stale_work',
+    'STORAGE_OR_SYNC_FAILURE': 'reconcile_storage_only',
+    'COMPLETE': 'save_without_repair',
+    'BLOCKED': 'hold_for_policy_or_new_evidence',
+    'TEMPORARY': 'retry_with_bounded_backoff',
+    'QUALIFIED_INTEGRATION_REPAIR': 'upsert_qualified_repair',
+    'UNKNOWN_CAPABILITY_HOLD': 'hold_for_engineering',
+    'UNCLASSIFIED_HOLD': 'hold_without_invented_repair',
+}
+OUTCOME_IDENTITY_REQUIRED = frozenset({'request_id', 'company_id', 'source_revision'})
+OUTCOME_IDENTITY_OPTIONAL = frozenset({
+    'company_event_id', 'cycle_id', 'attempt_id', 'provider', 'adapter_version', 'release_version',
+})
+
 
 def campaign_manifest_digest(state):
     """Stable digest for the reviewed assignment entry, not runtime state."""
@@ -50,6 +65,37 @@ def reached_operator_gate(state):
     """Terminal work cannot be reopened by pause/resume control transitions."""
     return (state.get('status') in OPERATOR_GATE_STATUSES
             or state.get('campaign_disposition') == CAMPAIGN_FINISHED and not state.get('campaign_outcome', '').startswith('PAUSED_'))
+
+
+def canonical_scrape_outcome(value):
+    """Verify the bounded M3 classifier record before coordinator intake.
+
+    The coordinator receives a record, never arbitrary error text.  It verifies
+    the deterministic identifier and action mapping before holding a possible
+    repair for later reviewed assignment.  This method never creates a task.
+    """
+    if not isinstance(value, dict) or set(value) != {
+            'outcome_id', 'outcome', 'action', 'identity', 'failure_fingerprint'}:
+        raise ValueError('Scrape outcome has unsupported fields.')
+    identity = value['identity']
+    if not isinstance(identity, dict) or not OUTCOME_IDENTITY_REQUIRED <= set(identity) <= (
+            OUTCOME_IDENTITY_REQUIRED | OUTCOME_IDENTITY_OPTIONAL):
+        raise ValueError('Scrape outcome has invalid identity fields.')
+    bounded = {}
+    for key, item in identity.items():
+        if not isinstance(item, str) or not item.strip() or len(item.strip()) > 256:
+            raise ValueError('Scrape outcome identity must be bounded text.')
+        bounded[key] = item.strip()
+    outcome, action, fingerprint = value['outcome'], value['action'], value['failure_fingerprint']
+    if (not isinstance(outcome, str) or OUTCOME_ACTIONS.get(outcome) != action
+            or not isinstance(fingerprint, str) or not re.fullmatch(r'[0-9a-f]{64}', fingerprint)):
+        raise ValueError('Scrape outcome classification is invalid.')
+    immutable = {'identity': bounded, 'failure_fingerprint': fingerprint, 'outcome': outcome}
+    expected = 'OUT-' + hashlib.sha256(json.dumps(immutable, sort_keys=True, separators=(',', ':')).encode()).hexdigest()[:24]
+    if value['outcome_id'] != expected:
+        raise ValueError('Scrape outcome ID does not match immutable evidence.')
+    return {'outcome_id': expected, 'outcome': outcome, 'action': action,
+            'identity': bounded, 'failure_fingerprint': fingerprint}
 
 
 class Store(CampaignStore, InferenceStore):
@@ -78,7 +124,70 @@ class Store(CampaignStore, InferenceStore):
                     current_task_id TEXT NOT NULL, identity_digest TEXT NOT NULL,
                     import_digest TEXT NOT NULL, retry_of TEXT,
                     PRIMARY KEY(campaign_id, company_id));
+                CREATE TABLE IF NOT EXISTS scrape_outcome_intake(
+                    outcome_id TEXT PRIMARY KEY, company_id TEXT NOT NULL,
+                    source_revision TEXT NOT NULL, outcome TEXT NOT NULL,
+                    payload TEXT NOT NULL, received REAL NOT NULL);
+                CREATE TABLE IF NOT EXISTS repair_intake(
+                    repair_key TEXT PRIMARY KEY, outcome_id TEXT NOT NULL,
+                    company_id TEXT NOT NULL, source_revision TEXT NOT NULL,
+                    status TEXT NOT NULL, payload TEXT NOT NULL, received REAL NOT NULL,
+                    FOREIGN KEY(outcome_id) REFERENCES scrape_outcome_intake(outcome_id));
             ''')
+
+    def ingest_scrape_outcome(self, facts):
+        """Classify trusted bounded facts, then hold the M3 result here.
+
+        Qualified defects upsert one held repair key.  No task is created or
+        claimed here: a later reviewed M4 assignment supplies the source scope,
+        tests, capability, and explicit campaign controls.
+        """
+        try:
+            from job_search_helper.outcomes import OutcomeFactsError, classify_outcome
+            canonical = canonical_scrape_outcome(classify_outcome(facts))
+        except (ImportError, OutcomeFactsError) as exc:
+            raise ValueError(f'Invalid trusted scrape outcome facts: {exc}') from exc
+        identity = canonical['identity']
+        repair_key = None
+        status = 'RECORDED_NO_REPAIR'
+        if canonical['outcome'] == 'QUALIFIED_INTEGRATION_REPAIR':
+            provider, adapter = identity.get('provider'), identity.get('adapter_version')
+            if provider and adapter:
+                repair_key = hashlib.sha256(json.dumps({
+                    'company_id': identity['company_id'], 'source_revision': identity['source_revision'],
+                    'provider': provider, 'adapter_version': adapter,
+                    'failure_fingerprint': canonical['failure_fingerprint'],
+                }, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+                status = 'HELD_FOR_REPAIR_TRIAGE'
+            else:
+                status = 'HELD_MISSING_REPAIR_CAPABILITY'
+        encoded = json.dumps(canonical, sort_keys=True, separators=(',', ':'))
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            prior = db.execute('SELECT payload FROM scrape_outcome_intake WHERE outcome_id=?',
+                               (canonical['outcome_id'],)).fetchone()
+            if prior:
+                if prior[0] != encoded:
+                    raise ValueError('Scrape outcome conflicts with immutable coordinator intake.')
+                return {'outcome_id': canonical['outcome_id'], 'recorded': False,
+                        'repair_key': repair_key, 'status': status}
+            db.execute('INSERT INTO scrape_outcome_intake VALUES (?,?,?,?,?,?)',
+                       (canonical['outcome_id'], identity['company_id'], identity['source_revision'],
+                        canonical['outcome'], encoded, time.time()))
+            if repair_key:
+                db.execute('INSERT OR IGNORE INTO repair_intake VALUES (?,?,?,?,?,?,?)',
+                           (repair_key, canonical['outcome_id'], identity['company_id'],
+                            identity['source_revision'], status, encoded, time.time()))
+        return {'outcome_id': canonical['outcome_id'], 'recorded': True,
+                'repair_key': repair_key, 'status': status}
+
+    def held_repair_intake(self):
+        """Review held repairs; this is deliberately not a scheduling API."""
+        with self.connect() as db:
+            rows = db.execute('SELECT repair_key,outcome_id,company_id,source_revision,status,payload '
+                              'FROM repair_intake ORDER BY received,repair_key').fetchall()
+        return [dict(repair_key=row[0], outcome_id=row[1], company_id=row[2],
+                     source_revision=row[3], status=row[4], outcome=json.loads(row[5])) for row in rows]
 
     @contextmanager
     def connect(self):
