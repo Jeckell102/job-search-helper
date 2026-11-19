@@ -86,3 +86,12 @@ The two remaining failures are limited to missing Inbox v2 state methods
 (`save_exact_plan` and its local-state transitions).  This confirms the next
 manual seam is the Inbox v2 layer; it does not authorize a source install or
 any live action.
+
+The Inbox seam is now merged in the disposable copy.  It creates the additive
+exact-plan local-state table; seals exact v2 plans to an already-saved
+inventory; records monotonic local-apply/local-verify state; compare-and-swap
+advances only the frozen local cursor; and refuses cleanup while an exact plan
+lacks its separately registered terminal remote plan.  The complete
+`tests/test_exact_local_plan.py` gate now passes: **11 passed in 0.78s**.
+This is temporary-source evidence only.  The remote-plan registration,
+Sheets readback/confirmation, and runner entry remain unmerged and disabled.

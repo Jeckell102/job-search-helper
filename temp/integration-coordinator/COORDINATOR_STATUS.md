@@ -1236,3 +1236,9 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   narrow Sheets APIs as the first real merge requirements.  See
   `PROTECTED_BASELINE_EXACT_RECONCILIATION_20261119.md`.  The coordinator now
   owns manual seam reconciliation; no worker owns production changes.
+- The first manual seam is complete in the disposable copy only: additive
+  SQLite exact-local journals and the Inbox v2 freeze/local-apply/local-verify
+  state now coexist with the protected Company-event/outcome behavior.
+  `test_exact_local_plan.py` passes 11/11 there.  Remote-plan registration,
+  Sheets confirmation/readback, and runner wiring are intentionally still
+  absent; this does not change the live hold or authorize any deployment.
