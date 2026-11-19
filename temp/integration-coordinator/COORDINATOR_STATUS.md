@@ -55,7 +55,7 @@ ten-minute user update. Update it immediately after any material result.
   producer records bounded scrape facts without dispatching work; malformed
   checkpoint data is safely skipped. Qualified defects are held once for
   triage, never dispatched. The remaining gap is guarded live verification.
-- Milestone 4: 50% — a held repair can be promoted only into a paused,
+- Milestone 4: 55% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
@@ -179,6 +179,13 @@ partial Google Sheets write alone is not completion.
   state or acknowledge cancellation by MuleLab request ID. This remains a
   safe hold, not F4 closure; the bounded protocol and test requirements are
   recorded in `F4_INFERENCE_RECOVERY_GAP.md`. No Jetson modification occurred.
+- Independent QA accepted the isolated F4 control-receipt store: it retains
+  only request/owner fingerprints, timestamps, terminal state, bounded scalar
+  usage, and a response digest; it never accepts prompt, source, inventory, or
+  model content. It rejects duplicate/conflicting IDs, permits only one running
+  Jetson request, and requires matching ownership to request cancellation.
+  Nine focused local checks passed. It is not yet wired into host/Jetson routes,
+  so this is an implementation component, not F4 closure.
 - A fresh publication preflight found 60 pending system-field updates in the
   local outbox. Live read-only comparison confirmed that 59 already match the
   workbook and identified one remaining `Last Checked` date for Saronic
