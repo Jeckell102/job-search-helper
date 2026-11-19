@@ -65,7 +65,8 @@ def classify_outcome(facts):
     capability = _text(facts.get("capability"), "capability").casefold()
     if category in {"adapter_regression", "full_description_regression", "pagination_regression"}:
         if capability == "qualified":
-            return _result(identity, failure, QUALIFIED_INTEGRATION_REPAIR, "upsert_qualified_repair")
+            return _result(identity, failure, QUALIFIED_INTEGRATION_REPAIR, "upsert_qualified_repair",
+                           repair_category=category)
         return _result(identity, failure, UNKNOWN_CAPABILITY_HOLD, "hold_for_engineering")
 
     if capability in {"unknown", "unqualified", "new_provider", "new_executor"}:
@@ -99,15 +100,20 @@ def _failure(facts):
     return result
 
 
-def _result(identity, failure, outcome, action):
+def _result(identity, failure, outcome, action, *, repair_category=None):
     immutable = {"identity": identity, "failure_fingerprint": failure["fingerprint"], "outcome": outcome}
-    return {
+    if repair_category is not None:
+        immutable["repair_category"] = repair_category
+    result = {
         "outcome_id": "OUT-" + _digest(immutable)[:24],
         "outcome": outcome,
         "action": action,
         "identity": identity,
         "failure_fingerprint": failure["fingerprint"],
     }
+    if repair_category is not None:
+        result["repair_category"] = repair_category
+    return result
 
 
 def _required_text(facts, key):

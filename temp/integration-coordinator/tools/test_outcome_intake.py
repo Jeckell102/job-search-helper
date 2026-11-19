@@ -230,6 +230,32 @@ class HeldRepairPromotionTests(coordinator_fixture.CoordinatorTests):
         self.assertTrue(state['stop_requested'])
         self.assertEqual(self.co.store.receipts(response['id']), [])
 
+    def test_unmatched_automatic_profile_keeps_repair_held_without_a_task(self):
+        repair = self.co.store.ingest_scrape_outcome(facts())
+        result = self.co.command({'action': 'prepare-held-repair', 'repair_key': repair['repair_key']})
+        self.assertEqual(result['status'], 'HELD_FOR_ENGINEERING_REVIEW')
+        self.assertEqual(self.co.store.all(), [])
+
+    def test_matched_automatic_profile_creates_only_one_paused_task(self):
+        repair = self.co.store.ingest_scrape_outcome(facts())
+        self.co.repair_profile_selector = lambda held: {
+            'profile_id': 'fixture-v1', 'source_revision': 'rev-1', 'mode': 'develop',
+            'objective': 'Develop the bounded Acme wrapper using src/a.py and run tests/test_a.py.',
+            'max_sessions': 2,
+            'integration': {
+                'company_id': 'COMP-0001', 'company': 'Acme',
+                'configured_url': 'https://jobs.example.test/acme',
+                'tests': ['tests/test_a.py'], 'source_targets': ['src/a.py'], 'ats': 'Greenhouse',
+            },
+        }
+        first = self.co.command({'action': 'prepare-held-repair', 'repair_key': repair['repair_key']})
+        state = self.co.store.get(first['id'])
+        self.assertEqual(state['status'], 'PAUSED')
+        self.assertTrue(state['stop_requested'])
+        self.assertEqual(first['profile_id'], 'fixture-v1')
+        self.assertEqual(self.co.command({'action': 'prepare-held-repair', 'repair_key': repair['repair_key']})['id'], first['id'])
+        self.assertEqual(len(self.co.store.all()), 1)
+
 
 if __name__ == '__main__':
     unittest.main()

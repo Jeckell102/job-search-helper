@@ -580,6 +580,11 @@ class SQLiteRepository:
             'action': outcome['action'], 'identity': identity,
             'failure_fingerprint': outcome['failure_fingerprint'],
         }
+        # New M4 profile selection needs the deterministic repair category,
+        # while existing category-less M3 records remain a valid held/manual
+        # intake format.  The classifier, not a caller, supplies this field.
+        if 'repair_category' in outcome:
+            payload['repair_category'] = outcome['repair_category']
         encoded = encode(payload)
         with self.transaction():
             existing = self.db.execute('SELECT payload FROM scrape_outcomes WHERE outcome_id=?',

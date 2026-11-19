@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from job_search_helper.company_events import (canonical_company_fact,
                                                company_revision_resolver,
+                                               current_company_repair_snapshot,
                                                current_company_source_revision,
                                                source_revision)
 from job_search_helper.repository import RepositoryError, SCHEMAS
@@ -49,6 +50,15 @@ class CompanyEventOutboxTests(unittest.TestCase):
         self.assertIsNone(resolver('COMP-missing'))
         self.mutation(**{'Company Status': 'Paused'})
         self.assertIsNone(resolver('COMP-1'))
+
+    def test_current_company_repair_snapshot_is_eligible_and_derived_locally(self):
+        snapshot = current_company_repair_snapshot(self.repo, 'COMP-1')
+        self.assertEqual(snapshot['company_id'], 'COMP-1')
+        self.assertEqual(snapshot['company'], 'Acme')
+        self.assertEqual(snapshot['official_careers_url'], 'https://jobs.example.test/acme')
+        self.assertEqual(snapshot['source_revision'], source_revision(self.repo.read('Companies')[0]))
+        self.mutation(**{'Company Status': 'Paused'})
+        self.assertIsNone(current_company_repair_snapshot(self.repo, 'COMP-1'))
 
     def test_supported_mutation_commits_company_and_eligible_event_together(self):
         result = self.mutation(**{'ATS / Source': 'Lever'})

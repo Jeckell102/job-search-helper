@@ -131,6 +131,11 @@ class DurableOutcomeTests(unittest.TestCase):
         self.assertEqual(self.repo.scrape_outcomes(company_id="COMP-1"), [first["outcome"]])
         self.assertEqual(self.repo.pending_company_events("intake"), [])
 
+    def test_qualified_outcome_retains_its_immutable_repair_category(self):
+        saved = self.repo.record_scrape_outcome(facts(failure={"category": "adapter_regression"}))['outcome']
+        self.assertEqual(saved['repair_category'], 'adapter_regression')
+        self.assertEqual(self.repo.scrape_outcomes(company_id='COMP-1')[0]['repair_category'], 'adapter_regression')
+
     def test_caller_cannot_forge_an_action_or_store_raw_private_identity(self):
         source_facts = facts(failure={"category": "timeout", "http_status": 503})
         source_facts.update({"outcome_id": "OUT-forged", "outcome": "FORGED",

@@ -114,7 +114,8 @@ def estimate(messages, schemas):
 
 
 class Coordinator:
-    def __init__(self, base=None, model=infer, budget=estimate, *, company_revision_resolver=None):
+    def __init__(self, base=None, model=infer, budget=estimate, *, company_revision_resolver=None,
+                 repair_profile_selector=None):
         self.store = Store(base or code.BASE / 'tasks', company_revision_resolver=company_revision_resolver)
         self.model, self.budget = model, budget
         self.workflow_version = 2
@@ -131,6 +132,7 @@ class Coordinator:
         self.scheduler_guard = threading.Lock()
         self.scheduler_token = None
         self.scheduler_thread = None
+        self.repair_profile_selector = repair_profile_selector
 
     def export(self, task_id):
         """Readable snapshots are replaceable; SQLite is the authoritative record."""
@@ -317,6 +319,28 @@ class Coordinator:
             self.export(state['id'])
             return {'ok': True, 'id': state['id'], 'state': {k: v for k, v in state.items() if k != 'manifest'},
                     'text': f"Held repair promoted to paused task {state['id']}. Explicit review and resume are required before any work."}
+        if action == 'prepare-held-repair':
+            if set(data) != {'action', 'repair_key'} or not isinstance(data.get('repair_key'), str):
+                raise ValueError('Held-repair preparation requires exactly action and repair_key.')
+            held = next((item for item in self.store.held_repair_intake()
+                         if item['repair_key'] == data['repair_key']), None)
+            if held is None:
+                raise ValueError('Held repair was not found.')
+            if held.get('task_id'):
+                state = self.store.get(held['task_id'])
+                return {'ok': True, 'id': state['id'], 'state': {k: v for k, v in state.items() if k != 'manifest'},
+                        'text': f"Held repair already has paused task {state['id']}; no new work was created."}
+            selector = self.repair_profile_selector
+            proposal = selector(held) if callable(selector) else None
+            if not isinstance(proposal, dict):
+                return {'ok': True, 'repair_key': held['repair_key'], 'status': 'HELD_FOR_ENGINEERING_REVIEW',
+                        'text': 'No uniquely matched reviewed repair profile. The repair remains held; no worker was started.'}
+            state = self.store.promote_held_repair(
+                held['repair_key'], self.assignment(proposal), source_revision=proposal.get('source_revision'))
+            self.export(state['id'])
+            return {'ok': True, 'id': state['id'], 'profile_id': proposal.get('profile_id'),
+                    'state': {k: v for k, v in state.items() if k != 'manifest'},
+                    'text': f"Reviewed profile prepared paused task {state['id']}. Explicit review and resume are required before any work."}
         if action == 'start':
             state = self.store.create(**self.assignment(data))
             self.export(state['id'])
@@ -403,7 +427,7 @@ class Coordinator:
                 max_tokens=MAX_TOKENS, max_seconds=MAX_SECONDS)
             self.wake.set()
         elif action != 'status':
-            raise ValueError('Use start, status, list, pause, resume, exclude, include, pilot controls, campaign controls, queue controls, or health.')
+            raise ValueError('Use start, status, list, pause, resume, held-repair preparation, exclude, include, pilot controls, campaign controls, queue controls, or health.')
         self.export(state['id'])
         return {'ok': True, 'state': {k: v for k, v in state.items() if k != 'manifest'}, 'state_digest': task_state_digest(state), 'next_action': next_action(state), 'text': self.describe(state)}
 

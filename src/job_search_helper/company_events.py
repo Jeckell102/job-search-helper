@@ -77,6 +77,32 @@ def current_company_source_revision(repository, company_id):
         return None
 
 
+def current_company_repair_snapshot(repository, company_id):
+    """Read the one eligible Company fact allowed to bind an M4 profile.
+
+    The external coordinator receives this narrow, recomputable snapshot from
+    the local authority instead of accepting a company name or URL supplied by
+    a repair request.  Missing, duplicate, paused, or malformed Companies
+    return ``None`` so the repair remains held.
+    """
+    if not isinstance(company_id, str) or not company_id.strip():
+        return None
+    try:
+        matches = repository.matches("Companies", {"Company ID": company_id.strip()})
+        if len(matches) != 1:
+            return None
+        company = matches[0][1]
+        fact = canonical_company_fact(company)
+        name = _text(company.get("Company"))
+        if not fact["eligible"] or not name:
+            return None
+        return {"company_id": fact["company_id"], "source_revision": source_revision(company),
+                "company": name, "official_careers_url": fact["official_careers_url"],
+                "ats_source": fact["ats_source"]}
+    except (RepositoryError, ValueError, TypeError):
+        return None
+
+
 def company_revision_resolver(repository):
     """Make the coordinator's Company-freshness callback from one repository."""
     return lambda company_id: current_company_source_revision(repository, company_id)

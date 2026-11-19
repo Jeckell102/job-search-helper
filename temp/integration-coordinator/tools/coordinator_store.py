@@ -74,8 +74,9 @@ def canonical_scrape_outcome(value):
     the deterministic identifier and action mapping before holding a possible
     repair for later reviewed assignment.  This method never creates a task.
     """
-    if not isinstance(value, dict) or set(value) != {
-            'outcome_id', 'outcome', 'action', 'identity', 'failure_fingerprint'}:
+    if not isinstance(value, dict) or set(value) not in ({
+            'outcome_id', 'outcome', 'action', 'identity', 'failure_fingerprint'}, {
+            'outcome_id', 'outcome', 'action', 'identity', 'failure_fingerprint', 'repair_category'}):
         raise ValueError('Scrape outcome has unsupported fields.')
     identity = value['identity']
     if not isinstance(identity, dict) or not OUTCOME_IDENTITY_REQUIRED <= set(identity) <= (
@@ -90,12 +91,22 @@ def canonical_scrape_outcome(value):
     if (not isinstance(outcome, str) or OUTCOME_ACTIONS.get(outcome) != action
             or not isinstance(fingerprint, str) or not re.fullmatch(r'[0-9a-f]{64}', fingerprint)):
         raise ValueError('Scrape outcome classification is invalid.')
+    repair_category = value.get('repair_category')
+    if repair_category is not None:
+        if (outcome != 'QUALIFIED_INTEGRATION_REPAIR' or not isinstance(repair_category, str)
+                or not re.fullmatch(r'[a-z_]{1,64}', repair_category)):
+            raise ValueError('Scrape outcome repair category is invalid.')
     immutable = {'identity': bounded, 'failure_fingerprint': fingerprint, 'outcome': outcome}
+    if repair_category is not None:
+        immutable['repair_category'] = repair_category
     expected = 'OUT-' + hashlib.sha256(json.dumps(immutable, sort_keys=True, separators=(',', ':')).encode()).hexdigest()[:24]
     if value['outcome_id'] != expected:
         raise ValueError('Scrape outcome ID does not match immutable evidence.')
-    return {'outcome_id': expected, 'outcome': outcome, 'action': action,
-            'identity': bounded, 'failure_fingerprint': fingerprint}
+    result = {'outcome_id': expected, 'outcome': outcome, 'action': action,
+              'identity': bounded, 'failure_fingerprint': fingerprint}
+    if repair_category is not None:
+        result['repair_category'] = repair_category
+    return result
 
 
 class Store(CampaignStore, InferenceStore):

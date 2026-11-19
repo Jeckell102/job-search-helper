@@ -49,13 +49,13 @@ ten-minute user update. Update it immediately after any material result.
   existing Sheets sync now baselines current Companies once without scheduling
   them, then reconciles later changes. The normal runner turns a confirmed
   change into an exact Company-only request. Guarded live proof remains.
-- Milestone 3: 76% — bounded outcome classification, local immutable records,
+- Milestone 3: 80% — bounded outcome classification, local immutable records,
   independently reviewed intake, and durable exact-receipt delivery into the
   existing coordinator are implemented. The independently accepted normal-run
   producer records bounded scrape facts without dispatching work; malformed
   checkpoint data is safely skipped. Qualified defects are held once for
   triage, never dispatched. The remaining gap is guarded live verification.
-- Milestone 4: 42% — a held repair can be promoted only into a paused,
+- Milestone 4: 50% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
@@ -165,6 +165,14 @@ partial Google Sheets write alone is not completion.
   the current eligible Company revision is missing or stale. The host resolver
   is local SQLite-only and returns no approval on missing configuration or any
   read failure. Forty-seven focused coordinator checks passed.
+- Independent QA accepted the M3-to-M4 profile evidence repair: qualified
+  outcomes now retain their bounded repair category through local storage and
+  coordinator intake, while earlier category-less records stay readable and
+  held. The deterministic selector requires exact Company, current revision,
+  provider, adapter version, repair category, and URL; its enabled registry is
+  intentionally empty until F5 qualification. No profile can start a worker.
+  Forty-one focused coordinator checks and fifty-seven local classifier/store
+  checks passed.
 - A fresh publication preflight found 60 pending system-field updates in the
   local outbox. Live read-only comparison confirmed that 59 already match the
   workbook and identified one remaining `Last Checked` date for Saronic

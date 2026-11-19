@@ -49,6 +49,39 @@ def current_company_revision(company_id):
         return None
 
 
+def current_company_repair_snapshot(company_id):
+    """Read one local Company profile-binding snapshot without Google access."""
+    try:
+        from job_search_helper.cli import (job_database_path, load_environment,
+                                           storage_backend)
+        from job_search_helper.company_events import current_company_repair_snapshot as snapshot
+        from job_search_helper.sqlite_repository import SQLiteRepository
+        load_environment(JOB_SEARCH_ROOT / '.env')
+        if storage_backend() != 'sqlite':
+            return None
+        spreadsheet_id = os.environ.get('SPREADSHEET_ID', '').strip()
+        if not spreadsheet_id:
+            return None
+        repository = SQLiteRepository(job_database_path(), spreadsheet_id, readonly=True)
+        try:
+            return snapshot(repository, company_id)
+        finally:
+            repository.close()
+    except (ImportError, OSError, ValueError, sqlite3.Error):
+        return None
+
+
+def select_repair_profile(held_repair):
+    """Build a task only from a reviewed profile and fresh local Company fact."""
+    try:
+        from coordinator_repair_profiles import select_profile
+        identity = held_repair.get('outcome', {}).get('identity', {})
+        company_id = identity.get('company_id')
+        return select_profile(held_repair, current_company_repair_snapshot(company_id))
+    except (AttributeError, ImportError, TypeError, ValueError):
+        return None
+
+
 def drain_scrape_outcomes(*, limit=20):
     """Deliver durable scraper outcomes into held-only coordinator intake."""
     from coordinator_outcome_delivery import drain
@@ -156,7 +189,8 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == '__main__':
     os.umask(0o077)
     server = ThreadingHTTPServer(('127.0.0.1', 18789), Handler)
-    COORDINATOR = Coordinator(company_revision_resolver=current_company_revision)
+    COORDINATOR = Coordinator(company_revision_resolver=current_company_revision,
+                              repair_profile_selector=select_repair_profile)
     COORDINATOR.start()
     threading.Thread(target=supervise, args=(COORDINATOR,), name='coordinator-supervisor', daemon=True).start()
     server.serve_forever()
