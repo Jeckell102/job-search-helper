@@ -111,3 +111,51 @@ read/write path.  Compilation plus the retained local/planner gate passed:
 **32 passed in 1.57s** (`test_exact_local_plan.py` and
 `test_exact_cycle_planner.py`).  Frozen-operation construction, selected-row
 readback, and confirmation remain separate unmerged steps.
+
+The complete protected-baseline candidate is now assembled in the same
+disposable copy. The previously vetted production-based v3 merge was upgraded
+with the accepted `0a46918` finalization lifecycle patch, then its reconciled
+`runner.py`, `inbox.py`, `publication_receipts.py`, `sheets_sync.py`,
+`sqlite_repository.py`, exact modules, and focused tests were copied into this
+full sanitized protected-source copy. Preserved `*.rej` files remain audit
+artifacts and are excluded from the candidate manifest; no candidate Python
+file contains a conflict marker.
+
+Fresh verification from the full copy passed **186 focused checks** in 17.99s
+and **180 protected-adjacent checks** in 27.84s with warnings treated as
+errors. The focused set includes pending-cleanup refusal, legacy-confirmation
+refusal, server-derived local row evidence, local acknowledgement evidence
+before `LOCAL_ACKNOWLEDGED` or cleanup, uncertain-write no-replay, bounded
+chunk recovery, exact compact readback, and manual/source-hash/salary guards.
+The adjacent set covers current runner cycles, scoped sync, local pipeline,
+SQLite migration, release controller, repaired retry, and scrape-to-FIRST-PASS
+behavior. Independent read-only review of this exact full-copy candidate is
+in progress. Production, Google, locks, job state, services, and Jetson remain
+untouched.
+
+Candidate core hashes:
+
+- `runner.py`: `28c05b612544eb51c073bbb784f508ec6a48343d3e4006a8545e17d514809aae`
+- `inbox.py`: `ef9056796e35ea807ba8ecf52585685543bf4196717968a665a2450ae5ced8bc`
+- `publication_receipts.py`: `ae2432f3ff81652e5c0d2dcfc196d291bd42189ef0246e3b1962ca00699e31be`
+- `sheets_sync.py`: `29d3032915133a491c41233fec12b8fa76d6e70773c4d49815a93de67dee92ef`
+- `sqlite_repository.py`: `31cd2d926f8b704459bf79651e67a1ccc7a3c9db393e8aa95ceb187bb9e908b6`
+- `exact_cycle_sync.py`: `674a549cc6eec2e4d3c1acdad78ac7f3f1d3410f19ec404eb70f2a8f383f7b04`
+- `exact_local_plan.py`: `8055d43f9801a8442221eab0cb8ea3660ccb8e252420aac5653e54315bcb141e`
+
+## Additional scoped Sheets planning evidence
+
+The disposable copy also now has local-only `_plan_exact_row` and
+`plan_exact_scope` coverage.  These helpers do not pull, discover, prune,
+publish, read remotely, or write remotely.  They validate named stable
+identities and frozen baseline expectations; preserve protected source-hash
+and blank extracted-salary behavior; reject user-owned Opportunities and
+non-append Notes; and seal the operation set.  Compilation and these focused
+fixture checks passed (3 passed, 0.264s):
+
+- `test_planning_uses_only_explicit_scope_and_requires_frozen_equality`
+- `test_blank_extracted_salary_keeps_remote_estimate_as_expected_guard`
+- `test_new_local_row_preserves_sealed_remote_insert_semantics`
+
+This is temporary-source evidence only.  It does not activate a publisher,
+runner, Samtec/company scrape, Google request, or any live release gate.

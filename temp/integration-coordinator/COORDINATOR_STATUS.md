@@ -1242,3 +1242,22 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   `test_exact_local_plan.py` passes 11/11 there.  Remote-plan registration,
   Sheets confirmation/readback, and runner wiring are intentionally still
   absent; this does not change the live hold or authorize any deployment.
+- The protected-source reconciliation is now fully assembled in the sanitized
+  disposable copy. The accepted final lifecycle repair was applied to the
+  earlier production-based merge, which passed 186 focused checks and 264
+  complete staging-package checks plus 180 protected-adjacent workflow checks.
+  That vetted file set now matches the full sanitized protected copy, where
+  186 focused and 180 adjacent checks passed again with strict warnings.
+  Candidate source files contain no merge markers; preserved `*.rej` files are
+  audit-only and excluded. Exact hashes are recorded in
+  `PROTECTED_BASELINE_EXACT_RECONCILIATION_20261119.md`. Independent review of
+  this exact candidate is active. No protected file, Google row, lock,
+  process, database, queue, release, or Jetson state changed.
+- A narrow additional Sheets planning seam was verified in that disposable
+  copy: it constructs sealed exact operations from an explicit scope without
+  any discovery, pull, prune, publish, remote read, or remote write.  It
+  retains source-hash and blank-salary protections, rejects user-owned
+  Opportunities and non-append Notes, and requires frozen baseline guards.
+  Three focused planning checks and compilation passed.  The goal remains
+  active; next is an independent review of the assembled candidate followed
+  by the still-required protected install and live acceptance gates.
