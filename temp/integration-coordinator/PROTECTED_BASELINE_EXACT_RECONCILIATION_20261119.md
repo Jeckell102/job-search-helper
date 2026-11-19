@@ -133,6 +133,15 @@ behavior. Independent read-only review of this exact full-copy candidate is
 in progress. Production, Google, locks, job state, services, and Jetson remain
 untouched.
 
+Independent review is now **ACCEPTED at source level**. The reviewer reproduced
+196 focused exact/runner/sync checks and 110 adjacent SQLite, receipt,
+recovery-status, and CLI checks with warnings treated as errors. It confirmed
+that cleanup requires `LOCAL_ACKNOWLEDGED`, a matching confirmed receipt, and
+verified local acknowledgement evidence; zero-write fabrication, cross-company
+row metadata, premature cleanup, uncertain-write replay, moved rows, and exact
+flag widening all refuse safely. This does not constitute protected install or
+live Sheets acceptance.
+
 Candidate core hashes:
 
 - `runner.py`: `28c05b612544eb51c073bbb784f508ec6a48343d3e4006a8545e17d514809aae`

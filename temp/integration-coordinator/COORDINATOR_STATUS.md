@@ -104,7 +104,7 @@ ten-minute user update. Update it immediately after any material result.
   duplicate jobs. Owner-reviewed protected integration is complete: the
   protected integration selection passes 202 checks and exact rollback/source
   hashes are recorded. The live release-to-saved-jobs proof remains.
-- Milestone 6: 72% — F4 receipt/recovery source review and controlled Jetson
+- Milestone 6: 74% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. An isolated F8 candidate now extends the existing
   coordinator with one maintenance owner, durable boot/reconnect catch-up,
   disk-pressure holds, explicit evidence-retention counts, and planned
@@ -1253,6 +1253,14 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   `PROTECTED_BASELINE_EXACT_RECONCILIATION_20261119.md`. Independent review of
   this exact candidate is active. No protected file, Google row, lock,
   process, database, queue, release, or Jetson state changed.
+- Independent QA **ACCEPTED** the exact protected-source candidate and
+  reproduced 196 focused plus 110 adjacent strict checks. It specifically
+  verified the terminal cleanup evidence, actual-readback confirmation,
+  zero-write and cross-company refusal, uncertain/multi-chunk no-replay,
+  compact manual/source-hash/salary safeguards, and exact-command containment.
+  Milestone 6 advances to 74%. The next gate is an exact private-branch backup
+  of this reconciled candidate, followed by rollback-backed protected install;
+  live Google publication remains separately approval-gated.
 - A narrow additional Sheets planning seam was verified in that disposable
   copy: it constructs sealed exact operations from an explicit scope without
   any discovery, pull, prune, publish, remote read, or remote write.  It
