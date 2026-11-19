@@ -316,6 +316,70 @@ class ExactScopeSheetsTests(unittest.TestCase):
         self.assertFalse(state['first_attempt_claimed'])
         self.assertEqual(state['state'], 'SYNC_CONFIRMED')
 
+    def test_observation_only_blank_missing_baseline_confirms_without_commit(self):
+        cycle_id = 'CYC-BLANK-MISSING'
+        local_operation = {
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+            'values': {'Last Checked': '', 'Next Action': ''},
+            'expected': {'Scan State': 'Queued'},
+        }
+        remote_operation = {
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+            'values': {'Last Checked': '', 'Next Action': ''},
+            'append_if_missing': False, 'on_insert': {},
+            'expected': {'Last Checked': '', 'Next Action': ''},
+            'append_notes': {},
+        }
+        plan = sealed_plan([local_operation], [remote_operation])
+        scope = [{
+            'tab': 'Companies', 'row_id': 1,
+            'identity': {'Company ID': 'COMP-1'},
+            'fields': ['Last Checked', 'Next Action'],
+            'append_if_missing': False,
+            'expected': copy.deepcopy(remote_operation['expected']),
+        }]
+        self.apply_verified_local(cycle_id, 'COMP-1', plan, scope)
+        row_id, _current = self.local.matches(
+            'Companies', {'Company ID': 'COMP-1'})[0]
+        baseline = self.local.baseline('Companies', row_id)
+        baseline.pop('Last Checked', None)
+        baseline.pop('Next Action', None)
+        with self.local.transaction():
+            self.local._baseline('Companies', row_id, baseline)
+            self.local.db.execute(
+                "DELETE FROM dirty WHERE tab='Companies' AND row_id=? "
+                "AND header IN ('Last Checked','Next Action')", (row_id,))
+        exact = self.sync.plan_exact_scope(
+            scope, [remote_operation], delivery_mode='observation_only')
+        receipt_id, intent_id = self.remote_authority(
+            cycle_id, 'COMP-1', plan, exact,
+            intent_id='intent-blank-missing',
+            delivery_mode='observation_only')
+        evidence = self.inbox.exact_legacy_delivery_evidence(
+            cycle_id, 'COMP-1')
+        self.assertEqual(
+            evidence['evidence']['classification_counts']['baseline_missing'],
+            2)
+        with patch.object(
+                self.remote, 'commit',
+                side_effect=AssertionError('must not write')):
+            delivered = self.sync.publish_exact_scope(
+                exact, inbox=self.inbox, cycle_id=cycle_id,
+                company_id='COMP-1', plan_digest=plan['plan_digest'],
+                receipt_id=receipt_id, intent_id=intent_id)
+            acknowledged = self.sync.confirm_and_acknowledge_exact_scope(
+                inbox=self.inbox, cycle_id=cycle_id, company_id='COMP-1',
+                plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+                intent_id=intent_id)
+        self.assertTrue(delivered['observation_only'])
+        self.assertFalse(delivered['first_attempt'])
+        self.assertIsNone(delivered['commit'])
+        self.assertEqual(len(self.service.batches), 0)
+        self.assertEqual(acknowledged['acknowledged_rows'], 1)
+        state = self.inbox.exact_remote_state(cycle_id, 'COMP-1')
+        self.assertEqual(state['state'], 'SYNC_CONFIRMED')
+        self.assertFalse(state['first_attempt_claimed'])
+
     def test_observation_only_mismatch_holds_without_commit_or_confirmation(self):
         plan, _scope, _operation, exact = self.make_company_observation()
         receipt_id, intent_id = self.remote_authority(

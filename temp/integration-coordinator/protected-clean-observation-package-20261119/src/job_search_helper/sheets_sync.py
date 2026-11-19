@@ -78,6 +78,31 @@ def _required_id(value, label):
     return value.strip()
 
 
+def _clean_observation_field(header, baseline, current, frozen_operation):
+    """Prove a clean field or a pinned blank awaiting read-only observation."""
+    if header in baseline:
+        return _equivalent(header, baseline[header], current.get(header, ''))
+    if not isinstance(frozen_operation, Mapping):
+        return False
+    frozen_values = {}
+    for group in ('values', 'on_insert'):
+        selected = frozen_operation.get(group, {})
+        if not isinstance(selected, Mapping):
+            return False
+        for name, value in selected.items():
+            if (name in frozen_values
+                    and not _equivalent(name, frozen_values[name], value)):
+                return False
+            frozen_values[name] = value
+    frozen_notes = frozen_operation.get('append_notes', {})
+    if not isinstance(frozen_notes, Mapping):
+        return False
+    return (header not in frozen_notes
+            and header in frozen_values
+            and _equivalent(header, frozen_values[header], '')
+            and _equivalent(header, current.get(header, ''), ''))
+
+
 def unique_rows(tab, numbered):
     seen = set()
     for number, row in numbered:
@@ -605,8 +630,8 @@ class SheetsSynchronizer:
         base = self.local.baseline(tab, row_id)
         if not item['append_if_missing'] and base is not None and missing_dirty:
             clean_verified = (delivery_mode == 'observation_only'
-                              and all(header in base and _equivalent(
-                                  header, base[header], current.get(header, ''))
+                              and all(_clean_observation_field(
+                                  header, base, current, frozen_operation)
                                       for header in missing_dirty))
             if not clean_verified:
                 raise ValueError(
@@ -761,8 +786,8 @@ class SheetsSynchronizer:
             if baseline is not None and missing_dirty:
                 clean_verified = (
                     exact_plan.get('delivery_mode') == 'observation_only'
-                    and all(header in baseline and _equivalent(
-                        header, baseline[header], current.get(header, ''))
+                    and all(_clean_observation_field(
+                        header, baseline, current, evidence.get('operation'))
                             for header in missing_dirty))
                 if not clean_verified:
                     raise ValueError(

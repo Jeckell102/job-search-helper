@@ -324,13 +324,64 @@ def capture_legacy_delivery_evidence(repository, operations):
     return evidence
 
 
+def _missing_baselines_are_blank(repository, operations, evidence):
+    """Allow only pinned, clean, blank fields to await remote observation.
+
+    A missing baseline is not evidence that a value reached Google.  For a
+    blank target, however, observation-only delivery can safely establish that
+    fact without replaying a write.  Require both the immutable target and the
+    current local value to remain blank.  The full local snapshot, delivery
+    evidence, and this check are revalidated at every migration boundary.
+    """
+    missing = {
+        (field["tab"], field["row_id"], field["header"])
+        for field in evidence["fields"]
+        if field["classification"] == "baseline_missing"
+    }
+    if not missing:
+        return True
+    for operation in operations:
+        tab = operation.get("tab")
+        identity = _final_identity(operation)
+        matches = repository.matches(tab, identity)
+        if len(matches) != 1:
+            return False
+        row_id, current = matches[0]
+        targets = {}
+        for group in ("values", "on_insert"):
+            selected = operation.get(group, {})
+            if not isinstance(selected, Mapping):
+                return False
+            for header, value in selected.items():
+                if header in targets and not _equivalent(
+                        header, targets[header], value):
+                    return False
+                targets[header] = value
+        notes = operation.get("append_notes", {})
+        if not isinstance(notes, Mapping):
+            return False
+        for key in [item for item in missing
+                    if item[0] == tab and item[1] == row_id]:
+            header = key[2]
+            if (header in notes
+                    or header not in targets
+                    or not _equivalent(header, targets[header], "")
+                    or not _equivalent(header, current.get(header, ""), "")):
+                return False
+            missing.remove(key)
+    return not missing
+
+
 def validate_legacy_delivery_evidence(repository, operations, expected):
     """Re-capture and require the exact separately approved local evidence."""
     current = capture_legacy_delivery_evidence(repository, operations)
     if not isinstance(expected, Mapping) or dict(expected) != current:
         raise ValueError("legacy_delivery_evidence_changed")
     unsupported = current["classification_counts"]
-    if unsupported["baseline_missing"] or unsupported["baseline_different"]:
+    if (unsupported["baseline_different"]
+            or (unsupported["baseline_missing"]
+                and not _missing_baselines_are_blank(
+                    repository, operations, current))):
         raise ValueError("legacy_delivery_evidence_unverifiable")
     if current["conflicts"]:
         raise ValueError("legacy_delivery_conflict_present")

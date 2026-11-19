@@ -465,6 +465,85 @@ class LegacyMigrationTests(unittest.TestCase):
                     "CYC-B639C6D864EC", "COMP-0035")["state"], "FROZEN")
                 repo.close(); inbox.close()
 
+    def test_clean_blank_missing_baseline_waits_for_remote_observation(self):
+        _memory, legacy, payload, cursor = fixture()
+        legacy = copy.deepcopy(legacy)
+        history_operation = next(
+            operation for operation in legacy["operations"]
+            if operation["tab"] == "Job History")
+        history_operation["values"]["Work Arrangement"] = ""
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = self.sqlite_fixture(temporary)
+            approved = preview_legacy_migration_binding(
+                repo, cycle_id="CYC-B639C6D864EC", company_id="COMP-0035",
+                payload=payload, legacy_plan=legacy, cursor=cursor,
+                controls=controls())
+            plan, _report = build_legacy_v2_plan(
+                repo, cycle_id="CYC-B639C6D864EC", company_id="COMP-0035",
+                payload=payload, legacy_plan=legacy, cursor=cursor,
+                controls=controls(), binding=approved)
+            history_row, current = repo.matches(
+                "Job History", {"Job Key": "job-1"})[0]
+            baseline = repo.baseline("Job History", history_row)
+            baseline.pop("Work Arrangement", None)
+            with repo.transaction():
+                repo._baseline("Job History", history_row, baseline)
+            evidence = capture_legacy_delivery_evidence(
+                repo, plan["remote_projection"])
+            self.assertEqual(
+                evidence["classification_counts"]["baseline_missing"], 1)
+            self.assertEqual(
+                validate_legacy_delivery_evidence(
+                    repo, plan["remote_projection"], evidence), evidence)
+
+            with repo.transaction():
+                repo.db.execute(
+                    "UPDATE records SET data=json_set(data, '$.Work Arrangement', ?) "
+                    "WHERE tab=? AND row_id=?",
+                    ("Hybrid", "Job History", history_row))
+            with self.assertRaisesRegex(
+                    ValueError, "legacy_delivery_evidence_unverifiable"):
+                validate_legacy_delivery_evidence(
+                    repo, plan["remote_projection"], evidence)
+            repo.close()
+
+    def test_fresh_nonblank_or_note_missing_baseline_remains_unverifiable(self):
+        _memory, legacy, payload, cursor = fixture()
+        for kind in ("nonblank", "append_note"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:
+                candidate = copy.deepcopy(legacy)
+                operation = next(item for item in candidate["operations"]
+                                 if item["tab"] == "Companies")
+                header = "Last Checked"
+                if kind == "append_note":
+                    operation["values"].pop(header)
+                    operation["append_notes"][header] = ""
+                repo = self.sqlite_fixture(temporary)
+                approved = preview_legacy_migration_binding(
+                    repo, cycle_id="CYC-B639C6D864EC",
+                    company_id="COMP-0035", payload=payload,
+                    legacy_plan=candidate, cursor=cursor, controls=controls())
+                plan, _report = build_legacy_v2_plan(
+                    repo, cycle_id="CYC-B639C6D864EC",
+                    company_id="COMP-0035", payload=payload,
+                    legacy_plan=candidate, cursor=cursor, controls=controls(),
+                    binding=approved)
+                row_id, _current = repo.matches(
+                    "Companies", {"Company ID": "COMP-0035"})[0]
+                baseline = repo.baseline("Companies", row_id)
+                baseline.pop(header, None)
+                with repo.transaction():
+                    repo._baseline("Companies", row_id, baseline)
+                evidence = capture_legacy_delivery_evidence(
+                    repo, plan["remote_projection"])
+                self.assertEqual(
+                    evidence["classification_counts"]["baseline_missing"], 1)
+                with self.assertRaisesRegex(
+                        ValueError, "legacy_delivery_evidence_unverifiable"):
+                    validate_legacy_delivery_evidence(
+                        repo, plan["remote_projection"], evidence)
+                repo.close()
+
     def test_dirty_baseline_value_and_manual_choice_are_pinned(self):
         _memory, legacy, payload, cursor = fixture()
         for mutation in ("baseline", "manual_choice"):
