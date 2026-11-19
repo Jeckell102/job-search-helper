@@ -1,12 +1,15 @@
 from datetime import datetime, timezone
 from pathlib import Path
+import sqlite3
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import MagicMock, patch
 
 from job_search_helper.engine import State
 from job_search_helper.runner import active_inbox_cycles
 from job_search_helper.runner import _print_run_status
-from contextlib import redirect_stdout
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from io import StringIO
 
 
@@ -50,6 +53,312 @@ class RunnerCycleSelectionTests(unittest.TestCase):
                 active_inbox_cycles(DummyInbox(), state),
                 ["CYC-ACTIVE", "CYC-ORPHAN"],
             )
+
+
+class ExactSyncRunnerAcceptanceTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.database = self.root / 'state.db'
+        # Exact recovery deliberately requires a present regular State file.
+        state = State(self.database)
+        state.close()
+        from job_search_helper.inbox import InventoryInbox
+        inbox = InventoryInbox(self.root / 'inventories.sqlite3', 'fixture')
+        inbox.close()
+
+    def seed(self, *, cycle_id='CYC-EXACT', cycle_company='C-1', stage='queued',
+             status='In Progress', selected_company='C-1', saved=True,
+             blocked=False, plan=None, save_plan=False):
+        from job_search_helper.inbox import InventoryInbox
+        state = State(self.database)
+        state.save_cycle({
+            'id': cycle_id,
+            'started_at': '2026-11-19T00:00:00+00:00',
+            'status': status,
+            'all': False,
+            'companies': {cycle_company: {'stage': stage}},
+        })
+        state.close()
+        inbox = InventoryInbox(self.root / 'inventories.sqlite3', 'fixture')
+        if saved:
+            inbox.save(cycle_id, selected_company, {'company_id': selected_company})
+        if blocked:
+            inbox.block(cycle_id, selected_company)
+        if save_plan:
+            inbox.save_plan(cycle_id, selected_company, plan)
+        inbox.close()
+
+    def exact_runner_stack(self, stack, *, get_remote=None, make_engine=None):
+        """Install only external/dependency seams; State and Inbox remain real."""
+        from job_search_helper import runner
+
+        local = MagicMock(name='readonly_local')
+        local.get_meta.return_value = 'fixture-profile'
+        remote = MagicMock(name='remote')
+        engines = []
+        states = []
+        inboxes = []
+        real_state = runner.State
+        real_inbox = runner.InventoryInbox
+
+        def make_state(path):
+            state = real_state(path)
+            states.append(state)
+            return state
+
+        def make_inbox(path, spreadsheet_id):
+            inbox = real_inbox(path, spreadsheet_id)
+            inboxes.append(inbox)
+            return inbox
+
+        def default_engine(repository, state, **kwargs):
+            engine = SimpleNamespace(
+                state=state, inbox=kwargs['inbox'],
+                sync_manual_opportunities=MagicMock(name='sync_manual_opportunities'))
+            engines.append(engine)
+            return engine
+
+        stack.enter_context(patch.object(runner, '_load_environment'))
+        stack.enter_context(patch.object(runner, 'storage_backend', return_value='sqlite'))
+        stack.enter_context(patch.object(runner, 'load_title_blacklist'))
+        stack.enter_context(patch.object(runner, 'load_title_review_list'))
+        stack.enter_context(patch.object(runner, 'state_path', return_value=self.database))
+        stack.enter_context(patch.object(runner, 'State', side_effect=make_state))
+        inbox_class = stack.enter_context(patch.object(
+            runner, 'InventoryInbox', side_effect=make_inbox))
+        inbox_class.destination_id.side_effect = real_inbox.destination_id
+        outer_lock = stack.enter_context(patch.object(runner, 'writer_lock'))
+        repository = stack.enter_context(patch.object(runner, 'get_repository'))
+        engine = stack.enter_context(patch.object(
+            runner, 'Engine', side_effect=make_engine or default_engine))
+        stack.enter_context(patch('job_search_helper.cli.job_database_path',
+                                  return_value=self.root / 'jobs.db'))
+        stack.enter_context(patch('job_search_helper.sqlite_repository.SQLiteRepository',
+                                  return_value=local))
+        stack.enter_context(patch('job_search_helper.sheet_profile.profile_schemas',
+                                  return_value={'Companies': object()}))
+        get_remote_mock = stack.enter_context(patch(
+            'job_search_helper.cli.get_remote_repository', side_effect=get_remote)) \
+            if get_remote is not None else stack.enter_context(patch(
+                'job_search_helper.cli.get_remote_repository', return_value=remote))
+        release = stack.enter_context(patch(
+            'job_search_helper.integration_release.assert_release_settled'))
+        run_scoped = stack.enter_context(patch(
+            'job_search_helper.run_sync.run_scoped_sync'))
+        review = stack.enter_context(patch.object(runner, '_refresh_review_queue'))
+        review_lifecycle = stack.enter_context(patch.object(runner, '_review_queue_lifecycle'))
+        purge_reviews = stack.enter_context(patch.object(real_state, 'purge_reviews'))
+        closed_cleanup = stack.enter_context(patch(
+            'job_search_helper.closed_jobs.stage_closed_pending'))
+        outcomes = stack.enter_context(patch(
+            'job_search_helper.scrape_outcome_producer.record_cycle_outcomes'))
+        performance = stack.enter_context(patch.object(runner, '_save_performance'))
+        return SimpleNamespace(
+            local=local, remote=remote, engines=engines, states=states,
+            inboxes=inboxes, outer_lock=outer_lock,
+            repository=repository, engine=engine, get_remote=get_remote_mock,
+            release=release, run_scoped=run_scoped, review=review,
+            review_lifecycle=review_lifecycle, purge_reviews=purge_reviews,
+            closed_cleanup=closed_cleanup, outcomes=outcomes,
+            performance=performance,
+        )
+
+    def test_public_cli_requires_cycle_and_one_or_more_repeatable_company_ids(self):
+        from job_search_helper import runner
+
+        with redirect_stderr(StringIO()), patch.object(runner, 'run_start') as run:
+            self.assertEqual(runner.main(['sync', '--company-id', 'C-1']), 2)
+            run.assert_not_called()
+
+        with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
+            self.assertEqual(runner.main(['sync', '--cycle-id', 'CYC-EXACT']), 1)
+
+        with patch.object(runner, 'run_start', return_value=0) as run:
+            self.assertEqual(runner.main([
+                'sync', '--cycle-id', 'CYC-EXACT',
+                '--company-id', 'C-1', '--company-id', 'C-2',
+            ]), 0)
+        self.assertEqual(run.call_args.kwargs['sync_cycle_id'], 'CYC-EXACT')
+        self.assertEqual(run.call_args.kwargs['sync_company_ids'], ['C-1', 'C-2'])
+
+    def test_invalid_exact_selections_stop_before_factory_or_remote(self):
+        from job_search_helper import runner
+
+        invalid = ([], [''], ['   '], ['C-1', 'C-1'],
+                   ['C-1', 'C-2', 'C-3', 'C-4', 'C-5', 'C-6'])
+        with patch('job_search_helper.exact_cycle_recovery.recover_exact_cycle_with_factory') as recover, \
+                patch('job_search_helper.cli.get_remote_repository') as get_remote, \
+                patch.object(runner, '_load_environment') as load_environment:
+            for selected in invalid:
+                with self.subTest(selected=selected), self.assertRaisesRegex(
+                        ValueError, 'unique and bounded'):
+                    runner.run_start(sync_only=True, sync_cycle_id='CYC-EXACT',
+                                     sync_company_ids=selected)
+        recover.assert_not_called()
+        get_remote.assert_not_called()
+        load_environment.assert_not_called()
+
+    def test_exact_run_uses_lock_owned_lazy_factory_orders_release_and_closes_dependencies(self):
+        from job_search_helper import runner
+        from job_search_helper.cli import WriterLockBusy, scraper_lock_name, writer_lock
+        from job_search_helper import exact_cycle_recovery
+
+        self.seed()
+        events = []
+
+        def get_remote(**kwargs):
+            events.append('remote')
+            with self.assertRaises(WriterLockBusy):
+                with writer_lock(self.root / scraper_lock_name()):
+                    pass
+            return MagicMock(name='remote')
+
+        output = StringIO()
+        with ExitStack() as stack:
+            seams = self.exact_runner_stack(stack, get_remote=get_remote)
+            seams.release.side_effect = lambda directory: events.append('release')
+            planner = stack.enter_context(patch.object(
+                exact_cycle_recovery, 'freeze_exact_cycle_plans',
+                return_value={'planned': ['C-1'], 'recovered': [], 'held': []}))
+            publisher = stack.enter_context(patch.object(
+                exact_cycle_recovery, 'publish_exact_cycle',
+                return_value={'confirmed': ['C-1'], 'held': [], 'skipped': []}))
+            with redirect_stdout(output):
+                self.assertEqual(runner.run_start(
+                    sync_only=True, sync_cycle_id='CYC-EXACT',
+                    sync_company_ids=['C-1']), 0)
+
+        seams.outer_lock.assert_not_called()
+        seams.repository.assert_not_called()
+        seams.release.assert_called_once_with(self.root)
+        self.assertEqual(events, ['release', 'remote'])
+        seams.local.close.assert_called_once_with()
+        self.assertEqual(len(seams.engines), 1)
+        with self.assertRaises(sqlite3.ProgrammingError):
+            seams.engines[0].state.connection.execute('SELECT 1')
+        with self.assertRaises(sqlite3.ProgrammingError):
+            seams.engines[0].inbox.connection.execute('SELECT 1')
+        planner.assert_called_once()
+        publisher.assert_called_once()
+        for hook in (seams.run_scoped, seams.review, seams.review_lifecycle,
+                     seams.purge_reviews, seams.closed_cleanup, seams.outcomes,
+                     seams.performance,
+                     seams.engines[0].sync_manual_opportunities):
+            hook.assert_not_called()
+        text = output.getvalue()
+        for field in ('planned', 'recovered', 'confirmed', 'held', 'skipped'):
+            self.assertIn(f'"{field}"', text)
+
+    def test_exact_dependency_context_closes_when_remote_construction_raises(self):
+        from job_search_helper import runner
+
+        self.seed()
+        with ExitStack() as stack:
+            seams = self.exact_runner_stack(
+                stack, get_remote=RuntimeError('remote construction failed'))
+            with redirect_stdout(StringIO()), self.assertRaisesRegex(
+                    RuntimeError, 'remote construction failed'):
+                runner.run_start(sync_only=True, sync_cycle_id='CYC-EXACT',
+                                 sync_company_ids=['C-1'])
+        seams.local.close.assert_called_once_with()
+        self.assertEqual(len(seams.states), 1)
+        self.assertEqual(len(seams.inboxes), 1)
+        with self.assertRaises(sqlite3.ProgrammingError):
+            seams.states[0].connection.execute('SELECT 1')
+        with self.assertRaises(sqlite3.ProgrammingError):
+            seams.inboxes[0].connection.execute('SELECT 1')
+        seams.outer_lock.assert_not_called()
+        seams.run_scoped.assert_not_called()
+
+    def test_local_exact_preflight_rejects_before_release_or_remote(self):
+        from job_search_helper import runner
+
+        cases = (
+            ('unknown', {'cycle_company': 'C-OTHER'}),
+            ('blocked', {'blocked': True}),
+            ('finished', {'status': 'Complete'}),
+            ('invalid-stage-plan', {'stage': 'inventory'}),
+        )
+        for label, seed_kwargs in cases:
+            with self.subTest(label=label):
+                # Each subcase gets independent State/inbox files.
+                case_root = self.root / label
+                case_root.mkdir()
+                original_root, original_database = self.root, self.database
+                self.root = case_root
+                self.database = case_root / 'state.db'
+                state = State(self.database)
+                state.close()
+                from job_search_helper.inbox import InventoryInbox
+                inbox = InventoryInbox(case_root / 'inventories.sqlite3', 'fixture')
+                inbox.close()
+                self.seed(**seed_kwargs)
+                try:
+                    with ExitStack() as stack:
+                        seams = self.exact_runner_stack(stack)
+                        with redirect_stdout(StringIO()), self.assertRaises(ValueError):
+                            runner.run_start(
+                                sync_only=True, sync_cycle_id='CYC-EXACT',
+                                sync_company_ids=['C-1'])
+                    seams.get_remote.assert_not_called()
+                    seams.release.assert_not_called()
+                    seams.local.close.assert_called_once_with()
+                finally:
+                    self.root, self.database = original_root, original_database
+
+    def test_empty_but_present_plan_is_recoverable(self):
+        from job_search_helper import runner
+        from job_search_helper import exact_cycle_recovery
+
+        self.seed(stage='inventory', plan={}, save_plan=True)
+        with ExitStack() as stack:
+            seams = self.exact_runner_stack(stack)
+            planner = stack.enter_context(patch.object(
+                exact_cycle_recovery, 'freeze_exact_cycle_plans'))
+            publisher = stack.enter_context(patch.object(
+                exact_cycle_recovery, 'publish_exact_cycle',
+                return_value={'confirmed': ['C-1'], 'held': [], 'skipped': []}))
+            with redirect_stdout(StringIO()):
+                self.assertEqual(runner.run_start(
+                    sync_only=True, sync_cycle_id='CYC-EXACT',
+                    sync_company_ids=['C-1']), 0)
+        planner.assert_not_called()
+        publisher.assert_called_once()
+        seams.get_remote.assert_called_once()
+
+    def test_legacy_direct_exact_sync_remains_contained_and_cli_never_passes_none(self):
+        from job_search_helper import runner
+        from job_search_helper.inbox import InventoryInbox
+
+        with patch.object(runner, '_load_environment'), \
+                patch.object(runner, 'storage_backend', return_value='sqlite'), \
+                patch.object(runner, 'load_title_blacklist'), \
+                patch.object(runner, 'load_title_review_list'), \
+                patch.object(runner, 'state_path', return_value=self.database), \
+                patch.object(InventoryInbox, 'has_unblocked_inventory', return_value=True), \
+                patch('job_search_helper.integration_release.assert_release_settled'), \
+                patch('job_search_helper.exact_cycle_recovery.recover_exact_cycle_with_factory') as recover, \
+                patch('job_search_helper.run_sync.run_scoped_sync') as run_scoped, \
+                patch.object(runner, 'get_repository') as get_repository, \
+                patch.object(runner, '_refresh_review_queue') as review, \
+                patch.object(runner, '_save_performance') as performance, \
+                redirect_stdout(StringIO()) as output:
+            self.assertEqual(runner.run_start(
+                sync_only=True, sync_cycle_id='CYC-EXACT',
+                sync_company_ids=None), 0)
+        self.assertIn('HELD_NO_EXACT_PLANNER', output.getvalue())
+        recover.assert_not_called()
+        run_scoped.assert_not_called()
+        get_repository.assert_not_called()
+        review.assert_not_called()
+        performance.assert_not_called()
+
+        with patch.object(runner, 'run_start', return_value=0) as run:
+            self.assertEqual(runner.main(['sync', '--cycle-id', 'CYC-EXACT']), 0)
+        self.assertEqual(run.call_args.kwargs['sync_company_ids'], [])
+        self.assertIsNotNone(run.call_args.kwargs['sync_company_ids'])
 
 
 

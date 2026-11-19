@@ -382,7 +382,7 @@ def _review_queue_lifecycle(repo, database):
 def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
               batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1,
               defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60,
-              browser_fallback=True, resume=False, sync_cycle_id=None):
+              browser_fallback=True, resume=False, sync_cycle_id=None, sync_company_ids=None):
     """Run a scrape or durable-inventory sync.
 
     ``sync_cycle_id`` deliberately has narrower semantics than the legacy
@@ -398,6 +398,15 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
             raise ValueError("Use a non-empty exact --cycle-id for sync.")
         sync_cycle_id = sync_cycle_id.strip()
     exact_sync = sync_only and sync_cycle_id is not None
+    if exact_sync and sync_company_ids is not None:
+        if not isinstance(sync_company_ids, (list, tuple)):
+            raise ValueError('Exact --cycle-id sync requires one or more --company-id values.')
+        sync_company_ids = [str(value).strip() for value in sync_company_ids]
+        if (not sync_company_ids or len(sync_company_ids) > 5 or any(not value for value in sync_company_ids)
+                or len(sync_company_ids) != len(set(sync_company_ids))):
+            raise ValueError('Exact --company-id selection must be unique and bounded to 1-5.')
+    elif sync_company_ids:
+        raise ValueError('--company-id applies only with sync --cycle-id.')
     if not 1 <= sync_interval <= 3600:
         raise ValueError("Sync interval must be between 1 and 3600 seconds")
     if not 1 <= fetch_workers <= MAX_FETCH_WORKERS or not 1 <= assignment_window <= 100:
@@ -419,6 +428,50 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
     load_title_review_list()
     database = state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if exact_sync and sync_company_ids is not None:
+        # The accepted recovery API owns the normal lock. Dependencies are
+        # deliberately constructed by its factory only after that acquisition.
+        from .exact_cycle_recovery import recover_exact_cycle_with_factory
+        from .cli import get_remote_repository, job_database_path
+        from .sheet_profile import profile_schemas
+        from .sqlite_repository import SQLiteRepository
+        @contextmanager
+        def exact_dependencies():
+            spreadsheet_id = InventoryInbox.destination_id(database.parent / 'inventories.sqlite3')
+            local = SQLiteRepository(job_database_path(), spreadsheet_id, readonly=True)
+            state = inbox = None
+            try:
+                schemas = profile_schemas(local.get_meta('sheets_profile'))
+                state = State(str(database))
+                inbox = InventoryInbox(database.parent / 'inventories.sqlite3', spreadsheet_id)
+                cycle = state.cycle(sync_cycle_id)
+                if (not isinstance(cycle, dict) or cycle.get('id') != sync_cycle_id
+                        or cycle.get('status') in FINISHED):
+                    raise ValueError('Exact sync cycle is missing, finished, or superseded.')
+                for company_id in sync_company_ids:
+                    item = cycle.get('companies', {}).get(company_id)
+                    saved = inbox.get(sync_cycle_id, company_id)
+                    planned = inbox.plan(sync_cycle_id, company_id)
+                    if not isinstance(item, dict) or saved is None or saved[1]:
+                        raise ValueError('Exact selected Company is missing or blocked.')
+                    stage = item.get('stage')
+                    if not (stage == 'queued'
+                            or (stage == 'inventory' and planned is not None)
+                            or (stage in {'complete', 'partial'} and planned is not None)):
+                        raise ValueError('Exact selected Company has no recoverable State/plan combination.')
+                from .integration_release import assert_release_settled
+                assert_release_settled(database.parent)
+                remote = get_remote_repository(write=True, interactive=True, renew_both=True,
+                                               min_request_interval=sheet_request_interval,
+                                               schemas=schemas, evidence_archives=False)
+                yield Engine(local, state, inbox=inbox, error_log_path=database.parent / 'errors.jsonl'), remote
+            finally:
+                if inbox is not None: inbox.close()
+                if state is not None: state.close()
+                local.close()
+        report = recover_exact_cycle_with_factory(database, exact_dependencies, sync_cycle_id, sync_company_ids)
+        print('Exact cycle recovery: ' + json.dumps(report, sort_keys=True), flush=True)
+        return 0
     with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
         from .integration_release import assert_release_settled
         assert_release_settled(database.parent)
@@ -697,6 +750,7 @@ def main(argv=None):
     parser.add_argument("--sheet-request-interval", type=float, default=1.1)
     parser.add_argument("--sync-interval", type=float, default=60)
     parser.add_argument("--cycle-id")
+    parser.add_argument("--company-id", action="append", default=[])
     try:
         args = parser.parse_args(argv)
     except SystemExit:
@@ -712,6 +766,9 @@ def main(argv=None):
     if args.command == "start" and args.cycle_id is not None:
         print("ERROR: --cycle-id applies to sync only.", file=sys.stderr)
         return 2
+    if args.company_id and (args.command != 'sync' or args.cycle_id is None):
+        print("ERROR: --company-id applies only with sync --cycle-id.", file=sys.stderr)
+        return 2
     try:
         return run_start(
             fetch_workers=args.fetch_workers,
@@ -721,6 +778,7 @@ def main(argv=None):
             defer_sync=args.defer_sync, sync_only=args.command == "sync", retry_blocked=args.retry_blocked,
             sync_interval=args.sync_interval, browser_fallback=args.browser_fallback, resume=args.resume,
             sync_cycle_id=args.cycle_id,
+            sync_company_ids=args.company_id,
         )
     except KeyboardInterrupt:
         print("Stopped. Run ./job-search-helper start --resume to continue this scan; start without --resume begins a fresh scan.", file=sys.stderr)

@@ -851,6 +851,22 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   remote access. Independent focused/adjacent verification passed 120 tests in
   6.75 seconds. See `EXACT_RECOVERY_LOCK_FACTORY_QA_PASS_20261119.md`. Runner
   wiring can resume; live recovery remains held.
+- The accepted lazy-factory boundary, retained failure evidence, pass report,
+  focused tests, and coordinator checkpoint were committed as `2e44444` and
+  pushed to the private GitHub branch. Local `HEAD` and `git ls-remote` both
+  returned `2e44444476163174e0ad499e7e1b4c73f20ab93f`. Runner integration is
+  active against this exact accepted base; production and live recovery remain
+  held.
+- Independent QA has now **passed the exact runner integration**. Public exact
+  sync requires one to five unique repeatable `--company-id` values with one
+  exact cycle; invalid or unknown/blocked/finished/invalid-stage selections and
+  unsettled releases stop before direct remote construction. All dependencies
+  are constructed and closed inside the accepted recovery-owned normal lock,
+  and the exact branch returns before global sync, cleanup, review, manual,
+  outcome, or performance hooks. Independent verification passed 168 tests in
+  10.73 seconds. See `EXACT_CYCLE_RUNNER_QA_PASS_20261119.md`. A fresh protected
+  production preflight plus scoped source/rollback manifest are now required
+  before the first one-Company live recovery action.
 - Fresh protected read-only status now supersedes the older multi-cycle note:
   `CYC-B639C6D864EC` is the sole blocker, with 764 queued, three inventory,
   three blocked, two unsupported, 20 complete, eight partial, 47 inventories,
