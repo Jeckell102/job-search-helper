@@ -1,6 +1,6 @@
 # Integration automation coordinator status
 
-Updated: 2026-11-18. This is the current working card for the isolated,
+Updated: 2026-11-19. This is the current working card for the isolated,
 source-only coordinator copy. It contains no production records, credentials,
 locks, or runtime histories.
 
@@ -23,8 +23,11 @@ ten-minute user update. Update it immediately after any material result.
   log; record the exact change, reason, verification, and rollback evidence
   in that file immediately afterward. Do not claim or imply a Jetson change
   until both the system and its record have been updated.
-- No Jetson modification has been made during this roadmap run as of this
-  checkpoint.
+- Jetson F4 source was deployed under recorded change control on 2026-11-18.
+  On 2026-11-19 the corrected, reviewed operator-proof script was added to the
+  existing F4 record without executing it; its exact hash, permissions,
+  verification, and rollback boundary are recorded in the Jetson changelog,
+  register, and dedicated staging receipt.
 
 ## Current position
 
@@ -70,8 +73,10 @@ ten-minute user update. Update it immediately after any material result.
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
   service was restarted and no scheduler has been started in this work.
-- Milestones 5–6: not started. F4 transport-recovery sub-gate remains open
-  pending independent re-review and deployment-specific change control.
+- Milestones 5–6: not started. F4 transport-recovery sub-gate remains open;
+  source review and controlled script placement are complete, but the
+  administrator-authenticated live interruption proof and independent
+  post-run verification are still required.
 
 ## Definition of fully completed
 
