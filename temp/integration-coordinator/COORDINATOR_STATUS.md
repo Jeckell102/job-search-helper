@@ -47,10 +47,11 @@ ten-minute user update. Update it immediately after any material result.
   and independently reviewed intake into the existing coordinator are
   implemented. The active Job Search Helper source now has the shared
   classifier; qualified defects are held once for triage, never dispatched.
-- Milestone 4: 30% — a held repair can be promoted only into a paused,
+- Milestone 4: 35% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
-  No scheduler has been started.
+  The coordinator host now has a local-only, read-only resolver wired in; no
+  service was restarted and no scheduler has been started in this work.
 - Milestones 5–6: not started.
 
 ## Definition of fully completed
@@ -88,6 +89,11 @@ partial Google Sheets write alone is not completion.
   action, as well as on normal resume and every claim path. The repaired
   implementation passed 145 focused coordinator checks and 13 focused
   Company-event checks. MuleLab reconciliation remains pending.
+- The accepted guard now matches the MuleLab coordinator source exactly; its
+  focused suite passed 145 checks there with no coordinator scheduler started.
+- The MuleLab coordinator host now supplies a local SQLite-only Company
+  resolver. Syntax and safe-failure checks passed; activation/restart and any
+  live task remain deliberately deferred.
 
 ## Safety boundaries
 
@@ -102,9 +108,9 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Reconcile the accepted current-Company guard with the MuleLab coordinator
-   source without starting its scheduler or altering its existing documentation.
-2. Reconcile the Company-side bridge with the active Job Search Helper source
+1. Reconcile the Company-side bridge with the active Job Search Helper source
    without overwriting the protected, pre-existing local worktree changes.
+2. Reconcile the durable Company-event bridge with the active Job Search
+   Helper repository and normal runner without overwriting local work.
 3. Design the normal Company-to-scrape handoff with one durable owner, then
    prove it in a guarded live test.
