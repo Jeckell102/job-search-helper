@@ -23,7 +23,7 @@ choices, and be demonstrably safe before activation.
   guarded live proof remains.
 - Milestone 3 — 80%: bounded scrape outcomes can be delivered to a held-only
   coordinator intake; guarded live proof remains.
-- Milestone 4 — 62%: safe held-repair promotion and a staged inference
+- Milestone 4 — 65% (planning estimate, not a passed acceptance gate): safe held-repair promotion and a staged inference
   recovery protocol exist; Jetson deployment and live protocol proof remain.
 - Milestones 5–6 have not started.
 
@@ -74,12 +74,14 @@ Canonical shared receipt-store implementation and tests are in:
 - The repair was independently accepted: exception -> `FAILED`, cancellation
   -> `CANCELLED`, and the single-running-request gate is released. It stores
   no error content.
-- Focused checks passed before adding the HTTP-route test:
-  - 31 MuleLab host/store checks.
-  - 6 staged wrapper checks.
-  - 8 canonical receipt-store checks.
-- The HTTP-route test is being finalized now and must be run before any
-  deployment claim.
+- The final focused run passed 31 MuleLab host/store checks and 8 staged checks
+  (6 inference checks plus 2 HTTP-route checks). The 8 canonical receipt-store
+  checks are included in the 31, not additional checks.
+- Final independent review accepted this as a staged stopping point, with
+  deployment and live service verification still required. The code checkpoint
+  is `8b5081a`; the subsequent status checkpoint is `88bcd7f`.
+- All assigned workers are finished. Implementation is paused for this review
+  at the user's request. The full six-milestone objective remains incomplete.
 
 ## Required review questions
 
@@ -98,3 +100,16 @@ Canonical shared receipt-store implementation and tests are in:
 Return `ACCEPT`, `ACCEPT WITH REQUIRED FOLLOW-UPS`, or `REJECT`. Cite exact
 file and line(s) for each finding, explain the concrete failure mode, and list
 the smallest test that proves the fix. Do not make live changes.
+
+Save the complete review to:
+`/tmp/job-search-helper-integration-automation/temp/integration-coordinator/HIGHER_MODEL_REVIEW_RESULTS.md`
+
+Include the reviewed Git commit, files inspected, commands actually executed,
+test outcomes, concrete findings, unresolved uncertainties, and an ordered list
+of next actions for the returning coordinator. Verify concerns against source;
+the earlier acceptance and passing tests are evidence, not a reason to assume
+the complete protocol is safe. In particular inspect process restart, errors
+after the model returns, and the host's use of retained status/cancel receipts.
+Writing this review report is authorized; implementation changes are outside
+this review assignment. The returning coordinator must read the saved report
+and current coordinator card before resuming implementation.

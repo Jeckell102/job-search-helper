@@ -28,6 +28,11 @@ ten-minute user update. Update it immediately after any material result.
 
 ## Current position
 
+- Handoff checkpoint, 2026-11-19: `PAUSED_NOT_COMPLETE` for the user's
+  requested higher-model review. All assigned workers have finished. Read
+  `HIGHER_MODEL_REVIEW_HANDOFF.md`; the reviewer must save findings in
+  `HIGHER_MODEL_REVIEW_RESULTS.md` for the returning coordinator. Periodic
+  status updates do not authorize resuming implementation during this pause.
 - Goal: complete all six roadmap milestones and the final independent
   acceptance demonstration, with safeguards and scoped GitHub backups.
 - Main checkout: protected and heavily dirty. Do not edit, delete locks, or
