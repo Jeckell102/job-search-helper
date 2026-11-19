@@ -24,9 +24,9 @@ def _text(value):
 def canonical_company_fact(company):
     """Return the immutable scrape-relevant Company fact.
 
-    A missing ID or careers URL is intentionally *not* eligible.  This means
-    partially entered Companies wait for a later supported mutation instead of
-    creating a request that could widen into an unscoped scan.
+    A missing ID or careers URL is intentionally *not* eligible.  The store
+    leaves a newly incomplete Company alone, but records a withdrawal if an
+    already eligible Company loses its source so consumers can cancel scope.
     """
     company_id = _text(company.get("Company ID"))
     if not company_id:
@@ -51,5 +51,6 @@ def source_revision(company):
 
 
 def event_kind(fact):
-    return "company.eligible" if fact["eligible"] else "company.ineligible"
-
+    if fact["eligible"]:
+        return "company.eligible"
+    return "company.withdrawn" if not fact["official_careers_url"] else "company.ineligible"

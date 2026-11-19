@@ -69,6 +69,19 @@ class CompanyEventOutboxTests(unittest.TestCase):
         self.addCleanup(self.repo.close)
         self.assertEqual(self.repo.pending_company_events('intake'), [second])
 
+    def test_newer_ack_sets_company_high_watermark_and_rejects_stale_ack(self):
+        first = self.mutation(**{'ATS / Source': 'Lever'})['company_event']
+        second = self.mutation(**{'Company Status': 'Paused'})['company_event']
+        # Consumers may receive r2 after a crash/reconnect before r1.  Taking
+        # r2 is a deliberate supersession, not permission to replay r1 later.
+        self.repo.acknowledge_company_event(second['event_id'], 'intake', source_revision=second['source_revision'])
+        self.assertEqual(self.repo.pending_company_events('intake'), [])
+        with self.assertRaisesRegex(RepositoryError, 'stale for this consumer revision'):
+            self.repo.acknowledge_company_event(first['event_id'], 'intake', source_revision=first['source_revision'])
+        # Retrying the r2 acknowledgement is idempotent.
+        self.assertTrue(self.repo.acknowledge_company_event(
+            second['event_id'], 'intake', source_revision=second['source_revision'])['acknowledged'])
+
     def test_failed_event_write_rolls_back_company_mutation(self):
         with patch.object(self.repo, '_record_company_event', side_effect=RuntimeError('event disk failure')):
             with self.assertRaisesRegex(RuntimeError, 'event disk failure'):
@@ -80,6 +93,14 @@ class CompanyEventOutboxTests(unittest.TestCase):
         result = self.mutation(**{'Official Careers URL': ''})
         self.assertIsNone(result['company_event'])
         self.assertEqual(self.repo.pending_company_events('intake'), [])
+
+    def test_removing_source_from_eligible_company_emits_withdrawal(self):
+        eligible = self.mutation(**{'ATS / Source': 'Lever'})['company_event']
+        withdrawal = self.mutation(**{'Official Careers URL': ''})['company_event']
+        self.assertEqual(withdrawal['kind'], 'company.withdrawn')
+        self.assertFalse(withdrawal['fact']['eligible'])
+        self.assertEqual(withdrawal['fact']['official_careers_url'], '')
+        self.assertEqual(self.repo.pending_company_events('intake'), [eligible, withdrawal])
 
     def test_explicit_company_import_emits_once_but_plain_bootstrap_does_not(self):
         # Plain bootstrap deliberately remains non-live, so enabling M2 cannot

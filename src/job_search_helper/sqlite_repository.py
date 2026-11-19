@@ -155,6 +155,10 @@ class SQLiteRepository:
           event_id TEXT NOT NULL, consumer TEXT NOT NULL, acknowledged_at TEXT NOT NULL,
           PRIMARY KEY(event_id, consumer),
           FOREIGN KEY(event_id) REFERENCES company_event_outbox(event_id));
+        CREATE TABLE IF NOT EXISTS company_event_watermarks (
+          consumer TEXT NOT NULL, company_id TEXT NOT NULL, revision INTEGER NOT NULL,
+          source_revision TEXT NOT NULL, acknowledged_at TEXT NOT NULL,
+          PRIMARY KEY(consumer, company_id));
         CREATE INDEX IF NOT EXISTS company_event_outbox_company ON company_event_outbox(company_id, revision);
         ''')
 
@@ -428,12 +432,16 @@ class SQLiteRepository:
             # Incomplete intake remains visible in Companies but cannot safely
             # enter the scrape queue.  A later complete mutation creates it.
             return None
-        if not fact['official_careers_url']:
-            return None
         digest = source_revision(company)
         latest = self.db.execute(
-            'SELECT revision,source_revision FROM company_revisions WHERE company_id=? '
+            'SELECT revision,source_revision,eligible FROM company_revisions WHERE company_id=? '
             'ORDER BY revision DESC LIMIT 1', (fact['company_id'],)).fetchone()
+        # A new incomplete entry waits for the required source fields.  Once a
+        # Company has been eligible, however, removing its URL is a durable
+        # withdrawal: an intake consumer must be able to supersede/cancel any
+        # prior scoped request without guessing from a silent row mutation.
+        if not fact['official_careers_url'] and (not latest or not latest[2]):
+            return None
         if latest and latest[1] == digest:
             return None
         revision = (latest[0] + 1) if latest else 1
@@ -488,8 +496,11 @@ class SQLiteRepository:
             return []
         rows = self.db.execute(
             'SELECT o.payload FROM company_event_outbox o LEFT JOIN company_event_deliveries d '
-            'ON d.event_id=o.event_id AND d.consumer=? WHERE d.event_id IS NULL '
-            'ORDER BY o.created_at,o.company_id,o.revision LIMIT ?', (consumer.strip(), limit)).fetchall()
+            'ON d.event_id=o.event_id AND d.consumer=? LEFT JOIN company_event_watermarks w '
+            'ON w.consumer=? AND w.company_id=o.company_id WHERE d.event_id IS NULL '
+            'AND (w.revision IS NULL OR o.revision>w.revision) '
+            'ORDER BY o.created_at,o.company_id,o.revision LIMIT ?',
+            (consumer.strip(), consumer.strip(), limit)).fetchall()
         return [json.loads(row[0]) for row in rows]
 
     def acknowledge_company_event(self, event_id, consumer, *, source_revision=None):
@@ -501,13 +512,26 @@ class SQLiteRepository:
         if not self._company_event_tables_present():
             raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
         with self.transaction():
-            row = self.db.execute('SELECT source_revision FROM company_event_outbox WHERE event_id=?', (event_id,)).fetchone()
+            row = self.db.execute('SELECT company_id,revision,source_revision FROM company_event_outbox WHERE event_id=?',
+                                  (event_id,)).fetchone()
             if not row:
                 raise RepositoryError('Unknown company event.')
-            if source_revision is not None and source_revision != row[0]:
+            company_id, revision, actual_source_revision = row
+            if source_revision is not None and source_revision != actual_source_revision:
                 raise RepositoryError('Company event acknowledgement has a stale source revision.')
+            watermark = self.db.execute(
+                'SELECT revision,source_revision FROM company_event_watermarks WHERE consumer=? AND company_id=?',
+                (consumer.strip(), company_id)).fetchone()
+            if watermark and watermark[0] > revision:
+                raise RepositoryError('Company event acknowledgement is stale for this consumer revision.')
             self.db.execute('INSERT OR IGNORE INTO company_event_deliveries(event_id,consumer,acknowledged_at) VALUES (?,?,?)',
                             (event_id, consumer.strip(), timestamp()))
+            self.db.execute(
+                'INSERT INTO company_event_watermarks(consumer,company_id,revision,source_revision,acknowledged_at) '
+                'VALUES (?,?,?,?,?) ON CONFLICT(consumer,company_id) DO UPDATE SET '
+                'revision=excluded.revision,source_revision=excluded.source_revision,acknowledged_at=excluded.acknowledged_at '
+                'WHERE excluded.revision>company_event_watermarks.revision',
+                (consumer.strip(), company_id, revision, actual_source_revision, timestamp()))
         return {'event_id': event_id, 'consumer': consumer.strip(), 'acknowledged': True}
 
     def status(self):
