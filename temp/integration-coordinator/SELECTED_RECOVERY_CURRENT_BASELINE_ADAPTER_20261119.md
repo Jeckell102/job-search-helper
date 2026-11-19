@@ -53,6 +53,18 @@ crash/restart, and fake-remote receipt state behavior.  It does **not** prove
 current inbox/receipt/Sheets integration, installation safety, real signer
 availability, or live publication.
 
+An initial broader run failed before assertions because the isolated source
+copy omitted the repository's required `title-blacklist.txt` policy file.
+After restoring that unchanged reference file to the isolated test copy, the
+current receipt and durable-inbox regression set passed:
+
+```text
+74 passed in 7.37 seconds
+```
+
+Combined isolated evidence: **102 passing tests**.  This is still staged
+source evidence only, not installation or live-publish acceptance.
+
 ## Next gate
 
 Port the selected-recovery journal and successor-promotion adapter into a
