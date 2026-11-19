@@ -65,6 +65,29 @@ current receipt and durable-inbox regression set passed:
 Combined isolated evidence: **102 passing tests**.  This is still staged
 source evidence only, not installation or live-publish acceptance.
 
+## Additive current-inbox boundary
+
+The isolated candidate now creates the dedicated
+`exact_selected_legacy_recoveries` table from the current `InventoryInbox`
+schema and adds a narrow `begin_selected_legacy_recovery` method.  Before it
+can freeze a row, the method rechecks the unblocked retained inventory, exact
+legacy source plan and cursor, workbook identity, sealed successor, verified
+authorization pins, and absence of competing exact local, remote, chunk,
+receipt, or all-complete migration ownership.  It creates no receipt, remote
+intent, Google client, or remote write.
+
+The existing fake-remote test fixture was also advanced to the new monotonic
+selected-recovery state names so that it cannot normalize an obsolete
+`LOCAL_COMPLETE` state.  A direct inbox test proves a valid signed candidate
+creates only the `FROZEN` selected-recovery row and no exact local or remote
+state.
+
+Current combined staged command result: **103 passed in 11.39 seconds** across
+selected recovery, local-plan, exact-cycle-sync, durable-inbox, and publication
+receipt coverage.  Promotion into the ordinary v2 local state and the existing
+real receipt/readback path remain unimplemented and must receive independent
+QA before any protected installation.
+
 ## Next gate
 
 Port the selected-recovery journal and successor-promotion adapter into a
