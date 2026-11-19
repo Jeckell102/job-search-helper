@@ -1561,3 +1561,8 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   acknowledgement; the publication receipt table is empty. Do not publish or
   normalize legacy cursors. Evidence:
   `CYCLE_B639_SELECTED_SYNC_READINESS_QA_20261119.md`.
+- Generic recovery design now preserves legacy cursors as local-only evidence:
+  Shield AI requires a new complete v2 receipt chain and Saronic requires
+  verified-prefix plus bounded-suffix conversion. Neither may normal-resume or
+  infer publication. Evidence:
+  `GENERIC_LEGACY_V2_RECOVERY_DESIGN_20261119.md`.
