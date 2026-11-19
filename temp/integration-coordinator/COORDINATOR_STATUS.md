@@ -1577,3 +1577,8 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   It remains local-only and uninstalled pending signer, receipt, remote-intent,
   and readback integration. Evidence:
   `GENERIC_LEGACY_V2_CANDIDATE_QA_ACCEPTANCE_20261119.md`.
+- Receipt-integration design keeps selected prefix conversion local-only, adds
+  a dedicated signed-recovery journal, then reuses exact-v2 receipt/intent/
+  readback only after complete local verification. No normal scraper or broad
+  sync route may invoke it. Evidence:
+  `SELECTED_RECOVERY_RECEIPT_INTEGRATION_DESIGN_20261119.md`.
