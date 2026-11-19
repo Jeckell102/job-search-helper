@@ -319,6 +319,20 @@ partial Google Sheets write alone is not completion.
   keeps that truthful boundary and never replays. Twenty-six focused staging
   checks passed. This is source acceptance only; no service restart or live
   request occurred.
+- Independent QA accepted the final staged real-HTTP proof at source level:
+  it uses the authenticated wrapper route without direct receipt-store access,
+  records a crash-durable pre-settlement authorization before the sole release
+  call, and handles later evidence persistence honestly. Twenty-six focused
+  staging checks passed in independent QA and coordinator rerun. The source is
+  backed up at `12ffb2d`.
+- Fresh read-only Jetson preflight after that source acceptance found
+  `local-ai-orchestrator.service` and `ollama.service` active, health 200/ok,
+  and all three deployed F4 file hashes matching the recorded installed hashes.
+  The control-receipt aggregate is `CANCELLED=1`, `COMPLETED=1`, with no
+  `RUNNING` or `UNCERTAIN` hold. The existing rollback script and source copies
+  remain present. `ollama.service` restart still requires interactive sudo;
+  no live proof, source installation, service restart, receipt mutation, or
+  deployment record update has occurred in this checkpoint.
 
 ## Safety boundaries
 
@@ -333,11 +347,11 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Prepare the accepted staged F4 proof for the guarded Jetson procedure:
-   recheck deployed source identity, service health, rollback evidence, active
-   lane state, and interactive administrator availability before a privileged
-   restart of only `ollama.service`. Until a live proof passes, leave uncertain
-   receipts lane-blocking.
+1. Obtain an interactive administrator-authenticated Jetson terminal for the
+   accepted staged F4 proof. Before running it, copy only the accepted script
+   into the existing scoped F4 record, recheck its hash and the preflight, then
+   restart only `ollama.service` through the script. Record the resulting
+   bounded evidence or failure and leave any uncertain receipt lane-blocking.
 2. Use the accepted M1-M4 reconciliation candidate only through an explicit,
    hash-recorded integration review; do not mechanically apply it to the
    protected checkout.
