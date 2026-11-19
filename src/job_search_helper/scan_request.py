@@ -5,6 +5,13 @@ import json
 
 
 COMPANY_ONLY_MODE = "company-only"
+# A request made while the intake boundary is clear is created synchronously by
+# ``start``.  When another cycle owns the single-writer boundary, the request
+# remains durable and must be admitted within this target after that cycle has
+# completed and the operator invokes ``start`` again.  These are deliberately
+# separate measurements: a paused cycle must not be disguised as an idle one.
+COMPANY_ONLY_IDLE_START_TARGET_SECONDS = 60
+COMPANY_ONLY_BUSY_START_TARGET_SECONDS = 60
 
 
 def cycle_metadata(cycle):
@@ -38,6 +45,13 @@ def requested_scan(engine, state, database):
     request, company_ids = _read_request(path)
     request = dict(request, request_fingerprint=request_fingerprint(request, company_ids))
     mode = request['mode']
+    measurement_cycles = list(state.cycles())
+    if mode == COMPANY_ONLY_MODE:
+        if hasattr(engine.repo, 'read_columns'):
+            measurement_cycles.extend(row for _, row in engine.repo.read_columns(
+                'Scan Cycles', ['Cycle ID', 'Cycle Status', 'Started At', 'Completed At', 'Notes']))
+        else:
+            measurement_cycles.extend(engine.repo.read('Scan Cycles'))
     found = [cycle for cycle in state.cycles() if cycle.get('start_request_id') == request['request_id']]
     if len(found) > 1:
         raise ValueError('Duplicate fresh-scan request IDs require reconciliation.')
@@ -53,6 +67,15 @@ def requested_scan(engine, state, database):
         if status and status['blocking_cycle_ids']:
             raise ValueError(status['recovery'])
         cycle_id = engine.start_cycle(company_ids=company_ids, new_scan_request=request)
+    if mode == COMPANY_ONLY_MODE:
+        cycle = state.cycle(cycle_id)
+        if cycle is None:
+            raise ValueError('Company-only cycle checkpoint is missing; refusing to consume the request.')
+        cycle['intake_start_measurement'] = company_only_intake_start_measurement(
+            request, cycle, measurement_cycles,
+        )
+        state.save_cycle(cycle)
+        engine._sync_cycle(cycle)
     path.replace(path.with_name('last-scan-request.json'))
     if mode == COMPANY_ONLY_MODE:
         print(f'Company-only scan: {cycle_id}. Only {len(company_ids)} declared company ID(s) are queued.', flush=True)
@@ -113,7 +136,7 @@ def request_fingerprint(request, company_ids):
     return hashlib.sha256(encoded).hexdigest()
 
 
-def company_only_queue_status(engine, state, database, *, observed_at=None):
+def company_only_queue_status(engine, state, database, *, observed_at=None, include_remote=True):
     """Read a pending company-only request without changing its durable queue entry."""
     path = database.parent / 'next-scan.json'
     if not path.exists():
@@ -125,7 +148,7 @@ def company_only_queue_status(engine, state, database, *, observed_at=None):
     if observed.tzinfo is None:
         raise ValueError('observed_at must include a timezone.')
     enqueued = _enqueued_at(request)
-    blocking = sorted(_unfinished_cycle_ids(engine, state))
+    blocking = sorted(_unfinished_cycle_ids(engine, state, include_remote=include_remote))
     age_seconds = max(0, int((observed.astimezone(timezone.utc) - enqueued).total_seconds()))
     recovery = (
         'Company-only request is waiting for safe boundary behind unfinished cycle(s): '
@@ -133,21 +156,82 @@ def company_only_queue_status(engine, state, database, *, observed_at=None):
         + '. Keep next-scan.json unchanged; do not delete locks or supersede the cycle. '
           'Resume the blocking cycle with ./job-search-scraper start --resume. '
           'There is no automatic cancel path for an existing cycle.'
+        if blocking else
+        'Company-only request is ready for the next normal ./job-search-scraper start. '
+        'Keep next-scan.json unchanged until that command acknowledges it.'
     )
     return {
+        'state': 'WAITING_SAFE_BOUNDARY' if blocking else 'READY_FOR_START',
         'request_id': request['request_id'],
         'company_ids': list(company_ids),
         'enqueued_at': request['enqueued_at'],
         'queue_age_seconds': age_seconds,
         'blocking_cycle_ids': blocking,
         'recovery': recovery,
+        'intake_start_targets': {
+            'idle_seconds': COMPANY_ONLY_IDLE_START_TARGET_SECONDS,
+            'busy_seconds_after_safe_boundary': COMPANY_ONLY_BUSY_START_TARGET_SECONDS,
+            'busy_boundary': ('the last blocking cycle reaches Complete or Complete with exceptions; '
+                              'the next normal start command admits the durable request'),
+        },
     }
 
 
-def _unfinished_cycle_ids(engine, state):
+def company_only_intake_start_measurement(request, cycle, cycles):
+    """Measure a company-only request without consulting a wall clock.
+
+    The caller supplies the immutable enqueue timestamp, the durable cycle
+    checkpoint, and a captured cycle list.  Keeping this pure makes both the
+    idle and busy target evidence deterministic and prevents a status read
+    from changing a request or a cycle.
+    """
+    if request.get('mode') != COMPANY_ONLY_MODE:
+        raise ValueError('Intake measurement requires a company-only request.')
+    enqueued = _enqueued_at(request)
+    started = _timestamp(cycle.get('started_at'), 'cycle started_at')
+    completed = []
+    for prior in cycles:
+        completed_at = prior.get('completed_at') or prior.get('Completed At')
+        if not completed_at:
+            continue
+        completed_time = _timestamp(completed_at, 'cycle completed_at')
+        if enqueued <= completed_time <= started:
+            completed.append((completed_time, str(prior.get('id') or prior.get('Cycle ID') or '')))
+    if completed:
+        boundary_at, boundary_cycle_id = max(completed)
+        elapsed = max(0, int((started - boundary_at).total_seconds()))
+        return {
+            'condition': 'busy', 'target_seconds': COMPANY_ONLY_BUSY_START_TARGET_SECONDS,
+            'target_anchor': 'safe_boundary_completed_at', 'safe_boundary_cycle_id': boundary_cycle_id,
+            'safe_boundary_at': boundary_at.isoformat(), 'started_at': started.isoformat(),
+            'intake_to_start_seconds': elapsed, 'target_met': elapsed <= COMPANY_ONLY_BUSY_START_TARGET_SECONDS,
+        }
+    elapsed = max(0, int((started - enqueued).total_seconds()))
+    return {
+        'condition': 'idle', 'target_seconds': COMPANY_ONLY_IDLE_START_TARGET_SECONDS,
+        'target_anchor': 'enqueued_at', 'enqueued_at': enqueued.isoformat(), 'started_at': started.isoformat(),
+        'intake_to_start_seconds': elapsed, 'target_met': elapsed <= COMPANY_ONLY_IDLE_START_TARGET_SECONDS,
+    }
+
+
+def _timestamp(value, label):
+    if not isinstance(value, str) or not value:
+        raise ValueError(f'{label} must be an ISO-8601 timestamp.')
+    try:
+        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError as exc:
+        raise ValueError(f'{label} must be an ISO-8601 timestamp.') from exc
+    if parsed.tzinfo is None:
+        raise ValueError(f'{label} must include a timezone.')
+    return parsed.astimezone(timezone.utc)
+
+
+def _unfinished_cycle_ids(engine, state, *, include_remote=True):
     """Return non-superseded local and workbook cycles that still own work."""
     local = state.cycles()
-    if hasattr(engine.repo, 'read_columns'):
+    if not include_remote:
+        remote = []
+    elif hasattr(engine.repo, 'read_columns'):
         remote = [row for _, row in engine.repo.read_columns(
             'Scan Cycles', ['Cycle ID', 'Cycle Status', 'Notes'])]
     else:

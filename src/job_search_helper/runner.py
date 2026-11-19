@@ -67,6 +67,10 @@ Commands:
 
   preflight    Validate access and workbook headers; never change cells.
   status       Read local cycle status without creating or updating state.
+  company-queue-status
+               Read a pending company-only request, its age, blocking cycles,
+               start targets, and safe recovery guidance without changing it.
+               Use --local-only when remote read access is unavailable.
   errors       Show recent per-company scraper errors from the local log.
   reviews      Export the saved pending review queue to a local file.
   review-queue Build read-only FIRST PASS and SECOND PASS review queues.
@@ -221,10 +225,50 @@ def select_start_cycle(engine, state, repo, database, *, resume=False):
     return cycle_id
 
 
-def company_only_queue_status(engine, state, database, *, observed_at=None):
+def company_only_queue_status(engine, state, database, *, observed_at=None, include_remote=True):
     """Expose pending company-only queue age and safe recovery guidance."""
     from .scan_request import company_only_queue_status as read_status
-    return read_status(engine, state, database, observed_at=observed_at)
+    return read_status(engine, state, database, observed_at=observed_at,
+                       include_remote=include_remote)
+
+
+def show_company_only_queue_status(*, database=None, repo=None, local_only=False, observed_at=None):
+    """Print the non-mutating F7 operator surface for a scoped request.
+
+    This command deliberately acquires no writer lock, starts no scan, and
+    never renames the durable request.  The default incorporates the workbook
+    cycle view; ``local_only`` is an explicit degraded read for an access
+    outage and says so in the resulting status.
+    """
+    database = database or state_path()
+    request_path = database.parent / 'next-scan.json'
+    if not request_path.exists():
+        print('Company-only queue: no pending request.')
+        return 0
+    # A missing checkpoint must not be created merely to inspect an intake
+    # request.  An in-memory empty view still reports the request and makes
+    # the lack of local blockers explicit.
+    state = State(str(database), readonly=True) if database.is_file() else State()
+    try:
+        if repo is None and not local_only:
+            _load_environment()
+            repo = get_repository(write=False, interactive=False)
+        if repo is None:
+            from .repository import MemoryRepository
+            repo = MemoryRepository({'Scan Cycles': []})
+        # Construction is read-only; ``dry_run`` is not appropriate here
+        # because Engine deliberately reserves that flag for a MemoryRepository.
+        engine = Engine(repo, state)
+        status = company_only_queue_status(engine, state, database, observed_at=observed_at,
+                                           include_remote=not local_only)
+    finally:
+        state.close()
+    if status is None:
+        print('Company-only queue: no pending company-only request.')
+        return 0
+    status = dict(status, visibility='local-only' if local_only else 'local-and-workbook')
+    print(json.dumps(status, indent=2, sort_keys=True))
+    return 0
 
 
 def active_inbox_cycles(inbox, state, include_blocked=True):
@@ -494,6 +538,18 @@ def main(argv=None):
         return show_performance()
     if argv[0] == "errors":
         return show_errors()
+    if argv[0] == 'company-queue-status':
+        parser = argparse.ArgumentParser(prog='./job-search-scraper company-queue-status')
+        parser.add_argument('--local-only', action='store_true')
+        try:
+            status_args = parser.parse_args(argv[1:])
+        except SystemExit:
+            return 2
+        try:
+            return show_company_only_queue_status(local_only=status_args.local_only)
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
     delegated = {"cleanup-blacklist", "cleanup-titles", "repair-careers-urls", "setup-evidence-tab", "preflight", "status", "reviews", "review-queue", "auth", "test", "demo"}
     if argv[0] in delegated:
         if argv[0] in {"cleanup-blacklist", "cleanup-titles"} and "--dry-run" not in argv and "--apply" not in argv:

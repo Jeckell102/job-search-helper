@@ -281,6 +281,21 @@ class FreshStartLifecycleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'different immutable request content'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
 
+    def test_company_only_request_id_rejects_changed_company_set_replay(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.root / 'next-scan.json'
+        original = ('{"mode":"company-only","request_id":"immutable-scope","company_ids":["C-1"],'
+                    '"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
+        request.write_text(original)
+        cycle = select_start_cycle(self.engine, self.state, self.repo, self.database)
+
+        request.write_text(original.replace('["C-1"]', '["C-0","C-1"]'))
+        with self.assertRaisesRegex(ValueError, 'different immutable request content'):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+
+        self.assertEqual(set(self.state.cycle(cycle)['companies']), {'C-1'})
+        self.assertTrue(request.exists())
+
     def test_company_only_request_waits_without_superseding_active_cycle(self):
         from job_search_helper.runner import company_only_queue_status, select_start_cycle
         active = self.engine.start_cycle(company_ids=['C-0'])
@@ -337,6 +352,32 @@ class FreshStartLifecycleTests(unittest.TestCase):
         self.assertIn('start --resume', status['recovery'])
         self.assertIn('do not delete locks', status['recovery'])
         self.assertTrue((self.root / 'next-scan.json').exists())
+
+    def test_company_queue_status_cli_is_read_only_and_can_degrade_to_local_state(self):
+        from unittest.mock import patch
+        from job_search_helper import runner
+        paused = self.engine.start_cycle(company_ids=['C-0'])
+        cycle = self.state.cycle(paused)
+        cycle['status'] = 'Paused'
+        self.state.save_cycle(cycle)
+        before = self.state.cycle(paused)
+        request = self.root / 'next-scan.json'
+        request.write_text(
+            '{"mode":"company-only","request_id":"operator-status","company_ids":["C-1"],'
+            '"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}'
+        )
+
+        with patch.object(runner, 'state_path', return_value=self.database), \
+                patch.object(runner, 'get_repository') as get_repository:
+            self.assertEqual(runner.main(['company-queue-status', '--local-only']), 0)
+
+        get_repository.assert_not_called()
+        self.assertEqual(self.state.cycle(paused), before)
+        self.assertTrue(request.exists())
+        output = self.output.getvalue()
+        self.assertIn('WAITING_SAFE_BOUNDARY', output)
+        self.assertIn('queue_age_seconds', output)
+        self.assertIn('local-only', output)
 
     def test_company_only_request_requires_immutable_enqueue_timestamp(self):
         from job_search_helper.runner import select_start_cycle

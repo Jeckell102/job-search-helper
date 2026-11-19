@@ -10,7 +10,8 @@ from job_search_helper.engine import Engine, State
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.repository import MemoryRepository
 from job_search_helper.runner import active_inbox_cycles, resolve_cycle
-from job_search_helper.scan_request import requested_scan, superseded_cycle_ids
+from job_search_helper.scan_request import (company_only_intake_start_measurement,
+                                             requested_scan, superseded_cycle_ids)
 from test_fetch_pool import company, inventory
 
 
@@ -52,6 +53,30 @@ class FreshScanRequestTests(unittest.TestCase):
         second = requested_scan(self.engine,self.state,self.database)
         self.assertEqual(first,second)
         self.assertEqual(len(self.state.cycles()),2)
+
+    def test_company_only_intake_measurement_has_deterministic_idle_and_busy_targets(self):
+        request = {
+            'mode': 'company-only', 'request_id': 'measurement', 'company_ids': ['C-1'],
+            'source_revision': 'rev-1', 'enqueued_at': '2026-11-18T00:00:00Z',
+        }
+        idle = company_only_intake_start_measurement(
+            request, {'started_at': '2026-11-18T00:00:45Z'}, [],
+        )
+        self.assertEqual(idle['condition'], 'idle')
+        self.assertEqual(idle['intake_to_start_seconds'], 45)
+        self.assertEqual(idle['target_seconds'], 60)
+        self.assertTrue(idle['target_met'])
+
+        busy = company_only_intake_start_measurement(
+            request, {'started_at': '2026-11-18T00:02:50Z'}, [{
+                'id': 'CYC-BLOCKER', 'completed_at': '2026-11-18T00:02:00Z',
+            }],
+        )
+        self.assertEqual(busy['condition'], 'busy')
+        self.assertEqual(busy['safe_boundary_cycle_id'], 'CYC-BLOCKER')
+        self.assertEqual(busy['intake_to_start_seconds'], 50)
+        self.assertEqual(busy['target_seconds'], 60)
+        self.assertTrue(busy['target_met'])
 
     def test_old_inbox_is_preserved_but_not_replayed_by_normal_start(self):
         self.inbox.save(self.old,'C-0',{'jobs':[],'inventory_status':'blocked'})
