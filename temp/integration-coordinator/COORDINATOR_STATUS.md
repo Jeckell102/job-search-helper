@@ -334,6 +334,15 @@ partial Google Sheets write alone is not completion.
   remain present. `ollama.service` restart still requires interactive sudo;
   no live proof, source installation, service restart, receipt mutation, or
   deployment record update has occurred in this checkpoint.
+- The exact reviewed proof is now installed as
+  `project-records/f4-inference-receipts-20261118/run_synthetic_http_recovery.py`.
+  Its installed SHA-256 matches the GitHub-backed reviewed source, its mode is
+  0700, its syntax parsed successfully, and both required services remained
+  active. The placement is recorded append-only in the Jetson changelog,
+  register, and a dedicated staging receipt. No proof request, receipt
+  mutation, or service restart has occurred; the older
+  `run_synthetic_g1g2g3.py` remains rejected historical evidence and must not
+  be run.
 - A second fresh preflight confirmed the same active services, 200 health, and
   terminal-only receipt aggregate. A `sudo -n` restart attempt returned 1
   without changing service state, confirming that only an interactive
@@ -353,11 +362,11 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Obtain an interactive administrator-authenticated Jetson terminal for the
-   accepted staged F4 proof. Before running it, copy only the accepted script
-   into the existing scoped F4 record, recheck its hash and the preflight, then
-   restart only `ollama.service` through the script. Record the resulting
-   bounded evidence or failure and leave any uncertain receipt lane-blocking.
+1. Obtain an interactive administrator-authenticated Jetson terminal and run
+   only the installed `run_synthetic_http_recovery.py`. It will restart only
+   `ollama.service` twice. Record the resulting bounded evidence or failure,
+   independently verify the authoritative receipt and service state, and leave
+   any uncertain receipt lane-blocking. Do not rerun blindly after a failure.
 2. Use the accepted M1-M4 reconciliation candidate only through an explicit,
    hash-recorded integration review; do not mechanically apply it to the
    protected checkout.
