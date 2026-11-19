@@ -36,12 +36,13 @@ documented matrix amendment.
   be reconciled or explicitly retained under the normal safeguards before any
   bounded publisher/readback. Current public-source evidence also remains open.
 - A bounded read-only workbook inspection confirmed that the 20 held
-  `Opportunities` `Salary / Range` conflicts contain independent remote values;
-  at least one is field-inappropriate content rather than a salary value. The
-  remaining conflict is a missing remote `Companies` row. These are protected
-  user-data discrepancies, not a permission to bulk-import, clear, restore, or
-  overwrite any value. They require an owner-approved, record-by-record
-  reconciliation decision.
+  `Opportunities` `Salary / Range` conflicts contain independent estimated
+  salary ranges when matched by immutable Opportunity ID. The initial
+  row-number-based inspection was invalid and its field-content classification
+  was withdrawn before any mutation. The remaining conflict is a missing remote
+  `Companies` row. These are protected user-data discrepancies, not a
+  permission to bulk-import, clear, restore, or overwrite any value. They
+  require an owner-approved, record-by-record reconciliation decision.
 - Historical broad in-progress cycles remain recorded. A company-only run is
   unsafe until the exact recovery contract and current scope guards are
   reviewed.

@@ -536,11 +536,13 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   cell and 21 protected remote-edit conflicts. No Google connection or write
   was attempted. This is a new explicit blocker ahead of any bounded publisher
   request.
-- A bounded read-only workbook inspection then established that the 20
-  Opportunities `Salary / Range` conflicts contain remote values, including at
-  least one field-inappropriate value, and the 21st conflict is one missing
-  Companies row. The sole dirty delivery is the Saronic Technologies
-  `Last Checked` update; it shares a protected salary conflict, so the normal
+- A first bounded workbook inspection incorrectly treated local row identifiers
+  as current remote sheet rows. It changed no data and was caught before any
+  action. A corrected identity-bound reread located each conflict by immutable
+  Opportunity ID and showed all 20 remote `Salary / Range` values are estimated
+  salary ranges; the 21st conflict remains one missing Companies row named
+  `Prepared`. The sole dirty delivery is the Saronic Technologies `Last
+  Checked` update; it shares a protected salary conflict, so the normal
   publisher correctly excludes that row. No conflict, remote value, local
   record, or pending receipt was changed. This is an owner-approved,
   record-by-record reconciliation gate; no bulk import, overwrite, restore,
