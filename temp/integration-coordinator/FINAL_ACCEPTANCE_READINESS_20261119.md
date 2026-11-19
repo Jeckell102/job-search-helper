@@ -30,11 +30,12 @@ documented matrix amendment.
   rechecked. This closes F4 only. It does not authorize broad inference,
   recovery, release, or final acceptance. See
   `F4_LIVE_PROOF_VERIFICATION.md` and `COORDINATOR_STATUS.md`.
-- The local publisher is not ready for an interactive Google session: its
-  read-only status reports one pending `Opportunities` `Last Checked` cell and
-  21 protected remote-edit conflicts. The pending cell and every conflict must
-  be reconciled or explicitly retained under the normal safeguards before any
-  bounded publisher/readback. Current public-source evidence also remains open.
+- The guarded salary-fallback and normal-publisher gate has passed: 20 eligible
+  estimated salary values reconciled only into blank local extractions, the
+  single pending `Last Checked` receipt settled without replay, and final
+  Google readback reported zero pending cells/rows. The missing `Prepared`
+  Company remains deliberately held. Current public-source evidence remains
+  open.
 - A bounded read-only workbook inspection confirmed that the 20 held
   `Opportunities` `Salary / Range` conflicts contain independent estimated
   salary ranges when matched by immutable Opportunity ID. The initial

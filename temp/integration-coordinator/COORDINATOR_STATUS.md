@@ -58,7 +58,7 @@ ten-minute user update. Update it immediately after any material result.
   supersede unfinished work or accept an altered retry. Independent source
   review accepted the offline proof; guarded operational proof is still
   required.
-- Milestone 2: 90% — durable Company revisions, reconciliation, and scoped
+- Milestone 2: 92% — durable Company revisions, reconciliation, and scoped
   request provenance are implemented and independently reviewed. A narrow
   current-Company revision lookup now exists for the coordinator boundary;
   the active local store now has the additive event/outbox foundation. The
@@ -558,6 +558,13 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   reviewed guarded source, then perform a bounded identity- and
   current-state-checked reconciliation/readback under the existing roadmap
   authorization. The live publisher gate remains otherwise held.
+- Guarded salary-fallback reconciliation is now accepted: 20 eligible
+  spreadsheet estimates reconciled into blank local extractions, the sole
+  pending `Last Checked` receipt settled without replay, and a final no-op
+  Google readback confirmed zero pending rows/cells and only the intentionally
+  held missing `Prepared` Company conflict. No scraper, broad recovery, or
+  automatic queue was enabled. See
+  `SALARY_FALLBACK_LIVE_RECONCILIATION_20261119.md`.
 - A separate read-only scope proposal now identifies `COMP-0024` Draper as a
   possible Workday third distinct-structure candidate. Its historical evidence
   includes a human-verification block and no current-cycle inventory, so it is
