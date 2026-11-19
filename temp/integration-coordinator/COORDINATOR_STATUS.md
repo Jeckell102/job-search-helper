@@ -173,6 +173,12 @@ partial Google Sheets write alone is not completion.
   intentionally empty until F5 qualification. No profile can start a worker.
   Forty-one focused coordinator checks and fifty-seven local classifier/store
   checks passed.
+- F4 recovery assessment confirmed the remaining Jetson boundary: MuleLab
+  already prevents duplicate or unaccounted inference after a transport loss,
+  but the current synchronous Jetson endpoint cannot report retained request
+  state or acknowledge cancellation by MuleLab request ID. This remains a
+  safe hold, not F4 closure; the bounded protocol and test requirements are
+  recorded in `F4_INFERENCE_RECOVERY_GAP.md`. No Jetson modification occurred.
 - A fresh publication preflight found 60 pending system-field updates in the
   local outbox. Live read-only comparison confirmed that 59 already match the
   workbook and identified one remaining `Last Checked` date for Saronic
@@ -197,8 +203,8 @@ partial Google Sheets write alone is not completion.
 1. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
-2. Continue offline-safe repair workflow and release-gate work in the isolated
-   feature copy.
+2. Implement and independently test the bounded F4 inference status/cancel
+   protocol in isolated source, before any Jetson deployment.
 3. Only after publication is clean, freshly recheck processes, locks,
    local/workbook cycle identity, deployed source identity, and sync health;
    then consider the guarded recovery command only if every preflight guard
