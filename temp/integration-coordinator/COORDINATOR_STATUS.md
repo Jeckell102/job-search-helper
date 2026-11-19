@@ -1526,3 +1526,15 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   qualified only for a source-reviewed configuration proposal, not a release
   or pilot. Evidence: `COMP-0164_ALLEN_CONTROL_PUBLIC_PREFLIGHT_20261119.md`.
   No project or external state changed.
+- Independent QA accepts the completed 13-file legacy migration source install
+  but holds any Davidson/local adoption: the current adoption CLI permits a
+  freshly self-generated binding JSON without reviewer identity or approval
+  provenance. Exact pins prevent drift, not unauthorized self-approval.
+  `DAVIDSON_LEGACY_MIGRATION_APPROVAL_20261119.json` remains candidate evidence
+  only. Evidence: `LEGACY_MIGRATION_INDEPENDENT_QA_20261119.md`.
+- COMP-0066 local normal-dispatch evidence now verifies the existing exact
+  Forterra repair and Rippling parser with a disposable 62-row 20/20/20/2
+  fixture. It requested only pages 0--3, not the HTTP-200 empty page 4, and
+  the adjacent shared-board/routing suite passed 26/26. No source rewrite is
+  justified; live pilot/release/independent-QA gates remain open. Evidence:
+  `COMP-0066_FORTERRA_LOCAL_NORMAL_DISPATCH_EVIDENCE_20261119.md`.
