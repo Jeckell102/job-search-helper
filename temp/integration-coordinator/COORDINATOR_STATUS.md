@@ -156,6 +156,10 @@ partial Google Sheets write alone is not completion.
   writes a reversible prior-stage receipt before releasing a safe boundary.
   Thirty-nine focused recovery/scheduling checks passed. It has not been run
   against the live 764-Company checkpoint.
+- The explicit `recover-interrupted-cycle` command is independently accepted:
+  it requires the exact cycle ID, a reason, and `--apply`, uses the normal
+  writer/synchronization boundary, and cannot start/resume a scrape or delete
+  locks. Forty focused recovery/scheduling checks passed.
 
 ## Safety boundaries
 
@@ -170,8 +174,8 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Save the independently accepted recovery-pause checkpoint to the scoped
+1. Save the independently accepted recovery-command checkpoint to the scoped
    GitHub branch without disturbing unrelated feature-worktree changes.
-2. Add the operator-facing, explicitly named recovery command and its
-   fresh-state preflight; then independently review it before considering the
-   guarded live pause of the retained 764-Company checkpoint.
+2. Freshly recheck processes, locks, local/workbook cycle identity and sync
+   health; then use the guarded recovery command only if every preflight guard
+   remains true.

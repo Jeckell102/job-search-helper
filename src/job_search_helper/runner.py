@@ -71,6 +71,9 @@ Commands:
                Read a pending company-only request, its age, blocking cycles,
                start targets, and safe recovery guidance without changing it.
                Use --local-only when remote read access is unavailable.
+  recover-interrupted-cycle
+               Explicitly pause one exact inactive cycle for recovery. Requires
+               --cycle-id, --reason, and --apply; preserves its checkpoint.
   errors       Show recent per-company scraper errors from the local log.
   reviews      Export the saved pending review queue to a local file.
   review-queue Build read-only FIRST PASS and SECOND PASS review queues.
@@ -499,6 +502,31 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                 state.close()
 
 
+def pause_interrupted_cycle(cycle_id, reason, *, database=None):
+    """Run the explicit recovery pause through the normal writer/sync boundary."""
+    if not isinstance(cycle_id, str) or not cycle_id.strip():
+        raise ValueError('Use an exact --cycle-id for interrupted-cycle recovery.')
+    if not isinstance(reason, str) or not reason.strip():
+        raise ValueError('Use a written --reason for interrupted-cycle recovery.')
+    _load_environment()
+    database = database or state_path()
+    database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
+        repo = get_repository(write=True, interactive=True, renew_both=True)
+        repo.validate_schema()
+        if getattr(repo, 'is_local', False) is True:
+            from .run_sync import run_scoped_sync
+            resources.enter_context(run_scoped_sync(repo, database))
+        state = State(str(database))
+        try:
+            engine = Engine(repo, state, dry_run=False)
+            result = engine.pause_interrupted_cycle(cycle_id, reason=reason)
+            print('Interrupted cycle paused safely: ' + json.dumps(result, sort_keys=True), flush=True)
+            return result
+        finally:
+            state.close()
+
+
 def show_performance():
     path = state_path().parent / "scraper-performance.json"
     print(path.read_text() if path.exists() else "No performance measurements saved yet.")
@@ -574,6 +602,24 @@ def main(argv=None):
             return 2
         try:
             return show_company_only_queue_status(local_only=status_args.local_only)
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+    if argv[0] == 'recover-interrupted-cycle':
+        parser = argparse.ArgumentParser(prog='./job-search-scraper recover-interrupted-cycle')
+        parser.add_argument('--cycle-id', required=True)
+        parser.add_argument('--reason', required=True)
+        parser.add_argument('--apply', action='store_true')
+        try:
+            recovery_args = parser.parse_args(argv[1:])
+        except SystemExit:
+            return 2
+        if not recovery_args.apply:
+            print('ERROR: recovery pause changes only the named cycle; rerun with --apply after reviewing the ID and reason.', file=sys.stderr)
+            return 2
+        try:
+            pause_interrupted_cycle(recovery_args.cycle_id, recovery_args.reason)
+            return 0
         except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1

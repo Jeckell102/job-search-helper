@@ -16,6 +16,13 @@ class DummyInbox:
 
 
 class RunnerCycleSelectionTests(unittest.TestCase):
+    def test_recovery_command_requires_explicit_apply(self):
+        from job_search_helper.runner import main
+        output = StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(main(['recover-interrupted-cycle', '--cycle-id', 'CYC-1',
+                                   '--reason', 'planned recovery']), 2)
+
     def test_summary_separates_scrape_completion_from_global_review_backlog(self):
         output = StringIO()
         with redirect_stdout(output):
