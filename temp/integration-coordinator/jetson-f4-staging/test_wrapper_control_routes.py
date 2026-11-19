@@ -143,6 +143,22 @@ class WrapperControlRouteTests(unittest.TestCase):
         self.assertNotIn('fingerprint', payload)
         self.assertNotIn('owner_generation', payload)
 
+    def test_orphan_recovery_rejects_non_post_methods_without_state_change(self):
+        request_id, fingerprint, owner = 'a' * 32, 'b' * 64, 'c' * 64
+        binding = {'request_fingerprint': fingerprint, 'owner_generation': owner}
+        g1 = {'service': 'ollama.service', 'pid': 101, 'start_monotonic': 201}
+        self.httpd.wrapper_control.begin(request_id, fingerprint, owner, backend_generation=g1)
+        control_path = self.httpd.wrapper_control.path
+        self.httpd.wrapper_control = self.server_module.InferenceControlStore(control_path)
+        self.httpd.backend_generation = lambda: {'service': 'ollama.service', 'pid': 102, 'start_monotonic': 202}
+        path = '/api/wrapper-control/' + request_id + '/orphan-recovery'
+        for method in ('GET', 'DELETE'):
+            with self.subTest(method=method):
+                status, _ = self.request(method, path, authorized=True, binding=binding,
+                                         data={'action': 'observe'} if method == 'DELETE' else None)
+                self.assertEqual(status, 405)
+        self.assertIsNone(self.httpd.wrapper_control.status(request_id)['_recovery_generation'])
+
 
 if __name__ == '__main__':
     unittest.main()

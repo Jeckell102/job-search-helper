@@ -201,6 +201,8 @@ class Handler(BaseHTTPRequestHandler):
             recovery_prefix='/api/wrapper-control/'
             recovery_suffix='/orphan-recovery'
             if path.startswith(recovery_prefix) and path.endswith(recovery_suffix):
+                if method!='POST':
+                    self.response(405, {'error':'Orphan recovery requires POST.'}); return
                 if not self.wrapper_auth():
                     self.response(403, {'error':'Unauthorized'}); return
                 request_id=path[len(recovery_prefix):-len(recovery_suffix)]

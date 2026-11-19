@@ -32,7 +32,7 @@ or model output into the records or GitHub.
    do not export tasks, chat history, credentials, or receipt rows.
 5. Record that the deployed wrapper endpoint is still the old implementation
    before the release. The source checkpoint for the proposed release is Git
-   commit `9dd1070` on `codex/integration-automation-20261118`.
+   commit `df226de` on `codex/integration-automation-20261118`.
 6. Save a consistent recovery archive using the existing Jetson/MuleLab
    encrypted recovery procedure and verify its checksum plus an isolated
    restore/integrity check. Save a separate source rollback copy of every
@@ -51,7 +51,7 @@ or model output into the records or GitHub.
   restart. If it has active work, leave the deployment pending.
 - A rollback script or exact manual rollback command is dry-run validated
   against the copied source list without changing the live service.
-- The source-level suite remains green: 34 MuleLab checks and 13 staged Jetson
+- The source-level suite remains green: 35 MuleLab checks and 16 staged Jetson
   checks. The endpoint tests need an ephemeral loopback server and should only
   run in an approved local test environment.
 - A fresh independent reviewer has accepted the final staged diff including

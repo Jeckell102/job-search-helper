@@ -247,8 +247,8 @@ partial Google Sheets write alone is not completion.
   to `ollama.service` generation (main PID plus systemd monotonic start time),
   not to an opaque HTTP timeout. `F4_BACKEND_INACTIVITY_CONTRACT.md` defines a
   fail-closed, owner-bound settlement after a deliberate recorded Ollama
-  restart proves the original process generation ended. This is a proposed
-  contract, not yet source code, deployment, or F4 closure.
+  restart proves the original process generation ended. The contract is now
+  implemented in the staged source checkpoint, but not deployed or F4 closure.
 - Independent review rejected the first backend-generation admission slice: an
   Ollama restart can occur between recorded generation G1 and native dispatch,
   allowing the lost request to run on G2. A corrected isolated implementation
@@ -262,6 +262,11 @@ partial Google Sheets write alone is not completion.
   the distinct replacement generation proves both potentially executing
   predecessors absent. The staged suite passed 16 checks and the focused
   MuleLab suite passed 35 checks. This is not deployment approval.
+- Follow-up route review found that the orphan-recovery path did not initially
+  restrict its HTTP method. The isolated route now accepts only `POST`; `GET`
+  and `DELETE` are proven to leave the receipt unchanged. The corrected staged
+  suite passed 17 checks and the focused host suite passed 27 checks. Fresh
+  independent confirmation is still required before deployment.
 
 ## Safety boundaries
 
@@ -276,16 +281,12 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Implement and independently review the fail-closed backend-generation
-   contract in `F4_BACKEND_INACTIVITY_CONTRACT.md`; live-test it only through
-   the controlled Jetson change path.
+1. Perform the bounded F4 Jetson rollout only after fresh preflight, backup,
+   and an exact Jetson change-log entry; then live-test it through the
+   controlled change path.
 2. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
-3. After F4 source re-review accepts, perform the bounded F4
-   Jetson rollout only if its remaining checks are satisfied. First capture a
-   live preflight and backup; then record the exact change, verification, and
-   rollback evidence in the existing Jetson modification log.
 3. Only after publication is clean, freshly recheck processes, locks,
    local/workbook cycle identity, deployed source identity, and sync health;
    then consider the guarded recovery command only if every preflight guard

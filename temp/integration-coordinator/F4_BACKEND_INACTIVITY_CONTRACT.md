@@ -1,7 +1,8 @@
 # F4 backend-inactivity contract
 
-Status: proposed implementation contract, 2026-11-19. Derived from a
-read-only live Jetson inspection. No Jetson service was changed.
+Status: staged and independently reviewed in Git checkpoint `df226de`,
+2026-11-19. Derived from a read-only live Jetson inspection. No Jetson service
+was changed.
 
 ## Why the existing design is incomplete
 
@@ -124,5 +125,5 @@ lost response from being replayed.
 - The service restart itself must be recorded in the Jetson change log and the
   F4 project-records directory with before/after generation values, no private
   request data, and rollback evidence.
-- Until this contract is implemented and live-tested, the existing permanent
+- Until this contract is deployed and live-tested, the existing permanent
   `UNCERTAIN` hold is correct. It is not a completed F4 recovery capability.
