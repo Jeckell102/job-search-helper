@@ -1502,3 +1502,13 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   proven. It remains frozen and is not a company-only pilot candidate.
   Evidence: `COMP-0072_GAASI_PUBLIC_PREFLIGHT_20261119.md`. No project or
   external state changed.
+- The F2/F8 lifecycle ledger is now installed into the actual idle MuleLab
+  coordinator target after an independent 98-check target-overlay pass. Its
+  five-file installation used the retained coordinator deployment lock and
+  recorded `/tmp/jsh-f2f8-ledger-20261119T204312Z-q38be4pi/manifest.json` as
+  `INSTALLED_HASH_VERIFIED`; a fresh target verification passed all 98 checks.
+  The coordinator now retains conflict evidence and exposes
+  `ROLLBACK_REQUIRED` as an operator fact, while F8 retention counts include
+  the two new tables and automatic cleanup remains false. It does not dispatch
+  work or execute rollback. No workers, scraper, queue, Google, job data, or
+  release action started during installation.
