@@ -433,12 +433,17 @@ class Engine:
         if unfinished_remote and new_scan_request is None:
             raise ValueError("An unfinished workbook cycle exists. Resume its Cycle ID.")
         rows = self._company_rows()
-        selected = set(company_ids or [])
-        if selected and selected - {r.get("Company ID") for r in rows}:
+        # ``None`` is the only spelling for an all-company cycle.  In
+        # particular, an omitted or empty company-only request must never
+        # silently widen into a full scan.
+        selected = None if company_ids is None else set(company_ids)
+        if selected is not None and not selected:
+            raise ValueError("Company-only cycle requires at least one Company ID")
+        if selected is not None and selected - {r.get("Company ID") for r in rows}:
             raise ValueError("Unknown Company ID in requested scope")
         scope = {}
         for company in rows:
-            if selected and company.get("Company ID") not in selected:
+            if selected is not None and company.get("Company ID") not in selected:
                 continue
             if str(company.get("Company Status", "Active")).strip().casefold() in {"pause", "paused", "remove"}:
                 continue
@@ -449,7 +454,7 @@ class Engine:
         if not scope:
             raise ValueError("No active companies selected")
         cycle = {"id": "CYC-" + uuid.uuid4().hex[:12].upper(), "started_at": now(), "status": "In Progress",
-                 "all": not bool(selected), "companies": scope}
+                 "all": selected is None, "companies": scope}
         if new_scan_request is not None:
             last = set(new_scan_request.get('start_last', []))
             cycle['companies'] = dict(sorted(scope.items(), key=lambda pair: pair[0] in last))

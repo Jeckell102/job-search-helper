@@ -241,6 +241,67 @@ class FreshStartLifecycleTests(unittest.TestCase):
         self.assertTrue(request.exists())
         self.assertEqual(self.state.cycles(), [])
 
+    def test_company_only_request_starts_only_declared_company(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.root / 'next-scan.json'
+        request.write_text('{"mode":"company-only","request_id":"one-company","company_ids":["C-1"]}')
+
+        cycle = select_start_cycle(self.engine, self.state, self.repo, self.database)
+
+        self.assertEqual(set(self.state.cycle(cycle)['companies']), {'C-1'})
+        self.assertFalse(self.state.cycle(cycle)['all'])
+        self.assertFalse(request.exists())
+        self.assertTrue((self.root / 'last-scan-request.json').exists())
+
+    def test_company_only_request_id_reuses_started_cycle_after_interrupted_receipt(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.root / 'next-scan.json'
+        payload = '{"mode":"company-only","request_id":"deduplicate","company_ids":["C-1"]}'
+        request.write_text(payload)
+        first = select_start_cycle(self.engine, self.state, self.repo, self.database)
+
+        # Models a crash after cycle creation but before the request receipt
+        # rename: retrying the same durable request cannot create another run.
+        request.write_text(payload)
+        second = select_start_cycle(self.engine, self.state, self.repo, self.database)
+
+        self.assertEqual(first, second)
+        self.assertEqual(len(self.state.cycles()), 1)
+        self.assertEqual(set(self.state.cycle(first)['companies']), {'C-1'})
+
+    def test_company_only_request_waits_without_superseding_active_cycle(self):
+        from job_search_helper.runner import select_start_cycle
+        active = self.engine.start_cycle(company_ids=['C-0'])
+        request = self.root / 'next-scan.json'
+        request.write_text('{"mode":"company-only","request_id":"waiting","company_ids":["C-1"]}')
+
+        with self.assertRaisesRegex(ValueError, f'safe boundary.*{active}'):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+
+        self.assertTrue(request.exists())
+        self.assertEqual(set(self.state.cycle(active)['companies']), {'C-0'})
+        self.assertEqual(len(self.state.cycles()), 1)
+
+    def test_company_only_request_rejects_missing_or_unknown_ids_without_full_scan(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.root / 'next-scan.json'
+        request.write_text('{"mode":"company-only","request_id":"missing","company_ids":[]}')
+        with self.assertRaisesRegex(ValueError, 'refusing to widen'):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+        self.assertEqual(self.state.cycles(), [])
+        self.assertTrue(request.exists())
+
+        request.write_text('{"mode":"company-only","request_id":"unknown","company_ids":["C-404"]}')
+        with self.assertRaisesRegex(ValueError, 'Unknown Company ID'):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+        self.assertEqual(self.state.cycles(), [])
+        self.assertTrue(request.exists())
+
+    def test_engine_rejects_empty_explicit_company_scope(self):
+        with self.assertRaisesRegex(ValueError, 'requires at least one'):
+            self.engine.start_cycle(company_ids=[])
+        self.assertEqual(self.state.cycles(), [])
+
     def test_blocked_failures_remain_separate_from_partial_and_skipped_counts(self):
         from job_search_helper.ats import Inventory
         from job_search_helper.runner import _print_run_summary
