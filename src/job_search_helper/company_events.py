@@ -55,6 +55,33 @@ def source_revision(company):
     return sha256(encoded.encode("utf-8")).hexdigest()
 
 
+def current_company_source_revision(repository, company_id):
+    """Read one eligible Company's current revision from the local authority.
+
+    This is the narrow trust boundary used by the external wrapper coordinator.
+    It intentionally returns no revision for missing, duplicate, malformed, or
+    paused Companies: any of those conditions must keep a previously held
+    repair paused instead of allowing a caller to reuse stale scope.
+    """
+    if not isinstance(company_id, str) or not company_id.strip():
+        return None
+    try:
+        matches = repository.matches("Companies", {"Company ID": company_id.strip()})
+        if len(matches) != 1:
+            return None
+        company = matches[0][1]
+        if not canonical_company_fact(company)["eligible"]:
+            return None
+        return source_revision(company)
+    except (RepositoryError, ValueError, TypeError):
+        return None
+
+
+def company_revision_resolver(repository):
+    """Make the coordinator's Company-freshness callback from one repository."""
+    return lambda company_id: current_company_source_revision(repository, company_id)
+
+
 def event_kind(fact):
     if fact["eligible"]:
         return "company.eligible"

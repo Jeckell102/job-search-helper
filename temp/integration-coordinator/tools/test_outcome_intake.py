@@ -170,6 +170,27 @@ class HeldRepairPromotionTests(coordinator_fixture.CoordinatorTests):
             }})
         self.assertEqual(self.co.store.get(response['id'])['status'], 'PAUSED')
 
+    def test_promoted_repair_needs_authoritative_current_company_revision_before_resume(self):
+        repair, response = self.promoted()
+        with self.assertRaisesRegex(ValueError, 'authoritative current Company revision'):
+            self.co.command({'action': 'resume', 'id': response['id']})
+        self.assertEqual(self.co.store.get(response['id'])['status'], 'PAUSED')
+        self.co.store.company_revision_resolver = lambda company_id: 'rev-1'
+        self.co.command({'action': 'resume', 'id': response['id']})
+        self.assertEqual(self.co.store.get(response['id'])['status'], 'QUEUED')
+
+    def test_stale_promoted_repair_cannot_resume_or_be_claimed(self):
+        repair, response = self.promoted()
+        self.co.store.company_revision_resolver = lambda company_id: 'rev-newer'
+        with self.assertRaisesRegex(ValueError, 'authoritative current Company revision'):
+            self.co.command({'action': 'resume', 'id': response['id']})
+        self.co.store.update(response['id'], status='QUEUED', stop_requested=False)
+        self.assertIsNone(self.co.store.claim_queued(response['id']))
+        state = self.co.store.get(response['id'])
+        self.assertEqual(state['status'], 'PAUSED')
+        self.assertTrue(state['stop_requested'])
+        self.assertIn('no longer current', state['reason'])
+
 
 if __name__ == '__main__':
     unittest.main()

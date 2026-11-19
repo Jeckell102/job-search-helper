@@ -3,7 +3,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from job_search_helper.company_events import canonical_company_fact, source_revision
+from job_search_helper.company_events import (canonical_company_fact,
+                                               company_revision_resolver,
+                                               current_company_source_revision,
+                                               source_revision)
 from job_search_helper.repository import RepositoryError, SCHEMAS
 from job_search_helper.sqlite_repository import SQLiteRepository
 
@@ -37,6 +40,15 @@ class CompanyEventOutboxTests(unittest.TestCase):
         after = company(Notes='second', **{'Official Careers URL': 'https://jobs.example.test/acme'})
         self.assertEqual(source_revision(before), source_revision(after))
         self.assertTrue(canonical_company_fact(before)['eligible'])
+
+    def test_current_company_revision_resolver_reads_only_one_eligible_current_company(self):
+        expected = source_revision(self.repo.read('Companies')[0])
+        resolver = company_revision_resolver(self.repo)
+        self.assertEqual(current_company_source_revision(self.repo, 'COMP-1'), expected)
+        self.assertEqual(resolver('COMP-1'), expected)
+        self.assertIsNone(resolver('COMP-missing'))
+        self.mutation(**{'Company Status': 'Paused'})
+        self.assertIsNone(resolver('COMP-1'))
 
     def test_supported_mutation_commits_company_and_eligible_event_together(self):
         result = self.mutation(**{'ATS / Source': 'Lever'})

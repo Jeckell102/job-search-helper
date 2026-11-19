@@ -114,8 +114,8 @@ def estimate(messages, schemas):
 
 
 class Coordinator:
-    def __init__(self, base=None, model=infer, budget=estimate):
-        self.store = Store(base or code.BASE / 'tasks')
+    def __init__(self, base=None, model=infer, budget=estimate, *, company_revision_resolver=None):
+        self.store = Store(base or code.BASE / 'tasks', company_revision_resolver=company_revision_resolver)
         self.model, self.budget = model, budget
         self.workflow_version = 2
         self.wake = threading.Event()

@@ -99,8 +99,11 @@ def canonical_scrape_outcome(value):
 
 
 class Store(CampaignStore, InferenceStore):
-    def __init__(self, base):
+    def __init__(self, base, *, company_revision_resolver=None):
         self.base = Path(base)
+        # Provided only by the Job Search Helper boundary.  An operator command
+        # cannot substitute an old revision for a fresh Company lookup.
+        self.company_revision_resolver = company_revision_resolver
         self.base.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.path = self.base / 'tasks.sqlite3'
         self.export_lock = threading.Lock()
@@ -152,8 +155,11 @@ class Store(CampaignStore, InferenceStore):
         """
         try:
             from job_search_helper.outcomes import OutcomeFactsError, classify_outcome
+        except ImportError as exc:
+            raise ValueError(f'Invalid trusted scrape outcome facts: {exc}') from exc
+        try:
             canonical = canonical_scrape_outcome(classify_outcome(facts))
-        except (ImportError, OutcomeFactsError) as exc:
+        except OutcomeFactsError as exc:
             raise ValueError(f'Invalid trusted scrape outcome facts: {exc}') from exc
         identity = canonical['identity']
         repair_key = None
@@ -251,6 +257,39 @@ class Store(CampaignStore, InferenceStore):
             db.execute('UPDATE repair_intake SET task_id=?,status=? WHERE repair_key=?',
                        (state['id'], 'PROMOTED_PAUSED', repair_key))
         return state
+
+    def _repair_revision_is_current(self, state):
+        """Return whether an M4 repair still matches the authoritative Company.
+
+        A missing/unavailable resolver is deliberately unsafe for a promoted
+        repair.  Generic pre-existing coordinator tasks retain their original
+        behavior because they are not owned by this Company-event handoff.
+        """
+        provenance = state.get('repair_provenance')
+        if not provenance:
+            return True
+        if not isinstance(provenance, dict):
+            return False
+        company_id = provenance.get('company_id')
+        expected = provenance.get('source_revision')
+        if (not isinstance(company_id, str) or not company_id
+                or not isinstance(expected, str) or not expected):
+            return False
+        identity = state.get('integration_identity') or {}
+        if identity.get('company_id') != company_id:
+            return False
+        resolver = self.company_revision_resolver
+        if not callable(resolver):
+            return False
+        try:
+            actual = resolver(company_id)
+        except Exception:
+            return False
+        return isinstance(actual, str) and actual == expected
+
+    def _require_current_repair_revision(self, state):
+        if state.get('repair_provenance') and not self._repair_revision_is_current(state):
+            raise ValueError('Held repair cannot resume until an authoritative current Company revision matches its promotion record.')
 
     @contextmanager
     def connect(self):
@@ -638,6 +677,7 @@ class Store(CampaignStore, InferenceStore):
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
             self._require_current_identity(db, state)
+            self._require_current_repair_revision(state)
             if (task_state_digest(state) != expected_state_digest
                     or self._control_generation(db) != expected_control_generation):
                 raise ValueError('Task or scheduler controls changed during activation preparation; retry from current status.')
@@ -831,6 +871,12 @@ class Store(CampaignStore, InferenceStore):
                 if state.get('campaign_id') or state.get('campaign_disposition'):
                     continue
                 self._require_current_identity(db, state)
+                if not self._repair_revision_is_current(state):
+                    state.update(status='PAUSED', stop_requested=True,
+                                 reason='Company revision is no longer current; obtain a new held repair from the current Company record.')
+                    db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), current_id))
+                    self._bump_control_generation(db)
+                    return None
                 state.update(status='RUNNING', scheduler_claimed_at=time.time())
                 db.execute('UPDATE tasks SET state=? WHERE id=?',
                            (json.dumps(state), current_id))
@@ -863,6 +909,12 @@ class Store(CampaignStore, InferenceStore):
                 return None
             task_id, state = matches[0]
             self._require_current_identity(db, state)
+            if not self._repair_revision_is_current(state):
+                state.update(status='PAUSED', stop_requested=True,
+                             reason='Company revision is no longer current; obtain a new held repair from the current Company record.')
+                db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
+                self._bump_control_generation(db)
+                return None
             state.update(status='RUNNING', scheduler_claimed_at=time.time())
             db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), task_id))
             self._bump_control_generation(db)
@@ -884,6 +936,12 @@ class Store(CampaignStore, InferenceStore):
             for current_id, state in decoded:
                 if current_id == task_id and state['status'] == 'QUEUED' and not state.get('stop_requested'):
                     self._require_current_identity(db, state)
+                    if not self._repair_revision_is_current(state):
+                        state.update(status='PAUSED', stop_requested=True,
+                                     reason='Company revision is no longer current; obtain a new held repair from the current Company record.')
+                        db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), current_id))
+                        self._bump_control_generation(db)
+                        return None
                     state.update(status='RUNNING', scheduler_claimed_at=time.time())
                     db.execute('UPDATE tasks SET state=? WHERE id=?', (json.dumps(state), current_id))
                     self._bump_control_generation(db)

@@ -39,16 +39,18 @@ ten-minute user update. Update it immediately after any material result.
   pre-existing documentation changes are preserved; it has no GitHub remote.
 - Milestone 1: 65% — implementation is present; guarded operational proof is
   still required.
-- Milestone 2: 65% — durable Company revisions, reconciliation, and scoped
-  request provenance are implemented and independently reviewed; live proof
-  remains.
-- Milestone 3: 45% — bounded outcome classification, local immutable records,
+- Milestone 2: 70% — durable Company revisions, reconciliation, and scoped
+  request provenance are implemented and independently reviewed. A narrow
+  current-Company revision lookup now exists for the coordinator boundary;
+  guarded live proof remains.
+- Milestone 3: 50% — bounded outcome classification, local immutable records,
   and independently reviewed intake into the existing coordinator are
-  implemented. Qualified defects are held once for triage; no repair is
-  dispatched automatically yet.
-- Milestone 4: 22% — the existing coordinator source and its focused tests
-  were copied here only as source/test material, independently reviewed, and
-  passed 117 isolated checks. No scheduler is running from this copy.
+  implemented. The active Job Search Helper source now has the shared
+  classifier; qualified defects are held once for triage, never dispatched.
+- Milestone 4: 30% — a held repair can be promoted only into a paused,
+  Company-version-bound coordinator task. It cannot resume without a fresh
+  trusted Company lookup, and stale work is re-paused before it can be claimed.
+  No scheduler has been started.
 - Milestones 5–6: not started.
 
 ## Definition of fully completed
@@ -69,14 +71,21 @@ partial Google Sheets write alone is not completion.
 - `b0fda48`: Company-event provenance persists through restart recovery.
 - `3179eba`: classified outcome records are bounded, idempotent, and local
   only; forged actions and private identity fields are not stored.
-- Pending checkpoint: source-only coordinator copy accepted after independent
-  review and saved as `b002564`.
-- Pending checkpoint: classifier-derived, held-only repair intake accepted by
-  independent review and saved as `fecfc7d`.
+- Source-only coordinator copy accepted after independent review and saved as
+  `b002564`.
+- Classifier-derived, held-only repair intake accepted by independent review
+  and saved as `fecfc7d`.
 - Repeated repair evidence was independently accepted and saved as `c9fcc8b`.
-- Pending checkpoint: a held repair can be promoted exactly once to an
-  independently reviewed, paused, source-version-bound task; its GitHub
-  backup is the next action.
+- A held repair can be promoted exactly once to an independently reviewed,
+  paused, source-version-bound task, saved and pushed as `834fc4d`.
+- The MuleLab coordinator source now matches the reviewed copy for this
+  checkpoint; its new focused test exposed that the active Job Search Helper
+  source was missing the shared outcome-classifier module. That source module
+  was reconciled and 142 focused MuleLab checks passed; the coordinator
+  remained off and no repair task was started.
+- Candidate current-Company guard: the isolated coordinator and Company-side
+  lookup passed 144 focused coordinator checks and 74 Job Search Helper
+  contract checks. Independent review and MuleLab reconciliation are pending.
 
 ## Safety boundaries
 
@@ -91,7 +100,10 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Save the accepted paused-promotion checkpoint to the scoped GitHub branch.
-2. Reconcile the promotion with the coordinator's existing development
-   checkout without overwriting its pre-existing documentation changes.
-3. Add a current-Company revision guard before any promoted task can resume.
+1. Independently review the current-Company guard, then reconcile it with the
+   MuleLab coordinator source without starting its scheduler or altering its
+   existing documentation.
+2. Reconcile the Company-side bridge with the active Job Search Helper source
+   without overwriting the protected, pre-existing local worktree changes.
+3. Design the normal Company-to-scrape handoff with one durable owner, then
+   prove it in a guarded live test.
