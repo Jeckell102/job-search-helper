@@ -282,6 +282,22 @@ class FreshStartLifecycleTests(unittest.TestCase):
         self.assertEqual(set(self.state.cycle(active)['companies']), {'C-0'})
         self.assertEqual(len(self.state.cycles()), 1)
 
+    def test_company_only_request_keeps_paused_cycle_visible_and_unchanged(self):
+        from job_search_helper.runner import select_start_cycle
+        paused = self.engine.start_cycle(company_ids=['C-0'])
+        cycle = self.state.cycle(paused)
+        cycle['status'] = 'Paused'
+        self.state.save_cycle(cycle)
+        request = self.root / 'next-scan.json'
+        request.write_text('{"mode":"company-only","request_id":"paused","company_ids":["C-1"]}')
+
+        with self.assertRaisesRegex(ValueError, f'safe boundary.*{paused}'):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+
+        self.assertTrue(request.exists())
+        self.assertEqual(self.state.cycle(paused)['status'], 'Paused')
+        self.assertEqual(set(self.state.cycle(paused)['companies']), {'C-0'})
+
     def test_company_only_request_rejects_missing_or_unknown_ids_without_full_scan(self):
         from job_search_helper.runner import select_start_cycle
         request = self.root / 'next-scan.json'
