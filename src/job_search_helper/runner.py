@@ -474,6 +474,18 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                                         retry_partial=resume)
                     run_counts.update(result["run_counts"])
                 final = engine.status(cycle_id)
+                if getattr(repo, 'is_local', False) is True:
+                    # Record only the bounded facts already held by the normal
+                    # pipeline.  The separate coordinator delivery path owns
+                    # repair intake; this call cannot start a worker.
+                    from .scrape_outcome_producer import record_cycle_outcomes
+                    cycle = state.cycle(cycle_id)
+                    receipts = record_cycle_outcomes(
+                        repo, cycle, engine._company_rows(),
+                        storage_confirmed=not defer_sync and repo.status()['pending_cells'] == 0,
+                    )
+                    if receipts:
+                        print(f"Scrape outcomes: recorded {len(receipts)} bounded result(s) for safe follow-up.", flush=True)
                 if defer_sync:
                     print("Inventories saved locally. Run ./job-search-scraper sync to write the jobs to Sheets.", flush=True)
                 _print_run_status(final)
