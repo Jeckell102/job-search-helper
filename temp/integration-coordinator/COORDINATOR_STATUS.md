@@ -200,6 +200,12 @@ partial Google Sheets write alone is not completion.
   local loopback checks: they require the existing wrapper token, reject a
   mismatched owner, and accept only a matching status/stop request. This is
   staged evidence only; no Jetson file, service, or live request changed.
+- Final staged QA marked the F4 package `ACCEPT WITH REQUIRED FOLLOW-UPS`:
+  no code blocker remains before staging/backup. Before any live deployment,
+  use the Jetson change-control path, collect fresh service preflight and
+  rollback evidence, record the actual modification in the Jetson log, and
+  prove the deployed authenticated endpoints. Generated staging bytecode was
+  removed; the clean staged checkpoint is GitHub commit `8b5081a`.
 - A fresh publication preflight found 60 pending system-field updates in the
   local outbox. Live read-only comparison confirmed that 59 already match the
   workbook and identified one remaining `Last Checked` date for Saronic
