@@ -11,7 +11,8 @@ from job_search_helper.inbox import InventoryInbox
 from job_search_helper.repository import MemoryRepository
 from job_search_helper.runner import active_inbox_cycles, resolve_cycle
 from job_search_helper.scan_request import (company_only_intake_start_measurement,
-                                             requested_scan, superseded_cycle_ids)
+                                             requested_scan, superseded_cycle_ids, _read_request,
+                                             request_fingerprint)
 from test_fetch_pool import company, inventory
 
 
@@ -114,6 +115,50 @@ class FreshScanRequestTests(unittest.TestCase):
             requested_scan(self.engine,self.state,self.database)
         self.assertEqual(len(self.state.cycles()),1)
         self.assertTrue((self.root/'next-scan.json').exists())
+
+    def test_company_event_provenance_must_bind_the_company_only_request(self):
+        request = {
+            'mode': 'company-only', 'request_id': 'company-event-provenance',
+            'company_ids': ['C-1'], 'source_revision': 'rev-1',
+            'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
+            'company_event': {
+                'schema': 'company-event-scan-request-v1', 'event_id': 'CEV-1',
+                'company_id': 'C-1', 'revision': 1, 'source_revision': 'rev-1',
+            },
+        }
+        (self.root / 'next-scan.json').write_text(json.dumps(request))
+        parsed, company_ids = _read_request(self.root / 'next-scan.json')
+        self.assertEqual(parsed['company_event'], request['company_event'])
+        self.assertEqual(company_ids, ['C-1'])
+
+        request['company_event']['company_id'] = 'C-0'
+        (self.root / 'next-scan.json').write_text(json.dumps(request))
+        with self.assertRaisesRegex(ValueError, 'does not bind this scope'):
+            requested_scan(self.engine, self.state, self.database)
+
+        request['company_ids'] = ['C-1']
+        one = request_fingerprint(request, ['C-1'])
+        request['company_event']['event_id'] = 'CEV-2'
+        self.assertNotEqual(one, request_fingerprint(request, ['C-1']))
+
+        request['company_event']['company_id'] = 'C-1'
+        request['company_ids'] = ['C-1', 'C-2']
+        (self.root / 'next-scan.json').write_text(json.dumps(request))
+        with self.assertRaisesRegex(ValueError, 'does not bind this scope'):
+            requested_scan(self.engine, self.state, self.database)
+
+    def test_legacy_manual_company_request_keeps_its_pre_event_fingerprint(self):
+        request = {
+            'mode': 'company-only', 'request_id': 'manual-legacy', 'company_ids': ['C-1'],
+            'source_revision': 'rev-1', 'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
+        }
+        expected = {
+            'mode': 'company-only', 'company_ids': ['C-1'],
+            'source_revision': 'rev-1', 'enqueued_at': '2026-11-18T00:00:00Z',
+        }
+        import hashlib
+        old = hashlib.sha256(json.dumps(expected, separators=(',', ':'), sort_keys=True).encode('utf-8')).hexdigest()
+        self.assertEqual(request_fingerprint(request, ['C-1']), old)
 
     def test_worker_assignment_order_follows_cycle_order_without_skipping_any_company(self):
         cycle_id = requested_scan(self.engine,self.state,self.database)

@@ -184,6 +184,11 @@ class CompanyEventBridgeTests(unittest.TestCase):
         cycles = state.cycles()
         self.assertEqual(len(cycles), 1)
         self.assertEqual(set(cycles[0]["companies"]), {"COMP-1"})
+        self.assertEqual(cycles[0]["company_event"]["event_id"], event["event_id"])
+        recovered_state = State()
+        self.addCleanup(recovered_state.close)
+        recovered = Engine(self.repo, recovered_state)._recover(cycles[0]["id"])
+        self.assertEqual(recovered["company_event"], cycles[0]["company_event"])
 
 
 if __name__ == "__main__":

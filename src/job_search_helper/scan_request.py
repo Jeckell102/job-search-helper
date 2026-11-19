@@ -103,9 +103,30 @@ def _read_request(path):
         if not isinstance(request.get('source_revision'), str) or not request['source_revision'].strip():
             raise ValueError('Invalid company-only next-scan.json; immutable source_revision is required.')
         _enqueued_at(request)
+        _company_event(request, company_ids)
     else:
         raise ValueError('Invalid next-scan.json; refusing to alter scan selection.')
     return request, company_ids
+
+
+def _company_event(request, company_ids):
+    """Validate optional M2 provenance before it becomes cycle metadata."""
+    event = request.get('company_event')
+    if event is None:
+        return None
+    if not isinstance(event, dict):
+        raise ValueError('Invalid company-only next-scan.json; company event must be an object.')
+    required = ('schema', 'event_id', 'company_id', 'source_revision')
+    if any(not isinstance(event.get(key), str) or not event[key].strip() for key in required):
+        raise ValueError('Invalid company-only next-scan.json; company event identity is incomplete.')
+    if not isinstance(event.get('revision'), int) or event['revision'] < 1:
+        raise ValueError('Invalid company-only next-scan.json; company event revision is invalid.')
+    if (event['schema'] != 'company-event-scan-request-v1'
+            or len(company_ids) != 1
+            or event['company_id'] != company_ids[0]
+            or event['source_revision'] != request['source_revision']):
+        raise ValueError('Invalid company-only next-scan.json; company event does not bind this scope.')
+    return event
 
 
 def _enqueued_at(request):
@@ -132,6 +153,11 @@ def request_fingerprint(request, company_ids):
         'source_revision': request['source_revision'],
         'enqueued_at': request['enqueued_at'],
     }
+    # Preserve fingerprints for pre-M2 manual requests with no provenance.
+    # When provenance is supplied it is immutable: request IDs cannot silently
+    # substitute another Company event during recovery.
+    if request.get('company_event') is not None:
+        canonical['company_event'] = request['company_event']
     encoded = json.dumps(canonical, separators=(',', ':'), sort_keys=True).encode('utf-8')
     return hashlib.sha256(encoded).hexdigest()
 

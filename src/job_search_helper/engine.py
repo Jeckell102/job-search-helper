@@ -467,6 +467,11 @@ class Engine:
                          start_last=list(new_scan_request.get('start_last', [])),
                          comparison_baseline_id=new_scan_request.get('comparison_baseline_id'),
                          request_fingerprint=new_scan_request.get('request_fingerprint'))
+            if new_scan_request.get('company_event') is not None:
+                # This immutable M2 provenance is carried into the cycle so a
+                # later M3 outcome/retry remains bound to the exact Company
+                # revision that requested it.
+                cycle['company_event'] = dict(new_scan_request['company_event'])
         self.state.save_cycle(cycle)
         self._sync_cycle(cycle)
         # Persist membership before fetching; reconstructible if local cache is lost.
@@ -508,7 +513,7 @@ class Engine:
                 scope[cid] = {"company": by_id[cid]["Company"], "stage": "queued"}
         cycle = {"id": cycle_id, "started_at": row.get("Started At") or now(), "status": row.get("Cycle Status"),
                  "all": bool(control.get("all", False)), "companies": scope}
-        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint')
+        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event')
                       if key in control})
         last = set(cycle.get('start_last', []))
         if last:
@@ -535,7 +540,7 @@ class Engine:
                   "Companies Partial": partial, "Companies Blocked": blocked, "Companies Remaining": remaining,
                   "Last Checkpoint At": now(), "Notes": json.dumps({"all": cycle["all"], "company_ids": list(cycle["companies"]),
                     "helper_version": 1, "mode": "single writer; no model calls",
-                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint')
+                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event')
                        if key in cycle}}, separators=(",", ":"))}
         if status in {"Complete", "Complete with exceptions"}:
             values["Completed At"] = cycle.setdefault("completed_at", now())
