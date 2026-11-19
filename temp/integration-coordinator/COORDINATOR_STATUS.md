@@ -37,9 +37,11 @@ ten-minute user update. Update it immediately after any material result.
 - Coordinator development checkout: `/home/chris/job-search-helper_old/dev/wrapper-coder/repo`
   is on `development/wrapper-coder` at `0c45d61`. Its code is clean, but four
   pre-existing documentation changes are preserved; it has no GitHub remote.
-- Milestone 1: 70% — the normal runner now admits a bridged Company-only
-  request through its existing writer boundary; guarded operational proof is
-  still required.
+- Milestone 1: 85% — the normal request consumer now validates and admits one
+  immutable Company-only request, runs only that Company, and refuses to
+  supersede unfinished work or accept an altered retry. Independent source
+  review accepted the offline proof; guarded operational proof is still
+  required.
 - Milestone 2: 85% — durable Company revisions, reconciliation, and scoped
   request provenance are implemented and independently reviewed. A narrow
   current-Company revision lookup now exists for the coordinator boundary;
@@ -109,6 +111,16 @@ partial Google Sheets write alone is not completion.
 - The active bridge was proven against an isolated temporary database: one
   eligible Company event wrote and read back one Company-only request for that
   exact ID, then acknowledged the event. No live state was used.
+- Independent review rejected activating that bridge: the active request
+  consumer currently accepts only fresh-full-scan requests, so its
+  Company-only request would safely fail rather than run. Compatibility and
+  an end-to-end normal-path proof are required before any guarded live test.
+- The compatibility repair was independently accepted: a bridged Company-only
+  request is schema-checked, bound to exactly one Company, waits behind any
+  unfinished cycle, and retains an immutable retry fingerprint. Twenty-four
+  focused request/runner checks passed locally; the independent reviewer also
+  confirmed the active-source path with ten focused request checks. No service
+  or live scrape was started.
 
 ## Safety boundaries
 
@@ -123,9 +135,12 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Reconcile the Company-side bridge with the active Job Search Helper source
-   without overwriting the protected, pre-existing local worktree changes.
-2. Reconcile the durable Company-event bridge with the active Job Search
-   Helper repository and normal runner without overwriting local work.
-3. Design the normal Company-to-scrape handoff with one durable owner, then
-   prove it in a guarded live test.
+1. Reconcile the accepted active-source request contract and its evidence into
+   the scoped GitHub backup without disturbing unrelated feature-worktree
+   changes.
+2. Review the full changed-Company path from Sheets reconciliation through
+   the bridge and normal runner, then determine the minimum safe guarded live
+   proof.
+3. Perform that guarded live
+   Company-to-scrape test only if current locks, source identity, and Google
+   state make that safe.
