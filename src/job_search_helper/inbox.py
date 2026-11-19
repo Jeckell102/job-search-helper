@@ -74,6 +74,42 @@ class InventoryInbox:
                     cycle TEXT NOT NULL, company TEXT NOT NULL, cursor INTEGER NOT NULL,
                     count INTEGER NOT NULL, digest TEXT NOT NULL DEFAULT '', state TEXT NOT NULL,
                     PRIMARY KEY(cycle, company, cursor))""")
+                self.connection.execute("""CREATE TABLE IF NOT EXISTS exact_plan_local_state (
+                    cycle TEXT NOT NULL, company TEXT NOT NULL,
+                    plan_digest TEXT NOT NULL,
+                    local_operations_digest TEXT NOT NULL,
+                    remote_projection_digest TEXT NOT NULL,
+                    state TEXT NOT NULL CHECK(state IN ('FROZEN','LOCAL_APPLIED','LOCAL_VERIFIED')),
+                    local_apply_id TEXT,
+                    local_records_digest TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(cycle, company),
+                    FOREIGN KEY(cycle, company) REFERENCES sync_plans(cycle, company))""")
+                self.connection.execute("""CREATE TABLE IF NOT EXISTS exact_legacy_plan_migrations (
+                    cycle TEXT NOT NULL, company TEXT NOT NULL,
+                    legacy_plan_digest TEXT NOT NULL,
+                    inventory_payload_digest TEXT NOT NULL,
+                    operation_count INTEGER NOT NULL,
+                    original_local_cursor INTEGER NOT NULL,
+                    verified_local_cursor INTEGER NOT NULL DEFAULT 0,
+                    row_scope TEXT, remote_projection TEXT,
+                    remote_projection_digest TEXT,
+                    state TEXT NOT NULL CHECK(state IN
+                      ('FROZEN','PREFIX_VERIFIED','LOCAL_COMPLETE','REMOTE_PLAN_FROZEN')),
+                    created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    PRIMARY KEY(cycle, company),
+                    FOREIGN KEY(cycle, company) REFERENCES sync_plans(cycle, company))""")
+                self.connection.execute("""CREATE TABLE IF NOT EXISTS exact_remote_plans (
+                    cycle TEXT NOT NULL, company TEXT NOT NULL,
+                    local_plan_digest TEXT NOT NULL,
+                    projection TEXT NOT NULL, projection_digest TEXT NOT NULL,
+                    remote_cursor INTEGER NOT NULL DEFAULT 0,
+                    state TEXT NOT NULL CHECK(state IN
+                      ('FROZEN','SYNC_PENDING','SYNC_CONFIRMED','LOCAL_ACKNOWLEDGED')),
+                    acknowledgement_id TEXT,
+                    created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    PRIMARY KEY(cycle, company))""")
                 columns = {row[1] for row in self.connection.execute('PRAGMA table_info(exact_sync_chunks)')}
                 if 'digest' not in columns:
                     self.connection.execute("ALTER TABLE exact_sync_chunks ADD COLUMN digest TEXT NOT NULL DEFAULT ''")
@@ -116,8 +152,13 @@ class InventoryInbox:
     def acknowledge(self, cycle, company):
         with self.lock, self.connection:
             self.connection.execute("DELETE FROM inventories WHERE cycle=? AND company=?", (cycle, company))
-            self.connection.execute("DELETE FROM sync_plans WHERE cycle=? AND company=?", (cycle, company))
             self.connection.execute("DELETE FROM exact_sync_chunks WHERE cycle=? AND company=?", (cycle, company))
+            self.connection.execute("DELETE FROM exact_remote_plans WHERE cycle=? AND company=?", (cycle, company))
+            self.connection.execute("DELETE FROM exact_legacy_plan_migrations WHERE cycle=? AND company=?",
+                                    (cycle, company))
+            self.connection.execute("DELETE FROM exact_plan_local_state WHERE cycle=? AND company=?",
+                                    (cycle, company))
+            self.connection.execute("DELETE FROM sync_plans WHERE cycle=? AND company=?", (cycle, company))
 
     def block(self, cycle, company):
         with self.lock, self.connection:
@@ -140,6 +181,180 @@ class InventoryInbox:
             if cursor.rowcount:
                 self.payload_bytes += len(encoded.encode("utf-8"))
         self.checkpoint_seconds += time.monotonic() - started
+
+    def save_exact_plan(self, cycle, company, plan, *, timestamp):
+        """Freeze a v2 local/remote plan without claiming local durability."""
+        from .exact_cycle_planner import _exact_plan_digest, _digest
+        from .publication_receipts import record_fingerprints
+        if (not isinstance(plan, dict) or plan.get('exact_plan_version') != 2
+                or plan.get('cycle_id') != cycle or plan.get('company_id') != company
+                or not isinstance(plan.get('plan_digest'), str) or not plan['plan_digest']
+                or not isinstance(plan.get('local_operations_digest'), str)
+                or not plan['local_operations_digest']
+                or not isinstance(plan.get('remote_projection_digest'), str)
+                or not plan['remote_projection_digest']
+                or plan.get('plan_digest') != _exact_plan_digest(plan)
+                or plan.get('local_operations_digest') != _digest(plan.get('local_operations'))
+                or plan.get('local_expected_records') != record_fingerprints(plan.get('local_operations', []))
+                or plan.get('local_expected_records_digest') != _digest(plan.get('local_expected_records'))
+                or plan.get('remote_projection_digest') != _digest(plan.get('remote_projection'))
+                or plan.get('remote_records') != record_fingerprints(plan.get('remote_projection', []))
+                or plan.get('remote_records_digest') != _digest(plan.get('remote_records'))):
+            raise ValueError('Exact v2 plan is missing immutable durability evidence.')
+        if not isinstance(timestamp, str) or not timestamp.strip():
+            raise ValueError('Exact v2 plan requires a durable timestamp.')
+        encoded = json.dumps(plan, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+        with self.lock, self.connection:
+            if not self.connection.execute(
+                    'SELECT 1 FROM inventories WHERE cycle=? AND company=?',
+                    (cycle, company)).fetchone():
+                raise ValueError('Cannot freeze an exact plan without a durable inventory.')
+            existing = self.connection.execute(
+                'SELECT payload,cursor FROM sync_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            local = self.connection.execute(
+                'SELECT plan_digest,local_operations_digest,remote_projection_digest,state '
+                'FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            evidence = (plan['plan_digest'], plan['local_operations_digest'],
+                        plan['remote_projection_digest'])
+            if existing is not None or local is not None:
+                if (existing is None or local is None or existing[0] != encoded
+                        or tuple(local[:3]) != evidence):
+                    raise ValueError('Exact v2 plan conflicts with existing frozen evidence.')
+                return {'cycle_id': cycle, 'company_id': company,
+                        'state': local[3], 'created': False}
+            self.connection.execute(
+                'INSERT INTO sync_plans(cycle,company,payload,cursor) VALUES (?,?,?,0)',
+                (cycle, company, encoded))
+            self.connection.execute(
+                'INSERT INTO exact_plan_local_state VALUES (?,?,?,?,?,?,?,?,?,?)',
+                (cycle, company, *evidence, 'FROZEN', None, None,
+                 timestamp.strip(), timestamp.strip()))
+        return {'cycle_id': cycle, 'company_id': company,
+                'state': 'FROZEN', 'created': True}
+
+    def exact_local_state(self, cycle, company):
+        with self.lock:
+            row = self.connection.execute(
+                'SELECT plan_digest,local_operations_digest,remote_projection_digest,state,'
+                'local_apply_id,local_records_digest,created_at,updated_at '
+                'FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            plan_row = self.connection.execute(
+                'SELECT payload FROM sync_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+        if row is None:
+            return None
+        if plan_row is None:
+            raise ValueError('Exact local state is orphaned from its frozen plan.')
+        from .exact_cycle_planner import _digest, _exact_plan_digest
+        plan = json.loads(plan_row[0])
+        if (plan.get('cycle_id') != cycle or plan.get('company_id') != company
+                or plan.get('plan_digest') != row[0]
+                or _exact_plan_digest(plan) != row[0]
+                or _digest(plan.get('local_operations')) != row[1]
+                or _digest(plan.get('remote_projection')) != row[2]):
+            raise ValueError('Exact frozen plan or local-state evidence is corrupt.')
+        keys = ('plan_digest', 'local_operations_digest', 'remote_projection_digest',
+                'state', 'local_apply_id', 'local_records_digest',
+                'created_at', 'updated_at')
+        return {'cycle_id': cycle, 'company_id': company,
+                **dict(zip(keys, row))}
+
+    def mark_exact_local_applied(self, cycle, company, *, plan_digest,
+                                 apply_id, records_digest, timestamp):
+        """Mirror one authoritative local-DB application monotonically."""
+        values = (str(plan_digest).strip(), str(apply_id).strip(),
+                  str(records_digest).strip(), str(timestamp).strip())
+        if not all(values):
+            raise ValueError('Exact local application evidence is incomplete.')
+        with self.lock, self.connection:
+            row = self.connection.execute(
+                'SELECT plan_digest,state,local_apply_id,local_records_digest '
+                'FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            if row is None or row[0] != values[0]:
+                raise ValueError('Exact local application has no matching frozen plan.')
+            stored = self.connection.execute(
+                'SELECT payload,cursor FROM sync_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            from .exact_cycle_planner import _exact_plan_digest
+            frozen = json.loads(stored[0]) if stored is not None else {}
+            if (stored is None or frozen.get('plan_digest') != values[0]
+                    or _exact_plan_digest(frozen) != values[0]):
+                raise ValueError('Exact local application plan payload is missing or changed.')
+            if row[1] in {'LOCAL_APPLIED', 'LOCAL_VERIFIED'}:
+                if row[2:] != values[1:3]:
+                    raise ValueError('Exact local application evidence changed after persistence.')
+                return self.exact_local_state(cycle, company)
+            updated = self.connection.execute(
+                'UPDATE exact_plan_local_state SET state=?,local_apply_id=?,local_records_digest=?,updated_at=? '
+                'WHERE cycle=? AND company=? AND state=? AND plan_digest=?',
+                ('LOCAL_APPLIED', values[1], values[2], values[3],
+                 cycle, company, 'FROZEN', values[0])).rowcount
+            if updated != 1:
+                raise ValueError('Exact local application state changed unexpectedly.')
+        return self.exact_local_state(cycle, company)
+
+    def mark_exact_local_verified(self, cycle, company, *, plan_digest,
+                                  apply_id, records_digest, timestamp):
+        """Mirror exact local readback; never skip the applied state."""
+        values = (str(plan_digest).strip(), str(apply_id).strip(),
+                  str(records_digest).strip(), str(timestamp).strip())
+        if not all(values):
+            raise ValueError('Exact local verification evidence is incomplete.')
+        with self.lock, self.connection:
+            row = self.connection.execute(
+                'SELECT plan_digest,state,local_apply_id,local_records_digest '
+                'FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            if (row is None or row[0] != values[0]
+                    or row[2:] != values[1:3]):
+                raise ValueError('Exact local verification does not match applied evidence.')
+            stored = self.connection.execute(
+                'SELECT payload FROM sync_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            from .exact_cycle_planner import _exact_plan_digest
+            frozen = json.loads(stored[0]) if stored is not None else {}
+            if frozen.get('plan_digest') != values[0] or _exact_plan_digest(frozen) != values[0]:
+                raise ValueError('Exact local verification plan payload is missing or changed.')
+            if row[1] == 'LOCAL_VERIFIED':
+                return self.exact_local_state(cycle, company)
+            if row[1] != 'LOCAL_APPLIED':
+                raise ValueError('Exact local verification requires LOCAL_APPLIED state.')
+            updated = self.connection.execute(
+                'UPDATE exact_plan_local_state SET state=?,updated_at=? '
+                'WHERE cycle=? AND company=? AND state=? AND plan_digest=?',
+                ('LOCAL_VERIFIED', values[3], cycle, company,
+                 'LOCAL_APPLIED', values[0])).rowcount
+            if updated != 1:
+                raise ValueError('Exact local verification state changed unexpectedly.')
+        return self.exact_local_state(cycle, company)
+
+    def advance_exact_local_cursor(self, cycle, company, cursor, *, expected):
+        """Advance only the local apply cursor with compare-and-swap."""
+        if (type(cursor) is not int or type(expected) is not int
+                or expected < 0 or cursor <= expected):
+            raise ValueError('Exact local cursor advance is invalid.')
+        with self.lock, self.connection:
+            row = self.connection.execute(
+                'SELECT payload FROM sync_plans WHERE cycle=? AND company=? AND cursor=?',
+                (cycle, company, expected)).fetchone()
+            state = self.connection.execute(
+                'SELECT state FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            if row is None or state is None:
+                raise ValueError('Exact local cursor has no matching frozen plan.')
+            plan = json.loads(row[0])
+            if plan.get('exact_plan_version') != 2 or cursor > len(plan.get('local_operations', [])):
+                raise ValueError('Exact local cursor exceeds the immutable operation stream.')
+            updated = self.connection.execute(
+                'UPDATE sync_plans SET cursor=? WHERE cycle=? AND company=? AND cursor=?',
+                (cursor, cycle, company, expected)).rowcount
+            if updated != 1:
+                raise ValueError('Exact local cursor changed before verified advance.')
+        return cursor
 
     def plan(self, cycle, company):
         with self.lock:
@@ -262,6 +477,10 @@ class InventoryInbox:
         # Only for a confirmed preflight rejection, never an uncertain write.
         # The original inventory remains durable for a fresh explicit retry.
         with self.lock, self.connection:
+            if self.connection.execute(
+                    'SELECT 1 FROM exact_plan_local_state WHERE cycle=? AND company=?',
+                    (cycle, company)).fetchone():
+                raise ValueError('Exact v2 frozen plans are immutable and cannot be discarded.')
             self.connection.execute("DELETE FROM sync_plans WHERE cycle=? AND company=?", (cycle, company))
 
     def unblock(self, cycle, company):

@@ -87,6 +87,7 @@ class SQLiteRepository:
             self.validate_schema()
             if not readonly:
                 self._ensure_company_event_schema()
+                self._ensure_exact_local_schema()
                 from .review_revisions import install
                 install(self.db)
                 self.path.chmod(0o600)
@@ -170,6 +171,67 @@ class SQLiteRepository:
           PRIMARY KEY(outcome_id, consumer),
           FOREIGN KEY(outcome_id) REFERENCES scrape_outcomes(outcome_id));
         ''')
+
+    def _ensure_exact_local_schema(self):
+        """Install additive exact-application journals without touching rows."""
+        if self.readonly:
+            raise RepositoryError('Exact local schema requires a writable repository.')
+        self.db.executescript('''
+        CREATE TABLE IF NOT EXISTS exact_local_applications (
+          apply_id TEXT PRIMARY KEY,
+          cycle TEXT NOT NULL,
+          company TEXT NOT NULL,
+          plan_digest TEXT NOT NULL UNIQUE,
+          inventory_payload_digest TEXT NOT NULL,
+          local_operations_digest TEXT NOT NULL,
+          remote_projection_digest TEXT NOT NULL,
+          row_scope TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          verified_at TEXT,
+          state TEXT NOT NULL CHECK(state IN ('APPLYING','VERIFIED'))
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS exact_local_application_company
+          ON exact_local_applications(cycle,company);
+        CREATE TABLE IF NOT EXISTS exact_local_apply_chunks (
+          apply_id TEXT NOT NULL,
+          start_cursor INTEGER NOT NULL,
+          operation_count INTEGER NOT NULL,
+          operations_digest TEXT NOT NULL,
+          before_records TEXT NOT NULL,
+          expected_records TEXT NOT NULL,
+          expected_records_digest TEXT NOT NULL,
+          dirty_before TEXT NOT NULL,
+          applied_at TEXT NOT NULL,
+          verified_at TEXT,
+          state TEXT NOT NULL CHECK(state IN ('APPLIED','VERIFIED')),
+          PRIMARY KEY(apply_id,start_cursor),
+          FOREIGN KEY(apply_id) REFERENCES exact_local_applications(apply_id)
+        );
+        CREATE TABLE IF NOT EXISTS exact_local_acknowledgements (
+          apply_id TEXT NOT NULL,
+          receipt_id TEXT NOT NULL,
+          acknowledgement_id TEXT NOT NULL,
+          selected_fields_digest TEXT NOT NULL,
+          acknowledged_at TEXT NOT NULL,
+          PRIMARY KEY(apply_id,receipt_id),
+          FOREIGN KEY(apply_id) REFERENCES exact_local_applications(apply_id)
+        );
+        ''')
+
+    def apply_exact_local_plan(self, cycle_id, company_id, plan, cursor,
+                               *, max_operations=100):
+        """Apply one explicit exact chunk; never discover another company."""
+        from .exact_local_plan import apply_exact_local_chunk
+        return apply_exact_local_chunk(
+            self, cycle_id, company_id, plan, cursor,
+            max_operations=max_operations)
+
+    def verify_exact_local_plan(self, cycle_id, company_id, plan, cursor=None):
+        """Verify one chunk or the complete explicit exact application."""
+        from .exact_local_plan import verify_exact_local_chunk, verify_exact_local_plan
+        if cursor is None:
+            return verify_exact_local_plan(self, cycle_id, company_id, plan)
+        return verify_exact_local_chunk(self, cycle_id, company_id, plan, cursor)
 
     @contextmanager
     def transaction(self):

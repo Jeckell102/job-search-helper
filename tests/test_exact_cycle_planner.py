@@ -261,16 +261,36 @@ class ExactCyclePlannerTests(unittest.TestCase):
         schema_b = {tab: list(publication[tab]) for tab in reversed(list(publication))}
         self.assertEqual(_digest(schema_a), _digest(schema_b))
 
-    def test_compact_new_plan_requires_dual_durable_local_remote_journal(self):
+    def test_compact_new_plan_freezes_v2_before_local_mutation_or_receipt(self):
         self.repo.get_meta = lambda key: COMPACT_PROFILE if key == 'sheets_profile' else None
         before = self.state.cycle(self.cycle)
+        repository_before = copy.deepcopy(self.repo.tables)
         result = freeze_exact_cycle_plans(self.engine, self.cycle, ['COMP-1'], company_guard=self.guard)
-        self.assertEqual(result['held'], [{
-            'company_id': 'COMP-1',
-            'reason': 'compact_exact_plan_requires_durable_local_commit_journal',
-        }])
-        self.assertIsNone(self.inbox.plan(self.cycle, 'COMP-1'))
+        self.assertEqual(result['planned'], ['COMP-1'])
+        self.assertEqual(result['held'], [])
+        plan, cursor = self.inbox.plan(self.cycle, 'COMP-1')
+        self.assertEqual(cursor, 0)
+        self.assertEqual(plan['exact_plan_version'], 2)
+        self.assertEqual(plan['cycle_id'], self.cycle)
+        self.assertEqual(plan['company_id'], 'COMP-1')
+        self.assertTrue(plan['local_operations'])
+        self.assertTrue(plan['remote_projection'])
+        self.assertEqual(plan['local_operations_digest'], _digest(plan['local_operations']))
+        self.assertEqual(plan['remote_projection_digest'], _digest(plan['remote_projection']))
+        self.assertEqual(plan['plan_digest'], _digest({
+            key: value for key, value in plan.items() if key != 'plan_digest'}))
+        self.assertEqual(self.inbox.exact_local_state(
+            self.cycle, 'COMP-1')['state'], 'FROZEN')
+        receipts = self.inbox.connection.execute(
+            'SELECT count(*) FROM publication_receipts').fetchone()[0]
+        self.assertEqual(receipts, 0)
+        self.assertEqual(self.repo.tables, repository_before)
         self.assertEqual(self.state.cycle(self.cycle), before)
+
+        recovered = freeze_exact_cycle_plans(
+            self.engine, self.cycle, ['COMP-1'], company_guard=self.guard)
+        self.assertEqual(recovered['recovered'], ['COMP-1'])
+        self.assertEqual(self.inbox.plan(self.cycle, 'COMP-1'), (plan, 0))
 
     def test_nonzero_cursor_legacy_plan_holds_without_mutation(self):
         legacy = {'operations': [{'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
