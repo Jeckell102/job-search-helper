@@ -10,10 +10,14 @@ from unittest.mock import patch
 
 from job_search_helper.ats import Inventory
 from job_search_helper.engine import Engine, State, inventory_payload
-from job_search_helper.exact_cycle_planner import freeze_exact_cycle_plans
+from job_search_helper.exact_cycle_planner import (
+    _digest, _project_operations, _publication_schema,
+    freeze_exact_cycle_plans,
+)
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.repository import MemoryRepository, SCHEMAS
 from job_search_helper.core import job_key
+from job_search_helper.sheet_profile import COMPACT_PROFILE
 
 
 def company(cid='COMP-1'):
@@ -160,8 +164,129 @@ class ExactCyclePlannerTests(unittest.TestCase):
                'control_evidence': {}, 'control_evidence_digest': 'wrong'}
         self.inbox.save_plan(self.cycle, 'COMP-1', bad)
         result = freeze_exact_cycle_plans(self.engine, self.cycle, ['COMP-1'], company_guard=self.guard)
-        self.assertEqual(result['held'][0]['reason'], 'existing_frozen_plan_invalid')
+        self.assertEqual(result['held'][0]['reason'], 'existing_frozen_plan_projection_incompatible')
         self.assertEqual(self.inbox.plan(self.cycle, 'COMP-1')[0], bad)
+
+    def test_compact_empty_inventory_company_projection_keeps_only_visible_final_fields(self):
+        self.repo.get_meta = lambda key: COMPACT_PROFILE if key == 'sheets_profile' else None
+        profile, publication = _publication_schema(self.repo)
+        operations = [{
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+            'values': {'Scan State': 'Complete', 'Active Cycle ID': self.cycle,
+                       'Last Inventory Count': 0, 'Last Checked': '2026-11-19',
+                       'Next Action': 'Official inventory saved'},
+        }]
+        projected = _project_operations(operations, publication)
+        self.assertEqual(profile, COMPACT_PROFILE)
+        self.assertEqual(projected, [{
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+            'values': {'Last Checked': '2026-11-19',
+                       'Next Action': 'Official inventory saved'},
+        }])
+
+    def test_compact_job_history_projection_prunes_local_only_delivery(self):
+        self.repo.get_meta = lambda key: COMPACT_PROFILE if key == 'sheets_profile' else None
+        _, publication = _publication_schema(self.repo)
+        operation = {
+            'tab': 'Job History', 'identity': {'Job Key': 'comp-1:greenhouse:42'},
+            'values': {'Job Title': 'Implementation Manager', 'Salary / Range': '$120k-$140k',
+                       'Source Hash': 'source-a', 'Job Description': 'local evidence',
+                       'Record Updated': 'local timestamp'},
+            'on_insert': {'Requisition ID': '42', 'Source Hash': 'source-a'},
+            'expected': {'Added to Opportunities?': 'Manual Review',
+                         'Salary / Range': '$120k-$140k', 'Source Hash': 'source-old'},
+        }
+        projected = _project_operations([operation], publication)[0]
+        self.assertEqual(projected['values'], {
+            'Job Title': 'Implementation Manager', 'Salary / Range': '$120k-$140k'})
+        self.assertEqual(projected['expected'], {
+            'Added to Opportunities?': 'Manual Review', 'Salary / Range': '$120k-$140k'})
+        self.assertEqual(projected['on_insert'], {'Requisition ID': '42'})
+        self.assertNotIn('Source Hash', projected['values'])
+        # The exact local evidence digest still changes when its local-only
+        # source-hash guard changes, even though Google cannot accept the field.
+        altered = copy.deepcopy(operation)
+        altered['expected']['Source Hash'] = 'different-source'
+        self.assertNotEqual(_digest([operation]), _digest([altered]))
+
+    def test_full_profile_projection_is_operation_compatible_and_sealed(self):
+        result = freeze_exact_cycle_plans(self.engine, self.cycle, ['COMP-1'], company_guard=self.guard)
+        self.assertEqual(result['planned'], ['COMP-1'])
+        plan, _ = self.inbox.plan(self.cycle, 'COMP-1')
+        self.assertEqual(plan['publication_profile'], 'full')
+        self.assertEqual(plan['remote_operations_digest'], _digest(plan['operations']))
+        self.assertTrue(plan['local_operations_digest'])
+        self.assertTrue(plan['local_finalization_digest'])
+        self.assertTrue(plan['remote_projection_digest'])
+
+    def test_unknown_profile_holds_without_plan_or_checkpoint_mutation(self):
+        self.repo.get_meta = lambda key: 'future-v9' if key == 'sheets_profile' else None
+        before = self.state.cycle(self.cycle)
+        result = freeze_exact_cycle_plans(self.engine, self.cycle, ['COMP-1'], company_guard=self.guard)
+        self.assertIn('Unknown Sheets publication profile', result['held'][0]['reason'])
+        self.assertIsNone(self.inbox.plan(self.cycle, 'COMP-1'))
+        self.assertEqual(self.state.cycle(self.cycle), before)
+
+    def test_compact_identity_removal_and_empty_operation_fail_closed(self):
+        self.repo.get_meta = lambda key: COMPACT_PROFILE if key == 'sheets_profile' else None
+        _, publication = _publication_schema(self.repo)
+        with self.assertRaisesRegex(ValueError, 'remove_identity'):
+            _project_operations([{
+                'tab': 'Job History', 'identity': {'Source Hash': 'local-only'},
+                'values': {'Job Title': 'Role'},
+            }], publication)
+        with self.assertRaisesRegex(ValueError, 'operation_empty'):
+            _project_operations([{
+                'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+                'values': {'Scan State': 'Complete'},
+            }], publication)
+        with self.assertRaisesRegex(ValueError, 'unknown_tab'):
+            _project_operations([{
+                'tab': 'Untrusted Tab', 'identity': {'Company ID': 'COMP-1'},
+                'values': {'Company ID': 'COMP-1'},
+            }], publication)
+
+    def test_projection_and_schema_digests_are_deterministic(self):
+        self.repo.get_meta = lambda key: COMPACT_PROFILE if key == 'sheets_profile' else None
+        _, publication = _publication_schema(self.repo)
+        operations = [{
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+            'values': {'Last Checked': '2026-11-19', 'Scan State': 'Complete'},
+        }]
+        first = _project_operations(copy.deepcopy(operations), publication)
+        second = _project_operations(copy.deepcopy(operations), publication)
+        self.assertEqual(first, second)
+        self.assertEqual(_digest(first), _digest(second))
+        schema_a = {tab: list(headers) for tab, headers in sorted(publication.items())}
+        schema_b = {tab: list(publication[tab]) for tab in reversed(list(publication))}
+        self.assertEqual(_digest(schema_a), _digest(schema_b))
+
+    def test_compact_new_plan_requires_dual_durable_local_remote_journal(self):
+        self.repo.get_meta = lambda key: COMPACT_PROFILE if key == 'sheets_profile' else None
+        before = self.state.cycle(self.cycle)
+        result = freeze_exact_cycle_plans(self.engine, self.cycle, ['COMP-1'], company_guard=self.guard)
+        self.assertEqual(result['held'], [{
+            'company_id': 'COMP-1',
+            'reason': 'compact_exact_plan_requires_durable_local_commit_journal',
+        }])
+        self.assertIsNone(self.inbox.plan(self.cycle, 'COMP-1'))
+        self.assertEqual(self.state.cycle(self.cycle), before)
+
+    def test_nonzero_cursor_legacy_plan_holds_without_mutation(self):
+        legacy = {'operations': [{'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+                                  'values': {'Last Checked': '2026-11-19'}}],
+                  'final': {'stage': 'complete'}, 'requested_url': self.saved_payload['requested_url']}
+        self.inbox.save_plan(self.cycle, 'COMP-1', legacy)
+        self.inbox.advance(self.cycle, {'COMP-1': 1}, expected={'COMP-1': 0})
+        before_cycle = self.state.cycle(self.cycle)
+        before_plan = self.inbox.plan(self.cycle, 'COMP-1')
+        result = freeze_exact_cycle_plans(self.engine, self.cycle, ['COMP-1'], company_guard=self.guard)
+        self.assertEqual(result['held'], [{
+            'company_id': 'COMP-1',
+            'reason': 'existing_frozen_plan_projection_incompatible_nonzero_cursor',
+        }])
+        self.assertEqual(self.inbox.plan(self.cycle, 'COMP-1'), before_plan)
+        self.assertEqual(self.state.cycle(self.cycle), before_cycle)
 
     def test_same_url_plan_without_exact_receipt_or_with_altered_payload_holds_queued(self):
         self.assertEqual(freeze_exact_cycle_plans(self.engine, self.cycle, ['COMP-1'], company_guard=self.guard)['planned'], ['COMP-1'])

@@ -24,6 +24,7 @@ from .exact_cycle_receipt import derive_receipt
 
 ALLOWED_INVENTORY_STATUSES = frozenset({'complete', 'partial'})
 CONTROL_EVIDENCE_VERSION = 1
+PUBLICATION_PROJECTION_VERSION = 1
 
 
 def _digest(value) -> str:
@@ -68,11 +69,110 @@ def _plan_digest(plan):
         'operations', 'final', 'requested_url', 'control_evidence',
         'control_evidence_version', 'control_evidence_digest', 'inventory_payload_digest', 'plan_records_digest',
         'final_projection', 'final_projection_digest',
+        'publication_projection_version', 'publication_profile',
+        'publication_schema_digest', 'local_operations_digest',
+        'local_finalization_digest', 'remote_operations_digest',
+        'remote_projection_digest',
     )})
 
 
-def _seal_plan(plan, payload):
+def _publication_schema(repository):
+    """Resolve the configured Google projection without guessing a profile.
+
+    A repository without metadata support is the historical full-Sheets
+    repository.  A repository that does expose ``sheets_profile`` must either
+    name a supported profile or explicitly leave it empty for the full schema.
+    """
+    from .sheet_profile import profile_schemas
+    schemas = getattr(repository, 'schemas', None)
+    if not isinstance(schemas, Mapping):
+        raise ValueError('local_repository_schema_missing')
+    getter = getattr(repository, 'get_meta', None)
+    profile = getter('sheets_profile') if callable(getter) else None
+    publication = profile_schemas(profile)
+    if publication is None:
+        publication = schemas
+        profile = 'full'
+    normalized = {}
+    for tab, headers in publication.items():
+        if tab not in schemas:
+            raise ValueError('publication_schema_unknown_tab')
+        if not isinstance(headers, (list, tuple)) or not headers:
+            raise ValueError('publication_schema_invalid')
+        if len(headers) != len(set(headers)) or set(headers) - set(schemas[tab]):
+            raise ValueError('publication_schema_not_local_subset')
+        normalized[str(tab)] = tuple(str(header) for header in headers)
+    if not normalized:
+        raise ValueError('publication_schema_empty')
+    return str(profile), normalized
+
+
+def _project_operations(operations, publication):
+    """Return only remote-publishable fields, preserving every safe guard."""
+    if not isinstance(operations, list) or not operations:
+        raise ValueError('local_plan_operations_empty')
+    projected = []
+    allowed_keys = {'tab', 'identity', 'values', 'on_insert', 'append_if_missing',
+                    'append_notes', 'expected'}
+    mapping_keys = ('identity', 'values', 'on_insert', 'append_notes', 'expected')
+    for operation in operations:
+        if not isinstance(operation, Mapping) or set(operation) - allowed_keys:
+            raise ValueError('local_plan_operation_shape_invalid')
+        tab = operation.get('tab')
+        if not isinstance(tab, str) or not tab:
+            raise ValueError('local_plan_operation_tab_invalid')
+        # A known local-only tab is deliberately finalized in SQLite but is
+        # not a Google operation under compact-v1.
+        if tab not in publication:
+            from .repository import SCHEMAS
+            if tab not in SCHEMAS:
+                raise ValueError('local_plan_operation_unknown_tab')
+            continue
+        headers = set(publication[tab])
+        result = {'tab': tab}
+        for key in mapping_keys:
+            values = operation.get(key, {})
+            if not isinstance(values, Mapping):
+                raise ValueError('local_plan_operation_mapping_invalid')
+            retained = {str(header): copy.deepcopy(value) for header, value in values.items()
+                        if header in headers}
+            if key == 'identity':
+                if not values or len(retained) != len(values):
+                    raise ValueError('publication_projection_would_remove_identity')
+                result[key] = retained
+            elif retained:
+                result[key] = retained
+        if operation.get('append_if_missing'):
+            result['append_if_missing'] = True
+        mutations = any(result.get(key) for key in ('values', 'on_insert', 'append_notes'))
+        if not mutations:
+            raise ValueError('publication_projection_operation_empty')
+        projected.append(result)
+    if not projected:
+        raise ValueError('publication_projection_operations_empty')
+    return projected
+
+
+def _seal_plan(plan, payload, repository):
     from .publication_receipts import record_fingerprints
+    local_operations = copy.deepcopy(plan['operations'])
+    profile, publication = _publication_schema(repository)
+    plan['operations'] = _project_operations(local_operations, publication)
+    plan['publication_projection_version'] = PUBLICATION_PROJECTION_VERSION
+    plan['publication_profile'] = profile
+    schema_evidence = {tab: list(headers) for tab, headers in sorted(publication.items())}
+    plan['publication_schema_digest'] = _digest(schema_evidence)
+    plan['local_operations_digest'] = _digest(local_operations)
+    plan['local_finalization_digest'] = _digest({
+        'operations': local_operations,
+        'final': plan['final'],
+    })
+    plan['remote_operations_digest'] = _digest(plan['operations'])
+    plan['remote_projection_digest'] = _digest({
+        'profile': profile,
+        'schema_digest': plan['publication_schema_digest'],
+        'operations': plan['operations'],
+    })
     plan['inventory_payload_digest'] = _digest(payload)
     plan['plan_records_digest'] = _digest(record_fingerprints(plan['operations']))
     plan['final_projection'] = {key: plan['final'][key] for key in sorted(plan['final'])}
@@ -81,13 +181,19 @@ def _seal_plan(plan, payload):
     return plan
 
 
-def _validate_existing_plan(inbox, cycle, company_id, payload, plan, evidence_digest, stamp):
+def _validate_existing_plan(inbox, cycle, company_id, payload, plan, evidence_digest, stamp,
+                            repository, cursor):
     """Validate an interrupted plan/receipt pair before repairing State.
 
     Only ``LOCAL_COMMITTED`` is accepted: ``SYNC_PENDING`` or confirmed states
     belong to the publisher/reconciliation boundary, never this planner.
     """
     from .publication_receipts import LOCAL_COMMITTED, record_fingerprints
+    if (not isinstance(plan, Mapping)
+            or plan.get('publication_projection_version') != PUBLICATION_PROJECTION_VERSION):
+        if isinstance(cursor, int) and cursor > 0:
+            raise ValueError('existing_frozen_plan_projection_incompatible_nonzero_cursor')
+        raise ValueError('existing_frozen_plan_projection_incompatible')
     if (not isinstance(plan, dict) or not isinstance(plan.get('operations'), list)
             or not isinstance(plan.get('final'), dict)
             or plan.get('requested_url') != payload['requested_url']
@@ -97,6 +203,21 @@ def _validate_existing_plan(inbox, cycle, company_id, payload, plan, evidence_di
             or plan.get('plan_records_digest') != _digest(record_fingerprints(plan['operations']))
             or plan.get('plan_digest') != _plan_digest(plan)):
         raise ValueError('existing_frozen_plan_invalid')
+    profile, publication = _publication_schema(repository)
+    schema_digest = _digest({tab: list(headers) for tab, headers in sorted(publication.items())})
+    if (plan.get('publication_profile') != profile
+            or plan.get('publication_schema_digest') != schema_digest
+            or plan.get('remote_operations_digest') != _digest(plan['operations'])
+            or plan.get('remote_projection_digest') != _digest({
+                'profile': profile, 'schema_digest': schema_digest,
+                'operations': plan['operations'],
+            })
+            or _project_operations(plan['operations'], publication) != plan['operations']
+            or not isinstance(plan.get('local_operations_digest'), str)
+            or not plan['local_operations_digest']
+            or not isinstance(plan.get('local_finalization_digest'), str)
+            or not plan['local_finalization_digest']):
+        raise ValueError('existing_frozen_plan_projection_invalid')
     if plan['control_evidence_digest'] != evidence_digest:
         raise ValueError('company_control_evidence_changed')
     expected = _receipt(cycle, company_id, payload, plan, stamp)
@@ -283,17 +404,26 @@ def freeze_exact_cycle_plans(engine, cycle_id: str, company_ids: Iterable[str], 
                 company_guard(company_id, payload['requested_url']), company_id, payload['requested_url'])
             existing = engine.inbox.plan(cycle_id, company_id)
             if existing is None:
+                profile, _publication = _publication_schema(engine.repo)
+                if profile != 'full':
+                    # Compact planning has two different authorities: the full
+                    # local simulation and its narrow Google projection.  Until
+                    # one durable transaction journals and commits the former
+                    # before labeling its receipt LOCAL_COMMITTED, creating a
+                    # new compact plan would falsely claim local durability.
+                    raise ValueError('compact_exact_plan_requires_durable_local_commit_journal')
                 plan = _freeze(engine, planner, cycle, company_id, payload)
                 plan['control_evidence'] = evidence
                 plan['control_evidence_version'] = CONTROL_EVIDENCE_VERSION
                 plan['control_evidence_digest'] = evidence_digest
-                _seal_plan(plan, payload)
+                _seal_plan(plan, payload, engine.repo)
                 receipt = _receipt(cycle, company_id, payload, plan, stamp)
                 engine.inbox.save_plan(cycle_id, company_id, plan, receipt)
                 action = 'planned'
             else:
-                plan, _cursor = existing
-                _validate_existing_plan(engine.inbox, cycle, company_id, payload, plan, evidence_digest, stamp)
+                plan, cursor = existing
+                _validate_existing_plan(engine.inbox, cycle, company_id, payload, plan,
+                                        evidence_digest, stamp, engine.repo, cursor)
                 action = 'recovered'
 
             # This is intentionally second: plan + receipt are the durable
