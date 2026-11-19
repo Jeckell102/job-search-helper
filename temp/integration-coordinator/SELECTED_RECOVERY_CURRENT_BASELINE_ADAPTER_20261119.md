@@ -88,6 +88,26 @@ receipt coverage.  Promotion into the ordinary v2 local state and the existing
 real receipt/readback path remain unimplemented and must receive independent
 QA before any protected installation.
 
+## Atomic v2 promotion and publication gate
+
+The isolated inbox candidate now records prefix verification and complete local
+verification separately, then under the local writer transaction atomically
+replaces only the retained legacy `sync_plans` entry with the sealed v2
+successor and persists ordinary `LOCAL_VERIFIED` evidence.  It leaves remote
+intent and receipts absent at that point.
+
+The existing exact-v2 publisher has an additive selected-recovery gate: before
+receipt creation it requires the matching selected journal, matching plan and
+projection digests, terminal v2 promotion state, and a still-unexpired signed
+authorization.  After the existing remote intent is frozen, it records the
+selected journal's terminal remote-plan state. Ordinary v2 plans take the
+unchanged path.
+
+The staged regression command now passes **104 tests in 12.12 seconds**. This
+is not independent QA, protected installation, Google access, or a live
+publication authorization. The remaining adapter work includes cleanup/archive
+integration, adversarial promotion failures, and independent staged QA.
+
 ## Next gate
 
 Port the selected-recovery journal and successor-promotion adapter into a
