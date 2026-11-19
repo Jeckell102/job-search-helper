@@ -33,6 +33,13 @@ completed Companies.
   21 protected remote-edit conflicts. The pending cell and every conflict must
   be reconciled or explicitly retained under the normal safeguards before any
   bounded publisher/readback. Current public-source evidence also remains open.
+- A bounded read-only workbook inspection confirmed that the 20 held
+  `Opportunities` `Salary / Range` conflicts contain independent remote values;
+  at least one is field-inappropriate content rather than a salary value. The
+  remaining conflict is a missing remote `Companies` row. These are protected
+  user-data discrepancies, not a permission to bulk-import, clear, restore, or
+  overwrite any value. They require an owner-approved, record-by-record
+  reconciliation decision.
 - Historical broad in-progress cycles remain recorded. A company-only run is
   unsafe until the exact recovery contract and current scope guards are
   reviewed.
@@ -53,6 +60,12 @@ controller workflow whose owner PID is absent. It is retained recovery
 evidence, not a live process. Nineteen historical cycles are also recorded as
 `In Progress`. These facts authorize neither recovery nor a new run.
 
+The sole pending delivery is the `Last Checked` update for a Saronic
+Technologies opportunity. It is blocked because the same row has a protected
+remote `Salary / Range` conflict; the remote value is retained and the local
+delivery receipt is absent. The normal publisher correctly refuses to send a
+partial row around that conflict.
+
 ## Guarded sequence
 
 1. Reconfirm installed hashes and rollback, host `ACTIVE`, queue/campaign off,
@@ -60,9 +73,10 @@ evidence, not a live process. Nineteen historical cycles are also recorded as
 2. Preserve the accepted F4 evidence and reconfirm its services/hashes only if
    a later gate needs it. Do not infer broader authorization from that proof.
 3. Identify and safely reconcile or explicitly retain the one local pending
-   publisher receipt and 21 protected conflicts. Only then request interactive
-   Google authorization for a bounded normal publisher/readback; do not start a
-   scrape.
+   publisher receipt and 21 protected conflicts. The remote salary conflicts
+   require owner-approved, record-by-record handling; do not bulk-import or
+   overwrite them. Only then request interactive Google authorization for a
+   bounded normal publisher/readback; do not start a scrape.
 4. Freshly verify Company ID/revision, employer scope, source access,
    pagination and detail coverage for all frozen cases and PDW. Source drift or
    access failure becomes an explicit hold.

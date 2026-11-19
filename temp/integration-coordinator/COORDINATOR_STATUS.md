@@ -536,6 +536,15 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   cell and 21 protected remote-edit conflicts. No Google connection or write
   was attempted. This is a new explicit blocker ahead of any bounded publisher
   request.
+- A bounded read-only workbook inspection then established that the 20
+  Opportunities `Salary / Range` conflicts contain remote values, including at
+  least one field-inappropriate value, and the 21st conflict is one missing
+  Companies row. The sole dirty delivery is the Saronic Technologies
+  `Last Checked` update; it shares a protected salary conflict, so the normal
+  publisher correctly excludes that row. No conflict, remote value, local
+  record, or pending receipt was changed. This is an owner-approved,
+  record-by-record reconciliation gate; no bulk import, overwrite, restore,
+  or conflict clearing is permitted.
 - QA lane ownership is complete for this checkpoint. Coordinator next action:
-  map the pending receipt and conflict protection paths without mutation, then
-  update the guarded recovery/publisher decision record.
+  prepare the bounded reconciliation decision record without mutation, then
+  obtain the required owner direction before Google publication can proceed.
