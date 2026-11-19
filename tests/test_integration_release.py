@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import tempfile
+from threading import Event, Thread
 import unittest
 
 from job_search_helper.cli import WriterLockBusy, scraper_lock_name, writer_lock
@@ -88,6 +89,34 @@ class IntegrationReleaseTests(unittest.TestCase):
         self.assertFalse((self.state / "integration-release-journal.json").exists())
         for name in self.paths:
             self.assertNotEqual(metadata(self.project / name), metadata(self.candidate / name))
+
+    def test_release_and_scraper_start_race_has_one_lock_owner(self):
+        entered, release = Event(), Event()
+        errors = []
+
+        def fault(stage):
+            if stage == "prepared":
+                entered.set()
+                release.wait(5)
+
+        def activate():
+            try:
+                self.activate(fault=fault)
+            except BaseException as exc:
+                errors.append(exc)
+
+        worker = Thread(target=activate)
+        worker.start()
+        self.assertTrue(entered.wait(2), "release did not reach its durable lock-held boundary")
+        with self.assertRaises(WriterLockBusy):
+            with writer_lock(self.state / scraper_lock_name()):
+                pass
+        release.set()
+        worker.join(5)
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(errors, [])
+        with writer_lock(self.state / scraper_lock_name()):
+            pass
 
     def test_crash_mid_install_blocks_startup_until_exact_rollback(self):
         def fault(stage):

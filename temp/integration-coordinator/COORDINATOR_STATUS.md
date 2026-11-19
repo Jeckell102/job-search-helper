@@ -73,7 +73,7 @@ ten-minute user update. Update it immediately after any material result.
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
   service was restarted and no scheduler has been started in this work.
-- Milestone 5: 52% — source candidates now provide crash-durable,
+- Milestone 5: 62% — source candidates now provide crash-durable,
   Company-version-bound release-to-retry intent, exact complete-release pins,
   normal company-only admission/recovery, stale-source refusal at admission
   and storage, and release/attempt identity through publication and outcomes.
@@ -85,9 +85,15 @@ ten-minute user update. Update it immediately after any material result.
   activation without reinstalling. The coordinator now records retry lineage,
   suppresses late original failures from reopening work, rejects competing
   successors and creates a fresh repair for a genuinely failed repaired
-  attempt. The complete isolated coordinator suite passes 195 checks with
-  strict resource warnings, and 178 scraper/release checks also pass.
-  Independent QA, protected-store reconciliation, disposable race rehearsal,
+  attempt. Protected-source reconciliation is now complete in a temporary,
+  source-only copy: the current scraper behavior and M5 selection passed 72
+  checks, nine repaired publication/restart checks passed, eleven current
+  durable-inbox checks passed, the disposable release/start race passed, and
+  the combined MuleLab coordinator suite passed 398 checks with strict
+  resource warnings. A reconciliation-specific safeguard now refuses silent
+  replanning after any acknowledged publication slice. The evidence and exact
+  hashes are recorded in `M5_PRODUCTION_RECONCILIATION_REPORT.md`.
+  Independent QA of that exact candidate, owner-reviewed protected integration,
   guarded deployment and the live release-to-saved-jobs proof remain.
 - Milestone 6: 15% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. The administrator-authenticated live interruption
@@ -391,6 +397,16 @@ partial Google Sheets write alone is not completion.
   195 checks; with 178 scraper/release checks, the two surfaces total 373.
   This remains isolated source pending
   independent review and protected-store reconciliation.
+- M5 protected-source reconciliation is now accepted as a temporary
+  source-level candidate, not a deployment. It preserves the current protected
+  scraper behavior while adding exact release/retry/publication lineage and a
+  fail-closed boundary for a review change after partial publication. The
+  current-source M5 selection passed 72 checks, nine publication/restart checks
+  passed, eleven durable-inbox checks passed, the release/start race passed,
+  and the combined MuleLab coordinator suite passed 398 checks. Exact hashes,
+  boundaries, and remaining gates are in
+  `M5_PRODUCTION_RECONCILIATION_REPORT.md`. Independent review of this exact
+  reconciled source remains open; protected production was not changed.
 - A second fresh preflight confirmed the same active services, 200 health, and
   terminal-only receipt aggregate. A `sudo -n` restart attempt returned 1
   without changing service state, confirming that only an interactive
@@ -415,11 +431,12 @@ partial Google Sheets write alone is not completion.
    `ollama.service` twice. Record the resulting bounded evidence or failure,
    independently verify the authoritative receipt and service state, and leave
    any uncertain receipt lane-blocking. Do not rerun blindly after a failure.
-2. Independently review the combined M5 repaired-retry and shared-release
-   candidates, then add the maintained controller that builds the reviewed
-   manifest, activates one release, and creates its durable retry from the
-   returned receipt. Rehearse the startup/activation/rollback races on a
-   disposable production snapshot before any guarded deployment.
+2. Independently review the exact hashes in
+   `M5_PRODUCTION_RECONCILIATION_REPORT.md`, including the partial-publication
+   hold and the disposable release/start race evidence. Only after acceptance,
+   freeze the protected baseline and perform an owner-reviewed integration;
+   rerun current production-owned tests on the exact installed set before any
+   guarded activation.
 3. Use the accepted M1-M4 reconciliation candidate only through an explicit,
    hash-recorded integration review; do not mechanically apply it to the
    protected checkout.
