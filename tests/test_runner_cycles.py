@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
 import unittest
@@ -244,7 +245,7 @@ class FreshStartLifecycleTests(unittest.TestCase):
     def test_company_only_request_starts_only_declared_company(self):
         from job_search_helper.runner import select_start_cycle
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"one-company","company_ids":["C-1"]}')
+        request.write_text('{"mode":"company-only","request_id":"one-company","company_ids":["C-1"],"enqueued_at":"2026-11-18T00:00:00Z"}')
 
         cycle = select_start_cycle(self.engine, self.state, self.repo, self.database)
 
@@ -256,7 +257,7 @@ class FreshStartLifecycleTests(unittest.TestCase):
     def test_company_only_request_id_reuses_started_cycle_after_interrupted_receipt(self):
         from job_search_helper.runner import select_start_cycle
         request = self.root / 'next-scan.json'
-        payload = '{"mode":"company-only","request_id":"deduplicate","company_ids":["C-1"]}'
+        payload = '{"mode":"company-only","request_id":"deduplicate","company_ids":["C-1"],"enqueued_at":"2026-11-18T00:00:00Z"}'
         request.write_text(payload)
         first = select_start_cycle(self.engine, self.state, self.repo, self.database)
 
@@ -270,10 +271,10 @@ class FreshStartLifecycleTests(unittest.TestCase):
         self.assertEqual(set(self.state.cycle(first)['companies']), {'C-1'})
 
     def test_company_only_request_waits_without_superseding_active_cycle(self):
-        from job_search_helper.runner import select_start_cycle
+        from job_search_helper.runner import company_only_queue_status, select_start_cycle
         active = self.engine.start_cycle(company_ids=['C-0'])
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"waiting","company_ids":["C-1"]}')
+        request.write_text('{"mode":"company-only","request_id":"waiting","company_ids":["C-1"],"enqueued_at":"2026-11-18T00:00:00Z"}')
 
         with self.assertRaisesRegex(ValueError, f'safe boundary.*{active}'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
@@ -281,6 +282,12 @@ class FreshStartLifecycleTests(unittest.TestCase):
         self.assertTrue(request.exists())
         self.assertEqual(set(self.state.cycle(active)['companies']), {'C-0'})
         self.assertEqual(len(self.state.cycles()), 1)
+        status = company_only_queue_status(
+            self.engine, self.state, self.database,
+            observed_at=datetime(2026, 11, 18, 0, 1, tzinfo=timezone.utc),
+        )
+        self.assertEqual(status['queue_age_seconds'], 60)
+        self.assertEqual(status['blocking_cycle_ids'], [active])
 
     def test_company_only_request_keeps_paused_cycle_visible_and_unchanged(self):
         from job_search_helper.runner import select_start_cycle
@@ -289,7 +296,7 @@ class FreshStartLifecycleTests(unittest.TestCase):
         cycle['status'] = 'Paused'
         self.state.save_cycle(cycle)
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"paused","company_ids":["C-1"]}')
+        request.write_text('{"mode":"company-only","request_id":"paused","company_ids":["C-1"],"enqueued_at":"2026-11-18T00:00:00Z"}')
 
         with self.assertRaisesRegex(ValueError, f'safe boundary.*{paused}'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
@@ -298,16 +305,47 @@ class FreshStartLifecycleTests(unittest.TestCase):
         self.assertEqual(self.state.cycle(paused)['status'], 'Paused')
         self.assertEqual(set(self.state.cycle(paused)['companies']), {'C-0'})
 
+    def test_company_only_queue_status_reports_age_blocker_and_safe_paused_recovery(self):
+        from job_search_helper.runner import company_only_queue_status
+        paused = self.engine.start_cycle(company_ids=['C-0'])
+        cycle = self.state.cycle(paused)
+        cycle['status'] = 'Paused'
+        self.state.save_cycle(cycle)
+        (self.root / 'next-scan.json').write_text(
+            '{"mode":"company-only","request_id":"queued","company_ids":["C-1"],'
+            '"enqueued_at":"2026-11-18T00:00:00Z"}'
+        )
+
+        status = company_only_queue_status(
+            self.engine, self.state, self.database,
+            observed_at=datetime(2026, 11, 18, 0, 2, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(status['queue_age_seconds'], 120)
+        self.assertEqual(status['blocking_cycle_ids'], [paused])
+        self.assertIn('start --resume', status['recovery'])
+        self.assertIn('do not delete locks', status['recovery'])
+        self.assertTrue((self.root / 'next-scan.json').exists())
+
+    def test_company_only_request_requires_immutable_enqueue_timestamp(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.root / 'next-scan.json'
+        request.write_text('{"mode":"company-only","request_id":"missing-time","company_ids":["C-1"]}')
+        with self.assertRaisesRegex(ValueError, 'immutable enqueued_at is required'):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+        self.assertEqual(self.state.cycles(), [])
+        self.assertTrue(request.exists())
+
     def test_company_only_request_rejects_missing_or_unknown_ids_without_full_scan(self):
         from job_search_helper.runner import select_start_cycle
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"missing","company_ids":[]}')
+        request.write_text('{"mode":"company-only","request_id":"missing","company_ids":[],"enqueued_at":"2026-11-18T00:00:00Z"}')
         with self.assertRaisesRegex(ValueError, 'refusing to widen'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
         self.assertEqual(self.state.cycles(), [])
         self.assertTrue(request.exists())
 
-        request.write_text('{"mode":"company-only","request_id":"unknown","company_ids":["C-404"]}')
+        request.write_text('{"mode":"company-only","request_id":"unknown","company_ids":["C-404"],"enqueued_at":"2026-11-18T00:00:00Z"}')
         with self.assertRaisesRegex(ValueError, 'Unknown Company ID'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
         self.assertEqual(self.state.cycles(), [])

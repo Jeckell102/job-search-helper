@@ -221,6 +221,12 @@ def select_start_cycle(engine, state, repo, database, *, resume=False):
     return cycle_id
 
 
+def company_only_queue_status(engine, state, database, *, observed_at=None):
+    """Expose pending company-only queue age and safe recovery guidance."""
+    from .scan_request import company_only_queue_status as read_status
+    return read_status(engine, state, database, observed_at=observed_at)
+
+
 def active_inbox_cycles(inbox, state, include_blocked=True):
     """Return saved work only for cycles that have not already finished.
 
