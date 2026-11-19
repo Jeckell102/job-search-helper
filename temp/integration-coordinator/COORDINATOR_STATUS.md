@@ -1403,6 +1403,17 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   inventory, and cursor on every refusal. A separate future slice still owns
   the coordinator lifecycle consumer and full release-binding provenance on
   outcomes. No protected runtime state was changed by this audit.
+- The resume/provenance repair is now independently accepted and installed as
+  one combined eleven-file safety delta. Both independent reconstitutions and
+  the protected suite passed 120 focused checks. The installation receipt is
+  `/tmp/jsh-f2-combined-20261119T201236Z-n261z6ji/manifest.json` with
+  `INSTALLED_HASH_VERIFIED`; it retains every replaced file for rollback.
+  Retry resume/recovery now rechecks the exact active `COMPLETE` release
+  before fetch, write, local rebuild, inbox acknowledgement, or cursor
+  movement, and retry outcomes/receipts carry a canonical complete-release
+  binding digest. This did not start any process or mutate job/Google/queue
+  state. The durable coordinator lifecycle ledger, stale-event reconciliation,
+  and guarded live acceptance remain open.
 - Davidson legacy-to-v2 migration remains source-only and uninstalled. A
   higher-model review rejected the first candidate after reproducing three
   real gaps: guard-only Google readback could falsely confirm after a refused
