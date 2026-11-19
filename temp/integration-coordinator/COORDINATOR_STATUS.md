@@ -104,7 +104,7 @@ ten-minute user update. Update it immediately after any material result.
   duplicate jobs. Owner-reviewed protected integration is complete: the
   protected integration selection passes 202 checks and exact rollback/source
   hashes are recorded. The live release-to-saved-jobs proof remains.
-- Milestone 6: 74% — F4 receipt/recovery source review and controlled Jetson
+- Milestone 6: 76% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. An isolated F8 candidate now extends the existing
   coordinator with one maintenance owner, durable boot/reconnect catch-up,
   disk-pressure holds, explicit evidence-retention counts, and planned
@@ -135,7 +135,12 @@ ten-minute user update. Update it immediately after any material result.
   installed hashes, Git checkpoint, historical-cycle refusal, and unchanged
   47-inventory/eight-plan live counts without accessing Google. The
   administrator-authenticated Jetson interruption proof and the full
-  sequential acceptance matrix remain.
+  sequential acceptance matrix remain. The independently accepted exact-cycle
+  overlay is now installed in the protected checkout under the existing
+  install lock with a 27-file rollback receipt. A separate installed-hash pass
+  found zero mismatches, and 186 focused plus 180 adjacent protected checks
+  passed. No live Google, scraper, service, database, queue, lock-deletion, or
+  Jetson action was part of this install.
 
 ## Definition of fully completed
 
@@ -1279,3 +1284,15 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   five exact targets and add the nine exact modules/tests is now required;
   this approval would still authorize no Google write, scrape, service start,
   queue release, database change, lock deletion, or Jetson action.
+- The owner gave the exact dirty-checkout install approval. The guarded
+  installer then installed and verified all 27 approved files in the protected
+  checkout. The rollback receipt is
+  `/tmp/job-search-protected-exact-backup-20261119T185825Z-2_4dpn9p/manifest.json`;
+  a second SHA-256 verification checked all 27 installed files with zero
+  mismatches. Protected offline verification passed 186 focused checks and
+  180 adjacent checks with warnings treated as errors. No Google access,
+  scrape, service restart, live-database change, lock deletion, queue release,
+  or Jetson modification occurred. Milestones are now M1 92%, M2 92%, M3 88%,
+  M4 78%, M5 76%, and M6 76% (about 88% overall). The next authorization gate
+  is the concrete live Google/company acceptance payload; final independent
+  end-to-end acceptance remains after that.

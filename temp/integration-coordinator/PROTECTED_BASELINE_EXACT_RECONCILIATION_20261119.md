@@ -155,6 +155,20 @@ new exact modules to be absent, acquires the existing integration lock, writes
 a durable per-file backup manifest, performs atomic copies, verifies every
 installed hash, and automatically restores only its own file set on failure.
 
+The owner subsequently gave that exact approval. The guarded installer ran on
+2026-11-19 and reported `INSTALLED_HASH_VERIFIED` for all 27 approved source
+and test files. Its durable rollback receipt is
+`/tmp/job-search-protected-exact-backup-20261119T185825Z-2_4dpn9p/manifest.json`.
+An independent post-install SHA-256 pass compared every installed file with
+that receipt and found 27 matches with zero mismatches.
+
+Post-install offline verification in the protected checkout passed **186
+focused checks** in 18.14s and **180 protected-adjacent checks** in 25.38s,
+with warnings treated as errors. The install and verification did not access
+Google, start a scrape, restart a service, change the live database, delete a
+lock, release a queue, or modify the Jetson. Live exact publication and the
+final end-to-end company demonstration remain separately approval-gated.
+
 Candidate core hashes:
 
 - `runner.py`: `28c05b612544eb51c073bbb784f508ec6a48343d3e4006a8545e17d514809aae`
