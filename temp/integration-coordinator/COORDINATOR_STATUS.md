@@ -39,11 +39,12 @@ ten-minute user update. Update it immediately after any material result.
   pre-existing documentation changes are preserved; it has no GitHub remote.
 - Milestone 1: 65% — implementation is present; guarded operational proof is
   still required.
-- Milestone 2: 75% — durable Company revisions, reconciliation, and scoped
+- Milestone 2: 80% — durable Company revisions, reconciliation, and scoped
   request provenance are implemented and independently reviewed. A narrow
   current-Company revision lookup now exists for the coordinator boundary;
-  the active local store now has the additive event/outbox foundation. Guarded
-  normal-runner wiring and live proof remain.
+  the active local store now has the additive event/outbox foundation. The
+  existing Sheets sync now baselines current Companies once without scheduling
+  them, then reconciles later changes. Guarded live proof remains.
 - Milestone 3: 55% — bounded outcome classification, local immutable records,
   and independently reviewed intake into the existing coordinator are
   implemented. The active Job Search Helper source now persists classifier
@@ -99,6 +100,10 @@ partial Google Sheets write alone is not completion.
 - The active local repository now has additive Company-event and scrape-outcome
   tables. An isolated temporary database proved one event and one idempotent
   classified outcome; no live database or Company record was changed.
+- The active Sheets synchronizer now seeds existing Companies only as a
+  one-time watermark and later reconciles changes into the outbox. An isolated
+  check seeded one Company, created no pending request, and remained
+  idempotent on the second call.
 
 ## Safety boundaries
 
