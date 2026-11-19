@@ -142,6 +142,19 @@ row metadata, premature cleanup, uncertain-write replay, moved rows, and exact
 flag widening all refuse safely. This does not constitute protected install or
 live Sheets acceptance.
 
+The sanitized overlay package and `SHA256SUMS` were committed and pushed to
+the private feature branch. Local HEAD, the local remote-tracking ref, and an
+independent `git ls-remote` query all matched
+`79dd7969abe9b0440ff815abe9bccbe038e1cc30`; the feature worktree was clean.
+The rollback-backed protected install then stopped at permission review before
+the install script ran or any protected file changed. Because five target core
+files are already modified or untracked in the protected dirty checkout, a
+fresh explicit owner approval naming that overwrite/addition risk is required.
+The prepared installer rechecks the five recorded pre-hashes, requires all nine
+new exact modules to be absent, acquires the existing integration lock, writes
+a durable per-file backup manifest, performs atomic copies, verifies every
+installed hash, and automatically restores only its own file set on failure.
+
 Candidate core hashes:
 
 - `runner.py`: `28c05b612544eb51c073bbb784f508ec6a48343d3e4006a8545e17d514809aae`

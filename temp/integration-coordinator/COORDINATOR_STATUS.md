@@ -1269,3 +1269,13 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   Three focused planning checks and compilation passed.  The goal remains
   active; next is an independent review of the assembled candidate followed
   by the still-required protected install and live acceptance gates.
+- The exact protected overlay is backed up and three-way hash verified on the
+  private branch at `79dd7969abe9b0440ff815abe9bccbe038e1cc30`. A guarded
+  installer with pre-hash checks, the existing install lock, durable per-file
+  rollback, atomic copies, and post-install hash verification is ready. The
+  permission reviewer stopped it before execution because the protected
+  checkout is dirty and five core targets are already modified or untracked.
+  No protected file changed. Fresh explicit owner approval to replace those
+  five exact targets and add the nine exact modules/tests is now required;
+  this approval would still authorize no Google write, scrape, service start,
+  queue release, database change, lock deletion, or Jetson action.
