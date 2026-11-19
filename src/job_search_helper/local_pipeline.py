@@ -270,8 +270,12 @@ class LocalPipeline:
             final = {k: v for k, v in local_item.items() if k != 'jobs'}
             plan = {'operations': self.planner.operations, 'final': final,
                     'requested_url': payload.get('requested_url', '')}
+            # Keep the receipt positional at this integration boundary.  Some
+            # durable-inbox adapters/proxies predate the optional keyword, but
+            # accept the fourth positional argument; the receipt is still
+            # persisted atomically by InventoryInbox.save_plan.
             self.inbox.save_plan(self.cid, cid, plan,
-                                 receipt=self._receipt_details(cid, payload, plan))
+                                 self._receipt_details(cid, payload, plan))
         except Exception as exc:
             for tab, length in lengths.items():
                 del self.planner.rows[tab][length:]
