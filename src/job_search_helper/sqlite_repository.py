@@ -86,6 +86,7 @@ class SQLiteRepository:
             self.schemas = {tab: json.loads(headers) for tab, headers in self.db.execute('SELECT tab,headers FROM tabs')}
             self.validate_schema()
             if not readonly:
+                self._ensure_company_event_schema()
                 from .review_revisions import install
                 install(self.db)
                 self.path.chmod(0o600)
@@ -135,6 +136,27 @@ class SQLiteRepository:
             self.set_meta('spreadsheet_id', self.spreadsheet_id)
             for tab, headers in SCHEMAS.items():
                 self.db.execute('INSERT OR IGNORE INTO tabs VALUES (?,?)', (tab, encode(headers)))
+
+    def _ensure_company_event_schema(self):
+        """Additive M2 schema; never changes workbook records or old outbox rows."""
+        self.db.executescript('''
+        CREATE TABLE IF NOT EXISTS company_revisions (
+          company_id TEXT NOT NULL, revision INTEGER NOT NULL,
+          source_revision TEXT NOT NULL, eligible INTEGER NOT NULL,
+          fact TEXT NOT NULL, created_at TEXT NOT NULL,
+          PRIMARY KEY(company_id, revision));
+        CREATE TABLE IF NOT EXISTS company_event_outbox (
+          event_id TEXT PRIMARY KEY, company_id TEXT NOT NULL,
+          revision INTEGER NOT NULL, source_revision TEXT NOT NULL,
+          kind TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL,
+          UNIQUE(company_id, revision),
+          FOREIGN KEY(company_id, revision) REFERENCES company_revisions(company_id, revision));
+        CREATE TABLE IF NOT EXISTS company_event_deliveries (
+          event_id TEXT NOT NULL, consumer TEXT NOT NULL, acknowledged_at TEXT NOT NULL,
+          PRIMARY KEY(event_id, consumer),
+          FOREIGN KEY(event_id) REFERENCES company_event_outbox(event_id));
+        CREATE INDEX IF NOT EXISTS company_event_outbox_company ON company_event_outbox(company_id, revision);
+        ''')
 
     @contextmanager
     def transaction(self):
@@ -267,91 +289,226 @@ class SQLiteRepository:
 
     def import_rows(self, tab, numbered_rows, *, policies=None, protect_existing_choices=False):
         """Idempotent bootstrap ONLY. Refuse to overwrite locally dirty records."""
+        with self.transaction():
+            count, _ = self._import_rows_in_transaction(tab, numbered_rows, policies=policies,
+                                                        protect_existing_choices=protect_existing_choices)
+            return count
+
+    def _import_rows_in_transaction(self, tab, numbered_rows, *, policies=None,
+                                    protect_existing_choices=False, event_origin=None):
         _tab(tab)
         count = 0
+        events = []
+        for remote_number, supplied in numbered_rows:
+            row = {h: supplied.get(h, '') for h in self.schemas[tab]}
+            for value in row.values():
+                _scalar(value)
+            identity = identity_for(tab, row)
+            matches = self.matches(tab, identity)
+            if len(matches) > 1:
+                raise RepositoryError(f'{tab}: duplicate import identity.')
+            row_id = matches[0][0] if matches else self.db.execute(
+                'SELECT COALESCE(MAX(row_id),0)+1 FROM records WHERE tab=?', (tab,)).fetchone()[0]
+            if self.db.execute('SELECT 1 FROM dirty WHERE tab=? AND row_id=?', (tab, row_id)).fetchone():
+                raise RepositoryError('Bootstrap would overwrite local changes; stop and reconcile.')
+            before = self.row(tab, row_id) if matches else None
+            self._put(tab, row_id, row, (policies or {}).get(remote_number, {}))
+            self._baseline(tab, row_id, row)
+            if event_origin and tab == 'Companies' and before != row:
+                event = self._record_company_event(row, origin=event_origin)
+                if event:
+                    events.append(event)
+            if protect_existing_choices and tab == 'Job History' and str(row.get('Added to Opportunities?', '')).casefold() in {'yes', 'no'}:
+                self.db.execute('INSERT OR IGNORE INTO manual_choices VALUES (?,?,?,?)',
+                                (tab, row_id, row['Added to Opportunities?'], timestamp()))
+            count += 1
+        return count, events
+
+    def import_companies_with_events(self, numbered_rows, *, policies=None, origin='import'):
+        """Import authoritative Company rows and outbox facts in one transaction.
+
+        A caller must explicitly choose this API; plain bootstrap imports do
+        not backfill the historical backlog into the live intake queue.
+        """
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        if not isinstance(origin, str) or not origin.strip():
+            raise RepositoryError('Company event origin is required.')
+        if not self._company_event_tables_present():
+            raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
         with self.transaction():
-            for remote_number, supplied in numbered_rows:
-                row = {h: supplied.get(h, '') for h in self.schemas[tab]}
-                for value in row.values():
-                    _scalar(value)
-                identity = identity_for(tab, row)
-                matches = self.matches(tab, identity)
-                if len(matches) > 1:
-                    raise RepositoryError(f'{tab}: duplicate import identity.')
-                row_id = matches[0][0] if matches else self.db.execute(
-                    'SELECT COALESCE(MAX(row_id),0)+1 FROM records WHERE tab=?', (tab,)).fetchone()[0]
-                if self.db.execute('SELECT 1 FROM dirty WHERE tab=? AND row_id=?', (tab, row_id)).fetchone():
-                    raise RepositoryError('Bootstrap would overwrite local changes; stop and reconcile.')
-                self._put(tab, row_id, row, (policies or {}).get(remote_number, {}))
-                self._baseline(tab, row_id, row)
-                if protect_existing_choices and tab == 'Job History' and str(row.get('Added to Opportunities?', '')).casefold() in {'yes', 'no'}:
-                    self.db.execute('INSERT OR IGNORE INTO manual_choices VALUES (?,?,?,?)',
-                                    (tab, row_id, row['Added to Opportunities?'], timestamp()))
-                count += 1
-        return count
+            count, events = self._import_rows_in_transaction('Companies', numbered_rows, policies=policies,
+                                                               event_origin=origin)
+        return {'imported': count, 'company_events': events}
 
     def commit(self, operations):
         operations = copy.deepcopy(list(operations))
         if not operations:
             return {'inserted': 0, 'updated': 0, 'new_jobs': [], 'requests': 0}
         with self.transaction():
-            expanded = []
-            for op in operations:
-                if op.get('tab') == 'Opportunities' and 'Opportunity ID' in self.schemas['Opportunities']:
-                    matches = self.matches('Opportunities', op.get('identity', {}))
-                    if matches:
-                        for _, row in matches:
-                            if not row.get('Opportunity ID'):
-                                raise RepositoryError('Opportunity is missing its permanent ID; reconcile before writing.')
-                            scoped = copy.deepcopy(op)
-                            scoped['identity'] = {'Opportunity ID': row['Opportunity ID']}
-                            scoped['append_if_missing'] = False
-                            expanded.append(scoped)
-                        continue
-                    if op.get('append_if_missing'):
-                        op.setdefault('on_insert', {}).setdefault('Opportunity ID', 'OPP-' + uuid.uuid4().hex)
-                expanded.append(op)
-            operations = expanded
-            sheets = {}
-            for op in operations:
-                tab = op.get('tab'); _tab(tab)
-                if tab not in sheets:
-                    tail = self.db.execute('SELECT COALESCE(MAX(row_id),0) FROM records WHERE tab=?', (tab,)).fetchone()[0]
-                    sheets[tab] = _Sheet(list(self.schemas[tab]), append_floor=tail)
-                matches = self.matches(tab, op.get('identity', {}))
-                # Also include aliases that _prepare must examine before appending.
-                proposed = {**op.get('on_insert', {}), **op.get('identity', {}), **op.get('values', {})}
-                if tab == 'Job History' and proposed.get('Company') and proposed.get('Official Job URL'):
-                    matches += self.matches(tab, {h: proposed[h] for h in ('Company', 'Official Job URL')})
-                for rid, row in matches:
-                    pin = self.db.execute('SELECT value FROM manual_choices WHERE tab=? AND row_id=?', (tab, rid)).fetchone()
-                    if pin and tab == 'Job History':
-                        proposed_values = op.get('values', {})
-                        if proposed_values.get('Review Status') in {'In Progress', 'Reviewed', 'Manual Review'} and any(
-                            h in proposed_values and not _equivalent(h, proposed_values[h], row.get(h, ''))
-                            for h in ('Added to Opportunities?', 'Decision')):
-                            raise RepositoryError('Manual Yes/No decision prevents automated review writeback.')
-                        for group in ('values', 'expected'):
-                            op[group] = {h: v for h, v in op.get(group, {}).items() if h not in REVIEW_FIELDS}
-                    policies = json.loads(self.db.execute('SELECT policies FROM records WHERE tab=? AND row_id=?', (tab, rid)).fetchone()[0])
-                    for col, header in enumerate(self.schemas[tab]):
-                        encoded = _encoded(row.get(header, ''))
-                        cell = {'userEnteredValue': encoded, 'effectiveValue': encoded}
-                        cell.update(copy.deepcopy(policies.get(header, {})))
-                        sheets[tab].cells[(rid, col)] = cell
-            changed, _, result = _prepare(sheets, self.schemas, operations)
-            touched = {(tab, rid) for tab, rid, col in changed}
-            self._committed_rows = {}
-            for tab, rid in touched:
-                sheet = sheets[tab]
-                from .repository import _value
-                row = {h: _value(sheet.cells.get((rid, col), {}), h) for col, h in enumerate(sheet.headers)}
-                self._put(tab, rid, row)
-                self.mark_dirty(tab, rid, [sheet.headers[col] for t, r, col in changed if t == tab and r == rid])
-                self._committed_rows.setdefault(tab, []).append(row)
-            self.metrics['local_transactions'] += 1
-            self.metrics['local_cell_changes'] += len(changed)
+            return self._commit_in_transaction(operations)
+
+    def _commit_in_transaction(self, operations):
+        """Apply normal repository operations inside an already-open transaction."""
+        expanded = []
+        for op in operations:
+            if op.get('tab') == 'Opportunities' and 'Opportunity ID' in self.schemas['Opportunities']:
+                matches = self.matches('Opportunities', op.get('identity', {}))
+                if matches:
+                    for _, row in matches:
+                        if not row.get('Opportunity ID'):
+                            raise RepositoryError('Opportunity is missing its permanent ID; reconcile before writing.')
+                        scoped = copy.deepcopy(op)
+                        scoped['identity'] = {'Opportunity ID': row['Opportunity ID']}
+                        scoped['append_if_missing'] = False
+                        expanded.append(scoped)
+                    continue
+                if op.get('append_if_missing'):
+                    op.setdefault('on_insert', {}).setdefault('Opportunity ID', 'OPP-' + uuid.uuid4().hex)
+            expanded.append(op)
+        operations = expanded
+        sheets = {}
+        for op in operations:
+            tab = op.get('tab'); _tab(tab)
+            if tab not in sheets:
+                tail = self.db.execute('SELECT COALESCE(MAX(row_id),0) FROM records WHERE tab=?', (tab,)).fetchone()[0]
+                sheets[tab] = _Sheet(list(self.schemas[tab]), append_floor=tail)
+            matches = self.matches(tab, op.get('identity', {}))
+            # Also include aliases that _prepare must examine before appending.
+            proposed = {**op.get('on_insert', {}), **op.get('identity', {}), **op.get('values', {})}
+            if tab == 'Job History' and proposed.get('Company') and proposed.get('Official Job URL'):
+                matches += self.matches(tab, {h: proposed[h] for h in ('Company', 'Official Job URL')})
+            for rid, row in matches:
+                pin = self.db.execute('SELECT value FROM manual_choices WHERE tab=? AND row_id=?', (tab, rid)).fetchone()
+                if pin and tab == 'Job History':
+                    proposed_values = op.get('values', {})
+                    if proposed_values.get('Review Status') in {'In Progress', 'Reviewed', 'Manual Review'} and any(
+                        h in proposed_values and not _equivalent(h, proposed_values[h], row.get(h, ''))
+                        for h in ('Added to Opportunities?', 'Decision')):
+                        raise RepositoryError('Manual Yes/No decision prevents automated review writeback.')
+                    for group in ('values', 'expected'):
+                        op[group] = {h: v for h, v in op.get(group, {}).items() if h not in REVIEW_FIELDS}
+                policies = json.loads(self.db.execute('SELECT policies FROM records WHERE tab=? AND row_id=?', (tab, rid)).fetchone()[0])
+                for col, header in enumerate(self.schemas[tab]):
+                    encoded = _encoded(row.get(header, ''))
+                    cell = {'userEnteredValue': encoded, 'effectiveValue': encoded}
+                    cell.update(copy.deepcopy(policies.get(header, {})))
+                    sheets[tab].cells[(rid, col)] = cell
+        changed, _, result = _prepare(sheets, self.schemas, operations)
+        touched = {(tab, rid) for tab, rid, col in changed}
+        self._committed_rows = {}
+        for tab, rid in touched:
+            sheet = sheets[tab]
+            from .repository import _value
+            row = {h: _value(sheet.cells.get((rid, col), {}), h) for col, h in enumerate(sheet.headers)}
+            self._put(tab, rid, row)
+            self.mark_dirty(tab, rid, [sheet.headers[col] for t, r, col in changed if t == tab and r == rid])
+            self._committed_rows.setdefault(tab, []).append(row)
+        self.metrics['local_transactions'] += 1
+        self.metrics['local_cell_changes'] += len(changed)
         return {**result, 'requests': 0, 'local_changes': len(changed)}
+
+    def _company_event_tables_present(self):
+        return bool(self.db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='company_event_outbox'"
+        ).fetchone())
+
+    def _record_company_event(self, company, *, origin):
+        """Record one semantic Company revision in the caller's transaction.
+
+        The sequence is local and monotonic per Company ID.  The content hash
+        is the portable source revision used by consumers to reject stale or
+        reordered delivery; the sequence preserves a deliberate reactivation
+        even when its content matches an older revision.
+        """
+        from .company_events import canonical_company_fact, event_kind, source_revision
+        try:
+            fact = canonical_company_fact(company)
+        except RepositoryError:
+            # Incomplete intake remains visible in Companies but cannot safely
+            # enter the scrape queue.  A later complete mutation creates it.
+            return None
+        if not fact['official_careers_url']:
+            return None
+        digest = source_revision(company)
+        latest = self.db.execute(
+            'SELECT revision,source_revision FROM company_revisions WHERE company_id=? '
+            'ORDER BY revision DESC LIMIT 1', (fact['company_id'],)).fetchone()
+        if latest and latest[1] == digest:
+            return None
+        revision = (latest[0] + 1) if latest else 1
+        event_id = 'CEV-' + uuid.uuid4().hex
+        created_at = timestamp()
+        payload = {'event_id': event_id, 'company_id': fact['company_id'], 'revision': revision,
+                   'source_revision': digest, 'kind': event_kind(fact), 'origin': origin,
+                   'company': str(company.get('Company', '') or '').strip(), 'fact': fact}
+        self.db.execute('INSERT INTO company_revisions(company_id,revision,source_revision,eligible,fact,created_at) '
+                        'VALUES (?,?,?,?,?,?)',
+                        (fact['company_id'], revision, digest, int(fact['eligible']), encode(fact), created_at))
+        self.db.execute('INSERT INTO company_event_outbox(event_id,company_id,revision,source_revision,kind,payload,created_at) '
+                        'VALUES (?,?,?,?,?,?,?)',
+                        (event_id, fact['company_id'], revision, digest, payload['kind'], encode(payload), created_at))
+        self.event('company_event_enqueued', 'Companies', 0,
+                   {'event_id': event_id, 'company_id': fact['company_id'], 'revision': revision,
+                    'source_revision': digest, 'kind': payload['kind'], 'origin': origin})
+        return payload
+
+    def mutate_company_with_event(self, operation, *, origin='application'):
+        """Atomically apply one supported Company mutation and enqueue its fact.
+
+        This is intentionally opt-in: legacy ``commit`` and remote import
+        callers keep their exact historical behavior until their reconciliation
+        boundary is explicitly upgraded.  The mutation, Company revision, and
+        outbox record either all commit or all roll back.
+        """
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        if not self._company_event_tables_present():
+            raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
+        operation = copy.deepcopy(operation)
+        if operation.get('tab') != 'Companies':
+            raise RepositoryError('Company event mutations require the Companies tab.')
+        if not isinstance(origin, str) or not origin.strip():
+            raise RepositoryError('Company event origin is required.')
+        with self.transaction():
+            result = self._commit_in_transaction([operation])
+            rows = self._committed_rows.get('Companies', [])
+            if len(rows) > 1:
+                raise RepositoryError('Company event mutation must resolve to one Company record.')
+            event = self._record_company_event(rows[0], origin=origin) if rows else None
+        return {**result, 'company_event': event}
+
+    def pending_company_events(self, consumer, *, limit=100):
+        """Return unacknowledged outbox events in immutable per-company order."""
+        if not isinstance(consumer, str) or not consumer.strip():
+            raise RepositoryError('Company event consumer is required.')
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise RepositoryError('Company event limit must be between 1 and 1000.')
+        if not self._company_event_tables_present():
+            return []
+        rows = self.db.execute(
+            'SELECT o.payload FROM company_event_outbox o LEFT JOIN company_event_deliveries d '
+            'ON d.event_id=o.event_id AND d.consumer=? WHERE d.event_id IS NULL '
+            'ORDER BY o.created_at,o.company_id,o.revision LIMIT ?', (consumer.strip(), limit)).fetchall()
+        return [json.loads(row[0]) for row in rows]
+
+    def acknowledge_company_event(self, event_id, consumer, *, source_revision=None):
+        """Durably acknowledge a consumer only when its immutable event matches."""
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        if not isinstance(event_id, str) or not event_id.strip() or not isinstance(consumer, str) or not consumer.strip():
+            raise RepositoryError('Company event ID and consumer are required.')
+        if not self._company_event_tables_present():
+            raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
+        with self.transaction():
+            row = self.db.execute('SELECT source_revision FROM company_event_outbox WHERE event_id=?', (event_id,)).fetchone()
+            if not row:
+                raise RepositoryError('Unknown company event.')
+            if source_revision is not None and source_revision != row[0]:
+                raise RepositoryError('Company event acknowledgement has a stale source revision.')
+            self.db.execute('INSERT OR IGNORE INTO company_event_deliveries(event_id,consumer,acknowledged_at) VALUES (?,?,?)',
+                            (event_id, consumer.strip(), timestamp()))
+        return {'event_id': event_id, 'consumer': consumer.strip(), 'acknowledged': True}
 
     def status(self):
         return {'ready': self.get_meta('ready') == 'yes', 'spreadsheet_id': self.spreadsheet_id,
