@@ -71,6 +71,20 @@ projection while retaining the full local finalization evidence and all manual,
 salary, source-hash, and identity protections. Existing incompatible plans
 must receive an explicit hold reason.
 
+Independent deployment QA then established that this is not only a profile
+projection issue. `sync_plans.cursor` records local SQLite application by
+`LocalPipeline`; it is not a Google publication cursor. The separate
+`SheetsSynchronizer` publishes compact-visible dirty cells later. Directly
+sending these legacy operations to Google would confuse the two authorities.
+
+All eight live plans are legacy three-key payloads (`final`, `operations`,
+`requested_url`) with nonzero local cursors and no exact seal/receipt. They
+must not be migrated by adding metadata or treated as remote operations. The
+production recovery contract must instead resume the selected local plan,
+freeze and publish only its selected dirty compact cells, perform exact remote
+readback, and acknowledge only those selected local baselines/dirty fields.
+Ambiguous remote writes must settle from the frozen journal without replay.
+
 The same live profile evidence also prevents activation of the accepted bulk
 pause executor as written: it expects local-only Company controls and an
 existing remote `Scan Cycles` row. A later compact-profile pause repair must

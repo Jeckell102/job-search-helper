@@ -2,7 +2,7 @@
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from job_search_helper.exact_cycle_sync import (publish_exact_cycle as _publish_exact_cycle, _chunk_digest,
                                                  _digest, _fallback_receipt, _readback)
@@ -11,7 +11,7 @@ from job_search_helper.engine import State
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.publication_receipts import SYNC_CONFIRMED, SYNC_PENDING
 from job_search_helper.repository import MemoryRepository, SCHEMAS, UncertainWriteError
-from job_search_helper.sheet_profile import COMPACT_SCHEMAS
+from job_search_helper.sheet_profile import COMPACT_PROFILE, COMPACT_SCHEMAS
 from job_search_helper.exact_cycle_receipt import derive_receipt
 from job_search_helper.exact_cycle_planner import _receipt as planner_receipt
 from job_search_helper.exact_recovery_terminal import _expected_receipt as terminal_receipt
@@ -33,7 +33,8 @@ CAREERS_URL = 'https://jobs.example.test/acme'
 PAYLOAD = {'jobs': [], 'fetched_at': '2026-11-19T00:00:00Z'}
 
 
-def sealed_plan(operations, final=None, payload=None, company_id='COMP-EXACT'):
+def sealed_plan(operations, final=None, payload=None, company_id='COMP-EXACT', *,
+                profile='full', schemas=SCHEMAS):
     payload = payload or PAYLOAD
     evidence = {
         'company_id': company_id, 'requested_url': CAREERS_URL,
@@ -47,6 +48,22 @@ def sealed_plan(operations, final=None, payload=None, company_id='COMP-EXACT'):
         'inventory_payload_digest': _digest(payload),
         'plan_records_digest': _digest(record_fingerprints(operations)),
     }
+    schema_evidence = {tab: list(headers) for tab, headers in sorted(schemas.items())}
+    result.update({
+        'publication_projection_version': 1,
+        'publication_profile': profile,
+        'publication_schema_digest': _digest(schema_evidence),
+        'local_operations_digest': _digest(operations),
+        'local_finalization_digest': _digest({
+            'operations': operations, 'final': result['final'],
+        }),
+        'remote_operations_digest': _digest(operations),
+    })
+    result['remote_projection_digest'] = _digest({
+        'profile': profile,
+        'schema_digest': result['publication_schema_digest'],
+        'operations': operations,
+    })
     result['final_projection'] = {key: result['final'][key] for key in sorted(result['final'])}
     result['final_projection_digest'] = _digest(result['final_projection'])
     result['plan_digest'] = _digest({key: result.get(key) for key in (
@@ -54,6 +71,10 @@ def sealed_plan(operations, final=None, payload=None, company_id='COMP-EXACT'):
         'control_evidence_version', 'control_evidence_digest',
         'inventory_payload_digest', 'plan_records_digest',
         'final_projection', 'final_projection_digest',
+        'publication_projection_version', 'publication_profile',
+        'publication_schema_digest', 'local_operations_digest',
+        'local_finalization_digest', 'remote_operations_digest',
+        'remote_projection_digest',
     )})
     return result
 
@@ -163,16 +184,28 @@ class ExactCyclePublisherTests(unittest.TestCase):
         })
         self.state.save_cycle(current)
         self.inbox.save(cycle, company, dict(PAYLOAD))
-        self.inbox.save_plan(cycle, company, plan(key, value))
+        self.save_applied_plan(cycle, company, plan(key, value))
+
+    def save_applied_plan(self, cycle, company, frozen):
+        """Model a plan whose full local operation stream is durable."""
+        self.inbox.save_plan(cycle, company, frozen)
+        self.inbox.advance(cycle, {company: len(frozen['operations'])},
+                           expected={company: 0})
 
     def receipt_count(self):
         return self.inbox.connection.execute(
             'SELECT count(*) FROM publication_receipts'
         ).fetchone()[0]
 
-    def test_compact_profile_uses_local_only_controls_and_publishes(self):
-        self.add_plan('CYC-COMPACT', 'COMP-EXACT', 'job-exact', 'after-exact')
+    def test_compact_profile_holds_until_local_commit_journal_exists(self):
         schemas = {tab: list(headers) for tab, headers in COMPACT_SCHEMAS.items()}
+        frozen = sealed_plan(
+            plan('job-exact', 'after-exact')['operations'],
+            profile=COMPACT_PROFILE, schemas=schemas,
+        )
+        self.inbox.save('CYC-COMPACT', 'COMP-EXACT', dict(PAYLOAD))
+        self.save_applied_plan('CYC-COMPACT', 'COMP-EXACT', frozen)
+        self.state.save_cycle(cycle_state('CYC-COMPACT'))
         compact_job = {key: value for key, value in job('job-exact').items()
                        if key in schemas['Job History']}
         remote_company = {'Company ID': 'COMP-EXACT', 'Company': 'Acme',
@@ -186,8 +219,12 @@ class ExactCyclePublisherTests(unittest.TestCase):
 
         report = publish_exact_cycle(self.inbox, 'CYC-COMPACT', remote, state=self.state)
 
-        self.assertEqual(report['confirmed'], ['COMP-EXACT'], report)
-        self.assertEqual(len(remote.commits), 1)
+        self.assertEqual(report['held'], [{
+            'company_id': 'COMP-EXACT',
+            'reason': 'non_full_plan_requires_durable_local_commit_journal',
+        }])
+        self.assertEqual(remote.commits, [])
+        self.assertEqual(self.receipt_count(), 0)
 
     def test_missing_trusted_local_guard_fails_closed_before_receipt_or_remote_access(self):
         self.add_plan('CYC-NO-GUARD', 'COMP-EXACT', 'job-exact', 'after-exact')
@@ -199,6 +236,76 @@ class ExactCyclePublisherTests(unittest.TestCase):
                                  company_ids=['COMP-EXACT'], state=self.state)
 
         self.assertEqual(self.receipt_count(), before)
+        self.assertEqual(remote.commits, [])
+
+    def test_projection_seal_fields_fail_closed_before_controls_receipts_or_remote(self):
+        cases = (
+            ('version', lambda frozen: frozen.__setitem__(
+                'publication_projection_version', 2),
+             'publication_projection_version_invalid'),
+            ('profile', lambda frozen: frozen.__setitem__(
+                'publication_profile', 'future-v9'),
+             'publication_profile_invalid'),
+            ('schema', lambda frozen: frozen.__setitem__(
+                'publication_schema_digest', 'changed'),
+             'publication_schema_digest_invalid'),
+            ('local-operations', lambda frozen: frozen.__setitem__(
+                'local_operations_digest', 'changed'),
+             'local_operations_digest_invalid'),
+            ('local-finalization', lambda frozen: frozen.__setitem__(
+                'local_finalization_digest', 'changed'),
+             'local_finalization_digest_invalid'),
+            ('remote-operations', lambda frozen: frozen.__setitem__(
+                'remote_operations_digest', 'changed'),
+             'remote_operations_digest_invalid'),
+            ('remote-projection', lambda frozen: frozen.__setitem__(
+                'remote_projection_digest', 'changed'),
+             'remote_projection_digest_invalid'),
+        )
+        for number, (label, mutate, reason) in enumerate(cases):
+            with self.subTest(label=label):
+                cycle = f'CYC-SEAL-{number}'
+                frozen = plan(f'job-seal-{number}', 'after')
+                mutate(frozen)
+                self.inbox.save(cycle, 'COMP-EXACT', dict(PAYLOAD))
+                self.save_applied_plan(cycle, 'COMP-EXACT', frozen)
+                self.state.save_cycle(cycle_state(cycle))
+                remote = RecordingRemote([job(f'job-seal-{number}')])
+                guard = MagicMock(side_effect=AssertionError('control guard must not run'))
+                receipts_before = self.receipt_count()
+
+                report = _publish_exact_cycle(
+                    self.inbox, cycle, remote, company_ids=['COMP-EXACT'],
+                    state=self.state, company_guard=guard,
+                )
+
+                self.assertEqual(report['held'], [{
+                    'company_id': 'COMP-EXACT', 'reason': reason,
+                }])
+                guard.assert_not_called()
+                self.assertEqual(remote.commits, [])
+                self.assertEqual(self.receipt_count(), receipts_before)
+
+    def test_current_remote_schema_must_match_the_full_plan_seal(self):
+        cycle = 'CYC-SCHEMA-DRIFT'
+        frozen = plan('job-schema-drift', 'after')
+        self.inbox.save(cycle, 'COMP-EXACT', dict(PAYLOAD))
+        self.save_applied_plan(cycle, 'COMP-EXACT', frozen)
+        self.state.save_cycle(cycle_state(cycle))
+        changed_schemas = {tab: list(headers) for tab, headers in SCHEMAS.items()}
+        changed_schemas['Job History'] = changed_schemas['Job History'][:-1]
+        remote = RecordingRemote([job('job-schema-drift')], schemas=changed_schemas)
+        guard = MagicMock(side_effect=AssertionError('control guard must not run'))
+
+        report = _publish_exact_cycle(
+            self.inbox, cycle, remote, company_ids=['COMP-EXACT'],
+            state=self.state, company_guard=guard,
+        )
+
+        self.assertEqual(report['held'], [{
+            'company_id': 'COMP-EXACT', 'reason': 'publication_schema_digest_invalid',
+        }])
+        guard.assert_not_called()
         self.assertEqual(remote.commits, [])
 
     def test_local_claim_change_after_planning_holds_without_commit_or_receipt(self):
@@ -330,7 +437,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         self.assertEqual(self.inbox.pending('CYC-EXACT', include_blocked=True), ['COMP-EXACT'])
         frozen, cursor = self.inbox.plan('CYC-EXACT', 'COMP-EXACT')
         self.assertEqual(frozen, plan('job-exact', 'after-exact'))
-        self.assertEqual(cursor, 0)
+        self.assertEqual(cursor, 1)
         receipt = self.inbox.find_receipt('COMP-EXACT',
                                           __import__('job_search_helper.publication_receipts', fromlist=['record_fingerprints'])
                                           .record_fingerprints(frozen['operations']))
@@ -354,7 +461,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT', 'reason': 'pending_readback_mismatch'}])
         self.assertEqual(remote.commits, [])
         self.assertEqual(remote.read('Job History')[0]['Last Checked'], 'manual-change')
-        self.assertEqual(self.inbox.plan('CYC-EXACT', 'COMP-EXACT')[1], 0)
+        self.assertEqual(self.inbox.plan('CYC-EXACT', 'COMP-EXACT')[1], 1)
 
     def test_compact_opportunity_id_is_the_exact_remote_identity(self):
         schemas = {tab: list(headers) for tab, headers in SCHEMAS.items()}
@@ -366,10 +473,10 @@ class ExactCyclePublisherTests(unittest.TestCase):
         frozen = sealed_plan([{
                 'tab': 'Opportunities', 'identity': {'Opportunity ID': 'OPP-EXACT'},
                 'expected': {'Salary / Range': ''}, 'values': {'Salary / Range': '$120,000-$140,000'},
-            }])
+            }], schemas=schemas)
         self.inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': [], 'fetched_at': '2026-11-19T00:00:00Z'})
         self.state.save_cycle(cycle_state('CYC-EXACT'))
-        self.inbox.save_plan('CYC-EXACT', 'COMP-EXACT', frozen)
+        self.save_applied_plan('CYC-EXACT', 'COMP-EXACT', frozen)
         remote = RecordingRemote([opportunity], tab='Opportunities', schemas=schemas)
 
         report = publish_exact_cycle(self.inbox, 'CYC-EXACT', remote, state=self.state)
@@ -383,7 +490,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
                       for number in range(101)]
         frozen = sealed_plan(operations)
         self.inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': [], 'fetched_at': '2026-11-19T00:00:00Z'})
-        self.inbox.save_plan('CYC-EXACT', 'COMP-EXACT', frozen)
+        self.save_applied_plan('CYC-EXACT', 'COMP-EXACT', frozen)
         self.state.save_cycle(cycle_state('CYC-EXACT'))
         remote = RecordingRemote([job(f'job-{number}') for number in range(101)])
 
@@ -422,7 +529,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         operation = plan('job-exact', 'after-exact')['operations'][0]
         duplicate = sealed_plan([operation, dict(operation)])
         self.inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': [], 'fetched_at': '2026-11-19T00:00:00Z'})
-        self.inbox.save_plan('CYC-EXACT', 'COMP-EXACT', duplicate)
+        self.save_applied_plan('CYC-EXACT', 'COMP-EXACT', duplicate)
         self.state.save_cycle(cycle_state('CYC-EXACT'))
         remote = RecordingRemote([job('job-exact')])
 
@@ -443,7 +550,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         frozen, _ = self.inbox.plan('CYC-EXACT', 'COMP-EXACT')
         frozen = sealed_plan(frozen['operations'], {'stage': 'blocked'})
         self.inbox.discard_plan('CYC-EXACT', 'COMP-EXACT')
-        self.inbox.save_plan('CYC-EXACT', 'COMP-EXACT', frozen)
+        self.save_applied_plan('CYC-EXACT', 'COMP-EXACT', frozen)
         remote = RecordingRemote([job('job-exact')])
 
         report = publish_exact_cycle(self.inbox, 'CYC-EXACT', remote, state=self.state)
@@ -458,7 +565,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'changed'):
             self.inbox.begin_exact_chunk('CYC-EXACT', 'COMP-EXACT', 0, 1, 'digest-b')
         with self.assertRaisesRegex(ValueError, 'cursor changed'):
-            self.inbox.advance('CYC-EXACT', {'COMP-EXACT': 1}, expected={'COMP-EXACT': 1})
+            self.inbox.advance('CYC-EXACT', {'COMP-EXACT': 1}, expected={'COMP-EXACT': 0})
 
     def test_invalid_cursor_holds_before_receipt_or_remote_access(self):
         self.add_plan('CYC-CURSOR', 'COMP-EXACT', 'job-exact', 'after-exact')
@@ -478,7 +585,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         frozen, _ = self.inbox.plan('CYC-CONTROL', 'COMP-EXACT')
         frozen.pop('control_evidence_version')
         self.inbox.discard_plan('CYC-CONTROL', 'COMP-EXACT')
-        self.inbox.save_plan('CYC-CONTROL', 'COMP-EXACT', frozen)
+        self.save_applied_plan('CYC-CONTROL', 'COMP-EXACT', frozen)
         remote = RecordingRemote([job('job-exact')])
 
         report = publish_exact_cycle(self.inbox, 'CYC-CONTROL', remote, state=self.state)
@@ -505,7 +612,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         first['values']['Job Key'] = 'job-final'
         second['values']['Job Key'] = 'job-final'
         self.inbox.save('CYC-FINAL-ID', 'COMP-EXACT', dict(PAYLOAD))
-        self.inbox.save_plan('CYC-FINAL-ID', 'COMP-EXACT', sealed_plan([first, second]))
+        self.save_applied_plan('CYC-FINAL-ID', 'COMP-EXACT', sealed_plan([first, second]))
         self.state.save_cycle(cycle_state('CYC-FINAL-ID'))
         remote = RecordingRemote([job('job-a'), job('job-b')])
 
@@ -531,7 +638,8 @@ class ExactCyclePublisherTests(unittest.TestCase):
         cycle = 'CYC-TWO'
         for company, key in (('COMP-ONE', 'job-one'), ('COMP-TWO', 'job-two')):
             self.inbox.save(cycle, company, dict(PAYLOAD))
-            self.inbox.save_plan(cycle, company, sealed_plan(plan(key, 'after')['operations'], company_id=company))
+            self.save_applied_plan(cycle, company, sealed_plan(
+                plan(key, 'after')['operations'], company_id=company))
         self.state.save_cycle({'id': cycle, 'started_at': '2026-11-19T00:00:00+00:00', 'status': 'In Progress',
                                'companies': {company: {'stage': 'inventory', 'durable_inventory': True,
                                                        'locally_processed': True}
@@ -554,7 +662,8 @@ class ExactCyclePublisherTests(unittest.TestCase):
         cycle = 'CYC-SELECTED'
         for company, key in (('COMP-ONE', 'job-one'), ('COMP-TWO', 'job-two')):
             self.inbox.save(cycle, company, dict(PAYLOAD))
-            self.inbox.save_plan(cycle, company, sealed_plan(plan(key, 'after')['operations'], company_id=company))
+            self.save_applied_plan(cycle, company, sealed_plan(
+                plan(key, 'after')['operations'], company_id=company))
         self.state.save_cycle({'id': cycle, 'started_at': '2026-11-19T00:00:00+00:00', 'status': 'In Progress',
                                'companies': {company: {'stage': 'inventory', 'durable_inventory': True,
                                                        'locally_processed': True}
@@ -591,8 +700,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
                 operations = [plan(f'job-{cursor}-{number}', f'after-{cursor}-{number}')['operations'][0]
                               for number in range(70)]
                 self.inbox.save(cycle, 'COMP-EXACT', {'jobs': [], 'fetched_at': '2026-11-19T00:00:00Z'})
-                self.inbox.save_plan(cycle, 'COMP-EXACT', sealed_plan(operations))
-                self.inbox.advance(cycle, {'COMP-EXACT': cursor}, expected={'COMP-EXACT': 0})
+                self.save_applied_plan(cycle, 'COMP-EXACT', sealed_plan(operations))
                 self.state.save_cycle(cycle_state(cycle))
                 remote = RecordingRemote([
                     job(f'job-{cursor}-{number}', **{'Last Checked': f'after-{cursor}-{number}' if number < cursor else 'before'})
@@ -603,14 +711,13 @@ class ExactCyclePublisherTests(unittest.TestCase):
                 self.assertEqual(report['confirmed'], ['COMP-EXACT'])
                 self.assertEqual(len(remote.commits), 1)
                 self.assertEqual([item['identity']['Job Key'] for item in remote.commits[0]],
-                                 [f'job-{cursor}-{number}' for number in range(cursor, 70)])
+                                 [f'job-{cursor}-{number}' for number in range(70)])
 
     def test_seeded_cursor_prefix_mismatch_holds_before_any_tail_write(self):
         operations = [plan(f'job-{number}', f'after-{number}')['operations'][0]
                       for number in range(20)]
         self.inbox.save('CYC-PREFIX', 'COMP-EXACT', {'jobs': [], 'fetched_at': '2026-11-19T00:00:00Z'})
-        self.inbox.save_plan('CYC-PREFIX', 'COMP-EXACT', sealed_plan(operations))
-        self.inbox.advance('CYC-PREFIX', {'COMP-EXACT': 19}, expected={'COMP-EXACT': 0})
+        self.save_applied_plan('CYC-PREFIX', 'COMP-EXACT', sealed_plan(operations))
         self.state.save_cycle(cycle_state('CYC-PREFIX'))
         remote = RecordingRemote([
             job(f'job-{number}', **{'Last Checked': 'manual-change' if number == 3
@@ -620,9 +727,9 @@ class ExactCyclePublisherTests(unittest.TestCase):
         report = publish_exact_cycle(self.inbox, 'CYC-PREFIX', remote, state=self.state)
 
         self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT',
-                                           'reason': 'partial_prefix_readback_mismatch'}])
-        self.assertEqual(remote.commits, [])
-        self.assertEqual(self.inbox.plan('CYC-PREFIX', 'COMP-EXACT')[1], 19)
+                                           'reason': 'RepositoryError'}])
+        self.assertEqual(len(remote.commits), 1)
+        self.assertEqual(self.inbox.plan('CYC-PREFIX', 'COMP-EXACT')[1], 20)
 
     def test_lost_ack_restart_reads_matching_pending_chunk_without_replay(self):
         self.add_plan('CYC-LOST-ACK', 'COMP-EXACT', 'job-exact', 'after-exact')
@@ -700,7 +807,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         frozen, _ = self.inbox.plan('CYC-POST-REFUSE', 'COMP-EXACT')
         frozen = sealed_plan(frozen['operations'], {'stage': 'complete', 'sealed_final_marker': 'expected'})
         self.inbox.discard_plan('CYC-POST-REFUSE', 'COMP-EXACT')
-        self.inbox.save_plan('CYC-POST-REFUSE', 'COMP-EXACT', frozen)
+        self.save_applied_plan('CYC-POST-REFUSE', 'COMP-EXACT', frozen)
         remote = RecordingRemote([job('job-exact')])
         with patch.object(self.inbox, 'acknowledge', side_effect=OSError('simulated cleanup crash')):
             publish_exact_cycle(self.inbox, 'CYC-POST-REFUSE', remote, state=self.state)
@@ -726,19 +833,17 @@ class ExactCyclePublisherTests(unittest.TestCase):
         self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT', 'reason': 'chunk_journal_mismatch'}])
         self.assertEqual(remote.commits, [])
 
-    def test_cursor_cas_conflict_keeps_frozen_plan_after_remote_readback(self):
+    def test_remote_publication_never_advances_local_apply_cursor(self):
         self.add_plan('CYC-CAS', 'COMP-EXACT', 'job-exact', 'after-exact')
         remote = RecordingRemote([job('job-exact')])
 
-        with patch.object(self.inbox, 'advance', side_effect=ValueError(
-                'Exact sync cursor changed before acknowledged advance.')):
+        with patch.object(self.inbox, 'advance', side_effect=AssertionError(
+                'remote publication must not advance local cursor')):
             report = publish_exact_cycle(self.inbox, 'CYC-CAS', remote, state=self.state)
 
-        self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT',
-                                           'reason': 'Exact sync cursor changed before acknowledged advance.'}])
+        self.assertEqual(report['confirmed'], ['COMP-EXACT'])
         self.assertEqual(len(remote.commits), 1)
-        self.assertIsNotNone(self.inbox.plan('CYC-CAS', 'COMP-EXACT'))
-        self.assertEqual(self.inbox.pending('CYC-CAS', include_blocked=True), ['COMP-EXACT'])
+        self.assertEqual(self.inbox.pending('CYC-CAS', include_blocked=True), [])
 
     def test_state_save_failure_keeps_exact_plan_after_confirmed_remote_readback(self):
         self.add_plan('CYC-SAVE-FAIL', 'COMP-EXACT', 'job-exact', 'after-exact')

@@ -21,6 +21,7 @@ from .exact_cycle_receipt import derive_receipt
 
 
 CONTROL_EVIDENCE_VERSION = 1
+PUBLICATION_PROJECTION_VERSION = 1
 _CONTROL_FIELDS = ('company_id', 'requested_url', 'official_careers_url',
                    'company_status', 'claimed_by', 'claim_token')
 
@@ -192,16 +193,92 @@ def _digest(value):
     return hashlib.sha256(_canonical(value).encode('utf-8')).hexdigest()
 
 
-def _validate_sealed_plan(plan, payload):
-    """Reject altered or pre-contract frozen plans before any remote action."""
+def _publication_schema(remote, profile):
+    """Return the current remote schema bound to a supported plan profile."""
+    from .sheet_profile import profile_schemas
+
+    schemas = getattr(remote, 'schemas', None)
+    if not isinstance(schemas, Mapping) or not schemas:
+        raise ValueError('publication_remote_schema_missing')
+    if profile == 'full':
+        publication = schemas
+    else:
+        try:
+            publication = profile_schemas(profile)
+        except Exception as exc:
+            raise ValueError('publication_profile_invalid') from exc
+        if publication is None:
+            raise ValueError('publication_profile_invalid')
+    normalized = {}
+    for tab, headers in publication.items():
+        if not isinstance(tab, str) or not tab or not isinstance(headers, (list, tuple)) or not headers:
+            raise ValueError('publication_schema_invalid')
+        values = tuple(str(header) for header in headers)
+        if len(values) != len(set(values)):
+            raise ValueError('publication_schema_invalid')
+        normalized[tab] = values
+    remote_normalized = {}
+    for tab, headers in schemas.items():
+        if not isinstance(tab, str) or not tab or not isinstance(headers, (list, tuple)) or not headers:
+            raise ValueError('publication_remote_schema_invalid')
+        values = tuple(str(header) for header in headers)
+        if len(values) != len(set(values)):
+            raise ValueError('publication_remote_schema_invalid')
+        remote_normalized[tab] = values
+    if normalized != remote_normalized:
+        raise ValueError('publication_remote_schema_changed')
+    return normalized
+
+
+def _validate_sealed_plan(plan, payload, remote):
+    """Reject altered or unprovable frozen plans before any remote action.
+
+    Full-profile plans contain the complete local operation stream, so both
+    local digests can be recomputed from the immutable plan.  A projected
+    profile omits local-only mutations and therefore needs a separate durable
+    local commit journal before it can ever be safe to publish.  No such
+    journal is part of the current receipt contract, so those plans fail
+    closed even when their remote projection is internally consistent.
+    """
     operations = plan.get('operations') if isinstance(plan, Mapping) else None
     if not isinstance(operations, list) or not isinstance(plan.get('final'), Mapping):
         raise ValueError('sealed_plan_shape_invalid')
+    if plan.get('publication_projection_version') != PUBLICATION_PROJECTION_VERSION:
+        raise ValueError('publication_projection_version_invalid')
+    profile = plan.get('publication_profile')
+    if not isinstance(profile, str) or not profile:
+        raise ValueError('publication_profile_invalid')
+    publication = _publication_schema(remote, profile)
+    schema_evidence = {tab: list(headers) for tab, headers in sorted(publication.items())}
+    schema_digest = _digest(schema_evidence)
+    if plan.get('publication_schema_digest') != schema_digest:
+        raise ValueError('publication_schema_digest_invalid')
+    if plan.get('remote_operations_digest') != _digest(operations):
+        raise ValueError('remote_operations_digest_invalid')
+    if plan.get('remote_projection_digest') != _digest({
+            'profile': profile,
+            'schema_digest': schema_digest,
+            'operations': operations,
+            }):
+        raise ValueError('remote_projection_digest_invalid')
+    if profile != 'full':
+        raise ValueError('non_full_plan_requires_durable_local_commit_journal')
+    if plan.get('local_operations_digest') != _digest(operations):
+        raise ValueError('local_operations_digest_invalid')
+    if plan.get('local_finalization_digest') != _digest({
+            'operations': operations,
+            'final': plan['final'],
+            }):
+        raise ValueError('local_finalization_digest_invalid')
     records = record_fingerprints(operations)
     required = ('operations', 'final', 'requested_url', 'control_evidence',
                 'control_evidence_version', 'control_evidence_digest',
                 'inventory_payload_digest', 'plan_records_digest',
-                'final_projection', 'final_projection_digest')
+                'final_projection', 'final_projection_digest',
+                'publication_projection_version', 'publication_profile',
+                'publication_schema_digest', 'local_operations_digest',
+                'local_finalization_digest', 'remote_operations_digest',
+                'remote_projection_digest')
     sealed = {key: plan.get(key) for key in required}
     if (plan.get('inventory_payload_digest') != _digest(payload)
             or plan.get('plan_records_digest') != _digest(records)
@@ -274,10 +351,18 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
             report['held'].append({'company_id': company_id, 'reason': 'invalid_plan_cursor'})
             continue
         try:
-            _validate_sealed_plan(plan, payload)
+            _validate_sealed_plan(plan, payload, remote)
             _validate_chunkable(operations)
         except ValueError as exc:
             report['held'].append({'company_id': company_id, 'reason': str(exc)})
+            continue
+        # sync_plans.cursor records durable *local SQLite application*.  It is
+        # not a Sheets cursor and must never be reinterpreted as evidence that
+        # any remote prefix was published.  Remote progress belongs solely to
+        # the exact_sync_chunks journal plus the immutable receipt state.
+        if cursor != len(operations):
+            report['held'].append({'company_id': company_id,
+                                   'reason': 'local_plan_not_durably_applied'})
             continue
         try:
             receipt = _receipt_for_plan(inbox, cycle, company_id, plan, payload)
@@ -290,7 +375,7 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
                 # It is eligible only for an already-confirmed cleanup after
                 # an interrupted inbox acknowledgement/block transaction.
                 final = plan.get('final', {})
-                if (current is None or cursor != len(operations) or current['state'] != SYNC_CONFIRMED
+                if (current is None or current['state'] != SYNC_CONFIRMED
                         or not _checkpoint_matches_final(checkpoint, plan)
                         ):
                     report['held'].append({'company_id': company_id,
@@ -317,7 +402,7 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
             # A confirmed receipt can never authorize a tail replay.  It is
             # usable only for the same zero-write finalization boundary.
             if current['state'] == SYNC_CONFIRMED:
-                if cursor != len(operations) or _readback(remote, operations) != receipt['records']:
+                if _readback(remote, operations) != receipt['records']:
                     report['held'].append({'company_id': company_id,
                                            'reason': 'confirmed_receipt_not_at_exact_end'})
                     continue
@@ -334,21 +419,12 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
                     inbox.block(cycle_id, company_id)
                 report['confirmed'].append(company_id)
                 continue
-            # A retained cursor is a promise that this prefix was previously
-            # acknowledged by exact readback.  Verify it again before writing
-            # any tail: an operator must not be allowed to overwrite a
-            # changed prefix just because recovery resumes later in the plan.
-            if cursor:
-                expected_prefix = record_fingerprints(operations[:cursor])
-                if _readback(remote, operations[:cursor]) != expected_prefix:
-                    report['held'].append({'company_id': company_id,
-                                           'reason': 'partial_prefix_readback_mismatch'})
-                    continue
             # Set below only after this invocation read back and advanced the
             # immediately preceding chunk. A restart begins False.
             safe_next = False
-            while cursor < len(operations):
-                start, chunk = next(_chunks(operations, cursor))
+            remote_cursor = 0
+            while remote_cursor < len(operations):
+                start, chunk = next(_chunks(operations, remote_cursor))
                 digest = _chunk_digest(chunk)
                 expected_chunk = record_fingerprints(chunk)
                 observed_chunk = _readback(remote, chunk)
@@ -362,8 +438,7 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
                     if attempt is None:
                         attempt = inbox.begin_exact_chunk(cycle_id, company_id, start, len(chunk), digest)
                     inbox.confirm_exact_chunk(cycle_id, company_id, start)
-                    cursor = start + len(chunk)
-                    inbox.advance(cycle_id, {company_id: cursor}, expected={company_id: start})
+                    remote_cursor = start + len(chunk)
                     safe_next = True
                     continue
                 if attempt is not None:
@@ -383,8 +458,7 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
                     report['held'].append({'company_id': company_id, 'reason': 'chunk_readback_mismatch'})
                     break
                 inbox.confirm_exact_chunk(cycle_id, company_id, start)
-                cursor = start + len(chunk)
-                inbox.advance(cycle_id, {company_id: cursor}, expected={company_id: start})
+                remote_cursor = start + len(chunk)
                 safe_next = True
             else:
                 observed = _readback(remote, operations)

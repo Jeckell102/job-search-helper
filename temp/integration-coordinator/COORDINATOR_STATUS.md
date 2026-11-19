@@ -936,3 +936,49 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   A separate planner-projection lane owns deterministic remote projection,
   retained full local finalization evidence, manual/salary guards, and explicit
   nonzero-cursor legacy refusal before any live action.
+- Independent deployment QA found the deeper authoritative boundary: inbox
+  `sync_plans.cursor` is a **local SQLite apply cursor**, not a Google
+  publication cursor. `LocalPipeline` applies the frozen operations to local
+  SQLite and advances that cursor; only the separate synchronizer projects
+  dirty visible cells to compact Google. The proposed direct exact publisher
+  must therefore never send a legacy local plan to Google.
+- Live read-only evidence confirms all eight current plans are legacy local
+  plans with only `final`, `operations`, and `requested_url`; every cursor is
+  nonzero (six 1/1 plans, 0035 at 19/19, and 0054 at 67/208). None has control
+  evidence, sealed digests, projection metadata, or exact receipt binding.
+  0035 includes 9 Job History + 9 Job Evidence + 1 Companies operations; 0054
+  includes 105 Job History + 97 Job Evidence + 5 Opportunities + 1 Companies
+  operations. All would hold under the new seal and none is qualified for
+  direct Google publication. 0052 is not a valid live pilot candidate yet.
+- The required production repair is now explicitly scoped as selected local-
+  plan resume plus selected dirty-cell Sheets publication/acknowledgement under
+  one crash-durable journal. It must qualify legacy nonzero cursors from exact
+  local/remote readback, preserve manual/salary/source-hash/identity controls,
+  clear only the selected acknowledged dirty fields, and never drain the
+  global outbox. A dedicated design lane owns this contract; overall deployment
+  remains **REJECTED** and production is unchanged.
+- Production-based runner/inbox reconciliation is otherwise accepted in
+  staging: current FIRST-PASS behavior is preserved, the public start-flag
+  side-effect escape is closed, compact control changes are refreshed, and
+  the isolated staged directory passed 191 tests. This candidate remains held
+  until the local/remote durability path replaces the incorrect direct-publish
+  assumption and is independently reverified.
+- The exact local-durability design is now complete and coordinator-reviewed.
+  It freezes version-2 local operations plus compact remote projection before
+  mutation, journals local SQLite apply/readback separately from remote
+  publication, treats all eight retained legacy cursors only as local apply
+  progress, and requires an exact scoped SheetsSynchronizer plan/acknowledgement
+  with readback-only recovery after an ambiguous write. It defines the 34
+  no-plan path, legacy migration envelope, salary/manual/source protections,
+  failure matrix, file ownership, and a 30-test acceptance matrix. See
+  `EXACT_LOCAL_DURABILITY_DESIGN_20261119.md`.
+- An unowned concurrent `exact_local_plan.py` draft and its tests were
+  independently **REJECTED** despite eight narrow passing tests: it could mark
+  local work committed without exact post-commit verification, accept an
+  insufficiently bound plan digest, skip the local cursor/chunk/migration
+  contract, and clear local delivery state without a receipt-bound confirmed
+  Google readback. It is not wired, committed, deployed, or accepted. A named
+  local-durability implementation lane owns replacement within planner/inbox/
+  SQLite boundaries; a separate projection-seal lane owns only exact sync and
+  recovery validation. Production and broad processing remain unchanged and
+  disabled.

@@ -121,7 +121,7 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         remote = RecordingRemote(remote_rows)
         return root, engine, state, inbox, remote
 
-    def test_real_engine_queued_inventory_plans_and_publishes_end_to_end(self):
+    def test_real_engine_holds_new_plan_until_local_apply_is_durable(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); schemas = copy.deepcopy(SCHEMAS)
             local = MemoryRepository({'Companies': [{'Company ID': 'COMP-1', 'Company': 'Fixture',
@@ -136,8 +136,13 @@ class ExactCycleRecoveryTests(unittest.TestCase):
                        'requested_url': 'https://boards.example.test/fixture', 'fetched_at': '2026-11-19T00:00:00Z'})
             remote = RecordingRemote()
             result = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
-            self.assertEqual(result['confirmed'], ['COMP-1'], result)
-            self.assertEqual(inbox.pending('CYC', include_blocked=True), [])
+            self.assertEqual(result['planned'], ['COMP-1'], result)
+            self.assertEqual(result['confirmed'], [], result)
+            self.assertEqual(result['held'], [{
+                'company_id': 'COMP-1', 'reason': 'local_plan_not_durably_applied',
+            }])
+            self.assertEqual(inbox.pending('CYC', include_blocked=True), ['COMP-1'])
+            self.assertEqual(remote.commits, [])
 
     def test_real_plan_save_state_split_recovers_then_publishes(self):
         _root, engine, state, inbox, remote = self.real_fixture()
@@ -156,11 +161,25 @@ class ExactCycleRecoveryTests(unittest.TestCase):
 
         recovered = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
         self.assertEqual(recovered['recovered'], ['COMP-1'], recovered)
-        self.assertEqual(recovered['confirmed'], ['COMP-1'], recovered)
-        self.assertEqual(inbox.pending('CYC', include_blocked=True), [])
+        self.assertEqual(recovered['confirmed'], [], recovered)
+        self.assertEqual(recovered['held'], [{
+            'company_id': 'COMP-1', 'reason': 'local_plan_not_durably_applied',
+        }])
+        self.assertEqual(inbox.pending('CYC', include_blocked=True), ['COMP-1'])
+        self.assertEqual(remote.commits, [])
 
     def test_real_post_state_save_ack_crash_restarts_without_remote_replay(self):
         _root, engine, state, inbox, remote = self.real_fixture()
+        planned = freeze_exact_cycle_plans(
+            engine, 'CYC', ['COMP-1'],
+            company_guard=lambda company_id, requested_url: _company_guard(
+                engine.repo, remote, company_id, requested_url,
+            ),
+            max_companies=1,
+        )
+        self.assertEqual(planned['planned'], ['COMP-1'])
+        frozen, _ = inbox.plan('CYC', 'COMP-1')
+        inbox.advance('CYC', {'COMP-1': len(frozen['operations'])}, expected={'COMP-1': 0})
         original_acknowledge = inbox.acknowledge
         with patch.object(inbox, 'acknowledge', side_effect=OSError('cleanup crash')):
             first = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
@@ -188,13 +207,16 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         remote_z_before = remote.snapshot('Companies')[2]
 
         result = recover_exact_cycle(engine, remote, 'CYC', ['COMP-A', 'COMP-B'])
-        self.assertEqual(result['confirmed'], ['COMP-A'], result)
-        self.assertEqual(result['held'][0]['company_id'], 'COMP-B')
+        self.assertEqual(result['confirmed'], [], result)
+        self.assertIn({'company_id': 'COMP-A',
+                       'reason': 'local_plan_not_durably_applied'}, result['held'])
+        self.assertIn({'company_id': 'COMP-B', 'reason': 'local_company_claimed'},
+                      result['held'])
         self.assertEqual(inbox.get('CYC', 'COMP-Z'), unselected_before)
         self.assertEqual(inbox.get('OTHER-CYCLE', 'COMP-Z'), other_before)
         self.assertEqual(remote.snapshot('Companies')[2], remote_z_before)
         self.assertEqual(request.read_bytes(), b'preserve-exact-request')
-        self.assertIsNone(inbox.get('CYC', 'COMP-A'))
+        self.assertIsNotNone(inbox.get('CYC', 'COMP-A'))
         self.assertIsNotNone(inbox.get('CYC', 'COMP-B'))
         self.assertEqual(state.cycle('CYC')['companies']['COMP-Z']['stage'], 'queued')
 
@@ -203,7 +225,7 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         planned = freeze_exact_cycle_plans(
             engine, 'CYC', ['COMP-1'],
             company_guard=lambda company_id, requested_url: _company_guard(
-                remote, company_id, {'requested_url': requested_url},
+                engine.repo, remote, company_id, requested_url,
             ),
             max_companies=1,
         )
@@ -281,7 +303,10 @@ class ExactCycleRecoveryTests(unittest.TestCase):
 
         before = local_snapshot()
         result = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
-        self.assertEqual(result['confirmed'], ['COMP-1'], result)
+        self.assertEqual(result['confirmed'], [], result)
+        self.assertEqual(result['held'], [{
+            'company_id': 'COMP-1', 'reason': 'local_plan_not_durably_applied',
+        }])
         self.assertEqual(local_snapshot(), before)
         self.assertIsNotNone(inbox.get('CYC', 'COMP-Z'))
         self.assertEqual(state.cycle('CYC')['companies']['COMP-Z']['stage'], 'queued')
@@ -336,7 +361,7 @@ class ExactCycleRecoveryTests(unittest.TestCase):
                     })
                     inbox.save('CYC', 'COMP-1', inventory('COMP-1'))
                     yield engine, RecordingRemote([company('COMP-1')])
-                    self.assertEqual(inbox.pending('CYC', include_blocked=True), [])
+                    self.assertEqual(inbox.pending('CYC', include_blocked=True), ['COMP-1'])
                 finally:
                     inbox.close()
                     state.close()
@@ -348,7 +373,10 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         result = recover_exact_cycle_with_factory(
             state_path, factory, 'CYC', ['COMP-1'],
         )
-        self.assertEqual(result['confirmed'], ['COMP-1'])
+        self.assertEqual(result['confirmed'], [])
+        self.assertEqual(result['held'], [{
+            'company_id': 'COMP-1', 'reason': 'local_plan_not_durably_applied',
+        }])
         self.assertEqual(events, ['factory', 'enter', 'exit'])
         with writer_lock(root / scraper_lock_name()):
             pass
