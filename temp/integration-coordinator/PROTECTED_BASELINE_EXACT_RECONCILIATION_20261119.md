@@ -102,3 +102,12 @@ exact receipt lookup, added to the temporary copy with an ambiguity refusal.
 The compact-profile planner recovery and frozen-plan receipt tests therefore
 run against the retained protected behavior.  This proves local planning only;
 no Sheets publisher or runner path is merged or enabled.
+
+The first Sheets seam is now present in the temporary copy: explicit scope
+validation resolves only named local stable identities and rejects malformed
+scope, duplicate rows, stale row hints, unknown fields, invalid guards, and
+ambiguous records before any remote method is reachable.  It adds no Google
+read/write path.  Compilation plus the retained local/planner gate passed:
+**32 passed in 1.57s** (`test_exact_local_plan.py` and
+`test_exact_cycle_planner.py`).  Frozen-operation construction, selected-row
+readback, and confirmation remain separate unmerged steps.
