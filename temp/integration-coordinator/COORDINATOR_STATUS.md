@@ -299,6 +299,13 @@ partial Google Sheets write alone is not completion.
   `fresh-full-scan`, and the latest visible first-pass checkpoint is a drained
   historical run. Do not resume, delete, or supersede either without the
   explicit guarded interrupted-cycle recovery path.
+- Independent QA accepted a local M1-M4 reconciliation candidate built from
+  the protected checkout's hash-recorded source/test snapshot. It preserves
+  protected behavior and restores the guarded Company-event, Company-only
+  request, recovery-provenance, and SQLite-outbox contracts; 68 protected
+  overlap checks and 39 event/outbox/outcome checks passed. It is not merged
+  or deployed because the candidate is relative to extensive uncommitted user
+  work. See `M1_M4_PRODUCTION_RECONCILIATION_REPORT.md`.
 
 ## Safety boundaries
 
@@ -313,13 +320,16 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Obtain the privileged, controlled restart of only `ollama.service`, then
-   finish the synthetic G1/G2/G3 proof and independently recheck the deployed
-   result. Until then, leave uncertain receipts lane-blocking.
-2. After interactive Google authorization is completed, run the bounded normal
+1. Complete the corrected staged F4 synthetic transport-loss proof and obtain
+   independent review before any privileged restart of only `ollama.service`.
+   Until then, leave uncertain receipts lane-blocking.
+2. Use the accepted M1-M4 reconciliation candidate only through an explicit,
+   hash-recorded integration review; do not mechanically apply it to the
+   protected checkout.
+3. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
-3. Only after publication is clean, freshly recheck processes, locks,
+4. Only after publication is clean, freshly recheck processes, locks,
    local/workbook cycle identity, deployed source identity, and sync health;
    then consider the guarded recovery command only if every preflight guard
    remains true.
