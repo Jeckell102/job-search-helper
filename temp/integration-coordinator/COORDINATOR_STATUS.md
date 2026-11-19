@@ -575,6 +575,44 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   acceptance evidence. No Samtec request or scrape was created. Coordinator
   owns the read-only cycle reconciliation decision. See
   `M1_READONLY_BLOCKERS_20261119.md`.
+- Read-only exact-cycle reconciliation found all 47 inventory payloads and all
+  eight frozen plans structurally valid and cycle-bound, but 39 durable
+  inventories have a stale `queued` checkpoint. More importantly, the current
+  exact-cycle command runs unrelated global cleanup/manual synchronization
+  before it reaches the named cycle. Coordinator/release lane owns the narrow
+  scope hardening; no live cycle sync will run until independent QA accepts it.
+- Independent QA rejected the first exact-cycle scope-hardening candidate:
+  despite its named-cycle preflight, it still starts the normal synchronization
+  worker, whose global pull and startup publication could affect unrelated
+  data. The candidate test also did not correctly prove the isolation boundary.
+  The rejection and concrete repair criteria are recorded in
+  `EXACT_CYCLE_SCOPE_QA_FAILURE_20261119.md`. Coordinator/release is repairing
+  it; the independent QA lane is concurrently defining the required narrow
+  delivery and exclusion proof. This is the current focus. No live recovery,
+  scrape, automatic release, or broad backlog action is authorized by this
+  checkpoint.
+- Independent QA has now **passed record-level containment** for the replacement
+  exact-cycle hold. A named `sync --cycle-id` verifies only that the exact
+  durable inbox cycle exists, then exits before the global synchronizer,
+  Sheets pull/publish, state/pipeline, cleanup, review export, manual import,
+  outcome delivery, or performance writes. Its focused tests preserve an
+  unrelated dirty local row, coordinator outbox record, and second inbox cycle
+  unchanged. This is deliberately not a scoped remote recovery: it has no
+  selected remote write/readback and leaves the named inventories untouched.
+  The protected-source compatibility lane owns installing the same containment
+  guard with its own focused evidence; a future narrow-delivery design remains
+  required before the 42 unblocked inventories can be processed.
+- Protected-source containment is also independently accepted and verified:
+  production `runner.py` returns immediately after its read-only exact-cycle
+  validator and before repository/Google creation. The focused protected
+  `test_runner_cycles` suite passed 16 tests. The scoped evidence is
+  `EXACT_CYCLE_CONTAINMENT_QA_20261119.md`. Because the protected tree was
+  already broadly dirty, this guard must be captured with a scoped release
+  manifest/backup rather than a wholesale production diff. Current next
+  action: design and independently test the dedicated identity-scoped remote
+  publisher/readback; keep exact-cycle work, the Company-only request, queues,
+  and broad processing held in the meantime.
+  See `EXACT_CYCLE_READONLY_RECONCILIATION_20261119.md`.
 - A separate read-only scope proposal now identifies `COMP-0024` Draper as a
   possible Workday third distinct-structure candidate. Its historical evidence
   includes a human-verification block and no current-cycle inventory, so it is

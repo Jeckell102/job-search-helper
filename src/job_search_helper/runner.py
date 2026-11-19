@@ -9,7 +9,7 @@ import sys
 import time
 import uuid
 from collections import Counter, deque
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, contextmanager, nullcontext
 
 from . import cli as helper_cli
 from .cli import PROJECT_ROOT, get_repository, load_environment, project_path, state_path, writer_lock, scraper_lock_name, storage_backend
@@ -42,6 +42,9 @@ Commands:
 
   sync         Sync saved SQLite inventories without fetching companies.
                Blocked saved work is retried by default.
+               Use --cycle-id ID to process only that durable cycle.  An exact
+               cycle sync does not run global cleanup, manual-opportunity
+               intake, review-queue refresh, or coordinator outcome delivery.
   performance  Show timing/request/byte totals from the last run.
 
   cleanup-blacklist
@@ -379,7 +382,22 @@ def _review_queue_lifecycle(repo, database):
 def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
               batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1,
               defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60,
-              browser_fallback=True, resume=False):
+              browser_fallback=True, resume=False, sync_cycle_id=None):
+    """Run a scrape or durable-inventory sync.
+
+    ``sync_cycle_id`` deliberately has narrower semantics than the legacy
+    unnamed ``sync`` command.  It is an exact-cycle recovery tool, not a
+    convenient way to run the normal coordinator pre/post hooks around one
+    selected inventory.  In particular, it must not mutate unrelated jobs,
+    opportunities, review exports, or coordinator receipts.
+    """
+    if sync_cycle_id is not None:
+        if not sync_only:
+            raise ValueError("--cycle-id applies to sync only.")
+        if not isinstance(sync_cycle_id, str) or not sync_cycle_id.strip():
+            raise ValueError("Use a non-empty exact --cycle-id for sync.")
+        sync_cycle_id = sync_cycle_id.strip()
+    exact_sync = sync_only and sync_cycle_id is not None
     if not 1 <= sync_interval <= 3600:
         raise ValueError("Sync interval must be between 1 and 3600 seconds")
     if not 1 <= fetch_workers <= MAX_FETCH_WORKERS or not 1 <= assignment_window <= 100:
@@ -407,23 +425,53 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         repo = get_repository(write=True, interactive=True, renew_both=True,
                               min_request_interval=sheet_request_interval)
         repo.validate_schema()
+        if exact_sync:
+            # Reject an absent ID before starting the run-owned publisher.
+            # Besides making a typo harmless, this prevents a named recovery
+            # command from opening the normal sync path when it has no exact
+            # inventory to own.
+            probe = InventoryInbox(database.parent / "inventories.sqlite3", repo.spreadsheet_id)
+            try:
+                if sync_cycle_id not in probe.cycles(include_blocked=retry_blocked):
+                    print(f"No saved inventory for exact cycle {sync_cycle_id}.")
+                    return 0
+            finally:
+                probe.close()
+            # RunSheetsSync owns a *global* local-to-Sheets pull/publish loop.
+            # It is therefore unsafe to reuse it for an exact-cycle recovery:
+            # startup alone could import or publish another cycle's work.  Do
+            # not quietly downgrade a named request into that broad behavior.
+            # A future scoped publisher must supply exact plan/readback guards
+            # before this command is allowed to write.  Until then this is an
+            # explicit no-global hold and leaves the inventory untouched.
+            print(
+                f"Exact cycle {sync_cycle_id} is held: global Sheets pull/publish is disabled "
+                "for named recovery. No inventory, workbook, review, or coordinator changes were applied.",
+                flush=True,
+            )
+            return 0
         performance = {}
         performance_sources = [performance]
         run_counts = Counter()
-        # Registered first to print after final Sheets drain and performance.
-        resources.callback(_print_run_summary, run_counts)
-        # Registered before sync so queue export and Sheets drain are included.
-        resources.callback(_save_performance, database, performance_sources, run_started)
+        if not exact_sync:
+            # Registered first to print after final Sheets drain and performance.
+            resources.callback(_print_run_summary, run_counts)
+            # Registered before sync so queue export and Sheets drain are included.
+            resources.callback(_save_performance, database, performance_sources, run_started)
         if getattr(repo, 'is_local', False) is True and not defer_sync:
             from .run_sync import run_scoped_sync
             sync = resources.enter_context(run_scoped_sync(repo, database, interval=sync_interval,
                                                            request_interval=sheet_request_interval))
             if isinstance(sync.totals, dict):
                 performance_sources.append(sync.totals)
-        with _review_queue_lifecycle(repo, database):
+        # An exact sync owns only its named cycle.  Refreshing the shared
+        # review export would be an unrelated mutation (and can race review
+        # work), so it remains part of normal scrape/unnamed-sync behavior.
+        with (nullcontext() if exact_sync else _review_queue_lifecycle(repo, database)):
             state = State(str(database))
             os.chmod(database, 0o600)
-            state.purge_reviews()
+            if not exact_sync:
+                state.purge_reviews()
             try:
                 inbox = InventoryInbox(database.parent / "inventories.sqlite3", repo.spreadsheet_id)
             except BaseException:
@@ -452,21 +500,32 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                             f"Company changes: safely handled {len(bridge_results)} queued change(s).",
                             flush=True,
                         )
-                from .closed_jobs import stage_closed_pending
-                while True:
-                    closed = stage_closed_pending(repo)
-                    if closed["changed"]:
-                        destination = "saved locally for verified Sheet sync" if getattr(repo, "is_local", False) else "saved to Sheets"
-                        print(f"Closed-job cleanup: {closed['changed']} Pending choices changed to No; {destination}.", flush=True)
-                    if not closed["remaining"] or not closed["changed"]:
-                        break
-                manual = engine.sync_manual_opportunities()
-                if manual["added"]:
-                    print(f"Added {manual['added']} manually selected job(s) to Opportunities.", flush=True)
-                if manual["skipped"]:
-                    print(f"Skipped {manual['skipped']} manually selected job(s) missing a company, title, or valid URL.", flush=True)
+                if not exact_sync:
+                    from .closed_jobs import stage_closed_pending
+                    while True:
+                        closed = stage_closed_pending(repo)
+                        if closed["changed"]:
+                            destination = "saved locally for verified Sheet sync" if getattr(repo, "is_local", False) else "saved to Sheets"
+                            print(f"Closed-job cleanup: {closed['changed']} Pending choices changed to No; {destination}.", flush=True)
+                        if not closed["remaining"] or not closed["changed"]:
+                            break
+                    manual = engine.sync_manual_opportunities()
+                    if manual["added"]:
+                        print(f"Added {manual['added']} manually selected job(s) to Opportunities.", flush=True)
+                    if manual["skipped"]:
+                        print(f"Skipped {manual['skipped']} manually selected job(s) missing a company, title, or valid URL.", flush=True)
                 if sync_only:
-                    cycle_ids = inbox.cycles(include_blocked=retry_blocked)
+                    available_cycle_ids = inbox.cycles(include_blocked=retry_blocked)
+                    if exact_sync:
+                        # The preflight above checked this before the publisher
+                        # started.  Keep this check as a durable-race guard:
+                        # a concurrent recovery must not make us fall back to
+                        # unnamed/global sync behavior.
+                        if sync_cycle_id not in available_cycle_ids:
+                            raise RuntimeError(f"Exact cycle {sync_cycle_id} disappeared before processing.")
+                        cycle_ids = [sync_cycle_id]
+                    else:
+                        cycle_ids = available_cycle_ids
                     if not cycle_ids:
                         print("No saved inventories to sync.")
                         return 0
@@ -479,7 +538,7 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                                         retry_partial=resume)
                     run_counts.update(result["run_counts"])
                 final = engine.status(cycle_id)
-                if getattr(repo, 'is_local', False) is True:
+                if getattr(repo, 'is_local', False) is True and not exact_sync:
                     # Record only the bounded facts already held by the normal
                     # pipeline.  The separate coordinator delivery path owns
                     # repair intake; this call cannot start a worker.
@@ -643,6 +702,7 @@ def main(argv=None):
     parser.add_argument("--batch-size", type=int, default=DEFAULT_SCRAPER_BATCH_SIZE)
     parser.add_argument("--sheet-request-interval", type=float, default=1.1)
     parser.add_argument("--sync-interval", type=float, default=60)
+    parser.add_argument("--cycle-id")
     try:
         args = parser.parse_args(argv)
     except SystemExit:
@@ -655,6 +715,9 @@ def main(argv=None):
     if args.command == "sync" and (args.defer_sync or args.resume):
         print("ERROR: --defer-sync and --resume apply to start only.", file=sys.stderr)
         return 2
+    if args.command == "start" and args.cycle_id is not None:
+        print("ERROR: --cycle-id applies to sync only.", file=sys.stderr)
+        return 2
     try:
         return run_start(
             fetch_workers=args.fetch_workers,
@@ -663,6 +726,7 @@ def main(argv=None):
             sheet_request_interval=args.sheet_request_interval,
             defer_sync=args.defer_sync, sync_only=args.command == "sync", retry_blocked=args.retry_blocked,
             sync_interval=args.sync_interval, browser_fallback=args.browser_fallback, resume=args.resume,
+            sync_cycle_id=args.cycle_id,
         )
     except KeyboardInterrupt:
         print("Stopped. Run ./job-search-helper start --resume to continue this scan; start without --resume begins a fresh scan.", file=sys.stderr)

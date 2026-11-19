@@ -605,6 +605,158 @@ class RunnerSyncWiringTests(unittest.TestCase):
         self.assertEqual(result,0)
         sync.assert_not_called()
 
+    def test_exact_cycle_sync_is_a_no_global_hold(self):
+        """Named recovery must never enter the global publisher or local pipeline."""
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        repo = MagicMock(spreadsheet_id='fixture', metrics={})
+        repo.is_local = True
+        state = MagicMock(checkpoint_seconds=0, checkpoint_bytes=0)
+        state.cycle.return_value = {'id': 'CYC-EXACT'}
+        inbox = MagicMock(checkpoint_seconds=0, payload_bytes=0, saved=0)
+        inbox.cycles.return_value = ['CYC-OTHER', 'CYC-EXACT']
+        engine = MagicMock(performance={})
+        engine.resume_local.return_value = {'run_counts': {}}
+        engine.status.return_value = {
+            'cycle_id': 'CYC-EXACT', 'status': 'Complete',
+            'pending_reviews': 0, 'manual_review': 0, 'companies': {},
+        }
+        # The State constructor is mocked here, while runner still retains
+        # the production permission hardening on its durable checkpoint.
+        (Path(directory.name) / 'state.db').touch()
+        output = StringIO()
+        with patch.object(runner, '_load_environment'), \
+             patch.object(runner, 'storage_backend', return_value='sqlite'), \
+             patch.object(runner, 'state_path', return_value=Path(directory.name) / 'state.db'), \
+             patch.object(runner, 'get_repository', return_value=repo), \
+             patch.object(runner, 'State', return_value=state), \
+             patch.object(runner, 'InventoryInbox', return_value=inbox), \
+             patch.object(runner, 'Engine', return_value=engine), \
+             patch.object(runner, '_refresh_review_queue') as refresh, \
+             patch.object(runner, '_save_performance') as save_performance, \
+             patch.object(runner, '_print_run_summary') as print_summary, \
+             patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
+             patch('job_search_helper.closed_jobs.stage_closed_pending') as closed_jobs, \
+             patch('job_search_helper.scrape_outcome_producer.record_cycle_outcomes') as outcomes, \
+             redirect_stdout(output):
+            sync.return_value.__enter__.return_value.totals = {}
+            self.assertEqual(runner.run_start(
+                sync_only=True, sync_cycle_id=' CYC-EXACT ', browser_fallback=False,
+            ), 0)
+
+        inbox.cycles.assert_called_once_with(include_blocked=True)
+        inbox.close.assert_called_once()
+        sync.assert_not_called()
+        self.assertIn('global Sheets pull/publish is disabled', output.getvalue())
+        self.assertIn('No inventory, workbook, review, or coordinator changes were applied.', output.getvalue())
+        engine.resume_local.assert_not_called()
+        state.purge_reviews.assert_not_called()
+        engine.sync_manual_opportunities.assert_not_called()
+        closed_jobs.assert_not_called()
+        outcomes.assert_not_called()
+        refresh.assert_not_called()
+        save_performance.assert_not_called()
+        print_summary.assert_not_called()
+
+    def test_absent_exact_cycle_does_not_start_publisher(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        repo = MagicMock(spreadsheet_id='fixture', metrics={})
+        repo.is_local = True
+        inbox = MagicMock()
+        inbox.cycles.return_value = []
+        with patch.object(runner, '_load_environment'), \
+             patch.object(runner, 'storage_backend', return_value='sqlite'), \
+             patch.object(runner, 'state_path', return_value=Path(directory.name) / 'state.db'), \
+             patch.object(runner, 'get_repository', return_value=repo), \
+             patch.object(runner, 'InventoryInbox', return_value=inbox), \
+             patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
+             redirect_stdout(StringIO()):
+            self.assertEqual(runner.run_start(
+                sync_only=True, sync_cycle_id='CYC-MISSING', browser_fallback=False,
+            ), 0)
+        sync.assert_not_called()
+        inbox.close.assert_called_once()
+
+    def test_exact_cycle_hold_leaves_unrelated_outbox_and_inbox_bytes_untouched(self):
+        """A held exact recovery cannot publish, pull, or alter another cycle."""
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        local = SQLiteRepository(root / 'jobs.sqlite3', 'fixture', initialize=True)
+        self.addCleanup(local.close)
+        company = {
+            'Company': 'Other Co', 'Company ID': 'COMP-OTHER', 'Company Status': 'Active',
+            'Official Careers URL': 'https://jobs.example.test/other', 'ATS / Source': 'Greenhouse',
+        }
+        for tab in SCHEMAS:
+            local.import_rows(tab, enumerate([company] if tab == 'Companies' else [], 2))
+        with local.transaction():
+            local.set_meta('ready', 'yes')
+        # Seed both a normal publisher row and an unrelated coordinator outbox
+        # event. A named cycle must leave each exact SQLite value unchanged.
+        local.commit([{'tab': 'Companies', 'identity': {'Company ID': 'COMP-OTHER'},
+                       'values': {'Notes': 'unrelated pending publisher row'}}])
+        local.mutate_company_with_event(
+            {'tab': 'Companies', 'identity': {'Company ID': 'COMP-OTHER'},
+             'values': {'Notes': 'unrelated coordinator outbox row'}},
+        )
+        inbox_path = root / 'inventories.sqlite3'
+        inbox = runner.InventoryInbox(inbox_path, 'fixture')
+        try:
+            inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': [], 'marker': 'exact-bytes'})
+            inbox.save('CYC-OTHER', 'COMP-OTHER', {'jobs': [], 'marker': 'other-bytes'})
+        finally:
+            inbox.close()
+
+        def snapshot():
+            db = sqlite3.connect(root / 'jobs.sqlite3')
+            inbox_db = sqlite3.connect(inbox_path)
+            try:
+                return {
+                    'dirty': list(db.execute('SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header')),
+                    'outbox': list(db.execute(
+                        'SELECT event_id,company_id,revision,source_revision,kind,payload,created_at '
+                        'FROM company_event_outbox ORDER BY event_id')),
+                    'inbox': list(inbox_db.execute(
+                        'SELECT cycle,company,payload,blocked FROM inventories ORDER BY cycle,company')),
+                    'plans': list(inbox_db.execute(
+                        'SELECT cycle,company,payload,cursor FROM sync_plans ORDER BY cycle,company')),
+                }
+            finally:
+                db.close()
+                inbox_db.close()
+
+        before = snapshot()
+        with patch.object(runner, '_load_environment'), \
+             patch.object(runner, 'storage_backend', return_value='sqlite'), \
+             patch.object(runner, 'state_path', return_value=root / 'state.db'), \
+             patch.object(runner, 'get_repository', return_value=local), \
+             patch.object(runner, 'load_title_blacklist'), \
+             patch.object(runner, 'load_title_review_list'), \
+             patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
+             redirect_stdout(StringIO()):
+            self.assertEqual(runner.run_start(
+                sync_only=True, sync_cycle_id='CYC-EXACT', browser_fallback=False,
+            ), 0)
+        self.assertEqual(snapshot(), before)
+        sync.assert_not_called()
+
+    def test_exact_cycle_id_must_name_saved_inventory_and_is_sync_only(self):
+        with self.assertRaisesRegex(ValueError, 'sync only'):
+            runner.run_start(sync_cycle_id='CYC-EXACT')
+        with self.assertRaisesRegex(ValueError, 'non-empty exact'):
+            runner.run_start(sync_only=True, sync_cycle_id='   ')
+
+    def test_cli_passes_exact_cycle_id_only_to_sync(self):
+        with patch.object(runner, 'run_start', return_value=0) as run:
+            self.assertEqual(runner.main(['sync', '--cycle-id', 'CYC-EXACT']), 0)
+        self.assertEqual(run.call_args.kwargs['sync_cycle_id'], 'CYC-EXACT')
+        with patch.object(runner, 'run_start') as run, redirect_stdout(StringIO()), \
+             patch('sys.stderr', new_callable=StringIO):
+            self.assertEqual(runner.main(['start', '--cycle-id', 'CYC-EXACT']), 2)
+        run.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()
