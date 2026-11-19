@@ -49,16 +49,25 @@ def infer(engine, data, control_store=None):
                                    (lambda: control_store.cancellation_requested(data['request_id'])) if control else (lambda: False),
                                    time.monotonic() + 270, foreground=False)
     except Exception:
+        # A local transport error cannot prove the backend stopped after it
+        # accepted the turn.  Keep the one-turn reservation closed.
         if control:
-            control_store.fail(data['request_id'])
+            control_store.uncertain(data['request_id'])
         raise
-    # Private reasoning is neither needed by the host nor written to task records.
-    result = {'message': {k: message[k] for k in ('role', 'content', 'tool_calls')},
-              'usage': {k: done.get(k) for k in ('done_reason', 'prompt_eval_count', 'eval_count')},
-              'context_tokens': profile.context_tokens}
-    if control:
-        terminal = control_store.finish(data['request_id'], response_digest=_digest(result), usage=result['usage'])
-        result['control'] = {key: terminal[key] for key in ('request_id', 'status', 'response_digest', 'usage')}
-        if terminal['status'] == 'CANCELLED':
-            raise ValueError('inference_cancelled')
-    return result
+    try:
+        # Private reasoning is neither needed by the host nor written to task records.
+        result = {'message': {k: message[k] for k in ('role', 'content', 'tool_calls')},
+                  'usage': {k: done.get(k) for k in ('done_reason', 'prompt_eval_count', 'eval_count')},
+                  'context_tokens': profile.context_tokens}
+        if control:
+            terminal = control_store.finish(data['request_id'], response_digest=_digest(result), usage=result['usage'])
+            result['control'] = {key: terminal[key] for key in ('request_id', 'status', 'response_digest', 'usage')}
+            if terminal['status'] == 'CANCELLED':
+                raise ValueError('inference_cancelled')
+        return result
+    except Exception:
+        # native_turn returned, so execution has ended even if serializing or
+        # validating its receipt failed.  Terminalize without retaining data.
+        if control:
+            control_store.finish(data['request_id'], cancelled=control_store.cancellation_requested(data['request_id']))
+        raise

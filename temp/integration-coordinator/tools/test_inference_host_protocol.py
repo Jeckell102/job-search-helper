@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 import coordinator
 from coordinator import inference_request_payload
@@ -37,6 +38,23 @@ class InferenceControlCleanupTests(fixture.CoordinatorTests):
         self.assertIsNone(coordinator.INFERENCE_CONTROL.get())
         receipt = self.co.store.inference_receipts(task)[0]
         self.assertEqual(receipt['status'], 'UNCERTAIN')
+
+    def test_host_reconciliation_uses_exact_persisted_binding_and_rejects_wrong_request(self):
+        task = self.task()
+        self.co.store.claim_queued(task)
+        state = self.co.store.start_inference_session(task)
+        receipt = self.co.store.reserve_inference(task, phase=state['phase'], prompt_digest='prompt',
+            tools_digest='tools', prompt_tokens=1, output_tokens=256,
+            expected_control_generation=self.co.store.control_generation(), session_id=state['inference_session_id'])
+        binding = {'request_id': receipt['request_id'], 'request_fingerprint': 'a' * 64,
+                   'owner_generation': 'b' * 64}
+        self.co.store.bind_inference_control(receipt['request_id'], binding)
+        saved = self.co.store.inference_receipts(task)[0]
+        with patch.object(coordinator, 'inference_control_status', return_value={
+                'request_id': 'c' * 32, 'status': 'COMPLETED'}) as status:
+            self.assertIsNone(self.co.reconcile_inference(saved))
+            status.assert_called_once_with(binding)
+        self.assertEqual(self.co.store.inference_receipts(task)[0]['status'], 'DISPATCHING')
 
 
 if __name__ == '__main__':

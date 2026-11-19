@@ -28,13 +28,16 @@ ten-minute user update. Update it immediately after any material result.
 
 ## Current position
 
-- Handoff checkpoint, 2026-11-19: `PAUSED_NOT_COMPLETE` for the user's
-  requested higher-model review. All assigned workers have finished. Read
-  `HIGHER_MODEL_REVIEW_HANDOFF.md`; the reviewer must save findings in
-  `HIGHER_MODEL_REVIEW_RESULTS.md` for the returning coordinator. Periodic
-  status updates do not authorize resuming implementation during this pause.
+- Coordinator checkpoint, 2026-11-19: higher-model review rejected the staged
+  F4 protocol with five concrete correctness/isolation gaps. Corrective work
+  is underway only in this isolated source tree; no production or Jetson
+  service change has been made. Independent re-review is assigned.
 - Goal: complete all six roadmap milestones and the final independent
   acceptance demonstration, with safeguards and scoped GitHub backups.
+- Goal reference: `01a1f11f-e014-7493-8441-2f66502e23a9`. The app currently
+  reports this persistent goal as paused after the interrupted handoff; the
+  coordinator continues the bounded source work, but no available goal API can
+  alter that lifecycle state. Do not create a replacement goal.
 - Main checkout: protected and heavily dirty. Do not edit, delete locks, or
   deploy from it. Its untracked coordinator source is read-only reference.
 - Isolated feature worktree: `/tmp/job-search-helper-integration-automation`
@@ -65,7 +68,8 @@ ten-minute user update. Update it immediately after any material result.
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
   service was restarted and no scheduler has been started in this work.
-- Milestones 5–6: not started.
+- Milestones 5–6: not started. F4 transport-recovery sub-gate remains open
+  pending independent re-review and deployment-specific change control.
 
 ## Definition of fully completed
 
@@ -205,7 +209,7 @@ partial Google Sheets write alone is not completion.
   local loopback checks: they require the existing wrapper token, reject a
   mismatched owner, and accept only a matching status/stop request. This is
   staged evidence only; no Jetson file, service, or live request changed.
-- Final staged QA marked the F4 package `ACCEPT WITH REQUIRED FOLLOW-UPS`:
+- Final staged QA marked the earlier F4 package `ACCEPT WITH REQUIRED FOLLOW-UPS`:
   no code blocker remains before staging/backup. Before any live deployment,
   use the Jetson change-control path, collect fresh service preflight and
   rollback evidence, record the actual modification in the Jetson log, and
@@ -218,6 +222,18 @@ partial Google Sheets write alone is not completion.
   Google authorization boundary and made no change because interactive sign-in
   is still required. No scrape, recovery, lock, Company record, or user review
   choice was changed.
+- Higher-model review then rejected the staged F4 package: post-turn receipt
+  validation could leave a receipt RUNNING; ambiguous backend transport was
+  incorrectly terminalized; restart orphan records had no guarded settlement;
+  status disclosed cancellation credentials; and MuleLab could not reconcile a
+  retained Jetson terminal receipt. Corrective isolated changes now cover all
+  five boundaries: post-turn terminal settlement, lane-blocking UNCERTAIN
+  transport/orphan states, ownership-proved and sanitized status, persisted
+  control bindings, and one-shot host recovery into RESPONSE_DROPPED or another
+  retained terminal state. Focused MuleLab tests: 34 passed. Focused Jetson
+  staging tests: 12 passed. Independent re-review passed all five source-level
+  corrections (45 focused checks before one additional host-binding probe); F4 and all
+  later deployment/rollout gates remain open pending live change control.
 
 ## Safety boundaries
 
@@ -232,10 +248,12 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. After interactive Google authorization is completed, run the bounded normal
+1. Add the source-level re-review evidence to the durable F4 QA report, then
+   prepare—but do not execute—the Jetson preflight/rollback procedure.
+2. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
-2. Obtain the prepared higher-model design review, then perform the bounded F4
+3. After F4 source re-review accepts, perform the bounded F4
    Jetson rollout only if its remaining checks are satisfied. First capture a
    live preflight and backup; then record the exact change, verification, and
    rollback evidence in the existing Jetson modification log.

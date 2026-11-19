@@ -49,3 +49,40 @@ class InferenceStoreTests(unittest.TestCase):
         self.assertFalse(final['tools_allowed'])
         self.assertEqual(final['receipt']['status'], 'UNCERTAIN')
         self.assertEqual(final['state']['tokens'], 2500)
+
+    def test_restart_reconciles_retained_completion_without_replay_or_double_charge(self):
+        task, receipt = self.reserve()
+        binding = {'request_id': receipt['request_id'], 'request_fingerprint': 'a' * 64,
+                   'owner_generation': 'b' * 64}
+        self.co.store.bind_inference_control(receipt['request_id'], binding)
+        calls = []
+        def status_query(saved):
+            calls.append(saved['request_id'])
+            self.assertEqual(saved['control_binding'], binding)
+            return self.co.store.reconcile_remote_inference(saved['request_id'], {
+                'request_id': saved['request_id'], 'status': 'COMPLETED',
+                'response_digest': 'c' * 64,
+                'usage': {'prompt_eval_count': 12, 'eval_count': 8, 'done_reason': 'stop'}})
+        restarted = Store(self.co.store.base)
+        restarted.recover(status_query)
+        settled = restarted.inference_receipts(task)[0]
+        self.assertEqual(calls, [receipt['request_id']])
+        self.assertEqual(settled['status'], 'RESPONSE_DROPPED')
+        self.assertEqual(restarted.get(task)['tokens'], 20)
+        self.assertIsNone(restarted.start_inference_session(task))
+
+    def test_restart_keeps_running_remote_receipt_as_a_lane_blocking_hold(self):
+        task, receipt = self.reserve()
+        binding = {'request_id': receipt['request_id'], 'request_fingerprint': 'a' * 64,
+                   'owner_generation': 'b' * 64}
+        self.co.store.bind_inference_control(receipt['request_id'], binding)
+        calls = []
+        def status_query(saved):
+            calls.append(saved['request_id'])
+            return self.co.store.reconcile_remote_inference(saved['request_id'], {
+                'request_id': saved['request_id'], 'status': 'RUNNING'})
+        restarted = Store(self.co.store.base)
+        restarted.recover(status_query)
+        self.assertEqual(calls, [receipt['request_id']])
+        self.assertEqual(restarted.inference_receipts(task)[0]['status'], 'UNCERTAIN')
+        self.assertIsNone(restarted.start_inference_session(task))

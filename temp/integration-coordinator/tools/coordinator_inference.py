@@ -96,12 +96,74 @@ class InferenceStore:
                            pre_counters={k: state[k] for k in ('sessions', 'calls', 'tokens')},
                            control_generation=expected_control_generation, max_seconds=max_seconds,
                            created=time.time(), finished=None, provider_request_id=None,
-                           status='DISPATCHING', observed_usage=None, response_digest=None, terminal_reason=None)
+                           status='DISPATCHING', observed_usage=None, response_digest=None, terminal_reason=None,
+                           control_binding=None)
             db.execute('INSERT INTO inference_receipts VALUES (?,?,?,?)',
                        (receipt['request_id'], task_id, receipt['status'], json.dumps(receipt)))
             state.update(calls=state['calls'] + 1, tokens=state['tokens'] + receipt['reserved_tokens'])
             self._inference_save(db, state)
             return receipt
+
+    def bind_inference_control(self, request_id, control):
+        """Persist the exact remote ownership proof before sending it.
+
+        A restart can then query only the matching Jetson receipt; it never
+        reconstructs or guesses credentials from mutable task state.
+        """
+        required = {'request_id', 'request_fingerprint', 'owner_generation'}
+        if (not isinstance(control, dict) or set(control) != required
+                or control.get('request_id') != request_id
+                or not all(isinstance(control[key], str) and len(control[key]) == 64
+                           for key in ('request_fingerprint', 'owner_generation'))):
+            raise ValueError('Invalid inference control binding.')
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT data FROM inference_receipts WHERE request_id=?', (request_id,)).fetchone()
+            if not row:
+                raise ValueError('Unknown inference request.')
+            receipt = json.loads(row[0])
+            if receipt['status'] != 'DISPATCHING':
+                return receipt
+            if receipt.get('control_binding') not in (None, control):
+                raise ValueError('Inference control binding conflicts with durable receipt.')
+            receipt['control_binding'] = dict(control)
+            db.execute('UPDATE inference_receipts SET data=? WHERE request_id=?', (json.dumps(receipt), request_id))
+            return receipt
+
+    def reconcile_remote_inference(self, request_id, remote):
+        """Settle a retained remote terminal state without replaying inference."""
+        if not isinstance(remote, dict) or remote.get('status') not in {'COMPLETED', 'FAILED', 'CANCELLED'}:
+            return None
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT data FROM inference_receipts WHERE request_id=?', (request_id,)).fetchone()
+            if not row:
+                raise ValueError('Unknown inference request.')
+            receipt = json.loads(row[0])
+            state = self._inference_state(db, receipt['task'])
+            if receipt['status'] not in ('DISPATCHING', 'UNCERTAIN'):
+                return dict(receipt=receipt, state=state, settled=False)
+            if not receipt.get('control_binding'):
+                return dict(receipt=receipt, state=state, settled=False)
+            usage = remote.get('usage')
+            counts = [usage.get(k) for k in ('prompt_eval_count', 'eval_count')] if isinstance(usage, dict) else []
+            valid_usage = len(counts) == 2 and all(type(n) is int and n >= 0 for n in counts)
+            if valid_usage:
+                consumed = sum(counts)
+                receipt['observed_usage'] = {key: usage.get(key) for key in ('prompt_eval_count', 'eval_count', 'done_reason')}
+                state['tokens'] += consumed - receipt['reserved_tokens']
+            remote_status = remote['status']
+            receipt.update(
+                status='RESPONSE_DROPPED' if remote_status == 'COMPLETED' else remote_status,
+                terminal_reason=('Jetson completed inference but its response was not delivered; no replay.'
+                                 if remote_status == 'COMPLETED' else 'Jetson retained terminal inference receipt.'),
+                response_digest=remote.get('response_digest'), finished=time.time())
+            if state['status'] not in ('AWAITING_LIVE_VALIDATION','REVIEW_COMPLETE_LIVE_NOT_VALIDATED','LIVE_VALIDATED'):
+                state.update(status='PAUSED_RECOVERY', reason=receipt['terminal_reason'])
+            db.execute('UPDATE inference_receipts SET status=?,data=? WHERE request_id=?',
+                       (receipt['status'], json.dumps(receipt), request_id))
+            self._inference_save(db, state)
+            return dict(receipt=receipt, state=state, settled=True)
 
     def finalize_inference(self, request_id, response=None, *, terminal_error=None):
         with self.connect() as db:

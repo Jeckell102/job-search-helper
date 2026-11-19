@@ -125,6 +125,30 @@ def infer(messages, schemas, limit):
     return result
 
 
+def inference_control_status(control):
+    """Read a bound, sanitized Jetson control receipt without replaying work."""
+    required = {'request_id', 'request_fingerprint', 'owner_generation'}
+    if not isinstance(control, dict) or set(control) != required:
+        raise ValueError('Invalid inference control binding.')
+    token = (code.BASE / 'bridge-token').read_text().strip()
+    request = urllib.request.Request('http://127.0.0.1:18790/api/wrapper-control/' + control['request_id'],
+        headers={'Authorization': 'Bearer ' + token,
+                 'X-Wrapper-Request-Fingerprint': control['request_fingerprint'],
+                 'X-Wrapper-Owner-Generation': control['owner_generation']}, method='GET')
+    try:
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request, timeout=10) as response:
+            raw = response.read(10001)
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError, TimeoutError):
+        return None
+    if len(raw) > 10000:
+        return None
+    try:
+        value = json.loads(raw)
+    except ValueError:
+        return None
+    return value if isinstance(value, dict) else None
+
+
 def estimate(messages, schemas):
     from coordinator_budget import estimate_context
     return estimate_context(messages, 12288, thinking=False, tools=schemas, internal_tools=True)
@@ -150,6 +174,16 @@ class Coordinator:
         self.scheduler_token = None
         self.scheduler_thread = None
         self.repair_profile_selector = repair_profile_selector
+
+    def reconcile_inference(self, receipt):
+        """Use the persisted binding to settle only a retained terminal turn."""
+        control = receipt.get('control_binding') if isinstance(receipt, dict) else None
+        if not control:
+            return None
+        remote = inference_control_status(control)
+        if remote is None or remote.get('request_id') != receipt['request_id']:
+            return None
+        return self.store.reconcile_remote_inference(receipt['request_id'], remote)
 
     def export(self, task_id):
         """Readable snapshots are replaceable; SQLite is the authoritative record."""
@@ -539,7 +573,7 @@ class Coordinator:
             try:
                 if recovery_required:
                     # Reconcile write-ahead intents before choosing anything to replay.
-                    self.store.recover()
+                    self.store.recover(self.reconcile_inference)
                     recovery_required = False
                 with self.health_lock:
                     pending_exports = list(self.export_errors)
@@ -993,6 +1027,7 @@ class Coordinator:
                     'identity_digest': reservation['identity_digest'],
                     'phase': reservation['phase']}),
             }
+            self.store.bind_inference_control(reservation['request_id'], control)
             control_token = INFERENCE_CONTROL.set(control)
             try:
                 answer = self.model(history, offered, reservation['reserved_output_tokens'])

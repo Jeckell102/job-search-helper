@@ -128,6 +128,10 @@ class Handler(BaseHTTPRequestHandler):
     def wrapper_auth(self):
         key=json.loads((store.ROOT/'config/wrapper-host.json').read_text())['token']
         return secrets.compare_digest(self.headers.get('Authorization',''), 'Bearer '+key)
+    def wrapper_control_binding(self):
+        """Read the per-request proof without ever reflecting it in a reply."""
+        return (self.headers.get('X-Wrapper-Request-Fingerprint'),
+                self.headers.get('X-Wrapper-Owner-Generation'))
     def static(self,path):
         cfg=store.settings()
         if path=='/' and cfg.get('webui_port') is not None:
@@ -177,11 +181,14 @@ class Handler(BaseHTTPRequestHandler):
                     self.response(403, {'error':'Unauthorized'}); return
                 request_id=path.rsplit('/',1)[-1]
                 if method=='GET':
-                    value=self.server.wrapper_control.status(request_id)
+                    fingerprint, owner_generation=self.wrapper_control_binding()
+                    value=self.server.wrapper_control.owned_status(request_id, fingerprint, owner_generation)
                     self.response(200 if value else 404, value or {'error':'Unknown inference request.'}); return
                 if method=='DELETE':
                     data=self.body()
                     value=self.server.wrapper_control.cancel(request_id, data.get('request_fingerprint'), data.get('owner_generation'))
+                    if value:
+                        value=self.server.wrapper_control.owned_status(request_id, data.get('request_fingerprint'), data.get('owner_generation'))
                     self.response(200 if value else 404, value or {'error':'Unknown inference request.'}); return
                 self.response(405, {'error':'Wrapper control requires GET or DELETE.'}); return
             if path.startswith('/api/worker/'):

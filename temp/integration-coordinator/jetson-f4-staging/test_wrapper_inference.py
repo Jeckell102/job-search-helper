@@ -64,13 +64,28 @@ class InferenceTests(unittest.TestCase):
                 self.module.infer(object(), data, control)
             self.native.assert_not_called()
 
-    def test_controlled_native_error_is_terminal_and_releases_the_gate(self):
+    def test_ambiguous_native_transport_error_blocks_the_lane_without_acknowledging_cancellation(self):
         with tempfile.TemporaryDirectory() as temp:
             control = InferenceControlStore(Path(temp) / 'control.sqlite3')
             self.native.side_effect = RuntimeError('backend unavailable')
             with self.assertRaisesRegex(RuntimeError, 'backend unavailable'):
                 self.module.infer(object(), self.controlled(), control)
-            self.assertEqual(control.status('a' * 32)['status'], 'FAILED')
+            self.assertEqual(control.status('a' * 32)['status'], 'UNCERTAIN')
+            control.cancel('a' * 32, self.controlled()['request_fingerprint'], 'c' * 64)
+            self.assertEqual(control.status('a' * 32)['status'], 'UNCERTAIN')
+            self.assertEqual(control.begin('b' * 32, 'd' * 64, 'c' * 64)['status'], 'BUSY')
+
+    def test_invalid_post_turn_usage_settles_terminal_without_replay(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            self.native.return_value = ({'role': 'assistant', 'content': 'ready', 'tool_calls': []},
+                                        {'done_reason': 'stop'})
+            data = self.controlled()
+            with self.assertRaisesRegex(ValueError, 'usage'):
+                self.module.infer(object(), data, control)
+            self.assertEqual(control.status(data['request_id'])['status'], 'COMPLETED')
+            self.module.infer(object(), data, control)
+            self.assertEqual(self.native.call_count, 1)
             self.assertTrue(control.begin('b' * 32, 'd' * 64, 'c' * 64)['start'])
 
     def test_controlled_cancellation_during_a_turn_is_terminal(self):

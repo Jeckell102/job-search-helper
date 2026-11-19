@@ -37,6 +37,17 @@ safe hold, but does not close F4.
    restart while running, retained completion, acknowledged cancellation, and
    a subsequent distinct company only after safe settlement.
 
+## Orphan reconciliation operational proof
+
+An orphan is not safe to expire on a timer. A Jetson restart marks the prior
+`RUNNING` receipt `UNCERTAIN` and holds the single-inference lane. It may be
+settled only after a current, independent backend-inactivity observation for
+the exact wrapper execution lane (and a matching request fingerprint and owner
+generation). A cancellation request alone is not that observation. The
+deployment procedure must record the command/output used for this proof and
+must keep the receipt blocked when the backend cannot be queried or its state
+is ambiguous.
+
 ## Deployment boundary
 
 Implement and test this in isolated source first. Before any Jetson deployment,

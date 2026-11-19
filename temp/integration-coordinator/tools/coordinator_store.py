@@ -1153,11 +1153,21 @@ class Store(CampaignStore, InferenceStore):
         return [{**dict(row), 'arguments': json.loads(row['arguments']),
                  'result': json.loads(row['result']) if row['result'] else None} for row in rows]
 
-    def recover(self):
+    def recover(self, reconcile_inference=None):
         if self.unresolved_inferences():
             self.configure_queue(False)
         for task in self.all():
             for receipt in self.inference_receipts(task['id']):
+                if receipt['status'] in ('DISPATCHING', 'UNCERTAIN') and callable(reconcile_inference):
+                    # Transport/status errors intentionally leave the durable
+                    # hold in place.  A callback may settle only a matching
+                    # remote terminal control receipt.
+                    try:
+                        reconcile_inference(receipt)
+                    except Exception:
+                        pass
+                    receipt = next((item for item in self.inference_receipts(task['id'])
+                                    if item['request_id'] == receipt['request_id']), receipt)
                 if receipt['status'] == 'DISPATCHING':
                     self.finalize_inference(receipt['request_id'], terminal_error='Service restarted with dispatched inference; no replay.')
         for state in self.all():

@@ -49,9 +49,12 @@ class WrapperControlRouteTests(unittest.TestCase):
         self.thread.join(timeout=2)
         sys.modules.pop('server', None)
 
-    def request(self, method, path, *, authorized=False, data=None):
+    def request(self, method, path, *, authorized=False, data=None, binding=None):
         body = None if data is None else json.dumps(data).encode()
         headers = {'Authorization': 'Bearer test-wrapper-token'} if authorized else {}
+        if binding:
+            headers.update({'X-Wrapper-Request-Fingerprint': binding['request_fingerprint'],
+                            'X-Wrapper-Owner-Generation': binding['owner_generation']})
         if body is not None:
             headers['Content-Type'] = 'application/json'
         request = Request(self.base + path, data=body, headers=headers, method=method)
@@ -73,21 +76,39 @@ class WrapperControlRouteTests(unittest.TestCase):
         self.assertEqual(status, 403)
         self.assertEqual(self.httpd.wrapper_control.status(request_id)['status'], 'RUNNING')
 
-    def test_authenticated_status_and_cancellation_obey_ownership(self):
+    def test_shared_wrapper_token_and_request_id_cannot_read_control_binding_or_cancel(self):
         request_id = 'a' * 32
         fingerprint = 'b' * 64
         owner = 'c' * 64
         self.httpd.wrapper_control.begin(request_id, fingerprint, owner)
         status, payload = self.request('GET', '/api/wrapper-control/' + request_id, authorized=True)
-        self.assertEqual(status, 200)
-        self.assertEqual(payload['status'], 'RUNNING')
+        self.assertEqual(status, 400)
+        self.assertNotIn('fingerprint', payload)
+        self.assertNotIn('owner_generation', payload)
+        status, _ = self.request('DELETE', '/api/wrapper-control/' + request_id, authorized=True, data={})
+        self.assertEqual(status, 400)
         status, _ = self.request('DELETE', '/api/wrapper-control/' + request_id, authorized=True,
                                  data={'request_fingerprint': fingerprint, 'owner_generation': 'd' * 64})
         self.assertEqual(status, 400)
+        self.assertEqual(self.httpd.wrapper_control.status(request_id)['status'], 'RUNNING')
+
+    def test_owned_status_is_sanitized_and_cancellation_obeys_ownership(self):
+        request_id = 'a' * 32
+        fingerprint = 'b' * 64
+        owner = 'c' * 64
+        binding = {'request_fingerprint': fingerprint, 'owner_generation': owner}
+        self.httpd.wrapper_control.begin(request_id, fingerprint, owner)
+        status, payload = self.request('GET', '/api/wrapper-control/' + request_id, authorized=True, binding=binding)
+        self.assertEqual(status, 200)
+        self.assertEqual(payload['status'], 'RUNNING')
+        self.assertNotIn('fingerprint', payload)
+        self.assertNotIn('owner_generation', payload)
         status, payload = self.request('DELETE', '/api/wrapper-control/' + request_id, authorized=True,
                                        data={'request_fingerprint': fingerprint, 'owner_generation': owner})
         self.assertEqual(status, 200)
         self.assertTrue(payload['cancel_requested'])
+        self.assertNotIn('fingerprint', payload)
+        self.assertNotIn('owner_generation', payload)
 
 
 if __name__ == '__main__':
