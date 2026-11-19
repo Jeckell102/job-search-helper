@@ -110,6 +110,7 @@ class CliTests(unittest.TestCase):
 
     def test_health_and_existing_actions(self):
         self.assertEqual(parse_request(['health']), {'action': 'health'})
+        self.assertEqual(parse_request(['supervision-status']), {'action': 'supervision-status'})
         self.assertEqual(parse_request(['list']), {'action': 'list'})
         self.assertEqual(parse_request(['status', 'WRAP-123']), {'action': 'status', 'id': 'WRAP-123'})
 

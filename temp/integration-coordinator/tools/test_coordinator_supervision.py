@@ -121,6 +121,33 @@ class CoordinatorSupervisionTests(unittest.TestCase):
         self.assertEqual(seen, [])
         self.assertFalse(result["retention"]["automatic_cleanup"])
 
+    def test_disk_pressure_retains_existing_uncommitted_evidence_byte_for_byte(self):
+        self.coordinator.store.configure_queue(True)
+        with self.coordinator.store.connect() as db:
+            db.execute("INSERT INTO tasks VALUES('T1','{}')")
+            db.execute("INSERT INTO receipts VALUES(1,'T1','inspect','code_read','{}',NULL,'sig',1.0)")
+            db.execute("INSERT INTO inference_receipts VALUES('R1','T1','UNCERTAIN','{}')")
+            db.execute("INSERT INTO scrape_outcome_intake VALUES('O1','C1','S1','HELD','{}',1.0)")
+            before = {
+                table: db.execute(f"SELECT * FROM {table} ORDER BY rowid").fetchall()
+                for table in ("tasks", "receipts", "inference_receipts",
+                              "scrape_outcome_intake")
+            }
+        self.usage = Usage(1000, 999, 1)
+        result = self.supervisor().tick()
+        with self.coordinator.store.connect() as db:
+            after = {
+                table: db.execute(f"SELECT * FROM {table} ORDER BY rowid").fetchall()
+                for table in before
+            }
+        self.assertEqual(after, before)
+        self.assertEqual(result["state"], "DISK_PRESSURE_HOLD")
+        self.assertFalse(self.coordinator.store.queue_enabled())
+        self.assertEqual(result["retention"]["protected_counts"]["tasks"], 1)
+        self.assertEqual(result["retention"]["protected_counts"]["receipts"], 1)
+        self.assertEqual(result["retention"]["protected_counts"]["inference_receipts"], 1)
+        self.assertEqual(result["retention"]["protected_counts"]["scrape_outcome_intake"], 1)
+
     def test_catch_up_failure_is_retryable_and_does_not_enable_work(self):
         self.coordinator.store.configure_queue(False)
         result = self.supervisor(lambda: (_ for _ in ()).throw(OSError("offline"))).tick()

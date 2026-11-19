@@ -3,6 +3,7 @@ import importlib
 from pathlib import Path
 import tempfile
 import threading
+import types
 import unittest
 from unittest.mock import patch
 
@@ -20,11 +21,42 @@ class FakeCoordinator:
 
 
 class HostSupervisionWiringTests(unittest.TestCase):
+    def import_host(self):
+        with patch.object(Path, "read_text", return_value="fixture-token"):
+            return importlib.import_module("host_server")
+
+    def test_existing_health_entry_point_still_fails_a_dead_scheduler(self):
+        host = self.import_host()
+        exits = []
+        coordinator = types.SimpleNamespace(
+            thread=types.SimpleNamespace(is_alive=lambda: False))
+        host.supervise(coordinator, exit_process=exits.append, interval=0)
+        self.assertEqual(exits, [75])
+
+    def test_bounded_environment_thresholds_support_live_disk_hold_exercise(self):
+        host = self.import_host()
+        with patch.dict(host.os.environ, {
+                "WRAPPER_SUPERVISION_MIN_FREE_BYTES": "987654321",
+                "WRAPPER_SUPERVISION_MIN_FREE_RATIO": "0.25"}):
+            supervision = host.build_supervision(
+                FakeCoordinator(Path(tempfile.mkdtemp()) / "tasks"),
+                catch_up=lambda: {"accepted": 0})
+        self.assertEqual(supervision.min_free_bytes, 987654321)
+        self.assertEqual(supervision.min_free_ratio, 0.25)
+
+    def test_invalid_environment_threshold_fails_service_start_closed(self):
+        host = self.import_host()
+        with patch.dict(host.os.environ, {
+                "WRAPPER_SUPERVISION_MIN_FREE_BYTES": "invalid"}):
+            with self.assertRaisesRegex(ValueError, "disk threshold"):
+                host.build_supervision(
+                    FakeCoordinator(Path(tempfile.mkdtemp()) / "tasks"),
+                    catch_up=lambda: {"accepted": 0})
+
     def test_host_persists_external_retention_counts_from_zero_argument_probe(self):
         # host_server reads its private bearer token at import. No service is
         # started by import, and this test substitutes a fixture token only.
-        with patch.object(Path, "read_text", return_value="fixture-token"):
-            host = importlib.import_module("host_server")
+        host = self.import_host()
         with tempfile.TemporaryDirectory() as temporary:
             coordinator = FakeCoordinator(Path(temporary) / "tasks")
             expected = {

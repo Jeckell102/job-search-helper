@@ -1,8 +1,9 @@
 # F8 supervised operation and retention candidate
 
-Updated: 2026-11-19. This is isolated source evidence only. It has not been
-installed into the protected Job Search Helper checkout and has not started,
-stopped, or restarted any production service.
+Updated: 2026-11-19. The source candidate was installed through the protected,
+rollback-backed integration process after independent acceptance. The live
+host has since passed restart, planned-stop and disk-pressure hold/recovery
+exercises without starting scraper work or discarding evidence.
 
 ## Implemented boundary
 
@@ -38,7 +39,7 @@ stopped, or restarted any production service.
 - Focused supervision plus inherited live-coordinator checks: 33 passed.
 - The real host-wiring check proves its zero-argument closure supplies the job
   database and both consumer identities, then persists nonempty external counts.
-- Full isolated coordinator suite with the application source available: 229
+- Full isolated coordinator suite with the application source available: 233
   passed.
 - The same focused supervision selection over the current protected-source
   reconciliation copy plus the host-wiring check: 34 passed.
@@ -51,10 +52,6 @@ stopped, or restarted any production service.
 
 ## Open gates
 
-- Installation through an owner-reviewed, hash-recorded protected integration.
-- A disposable reboot/reconnect and simulated disk-pressure demonstration on
-  the exact installed source, including no lost requests, duplicate owners, or
-  discarded uncommitted evidence.
 - Final sequential acceptance across three unfinished Companies with distinct
   source structures and the shared-adapter regression set.
 - The separate administrator-authenticated Jetson F4 interruption proof.

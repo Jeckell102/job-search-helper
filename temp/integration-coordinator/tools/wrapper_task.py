@@ -40,7 +40,7 @@ class Once(argparse.Action):
 
 def parse_request(argv=None):
     parser = argparse.ArgumentParser(description='Persistent MuleLab wrapper tasks')
-    parser.add_argument('action', choices=('start', 'status', 'list', 'health', 'pause', 'resume', 'pilot-start', 'pilot-stop', 'queue', 'queue-pause', 'queue-resume', 'autopilot-start', 'autopilot-stop', 'autopilot-status', 'enqueue', 'exclude', 'include', 'retry', 'scope-expand'))
+    parser.add_argument('action', choices=('start', 'status', 'list', 'health', 'supervision-status', 'pause', 'resume', 'pilot-start', 'pilot-stop', 'queue', 'queue-pause', 'queue-resume', 'autopilot-start', 'autopilot-stop', 'autopilot-status', 'enqueue', 'exclude', 'include', 'retry', 'scope-expand'))
     parser.add_argument('value', nargs='?', default='')
     parser.add_argument('--max-sessions', type=int, default=None, action=Once)
     parser.add_argument('--mode', choices=('review', 'develop'), default=None, action=Once,
@@ -96,7 +96,7 @@ def parse_request(argv=None):
         data = {'action': 'batch', 'items': items}
     elif args.mode is not None or args.max_sessions is not None:
         parser.error('--mode and --max-sessions only apply to start.')
-    elif args.action not in ('list', 'health', 'queue', 'queue-pause', 'queue-resume', 'pilot-stop',
+    elif args.action not in ('list', 'health', 'supervision-status', 'queue', 'queue-pause', 'queue-resume', 'pilot-stop',
                              'autopilot-start', 'autopilot-stop', 'autopilot-status'):
         if not args.value.strip():
             parser.error(args.action + ' requires a task ID.')
@@ -121,7 +121,10 @@ def main(argv=None):
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    print(json.dumps(result, indent=2) if output_json else result.get('text') or result.get('error'))
+    if data['action'] == 'supervision-status' and result.get('ok'):
+        print(json.dumps(result.get('supervision'), indent=2, sort_keys=True))
+    else:
+        print(json.dumps(result, indent=2) if output_json else result.get('text') or result.get('error'))
     return 0 if result.get('ok') else 1
 
 

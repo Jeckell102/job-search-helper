@@ -8,6 +8,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import threading
 import sqlite3
+import time
 import coding_tools
 import public_tools
 from coordinator import Coordinator
@@ -38,13 +39,42 @@ def host_external_retention_snapshot():
         outcome_consumer=SCRAPE_OUTCOME_CONSUMER)
 
 
+def supervision_thresholds(environ=None):
+    """Read bounded operator-test thresholds; defaults remain production-safe."""
+    environ = os.environ if environ is None else environ
+    try:
+        minimum_bytes = int(environ.get(
+            'WRAPPER_SUPERVISION_MIN_FREE_BYTES', str(2 * 1024**3)))
+        minimum_ratio = float(environ.get(
+            'WRAPPER_SUPERVISION_MIN_FREE_RATIO', '0.05'))
+    except (TypeError, ValueError):
+        raise ValueError('Invalid coordinator supervision disk threshold') from None
+    if not 0 <= minimum_bytes <= 2**63 - 1 or not 0 <= minimum_ratio <= 1:
+        raise ValueError('Coordinator supervision disk threshold is out of range')
+    return minimum_bytes, minimum_ratio
+
+
 def build_supervision(coordinator, catch_up=None):
     """Wire the real host's zero-argument probes into maintenance supervision."""
     if catch_up is None:
         catch_up = lambda: drain_scrape_outcomes(limit=20)
+    minimum_bytes, minimum_ratio = supervision_thresholds()
     return CoordinatorSupervision(
         coordinator, catch_up,
+        min_free_bytes=minimum_bytes, min_free_ratio=minimum_ratio,
         retention_probe=host_external_retention_snapshot)
+
+
+def supervise(coordinator, supervision=None, exit_process=os._exit, interval=1):
+    """Compatibility entry point for the existing host health contract."""
+    if supervision is not None:
+        return watchdog(coordinator, supervision, exit_process=exit_process,
+                        interval=interval)
+    while True:
+        if not coordinator.thread.is_alive():
+            exit_process(75)
+            return
+        time.sleep(interval)
 
 
 def current_company_revision(company_id):

@@ -43,37 +43,40 @@ ten-minute user update. Update it immediately after any material result.
   acceptance demonstration, with safeguards and scoped GitHub backups.
 - Goal reference: `01a1f11f-e014-7493-8441-2f66502e23a9`; the persistent goal
   is active. Do not create a replacement goal.
-- Main checkout: protected and heavily dirty. Do not edit, delete locks, or
-  deploy from it. Its untracked coordinator source is read-only reference.
+- Main checkout: protected and heavily dirty. The accepted, hash-recorded
+  integration file set was installed under the existing install lock on
+  2026-11-19 with an exact rollback copy. Do not edit anything else, delete
+  locks, or treat unrelated dirty files as part of this project.
 - Isolated feature worktree: `/tmp/job-search-helper-integration-automation`
   on `codex/integration-automation-20261118`.
 - Coordinator development checkout: `/home/chris/job-search-helper_old/dev/wrapper-coder/repo`
   is on `development/wrapper-coder` at `0c45d61`. Its code is clean, but four
   pre-existing documentation changes are preserved; it has no GitHub remote.
-- Milestone 1: 88% — the normal request consumer now validates and admits one
+- Milestone 1: 92% — the normal request consumer now validates and admits one
   immutable Company-only request, runs only that Company, and refuses to
   supersede unfinished work or accept an altered retry. Independent source
   review accepted the offline proof; guarded operational proof is still
   required.
-- Milestone 2: 85% — durable Company revisions, reconciliation, and scoped
+- Milestone 2: 90% — durable Company revisions, reconciliation, and scoped
   request provenance are implemented and independently reviewed. A narrow
   current-Company revision lookup now exists for the coordinator boundary;
   the active local store now has the additive event/outbox foundation. The
   existing Sheets sync now baselines current Companies once without scheduling
   them, then reconciles later changes. The normal runner turns a confirmed
   change into an exact Company-only request. Guarded live proof remains.
-- Milestone 3: 80% — bounded outcome classification, local immutable records,
+- Milestone 3: 88% — bounded outcome classification, local immutable records,
   independently reviewed intake, and durable exact-receipt delivery into the
   existing coordinator are implemented. The independently accepted normal-run
   producer records bounded scrape facts without dispatching work; malformed
   checkpoint data is safely skipped. Qualified defects are held once for
   triage, never dispatched. The remaining gap is guarded live verification.
-- Milestone 4: 68% — a held repair can be promoted only into a paused,
+- Milestone 4: 78% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
-  The coordinator host now has a local-only, read-only resolver wired in; no
-  service was restarted and no scheduler has been started in this work.
-- Milestone 5: 68% — source candidates now provide crash-durable,
+  The coordinator host now has a local-only, read-only resolver wired in. The
+  protected installed coordinator suite passes 434 checks; the queue remains
+  paused and no repair campaign was started.
+- Milestone 5: 76% — source candidates now provide crash-durable,
   Company-version-bound release-to-retry intent, exact complete-release pins,
   normal company-only admission/recovery, stale-source refusal at admission
   and storage, and release/attempt identity through publication and outcomes.
@@ -97,9 +100,10 @@ ten-minute user update. Update it immediately after any material result.
   follow-ups are now independently accepted: the full durable-inbox suite
   passes 12 checks and a real partial-publication review conflict retains the
   exact plan, pending receipt, manual note, and blocked inventory without
-  duplicate jobs. Owner-reviewed protected integration, guarded deployment and
-  the live release-to-saved-jobs proof remain.
-- Milestone 6: 30% — F4 receipt/recovery source review and controlled Jetson
+  duplicate jobs. Owner-reviewed protected integration is complete: the
+  protected integration selection passes 202 checks and exact rollback/source
+  hashes are recorded. The live release-to-saved-jobs proof remains.
+- Milestone 6: 54% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. An isolated F8 candidate now extends the existing
   coordinator with one maintenance owner, durable boot/reconnect catch-up,
   disk-pressure holds, explicit evidence-retention counts, and planned
@@ -107,10 +111,16 @@ ten-minute user update. Update it immediately after any material result.
   review rejected a watchdog/shutdown race; the corrected path now passes a
   live-scheduler/watchdog test and records recovery-required instead of a false
   safe pause on timeout. Independent QA accepted the corrected exact source
-  and its real-host retention wiring. The administrator-authenticated Jetson
-  interruption proof, protected
-  integration, disposable service demonstrations, and the full sequential
-  acceptance matrix remain.
+  and its real-host retention wiring. The protected host now runs this source;
+  a controlled stop persisted `SHUTDOWN_PAUSED`, restart catch-up returned
+  `ACTIVE`, and the queue stayed paused. The administrator-authenticated
+  The live service has now entered `DISK_PRESSURE_HOLD` under a temporary
+  threshold, preserved every tracked count without cleanup, then returned to
+  `ACTIVE` after the override was removed. Independent QA accepted the final
+  threshold control and independently confirmed both services healthy, no
+  temporary override, no running work or open receipts, and unchanged
+  retention counts. The administrator-authenticated Jetson interruption proof
+  and the full sequential acceptance matrix remain.
 
 ## Definition of fully completed
 
@@ -425,7 +435,7 @@ partial Google Sheets write alone is not completion.
   keeps the real `main(start ...)` scrape/FIRST-PASS preflight intact. The full
   current durable-inbox suite passes 12 checks. Source-level independent QA is
   closed; integration/deployment/live acceptance remain open.
-- The isolated F8 supervision candidate now passes 229 coordinator checks and
+- The isolated F8 supervision candidate now passes 233 coordinator checks and
   34 focused checks over the protected-source reconciliation copy. Its real
   host-wiring check proves the zero-argument probe supplies the database and
   consumer identities and persists nonempty external counts. It protects
