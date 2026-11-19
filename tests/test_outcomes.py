@@ -1,4 +1,6 @@
+import tempfile
 import unittest
+from pathlib import Path
 
 from job_search_helper.outcomes import (
     BLOCKED,
@@ -12,6 +14,8 @@ from job_search_helper.outcomes import (
     UNKNOWN_CAPABILITY_HOLD,
     classify_outcome,
 )
+from job_search_helper.repository import RepositoryError
+from job_search_helper.sqlite_repository import SQLiteRepository
 
 
 def facts(**changes):
@@ -109,6 +113,42 @@ class OutcomeClassificationTests(unittest.TestCase):
             classify_outcome(facts(failure={"category": {"private": "body"}}))
         with self.assertRaisesRegex(OutcomeFactsError, "capability must be text"):
             classify_outcome(facts(capability=["qualified"], failure={"category": "adapter_regression"}))
+
+
+class DurableOutcomeTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.repo = SQLiteRepository(Path(self.temp.name) / "jobs.sqlite3", "test-sheet", initialize=True)
+        self.addCleanup(self.repo.close)
+
+    def test_classified_outcome_is_idempotent_and_reviewable_without_dispatch(self):
+        source_facts = facts(failure={"category": "adapter_regression"})
+        outcome = classify_outcome(source_facts)
+        first = self.repo.record_scrape_outcome(source_facts)
+        self.assertTrue(first["recorded"])
+        self.assertFalse(self.repo.record_scrape_outcome(source_facts)["recorded"])
+        self.assertEqual(self.repo.scrape_outcomes(company_id="COMP-1"), [first["outcome"]])
+        self.assertEqual(self.repo.pending_company_events("intake"), [])
+
+    def test_caller_cannot_forge_an_action_or_store_raw_private_identity(self):
+        source_facts = facts(failure={"category": "timeout", "http_status": 503})
+        source_facts.update({"outcome_id": "OUT-forged", "outcome": "FORGED",
+                             "action": "dispatch-everything",
+                             "identity": {"raw_private": "X" * 10000}})
+        stored = self.repo.record_scrape_outcome(source_facts)["outcome"]
+        self.assertNotEqual(stored["outcome_id"], "OUT-forged")
+        self.assertEqual(stored["action"], "retry_with_bounded_backoff")
+        self.assertNotIn("raw_private", stored["identity"])
+
+    def test_readonly_legacy_database_without_outcome_table_reads_empty(self):
+        self.repo.db.execute("DROP TABLE scrape_outcomes")
+        with self.repo.transaction():
+            self.repo.set_meta("ready", "yes")
+        self.repo.close()
+        self.repo = SQLiteRepository(Path(self.temp.name) / "jobs.sqlite3", "test-sheet", readonly=True)
+        self.addCleanup(self.repo.close)
+        self.assertEqual(self.repo.scrape_outcomes(), [])
 
 
 if __name__ == "__main__":

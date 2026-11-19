@@ -138,7 +138,7 @@ class SQLiteRepository:
                 self.db.execute('INSERT OR IGNORE INTO tabs VALUES (?,?)', (tab, encode(headers)))
 
     def _ensure_company_event_schema(self):
-        """Additive M2 schema; never changes workbook records or old outbox rows."""
+        """Additive integration schema; never changes workbook records."""
         self.db.executescript('''
         CREATE TABLE IF NOT EXISTS company_revisions (
           company_id TEXT NOT NULL, revision INTEGER NOT NULL,
@@ -160,6 +160,11 @@ class SQLiteRepository:
           source_revision TEXT NOT NULL, acknowledged_at TEXT NOT NULL,
           PRIMARY KEY(consumer, company_id));
         CREATE INDEX IF NOT EXISTS company_event_outbox_company ON company_event_outbox(company_id, revision);
+        CREATE TABLE IF NOT EXISTS scrape_outcomes (
+          outcome_id TEXT PRIMARY KEY, request_id TEXT NOT NULL, company_id TEXT NOT NULL,
+          source_revision TEXT NOT NULL, outcome TEXT NOT NULL, action TEXT NOT NULL,
+          payload TEXT NOT NULL, recorded_at TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS scrape_outcomes_company ON scrape_outcomes(company_id, source_revision, recorded_at);
         ''')
 
     @contextmanager
@@ -544,6 +549,71 @@ class SQLiteRepository:
                 raise RepositoryError('Company event mutation must resolve to one Company record.')
             event = self._record_company_event(rows[0], origin=origin) if rows else None
         return {**result, 'company_event': event}
+
+    def record_scrape_outcome(self, facts):
+        """Classify bounded facts and persist the resulting outcome, without dispatch.
+
+        Callers cannot supply their own outcome ID, action, or identity.  The
+        local classifier reconstructs that immutable record, so the audit log
+        never becomes a carrier for raw/private details or invented actions.
+        """
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        from .outcomes import OutcomeFactsError, classify_outcome
+        try:
+            outcome = classify_outcome(facts)
+        except OutcomeFactsError as exc:
+            raise RepositoryError(f'Invalid scrape outcome facts: {exc}') from exc
+        identity = outcome.get('identity')
+        required = ('outcome_id', 'outcome', 'action', 'failure_fingerprint')
+        if (not isinstance(identity, dict)
+                or any(not isinstance(outcome.get(key), str) or not outcome[key].strip() for key in required)
+                or any(not isinstance(identity.get(key), str) or not identity[key].strip()
+                       for key in ('request_id', 'company_id', 'source_revision'))):
+            raise RepositoryError('Scrape outcome has incomplete immutable identity.')
+        payload = {
+            'outcome_id': outcome['outcome_id'], 'outcome': outcome['outcome'],
+            'action': outcome['action'], 'identity': identity,
+            'failure_fingerprint': outcome['failure_fingerprint'],
+        }
+        encoded = encode(payload)
+        with self.transaction():
+            existing = self.db.execute('SELECT payload FROM scrape_outcomes WHERE outcome_id=?',
+                                       (outcome['outcome_id'],)).fetchone()
+            if existing:
+                if existing[0] != encoded:
+                    raise RepositoryError('Scrape outcome ID conflicts with immutable stored evidence.')
+                return {'outcome_id': outcome['outcome_id'], 'recorded': False, 'outcome': payload}
+            self.db.execute(
+                'INSERT INTO scrape_outcomes(outcome_id,request_id,company_id,source_revision,outcome,action,payload,recorded_at) '
+                'VALUES (?,?,?,?,?,?,?,?)',
+                (outcome['outcome_id'], identity['request_id'], identity['company_id'],
+                 identity['source_revision'], outcome['outcome'], outcome['action'], encoded, timestamp()))
+            self.event('scrape_outcome_recorded', '', 0,
+                       {'outcome_id': outcome['outcome_id'], 'company_id': identity['company_id'],
+                        'source_revision': identity['source_revision'], 'outcome': outcome['outcome']})
+        return {'outcome_id': outcome['outcome_id'], 'recorded': True, 'outcome': payload}
+
+    def scrape_outcomes(self, *, company_id=None, limit=100):
+        """Read durable outcomes for review; this method never dispatches repairs."""
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise RepositoryError('Scrape outcome limit must be between 1 and 1000.')
+        if company_id is not None and (not isinstance(company_id, str) or not company_id.strip()):
+            raise RepositoryError('Company ID filter must be non-empty text.')
+        # A read-only legacy database cannot be migrated.  Treat the additive
+        # M3 ledger as absent rather than failing a status or audit read.
+        present = self.db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='scrape_outcomes'"
+        ).fetchone()
+        if not present:
+            return []
+        if company_id is None:
+            rows = self.db.execute('SELECT payload FROM scrape_outcomes ORDER BY recorded_at,outcome_id LIMIT ?',
+                                   (limit,)).fetchall()
+        else:
+            rows = self.db.execute('SELECT payload FROM scrape_outcomes WHERE company_id=? '
+                                   'ORDER BY recorded_at,outcome_id LIMIT ?', (company_id.strip(), limit)).fetchall()
+        return [json.loads(row[0]) for row in rows]
 
     def pending_company_events(self, consumer, *, limit=100):
         """Return unacknowledged outbox events in immutable per-company order."""
