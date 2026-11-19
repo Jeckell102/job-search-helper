@@ -133,6 +133,11 @@ class Store(CampaignStore, InferenceStore):
                     company_id TEXT NOT NULL, source_revision TEXT NOT NULL,
                     status TEXT NOT NULL, payload TEXT NOT NULL, received REAL NOT NULL,
                     FOREIGN KEY(outcome_id) REFERENCES scrape_outcome_intake(outcome_id));
+                CREATE TABLE IF NOT EXISTS repair_intake_evidence(
+                    repair_key TEXT NOT NULL, outcome_id TEXT NOT NULL,
+                    PRIMARY KEY(repair_key, outcome_id),
+                    FOREIGN KEY(repair_key) REFERENCES repair_intake(repair_key),
+                    FOREIGN KEY(outcome_id) REFERENCES scrape_outcome_intake(outcome_id));
             ''')
 
     def ingest_scrape_outcome(self, facts):
@@ -178,16 +183,25 @@ class Store(CampaignStore, InferenceStore):
                 db.execute('INSERT OR IGNORE INTO repair_intake VALUES (?,?,?,?,?,?,?)',
                            (repair_key, canonical['outcome_id'], identity['company_id'],
                             identity['source_revision'], status, encoded, time.time()))
+                # A later attempt can carry fresh evidence for the same
+                # defect.  Retain it without creating another repair owner.
+                db.execute('INSERT OR IGNORE INTO repair_intake_evidence VALUES (?,?)',
+                           (repair_key, canonical['outcome_id']))
         return {'outcome_id': canonical['outcome_id'], 'recorded': True,
                 'repair_key': repair_key, 'status': status}
 
     def held_repair_intake(self):
         """Review held repairs; this is deliberately not a scheduling API."""
         with self.connect() as db:
-            rows = db.execute('SELECT repair_key,outcome_id,company_id,source_revision,status,payload '
-                              'FROM repair_intake ORDER BY received,repair_key').fetchall()
+            rows = db.execute(
+                'SELECT r.repair_key,r.outcome_id,r.company_id,r.source_revision,r.status,r.payload,'
+                'GROUP_CONCAT(e.outcome_id) FROM repair_intake r '
+                'LEFT JOIN repair_intake_evidence e ON e.repair_key=r.repair_key '
+                'GROUP BY r.repair_key,r.outcome_id,r.company_id,r.source_revision,r.status,r.payload '
+                'ORDER BY r.received,r.repair_key').fetchall()
         return [dict(repair_key=row[0], outcome_id=row[1], company_id=row[2],
-                     source_revision=row[3], status=row[4], outcome=json.loads(row[5])) for row in rows]
+                     source_revision=row[3], status=row[4], outcome=json.loads(row[5]),
+                     evidence_outcome_ids=sorted(item for item in (row[6] or '').split(',') if item)) for row in rows]
 
     @contextmanager
     def connect(self):

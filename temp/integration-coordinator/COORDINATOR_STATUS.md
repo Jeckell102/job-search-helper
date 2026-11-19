@@ -39,7 +39,7 @@ ten-minute user update. Update it immediately after any material result.
 - Milestone 2: 65% — durable Company revisions, reconciliation, and scoped
   request provenance are implemented and independently reviewed; live proof
   remains.
-- Milestone 3: 42% — bounded outcome classification, local immutable records,
+- Milestone 3: 45% — bounded outcome classification, local immutable records,
   and independently reviewed intake into the existing coordinator are
   implemented. Qualified defects are held once for triage; no repair is
   dispatched automatically yet.
@@ -69,7 +69,9 @@ partial Google Sheets write alone is not completion.
 - Pending checkpoint: source-only coordinator copy accepted after independent
   review and saved as `b002564`.
 - Pending checkpoint: classifier-derived, held-only repair intake accepted by
-  independent review; its GitHub backup is the next action.
+  independent review and saved as `fecfc7d`.
+- Pending checkpoint: repeated repair evidence is independently accepted; its
+  GitHub backup is the next action.
 
 ## Safety boundaries
 
@@ -85,6 +87,6 @@ partial Google Sheets write alone is not completion.
 ## Next actions
 
 1. Save the accepted source-only coordinator copy to the scoped GitHub branch.
-2. Save the accepted held-only outcome intake checkpoint to GitHub.
-3. Attach repeated evidence to an existing held repair and define the reviewed
-   M4 promotion from held repair to a single scoped coordinator task.
+2. Save the accepted repeated-evidence checkpoint to GitHub.
+3. Define the reviewed M4 promotion from held repair to a single scoped
+   coordinator task, without activating that task automatically.

@@ -78,6 +78,24 @@ class OutcomeIntakeTests(unittest.TestCase):
         self.assertIsNone(result['repair_key'])
         self.assertEqual(self.store.held_repair_intake(), [])
 
+    def test_repeated_attempts_attach_evidence_to_one_held_repair(self):
+        first = self.store.ingest_scrape_outcome(facts(attempt_id='ATT-1'))
+        second = self.store.ingest_scrape_outcome(facts(attempt_id='ATT-2'))
+        self.assertTrue(first['recorded'])
+        self.assertTrue(second['recorded'])
+        self.assertEqual(first['repair_key'], second['repair_key'])
+        held = self.store.held_repair_intake()
+        self.assertEqual(len(held), 1)
+        self.assertEqual(held[0]['evidence_outcome_ids'], sorted([first['outcome_id'], second['outcome_id']]))
+
+    def test_pre_evidence_relation_repair_reads_as_no_attached_evidence(self):
+        item = facts()
+        result = self.store.ingest_scrape_outcome(item)
+        with self.store.connect() as db:
+            db.execute('DELETE FROM repair_intake_evidence WHERE repair_key=?', (result['repair_key'],))
+        held = self.store.held_repair_intake()
+        self.assertEqual(held[0]['evidence_outcome_ids'], [])
+
 
 if __name__ == '__main__':
     unittest.main()
