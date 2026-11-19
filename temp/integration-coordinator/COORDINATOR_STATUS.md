@@ -236,6 +236,13 @@ partial Google Sheets write alone is not completion.
   recheck reproduced the fix. The normal Jetson worker also honors this shared
   lane hold. Staging regression suite: 13 passed. F4 and all
   later deployment/rollout gates remain open pending live change control.
+- F4 source checkpoint `9dd1070` has been pushed to the scoped GitHub branch
+  after the independent legacy-lane recheck. A Jetson preflight/rollback
+  procedure is prepared in `F4_JETSON_PREFLIGHT_AND_ROLLBACK.md`. It states
+  the current essential limitation: no independent, request-correlated Ollama
+  inactivity proof exists for a post-restart orphan, so an `UNCERTAIN` receipt
+  must keep the sole inference lane blocked. Deployment cannot close F4 until
+  that proof is designed, implemented, and live-tested.
 
 ## Safety boundaries
 
@@ -250,8 +257,9 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Add the source-level re-review evidence to the durable F4 QA report, then
-   prepare—but do not execute—the Jetson preflight/rollback procedure.
+1. Independently review the final F4 source checkpoint and its preflight plan;
+   then design the missing request-correlated backend-inactivity proof before
+   treating a retained Jetson orphan as terminal.
 2. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
