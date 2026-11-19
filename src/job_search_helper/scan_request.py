@@ -1,5 +1,6 @@
 """Explicit one-time fresh scan requests; old checkpoints are never deleted."""
 from datetime import datetime, timezone
+import hashlib
 import json
 
 
@@ -35,11 +36,14 @@ def requested_scan(engine, state, database):
     if not path.exists():
         return None
     request, company_ids = _read_request(path)
+    request = dict(request, request_fingerprint=request_fingerprint(request, company_ids))
     mode = request['mode']
     found = [cycle for cycle in state.cycles() if cycle.get('start_request_id') == request['request_id']]
     if len(found) > 1:
         raise ValueError('Duplicate fresh-scan request IDs require reconciliation.')
     if found:
+        if found[0].get('request_fingerprint') != request['request_fingerprint']:
+            raise ValueError('Request ID reuse has different immutable request content; refusing to reuse a cycle.')
         cycle_id = found[0]['id']
     else:
         # The caller holds the normal scraper/writer lock.  Do not supersede a
@@ -73,6 +77,8 @@ def _read_request(path):
                 or not all(isinstance(value, str) and value.strip() for value in company_ids)
                 or len(set(company_ids)) != len(company_ids)):
             raise ValueError('Invalid company-only next-scan.json; refusing to widen scan selection.')
+        if not isinstance(request.get('source_revision'), str) or not request['source_revision'].strip():
+            raise ValueError('Invalid company-only next-scan.json; immutable source_revision is required.')
         _enqueued_at(request)
     else:
         raise ValueError('Invalid next-scan.json; refusing to alter scan selection.')
@@ -91,6 +97,20 @@ def _enqueued_at(request):
     if parsed.tzinfo is None:
         raise ValueError('Invalid company-only next-scan.json; immutable enqueued_at must include a timezone.')
     return parsed.astimezone(timezone.utc)
+
+
+def request_fingerprint(request, company_ids):
+    """Canonical identity for safe company-only request retry/reuse."""
+    if request['mode'] != COMPANY_ONLY_MODE:
+        return None
+    canonical = {
+        'mode': COMPANY_ONLY_MODE,
+        'company_ids': sorted(company_ids),
+        'source_revision': request['source_revision'],
+        'enqueued_at': request['enqueued_at'],
+    }
+    encoded = json.dumps(canonical, separators=(',', ':'), sort_keys=True).encode('utf-8')
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def company_only_queue_status(engine, state, database, *, observed_at=None):

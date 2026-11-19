@@ -418,7 +418,11 @@ class Engine:
         superseded = superseded_cycle_ids(local_cycles)
         unfinished_local = [c['id'] for c in local_cycles if c['id'] not in superseded
                             and c['status'] not in {'Complete', 'Complete with exceptions'}]
-        if unfinished_local and new_scan_request is None:
+        # Only an explicit fresh full scan may replace an unfinished cycle.
+        # Company-only intake must serialize at this boundary even if a caller
+        # bypasses the preliminary queue-status check.
+        may_supersede = bool(new_scan_request and new_scan_request.get('mode') == 'fresh-full-scan')
+        if unfinished_local and not may_supersede:
             raise ValueError("An unfinished local cycle exists. Resume it before starting another.")
         # Also reject a remote unfinished cycle after a local cache loss.
         if hasattr(self.repo, "read_columns"):
@@ -430,7 +434,7 @@ class Engine:
         superseded |= superseded_cycle_ids(remote_cycles)
         unfinished_remote = [r['Cycle ID'] for r in remote_cycles if r.get('Cycle ID') not in superseded
                              and r.get('Cycle Status') not in {'Complete', 'Complete with exceptions', '', None}]
-        if unfinished_remote and new_scan_request is None:
+        if unfinished_remote and not may_supersede:
             raise ValueError("An unfinished workbook cycle exists. Resume its Cycle ID.")
         rows = self._company_rows()
         # ``None`` is the only spelling for an all-company cycle.  In
@@ -461,7 +465,8 @@ class Engine:
             cycle.update(start_request_id=new_scan_request['request_id'],
                          supersedes=sorted(set(unfinished_local + unfinished_remote)),
                          start_last=list(new_scan_request.get('start_last', [])),
-                         comparison_baseline_id=new_scan_request.get('comparison_baseline_id'))
+                         comparison_baseline_id=new_scan_request.get('comparison_baseline_id'),
+                         request_fingerprint=new_scan_request.get('request_fingerprint'))
         self.state.save_cycle(cycle)
         self._sync_cycle(cycle)
         # Persist membership before fetching; reconstructible if local cache is lost.
@@ -503,7 +508,7 @@ class Engine:
                 scope[cid] = {"company": by_id[cid]["Company"], "stage": "queued"}
         cycle = {"id": cycle_id, "started_at": row.get("Started At") or now(), "status": row.get("Cycle Status"),
                  "all": bool(control.get("all", False)), "companies": scope}
-        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id')
+        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint')
                       if key in control})
         last = set(cycle.get('start_last', []))
         if last:
@@ -530,7 +535,7 @@ class Engine:
                   "Companies Partial": partial, "Companies Blocked": blocked, "Companies Remaining": remaining,
                   "Last Checkpoint At": now(), "Notes": json.dumps({"all": cycle["all"], "company_ids": list(cycle["companies"]),
                     "helper_version": 1, "mode": "single writer; no model calls",
-                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id')
+                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint')
                        if key in cycle}}, separators=(",", ":"))}
         if status in {"Complete", "Complete with exceptions"}:
             values["Completed At"] = cycle.setdefault("completed_at", now())

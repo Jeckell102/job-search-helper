@@ -245,7 +245,7 @@ class FreshStartLifecycleTests(unittest.TestCase):
     def test_company_only_request_starts_only_declared_company(self):
         from job_search_helper.runner import select_start_cycle
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"one-company","company_ids":["C-1"],"enqueued_at":"2026-11-18T00:00:00Z"}')
+        request.write_text('{"mode":"company-only","request_id":"one-company","company_ids":["C-1"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
 
         cycle = select_start_cycle(self.engine, self.state, self.repo, self.database)
 
@@ -257,7 +257,7 @@ class FreshStartLifecycleTests(unittest.TestCase):
     def test_company_only_request_id_reuses_started_cycle_after_interrupted_receipt(self):
         from job_search_helper.runner import select_start_cycle
         request = self.root / 'next-scan.json'
-        payload = '{"mode":"company-only","request_id":"deduplicate","company_ids":["C-1"],"enqueued_at":"2026-11-18T00:00:00Z"}'
+        payload = '{"mode":"company-only","request_id":"deduplicate","company_ids":["C-1"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}'
         request.write_text(payload)
         first = select_start_cycle(self.engine, self.state, self.repo, self.database)
 
@@ -270,11 +270,22 @@ class FreshStartLifecycleTests(unittest.TestCase):
         self.assertEqual(len(self.state.cycles()), 1)
         self.assertEqual(set(self.state.cycle(first)['companies']), {'C-1'})
 
+    def test_company_only_request_id_rejects_changed_scope_or_source_revision(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.root / 'next-scan.json'
+        original = ('{"mode":"company-only","request_id":"immutable","company_ids":["C-1"],'
+                    '"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
+        request.write_text(original)
+        select_start_cycle(self.engine, self.state, self.repo, self.database)
+        request.write_text(original.replace('rev-1', 'rev-2'))
+        with self.assertRaisesRegex(ValueError, 'different immutable request content'):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+
     def test_company_only_request_waits_without_superseding_active_cycle(self):
         from job_search_helper.runner import company_only_queue_status, select_start_cycle
         active = self.engine.start_cycle(company_ids=['C-0'])
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"waiting","company_ids":["C-1"],"enqueued_at":"2026-11-18T00:00:00Z"}')
+        request.write_text('{"mode":"company-only","request_id":"waiting","company_ids":["C-1"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
 
         with self.assertRaisesRegex(ValueError, f'safe boundary.*{active}'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
@@ -296,7 +307,7 @@ class FreshStartLifecycleTests(unittest.TestCase):
         cycle['status'] = 'Paused'
         self.state.save_cycle(cycle)
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"paused","company_ids":["C-1"],"enqueued_at":"2026-11-18T00:00:00Z"}')
+        request.write_text('{"mode":"company-only","request_id":"paused","company_ids":["C-1"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
 
         with self.assertRaisesRegex(ValueError, f'safe boundary.*{paused}'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
@@ -312,7 +323,7 @@ class FreshStartLifecycleTests(unittest.TestCase):
         cycle['status'] = 'Paused'
         self.state.save_cycle(cycle)
         (self.root / 'next-scan.json').write_text(
-            '{"mode":"company-only","request_id":"queued","company_ids":["C-1"],'
+            '{"mode":"company-only","request_id":"queued","company_ids":["C-1"],"source_revision":"rev-1",'
             '"enqueued_at":"2026-11-18T00:00:00Z"}'
         )
 
@@ -330,7 +341,7 @@ class FreshStartLifecycleTests(unittest.TestCase):
     def test_company_only_request_requires_immutable_enqueue_timestamp(self):
         from job_search_helper.runner import select_start_cycle
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"missing-time","company_ids":["C-1"]}')
+        request.write_text('{"mode":"company-only","request_id":"missing-time","company_ids":["C-1"],"source_revision":"rev-1"}')
         with self.assertRaisesRegex(ValueError, 'immutable enqueued_at is required'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
         self.assertEqual(self.state.cycles(), [])
@@ -339,13 +350,13 @@ class FreshStartLifecycleTests(unittest.TestCase):
     def test_company_only_request_rejects_missing_or_unknown_ids_without_full_scan(self):
         from job_search_helper.runner import select_start_cycle
         request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"missing","company_ids":[],"enqueued_at":"2026-11-18T00:00:00Z"}')
+        request.write_text('{"mode":"company-only","request_id":"missing","company_ids":[],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
         with self.assertRaisesRegex(ValueError, 'refusing to widen'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
         self.assertEqual(self.state.cycles(), [])
         self.assertTrue(request.exists())
 
-        request.write_text('{"mode":"company-only","request_id":"unknown","company_ids":["C-404"],"enqueued_at":"2026-11-18T00:00:00Z"}')
+        request.write_text('{"mode":"company-only","request_id":"unknown","company_ids":["C-404"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
         with self.assertRaisesRegex(ValueError, 'Unknown Company ID'):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
         self.assertEqual(self.state.cycles(), [])
