@@ -1582,3 +1582,8 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   readback only after complete local verification. No normal scraper or broad
   sync route may invoke it. Evidence:
   `SELECTED_RECOVERY_RECEIPT_INTEGRATION_DESIGN_20261119.md`.
+- Independent QA accepts the isolated signer and selected-recovery journal:
+  forced post-commit crash recovery reaches `REMOTE_PLAN_FROZEN` from immutable
+  signed claims; altered/expired authorization rejects before a journal. It
+  remains local-only with zero receipt/remote plan evidence. Evidence:
+  `SELECTED_RECOVERY_AUTH_JOURNAL_QA_ACCEPTANCE_20261119.md`.
