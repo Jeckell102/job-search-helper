@@ -513,7 +513,7 @@ class Engine:
                 scope[cid] = {"company": by_id[cid]["Company"], "stage": "queued"}
         cycle = {"id": cycle_id, "started_at": row.get("Started At") or now(), "status": row.get("Cycle Status"),
                  "all": bool(control.get("all", False)), "companies": scope}
-        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event')
+        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'recovery_pause')
                       if key in control})
         last = set(cycle.get('start_last', []))
         if last:
@@ -540,7 +540,7 @@ class Engine:
                   "Companies Partial": partial, "Companies Blocked": blocked, "Companies Remaining": remaining,
                   "Last Checkpoint At": now(), "Notes": json.dumps({"all": cycle["all"], "company_ids": list(cycle["companies"]),
                     "helper_version": 1, "mode": "single writer; no model calls",
-                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event')
+                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'recovery_pause')
                        if key in cycle}}, separators=(",", ":"))}
         if status in {"Complete", "Complete with exceptions"}:
             values["Completed At"] = cycle.setdefault("completed_at", now())
@@ -550,6 +550,61 @@ class Engine:
                       "on_insert": {"Started At": cycle["started_at"], "Started By": "Local helper (single writer)"},
                       "append_if_missing": True})
         self.state.save_cycle(cycle)
+
+    def pause_interrupted_cycle(self, cycle_id, *, reason):
+        """Freeze an exact inactive cycle without discarding its checkpoint.
+
+        This is a deliberately explicit recovery boundary, not normal queue
+        behavior. It changes only queued or in-progress inventory entries to
+        a visible manual hold; completed and already-blocked work remains
+        untouched. A later recovery tool must restore the saved prior stages.
+        """
+        if not isinstance(cycle_id, str) or not cycle_id.strip():
+            raise ValueError('Interrupted-cycle recovery requires an exact cycle ID.')
+        if not isinstance(reason, str) or not reason.strip() or len(reason.strip()) > 256:
+            raise ValueError('Interrupted-cycle recovery requires a bounded reason.')
+        cycle = self.state.cycle(cycle_id.strip())
+        if not cycle or cycle.get('status') in {'Complete', 'Complete with exceptions'}:
+            raise ValueError('Only an unfinished saved cycle can be paused for recovery.')
+        remote = [row for row in self.repo.read('Scan Cycles') if row.get('Cycle ID') == cycle_id]
+        if len(remote) != 1 or remote[0].get('Cycle Status') != cycle.get('status'):
+            raise ValueError('Cycle checkpoint no longer matches the workbook; refresh and reconcile before recovery.')
+        try:
+            remote_control = json.loads(remote[0].get('Notes') or '{}')
+        except (TypeError, ValueError) as exc:
+            raise ValueError('Cycle workbook control is unreadable; refresh and reconcile before recovery.') from exc
+        local_ids = set(cycle.get('companies', {}))
+        if not isinstance(remote_control, dict) or set(remote_control.get('company_ids', [])) != local_ids:
+            raise ValueError('Cycle workbook scope no longer matches the saved checkpoint; refresh and reconcile before recovery.')
+        paused = []
+        for company_id, item in cycle.get('companies', {}).items():
+            if item.get('stage') in {'queued', 'inventory'}:
+                item['recovery_previous_stage'] = item['stage']
+                item['stage'] = 'paused'
+                paused.append(company_id)
+        if not paused:
+            raise ValueError('Interrupted cycle has no queued or in-progress work to pause.')
+        rows = {row.get('Company ID'): row for row in self._company_rows()}
+        if any(company_id not in rows for company_id in paused):
+            raise ValueError('A paused Company is missing from the workbook; reconcile before recovery.')
+        if any(rows[company_id].get('Active Cycle ID') != cycle_id for company_id in paused):
+            raise ValueError('A paused Company is no longer bound to this cycle; refresh and reconcile before recovery.')
+        # Workbook holds land first. If interrupted before the local checkpoint,
+        # a normal resume observes the manual holds and cannot fetch those rows.
+        hold = 'Interrupted cycle paused for recovery: ' + reason.strip()
+        self._commit(*[self._company_op(rows[company_id], {
+            'Scan State': 'Blocked / Manual Review', 'Automatic Retry?': 'No',
+            'Blocked Reason': hold, 'Next Action': 'Cycle preserved for explicit recovery; do not retry automatically.',
+            'Record Updated': now(),
+        }) for company_id in paused])
+        cycle['recovery_pause'] = {'reason': reason.strip(), 'paused_company_ids': sorted(paused),
+                                   'previous_stages': {company_id: cycle['companies'][company_id]['recovery_previous_stage']
+                                                       for company_id in sorted(paused)},
+                                   'paused_at': now()}
+        self.state.save_cycle(cycle)
+        self._sync_cycle(cycle)
+        return {'cycle_id': cycle_id, 'paused_company_ids': sorted(paused),
+                'status': cycle['status'], 'recovery_pause': dict(cycle['recovery_pause'])}
 
     def _history(self, posting, company):
         key = job_key(company["Company ID"], posting["ats"], posting.get("posting_id", ""), posting["url"])

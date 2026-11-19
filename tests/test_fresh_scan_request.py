@@ -109,6 +109,36 @@ class FreshScanRequestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'unfinished local'):
             self.engine.start_cycle()
 
+    def test_explicit_recovery_pause_preserves_checkpoint_and_holds_only_unfinished_work(self):
+        cycle = self.state.cycle(self.old)
+        cycle['companies']['C-0']['stage'] = 'complete'
+        self.engine._sync_cycle(cycle)
+        result = self.engine.pause_interrupted_cycle(self.old, reason='operator recovery boundary')
+        paused = self.state.cycle(self.old)
+        self.assertEqual(result['paused_company_ids'], ['C-1', 'C-2', 'C-3', 'C-4', 'C-5'])
+        self.assertEqual(paused['companies']['C-0']['stage'], 'complete')
+        self.assertEqual(paused['companies']['C-1']['recovery_previous_stage'], 'queued')
+        self.assertEqual(paused['status'], 'Complete with exceptions')
+        rows = {row['Company ID']: row for row in self.repo.read('Companies')}
+        self.assertEqual(rows['C-0']['Scan State'], 'Queued')
+        self.assertEqual(rows['C-1']['Scan State'], 'Blocked / Manual Review')
+        self.assertEqual(paused['recovery_pause']['previous_stages']['C-1'], 'queued')
+        self.assertEqual(self.engine.status(self.old)['status'], 'Complete with exceptions')
+
+    def test_recovery_pause_refuses_scope_or_membership_drift(self):
+        self.repo.commit([{'tab': 'Scan Cycles', 'identity': {'Cycle ID': self.old},
+                           'values': {'Notes': json.dumps({'company_ids': ['C-0']})}}])
+        with self.assertRaisesRegex(ValueError, 'scope no longer matches'):
+            self.engine.pause_interrupted_cycle(self.old, reason='operator recovery boundary')
+        self.assertEqual(self.state.cycle(self.old)['status'], 'In Progress')
+
+        self.engine._sync_cycle(self.state.cycle(self.old))
+        self.repo.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
+                           'values': {'Active Cycle ID': 'CYC-OTHER'}}])
+        with self.assertRaisesRegex(ValueError, 'no longer bound'):
+            self.engine.pause_interrupted_cycle(self.old, reason='operator recovery boundary')
+        self.assertEqual(self.state.cycle(self.old)['status'], 'In Progress')
+
     def test_invalid_request_is_preserved_and_creates_no_cycle(self):
         (self.root/'next-scan.json').write_text('{"mode":"skip everything"}')
         with self.assertRaisesRegex(ValueError,'Invalid next-scan'):

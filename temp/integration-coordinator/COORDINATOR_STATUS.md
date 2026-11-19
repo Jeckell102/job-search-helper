@@ -150,6 +150,12 @@ partial Google Sheets write alone is not completion.
   than guessing a repair, and skips malformed saved data without changing the
   completed scrape result. Fifty-five focused producer, classifier, runner,
   and request checks passed. No live action was taken.
+- The interrupted-cycle recovery pause is independently accepted in the
+  isolated source. It requires an exact unfinished cycle, matching workbook
+  scope and per-Company membership, preserves completed/blocked work, and
+  writes a reversible prior-stage receipt before releasing a safe boundary.
+  Thirty-nine focused recovery/scheduling checks passed. It has not been run
+  against the live 764-Company checkpoint.
 
 ## Safety boundaries
 
@@ -164,9 +170,8 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Save the accepted normal-run outcome-producer checkpoint to the scoped
+1. Save the independently accepted recovery-pause checkpoint to the scoped
    GitHub branch without disturbing unrelated feature-worktree changes.
-2. Design and independently review a reversible recovery procedure for the
-   retained 764-Company interrupted cycle. The current documented `--resume`
-   route would restart broad work and is not an acceptable shortcut to the
-   one-Company pilot. See `RECOVERY_ASSESSMENT.md`.
+2. Add the operator-facing, explicitly named recovery command and its
+   fresh-state preflight; then independently review it before considering the
+   guarded live pause of the retained 764-Company checkpoint.
