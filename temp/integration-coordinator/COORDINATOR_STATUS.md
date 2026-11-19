@@ -1394,3 +1394,35 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   backlog processing was started. The implementation closes only the
   installation/immutable-binding admission slice; full retry lifecycle,
   stale-result precedence, and guarded live acceptance remain open.
+- Independent F2/F3 follow-up audit found a required resume-path gap: a retry
+  admitted under release A can reach the normal resume/recovery path after A
+  is replaced or rolled back because only fresh `next-scan.json` admission
+  rechecked the active binding. This is not accepted for a live pilot. Worker
+  `f2_resume_binding_repair` owns an isolated repair of that one boundary and
+  tests for local and reconstructed cycles; it must retain the request, cycle,
+  inventory, and cursor on every refusal. A separate future slice still owns
+  the coordinator lifecycle consumer and full release-binding provenance on
+  outcomes. No protected runtime state was changed by this audit.
+- Davidson legacy-to-v2 migration remains source-only and uninstalled. A
+  higher-model review rejected the first candidate after reproducing three
+  real gaps: guard-only Google readback could falsely confirm after a refused
+  write, full local snapshot/approved-conflict evidence was incomplete, and
+  the existing legacy plan had no crash-safe adoption transition. The current
+  isolated revision now reads and verifies actual remote guard-only fields
+  before any chunk advance; versions the stronger record fingerprint so old
+  frozen evidence is not silently reinterpreted; double-reads and pins the
+  complete selected local snapshot, workbook/profile/schema/current controls,
+  exact approved conflicts, ownership, and guard digests; orders the compact
+  projection for the exact Sheets planner; and adds an idempotent adoption
+  journal that preserves the legacy plan, adopts already-completed local work
+  without replay, creates no receipt, and atomically freezes exactly one v2
+  successor after local verification. The compatibility validator now compares
+  local and remote projections by exact record identity rather than requiring
+  legacy stream order. New blank/nonblank remote-guard, restart, no-replay,
+  snapshot-drift, and adoption tests are included. The latest disposable
+  focused/adjacent matrix passed 189 checks with warnings treated as errors;
+  the final post-order/adopter independent re-review is still required. No
+  protected file, Google data, live database, receipt, queue, service, lock,
+  scrape, or Jetson state changed. Milestones remain M1 92%, M2 92%, M3 88%,
+  M4 78%, M5 76%, M6 76% (about 88% overall) until independent acceptance and
+  protected install/live proof.
