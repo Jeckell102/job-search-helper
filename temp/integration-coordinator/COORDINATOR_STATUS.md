@@ -1566,3 +1566,8 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   verified-prefix plus bounded-suffix conversion. Neither may normal-resume or
   infer publication. Evidence:
   `GENERIC_LEGACY_V2_RECOVERY_DESIGN_20261119.md`.
+- Independent QA rejected the first isolated generic recovery candidate:
+  foreign-company prefix/suffix operations were accepted and suffix legacy
+  values could overwrite manual Decision/Review Status fields. Repair remains
+  isolated with adversarial regression tests required before installation.
+  Evidence: `GENERIC_LEGACY_V2_CANDIDATE_QA_HOLD_20261119.md`.
