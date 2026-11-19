@@ -290,6 +290,12 @@ class Coordinator:
             self.wake.set()
             return {'ok': True, 'ids': ids, 'reused': reused,
                     'text': ('Existing' if reused else 'Imported and held') + f' batch: {len(ids)} companies. Campaign selection is required. Check /wrapper queue.'}
+        if action == 'promote-repair':
+            state = self.store.promote_held_repair(
+                data.get('repair_key'), self.assignment(data), source_revision=data.get('source_revision'))
+            self.export(state['id'])
+            return {'ok': True, 'id': state['id'], 'state': {k: v for k, v in state.items() if k != 'manifest'},
+                    'text': f"Held repair promoted to paused task {state['id']}. Explicit review and resume are required before any work."}
         if action == 'start':
             state = self.store.create(**self.assignment(data))
             self.export(state['id'])

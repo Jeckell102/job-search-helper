@@ -8,6 +8,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'src'))
 from coordinator_store import Store, canonical_scrape_outcome
+import test_coordinator as coordinator_fixture
 
 
 def outcome(**changes):
@@ -95,6 +96,79 @@ class OutcomeIntakeTests(unittest.TestCase):
             db.execute('DELETE FROM repair_intake_evidence WHERE repair_key=?', (result['repair_key'],))
         held = self.store.held_repair_intake()
         self.assertEqual(held[0]['evidence_outcome_ids'], [])
+
+
+class HeldRepairPromotionTests(coordinator_fixture.CoordinatorTests):
+    def promoted(self):
+        repair = self.co.store.ingest_scrape_outcome(facts())
+        response = self.co.command({
+            'action': 'promote-repair', 'repair_key': repair['repair_key'], 'source_revision': 'rev-1', 'mode': 'develop',
+            'objective': 'Develop the bounded Acme wrapper using src/a.py and run tests/test_a.py.',
+            'integration': {
+                'company_id': 'COMP-0001', 'company': 'Acme', 'configured_url': 'https://jobs.example.test/acme',
+                'tests': ['tests/test_a.py'], 'source_targets': ['src/a.py'], 'ats': 'Greenhouse',
+            },
+        })
+        return repair, response
+
+    def test_promotion_creates_one_paused_task_not_a_runnable_task(self):
+        repair, response = self.promoted()
+        state = self.co.store.get(response['id'])
+        self.assertEqual(state['status'], 'PAUSED')
+        self.assertTrue(state['stop_requested'])
+        self.assertEqual(state['held_repair_key'], repair['repair_key'])
+        self.assertEqual(state['repair_provenance']['source_revision'], 'rev-1')
+        self.assertIsNone(self.co.store.claim_queued())
+        self.assertEqual(self.co.store.held_repair_intake()[0]['task_id'], state['id'])
+        self.assertEqual(self.promoted()[1]['id'], state['id'])
+        self.assertEqual(len(self.co.store.all()), 1)
+        restarted = Store(self.co.store.base)
+        restarted.recover()
+        self.assertEqual(restarted.get(state['id'])['status'], 'PAUSED')
+        self.assertEqual(restarted.held_repair_intake()[0]['task_id'], state['id'])
+
+    def test_promotion_refuses_an_assignment_for_another_company(self):
+        repair = self.co.store.ingest_scrape_outcome(facts())
+        with self.assertRaisesRegex(ValueError, 'does not match'):
+            self.co.command({
+                'action': 'promote-repair', 'repair_key': repair['repair_key'], 'source_revision': 'rev-1', 'mode': 'develop',
+                'objective': 'Develop another wrapper using src/a.py and run tests/test_a.py.',
+                'integration': {
+                    'company_id': 'COMP-0002', 'company': 'Other', 'configured_url': 'https://jobs.example.test/other',
+                    'tests': ['tests/test_a.py'], 'source_targets': ['src/a.py'], 'ats': 'Greenhouse',
+                },
+            })
+
+    def test_promotion_refuses_a_stale_source_revision(self):
+        repair = self.co.store.ingest_scrape_outcome(facts())
+        with self.assertRaisesRegex(ValueError, 'does not match'):
+            self.co.command({
+                'action': 'promote-repair', 'repair_key': repair['repair_key'], 'source_revision': 'rev-stale', 'mode': 'develop',
+                'objective': 'Develop the bounded Acme wrapper using src/a.py and run tests/test_a.py.',
+                'integration': {
+                    'company_id': 'COMP-0001', 'company': 'Acme', 'configured_url': 'https://jobs.example.test/acme',
+                    'tests': ['tests/test_a.py'], 'source_targets': ['src/a.py'], 'ats': 'Greenhouse',
+                },
+            })
+        self.assertEqual(self.co.store.all(), [])
+
+    def test_repeat_promotion_still_refuses_wrong_company_or_revision(self):
+        repair, response = self.promoted()
+        base = {
+            'action': 'promote-repair', 'repair_key': repair['repair_key'], 'mode': 'develop',
+            'objective': 'Develop the bounded Acme wrapper using src/a.py and run tests/test_a.py.',
+            'integration': {
+                'company_id': 'COMP-0001', 'company': 'Acme', 'configured_url': 'https://jobs.example.test/acme',
+                'tests': ['tests/test_a.py'], 'source_targets': ['src/a.py'], 'ats': 'Greenhouse',
+            },
+        }
+        with self.assertRaisesRegex(ValueError, 'does not match'):
+            self.co.command({**base, 'source_revision': 'rev-stale'})
+        with self.assertRaisesRegex(ValueError, 'does not match'):
+            self.co.command({**base, 'source_revision': 'rev-1', 'integration': {
+                **base['integration'], 'company_id': 'COMP-0002', 'company': 'Other',
+            }})
+        self.assertEqual(self.co.store.get(response['id'])['status'], 'PAUSED')
 
 
 if __name__ == '__main__':

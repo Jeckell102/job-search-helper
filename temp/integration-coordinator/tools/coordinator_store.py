@@ -131,7 +131,7 @@ class Store(CampaignStore, InferenceStore):
                 CREATE TABLE IF NOT EXISTS repair_intake(
                     repair_key TEXT PRIMARY KEY, outcome_id TEXT NOT NULL,
                     company_id TEXT NOT NULL, source_revision TEXT NOT NULL,
-                    status TEXT NOT NULL, payload TEXT NOT NULL, received REAL NOT NULL,
+                    status TEXT NOT NULL, task_id TEXT, payload TEXT NOT NULL, received REAL NOT NULL,
                     FOREIGN KEY(outcome_id) REFERENCES scrape_outcome_intake(outcome_id));
                 CREATE TABLE IF NOT EXISTS repair_intake_evidence(
                     repair_key TEXT NOT NULL, outcome_id TEXT NOT NULL,
@@ -139,6 +139,9 @@ class Store(CampaignStore, InferenceStore):
                     FOREIGN KEY(repair_key) REFERENCES repair_intake(repair_key),
                     FOREIGN KEY(outcome_id) REFERENCES scrape_outcome_intake(outcome_id));
             ''')
+            columns = {row[1] for row in db.execute('PRAGMA table_info(repair_intake)')}
+            if 'task_id' not in columns:
+                db.execute('ALTER TABLE repair_intake ADD COLUMN task_id TEXT')
 
     def ingest_scrape_outcome(self, facts):
         """Classify trusted bounded facts, then hold the M3 result here.
@@ -180,7 +183,9 @@ class Store(CampaignStore, InferenceStore):
                        (canonical['outcome_id'], identity['company_id'], identity['source_revision'],
                         canonical['outcome'], encoded, time.time()))
             if repair_key:
-                db.execute('INSERT OR IGNORE INTO repair_intake VALUES (?,?,?,?,?,?,?)',
+                db.execute('INSERT OR IGNORE INTO repair_intake('
+                           'repair_key,outcome_id,company_id,source_revision,status,payload,received) '
+                           'VALUES (?,?,?,?,?,?,?)',
                            (repair_key, canonical['outcome_id'], identity['company_id'],
                             identity['source_revision'], status, encoded, time.time()))
                 # A later attempt can carry fresh evidence for the same
@@ -194,14 +199,58 @@ class Store(CampaignStore, InferenceStore):
         """Review held repairs; this is deliberately not a scheduling API."""
         with self.connect() as db:
             rows = db.execute(
-                'SELECT r.repair_key,r.outcome_id,r.company_id,r.source_revision,r.status,r.payload,'
+                'SELECT r.repair_key,r.outcome_id,r.company_id,r.source_revision,r.status,r.task_id,r.payload,'
                 'GROUP_CONCAT(e.outcome_id) FROM repair_intake r '
                 'LEFT JOIN repair_intake_evidence e ON e.repair_key=r.repair_key '
-                'GROUP BY r.repair_key,r.outcome_id,r.company_id,r.source_revision,r.status,r.payload '
+                'GROUP BY r.repair_key,r.outcome_id,r.company_id,r.source_revision,r.status,r.task_id,r.payload '
                 'ORDER BY r.received,r.repair_key').fetchall()
         return [dict(repair_key=row[0], outcome_id=row[1], company_id=row[2],
-                     source_revision=row[3], status=row[4], outcome=json.loads(row[5]),
-                     evidence_outcome_ids=sorted(item for item in (row[6] or '').split(',') if item)) for row in rows]
+                     source_revision=row[3], status=row[4], task_id=row[5], outcome=json.loads(row[6]),
+                     evidence_outcome_ids=sorted(item for item in (row[7] or '').split(',') if item)) for row in rows]
+
+    def promote_held_repair(self, repair_key, spec, *, source_revision):
+        """Create one fully scoped *paused* task for an approved held repair.
+
+        This is a durable ownership handoff, not a dispatch action.  The
+        caller supplies a Coordinator-validated specification with exact
+        source/test scope.  The task remains paused until an explicit later
+        resume, so a running queue cannot claim it in the promotion window.
+        """
+        if not isinstance(repair_key, str) or not re.fullmatch(r'[0-9a-f]{64}', repair_key):
+            raise ValueError('Use a held repair key.')
+        if not isinstance(source_revision, str) or not source_revision.strip() or len(source_revision.strip()) > 256:
+            raise ValueError('Held repair promotion requires its exact source revision.')
+        source_revision = source_revision.strip()
+        state = self.new_state(**spec)
+        identity = state.get('integration_identity') or {}
+        if not identity:
+            raise ValueError('Held repair promotion requires canonical integration identity.')
+        import coding_tools as code
+        from coordinator_acceptance import files
+        from coordinator_baseline import binding, files as baseline_files
+        state['acceptance_baseline_manifest'] = files(code.root())
+        state['assignment_baseline'] = binding(baseline_files(code.root()))
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT outcome_id,company_id,source_revision,status,task_id FROM repair_intake WHERE repair_key=?',
+                             (repair_key,)).fetchone()
+            if not row:
+                raise ValueError('Held repair was not found.')
+            outcome_id, company_id, held_revision, status, existing_task = row
+            if identity['company_id'] != company_id or source_revision != held_revision:
+                raise ValueError('Held repair does not match the proposed company assignment.')
+            if existing_task:
+                return self.get(existing_task)
+            if status != 'HELD_FOR_REPAIR_TRIAGE':
+                raise ValueError('Held repair is not available for promotion.')
+            state.update(status='PAUSED', stop_requested=True, held_repair_key=repair_key,
+                         repair_provenance={'repair_key': repair_key, 'outcome_id': outcome_id,
+                                            'company_id': company_id, 'source_revision': held_revision},
+                         reason='Promoted from held repair; explicit resume and review are required.')
+            db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
+            db.execute('UPDATE repair_intake SET task_id=?,status=? WHERE repair_key=?',
+                       (state['id'], 'PROMOTED_PAUSED', repair_key))
+        return state
 
     @contextmanager
     def connect(self):
@@ -958,7 +1007,7 @@ class Store(CampaignStore, InferenceStore):
                 raise ValueError('Task not found.')
             state = json.loads(row[0])
             validate_bound_identity(state)
-            protected = {'integration', 'integration_identity', 'integration_identity_digest', 'worker_assignment', 'worker_assignment_digest', 'identity_binding_digest', 'evidence_requirements_digest', 'edit_scope', 'acceptance_bundle', 'acceptance_baseline_manifest', 'assignment_baseline', 'evidence_epoch', 'objective', 'tests', 'campaign_manifest_digest', 'campaign_id', 'campaign_company_id', 'retry_of'}
+            protected = {'integration', 'integration_identity', 'integration_identity_digest', 'worker_assignment', 'worker_assignment_digest', 'identity_binding_digest', 'evidence_requirements_digest', 'edit_scope', 'acceptance_bundle', 'acceptance_baseline_manifest', 'assignment_baseline', 'evidence_epoch', 'objective', 'tests', 'campaign_manifest_digest', 'campaign_id', 'campaign_company_id', 'retry_of', 'held_repair_key', 'repair_provenance'}
             if any(key in fields and fields[key] != state.get(key) for key in protected):
                 raise ValueError('Immutable assignment identity cannot be changed.')
             state.update(fields)

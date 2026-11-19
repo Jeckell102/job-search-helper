@@ -34,6 +34,9 @@ ten-minute user update. Update it immediately after any material result.
   deploy from it. Its untracked coordinator source is read-only reference.
 - Isolated feature worktree: `/tmp/job-search-helper-integration-automation`
   on `codex/integration-automation-20261118`.
+- Coordinator development checkout: `/home/chris/job-search-helper_old/dev/wrapper-coder/repo`
+  is on `development/wrapper-coder` at `0c45d61`. Its code is clean, but four
+  pre-existing documentation changes are preserved; it has no GitHub remote.
 - Milestone 1: 65% — implementation is present; guarded operational proof is
   still required.
 - Milestone 2: 65% — durable Company revisions, reconciliation, and scoped
@@ -43,7 +46,7 @@ ten-minute user update. Update it immediately after any material result.
   and independently reviewed intake into the existing coordinator are
   implemented. Qualified defects are held once for triage; no repair is
   dispatched automatically yet.
-- Milestone 4: 17% — the existing coordinator source and its focused tests
+- Milestone 4: 22% — the existing coordinator source and its focused tests
   were copied here only as source/test material, independently reviewed, and
   passed 117 isolated checks. No scheduler is running from this copy.
 - Milestones 5–6: not started.
@@ -70,8 +73,10 @@ partial Google Sheets write alone is not completion.
   review and saved as `b002564`.
 - Pending checkpoint: classifier-derived, held-only repair intake accepted by
   independent review and saved as `fecfc7d`.
-- Pending checkpoint: repeated repair evidence is independently accepted; its
-  GitHub backup is the next action.
+- Repeated repair evidence was independently accepted and saved as `c9fcc8b`.
+- Pending checkpoint: a held repair can be promoted exactly once to an
+  independently reviewed, paused, source-version-bound task; its GitHub
+  backup is the next action.
 
 ## Safety boundaries
 
@@ -86,7 +91,7 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Save the accepted source-only coordinator copy to the scoped GitHub branch.
-2. Save the accepted repeated-evidence checkpoint to GitHub.
-3. Define the reviewed M4 promotion from held repair to a single scoped
-   coordinator task, without activating that task automatically.
+1. Save the accepted paused-promotion checkpoint to the scoped GitHub branch.
+2. Reconcile the promotion with the coordinator's existing development
+   checkout without overwriting its pre-existing documentation changes.
+3. Add a current-Company revision guard before any promoted task can resume.
