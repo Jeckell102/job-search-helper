@@ -1550,3 +1550,8 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   authorization evidence in the migration journal. Binding-only JSON is not
   human approval. Evidence:
   `LEGACY_MIGRATION_APPROVAL_PROVENANCE_DESIGN_20261119.md`.
+- Read-only reconciliation mapping now identifies the retained cycle's only
+  bounded `sync` candidates (Davidson, Shield AI, and Saronic), but that route
+  writes/publishes and remains gated by exact prestate/readback/receipt and
+  independent QA. Broad `start --resume` is prohibited. Evidence:
+  `CYCLE_B639_RECONCILIATION_MAP_20261119.md`.
