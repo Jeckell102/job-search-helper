@@ -276,6 +276,13 @@ partial Google Sheets write alone is not completion.
   `192.168.1.146:8787`. The deployment has no recorded synthetic acceptance,
   F4 changelog/register entry, or final independent deployed QA, so it remains
   deployed-but-unaccepted and F4 remains open.
+- Fresh MuleLab state verification found no scraper, coordinator, review, or
+  Sheets process running. The retained scraper, writer, review-writeback, and
+  first-pass controller lock owners are absent; their historical lock files
+  remain preserved. The last saved request is an old 509-company
+  `fresh-full-scan`, and the latest visible first-pass checkpoint is a drained
+  historical run. Do not resume, delete, or supersede either without the
+  explicit guarded interrupted-cycle recovery path.
 
 ## Safety boundaries
 
