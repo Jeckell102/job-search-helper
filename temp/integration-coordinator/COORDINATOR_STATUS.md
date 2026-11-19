@@ -1141,3 +1141,12 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   A final follow-up commit and three-way private-branch hash verification are
   now the active checkpoint; production, Google, Jetson, and live queues
   remain untouched.
+- The accepted source/evidence checkpoint was committed and its local HEAD,
+  local remote-tracking ref, and independent private GitHub query all matched
+  `3246f230cb0e1991c111b693e668d0b4a4412289`. Three additional adversarial
+  tests then arrived from the shared review workspace and passed without a
+  source change: they reject a pre-confirmed legacy receipt at exact-plan
+  enrollment, hold on a changed earlier remote chunk during restart, and
+  refuse confirmation when the frozen binding changes during readback. The
+  expanded focused matrix passes 179 strict checks. A test/evidence-only
+  follow-up backup is the active finalization step; live state is untouched.

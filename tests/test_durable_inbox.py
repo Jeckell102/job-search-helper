@@ -432,6 +432,23 @@ class ExactRemoteIntentJournalTests(unittest.TestCase):
         self.assertEqual(self.inbox.exact_remote_state(
             self.cycle, self.company)['state'], 'FROZEN')
 
+    def test_exact_registration_rejects_preconfirmed_legacy_receipt(self):
+        with self.inbox.lock, self.inbox.connection:
+            self.inbox.connection.execute(
+                'DELETE FROM exact_remote_plans WHERE cycle=? AND company=?',
+                (self.cycle, self.company))
+            self.inbox.connection.execute(
+                "UPDATE publication_receipts SET state='SYNC_CONFIRMED',"
+                "acknowledgement_id='legacy-ack' WHERE receipt_id=?",
+                (self.receipt_id,))
+        with self.assertRaisesRegex(ValueError, 'pre-confirmed receipt'):
+            self.inbox.freeze_exact_remote_plan(
+                self.cycle, self.company, local_plan_digest=self.plan_digest,
+                projection=self.projection,
+                projection_digest=self.projection_digest,
+                receipt_id=self.receipt_id, intent_id=self.intent_id,
+                timestamp='t2')
+
     def test_public_caller_cannot_forge_remote_confirmation(self):
         self.claim('t2')
         self.assertFalse(hasattr(self.inbox, 'confirm_exact_remote'))

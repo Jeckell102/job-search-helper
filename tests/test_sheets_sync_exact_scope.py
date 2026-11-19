@@ -360,6 +360,63 @@ class ExactScopeSheetsTests(unittest.TestCase):
         self.assertEqual(self.inbox.exact_remote_state(
             'CYC-1', 'COMP-1')['state'], 'SYNC_PENDING')
 
+    def test_final_readback_rejects_remote_row_move(self):
+        plan, scope, remote_operation = self.company_plan()
+        exact = self.sync.plan_exact_scope(scope, [remote_operation])
+        receipt_id, intent_id = self.remote_authority(
+            'CYC-1', 'COMP-1', plan, exact, intent_id='intent-row-move')
+        self.sync.publish_exact_scope(
+            exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+            intent_id=intent_id)
+        original = self.remote.read_row
+
+        def moved_row(tab, row_number):
+            row = original(tab, row_number)
+            return {**row, 'Company ID': 'COMP-MOVED'}
+
+        with patch.object(self.remote, 'read_row', side_effect=moved_row):
+            with self.assertRaisesRegex(ValueError, 'row moved'):
+                self.sync.confirm_and_acknowledge_exact_scope(
+                    exact, inbox=self.inbox, cycle_id='CYC-1',
+                    company_id='COMP-1', plan_digest=plan['plan_digest'],
+                    receipt_id=receipt_id, intent_id=intent_id)
+        self.assertEqual(self.inbox.receipt({
+            'binding': {'request_id': 'CYC-1', 'company_id': 'COMP-1',
+                        'source_revision': plan['plan_digest'], 'release_id': 'test'},
+        })['state'], 'SYNC_PENDING')
+
+    def test_binding_change_during_remote_read_cannot_confirm(self):
+        plan, scope, remote_operation = self.company_plan()
+        exact = self.sync.plan_exact_scope(scope, [remote_operation])
+        receipt_id, intent_id = self.remote_authority(
+            'CYC-1', 'COMP-1', plan, exact, intent_id='intent-binding-drift')
+        self.sync.publish_exact_scope(
+            exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+            intent_id=intent_id)
+        original = self.remote.read_row
+
+        def drift_binding(tab, row_number):
+            with self.inbox.lock, self.inbox.connection:
+                self.inbox.connection.execute(
+                    'UPDATE exact_remote_plans SET intent_id=? '
+                    'WHERE cycle=? AND company=?',
+                    ('intent-changed-during-read', 'CYC-1', 'COMP-1'))
+            return original(tab, row_number)
+
+        with patch.object(self.remote, 'read_row', side_effect=drift_binding):
+            with self.assertRaisesRegex(ValueError, 'frozen intent'):
+                self.sync.confirm_and_acknowledge_exact_scope(
+                    exact, inbox=self.inbox, cycle_id='CYC-1',
+                    company_id='COMP-1', plan_digest=plan['plan_digest'],
+                    receipt_id=receipt_id, intent_id=intent_id)
+        with self.inbox.lock:
+            state = self.inbox.connection.execute(
+                'SELECT state FROM publication_receipts WHERE receipt_id=?',
+                (receipt_id,)).fetchone()[0]
+        self.assertEqual(state, 'SYNC_PENDING')
+
     def test_manual_source_and_salary_controls_are_not_weakened(self):
         local_operation = {
             'tab': 'Job History', 'identity': {'Job Key': 'job-1'},

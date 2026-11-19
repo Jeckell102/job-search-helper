@@ -524,6 +524,34 @@ class ExactCycleRecoveryTests(unittest.TestCase):
         }])
         self.assertEqual(len(remote.commits), 2)
 
+        first_job = remote.snapshot('Job History')[0]
+        expected_last_checked = first_job['Last Checked']
+        remote._inside_commit = True
+        try:
+            MemoryRepository.commit(remote, [{
+                'tab': 'Job History', 'identity': {'Job Key': first_job['Job Key']},
+                'values': {'Last Checked': 'changed-after-earlier-chunk'},
+            }])
+        finally:
+            remote._inside_commit = False
+
+        with patch.object(remote, 'commit', side_effect=AssertionError('chunk replay')):
+            changed = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
+
+        self.assertEqual(changed['confirmed'], [], changed)
+        self.assertIn('readback', changed['held'][0]['reason'].lower())
+        self.assertEqual(len(remote.commits), 2)
+        self.assertEqual(inbox.exact_remote_state('CYC', 'COMP-1')['state'],
+                         'SYNC_PENDING')
+
+        remote._inside_commit = True
+        try:
+            MemoryRepository.commit(remote, [{
+                'tab': 'Job History', 'identity': {'Job Key': first_job['Job Key']},
+                'values': {'Last Checked': expected_last_checked},
+            }])
+        finally:
+            remote._inside_commit = False
         with patch.object(remote, 'commit', side_effect=AssertionError('chunk replay')):
             result = recover_exact_cycle(engine, remote, 'CYC', ['COMP-1'])
 
