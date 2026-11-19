@@ -32,9 +32,10 @@ ten-minute user update. Update it immediately after any material result.
   byte-for-byte matched to the reviewed staged source and has a scoped rollback
   copy. It is deployed-but-unaccepted. The proposed real-HTTP proof corrected
   its private endpoint and generation-labeling defects, then added fsync-backed
-  post-request checkpoints. Independent QA still rejects its ordering: a final
-  evidence write can fail after settlement has released the inference lane. No
-  live proof, restart, or deployment is authorized from that candidate.
+  post-request checkpoints. Independent QA now accepts its source-level
+  ordering: a durable `settlement_authorized` record precedes the only lane
+  release, and a post-settlement evidence failure is recorded honestly. The
+  actual Jetson proof, records, and deployed QA remain separate open gates.
 - Goal: complete all six roadmap milestones and the final independent
   acceptance demonstration, with safeguards and scoped GitHub backups.
 - Goal reference: `01a1f11f-e014-7493-8441-2f66502e23a9`; the persistent goal
@@ -312,11 +313,12 @@ partial Google Sheets write alone is not completion.
   private addressing and correctly treats pre-request process sampling as
   non-authoritative. Independent QA still rejects the candidate: the
   post-request checkpoint now fsyncs its file and directory and a first-write
-  failure test preserves a sanitized hold. Independent QA still rejects the
-  candidate because final evidence is persisted only after the `settle` call
-  can release the lane. The repair must durably record pre-settlement intent
-  before release and test final- and retry-write failures. No service restart
-  or live request occurred.
+  failure test preserves a sanitized hold. Independent QA accepted the final
+  sequencing repair: a durable `settlement_authorized` checkpoint with
+  `lane_released: false` comes before `settle`; post-settlement evidence failure
+  keeps that truthful boundary and never replays. Twenty-six focused staging
+  checks passed. This is source acceptance only; no service restart or live
+  request occurred.
 
 ## Safety boundaries
 
@@ -331,11 +333,11 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Re-review the repaired staged F4 synthetic transport-loss proof before any
-   privileged restart of only `ollama.service`; require private-endpoint-free
-   source, race-safe generation wording, fsync-backed sanitized checkpoints,
-   a durable pre-settlement record, and tested final/retry checkpoint-failure
-   holds. Until then, leave uncertain receipts lane-blocking.
+1. Prepare the accepted staged F4 proof for the guarded Jetson procedure:
+   recheck deployed source identity, service health, rollback evidence, active
+   lane state, and interactive administrator availability before a privileged
+   restart of only `ollama.service`. Until a live proof passes, leave uncertain
+   receipts lane-blocking.
 2. Use the accepted M1-M4 reconciliation candidate only through an explicit,
    hash-recorded integration review; do not mechanically apply it to the
    protected checkout.
