@@ -1,7 +1,7 @@
 # Milestone 5 protected-source reconciliation report
 
-Status: source-level reconciliation accepted for continued review; not merged,
-deployed, activated, or used for a live scrape.
+Status: independently accepted at source level; not merged, deployed,
+activated, or used for a live scrape.
 
 Updated: 2026-11-19.
 
@@ -49,9 +49,13 @@ All commands used fixture or temporary state only.
 
 - Reconciled M5/request/runner selection: 72 checks passed with resource
   warnings treated as errors.
-- Current protected durable-inbox behavior, excluding its unrelated real
-  startup-preflight CLI fixture: 11 checks passed.
+- Current protected durable-inbox behavior: 12 checks passed. The option
+  forwarding fixture now correctly tests `scrape_main`; `main(start ...)`
+  intentionally retains the real scrape-and-FIRST-PASS preflight.
 - Repaired publication/restart/storage selection: 9 checks passed.
+- A real LocalPipeline review conflict after a nonzero acknowledged cursor
+  passed: it retained the incomplete frozen plan, `SYNC_PENDING` receipt,
+  blocked inventory and intervening manual note without duplicate Job Keys.
 - Current protected SQLite migration selection: 46 checks passed.
 - Disposable release-versus-scraper race: passed.  While activation held the
   normal lock at its durable prepared boundary, scraper admission was refused;
@@ -65,7 +69,9 @@ production acceptance evidence: when pointed at the newer protected source it
 retains obsolete expectations for startup preflight, elapsed summary output,
 and run-scoped sync timing.  The authoritative current-source selections above
 were run instead.  Those obsolete expectations must not be restored because
-doing so would replace newer protected behavior.
+doing so would replace newer protected behavior. Independent QA reviewed the
+exact candidate and both follow-up tests and returned `ACCEPT` for the
+source-level reconciliation.
 
 ## Exact reconciled source hashes
 
@@ -93,11 +99,9 @@ They intentionally differ from the older isolated feature source.
 
 ## Remaining M5 gates
 
-1. Independent review of this exact reconciled candidate and evidence.
-2. Owner-reviewed integration into a frozen protected baseline, followed by
+1. Owner-reviewed integration into a frozen protected baseline, followed by
    rerunning the current production-owned suites on the exact installed set.
-3. Guarded activation and live one-Company release-to-retry proof, including
+2. Guarded activation and live one-Company release-to-retry proof, including
    confirmed Google Sheets publication and managed FIRST PASS start.
-4. A scoped sanitized GitHub backup of accepted source, tests, and evidence;
+3. A scoped sanitized GitHub backup of accepted source, tests, and evidence;
    never publish the private protected snapshot or runtime data.
-

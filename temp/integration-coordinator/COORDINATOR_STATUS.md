@@ -73,7 +73,7 @@ ten-minute user update. Update it immediately after any material result.
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
   service was restarted and no scheduler has been started in this work.
-- Milestone 5: 62% — source candidates now provide crash-durable,
+- Milestone 5: 68% — source candidates now provide crash-durable,
   Company-version-bound release-to-retry intent, exact complete-release pins,
   normal company-only admission/recovery, stale-source refusal at admission
   and storage, and release/attempt identity through publication and outcomes.
@@ -93,12 +93,24 @@ ten-minute user update. Update it immediately after any material result.
   resource warnings. A reconciliation-specific safeguard now refuses silent
   replanning after any acknowledged publication slice. The evidence and exact
   hashes are recorded in `M5_PRODUCTION_RECONCILIATION_REPORT.md`.
-  Independent QA of that exact candidate, owner-reviewed protected integration,
-  guarded deployment and the live release-to-saved-jobs proof remain.
-- Milestone 6: 15% — F4 receipt/recovery source review and controlled Jetson
-  placement are complete. The administrator-authenticated live interruption
-  proof and independent post-run verification remain, as do F8 supervised
-  recovery/retention and the full sequential acceptance matrix.
+  Independent QA accepted that exact candidate. Its two required test
+  follow-ups are now independently accepted: the full durable-inbox suite
+  passes 12 checks and a real partial-publication review conflict retains the
+  exact plan, pending receipt, manual note, and blocked inventory without
+  duplicate jobs. Owner-reviewed protected integration, guarded deployment and
+  the live release-to-saved-jobs proof remain.
+- Milestone 6: 30% — F4 receipt/recovery source review and controlled Jetson
+  placement are complete. An isolated F8 candidate now extends the existing
+  coordinator with one maintenance owner, durable boot/reconnect catch-up,
+  disk-pressure holds, explicit evidence-retention counts, and planned
+  shutdown that waits for the current action boundary. Its first independent
+  review rejected a watchdog/shutdown race; the corrected path now passes a
+  live-scheduler/watchdog test and records recovery-required instead of a false
+  safe pause on timeout. Independent QA accepted the corrected exact source
+  and its real-host retention wiring. The administrator-authenticated Jetson
+  interruption proof, protected
+  integration, disposable service demonstrations, and the full sequential
+  acceptance matrix remain.
 
 ## Definition of fully completed
 
@@ -405,8 +417,25 @@ partial Google Sheets write alone is not completion.
   passed, eleven durable-inbox checks passed, the release/start race passed,
   and the combined MuleLab coordinator suite passed 398 checks. Exact hashes,
   boundaries, and remaining gates are in
-  `M5_PRODUCTION_RECONCILIATION_REPORT.md`. Independent review of this exact
-  reconciled source remains open; protected production was not changed.
+  `M5_PRODUCTION_RECONCILIATION_REPORT.md`. Protected production was not changed.
+- Independent QA accepted the exact M5 reconciled hashes and then accepted
+  both required follow-ups. A real nonzero-cursor review conflict now proves
+  the frozen plan, pending receipt, manual decision and blocked inventory are
+  retained without duplicate Job Keys. The corrected option-forwarding test
+  keeps the real `main(start ...)` scrape/FIRST-PASS preflight intact. The full
+  current durable-inbox suite passes 12 checks. Source-level independent QA is
+  closed; integration/deployment/live acceptance remain open.
+- The isolated F8 supervision candidate now passes 229 coordinator checks and
+  34 focused checks over the protected-source reconciliation copy. Its real
+  host-wiring check proves the zero-argument probe supplies the database and
+  consumer identities and persists nonempty external counts. It protects
+  coordinator state plus unacknowledged scraper events, publication receipts,
+  and active release evidence without automatic cleanup. A live coordinator
+  action test proves planned shutdown makes the watchdog stand down, waits for
+  scheduler ownership to end, and only then records a durable pause; a timeout
+  remains explicitly recovery-required. Independent QA accepted the corrected
+  exact source; it is not deployed and operational evidence remains open. See
+  `F8_SUPERVISION_CANDIDATE.md`.
 - A second fresh preflight confirmed the same active services, 200 health, and
   terminal-only receipt aggregate. A `sudo -n` restart attempt returned 1
   without changing service state, confirming that only an interactive
@@ -431,12 +460,10 @@ partial Google Sheets write alone is not completion.
    `ollama.service` twice. Record the resulting bounded evidence or failure,
    independently verify the authoritative receipt and service state, and leave
    any uncertain receipt lane-blocking. Do not rerun blindly after a failure.
-2. Independently review the exact hashes in
-   `M5_PRODUCTION_RECONCILIATION_REPORT.md`, including the partial-publication
-   hold and the disposable release/start race evidence. Only after acceptance,
-   freeze the protected baseline and perform an owner-reviewed integration;
-   rerun current production-owned tests on the exact installed set before any
-   guarded activation.
+2. Using the independently accepted exact hashes in
+   `M5_PRODUCTION_RECONCILIATION_REPORT.md`, freeze the protected baseline and
+   perform an owner-reviewed integration; rerun current production-owned tests
+   on the exact installed set before any guarded activation.
 3. Use the accepted M1-M4 reconciliation candidate only through an explicit,
    hash-recorded integration review; do not mechanically apply it to the
    protected checkout.

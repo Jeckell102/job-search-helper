@@ -3,14 +3,17 @@ import hmac
 import json
 import os
 from pathlib import Path
+import signal
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import threading
 import sqlite3
-import time
 import coding_tools
 import public_tools
 from coordinator import Coordinator
+from coordinator_supervision import (CoordinatorSupervision,
+                                     external_retention_snapshot as retention_counts,
+                                     watchdog)
 
 BASE = Path(__file__).resolve().parent.parent
 JOB_SEARCH_ROOT = BASE.parent.parent
@@ -19,7 +22,29 @@ if str(JOB_SEARCH_ROOT / 'src') not in sys.path:
 TOKEN = (BASE / 'bridge-token').read_text().strip()
 SLOTS = threading.BoundedSemaphore(4)
 COORDINATOR = None
+SUPERVISION = None
 SCRAPE_OUTCOME_CONSUMER = 'wrapper-coordinator'
+
+
+def host_external_retention_snapshot():
+    """Count scraper/release evidence that supervision must never discard."""
+    from job_search_helper.cli import job_database_path, load_environment, storage_backend
+    from job_search_helper.company_events import BRIDGE_CONSUMER
+    load_environment(JOB_SEARCH_ROOT / '.env')
+    if storage_backend() != 'sqlite':
+        raise ValueError('External retention snapshot requires local SQLite storage.')
+    return retention_counts(
+        job_database_path(), company_consumer=BRIDGE_CONSUMER,
+        outcome_consumer=SCRAPE_OUTCOME_CONSUMER)
+
+
+def build_supervision(coordinator, catch_up=None):
+    """Wire the real host's zero-argument probes into maintenance supervision."""
+    if catch_up is None:
+        catch_up = lambda: drain_scrape_outcomes(limit=20)
+    return CoordinatorSupervision(
+        coordinator, catch_up,
+        retention_probe=host_external_retention_snapshot)
 
 
 def current_company_revision(company_id):
@@ -116,15 +141,6 @@ def execute_manual(name, args, names):
         coding_tools.EDIT_SCOPE.reset(token)
 
 
-def supervise(coordinator, exit_process=os._exit, interval=1):
-    """A dead scheduler must fail the service so Restart=on-failure can recover it."""
-    while True:
-        if not coordinator.thread.is_alive():
-            exit_process(75)
-            return
-        time.sleep(interval)
-
-
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass  # Never log submitted code, tokens, or conversation content.
@@ -157,6 +173,10 @@ class Handler(BaseHTTPRequestHandler):
                     if set(body) - {'action', 'limit'}:
                         raise ValueError('Scrape outcome drain has unsupported fields.')
                     return self.reply(200, drain_scrape_outcomes(limit=body.get('limit', 20)))
+                if body.get('action') == 'supervision-status':
+                    if set(body) != {'action'}:
+                        raise ValueError('Supervision status has unsupported fields.')
+                    return self.reply(200, {'ok': True, 'supervision': SUPERVISION.status()})
                 return self.reply(200, COORDINATOR.command(body))
             if not isinstance(body, dict) or set(body) != {'name', 'args', 'names'}:
                 raise ValueError('Invalid request')
@@ -192,5 +212,22 @@ if __name__ == '__main__':
     COORDINATOR = Coordinator(company_revision_resolver=current_company_revision,
                               repair_profile_selector=select_repair_profile)
     COORDINATOR.start()
-    threading.Thread(target=supervise, args=(COORDINATOR,), name='coordinator-supervisor', daemon=True).start()
-    server.serve_forever()
+    SUPERVISION = build_supervision(COORDINATOR)
+    SUPERVISION.start()
+
+    def shutdown(signum, frame):
+        SUPERVISION.shutdown('Service signal ' + str(signum))
+        # HTTPServer.shutdown must run outside the serve_forever thread.
+        threading.Thread(target=server.shutdown, name='coordinator-http-shutdown', daemon=True).start()
+
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+    threading.Thread(target=watchdog, args=(COORDINATOR, SUPERVISION),
+                     kwargs={'exit_process': os._exit},
+                     name='coordinator-supervisor', daemon=True).start()
+    try:
+        server.serve_forever()
+    finally:
+        if SUPERVISION.status() is None or SUPERVISION.status().get('state') != 'SHUTDOWN_PAUSED':
+            SUPERVISION.shutdown('HTTP service stopped')
+        server.server_close()
