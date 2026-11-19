@@ -40,9 +40,11 @@ documented matrix amendment.
   salary ranges when matched by immutable Opportunity ID. The initial
   row-number-based inspection was invalid and its field-content classification
   was withdrawn before any mutation. The remaining conflict is a missing remote
-  `Companies` row. These are protected user-data discrepancies, not a
-  permission to bulk-import, clear, restore, or overwrite any value. They
-  require an owner-approved, record-by-record reconciliation decision.
+  `Companies` row. The owner has specified a narrow future policy: a numeric
+  spreadsheet estimate may fill only a truly blank extracted posting salary;
+  it must never replace a nonblank or locally updated posting value. This
+  rule is locally tested but has not been run against protected data. It is not
+  permission to bulk-import, clear, restore, or overwrite any value.
 - Historical broad in-progress cycles remain recorded. A company-only run is
   unsafe until the exact recovery contract and current scope guards are
   reviewed.
@@ -78,10 +80,12 @@ Technologies opportunity. It is blocked because the same row has a protected
 2. Preserve the accepted F4 evidence and reconfirm its services/hashes only if
    a later gate needs it. Do not infer broader authorization from that proof.
 3. Identify and safely reconcile or explicitly retain the one local pending
-   publisher receipt and 21 protected conflicts. The remote salary conflicts
-   require owner-approved, record-by-record handling; do not bulk-import or
-   overwrite them. Only then request interactive Google authorization for a
-   bounded normal publisher/readback; do not start a scrape.
+   publisher receipt and 21 protected conflicts. A numeric remote salary
+   estimate may be adopted only where the deployed guard freshly proves an
+   exact identity and blank extracted posting salary; do not bulk-import or
+   overwrite a nonblank/dirty source value. The missing Company remains held.
+   Only then request interactive Google authorization for a bounded normal
+   publisher/readback; do not start a scrape.
 4. Freshly verify Company ID/revision, employer scope, source access,
    pagination and detail coverage for all frozen cases and PDW. Source drift or
    access failure becomes an explicit hold.

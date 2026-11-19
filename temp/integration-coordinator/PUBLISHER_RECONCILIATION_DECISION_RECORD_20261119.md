@@ -37,23 +37,44 @@ bounded Companies search confirms the locally retained Company named `Prepared`
 is still absent remotely. This correction changes no data and is the only
 acceptable identity method for any later reconciliation.
 
-## Required owner decision
+## Owner policy and remaining live decision
 
-Choose a disposition for each protected salary value and for the missing
-Companies row. The coordinator must record the chosen disposition before any
-mutation and must re-read the exact live cell/identity immediately before a
-write.
+The owner has now specified the durable policy: a spreadsheet-maintained
+estimated salary range is a permitted fallback when the current job posting
+has no extracted salary. It is not a substitute for a nonblank posting salary.
+The coordinator implemented and locally tested that narrow rule in the
+isolated source copy: it accepts only a blank field or the exact known empty
+scraper compensation envelope, requires a numeric spreadsheet value, and
+refuses any locally dirty, malformed, unfamiliar, or nonblank extracted value.
+The focused synchronization suite passed 63 checks, including positive,
+nonblank/dirty-protection, and malformed-source/non-salary rejection cases.
+Independent QA reviewed the branch and passed it; its requested partial-empty
+envelope regression was added before the final 63-check run.
+
+This policy does **not** authorize an immediate pull, conflict clear, local
+data change, or Google write. Before a live reconciliation, the coordinator
+must confirm the deployed source, exact immutable identities, current remote
+values, and current local extraction state, then record the guarded result.
+
+The missing Companies row remains a separate owner decision. Choose a
+disposition for it; retain it unless and until the current identity and
+controls are approved for restoration.
+
+For a salary value that does not meet the fallback rule, choose a disposition
+before any mutation and re-read the exact live cell/identity immediately before
+a write.
 
 | Disposition | Effect | Safety consequence |
 |---|---|---|
 | Retain hold | Leave every conflict and pending delivery unchanged. | Safest default; publisher and final-pilot gate remain blocked. |
-| Preserve remote value locally | Import only a specified, freshly re-read remote value into its matching local row and baseline, then clear only that exact conflict. | Changes local protected data. No Google write. |
+| Preserve remote value locally | Import only an exact, freshly re-read remote value into its matching local row and baseline, then clear only that exact conflict. This may occur through the approved salary-fallback rule only when every guard passes. | Changes local protected data. No Google write. |
 | Correct remote value | Write only owner-supplied correction(s) with identity and expected-value guards, then read back and reconcile the exact matching local row. | Requires explicit owner-approved field values and a bounded Google write. |
 | Restore missing Company row | Recreate the exact missing Company only after owner approves its current identity and controls. | A Google write; never automatic. |
 
 The first two choices do not permit a broad cleanup. They merely determine
 whether the discrepancy remains held or one exact current remote value is
-preserved as the matching local record.
+preserved as the matching local record. The fallback rule must never overwrite
+a current posting-provided salary.
 
 ## Required execution record after approval
 

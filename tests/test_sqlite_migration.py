@@ -230,6 +230,73 @@ class MigrationTests(unittest.TestCase):
         row = self.local.read('Opportunities')[0]
         self.assertEqual(row['Application Status'], 'Interviewing'); self.assertEqual(row['Date Applied'], 46300.25)
 
+    def test_spreadsheet_salary_estimate_fills_only_known_empty_extraction(self):
+        identity = {'Company': 'Acme', 'Job URL': 'https://jobs.example.com/job-1'}
+        self.remote.commit([{'tab': 'Opportunities', 'identity': identity,
+                             'values': {'Salary / Range': ''}, 'append_if_missing': True}])
+        self.sync.pull()
+        rid, row = self.local.matches('Opportunities', identity)[0]
+        empty = ('{"compensationTierSummary": null, "compensationTiers": [], '
+                 '"scrapeableCompensationSalarySummary": null, "summaryComponents": []}')
+        with self.local.transaction():
+            row['Salary / Range'] = empty
+            self.local._put('Opportunities', rid, row)
+        self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
+
+        self.sync.pull()
+
+        self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'], '$125,000-$150,000 estimated')
+        self.assertEqual(self.local.status()['conflicts'], 0)
+        self.assertEqual(self.local.status()['pending_cells'], 0)
+
+    def test_spreadsheet_salary_estimate_never_replaces_nonblank_or_dirty_extraction(self):
+        identity = {'Company': 'Acme', 'Job URL': 'https://jobs.example.com/job-1'}
+        self.remote.commit([{'tab': 'Opportunities', 'identity': identity,
+                             'values': {'Salary / Range': ''}, 'append_if_missing': True}])
+        self.sync.pull()
+        self.local.commit([{'tab': 'Opportunities', 'identity': identity,
+                            'values': {'Salary / Range': '$180,000 posting range'}}])
+        self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
+
+        self.sync.pull()
+
+        rid, row = self.local.matches('Opportunities', identity)[0]
+        self.assertEqual(row['Salary / Range'], '$180,000 posting range')
+        conflicts = self.local.db.execute(
+            'SELECT detail FROM conflicts WHERE tab=? AND row_id=? AND header=?',
+            ('Opportunities', rid, 'Salary / Range')).fetchall()
+        self.assertEqual(len(conflicts), 1)
+
+    def test_salary_fallback_rejects_malformed_or_partial_source_and_non_salary_text(self):
+        identity = {'Company': 'Acme', 'Job URL': 'https://jobs.example.com/job-1'}
+        self.remote.commit([{'tab': 'Opportunities', 'identity': identity,
+                             'values': {'Salary / Range': ''}, 'append_if_missing': True}])
+        self.sync.pull()
+        rid, row = self.local.matches('Opportunities', identity)[0]
+        with self.local.transaction():
+            row['Salary / Range'] = '{not-valid-json}'
+            self.local._put('Opportunities', rid, row)
+        self.edit('Opportunities', 'Salary / Range', 'see recruiter')
+
+        self.sync.pull()
+
+        self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'], '{not-valid-json}')
+        self.assertEqual(self.local.status()['conflicts'], 1)
+
+        with self.local.transaction():
+            row = self.local.row('Opportunities', rid)
+            row['Salary / Range'] = '{"compensationTierSummary": null}'
+            self.local._put('Opportunities', rid, row)
+            self.local.db.execute(
+                'DELETE FROM conflicts WHERE tab=? AND row_id=? AND header=?',
+                ('Opportunities', rid, 'Salary / Range'))
+        self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
+        self.sync.pull()
+
+        self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'],
+                         '{"compensationTierSummary": null}')
+        self.assertEqual(self.local.status()['conflicts'], 1)
+
     def test_no_keeps_existing_applied_opportunity(self):
         self.remote.commit([{'tab': 'Opportunities', 'identity': {'Company': 'Acme', 'Job URL': 'https://jobs.example.com/job-1'},
                             'values': {'Application Status': 'Applied'}, 'append_if_missing': True}])

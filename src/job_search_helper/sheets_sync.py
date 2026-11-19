@@ -33,6 +33,34 @@ HUMAN_FIELDS = {
 ORDER = {'Job Evidence': 0, 'Job History': 1, 'Opportunities': 2, 'Companies': 3, 'Scan Cycles': 4}
 
 
+# A posting with no compensation is persisted by the scraper as this exact,
+# structured empty envelope.  It is deliberately narrower than "any JSON" or
+# "any falsy value": a malformed or unfamiliar source value must remain under
+# reconciliation rather than being silently replaced by a spreadsheet value.
+_EMPTY_EXTRACTED_SALARY = {
+    'compensationTierSummary': None,
+    'compensationTiers': [],
+    'scrapeableCompensationSalarySummary': None,
+    'summaryComponents': [],
+}
+
+
+def _missing_extracted_salary(value):
+    """Return True only for a blank field or the known empty scraper envelope."""
+    if value is None or not str(value).strip():
+        return True
+    try:
+        parsed = json.loads(str(value))
+    except (TypeError, ValueError):
+        return False
+    return parsed == _EMPTY_EXTRACTED_SALARY
+
+
+def _plausible_salary_estimate(value):
+    """Keep the fallback narrow: a spreadsheet salary must contain a number."""
+    return bool(str(value).strip()) and any(character.isdigit() for character in str(value))
+
+
 def unique_rows(tab, numbered):
     seen = set()
     for number, row in numbered:
@@ -133,6 +161,15 @@ class SheetsSynchronizer:
                         if self.local.db.execute('SELECT 1 FROM manual_choices WHERE tab=? AND row_id=?', (tab, rid)).fetchone():
                             self.local.conflict(tab, rid, header, 'Remote review conflicts with a protected manual choice.')
                             continue
+                    elif (tab == 'Opportunities' and header == 'Salary / Range'
+                          and header not in dirty
+                          and _missing_extracted_salary(local_value)
+                          and _plausible_salary_estimate(value)):
+                        # User-maintained estimates are a fallback only when
+                        # the current posting yielded no salary at all.  A
+                        # nonblank or newly-updated extracted value continues
+                        # to be locally managed and therefore conflicts.
+                        pass
                     elif header not in HUMAN_FIELDS.get(tab, set()):
                         # Source/version and progress fields belong to local processing.
                         self.local.conflict(tab, rid, header, 'Remote edit to a locally managed field needs reconciliation.')

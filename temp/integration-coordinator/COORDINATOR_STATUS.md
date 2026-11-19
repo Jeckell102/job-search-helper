@@ -544,13 +544,20 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   `Prepared`. The sole dirty delivery is the Saronic Technologies `Last
   Checked` update; it shares a protected salary conflict, so the normal
   publisher correctly excludes that row. No conflict, remote value, local
-  record, or pending receipt was changed. This is an owner-approved,
-  record-by-record reconciliation gate; no bulk import, overwrite, restore,
-  or conflict clearing is permitted.
-- QA lane ownership is complete for this checkpoint. Coordinator next action:
-  obtain the required owner direction recorded in
-  `PUBLISHER_RECONCILIATION_DECISION_RECORD_20261119.md` before Google
-  publication can proceed.
+  record, or pending receipt was changed. The owner has now set a narrow
+  salary policy: the spreadsheet estimate may be used only when the current
+  posting extraction is truly blank; it can never replace a nonblank or dirty
+  posting salary. The isolated-source guard accepts only the exact known empty
+  compensation envelope (or blank), requires a numeric estimate, and passed
+  63 focused synchronization checks. It has not been run against local
+  protected data or Google. The missing `Prepared` Company remains held; no
+  bulk import, overwrite, restore, or conflict clearing is permitted.
+- Independent QA passed the new salary fallback safeguard. Its requested
+  partial-envelope regression was added before the final 63-check focused
+  synchronization/review run passed. Coordinator next action: install the
+  reviewed guarded source, then perform a bounded identity- and
+  current-state-checked reconciliation/readback under the existing roadmap
+  authorization. The live publisher gate remains otherwise held.
 - A separate read-only scope proposal now identifies `COMP-0024` Draper as a
   possible Workday third distinct-structure candidate. Its historical evidence
   includes a human-verification block and no current-cycle inventory, so it is
