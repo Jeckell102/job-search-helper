@@ -887,3 +887,28 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   qualification, or completion. Owner approval, a matrix amendment, fresh
   public preflight, and the separate publisher gate remain mandatory. See
   `THIRD_STRUCTURE_SCOPE_PROPOSAL_20261119.md`.
+- A host cleanup removed the ephemeral feature and reconciliation worktrees,
+  but did not affect production or its job data. The coordinator removed only
+  the stale feature-worktree registration and recreated the isolated feature
+  worktree from the already verified local/private-GitHub branch. Its restored
+  `HEAD` is still exactly `c689ebba5ede3c8b5189e88691550cf8c2d3855c` and
+  the worktree is clean. Temporary reconciliation and independent-QA lanes
+  were restarted with the same non-overlapping ownership.
+- Fresh read-only production preflight acquired and released the actual
+  `.state/scraper.lock` nonblockingly and `assert_release_settled` returned a
+  settled state with no pending release journal. No scraper, synchronization,
+  or data mutation was started.
+- Fresh read-only Google preflight made five read requests and zero writes.
+  `COMP-0035`, `COMP-0052`, and `COMP-0054` each matched exactly once between
+  local authority and the compact Sheet on Company ID, Active status, provider,
+  and careers-URL digest; all three local control rows have empty claim owner
+  and token and remain bound to `CYC-B639C6D864EC`. Local Scan State is
+  Complete for 0035/0052 and Queued for 0054. The compact Sheet has no row for
+  that active local cycle, so remote cycle finalization remains a separate
+  explicit gate and cannot be inferred from Company-row agreement.
+- Production is still deliberately unmodified by the exact-cycle deployment.
+  The eight accepted `exact_*` source modules and their seven focused test
+  files are absent there, while production `inbox.py`, `runner.py`,
+  `test_run_scoped_sync.py`, and `test_runner_cycles.py` differ from the
+  accepted branch. Reconciliation must preserve the newer production
+  scrape-to-FIRST-PASS behavior; direct file replacement remains forbidden.
