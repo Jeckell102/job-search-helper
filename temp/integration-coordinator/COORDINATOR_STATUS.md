@@ -568,9 +568,11 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
 - Milestone 1 read-only Samtec preflight exposed two still-open gates. The
   legacy `CYC-B639C6D864EC` cannot be paused while its 47 saved inventories
   and eight partial plans remain unreconciled, and the direct normal CLI
-  currently rejects the compact-profile `Opportunity ID` column before it can
-  prove its safe queue refusal. No Samtec request or scrape was created.
-  Intake lane owns the minimal CLI/profile compatibility repair; coordinator
+  previously rejected the compact-profile `Opportunity ID` column before it
+  could prove its safe queue refusal. Independent QA accepted the minimal
+  schema-preservation repair; protected focused tests pass, but the real
+  Google-backed dry run did not yield a usable terminal receipt and is not
+  acceptance evidence. No Samtec request or scrape was created. Coordinator
   owns the read-only cycle reconciliation decision. See
   `M1_READONLY_BLOCKERS_20261119.md`.
 - A separate read-only scope proposal now identifies `COMP-0024` Draper as a

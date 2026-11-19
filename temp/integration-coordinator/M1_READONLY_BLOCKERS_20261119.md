@@ -21,7 +21,10 @@ Google write, checkpoint, lock, or job record was changed by this preflight.
 - A direct read-only `cli start --company-id COMP-0739 --dry-run` stopped
   before scheduling because its remote repository was built with the base
   schema and rejected the existing compact-profile `Opportunity ID` column.
-  This is a new M1 path compatibility defect, not a successful safe-boundary
+  The minimal schema-preservation repair was independently reviewed, backed up
+  in `a755861`, installed into the protected checkout, and its two focused
+  protected tests passed. A later real Google-backed dry run did not produce a
+  usable terminal receipt, so it is not counted as a successful safe-boundary
   result.
 
 ## Current controls
