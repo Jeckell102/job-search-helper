@@ -52,6 +52,60 @@ def _records(records):
     return dict(sorted(result.items()))
 
 
+def record_fingerprints(operations, rows_by_tab=None):
+    """Fingerprint the final guarded values for each frozen remote record.
+
+    With no ``rows_by_tab`` this returns the fingerprint of the frozen plan.
+    With rows supplied it projects only the exact identities and fields owned by
+    that plan.  Thus an unrelated edit cannot manufacture a receipt, while a
+    manual field that the plan deliberately does not own is left untouched.
+    """
+    grouped = {}
+    for operation in operations:
+        tab = str(operation.get("tab", "")).strip()
+        identity = operation.get("identity")
+        if not tab or not isinstance(identity, Mapping) or not identity:
+            raise ValueError("Receipt records require exact tab and identity")
+        identity = {str(key): value for key, value in sorted(identity.items())}
+        fields = {}
+        for values in (operation.get("on_insert", {}), operation.get("values", {})):
+            if not isinstance(values, Mapping):
+                raise ValueError("Receipt operation values must be mappings")
+            fields.update({str(key): value for key, value in values.items()})
+        # A guarded legacy-key migration can legitimately alter an identity
+        # column.  The post-commit readback must locate its final identity,
+        # while the repository itself still validates the original one.
+        final_identity = dict(identity)
+        final_identity.update({key: value for key, value in fields.items() if key in final_identity})
+        label = tab + ":" + _canonical(final_identity)
+        target = grouped.setdefault(label, {"tab": tab, "identity": final_identity,
+                                            "fields": {}, "notes": {}})
+        target["fields"].update(fields)
+        for field, note in operation.get("append_notes", {}).items():
+            notes = target["notes"].setdefault(str(field), [])
+            if note not in notes:
+                notes.append(note)
+
+    records = {}
+    for label, target in sorted(grouped.items()):
+        projected = {"tab": target["tab"], "identity": target["identity"],
+                     "fields": target["fields"], "notes": target["notes"]}
+        if rows_by_tab is not None:
+            matches = [row for row in rows_by_tab.get(target["tab"], [])
+                       if all(str(row.get(key, "")) == str(value) for key, value in target["identity"].items())]
+            if len(matches) != 1:
+                projected["missing_or_ambiguous"] = len(matches)
+            else:
+                row = matches[0]
+                projected["fields"] = {key: row.get(key, "") for key in target["fields"]}
+                projected["notes"] = {
+                    key: [note if note in str(row.get(key, "")) else "__missing_note__" for note in notes]
+                    for key, notes in target["notes"].items()
+                }
+        records[label] = hashlib.sha256(_canonical(projected).encode("utf-8")).hexdigest()
+    return _records(records)
+
+
 def initialize(connection: sqlite3.Connection):
     """Create the receipt table in the storage writer's existing database."""
     connection.execute("""CREATE TABLE IF NOT EXISTS publication_receipts (

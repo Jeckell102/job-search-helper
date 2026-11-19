@@ -7,6 +7,7 @@ slow uploads never bound the number of inventories safely held on disk.
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 import copy
+import hashlib
 import json
 from queue import Empty, Full, Queue, SimpleQueue
 from threading import Event
@@ -19,6 +20,7 @@ from .batching import PlanningRepository, PendingState
 from .dashboard import TerminalDashboard
 from .engine import MAX_FETCH_WORKERS, inventory_payload, now
 from .repository import RepositoryError, UncertainWriteError
+from .publication_receipts import SYNC_CONFIRMED, record_fingerprints
 
 
 def _stale_scoped_taleo_payload(company, payload):
@@ -49,6 +51,82 @@ class LocalPipeline:
         self.last_cycle_sync = self.last_sync
         self.synced_stages = None
         self.dashboard = None
+
+    @staticmethod
+    def _digest(value):
+        return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True,
+                                        separators=(',', ':')).encode('utf-8')).hexdigest()
+
+    def _receipt_details(self, cid, payload, plan):
+        """Bind a receipt to this frozen inventory, plan, and exact scope.
+
+        Prefer the immutable source revision supplied by a current request or
+        cycle.  Older checkpoints lack that field, so their fallback is
+        explicitly labelled as a fingerprint of the complete frozen inventory
+        payload--not an invented URL-based source revision.
+        """
+        records = record_fingerprints(plan['operations'])
+        item = self.cycle.get('companies', {}).get(cid, {})
+        request = self.cycle.get('request', {})
+        candidates = (
+            ('cycle', self.cycle.get('source_revision')),
+            ('request', request.get('source_revision') if isinstance(request, dict) else None),
+            ('company', item.get('source_revision')),
+            ('inventory', payload.get('source_revision')),
+        )
+        origin, source_revision = next(
+            ((name, str(value).strip()) for name, value in candidates if str(value or '').strip()),
+            ('frozen_inventory', 'frozen-inventory:' + self._digest(payload)),
+        )
+        binding = {
+            'request_id': str(self.cycle.get('start_request_id') or self.cid),
+            'company_id': str(cid),
+            'source_revision': source_revision,
+            'source_revision_origin': origin,
+            'release_id': self._digest({'records': records, 'final': plan.get('final', {})}),
+        }
+        return {
+            'binding': binding,
+            'records': records,
+            'schedule': {
+                'boundary': 'idle',
+                'enqueued_at': str(payload.get('fetched_at') or self.cycle.get('started_at') or now()),
+            },
+            'timestamp': now(),
+        }
+
+    def _receipt_for_plan(self, cid, plan):
+        saved = self.inbox.get(self.cid, cid)
+        if saved is None:
+            raise ValueError('Durable inventory disappeared before receipt recovery')
+        return self._receipt_details(cid, saved[0], plan)
+
+    def _reconcile_receipt(self, cid, plan):
+        """Confirm a receipt only from fresh exact remote rows, never an ACK."""
+        details = self._receipt_for_plan(cid, plan)
+        current = self.inbox.receipt(details)
+        if current is None:
+            self.inbox.ensure_receipt(details)
+            current = self.inbox.receipt(details)
+        if current['state'] == SYNC_CONFIRMED:
+            return True
+        if current['state'] == 'LOCAL_COMMITTED':
+            # This covers a restart after local persistence but before a
+            # request, plus old frozen plans upgraded by this release.  The
+            # durable pending state is still written before any new commit.
+            self.inbox.mark_receipt_pending(details, timestamp=now())
+        tabs = {operation['tab'] for operation in plan['operations']}
+        try:
+            observed = record_fingerprints(
+                plan['operations'], {tab: self.repo.read(tab) for tab in tabs})
+        except Exception:
+            # A failed verification is not evidence that the write failed.
+            # Leave the immutable plan and pending receipt for a later read.
+            return False
+        acknowledgement = 'readback:' + self._digest({
+            'receipt': current['receipt_id'], 'records': observed,
+        })
+        return self.inbox.reconcile_receipt(details, observed, acknowledgement, timestamp=now())
 
     def refresh_company_controls(self):
         headers = [
@@ -108,11 +186,20 @@ class LocalPipeline:
         item = self.cycle['companies'][cid]
         plan = self.inbox.plan(self.cid, cid)
         if plan is not None:
-            if plan[1] == len(plan[0]['operations']):
-                self.finish(cid, plan[0])
+            frozen, cursor = plan
+            details = self._receipt_for_plan(cid, frozen)
+            current = self.inbox.receipt(details)
+            if current and current['state'] == SYNC_CONFIRMED:
+                self.inbox.advance(self.cid, {cid: len(frozen['operations'])})
+                self.finish(cid, frozen)
+            elif current and current['state'] == 'SYNC_PENDING' and self._reconcile_receipt(cid, frozen):
+                self.inbox.advance(self.cid, {cid: len(frozen['operations'])})
+                self.finish(cid, frozen)
+            elif cursor == len(frozen['operations']):
+                self.finish(cid, frozen)
             else:
                 try:
-                    self.planner.commit(plan[0]['operations'][plan[1]:])
+                    self.planner.commit(frozen['operations'][cursor:])
                 except RepositoryError as exc:
                     self.fail(cid, exc, 'restoring local plan')
                     return
@@ -183,7 +270,8 @@ class LocalPipeline:
             final = {k: v for k, v in local_item.items() if k != 'jobs'}
             plan = {'operations': self.planner.operations, 'final': final,
                     'requested_url': payload.get('requested_url', '')}
-            self.inbox.save_plan(self.cid, cid, plan)
+            self.inbox.save_plan(self.cid, cid, plan,
+                                 receipt=self._receipt_details(cid, payload, plan))
         except Exception as exc:
             for tab, length in lengths.items():
                 del self.planner.rows[tab][length:]
@@ -213,6 +301,12 @@ class LocalPipeline:
         self.refresh_queue_status()
 
     def finish(self, cid, plan):
+        # A completed cursor only proves that the remote request returned.  It
+        # cannot release frozen inventory until the pending receipt has an
+        # exact live readback, including after a process restart/lost ACK.
+        if not self._reconcile_receipt(cid, plan):
+            self.refresh_queue_status()
+            return False
         self.cycle['companies'][cid].update(plan['final'])
         self.state.save_cycle(self.cycle)
         # Checkpoint first: a crash before deletion leaves a fully acknowledged
@@ -223,6 +317,7 @@ class LocalPipeline:
         else:
             self.inbox.block(self.cid, cid)
         self.refresh_queue_status()
+        return True
 
     def upload(self, entries):
         if not entries:
@@ -250,6 +345,26 @@ class LocalPipeline:
                 continue
             valid.append((cid, cursor, ops))
         entries = valid
+        if not entries:
+            return
+        recoverable = []
+        for cid, cursor, ops in entries:
+            plan = self.inbox.plan(self.cid, cid)[0]
+            details = self._receipt_for_plan(cid, plan)
+            self.inbox.ensure_receipt(details)
+            current = self.inbox.receipt(details)
+            if current['state'] == SYNC_CONFIRMED:
+                self.inbox.advance(self.cid, {cid: len(plan['operations'])})
+                continue
+            if current['state'] == 'SYNC_PENDING' and self._reconcile_receipt(cid, plan):
+                self.inbox.advance(self.cid, {cid: len(plan['operations'])})
+                continue
+            # This durable transition occurs before the ordinary repository
+            # commit.  Any ambiguous response can now be reconciled against
+            # the frozen exact record fingerprints without a refetch.
+            self.inbox.mark_receipt_pending(details, timestamp=now())
+            recoverable.append((cid, cursor, ops))
+        entries = recoverable
         if not entries:
             return
         operations = [op for _, _, ops in entries for op in ops]
@@ -320,7 +435,8 @@ class LocalPipeline:
             if cid not in self.ignored:
                 saved = self.inbox.plan(self.cid, cid)
                 if saved[1] == len(plan['operations']):
-                    self.finish(cid, plan)
+                    if not self.finish(cid, plan):
+                        self.pending.append(cid)
                 else:
                     self.pending.append(cid)
         # Frequent full batches must not keep postponing the partial-batch

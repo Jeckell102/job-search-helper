@@ -1,6 +1,7 @@
 import copy
 from contextlib import redirect_stdout
 from io import StringIO
+import json
 from pathlib import Path
 import tempfile
 from threading import Event
@@ -10,6 +11,7 @@ from unittest.mock import patch
 from job_search_helper.batching import PlanningRepository
 from job_search_helper.engine import Engine, State, inventory_payload
 from job_search_helper.inbox import InventoryInbox
+from job_search_helper.publication_receipts import LOCAL_COMMITTED, receipt, record_fingerprints
 from job_search_helper.repository import GoogleRepository, RepositoryError, SCHEMAS
 from sheets_fixture import RangeSheets
 from test_fetch_pool import company, inventory
@@ -36,6 +38,52 @@ class DurablePipelineTests(unittest.TestCase):
         capture.__enter__()
         self.addCleanup(capture.__exit__, None, None, None)
         self.cycle = self.engine.start_cycle([f'C-{i}' for i in range(4)])
+
+    def company_receipt(self, company_id, inbox=None):
+        inbox = inbox or self.inbox
+        rows = inbox.connection.execute('SELECT binding FROM publication_receipts').fetchall()
+        bindings = [json.loads(row[0]) for row in rows]
+        binding = next(item for item in bindings if item['company_id'] == company_id)
+        return receipt(inbox.connection, binding)
+
+    def test_frozen_plan_and_local_receipt_commit_in_one_sqlite_transaction(self):
+        payload = inventory_payload(inventory('C-0', 'Company 0', company(0)['Official Careers URL']), company(0))
+        self.inbox.save(self.cycle, 'C-0', payload)
+        plan = {'operations': [{'tab': 'Companies', 'identity': {'Company ID': 'C-0'},
+                                'values': {'Scan State': 'In Progress'}}], 'final': {}}
+        binding = {'request_id': self.cycle, 'company_id': 'C-0',
+                   'source_revision': 'source-fixture', 'release_id': 'release-fixture'}
+        details = {'binding': binding, 'records': record_fingerprints(plan['operations']),
+                   'schedule': {'boundary': 'idle', 'enqueued_at': payload['fetched_at']}, 'timestamp': 't1'}
+        self.inbox.save_plan(self.cycle, 'C-0', plan, receipt=details)
+        self.assertIsNotNone(self.inbox.plan(self.cycle, 'C-0'))
+        self.assertEqual(receipt(self.inbox.connection, binding)['state'], LOCAL_COMMITTED)
+
+    def test_receipt_write_exception_rolls_back_the_frozen_plan_insert(self):
+        payload = inventory_payload(inventory('C-0', 'Company 0', company(0)['Official Careers URL']), company(0))
+        self.inbox.save(self.cycle, 'C-0', payload)
+        plan = {'operations': [{'tab': 'Companies', 'identity': {'Company ID': 'C-0'},
+                                'values': {'Scan State': 'In Progress'}}], 'final': {}}
+        binding = {'request_id': self.cycle, 'company_id': 'C-0',
+                   'source_revision': 'source-fixture', 'release_id': 'receipt-write-failure'}
+        details = {'binding': binding, 'records': record_fingerprints(plan['operations']),
+                   'schedule': {'boundary': 'idle', 'enqueued_at': payload['fetched_at']}, 'timestamp': 't1'}
+        with patch('job_search_helper.inbox.publication_receipts.local_committed',
+                   side_effect=OSError('injected receipt disk failure')):
+            with self.assertRaisesRegex(OSError, 'receipt disk failure'):
+                self.inbox.save_plan(self.cycle, 'C-0', plan, receipt=details)
+        self.assertIsNone(self.inbox.plan(self.cycle, 'C-0'))
+        self.assertIsNone(receipt(self.inbox.connection, binding))
+
+    def test_receipt_uses_authoritative_cycle_source_revision_when_available(self):
+        cycle = self.state.cycle(self.cycle)
+        cycle['source_revision'] = 'immutable-company-source-rev-7'
+        self.state.save_cycle(cycle)
+        self.engine.resume_local(self.cycle, defer_sync=True)
+        self.engine.resume_local(self.cycle, sync_only=True)
+        saved = self.company_receipt('C-0')
+        self.assertEqual(saved['binding']['source_revision'], 'immutable-company-source-rev-7')
+        self.assertEqual(saved['binding']['source_revision_origin'], 'cycle')
 
     def test_deferred_sync_does_not_refetch_and_releases_acknowledged_data(self):
         self.engine.resume_parallel(self.cycle, fetch_workers=2, assignment_window=2, defer_sync=True)
@@ -121,6 +169,66 @@ class DurablePipelineTests(unittest.TestCase):
         self.assertEqual(len(rows), 4)
         self.assertEqual(len({r['Job Key'] for r in rows}), 4)
         self.assertEqual(self.inbox.cycles(), [])
+
+    def test_file_backed_restart_reconciles_frozen_receipt_without_duplicate_rows(self):
+        self.engine.resume_local(self.cycle, defer_sync=True)
+        # This is intentionally a new SQLite connection, not an in-memory
+        # fixture: the receipt must survive a process boundary with its plan.
+        reopened = InventoryInbox(self.root / 'inbox.db', 'fixture')
+        self.addCleanup(reopened.close)
+        restarted = Engine(GoogleRepository(self.service, 'fixture', min_request_interval=0), self.state,
+                           inbox=reopened, error_log_path=self.root / 'errors.jsonl')
+        restarted.resume_local(self.cycle, sync_only=True)
+        saved = self.company_receipt('C-0', reopened)
+        self.assertEqual(saved['state'], 'SYNC_CONFIRMED')
+        self.assertEqual(len(restarted.repo.read('Job History')), 4)
+        self.assertEqual(len({row['Job Key'] for row in restarted.repo.read('Job History')}), 4)
+
+    def test_duplicate_resume_keeps_one_confirmed_receipt_per_frozen_company(self):
+        self.engine.resume_local(self.cycle, defer_sync=True)
+        self.engine.resume_local(self.cycle, sync_only=True)
+        self.engine.resume_local(self.cycle, sync_only=True, retry_blocked=True)
+        rows = self.inbox.connection.execute(
+            'SELECT company, count(*) FROM (SELECT json_extract(binding, "$.company_id") AS company '
+            'FROM publication_receipts) GROUP BY company').fetchall()
+        self.assertEqual(dict(rows), {f'C-{index}': 1 for index in range(4)})
+        self.assertEqual(self.company_receipt('C-0')['state'], 'SYNC_CONFIRMED')
+
+    def test_lost_acknowledgement_is_pending_across_restart_then_confirms_after_readback(self):
+        self.engine.resume_local(self.cycle, defer_sync=True)
+        original = self.repo.commit
+        failed = [False]
+        def commit(operations):
+            if not failed[0] and any(op['tab'] == 'Job History' for op in operations):
+                failed[0] = True
+                self.service.lose_response = True
+            return original(operations)
+        with patch.object(self.repo, 'commit', side_effect=commit):
+            self.engine.resume_local(self.cycle, sync_only=True)
+        self.assertEqual(self.company_receipt('C-0')['state'], 'SYNC_PENDING')
+        reopened = InventoryInbox(self.root / 'inbox.db', 'fixture')
+        self.addCleanup(reopened.close)
+        restarted = Engine(GoogleRepository(self.service, 'fixture', min_request_interval=0), self.state,
+                           inbox=reopened, error_log_path=self.root / 'errors.jsonl')
+        restarted.resume_local(self.cycle, sync_only=True, retry_blocked=True)
+        self.assertEqual(self.company_receipt('C-0', reopened)['state'], 'SYNC_CONFIRMED')
+        self.assertEqual(len(restarted.repo.read('Job History')), 4)
+
+    def test_lost_acknowledgement_never_overwrites_a_manual_choice_during_recovery(self):
+        self.engine.resume_local(self.cycle, defer_sync=True)
+        original = self.repo.commit
+        failed = [False]
+        def commit(operations):
+            if not failed[0] and any(op['tab'] == 'Job History' for op in operations):
+                failed[0] = True
+                self.service.lose_response = True
+            return original(operations)
+        with patch.object(self.repo, 'commit', side_effect=commit):
+            self.engine.resume_local(self.cycle, sync_only=True)
+        self.service.set_cell('Job History', 1, 'Added to Opportunities?', 'No')
+        self.engine.resume_local(self.cycle, sync_only=True, retry_blocked=True)
+        self.assertEqual(self.repo.read('Job History')[0]['Added to Opportunities?'], 'No')
+        self.assertEqual(self.company_receipt('C-0')['state'], 'SYNC_PENDING')
 
     def test_fresh_pause_preserves_saved_inventory_for_explicit_retry(self):
         self.engine.resume_parallel(self.cycle, defer_sync=True)

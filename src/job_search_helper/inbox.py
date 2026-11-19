@@ -14,6 +14,7 @@ import time
 
 from .title_audit import TITLE_AUDIT_SCHEMA, remember_title_audit
 from .browser_progress import SCHEMA as BROWSER_PROGRESS_SCHEMA
+from . import publication_receipts
 
 
 class InventoryInbox:
@@ -44,6 +45,7 @@ class InventoryInbox:
                 self.connection.execute("""CREATE TABLE IF NOT EXISTS sync_plans (
                     cycle TEXT, company TEXT, payload TEXT NOT NULL, cursor INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY(cycle, company))""")
+                publication_receipts.initialize(self.connection)
         except BaseException:
             self.connection.close()
             raise
@@ -88,7 +90,7 @@ class InventoryInbox:
         with self.lock, self.connection:
             self.connection.execute("UPDATE inventories SET blocked=1 WHERE cycle=? AND company=?", (cycle, company))
 
-    def save_plan(self, cycle, company, plan):
+    def save_plan(self, cycle, company, plan, receipt=None):
         """Freeze keyed operations before a Sheets request; never replace a replay."""
         started = time.monotonic()
         encoded = json.dumps(plan, ensure_ascii=False)
@@ -98,6 +100,10 @@ class InventoryInbox:
                 raise ValueError("Cannot plan without a durable inventory")
             cursor = self.connection.execute("INSERT OR IGNORE INTO sync_plans VALUES (?,?,?,0)",
                                              (cycle, company, encoded))
+            if receipt is not None:
+                publication_receipts.local_committed(
+                    self.connection, receipt['binding'], receipt['records'], receipt['schedule'],
+                    timestamp=receipt['timestamp'])
             if cursor.rowcount:
                 self.payload_bytes += len(encoded.encode("utf-8"))
         self.checkpoint_seconds += time.monotonic() - started
@@ -107,6 +113,26 @@ class InventoryInbox:
             row = self.connection.execute("SELECT payload,cursor FROM sync_plans WHERE cycle=? AND company=?",
                                           (cycle, company)).fetchone()
         return (json.loads(row[0]), row[1]) if row else None
+
+    def ensure_receipt(self, receipt):
+        """Recover a legacy frozen plan without changing it or its cursor."""
+        with self.lock, self.connection:
+            return publication_receipts.local_committed(
+                self.connection, receipt['binding'], receipt['records'], receipt['schedule'],
+                timestamp=receipt['timestamp'])
+
+    def mark_receipt_pending(self, receipt, *, timestamp):
+        with self.lock, self.connection:
+            return publication_receipts.mark_sync_pending(self.connection, receipt['binding'], timestamp=timestamp)
+
+    def reconcile_receipt(self, receipt, observed_records, acknowledgement_id, *, timestamp):
+        with self.lock, self.connection:
+            return publication_receipts.reconcile_sync(
+                self.connection, receipt['binding'], observed_records, acknowledgement_id, timestamp=timestamp)
+
+    def receipt(self, receipt):
+        with self.lock:
+            return publication_receipts.receipt(self.connection, receipt['binding'])
 
     def pending(self, cycle, include_blocked=False):
         with self.lock:
