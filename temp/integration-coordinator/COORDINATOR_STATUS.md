@@ -1382,3 +1382,15 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   verification passed 74 tests. This is source activation only: no scrape,
   queue admission, Google mutation, backlog processing, or automatic release
   was enabled.
+- F2/F3 release-admission delta is now installed through that same existing
+  lock. It first passed independent archive reconstitution: its sealed
+  five-file package (`0f3f8c33c560...d32d2864`) was overlaid on a disposable
+  copy of the current protected source and passed 65 focused tests. The
+  guarded install then recorded
+  `/tmp/jsh-f2-f3-release-20261119T194453Z-d03rx1s1/manifest.json` as
+  `INSTALLED_HASH_VERIFIED` for exactly five files; a fresh protected run of
+  the same 65 checks passed in 14.37 seconds. This is source activation only:
+  no scraper, Google call, queue, release, job-data change, or automatic
+  backlog processing was started. The implementation closes only the
+  installation/immutable-binding admission slice; full retry lifecycle,
+  stale-result precedence, and guarded live acceptance remain open.
