@@ -8,8 +8,11 @@ publish are unsupported. Use filter views instead of physically sorting rows.
 from __future__ import annotations
 
 from collections import defaultdict
+import copy
+import hashlib
 import json
 import time
+from typing import Mapping
 
 from .repository import RepositoryError, USER_FIELDS, _equivalent, _identity_key
 from .sqlite_repository import REVIEW_FIELDS, encode, identity_for, timestamp
@@ -59,6 +62,16 @@ def _missing_extracted_salary(value):
 def _plausible_salary_estimate(value):
     """Keep the fallback narrow: a spreadsheet salary must contain a number."""
     return bool(str(value).strip()) and any(character.isdigit() for character in str(value))
+
+
+def _digest(value):
+    return hashlib.sha256(encode(value).encode('utf-8')).hexdigest()
+
+
+def _required_id(value, label):
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f'Exact Sheets {label} is required.')
+    return value.strip()
 
 
 def unique_rows(tab, numbered):
@@ -372,6 +385,342 @@ class SheetsSynchronizer:
                 break
             plans.append((tab, rid, fields, current, op)); size += cost
         return plans
+
+    def _normalize_exact_scope(self, row_scope):
+        """Validate explicit stable row identities without discovering work."""
+        if not isinstance(row_scope, (list, tuple)) or not row_scope:
+            raise ValueError('Exact Sheets row scope must be a nonempty explicit sequence.')
+        normalized = []
+        seen = set()
+        for item in row_scope:
+            required = {'tab', 'identity', 'fields'}
+            if (not isinstance(item, Mapping) or not required <= set(item)
+                    or set(item) - required - {'row_id', 'guards'}):
+                raise ValueError('Exact Sheets row scope has an invalid shape.')
+            tab, row_id = item['tab'], item.get('row_id')
+            identity, fields = item['identity'], item['fields']
+            guards = item.get('guards', {})
+            if (tab not in ORDER or (row_id is not None and
+                                     (type(row_id) is not int or row_id < 1))
+                    or not isinstance(identity, Mapping) or not identity
+                    or any(not str(value).strip() for value in identity.values())
+                    or not isinstance(fields, (list, tuple)) or not fields
+                    or any(not isinstance(header, str) or not header for header in fields)
+                    or len(fields) != len(set(fields))
+                    or not isinstance(guards, Mapping)
+                    or set(guards) - set(self.local.schemas.get(tab, ()))):
+                raise ValueError('Exact Sheets row scope contains an invalid row.')
+            matches = self.local.matches(tab, identity)
+            if len(matches) != 1:
+                raise ValueError('Exact Sheets stable identity is missing or ambiguous.')
+            resolved_row_id = matches[0][0]
+            if row_id is not None and row_id != resolved_row_id:
+                raise ValueError('Exact Sheets row hint no longer matches its stable identity.')
+            row_id = resolved_row_id
+            if self.publication is not None:
+                if tab not in self.publication or set(fields) - set(self.publication[tab]):
+                    raise ValueError('Exact Sheets scope contains a non-publishable field.')
+            elif tab not in self.local.schemas or set(fields) - set(self.local.schemas[tab]):
+                raise ValueError('Exact Sheets scope contains an unknown field.')
+            label = (tab, row_id)
+            if label in seen:
+                raise ValueError('Exact Sheets row scope repeats a local row.')
+            seen.add(label)
+            normalized.append({'tab': tab, 'row_id': row_id,
+                               'identity': {str(key): copy.deepcopy(value)
+                                            for key, value in sorted(identity.items())},
+                               'fields': sorted(fields),
+                               'guards': {str(key): copy.deepcopy(value)
+                                          for key, value in sorted(guards.items())}})
+        return sorted(normalized, key=lambda item: (ORDER[item['tab']], item['row_id']))
+
+    def _plan_exact_row(self, item):
+        """Derive one operation from only one explicitly named local row."""
+        tab, row_id = item['tab'], item['row_id']
+        current = self.local.row(tab, row_id)
+        if current is None:
+            raise ValueError('Exact Sheets scoped local row is missing.')
+        matches = self.local.matches(tab, item['identity'])
+        if len(matches) != 1 or matches[0][0] != row_id:
+            raise ValueError('Exact Sheets stable identity moved or became ambiguous.')
+        if self.local.db.execute(
+                'SELECT 1 FROM conflicts WHERE tab=? AND row_id=? LIMIT 1',
+                (tab, row_id)).fetchone():
+            raise ValueError('Exact Sheets scoped row has an unresolved conflict.')
+        if any(not _equivalent(header, current.get(header, ''), value)
+               for header, value in item['guards'].items()):
+            raise ValueError('Exact Sheets local manual or source guard changed.')
+        if (tab == 'Job History' and str(current.get('Source Hash', '')).strip()
+                and 'Source Hash' not in item['guards']):
+            raise ValueError('Exact Sheets Source Hash guard is required.')
+        dirty = {header for (header,) in self.local.db.execute(
+            'SELECT header FROM dirty WHERE tab=? AND row_id=?', (tab, row_id))}
+        fields = set(item['fields'])
+        if not (fields - set(item['identity'])) <= dirty:
+            raise ValueError('Exact Sheets frozen scope is no longer dirty.')
+        base = self.local.baseline(tab, row_id)
+
+        # A blank scraper salary must not replace a user estimate.  Removing
+        # the field here makes an unsafe frozen projection fail equality.
+        if ('Salary / Range' in fields and base
+                and _missing_extracted_salary(current.get('Salary / Range'))
+                and _plausible_salary_estimate(base.get('Salary / Range'))):
+            fields.remove('Salary / Range')
+        if not fields:
+            raise ValueError('Exact Sheets scoped operation became empty.')
+
+        identity = identity_for(tab, base or current)
+        if tab == 'Job History' and base and not _equivalent(
+                'Job Key', base.get('Job Key', ''), current.get('Job Key', '')):
+            stable = ('Company', 'Official Job URL')
+            if not all(base.get(header) and _equivalent(
+                    header, base[header], current.get(header, '')) for header in stable):
+                raise ValueError('Exact Sheets Job History identity changed unsafely.')
+            identity = {header: base[header] for header in stable}
+        if base and tab == 'Opportunities' and any(
+                not _equivalent(header, current.get(header, ''), value)
+                for header, value in identity.items()):
+            raise ValueError('Exact Sheets Opportunity identity changed locally.')
+        if tab == 'Companies' and base and not base.get('Company ID'):
+            identity = {'Company': base['Company']}
+
+        values = {header: current.get(header, '') for header in fields
+                  if header not in identity}
+        notes = {}
+        if base and tab == 'Opportunities':
+            forbidden = set(values) & set(USER_FIELDS)
+            if forbidden:
+                raise ValueError('Exact Sheets cannot publish user-owned application fields.')
+            if 'Notes' in values:
+                before, after = str(base.get('Notes', '') or ''), str(values.pop('Notes') or '')
+                if not after.startswith(before):
+                    raise ValueError('Exact Sheets personal notes are not append-only.')
+                suffix = after[len(before):].strip()
+                if suffix:
+                    notes['Notes'] = suffix
+        expected = {header: base.get(header, '')
+                    for header in set(values) | set(notes)} if base else {}
+        if base and tab == 'Job History':
+            expected['Added to Opportunities?'] = base.get('Added to Opportunities?', '')
+        inserted = current if base is None else {}
+        if self.publication is not None:
+            inserted = {header: value for header, value in inserted.items()
+                        if header in self.publication[tab]}
+        if not values and not notes and not inserted:
+            raise ValueError('Exact Sheets scoped operation has no remote mutation.')
+        operation = {'tab': tab, 'identity': identity, 'values': values,
+                     'append_if_missing': base is None, 'on_insert': inserted,
+                     'expected': expected, 'append_notes': notes}
+        return {'tab': tab, 'row_id': row_id, 'identity': item['identity'],
+                'fields': sorted(fields), 'sent': copy.deepcopy(current),
+                'guards': copy.deepcopy(item['guards']), 'operation': operation}
+
+    def plan_exact_scope(self, row_scope, frozen_projection):
+        """Plan only explicit rows and require exact frozen-projection equality.
+
+        This method does not call ``pull``, ``once``, ``publish_batch``,
+        ``prune_local_only_delivery`` or global dirty-candidate discovery.
+        """
+        if not isinstance(frozen_projection, list) or not frozen_projection:
+            raise ValueError('Exact Sheets frozen projection must be a nonempty operation list.')
+        rows = [self._plan_exact_row(item) for item in self._normalize_exact_scope(row_scope)]
+        operations = [row['operation'] for row in rows]
+        if encode(operations) != encode(frozen_projection):
+            raise ValueError('Exact Sheets scoped plan differs from the frozen projection.')
+        return {'operations': copy.deepcopy(operations), 'rows': rows,
+                'projection_digest': _digest(operations)}
+
+    def _validate_exact_plan(self, exact_plan):
+        if (not isinstance(exact_plan, Mapping)
+                or set(exact_plan) != {'operations', 'rows', 'projection_digest'}
+                or not isinstance(exact_plan.get('operations'), list)
+                or not exact_plan['operations']
+                or not isinstance(exact_plan.get('rows'), list)
+                or len(exact_plan['operations']) != len(exact_plan['rows'])
+                or exact_plan.get('projection_digest') != _digest(exact_plan['operations'])):
+            raise ValueError('Exact Sheets plan is invalid or unsealed.')
+        for row, operation in zip(exact_plan['rows'], exact_plan['operations']):
+            if row.get('operation') != operation:
+                raise ValueError('Exact Sheets row evidence differs from its operation.')
+        return exact_plan
+
+    def _revalidate_exact_rows(self, exact_plan):
+        """Prove selected local rows/guards are unchanged immediately prewrite."""
+        for evidence in exact_plan['rows']:
+            matches = self.local.matches(evidence['tab'], evidence['identity'])
+            if len(matches) != 1 or matches[0][0] != evidence['row_id']:
+                raise ValueError('Exact Sheets local identity changed before remote write.')
+            current = matches[0][1]
+            if any(not _equivalent(header, current.get(header, ''), value)
+                   for header, value in evidence.get('guards', {}).items()):
+                raise ValueError('Exact Sheets local guard changed before remote write.')
+            if any(not _equivalent(header, current.get(header, ''),
+                                   evidence['sent'].get(header, ''))
+                   for header in evidence['fields']):
+                raise ValueError('Exact Sheets selected local value changed before remote write.')
+            dirty = {header for (header,) in self.local.db.execute(
+                'SELECT header FROM dirty WHERE tab=? AND row_id=?',
+                (evidence['tab'], evidence['row_id']))}
+            if not (set(evidence['fields']) - set(evidence['identity'])) <= dirty:
+                raise ValueError('Exact Sheets selected field was acknowledged before remote write.')
+
+    def readback_exact_scope(self, exact_plan, *, receipt_id, intent_id,
+                             intent_projection_digest):
+        """Read only exact identities/rows and return bound confirmation."""
+        exact_plan = self._validate_exact_plan(exact_plan)
+        receipt_id = _required_id(receipt_id, 'receipt ID')
+        intent_id = _required_id(intent_id, 'intent ID')
+        intent_projection_digest = _required_id(
+            intent_projection_digest, 'intent projection digest')
+        if intent_projection_digest != exact_plan['projection_digest']:
+            raise ValueError('Exact Sheets pending intent names another projection.')
+        observed = []
+        for evidence, operation in zip(exact_plan['rows'], exact_plan['operations']):
+            tab = operation['tab']
+            identity = dict(operation['identity'])
+            for values in (operation.get('on_insert', {}), operation.get('values', {})):
+                identity.update({key: value for key, value in values.items() if key in identity})
+            numbered = self.remote.read_columns(tab, sorted(identity))
+            matches = [number for number, row in numbered if all(
+                _equivalent(header, row.get(header, ''), value)
+                for header, value in identity.items())]
+            if len(matches) != 1:
+                raise ValueError('Exact Sheets remote identity is missing or ambiguous.')
+            actual = self.remote.read_row(tab, matches[0])
+            for values in (operation.get('on_insert', {}), operation.get('values', {})):
+                if any(not _equivalent(header, actual.get(header, ''), value)
+                       for header, value in values.items()):
+                    raise ValueError('Exact Sheets remote readback differs from the frozen projection.')
+            for header, suffix in operation.get('append_notes', {}).items():
+                if str(suffix) not in str(actual.get(header, '')):
+                    raise ValueError('Exact Sheets remote note readback is missing its frozen suffix.')
+            observed.append({'tab': tab, 'row_id': evidence['row_id'],
+                             'identity': copy.deepcopy(evidence['identity']),
+                             'fields': list(evidence['fields']),
+                             'sent': copy.deepcopy(evidence['sent']),
+                             'actual': {header: actual.get(header, '')
+                                        for header in evidence['fields']}})
+        acknowledgement_id = _digest({
+            'receipt_id': receipt_id, 'intent_id': intent_id,
+            'projection_digest': exact_plan['projection_digest'],
+            'observed': observed,
+        })
+        return {'receipt_id': receipt_id, 'intent_id': intent_id,
+                'intent_projection_digest': intent_projection_digest,
+                'projection_digest': exact_plan['projection_digest'],
+                'rows': observed, 'acknowledgement_id': acknowledgement_id}
+
+    def publish_exact_scope(self, exact_plan, *, receipt_id, intent_id,
+                            intent_projection_digest, intent_state, first_attempt,
+                            max_operations=100,
+                            max_bytes=500_000):
+        """Perform one externally journaled, bounded first remote attempt.
+
+        Recovery from an uncertain attempt must call ``readback_exact_scope``;
+        passing ``first_attempt=False`` can never issue a Google write.
+        """
+        exact_plan = self._validate_exact_plan(exact_plan)
+        receipt_id = _required_id(receipt_id, 'receipt ID')
+        intent_id = _required_id(intent_id, 'intent ID')
+        intent_projection_digest = _required_id(
+            intent_projection_digest, 'intent projection digest')
+        if intent_projection_digest != exact_plan['projection_digest']:
+            raise ValueError('Exact Sheets pending intent names another projection.')
+        if intent_state != 'SYNC_PENDING' or first_attempt is not True:
+            raise ValueError('Exact Sheets write requires an authorized first pending intent.')
+        if (type(max_operations) is not int or not 1 <= max_operations <= 100
+                or type(max_bytes) is not int or not 1 <= max_bytes <= 500_000):
+            raise ValueError('Exact Sheets remote bounds are invalid.')
+        operations = exact_plan['operations']
+        size = len(encode(operations).encode('utf-8'))
+        if len(operations) > max_operations or size > max_bytes:
+            raise ValueError('Exact Sheets frozen projection exceeds the remote bound.')
+        self._revalidate_exact_rows(exact_plan)
+        result = self.remote.commit(copy.deepcopy(operations))
+        readback = self.readback_exact_scope(
+            exact_plan, receipt_id=receipt_id, intent_id=intent_id,
+            intent_projection_digest=intent_projection_digest)
+        return {'commit': result, 'readback': readback,
+                'acknowledgement_id': readback['acknowledgement_id']}
+
+    def acknowledge_exact_scope(self, exact_plan, readback, *, cycle_id,
+                                company_id, plan_digest, receipt_id,
+                                acknowledgement_id):
+        """Acknowledge only confirmed visible fields and preserve later edits."""
+        exact_plan = self._validate_exact_plan(exact_plan)
+        cycle_id = _required_id(cycle_id, 'cycle ID')
+        company_id = _required_id(company_id, 'Company ID')
+        plan_digest = _required_id(plan_digest, 'plan digest')
+        receipt_id = _required_id(receipt_id, 'receipt ID')
+        acknowledgement_id = _required_id(acknowledgement_id, 'acknowledgement ID')
+        expected_acknowledgement = _digest({
+            'receipt_id': receipt_id,
+            'intent_id': readback.get('intent_id') if isinstance(readback, Mapping) else None,
+            'projection_digest': exact_plan['projection_digest'],
+            'observed': readback.get('rows') if isinstance(readback, Mapping) else None,
+        })
+        if (not isinstance(readback, Mapping)
+                or readback.get('receipt_id') != receipt_id
+                or readback.get('intent_projection_digest') != exact_plan['projection_digest']
+                or readback.get('projection_digest') != exact_plan['projection_digest']
+                or readback.get('acknowledgement_id') != expected_acknowledgement
+                or acknowledgement_id != expected_acknowledgement
+                or not isinstance(readback.get('rows'), list)
+                or len(readback['rows']) != len(exact_plan['rows'])):
+            raise ValueError('Exact Sheets acknowledgement binding is unavailable or invalid.')
+        if not self.local.db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='exact_local_applications'").fetchone():
+            raise ValueError('Exact Sheets acknowledgement lacks a verified local plan binding.')
+        selected_digest = _digest(readback['rows'])
+        with self.local.transaction():
+            parent = self.local.db.execute(
+                'SELECT apply_id,plan_digest,state FROM exact_local_applications '
+                'WHERE cycle=? AND company=?', (cycle_id, company_id)).fetchone()
+            if parent is None or parent[1] != plan_digest or parent[2] != 'VERIFIED':
+                raise ValueError('Exact Sheets acknowledgement lacks a verified local plan binding.')
+            apply_id = parent[0]
+            prior = self.local.db.execute(
+                'SELECT acknowledgement_id,selected_fields_digest '
+                'FROM exact_local_acknowledgements WHERE apply_id=? AND receipt_id=?',
+                (apply_id, receipt_id)).fetchone()
+            if prior is not None:
+                if prior != (acknowledgement_id, selected_digest):
+                    raise ValueError('Exact Sheets acknowledgement changed after persistence.')
+                return {'acknowledged_rows': len(readback['rows']), 'recovered': True,
+                        'apply_id': apply_id, 'acknowledgement_id': acknowledgement_id}
+            for evidence, observed in zip(exact_plan['rows'], readback['rows']):
+                if any(observed.get(key) != evidence.get(key)
+                       for key in ('tab', 'row_id', 'identity', 'fields', 'sent')):
+                    raise ValueError('Exact Sheets readback row binding changed.')
+                tab, row_id = evidence['tab'], evidence['row_id']
+                matches = self.local.matches(tab, evidence['identity'])
+                if len(matches) != 1 or matches[0][0] != row_id:
+                    raise ValueError('Exact Sheets local identity moved before acknowledgement.')
+                current = matches[0][1]
+                if any(not _equivalent(header, current.get(header, ''), value)
+                       for header, value in evidence.get('guards', {}).items()):
+                    raise ValueError('Exact Sheets local guard changed before acknowledgement.')
+                baseline = self.local.baseline(tab, row_id) or {}
+                for header in evidence['fields']:
+                    actual = observed['actual'].get(header, '')
+                    sent = evidence['sent'].get(header, '')
+                    if not _equivalent(header, actual, sent):
+                        raise ValueError('Exact Sheets confirmed value differs from frozen sent value.')
+                    baseline[header] = actual
+                    if _equivalent(header, current.get(header, ''), sent):
+                        self.local.db.execute(
+                            'DELETE FROM dirty WHERE tab=? AND row_id=? AND header=?',
+                            (tab, row_id, header))
+                self.local._baseline(tab, row_id, baseline)
+                # This exact path never creates rows in the normal writer's
+                # shared delivery_attempts table.  Therefore none can be
+                # attributed to this receipt, and every row is left intact.
+            self.local.db.execute(
+                'INSERT INTO exact_local_acknowledgements VALUES (?,?,?,?,?)',
+                (apply_id, receipt_id, acknowledgement_id,
+                 selected_digest, timestamp()))
+        return {'acknowledged_rows': len(readback['rows']), 'recovered': False,
+                'apply_id': apply_id, 'acknowledgement_id': acknowledgement_id}
 
     def publish_batch(self, limit=500, *, row_scope=None, guards=()):
         """Publish queued fields, optionally restricted to explicit local rows/fields."""

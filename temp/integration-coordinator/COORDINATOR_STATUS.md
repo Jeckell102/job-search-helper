@@ -982,3 +982,42 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   SQLite boundaries; a separate projection-seal lane owns only exact sync and
   recovery validation. Production and broad processing remain unchanged and
   disabled.
+- Projection-seal integration is now accepted as a fail-closed prerequisite
+  and saved locally as `775a79e`. It validates profile/schema/local/remote
+  digests before controls or receipts, treats `sync_plans.cursor` only as local
+  apply progress, and uses `exact_sync_chunks` plus the immutable receipt as
+  the sole remote progress authority. Compact publication remains disabled
+  until a matching local journal exists. The lane passed 58 focused and 91
+  adjacent checks; the coordinator independently reproduced a 188-test exact
+  planner/sync/recovery/pause/runner matrix. A local-durability lane now owns
+  planner/inbox/SQLite journal replacement, while a separate exact-Sheets
+  lane owns only selected-scope planning/write/readback/acknowledgement helpers.
+  No production, Google, Jetson, or broad queue state changed.
+- The accepted projection-seal/design checkpoint is backed up to the private
+  GitHub branch. Local `HEAD` and independent `git ls-remote` both returned
+  `775a79ec10f4b36bbf6af5e3b48a7559411c9048`. Later local-durability and
+  exact-Sheets work is still in progress and is not covered by that verified
+  remote hash yet.
+- Independent QA accepted the source-level exact local-durability and
+  exact-selected-Sheets candidate. Version-2 plans freeze the complete local
+  stream and compact remote projection before mutation; every bounded local
+  apply and APPLIED journal row share one SQLite transaction; restart recovery
+  verifies rather than replays; and complete local readback is required before
+  VERIFIED. Exact Sheets planning equals the frozen projection and never uses
+  global discovery, pull, or publish. Scoped acknowledgement preserves newer
+  edits, unrelated dirty rows, and unrelated delivery state while retaining
+  manual, source-hash, and salary safeguards. The coordinator reproduced 94
+  focused checks; independent QA reproduced 76 focused/adjacent checks with
+  strict warnings. This is source-level acceptance only. Normal-command
+  orchestration, a verified GitHub hash for this checkpoint, installation, and
+  any live Google action remain open; production was not accessed.
+- The settled candidate additionally resolves and persists each exact local
+  row identity/row hint only after complete local verification, then
+  revalidates that mapping on recovery. One coordinator review found and
+  repaired a false-hold edge: when Source Hash changes locally as part of the
+  frozen operation, the later Sheets guard now uses the final frozen value,
+  not the pre-apply expected value. Independent QA accepted that correction
+  and reproduced 78 focused checks. The coordinator's final combined local,
+  Sheets, planner, publisher, recovery, inbox, and SQLite matrix passes 177
+  checks with strict warnings. Normal-command orchestration remains the next
+  open boundary; no live or production action occurred.
