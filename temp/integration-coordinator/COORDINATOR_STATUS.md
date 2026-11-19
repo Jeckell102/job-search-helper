@@ -28,16 +28,16 @@ ten-minute user update. Update it immediately after any material result.
 
 ## Current position
 
-- Coordinator checkpoint, 2026-11-19: higher-model review rejected the staged
-  F4 protocol with five concrete correctness/isolation gaps. Corrective work
-  is underway only in this isolated source tree; no production or Jetson
-  service change has been made. Independent re-review is assigned.
+- Coordinator checkpoint, 2026-11-19: F4 source corrections and independent
+  review are complete. Fresh read-only inspection found the accepted package
+  already deployed byte-for-byte on Jetson with a scoped rollback copy. It is
+  deployed-but-unaccepted: synthetic live proof, authoritative Jetson records,
+  and final independent deployed QA remain open. Do not redeploy or overwrite
+  the observed files.
 - Goal: complete all six roadmap milestones and the final independent
   acceptance demonstration, with safeguards and scoped GitHub backups.
-- Goal reference: `01a1f11f-e014-7493-8441-2f66502e23a9`. The app currently
-  reports this persistent goal as paused after the interrupted handoff; the
-  coordinator continues the bounded source work, but no available goal API can
-  alter that lifecycle state. Do not create a replacement goal.
+- Goal reference: `01a1f11f-e014-7493-8441-2f66502e23a9`; the persistent goal
+  is active. Do not create a replacement goal.
 - Main checkout: protected and heavily dirty. Do not edit, delete locks, or
   deploy from it. Its untracked coordinator source is read-only reference.
 - Isolated feature worktree: `/tmp/job-search-helper-integration-automation`
@@ -267,6 +267,15 @@ partial Google Sheets write alone is not completion.
   and `DELETE` are proven to leave the receipt unchanged. The corrected staged
   suite passed 17 checks and the focused host suite passed 27 checks. Fresh
   independent confirmation is still required before deployment.
+- Fresh Jetson preflight then found the accepted F4 package already installed,
+  exactly matching staged `server.py`, `wrapper_inference.py`, and
+  `inference_control_store.py`, with a scoped pre-change source rollback at
+  `project-records/f4-inference-receipts-20261118`. The user-level
+  `local-ai-orchestrator.service` and `ollama.service` were active; the live
+  health endpoint returned version 0.2.2. The unit listens at
+  `192.168.1.146:8787`. The deployment has no recorded synthetic acceptance,
+  F4 changelog/register entry, or final independent deployed QA, so it remains
+  deployed-but-unaccepted and F4 remains open.
 
 ## Safety boundaries
 
@@ -281,9 +290,9 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Perform the bounded F4 Jetson rollout only after fresh preflight, backup,
-   and an exact Jetson change-log entry; then live-test it through the
-   controlled change path.
+1. Do not repeat the F4 Jetson rollout: reconcile the already-installed
+   package by capturing its required pre/change record, then live-test it
+   through the controlled synthetic path and obtain independent deployed QA.
 2. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.

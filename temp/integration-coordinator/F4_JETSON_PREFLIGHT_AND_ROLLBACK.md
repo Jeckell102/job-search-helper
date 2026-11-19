@@ -30,9 +30,10 @@ or model output into the records or GitHub.
    installed `inference_control_store.py`.
 4. Record a health/status response and database integrity only in aggregate;
    do not export tasks, chat history, credentials, or receipt rows.
-5. Record that the deployed wrapper endpoint is still the old implementation
-   before the release. The source checkpoint for the proposed release is Git
-   commit `df226de` on `codex/integration-automation-20261118`.
+5. Record whether the deployed wrapper endpoint is still the old
+   implementation before the release. The final source checkpoint is Git
+   commit `fcf8079` on `codex/integration-automation-20261118`; it includes
+   the required POST-only orphan-recovery route repair.
 6. Save a consistent recovery archive using the existing Jetson/MuleLab
    encrypted recovery procedure and verify its checksum plus an isolated
    restore/integrity check. Save a separate source rollback copy of every
@@ -55,7 +56,19 @@ or model output into the records or GitHub.
   checks. The endpoint tests need an ephemeral loopback server and should only
   run in an approved local test environment.
 - A fresh independent reviewer has accepted the final staged diff including
-  the legacy-payload lane guard.
+  the legacy-payload lane guard and POST-only orphan-recovery route.
+
+## 2026-11-19 deployment observation
+
+Fresh read-only preflight found the final F4 package already installed at
+`/home/chris/AI/local-ai`: its three source SHA-256 values exactly match the
+staged files from `fcf8079`.  A scoped rollback copy and installed hashes are
+present at `project-records/f4-inference-receipts-20261118`.  The active
+user-level orchestrator listens on `192.168.1.146:8787`, not the obsolete
+loopback example used by earlier source-only host tests.  This is a
+deployment observation, not acceptance: do not overwrite, redeploy, or claim
+F4 closure until the required synthetic live tests and authoritative Jetson
+change records below are complete.
 
 ## Controlled rollout sequence
 
