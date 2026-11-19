@@ -1,4 +1,5 @@
 import ast
+import io
 import json
 import os
 from pathlib import Path
@@ -40,6 +41,28 @@ class Client:
 
 
 class SyntheticHttpRecoveryTests(unittest.TestCase):
+    def test_client_uses_authenticated_deployed_http_routes_and_owner_headers(self):
+        requests = []
+        class Response(io.BytesIO):
+            def __enter__(self): return self
+            def __exit__(self, *args): self.close()
+        def open_request(request, timeout):
+            requests.append(request)
+            return Response(b'{"request_id":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","status":"RUNNING"}')
+        binding = {'request_id': 'a' * 32, 'request_fingerprint': 'b' * 64,
+                   'owner_generation': 'c' * 64}
+        client = proof.Client('local-token', 'http://127.0.0.1:8787')
+        with patch.object(proof.urllib.request, 'urlopen', side_effect=open_request):
+            handle = client.start_turn({'messages': [], 'tools': [], 'max_tokens': 1, **binding})
+            self.assertTrue(handle.join(2))
+            client.status(binding)
+        self.assertEqual([request.full_url for request in requests], [
+            'http://127.0.0.1:8787/api/wrapper-turn',
+            'http://127.0.0.1:8787/api/wrapper-control/' + binding['request_id']])
+        self.assertEqual(requests[0].get_header('Authorization'), 'Bearer local-token')
+        self.assertEqual(requests[1].get_header('X-wrapper-request-fingerprint'), 'b' * 64)
+        self.assertEqual(requests[1].get_header('X-wrapper-owner-generation'), 'c' * 64)
+
     def test_real_http_contract_precedes_owner_bound_three_generation_settlement(self):
         client = Client()
         generations = iter((G2, G3))

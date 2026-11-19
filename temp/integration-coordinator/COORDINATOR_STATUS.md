@@ -323,8 +323,9 @@ partial Google Sheets write alone is not completion.
   it uses the authenticated wrapper route without direct receipt-store access,
   records a crash-durable pre-settlement authorization before the sole release
   call, and handles later evidence persistence honestly. Twenty-six focused
-  staging checks passed in independent QA and coordinator rerun. The source is
-  backed up at `12ffb2d`.
+  staging checks passed in independent QA; coordinator added a client-route
+  contract test and reran twenty-seven focused checks. The source is staged
+  for the next scoped backup commit.
 - Fresh read-only Jetson preflight after that source acceptance found
   `local-ai-orchestrator.service` and `ollama.service` active, health 200/ok,
   and all three deployed F4 file hashes matching the recorded installed hashes.
