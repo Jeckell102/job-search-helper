@@ -67,6 +67,28 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(self.remote.read('Job History')[0]['Last Checked'], 'two')
         self.assertEqual(self.local.status()['pending_cells'], 0)
 
+    def test_scrape_outcome_delivery_is_durable_and_consumer_scoped(self):
+        facts = {
+            'request_id': 'company-event:CEV-1', 'company_id': 'COMP-1',
+            'source_revision': 'revision-1', 'source_current': True,
+            'company_status': 'Active', 'storage_status': 'confirmed',
+            'inventory_status': 'partial', 'capability': 'qualified',
+            'provider': 'greenhouse', 'adapter_version': 'adapter-1',
+            'failure': {'category': 'adapter_regression'},
+        }
+        recorded = self.local.record_scrape_outcome(facts)
+        outcome = recorded['outcome']
+        self.assertTrue(recorded['recorded'])
+        self.assertEqual(self.local.pending_scrape_outcomes('repair-coordinator'), [outcome])
+        self.assertEqual(self.local.pending_scrape_outcomes('another-consumer'), [outcome])
+        acknowledgement = self.local.acknowledge_scrape_outcome(
+            outcome['outcome_id'], 'repair-coordinator')
+        self.assertTrue(acknowledgement['acknowledged'])
+        self.assertEqual(self.local.pending_scrape_outcomes('repair-coordinator'), [])
+        self.assertEqual(self.local.pending_scrape_outcomes('another-consumer'), [outcome])
+        self.assertFalse(self.local.record_scrape_outcome(facts)['recorded'])
+        self.assertEqual(self.local.pending_scrape_outcomes('repair-coordinator'), [])
+
     def test_pending_key_upgrade_pulls_manual_edits_and_publishes_same_row(self):
         self.local.commit([upgrade_operation()])
         self.edit('Job History', 'Added to Opportunities?', 'No')

@@ -165,6 +165,10 @@ class SQLiteRepository:
           source_revision TEXT NOT NULL, outcome TEXT NOT NULL, action TEXT NOT NULL,
           payload TEXT NOT NULL, recorded_at TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS scrape_outcomes_company ON scrape_outcomes(company_id, source_revision, recorded_at);
+        CREATE TABLE IF NOT EXISTS scrape_outcome_deliveries (
+          outcome_id TEXT NOT NULL, consumer TEXT NOT NULL, acknowledged_at TEXT NOT NULL,
+          PRIMARY KEY(outcome_id, consumer),
+          FOREIGN KEY(outcome_id) REFERENCES scrape_outcomes(outcome_id));
         ''')
 
     @contextmanager
@@ -614,6 +618,39 @@ class SQLiteRepository:
             rows = self.db.execute('SELECT payload FROM scrape_outcomes WHERE company_id=? '
                                    'ORDER BY recorded_at,outcome_id LIMIT ?', (company_id.strip(), limit)).fetchall()
         return [json.loads(row[0]) for row in rows]
+
+    def pending_scrape_outcomes(self, consumer, *, limit=100):
+        """Return unacknowledged immutable outcomes for one repair consumer.
+
+        Reading this outbox is non-mutating. A caller must acknowledge the
+        exact immutable outcome only after the receiving system accepts it.
+        """
+        if not isinstance(consumer, str) or not consumer.strip():
+            raise RepositoryError('Scrape outcome consumer is required.')
+        if not isinstance(limit, int) or not 1 <= limit <= 1000:
+            raise RepositoryError('Scrape outcome limit must be between 1 and 1000.')
+        rows = self.db.execute(
+            'SELECT o.payload FROM scrape_outcomes o LEFT JOIN scrape_outcome_deliveries d '
+            'ON d.outcome_id=o.outcome_id AND d.consumer=? WHERE d.outcome_id IS NULL '
+            'ORDER BY o.recorded_at,o.outcome_id LIMIT ?', (consumer.strip(), limit),
+        ).fetchall()
+        return [json.loads(row[0]) for row in rows]
+
+    def acknowledge_scrape_outcome(self, outcome_id, consumer):
+        """Record a consumer acknowledgement without changing the outcome."""
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        if not isinstance(outcome_id, str) or not outcome_id.strip():
+            raise RepositoryError('Scrape outcome ID is required.')
+        if not isinstance(consumer, str) or not consumer.strip():
+            raise RepositoryError('Scrape outcome consumer is required.')
+        with self.transaction():
+            if not self.db.execute('SELECT 1 FROM scrape_outcomes WHERE outcome_id=?',
+                                   (outcome_id.strip(),)).fetchone():
+                raise RepositoryError('Unknown scrape outcome.')
+            self.db.execute('INSERT OR IGNORE INTO scrape_outcome_deliveries(outcome_id,consumer,acknowledged_at) '
+                            'VALUES (?,?,?)', (outcome_id.strip(), consumer.strip(), timestamp()))
+        return {'outcome_id': outcome_id.strip(), 'consumer': consumer.strip(), 'acknowledged': True}
 
     def pending_company_events(self, consumer, *, limit=100):
         """Return unacknowledged outbox events in immutable per-company order."""

@@ -114,6 +114,18 @@ class OutcomeIntakeTests(unittest.TestCase):
             self.coordinator.command({'action': 'ingest-scrape-outcome', 'facts': facts(), 'start': True})
         self.assertEqual(self.coordinator.store.all(), [])
 
+    def test_immutable_record_retry_does_not_reclassify_or_start_worker(self):
+        record = outcome()
+        result = self.coordinator.command({
+            'action': 'ingest-scrape-outcome-record', 'record': record,
+        })
+        self.assertTrue(result['ok'])
+        self.assertEqual(result['status'], 'HELD_FOR_REPAIR_TRIAGE')
+        self.assertFalse(self.coordinator.command({
+            'action': 'ingest-scrape-outcome-record', 'record': record,
+        })['recorded'])
+        self.assertEqual(self.coordinator.store.all(), [])
+
 
 class HeldRepairPromotionTests(coordinator_fixture.CoordinatorTests):
     def promoted(self):

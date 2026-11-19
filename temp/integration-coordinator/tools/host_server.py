@@ -19,6 +19,7 @@ if str(JOB_SEARCH_ROOT / 'src') not in sys.path:
 TOKEN = (BASE / 'bridge-token').read_text().strip()
 SLOTS = threading.BoundedSemaphore(4)
 COORDINATOR = None
+SCRAPE_OUTCOME_CONSUMER = 'wrapper-coordinator'
 
 
 def current_company_revision(company_id):
@@ -46,6 +47,24 @@ def current_company_revision(company_id):
             repository.close()
     except (ImportError, OSError, ValueError, sqlite3.Error):
         return None
+
+
+def drain_scrape_outcomes(*, limit=20):
+    """Deliver durable scraper outcomes into held-only coordinator intake."""
+    from coordinator_outcome_delivery import drain
+    from job_search_helper.cli import job_database_path, load_environment, storage_backend
+    from job_search_helper.sqlite_repository import SQLiteRepository
+    load_environment(JOB_SEARCH_ROOT / '.env')
+    if storage_backend() != 'sqlite':
+        raise ValueError('Scrape outcome delivery requires local SQLite storage.')
+    spreadsheet_id = os.environ.get('SPREADSHEET_ID', '').strip()
+    if not spreadsheet_id:
+        raise ValueError('Scrape outcome delivery requires a configured spreadsheet ID.')
+    repository = SQLiteRepository(job_database_path(), spreadsheet_id)
+    try:
+        return drain(repository, COORDINATOR, consumer=SCRAPE_OUTCOME_CONSUMER, limit=limit)
+    finally:
+        repository.close()
 
 
 def execute_manual(name, args, names):
@@ -101,6 +120,10 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == '/coordinator':
                 if not isinstance(body, dict):
                     raise ValueError('Invalid coordinator request.')
+                if body.get('action') == 'drain-scrape-outcomes':
+                    if set(body) - {'action', 'limit'}:
+                        raise ValueError('Scrape outcome drain has unsupported fields.')
+                    return self.reply(200, drain_scrape_outcomes(limit=body.get('limit', 20)))
                 return self.reply(200, COORDINATOR.command(body))
             if not isinstance(body, dict) or set(body) != {'name', 'args', 'names'}:
                 raise ValueError('Invalid request')

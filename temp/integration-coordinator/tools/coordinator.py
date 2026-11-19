@@ -244,6 +244,16 @@ class Coordinator:
                     if result.get('repair_key') else
                     'Scrape outcome recorded; no repair worker was started.')
             return {'ok': True, **result, 'text': text}
+        if action == 'ingest-scrape-outcome-record':
+            # Retries retain their original immutable classifier record; they
+            # may not reinterpret a saved failure under newer rules.
+            if set(data) != {'action', 'record'} or not isinstance(data.get('record'), dict):
+                raise ValueError('Scrape-outcome record intake requires exactly action and record.')
+            result = self.store.ingest_scrape_outcome_record(data['record'])
+            text = ('Qualified repair held for triage; no worker was started.'
+                    if result.get('repair_key') else
+                    'Scrape outcome recorded; no repair worker was started.')
+            return {'ok': True, **result, 'text': text}
         if action in ('queue', 'queue-pause', 'queue-resume', 'pilot-stop',
                       'autopilot-start', 'autopilot-stop', 'autopilot-status',
                       'campaign-start', 'campaign-stop', 'campaign-status'):

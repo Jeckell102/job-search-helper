@@ -161,6 +161,11 @@ class Store(CampaignStore, InferenceStore):
             canonical = canonical_scrape_outcome(classify_outcome(facts))
         except OutcomeFactsError as exc:
             raise ValueError(f'Invalid trusted scrape outcome facts: {exc}') from exc
+        return self.ingest_scrape_outcome_record(canonical)
+
+    def ingest_scrape_outcome_record(self, record):
+        """Persist a previously classified immutable outcome without reclassifying it."""
+        canonical = canonical_scrape_outcome(record)
         identity = canonical['identity']
         repair_key = None
         status = 'RECORDED_NO_REPAIR'

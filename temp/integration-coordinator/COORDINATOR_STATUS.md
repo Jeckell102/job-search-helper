@@ -49,11 +49,11 @@ ten-minute user update. Update it immediately after any material result.
   existing Sheets sync now baselines current Companies once without scheduling
   them, then reconciles later changes. The normal runner turns a confirmed
   change into an exact Company-only request. Guarded live proof remains.
-- Milestone 3: 62% — bounded outcome classification, local immutable records,
-  and independently reviewed intake into the existing coordinator are
-  implemented. The active Job Search Helper source now persists classifier
-  results idempotently; qualified defects are held once for triage, never
-  dispatched.
+- Milestone 3: 68% — bounded outcome classification, local immutable records,
+  independently reviewed intake, and durable exact-receipt delivery into the
+  existing coordinator are implemented. Qualified defects are held once for
+  triage, never dispatched. The remaining gap is the normal runtime producer
+  that turns an actual completed scoped scrape into these bounded facts.
 - Milestone 4: 35% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
@@ -138,6 +138,12 @@ partial Google Sheets write alone is not completion.
   reuses the shared classifier, creates at most a held repair record, and
   cannot create, resume, claim, or start a coordinator task. Thirty focused
   active and isolated coordinator checks passed; no service was activated.
+- Durable outcome delivery is accepted: an immutable local outcome remains in
+  the Job Search Helper outbox until the coordinator accepts the exact same
+  outcome ID. Rejection, mismatch, or an unavailable coordinator leaves it
+  pending for retry. The isolated feature copy passed 34 focused coordinator
+  delivery/intake checks and 41 local repository checks; no service, worker,
+  or live scraper was started.
 
 ## Safety boundaries
 
@@ -152,9 +158,8 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Reconcile the accepted active-source request contract and its evidence into
-   the scoped GitHub backup without disturbing unrelated feature-worktree
-   changes.
+1. Save the accepted durable outcome-delivery checkpoint to the scoped GitHub
+   branch without disturbing unrelated feature-worktree changes.
 2. Add the normal runtime producer that turns a completed scoped scrape into
    bounded outcome facts and delivers them to the held-only coordinator intake,
    with a durable retry receipt and no direct worker activation.
