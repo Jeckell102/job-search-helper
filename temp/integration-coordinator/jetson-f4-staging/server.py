@@ -35,11 +35,15 @@ MODEL_ID='Instant'
 VISIBLE_MODEL_IDS=tuple(VISIBLE_PROFILES)
 MODEL_IDS=VISIBLE_MODEL_IDS+tuple(PROFILES)+tuple(LEGACY_ALIASES)
 
-def worker(engine):
+def worker(engine, wrapper_control=None):
     while not STOP.is_set():
         try: store.schedule_tick()
         except ValueError: pass  # A full task queue must still be allowed to drain.
         except Exception as exc: logging.error('scheduler_error type=%s',type(exc).__name__)
+        # A lost wrapper transport may leave the backend executing.  This
+        # ordinary local worker must not bypass that durable one-turn hold.
+        if wrapper_control and wrapper_control.lane_blocked():
+            WAKE.wait(3); WAKE.clear(); continue
         current=None
         try:
             current=store.claim()
@@ -383,7 +387,7 @@ def main():
     logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s',handlers=[handler])
     store.recover(); engine=Engine(STOP)
     server=Server((cfg['listen_host'],cfg['listen_port']),Handler,engine)
-    thread=threading.Thread(target=worker,args=(engine,),name='agent-worker',daemon=True); thread.start()
+    thread=threading.Thread(target=worker,args=(engine,server.wrapper_control),name='agent-worker',daemon=True); thread.start()
     compute=threading.Thread(target=compute_worker,args=(engine,),name='compute-worker',daemon=True); compute.start()
     def stop(*_):
         STOP.set(); WAKE.set(); threading.Thread(target=server.shutdown,daemon=True).start()

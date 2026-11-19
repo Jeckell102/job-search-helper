@@ -8,7 +8,10 @@ or Google Sheets data was changed.
 
 ## Result
 
-PASS for the five rejected source-level protocol requirements. This is not a
+The original five rejected source-level protocol requirements passed. A later
+independent probe found that a legacy payload could bypass an `UNCERTAIN` lane;
+the corrective staging change now rejects legacy payloads whenever the server
+supplies a control store, and its regression test passes. This is not a
 deployment approval and does not close F4 or later roadmap milestones.
 
 1. Post-model response/usage failures now settle a returned model turn before
@@ -25,6 +28,11 @@ deployment approval and does not close F4 or later roadmap milestones.
    queries the ownership-bound remote status and turns a retained completion
    into `RESPONSE_DROPPED`, never executing lost tool calls or recharging the
    request. A remote running/uncertain state remains lane-blocking.
+6. A legacy three-field wrapper payload cannot bypass an `UNCERTAIN` receipt:
+   once the Jetson server provides its control store, every wrapper turn must
+   carry durable control identifiers and use atomic admission.
+7. The normal Jetson agent worker checks the same durable lane before claiming
+   a local generation task, so it cannot bypass a retained wrapper uncertainty.
 
 ## Evidence
 

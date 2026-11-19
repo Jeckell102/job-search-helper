@@ -75,6 +75,12 @@ class InferenceControlStore:
                        'VALUES (?,?,?,?,?,?,?)', (request_id, fingerprint, owner_generation, 'RUNNING', now, now, self.instance_id))
         return {'start': True, **self.status(request_id)}
 
+    def lane_blocked(self):
+        """Whether a retained wrapper turn makes another Jetson turn unsafe."""
+        with self._connect() as db:
+            return bool(db.execute("SELECT 1 FROM wrapper_inference_control "
+                                   "WHERE status IN ('RUNNING','UNCERTAIN') LIMIT 1").fetchone())
+
     def status(self, request_id, *, _db=None):
         if not isinstance(request_id, str) or not _ID.fullmatch(request_id):
             raise ValueError('Invalid inference request ID.')

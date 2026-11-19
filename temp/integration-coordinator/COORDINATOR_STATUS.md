@@ -231,8 +231,10 @@ partial Google Sheets write alone is not completion.
   transport/orphan states, ownership-proved and sanitized status, persisted
   control bindings, and one-shot host recovery into RESPONSE_DROPPED or another
   retained terminal state. Focused MuleLab tests: 34 passed. Focused Jetson
-  staging tests: 12 passed. Independent re-review passed all five source-level
-  corrections (45 focused checks before one additional host-binding probe); F4 and all
+  staging tests: 12 passed before a new independent legacy-path finding. The
+  legacy payload now cannot bypass a retained UNCERTAIN lane; an independent
+  recheck reproduced the fix. The normal Jetson worker also honors this shared
+  lane hold. Staging regression suite: 13 passed. F4 and all
   later deployment/rollout gates remain open pending live change control.
 
 ## Safety boundaries

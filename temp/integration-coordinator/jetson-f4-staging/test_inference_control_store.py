@@ -12,6 +12,7 @@ class OrphanRecoveryTests(unittest.TestCase):
             first = InferenceControlStore(path)
             request_id, fingerprint, owner = 'a' * 32, 'b' * 64, 'c' * 64
             self.assertTrue(first.begin(request_id, fingerprint, owner)['start'])
+            self.assertTrue(first.lane_blocked())
             restarted = InferenceControlStore(path)
             self.assertEqual(restarted.status(request_id)['status'], 'UNCERTAIN')
             restarted.cancel(request_id, fingerprint, owner)
@@ -20,6 +21,7 @@ class OrphanRecoveryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'does not own'):
                 restarted.reconcile_orphan(request_id, fingerprint, 'f' * 64, execution_inactive=True)
             self.assertEqual(restarted.reconcile_orphan(request_id, fingerprint, owner, execution_inactive=True)['status'], 'CANCELLED')
+            self.assertFalse(restarted.lane_blocked())
             self.assertTrue(restarted.begin('d' * 32, 'e' * 64, owner)['start'])
 
     def test_done_reason_is_an_explicit_metadata_enum(self):

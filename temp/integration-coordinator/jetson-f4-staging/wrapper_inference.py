@@ -20,6 +20,11 @@ def infer(engine, data, control_store=None):
     controlled = allowed | {'request_id', 'request_fingerprint', 'owner_generation'}
     if set(data) not in (allowed, controlled):
         raise ValueError('Unexpected inference arguments.')
+    # Once the server supplies the durable control store, every wrapper turn
+    # must acquire the same atomic lane.  The legacy payload remains usable
+    # only for direct compatibility callers that have no control store.
+    if control_store is not None and set(data) != controlled:
+        raise ValueError('Controlled inference arguments are required.')
     schemas = data['tools']
     if not isinstance(schemas, list) or len(schemas) > len(TOOL_NAMES):
         raise ValueError('Invalid tool schemas.')

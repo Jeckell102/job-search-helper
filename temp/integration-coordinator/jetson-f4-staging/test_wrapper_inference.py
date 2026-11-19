@@ -75,6 +75,16 @@ class InferenceTests(unittest.TestCase):
             self.assertEqual(control.status('a' * 32)['status'], 'UNCERTAIN')
             self.assertEqual(control.begin('b' * 32, 'd' * 64, 'c' * 64)['status'], 'BUSY')
 
+    def test_legacy_payload_cannot_bypass_a_controlled_uncertain_lane(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            data = self.controlled()
+            control.begin(data['request_id'], data['request_fingerprint'], data['owner_generation'])
+            control.uncertain(data['request_id'])
+            with self.assertRaisesRegex(ValueError, 'Controlled'):
+                self.module.infer(object(), self.data, control)
+            self.native.assert_not_called()
+
     def test_invalid_post_turn_usage_settles_terminal_without_replay(self):
         with tempfile.TemporaryDirectory() as temp:
             control = InferenceControlStore(Path(temp) / 'control.sqlite3')
