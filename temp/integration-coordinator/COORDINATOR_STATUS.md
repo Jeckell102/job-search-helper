@@ -334,6 +334,11 @@ partial Google Sheets write alone is not completion.
   remain present. `ollama.service` restart still requires interactive sudo;
   no live proof, source installation, service restart, receipt mutation, or
   deployment record update has occurred in this checkpoint.
+- A second fresh preflight confirmed the same active services, 200 health, and
+  terminal-only receipt aggregate. A `sudo -n` restart attempt returned 1
+  without changing service state, confirming that only an interactive
+  administrator-authenticated terminal can perform the deliberate Ollama
+  interruption.
 
 ## Safety boundaries
 
