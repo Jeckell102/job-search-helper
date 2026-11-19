@@ -1128,6 +1128,45 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   higher-reasoning read-only architecture lane now owns the replacement design;
   implementation remains paused only at this confirmation boundary while
   independent QA and other non-mutating verification continue.
+- A subsequent higher-reasoning review invalidated the later source-level
+  acceptance claim at `14afd48`: two supported-API P0 paths are reproducible
+  in in-memory fixtures. First, public inbox cleanup can delete the
+  `exact_remote_plans` ownership marker while a receipt is still pending,
+  allowing legacy reconciliation to mark it `SYNC_CONFIRMED` without any
+  remote read or write. Second, the combined confirmation/acknowledgement
+  operation accepts caller-controlled exact-plan row metadata; its remote
+  operations can confirm Company 1 while local acknowledgement clears Company
+  2's selected dirty fields. The candidate is therefore **REJECTED** again.
+  A single cross-file repair lane owns durable finalization guards and
+  server-derived local row evidence; independent QA is reproducing both
+  exploits before accepting any repair. No production, Google, scraper, lock,
+  job data, backlog, or automatic release state has changed.
+- The subsequent cleanup and durable-row-evidence repair closed those two
+  paths, and root reproduced 193 strict exact tests, 52 adjacent
+  pause/terminal/SQLite tests, and 399 broader regression tests (with one
+  third-party Python-3.11 deprecation warning). Fresh independent QA then
+  found one remaining lifecycle defect: after a real exact remote confirmation
+  but before local acknowledgement, the public
+  `mark_exact_remote_locally_acknowledged` transition could be invoked without
+  a matching `exact_local_acknowledgements` row. Public cleanup could then
+  discard the inventory/plan/journal while selected local fields remained
+  dirty. The candidate remains **REJECTED**. A narrow repair now requires the
+  verified local application plus exact local acknowledgement evidence before
+  either LOCAL_ACKNOWLEDGED or cleanup. No live or production state changed.
+- The lifecycle repair is now independently **ACCEPTED at source/fixture
+  level**. A premature local-acknowledged transition or cleanup after real
+  remote confirmation, but before local acknowledgement, refuses without any
+  inbox or dirty-field change; the state remains SYNC_CONFIRMED. The genuine
+  combined local acknowledgement persists the matching application/receipt/
+  acknowledgement/selected-digest evidence, after which LOCAL_ACKNOWLEDGED
+  and cleanup succeed. Independent QA also rejected missing/fake repositories,
+  wrong workbook/apply/receipt/acknowledgement bindings, malformed selected
+  digests, pre-registration cleanup, legacy reconciliation, and cross-company
+  row metadata. Its 13-file matrix passed 235 checks; root reproduced 194
+  strict exact checks and 52 adjacent pause/terminal/SQLite checks. This is
+  not a live or deployed acceptance. The next checkpoint is scoped commit and
+  verified private-GitHub backup, followed by protected-source reconciliation
+  and the still-required bounded operational gates.
 - The confirmation-boundary replacement is now independently **ACCEPTED**.
   The importable token and all Inbox remote-confirmation methods are gone;
   only the Sheets synchronizer can advance durable confirmation, and it first

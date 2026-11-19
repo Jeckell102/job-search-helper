@@ -252,8 +252,14 @@ class ExactInboxPlanStateTests(unittest.TestCase):
         self.assertEqual(verified['state'], 'LOCAL_VERIFIED')
         with self.assertRaisesRegex(ValueError, 'immutable'):
             self.inbox.discard_plan('CYC-1', 'COMP-1')
-        self.inbox.acknowledge('CYC-1', 'COMP-1')
-        self.assertIsNone(self.inbox.exact_local_state('CYC-1', 'COMP-1'))
+        inventory = self.inbox.get('CYC-1', 'COMP-1')
+        sync_plan = self.inbox.plan('CYC-1', 'COMP-1')
+        local_state = self.inbox.exact_local_state('CYC-1', 'COMP-1')
+        with self.assertRaisesRegex(ValueError, 'registered, terminal remote plan'):
+            self.inbox.acknowledge('CYC-1', 'COMP-1')
+        self.assertEqual(self.inbox.get('CYC-1', 'COMP-1'), inventory)
+        self.assertEqual(self.inbox.plan('CYC-1', 'COMP-1'), sync_plan)
+        self.assertEqual(self.inbox.exact_local_state('CYC-1', 'COMP-1'), local_state)
 
 
 if __name__ == '__main__':

@@ -161,8 +161,71 @@ class InventoryInbox:
             return [row[0] for row in self.connection.execute(
                 "SELECT DISTINCT cycle FROM inventories" + ("" if include_blocked else " WHERE blocked=0"))]
 
-    def acknowledge(self, cycle, company):
+    def _require_exact_local_acknowledgement(self, local, cycle, company,
+                                             plan_digest, receipt_id,
+                                             acknowledgement_id,
+                                             expected_apply_id=None):
+        """Prove the concrete job DB durably acknowledged this exact receipt."""
+        from .sqlite_repository import SQLiteRepository
+        if not isinstance(local, SQLiteRepository):
+            raise ValueError('Exact v2 finalization requires its SQLite repository.')
+        with self.lock:
+            destination = self.connection.execute('SELECT id FROM destination').fetchone()
+        if destination != (local.spreadsheet_id,):
+            raise ValueError('Exact v2 local acknowledgement belongs to another workbook.')
+        tables = {row[0] for row in local.db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name IN "
+            "('exact_local_applications','exact_local_acknowledgements')")}
+        if tables != {'exact_local_applications', 'exact_local_acknowledgements'}:
+            raise ValueError('Exact v2 local acknowledgement journal is unavailable.')
+        parent = local.db.execute(
+            'SELECT apply_id,state FROM exact_local_applications '
+            'WHERE cycle=? AND company=? AND plan_digest=?',
+            (cycle, company, plan_digest)).fetchone()
+        if (parent is None or parent[1] != 'VERIFIED'
+                or (expected_apply_id is not None and parent[0] != expected_apply_id)):
+            raise ValueError('Exact v2 local application is not durably verified.')
+        acknowledgement = local.db.execute(
+            'SELECT acknowledgement_id,selected_fields_digest '
+            'FROM exact_local_acknowledgements '
+            'WHERE apply_id=? AND receipt_id=?',
+            (parent[0], receipt_id)).fetchone()
+        selected = acknowledgement[1] if acknowledgement else ''
+        if (acknowledgement is None or acknowledgement[0] != acknowledgement_id
+                or len(selected) != 64
+                or any(character not in '0123456789abcdef' for character in selected)):
+            raise ValueError('Exact v2 selected local evidence is not durably acknowledged.')
+        return {'apply_id': parent[0], 'selected_fields_digest': selected}
+
+    def acknowledge(self, cycle, company, *, local=None):
         with self.lock, self.connection:
+            # An exact-v2 marker is the durable barrier that keeps all legacy
+            # receipt/chunk reconciliation paths fail-closed.  It may only be
+            # removed after the trusted Sheets path has confirmed the receipt
+            # and the exact local acknowledgement has been persisted.
+            exact = self.connection.execute(
+                'SELECT local_plan_digest,receipt_id,acknowledgement_id,state '
+                'FROM exact_remote_plans WHERE cycle=? AND company=?',
+                (cycle, company)).fetchone()
+            local_exact = self.connection.execute(
+                'SELECT state,local_apply_id FROM exact_plan_local_state '
+                'WHERE cycle=? AND company=?', (cycle, company)).fetchone()
+            if local_exact is not None and exact is None:
+                raise ValueError(
+                    'Exact v2 cleanup requires a registered, terminal remote plan.')
+            if exact is not None:
+                receipt = self.connection.execute(
+                    'SELECT acknowledgement_id,state FROM publication_receipts '
+                    'WHERE receipt_id=?', (exact[1],)).fetchone()
+                if (exact[3] != 'LOCAL_ACKNOWLEDGED'
+                        or not exact[2]
+                        or receipt != (exact[2], publication_receipts.SYNC_CONFIRMED)):
+                    raise ValueError(
+                        'Exact v2 cleanup requires a locally acknowledged, '
+                        'durably confirmed receipt.')
+                self._require_exact_local_acknowledgement(
+                    local, cycle, company, exact[0], exact[1], exact[2],
+                    expected_apply_id=local_exact[1] if local_exact else None)
             self.connection.execute("DELETE FROM inventories WHERE cycle=? AND company=?", (cycle, company))
             self.connection.execute("DELETE FROM exact_sync_chunks WHERE cycle=? AND company=?", (cycle, company))
             self.connection.execute("DELETE FROM exact_remote_plans WHERE cycle=? AND company=?", (cycle, company))
@@ -388,9 +451,15 @@ class InventoryInbox:
     def reconcile_receipt(self, receipt, observed_records, acknowledgement_id, *, timestamp):
         with self.lock, self.connection:
             receipt_id = publication_receipts._receipt_id(receipt['binding'])
-            if self.connection.execute(
+            binding = receipt['binding']
+            if (self.connection.execute(
                     'SELECT 1 FROM exact_remote_plans WHERE receipt_id=?',
-                    (receipt_id,)).fetchone():
+                    (receipt_id,)).fetchone()
+                    or self.connection.execute(
+                        'SELECT 1 FROM exact_plan_local_state '
+                        'WHERE cycle=? AND company=?',
+                        (binding.get('request_id'),
+                         binding.get('company_id'))).fetchone()):
                 raise ValueError('Exact remote receipts require trusted Sheets confirmation.')
             return publication_receipts.reconcile_sync(
                 self.connection, receipt['binding'], observed_records, acknowledgement_id, timestamp=timestamp)
@@ -617,10 +686,21 @@ class InventoryInbox:
         return self.exact_remote_state(cycle, company)
 
     def mark_exact_remote_locally_acknowledged(self, cycle, company, *,
+                                               local,
                                                local_plan_digest,
                                                projection_digest, receipt_id,
                                                intent_id, acknowledgement_id,
                                                timestamp):
+        with self.lock:
+            local_state = self.connection.execute(
+                'SELECT local_apply_id,state FROM exact_plan_local_state '
+                'WHERE cycle=? AND company=? AND plan_digest=?',
+                (cycle, company, local_plan_digest)).fetchone()
+        if local_state is None or local_state[1] != 'LOCAL_VERIFIED':
+            raise ValueError('Exact v2 inbox local application is not verified.')
+        self._require_exact_local_acknowledgement(
+            local, cycle, company, local_plan_digest, receipt_id,
+            acknowledgement_id, expected_apply_id=local_state[0])
         self.require_exact_remote_confirmed(
             cycle, company, local_plan_digest=local_plan_digest,
             projection_digest=projection_digest, receipt_id=receipt_id,
@@ -650,9 +730,13 @@ class InventoryInbox:
         if type(cursor) is not int or type(count) is not int or cursor < 0 or count < 1:
             raise ValueError('Exact chunk cursor/count must be positive integers.')
         with self.lock, self.connection:
-            if self.connection.execute(
+            if (self.connection.execute(
                     'SELECT 1 FROM exact_remote_plans WHERE cycle=? AND company=?',
-                    (cycle, company)).fetchone():
+                    (cycle, company)).fetchone()
+                    or self.connection.execute(
+                        'SELECT 1 FROM exact_plan_local_state '
+                        'WHERE cycle=? AND company=?',
+                        (cycle, company)).fetchone()):
                 raise ValueError('Exact remote chunks require trusted Sheets publication.')
             self.connection.execute(
                 'INSERT OR IGNORE INTO exact_sync_chunks(cycle,company,cursor,count,digest,state) VALUES (?,?,?,?,?,?)',
@@ -666,9 +750,13 @@ class InventoryInbox:
 
     def confirm_exact_chunk(self, cycle, company, cursor):
         with self.lock, self.connection:
-            if self.connection.execute(
+            if (self.connection.execute(
                     'SELECT 1 FROM exact_remote_plans WHERE cycle=? AND company=?',
-                    (cycle, company)).fetchone():
+                    (cycle, company)).fetchone()
+                    or self.connection.execute(
+                        'SELECT 1 FROM exact_plan_local_state '
+                        'WHERE cycle=? AND company=?',
+                        (cycle, company)).fetchone()):
                 raise ValueError('Exact remote chunks require trusted Sheets confirmation.')
             updated = self.connection.execute(
                 "UPDATE exact_sync_chunks SET state='CONFIRMED' WHERE cycle=? AND company=? AND cursor=?",

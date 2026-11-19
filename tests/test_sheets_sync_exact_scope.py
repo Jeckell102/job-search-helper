@@ -92,12 +92,12 @@ class ExactScopeSheetsTests(unittest.TestCase):
             'expected': {'Last Checked': '', 'Next Action': ''}, 'append_notes': {},
         }
         plan = sealed_plan([local_operation], [remote_operation])
-        self.apply_verified_local('CYC-1', 'COMP-1', plan)
         scope = [{'tab': 'Companies', 'row_id': 1,
                   'identity': {'Company ID': 'COMP-1'},
                   'fields': ['Last Checked', 'Next Action'],
                   'append_if_missing': False,
                   'expected': {'Last Checked': '', 'Next Action': ''}}]
+        self.apply_verified_local('CYC-1', 'COMP-1', plan, scope)
         return plan, scope, remote_operation
 
     def remote_authority(self, cycle_id, company_id, plan, exact,
@@ -106,7 +106,7 @@ class ExactScopeSheetsTests(unittest.TestCase):
         with self.inbox.lock, self.inbox.connection:
             self.inbox.connection.execute(
                 'INSERT OR IGNORE INTO sync_plans VALUES (?,?,?,0)',
-                (cycle_id, company_id, json.dumps({'fixture': True})))
+                (cycle_id, company_id, json.dumps(plan)))
             self.inbox.connection.execute(
                 'INSERT OR IGNORE INTO exact_plan_local_state VALUES '
                 '(?,?,?,?,?,?,?,?,?,?)',
@@ -132,18 +132,18 @@ class ExactScopeSheetsTests(unittest.TestCase):
     def confirm_remote(self, cycle_id, company_id, plan, exact, readback,
                        receipt_id, intent_id):
         return self.sync.confirm_exact_scope(
-            exact, inbox=self.inbox, cycle_id=cycle_id, company_id=company_id,
+            inbox=self.inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan['plan_digest'], receipt_id=receipt_id,
             intent_id=intent_id)
 
-    def apply_verified_local(self, cycle_id, company_id, plan):
+    def apply_verified_local(self, cycle_id, company_id, plan, row_scope):
         self.local.commit(plan['local_operations'])
         with self.local.transaction():
             self.local.db.execute(
                 'INSERT INTO exact_local_applications VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                 ('APPLY-' + cycle_id, cycle_id, company_id, plan['plan_digest'],
                  'inventory-digest', plan['local_operations_digest'],
-                 plan['remote_projection_digest'], '[]',
+                 plan['remote_projection_digest'], json.dumps(row_scope),
                  '2026-11-19T00:00:00Z', '2026-11-19T00:00:01Z', 'VERIFIED'))
 
     def test_planning_uses_only_explicit_scope_and_requires_frozen_equality(self):
@@ -240,7 +240,7 @@ class ExactScopeSheetsTests(unittest.TestCase):
             'SELECT * FROM delivery_attempts WHERE row_id=2'))
 
         acknowledged = self.sync.confirm_and_acknowledge_exact_scope(
-            exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
             plan_digest=plan['plan_digest'], receipt_id=receipt_id,
             intent_id=intent_id)
         self.assertFalse(acknowledged['recovered'])
@@ -260,10 +260,70 @@ class ExactScopeSheetsTests(unittest.TestCase):
         self.assertEqual(list(self.local.db.execute(
             'SELECT * FROM delivery_attempts WHERE row_id=2')), unrelated_before)
         repeated = self.sync.confirm_and_acknowledge_exact_scope(
-            exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
             plan_digest=plan['plan_digest'], receipt_id=receipt_id,
             intent_id=intent_id)
         self.assertTrue(repeated['recovered'])
+
+    def test_caller_row_metadata_cannot_redirect_exact_acknowledgement(self):
+        plan, scope, remote_operation = self.company_plan()
+        exact = self.sync.plan_exact_scope(scope, [remote_operation])
+        receipt_id, intent_id = self.remote_authority(
+            'CYC-1', 'COMP-1', plan, exact, intent_id='intent-forged-row')
+        delivered = self.sync.publish_exact_scope(
+            exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+            intent_id=intent_id)
+        self.local.commit([{
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-2'},
+            'values': {'Last Checked': '2026-11-19',
+                       'Next Action': 'Unrelated work'},
+        }])
+        forged = copy.deepcopy(exact)
+        forged['rows'][0].update({
+            'row_id': 2,
+            'identity': {'Company ID': 'COMP-2'},
+            'sent': {'Last Checked': '2026-11-19',
+                     'Next Action': 'Unrelated work'},
+        })
+        forged_readback = copy.deepcopy(delivered['readback'])
+        forged_readback['rows'][0].update({
+            'row_id': 2,
+            'identity': {'Company ID': 'COMP-2'},
+            'sent': {'Last Checked': '2026-11-19',
+                     'Next Action': 'Unrelated work'},
+        })
+        before = set(self.local.db.execute(
+            'SELECT tab,row_id,header FROM dirty'))
+        with self.assertRaises(TypeError):
+            self.sync._readback_and_confirm_full(
+                forged, self.inbox, cycle_id='CYC-1',
+                company_id='COMP-1', plan_digest=plan['plan_digest'],
+                receipt_id=receipt_id, intent_id=intent_id)
+        with self.assertRaises(TypeError):
+            self.sync._acknowledge_exact_readback(
+                forged, forged_readback, inbox=self.inbox,
+                cycle_id='CYC-1', company_id='COMP-1',
+                plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+                intent_id=intent_id,
+                acknowledgement_id=forged_readback['acknowledgement_id'])
+        with self.assertRaises(TypeError):
+            self.sync.confirm_and_acknowledge_exact_scope(
+                forged, inbox=self.inbox, cycle_id='CYC-1',
+                company_id='COMP-1', plan_digest=plan['plan_digest'],
+                receipt_id=receipt_id, intent_id=intent_id)
+        self.assertEqual(set(self.local.db.execute(
+            'SELECT tab,row_id,header FROM dirty')), before)
+
+        acknowledged = self.sync.confirm_and_acknowledge_exact_scope(
+            inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+            intent_id=intent_id)
+        self.assertEqual(acknowledged['acknowledged_rows'], 1)
+        dirty = set(self.local.db.execute(
+            'SELECT tab,row_id,header FROM dirty'))
+        self.assertIn(('Companies', 2, 'Last Checked'), dirty)
+        self.assertIn(('Companies', 2, 'Next Action'), dirty)
 
     def test_tampered_readback_or_missing_local_journal_cannot_acknowledge(self):
         plan, scope, remote_operation = self.company_plan()
@@ -304,9 +364,9 @@ class ExactScopeSheetsTests(unittest.TestCase):
             intent_id=intent_id)
         with self.local.transaction():
             self.local.db.execute('DELETE FROM exact_local_applications')
-        with self.assertRaisesRegex(ValueError, 'verified local plan binding'):
+        with self.assertRaisesRegex(ValueError, 'durable row scope'):
             self.sync.confirm_and_acknowledge_exact_scope(
-                exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+                inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
                 plan_digest=plan['plan_digest'], receipt_id=receipt_id,
                 intent_id=intent_id)
 
@@ -351,7 +411,7 @@ class ExactScopeSheetsTests(unittest.TestCase):
             'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header'))
         with self.assertRaisesRegex(ValueError, 'readback'):
             self.sync.confirm_and_acknowledge_exact_scope(
-                exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+                inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
                 plan_digest=plan['plan_digest'], receipt_id=receipt_id,
                 intent_id=intent_id)
         self.assertEqual(len(self.service.batches), 0)
@@ -359,6 +419,41 @@ class ExactScopeSheetsTests(unittest.TestCase):
             'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header')), before)
         self.assertEqual(self.inbox.exact_remote_state(
             'CYC-1', 'COMP-1')['state'], 'SYNC_PENDING')
+
+    def test_remote_confirmation_cannot_skip_durable_local_acknowledgement(self):
+        plan, scope, remote_operation = self.company_plan()
+        exact = self.sync.plan_exact_scope(scope, [remote_operation])
+        receipt_id, intent_id = self.remote_authority(
+            'CYC-1', 'COMP-1', plan, exact, intent_id='intent-no-local-ack')
+        self.sync.publish_exact_scope(
+            exact, inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+            intent_id=intent_id)
+        confirmed = self.sync.confirm_exact_scope(
+            inbox=self.inbox, cycle_id='CYC-1', company_id='COMP-1',
+            plan_digest=plan['plan_digest'], receipt_id=receipt_id,
+            intent_id=intent_id)
+        before_dirty = list(self.local.db.execute(
+            'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header'))
+        with self.assertRaisesRegex(ValueError, 'selected local evidence'):
+            self.inbox.mark_exact_remote_locally_acknowledged(
+                'CYC-1', 'COMP-1', local=self.local,
+                local_plan_digest=plan['plan_digest'],
+                projection_digest=exact['projection_digest'],
+                receipt_id=receipt_id, intent_id=intent_id,
+                acknowledgement_id=confirmed['acknowledgement_id'],
+                timestamp='2026-11-19T00:00:03Z')
+        with self.assertRaisesRegex(ValueError, 'locally acknowledged'):
+            self.inbox.acknowledge('CYC-1', 'COMP-1', local=self.local)
+        self.assertEqual(self.inbox.exact_remote_state(
+            'CYC-1', 'COMP-1')['state'], 'SYNC_CONFIRMED')
+        self.assertIsNotNone(self.inbox.get('CYC-1', 'COMP-1'))
+        self.assertIsNotNone(self.inbox.plan('CYC-1', 'COMP-1'))
+        self.assertEqual(list(self.local.db.execute(
+            'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header')),
+            before_dirty)
+        self.assertEqual(self.local.db.execute(
+            'SELECT COUNT(*) FROM exact_local_acknowledgements').fetchone()[0], 0)
 
     def test_final_readback_rejects_remote_row_move(self):
         plan, scope, remote_operation = self.company_plan()
@@ -378,7 +473,7 @@ class ExactScopeSheetsTests(unittest.TestCase):
         with patch.object(self.remote, 'read_row', side_effect=moved_row):
             with self.assertRaisesRegex(ValueError, 'row moved'):
                 self.sync.confirm_and_acknowledge_exact_scope(
-                    exact, inbox=self.inbox, cycle_id='CYC-1',
+                    inbox=self.inbox, cycle_id='CYC-1',
                     company_id='COMP-1', plan_digest=plan['plan_digest'],
                     receipt_id=receipt_id, intent_id=intent_id)
         self.assertEqual(self.inbox.receipt({
@@ -406,9 +501,9 @@ class ExactScopeSheetsTests(unittest.TestCase):
             return original(tab, row_number)
 
         with patch.object(self.remote, 'read_row', side_effect=drift_binding):
-            with self.assertRaisesRegex(ValueError, 'frozen intent'):
+            with self.assertRaisesRegex(ValueError, 'durable remote binding'):
                 self.sync.confirm_and_acknowledge_exact_scope(
-                    exact, inbox=self.inbox, cycle_id='CYC-1',
+                    inbox=self.inbox, cycle_id='CYC-1',
                     company_id='COMP-1', plan_digest=plan['plan_digest'],
                     receipt_id=receipt_id, intent_id=intent_id)
         with self.inbox.lock:
@@ -434,7 +529,6 @@ class ExactScopeSheetsTests(unittest.TestCase):
             'append_notes': {},
         }
         plan = sealed_plan([local_operation], [remote_operation])
-        self.apply_verified_local('CYC-SALARY', 'COMP-1', plan)
         scope = [{'tab': 'Job History', 'row_id': 1,
                   'identity': {'Job Key': 'job-1'},
                   'fields': ['Last Checked', 'Salary / Range'],
@@ -444,6 +538,7 @@ class ExactScopeSheetsTests(unittest.TestCase):
                   'expected': {'Last Checked': '',
                                'Salary / Range': '$130,000 estimated',
                                'Added to Opportunities?': 'Manual Review'}}]
+        self.apply_verified_local('CYC-SALARY', 'COMP-1', plan, scope)
         exact = self.sync.plan_exact_scope(scope, [remote_operation])
         receipt_id, intent_id = self.remote_authority(
             'CYC-SALARY', 'COMP-1', plan, exact, intent_id='intent-salary')
@@ -520,7 +615,6 @@ class ExactScopeSheetsTests(unittest.TestCase):
             'append_notes': {},
         }
         plan = sealed_plan([local_operation], [remote_operation])
-        self.apply_verified_local('CYC-BLANK-SALARY', 'COMP-1', plan)
         scope = [{
             'tab': 'Job History', 'row_id': 1,
             'identity': {'Job Key': 'job-1'},
@@ -532,6 +626,7 @@ class ExactScopeSheetsTests(unittest.TestCase):
                          'Salary / Range': '$130,000 estimated',
                          'Added to Opportunities?': 'Manual Review'},
         }]
+        self.apply_verified_local('CYC-BLANK-SALARY', 'COMP-1', plan, scope)
         exact = self.sync.plan_exact_scope(scope, [remote_operation])
         self.assertEqual(exact['operations'], [remote_operation])
         self.assertEqual(exact['operations'][0]['expected']['Salary / Range'],

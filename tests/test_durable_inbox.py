@@ -475,5 +475,77 @@ class ExactRemoteIntentJournalTests(unittest.TestCase):
         self.assertEqual(self.inbox.exact_remote_state(
             self.cycle, self.company)['state'], 'SYNC_PENDING')
 
+    def test_public_cleanup_cannot_remove_pending_exact_v2_barrier(self):
+        self.claim('t2')
+        with self.assertRaisesRegex(ValueError, 'Exact v2 cleanup requires'):
+            self.inbox.acknowledge(self.cycle, self.company)
+        state = self.inbox.exact_remote_state(self.cycle, self.company)
+        self.assertIsNotNone(state)
+        self.assertEqual(state['state'], 'SYNC_PENDING')
+        with self.inbox.lock:
+            self.assertIsNotNone(self.inbox.connection.execute(
+                'SELECT 1 FROM sync_plans WHERE cycle=? AND company=?',
+                (self.cycle, self.company)).fetchone())
+            self.assertIsNotNone(self.inbox.connection.execute(
+                'SELECT 1 FROM exact_plan_local_state '
+                'WHERE cycle=? AND company=?',
+                (self.cycle, self.company)).fetchone())
+        legacy_receipt = {
+            'binding': self.binding,
+            'records': record_fingerprints(self.projection),
+            'schedule': {'boundary': 'idle', 'enqueued_at': 't0'},
+            'timestamp': 't0',
+        }
+        with self.assertRaisesRegex(ValueError, 'trusted Sheets confirmation'):
+            self.inbox.reconcile_receipt(
+                legacy_receipt, legacy_receipt['records'], 'forged-after-cleanup',
+                timestamp='t3')
+        self.assertEqual(self.inbox.exact_remote_state(
+            self.cycle, self.company)['state'], 'SYNC_PENDING')
+
+    def test_preregistration_v2_state_blocks_cleanup_and_legacy_routes(self):
+        self.inbox.save(self.cycle, self.company, {'jobs': []})
+        with self.inbox.lock, self.inbox.connection:
+            self.inbox.connection.execute(
+                'DELETE FROM exact_remote_plans WHERE cycle=? AND company=?',
+                (self.cycle, self.company))
+        self.inbox.block(self.cycle, self.company)
+        self.inbox.unblock(self.cycle, self.company)
+        self.assertIsNotNone(self.inbox.get(self.cycle, self.company))
+        with self.assertRaisesRegex(ValueError, 'registered, terminal remote plan'):
+            self.inbox.acknowledge(self.cycle, self.company)
+        with self.assertRaisesRegex(ValueError, 'immutable'):
+            self.inbox.discard_plan(self.cycle, self.company)
+
+        legacy_receipt = {
+            'binding': self.binding,
+            'records': record_fingerprints(self.projection),
+            'schedule': {'boundary': 'idle', 'enqueued_at': 't0'},
+            'timestamp': 't0',
+        }
+        self.inbox.mark_receipt_pending(legacy_receipt, timestamp='t2')
+        with self.assertRaisesRegex(ValueError, 'trusted Sheets confirmation'):
+            self.inbox.reconcile_receipt(
+                legacy_receipt, legacy_receipt['records'], 'forged-preregister',
+                timestamp='t3')
+        from job_search_helper import publication_receipts
+        with self.inbox.lock, self.inbox.connection:
+            with self.assertRaisesRegex(ValueError, 'trusted Sheets confirmation'):
+                publication_receipts.reconcile_sync(
+                    self.inbox.connection, self.binding,
+                    legacy_receipt['records'], 'forged-direct', timestamp='t3')
+        with self.assertRaisesRegex(ValueError, 'trusted Sheets publication'):
+            self.inbox.begin_exact_chunk(
+                self.cycle, self.company, 0, 1, self.projection_digest)
+        with self.assertRaisesRegex(ValueError, 'trusted Sheets confirmation'):
+            self.inbox.confirm_exact_chunk(self.cycle, self.company, 0)
+        self.assertIsNotNone(self.inbox.get(self.cycle, self.company))
+        with self.inbox.lock:
+            self.assertIsNotNone(self.inbox.connection.execute(
+                'SELECT 1 FROM exact_plan_local_state '
+                'WHERE cycle=? AND company=?',
+                (self.cycle, self.company)).fetchone())
+        self.assertIsNotNone(self.inbox.plan(self.cycle, self.company))
+
 if __name__ == '__main__':
     unittest.main()

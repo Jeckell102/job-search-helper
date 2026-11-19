@@ -431,7 +431,7 @@ def _save_inventory_checkpoint(state, cycle_id, company_id, payload):
     state.save_cycle(refreshed)
 
 
-def _finalize_exact_company(inbox, state, cycle_id, company_id, plan):
+def _finalize_exact_company(inbox, state, cycle_id, company_id, plan, local):
     finalized = state.cycle(cycle_id)
     if finalized is None or company_id not in finalized.get('companies', {}):
         raise RuntimeError('state_cycle_or_company_missing_before_finalization')
@@ -440,7 +440,7 @@ def _finalize_exact_company(inbox, state, cycle_id, company_id, plan):
     finalized['companies'][company_id].update(final)
     state.save_cycle(finalized)
     if final.get('stage') in {'complete', 'partial'}:
-        inbox.acknowledge(cycle_id, company_id)
+        inbox.acknowledge(cycle_id, company_id, local=local)
     else:
         inbox.block(cycle_id, company_id)
 
@@ -485,11 +485,12 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
                 local, cycle_id, company_id, plan['plan_digest'], receipt_id,
                 current['acknowledgement_id'])):
         inbox.mark_exact_remote_locally_acknowledged(
-            cycle_id, company_id, local_plan_digest=plan['plan_digest'],
+            cycle_id, company_id, local=local,
+            local_plan_digest=plan['plan_digest'],
             projection_digest=remote_state['projection_digest'],
             receipt_id=receipt_id, intent_id=remote_state['intent_id'],
             acknowledgement_id=current['acknowledgement_id'], timestamp=timestamp())
-        _finalize_exact_company(inbox, state, cycle_id, company_id, plan)
+        _finalize_exact_company(inbox, state, cycle_id, company_id, plan, local)
         return {'confirmed': True, 'acknowledgement_id': current['acknowledgement_id']}
 
     _save_inventory_checkpoint(state, cycle_id, company_id, payload)
@@ -521,16 +522,17 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
         if remote_cursor != len(exact_plan['operations']):
             raise ValueError('exact_plan_v2_remote_cursor_incomplete')
     acknowledged = sync.confirm_and_acknowledge_exact_scope(
-        exact_plan, inbox=inbox, cycle_id=cycle_id, company_id=company_id,
+        inbox=inbox, cycle_id=cycle_id, company_id=company_id,
         plan_digest=plan['plan_digest'], receipt_id=receipt_id,
         intent_id=intent_id)
     acknowledgement_id = acknowledged['acknowledgement_id']
     inbox.mark_exact_remote_locally_acknowledged(
-        cycle_id, company_id, local_plan_digest=plan['plan_digest'],
+        cycle_id, company_id, local=local,
+        local_plan_digest=plan['plan_digest'],
         projection_digest=exact_plan['projection_digest'], receipt_id=receipt_id,
         intent_id=intent_id, acknowledgement_id=acknowledgement_id,
         timestamp=timestamp())
-    _finalize_exact_company(inbox, state, cycle_id, company_id, plan)
+    _finalize_exact_company(inbox, state, cycle_id, company_id, plan, local)
     return {'confirmed': True, 'acknowledgement_id': acknowledgement_id,
             'local_ack_recovered': acknowledged['recovered']}
 

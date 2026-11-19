@@ -739,13 +739,22 @@ class SheetsSynchronizer:
                 raise ValueError('Exact remote chunk cursor changed during confirmation.')
         return readback
 
-    def _readback_and_confirm_full(self, exact_plan, inbox, *, cycle_id,
-                                   company_id, plan_digest, receipt_id,
-                                   intent_id):
+    def _readback_and_confirm_full(self, *, inbox, cycle_id, company_id,
+                                   plan_digest, receipt_id, intent_id):
         """Perform full remote readback and atomically confirm its receipt."""
+        exact_plan = self._durable_exact_plan(
+            inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
         readback = self.readback_exact_scope(
             exact_plan, receipt_id=receipt_id, intent_id=intent_id,
             intent_projection_digest=exact_plan['projection_digest'])
+        after_read = self._durable_exact_plan(
+            inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
+        if encode(after_read) != encode(exact_plan):
+            raise ValueError('Exact Sheets durable scope changed during remote read.')
         acknowledgement_id = readback['acknowledgement_id']
         stamp = timestamp()
         with inbox.lock, inbox.connection:
@@ -889,16 +898,104 @@ class SheetsSynchronizer:
                 'first_attempt': claim['first_attempt'],
                 'acknowledgement_id': readback['acknowledgement_id']}
 
-    def confirm_exact_scope(self, exact_plan, *, inbox, cycle_id, company_id,
-                            plan_digest, receipt_id, intent_id):
-        """Read back the complete scope and durably confirm it as one operation."""
-        exact_plan = self._validate_exact_plan(exact_plan)
+    def _durable_exact_plan(self, inbox, *, cycle_id, company_id, plan_digest,
+                            receipt_id, intent_id):
+        """Rebuild the exact scope exclusively from durable trusted records."""
         inbox = self._require_exact_inbox(inbox)
         cycle_id = _required_id(cycle_id, 'cycle ID')
         company_id = _required_id(company_id, 'Company ID')
         plan_digest = _required_id(plan_digest, 'plan digest')
         receipt_id = _required_id(receipt_id, 'receipt ID')
         intent_id = _required_id(intent_id, 'intent ID')
+        with inbox.lock:
+            remote = inbox.connection.execute(
+                'SELECT local_plan_digest,projection,projection_digest,'
+                'receipt_id,intent_id FROM exact_remote_plans '
+                'WHERE cycle=? AND company=?', (cycle_id, company_id)).fetchone()
+            frozen = inbox.connection.execute(
+                'SELECT p.payload,l.plan_digest,l.state FROM sync_plans p '
+                'JOIN exact_plan_local_state l '
+                'ON l.cycle=p.cycle AND l.company=p.company '
+                'WHERE p.cycle=? AND p.company=?',
+                (cycle_id, company_id)).fetchone()
+        if remote is None or (remote[0], remote[3], remote[4]) != (
+                plan_digest, receipt_id, intent_id):
+            raise ValueError('Exact Sheets durable remote binding is unavailable.')
+        try:
+            projection = json.loads(remote[1])
+        except (TypeError, ValueError) as error:
+            raise ValueError('Exact Sheets durable projection is invalid.') from error
+        if not isinstance(projection, list) or _digest(projection) != remote[2]:
+            raise ValueError('Exact Sheets durable projection is invalid.')
+        if frozen is None or frozen[1:] != (plan_digest, 'LOCAL_VERIFIED'):
+            raise ValueError('Exact Sheets durable local plan is unavailable.')
+        try:
+            plan = json.loads(frozen[0])
+        except (TypeError, ValueError) as error:
+            raise ValueError('Exact Sheets durable local plan is invalid.') from error
+        from .exact_cycle_planner import _exact_plan_digest
+        if (not isinstance(plan, Mapping)
+                or plan.get('plan_digest') != plan_digest
+                or _exact_plan_digest(plan) != plan_digest
+                or not isinstance(plan.get('local_operations'), list)):
+            raise ValueError('Exact Sheets durable local plan is invalid.')
+        stored_projection = plan.get('remote_projection', plan.get('operations'))
+        if stored_projection != projection:
+            raise ValueError('Exact Sheets durable projection conflicts with its local plan.')
+        if not self.local.db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='exact_local_applications'").fetchone():
+            raise ValueError('Exact Sheets durable row scope is unavailable.')
+        parent = self.local.db.execute(
+            'SELECT plan_digest,row_scope,state FROM exact_local_applications '
+            'WHERE cycle=? AND company=?', (cycle_id, company_id)).fetchone()
+        if parent is None or parent[0] != plan_digest or parent[2] != 'VERIFIED':
+            raise ValueError('Exact Sheets durable row scope is unavailable.')
+        try:
+            row_scope = json.loads(parent[1])
+        except (TypeError, ValueError) as error:
+            raise ValueError('Exact Sheets durable row scope is invalid.') from error
+        normalized = self._normalize_exact_scope(row_scope)
+        if len(normalized) != len(projection):
+            raise ValueError('Exact Sheets durable scope changed after registration.')
+
+        def final_identity(operation):
+            identity = dict(operation.get('identity', {}))
+            for values in (operation.get('on_insert', {}), operation.get('values', {})):
+                for key in tuple(identity):
+                    if key in values:
+                        identity[key] = values[key]
+            return identity
+
+        rows = []
+        for item, operation in zip(normalized, projection):
+            candidates = [candidate for candidate in plan['local_operations']
+                          if candidate.get('tab') == item['tab']
+                          and final_identity(candidate) == item['identity']]
+            if len(candidates) != 1 or operation.get('tab') != item['tab']:
+                raise ValueError('Exact Sheets durable row evidence is ambiguous.')
+            local_operation = candidates[0]
+            frozen_values = dict(local_operation.get('expected', {}))
+            frozen_values.update(local_operation.get('on_insert', {}))
+            frozen_values.update(local_operation.get('values', {}))
+            if any(header not in frozen_values for header in item['fields']):
+                raise ValueError('Exact Sheets durable row evidence is incomplete.')
+            rows.append({**copy.deepcopy(item),
+                         'sent': {header: copy.deepcopy(frozen_values[header])
+                                  for header in item['fields']},
+                         'operation': copy.deepcopy(operation)})
+        exact_plan = {'operations': copy.deepcopy(projection), 'rows': rows,
+                      'projection_digest': remote[2]}
+        self._validate_exact_plan(exact_plan)
+        return exact_plan
+
+    def confirm_exact_scope(self, *, inbox, cycle_id, company_id,
+                            plan_digest, receipt_id, intent_id):
+        """Read back the complete scope and durably confirm it as one operation."""
+        exact_plan = self._durable_exact_plan(
+            inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
         remote_state = inbox.exact_remote_state(cycle_id, company_id)
         if (not isinstance(remote_state, Mapping)
                 or remote_state.get('local_plan_digest') != plan_digest
@@ -908,44 +1005,31 @@ class SheetsSynchronizer:
                 or remote_state.get('remote_cursor') != len(exact_plan['operations'])):
             raise ValueError('Exact Sheets complete remote journal is unavailable.')
         return self._readback_and_confirm_full(
-            exact_plan, inbox, cycle_id=cycle_id, company_id=company_id,
+            inbox=inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
             intent_id=intent_id)
 
-    def confirm_and_acknowledge_exact_scope(self, exact_plan, *, inbox, cycle_id,
+    def confirm_and_acknowledge_exact_scope(self, *, inbox, cycle_id,
                                             company_id, plan_digest, receipt_id,
                                             intent_id):
         """Fresh-read, durably confirm, then acknowledge only the exact scope."""
-        exact_plan = self._validate_exact_plan(exact_plan)
-        inbox = self._require_exact_inbox(inbox)
-        cycle_id = _required_id(cycle_id, 'cycle ID')
-        company_id = _required_id(company_id, 'Company ID')
-        plan_digest = _required_id(plan_digest, 'plan digest')
-        receipt_id = _required_id(receipt_id, 'receipt ID')
-        intent_id = _required_id(intent_id, 'intent ID')
-        readback = self._readback_and_confirm_full(
-            exact_plan, inbox, cycle_id=cycle_id, company_id=company_id,
+        return self._acknowledge_exact_readback(
+            inbox=inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
             intent_id=intent_id)
-        result = self._acknowledge_exact_readback(
-            exact_plan, readback, inbox=inbox, cycle_id=cycle_id,
-            company_id=company_id, plan_digest=plan_digest,
-            receipt_id=receipt_id, intent_id=intent_id,
-            acknowledgement_id=readback['acknowledgement_id'])
-        return {**result, 'readback': readback}
 
-    def _acknowledge_exact_readback(self, exact_plan, readback, *, inbox, cycle_id,
-                                    company_id, plan_digest, receipt_id,
-                                    intent_id, acknowledgement_id):
-        """Consume only readback created inside the combined trusted operation."""
-        exact_plan = self._validate_exact_plan(exact_plan)
-        inbox = self._require_exact_inbox(inbox)
-        cycle_id = _required_id(cycle_id, 'cycle ID')
-        company_id = _required_id(company_id, 'Company ID')
-        plan_digest = _required_id(plan_digest, 'plan digest')
-        receipt_id = _required_id(receipt_id, 'receipt ID')
-        intent_id = _required_id(intent_id, 'intent ID')
-        acknowledgement_id = _required_id(acknowledgement_id, 'acknowledgement ID')
+    def _acknowledge_exact_readback(self, *, inbox, cycle_id, company_id,
+                                    plan_digest, receipt_id, intent_id):
+        """Fresh-read and consume only canonical durable exact evidence."""
+        exact_plan = self._durable_exact_plan(
+            inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
+        readback = self._readback_and_confirm_full(
+            inbox=inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
+        acknowledgement_id = readback['acknowledgement_id']
         expected_acknowledgement = _digest({
             'receipt_id': receipt_id,
             'intent_id': readback.get('intent_id') if isinstance(readback, Mapping) else None,
@@ -986,7 +1070,8 @@ class SheetsSynchronizer:
                 if prior != (acknowledgement_id, selected_digest):
                     raise ValueError('Exact Sheets acknowledgement changed after persistence.')
                 return {'acknowledged_rows': len(readback['rows']), 'recovered': True,
-                        'apply_id': apply_id, 'acknowledgement_id': acknowledgement_id}
+                        'apply_id': apply_id, 'acknowledgement_id': acknowledgement_id,
+                        'readback': readback}
             for evidence, observed in zip(exact_plan['rows'], readback['rows']):
                 if any(observed.get(key) != evidence.get(key)
                        for key in ('tab', 'row_id', 'identity', 'fields', 'sent')):
@@ -1019,7 +1104,8 @@ class SheetsSynchronizer:
                 (apply_id, receipt_id, acknowledgement_id,
                  selected_digest, timestamp()))
         return {'acknowledged_rows': len(readback['rows']), 'recovered': False,
-                'apply_id': apply_id, 'acknowledgement_id': acknowledgement_id}
+                'apply_id': apply_id, 'acknowledgement_id': acknowledgement_id,
+                'readback': readback}
 
     def publish_batch(self, limit=500, *, row_scope=None, guards=()):
         """Publish queued fields, optionally restricted to explicit local rows/fields."""

@@ -179,6 +179,13 @@ def reconcile_sync(connection, binding, observed_records, acknowledgement_id, *,
             'SELECT 1 FROM exact_remote_plans WHERE receipt_id=?',
             (receipt_id,)).fetchone():
         raise ValueError('Exact remote receipts require trusted Sheets confirmation.')
+    has_exact_local = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' "
+        "AND name='exact_plan_local_state'").fetchone()
+    if has_exact_local and connection.execute(
+            'SELECT 1 FROM exact_plan_local_state WHERE cycle=? AND company=?',
+            (binding.get('request_id'), binding.get('company_id'))).fetchone():
+        raise ValueError('Exact remote receipts require trusted Sheets confirmation.')
     row = connection.execute("SELECT records,state FROM publication_receipts WHERE receipt_id=?", (receipt_id,)).fetchone()
     if row is None:
         raise ValueError("Cannot reconcile an unknown receipt")
