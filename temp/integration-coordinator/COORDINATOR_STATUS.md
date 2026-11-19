@@ -1555,3 +1555,9 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   writes/publishes and remains gated by exact prestate/readback/receipt and
   independent QA. Broad `start --resume` is prohibited. Evidence:
   `CYCLE_B639_RECONCILIATION_MAP_20261119.md`.
+- Independent selected-sync QA rejects Davidson, Shield AI, and Saronic alike:
+  every retained plan is legacy local-only work with no exact v2 plan, receipt,
+  source/input/release binding, remote intent, fresh control readback, or
+  acknowledgement; the publication receipt table is empty. Do not publish or
+  normalize legacy cursors. Evidence:
+  `CYCLE_B639_SELECTED_SYNC_READINESS_QA_20261119.md`.
