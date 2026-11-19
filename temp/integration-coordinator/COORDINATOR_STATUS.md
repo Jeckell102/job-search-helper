@@ -1376,3 +1376,9 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   initially untracked in the copied source, so an exact sealed source package
   is now stored on private GitHub commit `8d5e805`. Full retry lifecycle,
   stale-result precedence, and live acceptance remain open.
+- F1 periodic intake is now installed through the existing integration lock.
+  Its rollback receipt is `/tmp/jsh-f1-intake-20261119T193843Z-s7odz7bf` and
+  reports `INSTALLED_HASH_VERIFIED` for exactly three files. Protected offline
+  verification passed 74 tests. This is source activation only: no scrape,
+  queue admission, Google mutation, backlog processing, or automatic release
+  was enabled.
