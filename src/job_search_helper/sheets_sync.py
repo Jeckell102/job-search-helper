@@ -216,9 +216,21 @@ class SheetsSynchronizer:
             totals[tab] = self.merge_remote(tab, numbered)
         from .engine import Engine
         engine = Engine(self.local, None)
+        # Stable IDs must exist before the first external watermark is seeded.
+        # Otherwise an old ID-less row could be mistaken for a new Company on
+        # the very next pull after this normal local assignment.
         for row in self.local.read('Companies'):
             if row.get('Company') and not row.get('Company ID'):
                 engine._assign_company_id(row)
+        # The first full Companies snapshot is only a durable watermark.  On
+        # subsequent pulls, changed external Company facts enter the same
+        # transactional outbox as supported local mutations.  This remains a
+        # one-shot reconciliation during a normal sync, not a resident watcher.
+        if hasattr(self.local, 'bootstrap_company_event_reconciliation'):
+            baseline = self.local.bootstrap_company_event_reconciliation()
+            totals['company_event_baseline'] = baseline
+            if not baseline['bootstrapped']:
+                totals['company_event_reconciliation'] = self.local.reconcile_external_company_events()
         totals['manual_opportunities'] = engine.sync_manual_opportunities()
         self.last_pull = time.monotonic()
         with self.local.transaction():

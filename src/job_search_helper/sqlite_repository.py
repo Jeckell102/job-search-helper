@@ -345,6 +345,65 @@ class SQLiteRepository:
                                                                event_origin=origin)
         return {'imported': count, 'company_events': events}
 
+    def bootstrap_company_event_reconciliation(self):
+        """Seed external-intake revisions without treating old Companies as new.
+
+        Sheets is an external source, so its first observed snapshot is a
+        watermark, not a request to scrape the historical workbook. Later
+        reconciliations compare against these durable revisions and create
+        normal outbox events only for a real post-bootstrap change.
+        """
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        if not self._company_event_tables_present():
+            raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
+        if self.get_meta('company_event_external_baseline') == 'yes':
+            return {'bootstrapped': False, 'seeded': 0}
+        seeded = 0
+        with self.transaction():
+            if self.get_meta('company_event_external_baseline') == 'yes':
+                return {'bootstrapped': False, 'seeded': 0}
+            from .company_events import canonical_company_fact, source_revision
+            for company in self.read('Companies'):
+                try:
+                    fact = canonical_company_fact(company)
+                except RepositoryError:
+                    continue
+                exists = self.db.execute(
+                    'SELECT 1 FROM company_revisions WHERE company_id=? LIMIT 1',
+                    (fact['company_id'],),
+                ).fetchone()
+                if exists:
+                    continue
+                digest = source_revision(company)
+                self.db.execute(
+                    'INSERT INTO company_revisions(company_id,revision,source_revision,eligible,fact,created_at) '
+                    'VALUES (?,?,?,?,?,?)',
+                    (fact['company_id'], 1, digest, int(fact['eligible']), encode(fact), timestamp()),
+                )
+                seeded += 1
+            self.set_meta('company_event_external_baseline', 'yes')
+            self.event('company_event_external_baseline', 'Companies', 0, {'seeded': seeded})
+        return {'bootstrapped': True, 'seeded': seeded}
+
+    def reconcile_external_company_events(self, *, origin='sheets-reconciliation'):
+        """Emit durable events for authoritative Company rows changed after bootstrap."""
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        if not isinstance(origin, str) or not origin.strip():
+            raise RepositoryError('Company event origin is required.')
+        if not self._company_event_tables_present():
+            raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
+        if self.get_meta('company_event_external_baseline') != 'yes':
+            raise RepositoryError('External Company reconciliation requires a completed baseline.')
+        events = []
+        with self.transaction():
+            for company in self.read('Companies'):
+                event = self._record_company_event(company, origin=origin)
+                if event:
+                    events.append(event)
+        return {'reconciled': len(events), 'company_events': events}
+
     def commit(self, operations):
         operations = copy.deepcopy(list(operations))
         if not operations:

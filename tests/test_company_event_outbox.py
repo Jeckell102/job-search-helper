@@ -115,6 +115,24 @@ class CompanyEventOutboxTests(unittest.TestCase):
             [(2, company(**{'ATS / Source': 'Ashby'}))], origin='sheets-reconciliation')
         self.assertEqual(replay['company_events'], [])
 
+    def test_external_reconciliation_seeds_once_then_emits_only_later_changes(self):
+        initial = self.repo.bootstrap_company_event_reconciliation()
+        self.assertEqual(initial, {'bootstrapped': True, 'seeded': 1})
+        self.assertEqual(self.repo.pending_company_events('intake'), [])
+        self.assertEqual(self.repo.bootstrap_company_event_reconciliation(), {'bootstrapped': False, 'seeded': 0})
+
+        # This models an authoritative Sheets pull using the legacy safe
+        # importer.  The follow-up reconciliation is what creates intake work.
+        self.repo.import_rows('Companies', [(2, company(**{'ATS / Source': 'Lever'}))])
+        changed = self.repo.reconcile_external_company_events()
+        self.assertEqual(changed['reconciled'], 1)
+        self.assertEqual(changed['company_events'][0]['kind'], 'company.eligible')
+        self.assertEqual(self.repo.reconcile_external_company_events()['company_events'], [])
+
+    def test_external_reconciliation_rejects_use_before_safe_baseline(self):
+        with self.assertRaisesRegex(RepositoryError, 'requires a completed baseline'):
+            self.repo.reconcile_external_company_events()
+
     def test_readonly_open_does_not_require_or_modify_event_schema(self):
         self.repo.close()
         self.repo = SQLiteRepository(Path(self.temp.name) / 'jobs.sqlite3', 'test-sheet', readonly=True)
