@@ -28,12 +28,13 @@ ten-minute user update. Update it immediately after any material result.
 
 ## Current position
 
-- Coordinator checkpoint, 2026-11-19: F4 source corrections and independent
-  review are complete. Fresh read-only inspection found the accepted package
-  already deployed byte-for-byte on Jetson with a scoped rollback copy. It is
-  deployed-but-unaccepted: synthetic live proof, authoritative Jetson records,
-  and final independent deployed QA remain open. Do not redeploy or overwrite
-  the observed files.
+- Coordinator checkpoint, 2026-11-19: the deployed F4 package is still
+  byte-for-byte matched to the reviewed staged source and has a scoped rollback
+  copy. It is deployed-but-unaccepted. The proposed real-HTTP proof corrected
+  its private endpoint and generation-labeling defects, but independent QA
+  rejected its checkpoint: the first evidence write is post-request, lacks
+  fsync durability, and is not exercised under write failure. No live proof,
+  restart, or deployment is authorized from that candidate.
 - Goal: complete all six roadmap milestones and the final independent
   acceptance demonstration, with safeguards and scoped GitHub backups.
 - Goal reference: `01a1f11f-e014-7493-8441-2f66502e23a9`; the persistent goal
@@ -306,6 +307,15 @@ partial Google Sheets write alone is not completion.
   overlap checks and 39 event/outbox/outcome checks passed. It is not merged
   or deployed because the candidate is relative to extensive uncommitted user
   work. See `M1_M4_PRODUCTION_RECONCILIATION_REPORT.md`.
+- Coordinator review rejected the first real-HTTP F4 proof candidate before
+  execution. Its repair now resolves the runtime endpoint without committing
+  private addressing and correctly treats pre-request process sampling as
+  non-authoritative. Independent QA still rejects the candidate: the
+  post-request checkpoint does not fsync its file and directory and no test
+  proves safe behavior when that checkpoint write fails. The repair must
+  preserve a sanitized durable failure receipt where possible, define the
+  unavoidable boundary precisely, and prove no recovery release is attempted
+  after checkpoint failure. No service restart or live request occurred.
 
 ## Safety boundaries
 
@@ -320,9 +330,11 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Complete the corrected staged F4 synthetic transport-loss proof and obtain
-   independent review before any privileged restart of only `ollama.service`.
-   Until then, leave uncertain receipts lane-blocking.
+1. Re-review the repaired staged F4 synthetic transport-loss proof before any
+   privileged restart of only `ollama.service`; require private-endpoint-free
+   source, race-safe generation wording, fsync-backed sanitized checkpoints,
+   and a tested post-request checkpoint-failure hold. Until then, leave
+   uncertain receipts lane-blocking.
 2. Use the accepted M1-M4 reconciliation candidate only through an explicit,
    hash-recorded integration review; do not mechanically apply it to the
    protected checkout.
