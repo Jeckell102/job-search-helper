@@ -78,12 +78,28 @@ class LocalPipeline:
             ((name, str(value).strip()) for name, value in candidates if str(value or '').strip()),
             ('frozen_inventory', 'frozen-inventory:' + self._digest(payload)),
         )
+        repair_retry = self.cycle.get('repair_retry')
+        if isinstance(repair_retry, dict):
+            from .company_events import source_revision as company_source_revision
+            from .repair_retry import canonical_retry_binding
+            repair_retry = canonical_retry_binding(repair_retry)
+            if repair_retry['company_id'] != str(cid):
+                raise ValueError('Repair retry Company identity does not match the stored inventory.')
+            source_revision = str(repair_retry['source_revision'])
+            matches = [row for row in self.repo.read('Companies')
+                       if str(row.get('Company ID') or '').strip() == str(cid)]
+            if len(matches) != 1 or company_source_revision(matches[0]) != source_revision:
+                raise ValueError('Repair retry source revision changed before storage; preserving the inventory for reconciliation.')
+            origin = 'repair_retry'
+            release_id = str(repair_retry['release']['release_id'])
+        else:
+            release_id = self._digest({'records': records, 'final': plan.get('final', {})})
         binding = {
             'request_id': str(self.cycle.get('start_request_id') or self.cid),
             'company_id': str(cid),
             'source_revision': source_revision,
             'source_revision_origin': origin,
-            'release_id': self._digest({'records': records, 'final': plan.get('final', {})}),
+            'release_id': release_id,
         }
         return {
             'binding': binding,

@@ -9,6 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from job_search_helper.batching import PlanningRepository
+from job_search_helper.company_events import source_revision
 from job_search_helper.engine import Engine, State, inventory_payload
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.publication_receipts import LOCAL_COMMITTED, receipt, record_fingerprints
@@ -84,6 +85,62 @@ class DurablePipelineTests(unittest.TestCase):
         saved = self.company_receipt('C-0')
         self.assertEqual(saved['binding']['source_revision'], 'immutable-company-source-rev-7')
         self.assertEqual(saved['binding']['source_revision_origin'], 'cycle')
+
+    def test_repaired_retry_receipt_uses_admitted_release_and_source(self):
+        self.repo.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-0'},
+                           'values': {'ATS / Source': 'Greenhouse'}}])
+        row = next(item for item in self.repo.read('Companies') if item['Company ID'] == 'C-0')
+        revision = source_revision(row)
+        cycle = self.state.cycle(self.cycle)
+        cycle['companies'] = {'C-0': cycle['companies']['C-0']}
+        cycle['all'] = False
+        cycle['repair_retry'] = {
+            'schema': 'repair-retry-request-v1', 'attempt_id': '',
+            'failed_request_id': 'REQ-failed', 'company_id': 'C-0',
+            'source_revision': revision, 'activated_at': '2026-11-19T12:00:00Z',
+            'release': {'schema': 'integration-release-binding-v1', 'release_id': 'REL-reviewed-7',
+                        'source_manifest_sha256': '1' * 64,
+                        'dependency_manifest_sha256': '2' * 64,
+                        'config_sha256': '3' * 64},
+        }
+        from job_search_helper.repair_retry import retry_attempt_id
+        cycle['repair_retry']['attempt_id'] = retry_attempt_id(cycle['repair_retry'])
+        self.state.save_cycle(cycle)
+        self.engine.resume_local(self.cycle, defer_sync=True)
+        self.engine.resume_local(self.cycle, sync_only=True)
+        saved = self.company_receipt('C-0')
+        self.assertEqual(saved['binding']['source_revision'], revision)
+        self.assertEqual(saved['binding']['source_revision_origin'], 'repair_retry')
+        self.assertEqual(saved['binding']['release_id'], 'REL-reviewed-7')
+
+    def test_company_change_after_retry_admission_blocks_storage(self):
+        self.repo.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-0'},
+                           'values': {'ATS / Source': 'Greenhouse'}}])
+        row = next(item for item in self.repo.read('Companies') if item['Company ID'] == 'C-0')
+        revision = source_revision(row)
+        cycle = self.state.cycle(self.cycle)
+        cycle['companies'] = {'C-0': cycle['companies']['C-0']}
+        cycle['all'] = False
+        cycle['repair_retry'] = {
+            'schema': 'repair-retry-request-v1', 'attempt_id': '',
+            'failed_request_id': 'REQ-failed', 'company_id': 'C-0',
+            'source_revision': revision, 'activated_at': '2026-11-19T12:00:00Z',
+            'release': {'schema': 'integration-release-binding-v1', 'release_id': 'REL-reviewed-7',
+                        'source_manifest_sha256': '1' * 64,
+                        'dependency_manifest_sha256': '2' * 64,
+                        'config_sha256': '3' * 64},
+        }
+        from job_search_helper.repair_retry import retry_attempt_id
+        cycle['repair_retry']['attempt_id'] = retry_attempt_id(cycle['repair_retry'])
+        self.state.save_cycle(cycle)
+        self.repo.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-0'},
+                           'values': {'Official Careers URL': 'https://changed.example.test'}}])
+        self.engine.resume_local(self.cycle)
+        self.assertEqual(self.repo.read('Job History'), [])
+        self.assertIsNone(self.inbox.plan(self.cycle, 'C-0'))
+        current = next(item for item in self.repo.read('Companies') if item['Company ID'] == 'C-0')
+        self.assertEqual(current['Scan State'], 'Blocked / Manual Review')
+        self.assertIn('source revision changed before storage', current['Blocked Reason'])
 
     def test_deferred_sync_does_not_refetch_and_releases_acknowledged_data(self):
         self.engine.resume_parallel(self.cycle, fetch_workers=2, assignment_window=2, defer_sync=True)

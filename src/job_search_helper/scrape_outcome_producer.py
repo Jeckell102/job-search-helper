@@ -47,7 +47,7 @@ def _facts(cycle, company, item, *, storage_confirmed):
     # Scraper stages do not carry a trustworthy adapter fault category.  Hold
     # non-complete work for evidence rather than guessing it merits a repair.
     category = 'none' if stage == 'complete' else 'unknown'
-    return {
+    facts = {
         'request_id': _required_text(cycle.get('start_request_id') or cycle.get('id'), 'request ID'),
         'company_id': company_id,
         'source_revision': revision,
@@ -62,6 +62,12 @@ def _facts(cycle, company, item, *, storage_confirmed):
         'capability': 'unknown',
         'failure': {'category': category},
     }
+    retry = cycle.get('repair_retry')
+    if isinstance(retry, dict):
+        facts['attempt_id'] = _optional_text(retry.get('attempt_id'))
+        release = retry.get('release') or {}
+        facts['release_version'] = _optional_text(release.get('release_id'))
+    return facts
 
 
 def _required_text(value, field):

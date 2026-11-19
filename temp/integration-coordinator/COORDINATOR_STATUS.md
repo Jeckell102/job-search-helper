@@ -73,10 +73,17 @@ ten-minute user update. Update it immediately after any material result.
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
   service was restarted and no scheduler has been started in this work.
-- Milestones 5–6: not started. F4 transport-recovery sub-gate remains open;
-  source review and controlled script placement are complete, but the
-  administrator-authenticated live interruption proof and independent
-  post-run verification are still required.
+- Milestone 5: 18% — a source candidate now provides crash-durable,
+  Company-version-bound release-to-retry intent, exact complete-release pins,
+  normal company-only admission/recovery, stale-source refusal at admission
+  and storage, and release/attempt identity through publication and outcomes.
+  One hundred fifty-one focused checks pass. Independent QA, maintained
+  release-controller wiring, F3 release locking/atomic activation, guarded
+  deployment, and the live release-to-saved-jobs proof remain.
+- Milestone 6: 15% — F4 receipt/recovery source review and controlled Jetson
+  placement are complete. The administrator-authenticated live interruption
+  proof and independent post-run verification remain, as do F8 supervised
+  recovery/retention and the full sequential acceptance matrix.
 
 ## Definition of fully completed
 
@@ -348,6 +355,13 @@ partial Google Sheets write alone is not completion.
   mutation, or service restart has occurred; the older
   `run_synthetic_g1g2g3.py` remains rejected historical evidence and must not
   be run.
+- Milestone 5 F2 implementation candidate now persists a release-to-retry
+  intent before the normal Company-only request, binds the full source,
+  dependency and configuration release identity, carries it across restart
+  and publication, and blocks Company source drift before storage. The focused
+  request/event/storage/outcome suite passes 151 checks. This is isolated
+  source evidence only; F3 release admission and activation remain open and no
+  production behavior was enabled. See `M5_REPAIR_RETRY_CANDIDATE.md`.
 - A second fresh preflight confirmed the same active services, 200 health, and
   terminal-only receipt aggregate. A `sudo -n` restart attempt returned 1
   without changing service state, confirming that only an interactive
@@ -372,13 +386,16 @@ partial Google Sheets write alone is not completion.
    `ollama.service` twice. Record the resulting bounded evidence or failure,
    independently verify the authoritative receipt and service state, and leave
    any uncertain receipt lane-blocking. Do not rerun blindly after a failure.
-2. Use the accepted M1-M4 reconciliation candidate only through an explicit,
+2. Independently review the M5 repaired-retry source candidate, then connect
+   it only through a maintained release controller that satisfies F3 shared
+   admission, complete-version activation and rollback tests.
+3. Use the accepted M1-M4 reconciliation candidate only through an explicit,
    hash-recorded integration review; do not mechanically apply it to the
    protected checkout.
-3. After interactive Google authorization is completed, run the bounded normal
+4. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
-4. Only after publication is clean, freshly recheck processes, locks,
+5. Only after publication is clean, freshly recheck processes, locks,
    local/workbook cycle identity, deployed source identity, and sync health;
    then consider the guarded recovery command only if every preflight guard
    remains true.

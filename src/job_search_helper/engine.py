@@ -472,6 +472,14 @@ class Engine:
                 # later M3 outcome/retry remains bound to the exact Company
                 # revision that requested it.
                 cycle['company_event'] = dict(new_scan_request['company_event'])
+            if new_scan_request.get('repair_retry') is not None:
+                from .company_events import source_revision
+                from .repair_retry import validate_retry_request
+                retry = validate_retry_request(new_scan_request, list(company_ids or ()))
+                company = next(row for row in rows if row.get('Company ID') == retry['company_id'])
+                if source_revision(company) != retry['source_revision']:
+                    raise ValueError('Repair retry source revision is stale; refusing to start a cycle.')
+                cycle['repair_retry'] = retry
         self.state.save_cycle(cycle)
         self._sync_cycle(cycle)
         # Persist membership before fetching; reconstructible if local cache is lost.
@@ -513,8 +521,14 @@ class Engine:
                 scope[cid] = {"company": by_id[cid]["Company"], "stage": "queued"}
         cycle = {"id": cycle_id, "started_at": row.get("Started At") or now(), "status": row.get("Cycle Status"),
                  "all": bool(control.get("all", False)), "companies": scope}
-        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'recovery_pause')
+        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'repair_retry', 'recovery_pause')
                       if key in control})
+        if cycle.get('repair_retry') is not None:
+            from .repair_retry import validate_retry_request
+            request = {'repair_retry': cycle['repair_retry'],
+                       'request_id': cycle.get('start_request_id'),
+                       'source_revision': cycle['repair_retry'].get('source_revision')}
+            cycle['repair_retry'] = validate_retry_request(request, list(scope))
         last = set(cycle.get('start_last', []))
         if last:
             cycle['companies'] = dict(sorted(scope.items(), key=lambda pair: pair[0] in last))
@@ -540,7 +554,7 @@ class Engine:
                   "Companies Partial": partial, "Companies Blocked": blocked, "Companies Remaining": remaining,
                   "Last Checkpoint At": now(), "Notes": json.dumps({"all": cycle["all"], "company_ids": list(cycle["companies"]),
                     "helper_version": 1, "mode": "single writer; no model calls",
-                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'recovery_pause')
+                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'repair_retry', 'recovery_pause')
                        if key in cycle}}, separators=(",", ":"))}
         if status in {"Complete", "Complete with exceptions"}:
             values["Completed At"] = cycle.setdefault("completed_at", now())

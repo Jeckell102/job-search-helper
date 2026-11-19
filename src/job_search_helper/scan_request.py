@@ -103,7 +103,12 @@ def _read_request(path):
         if not isinstance(request.get('source_revision'), str) or not request['source_revision'].strip():
             raise ValueError('Invalid company-only next-scan.json; immutable source_revision is required.')
         _enqueued_at(request)
+        if request.get('company_event') is not None and request.get('repair_retry') is not None:
+            raise ValueError('Invalid company-only next-scan.json; event and repair retry provenance are mutually exclusive.')
         _company_event(request, company_ids)
+        if request.get('repair_retry') is not None:
+            from .repair_retry import validate_retry_request
+            validate_retry_request(request, company_ids)
     else:
         raise ValueError('Invalid next-scan.json; refusing to alter scan selection.')
     return request, company_ids
@@ -158,6 +163,8 @@ def request_fingerprint(request, company_ids):
     # substitute another Company event during recovery.
     if request.get('company_event') is not None:
         canonical['company_event'] = request['company_event']
+    if request.get('repair_retry') is not None:
+        canonical['repair_retry'] = request['repair_retry']
     encoded = json.dumps(canonical, separators=(',', ':'), sort_keys=True).encode('utf-8')
     return hashlib.sha256(encoded).hexdigest()
 

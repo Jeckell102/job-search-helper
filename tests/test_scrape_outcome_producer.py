@@ -44,3 +44,12 @@ class OutcomeProducerTests(unittest.TestCase):
                 cycle = {'id': 'CYC-1', 'companies': {company_id: {'stage': 'complete'}}}
                 self.assertEqual(record_cycle_outcomes(repo, cycle, [company], storage_confirmed=True), [])
                 self.assertEqual(repo.facts, [])
+
+    def test_repaired_retry_outcome_preserves_attempt_and_release_identity(self):
+        repo = Repository()
+        cycle = {'id': 'CYC-1', 'companies': {'COMP-1': {'stage': 'complete'}},
+                 'repair_retry': {'attempt_id': 'RTRY-1', 'source_revision': source_revision(self.company),
+                                  'release': {'release_id': 'REL-1'}}}
+        record_cycle_outcomes(repo, cycle, [self.company], storage_confirmed=True)
+        self.assertEqual(repo.facts[0]['attempt_id'], 'RTRY-1')
+        self.assertEqual(repo.facts[0]['release_version'], 'REL-1')
