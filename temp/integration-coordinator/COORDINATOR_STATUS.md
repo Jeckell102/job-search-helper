@@ -1457,6 +1457,13 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   overwrite a competing request. No run, queue release, Google mutation, or
   job-data change occurred during installation. M2 still needs guarded live
   idle/busy and end-to-end evidence before its exit gate closes.
+- The repaired F2 lifecycle-ledger package passed independent source QA and
+  overlaid onto the actual MuleLab coordinator target with 85 focused checks,
+  but it is not installable yet: F8 retention reporting would omit its two new
+  durable tables. Worker `f2_ledger_f8_rebase` owns the required five-file
+  rebase (ledger plus supervision counts/tests) against
+  `dev/wrapper-coder/tools`. The target remains untouched; no worker, queue,
+  release, scraper, or Google action is authorized by this source result.
 - Davidson legacy-to-v2 migration remains source-only and uninstalled. A
   higher-model review rejected the first candidate after reproducing three
   real gaps: guard-only Google readback could falsely confirm after a refused
