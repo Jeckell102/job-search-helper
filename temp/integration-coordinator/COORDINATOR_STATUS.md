@@ -63,7 +63,7 @@ ten-minute user update. Update it immediately after any material result.
   producer records bounded scrape facts without dispatching work; malformed
   checkpoint data is safely skipped. Qualified defects are held once for
   triage, never dispatched. The remaining gap is guarded live verification.
-- Milestone 4: 65% — a held repair can be promoted only into a paused,
+- Milestone 4: 68% — a held repair can be promoted only into a paused,
   Company-version-bound coordinator task. It cannot resume without a fresh
   trusted Company lookup, and stale work is re-paused before it can be claimed.
   The coordinator host now has a local-only, read-only resolver wired in; no
@@ -276,6 +276,16 @@ partial Google Sheets write alone is not completion.
   `192.168.1.146:8787`. The deployment has no recorded synthetic acceptance,
   F4 changelog/register entry, or final independent deployed QA, so it remains
   deployed-but-unaccepted and F4 remains open.
+- The actual F4 rollout has now been reconciled and recorded: only
+  `local-ai-orchestrator.service` was restarted, its aggregate health and
+  database integrity stayed clean, and aggregate task counts did not change.
+  Synthetic non-user-data checks confirmed authentication, ownership,
+  sanitized status, duplicate non-replay, cancellation acknowledgement, and
+  POST-only recovery handling. The scoped record and rollback source are in
+  `/home/chris/AI/project-records/f4-inference-receipts-20261118`, with durable
+  entries in the Jetson CHANGELOG and change register. The G1/G2/G3 proof is
+  pending only because `ollama.service` requires interactive administrator
+  authorization to restart; no uncertain receipt was released or replayed.
 - Fresh MuleLab state verification found no scraper, coordinator, review, or
   Sheets process running. The retained scraper, writer, review-writeback, and
   first-pass controller lock owners are absent; their historical lock files
@@ -297,9 +307,9 @@ partial Google Sheets write alone is not completion.
 
 ## Next actions
 
-1. Do not repeat the F4 Jetson rollout: reconcile the already-installed
-   package by capturing its required pre/change record, then live-test it
-   through the controlled synthetic path and obtain independent deployed QA.
+1. Obtain the privileged, controlled restart of only `ollama.service`, then
+   finish the synthetic G1/G2/G3 proof and independently recheck the deployed
+   result. Until then, leave uncertain receipts lane-blocking.
 2. After interactive Google authorization is completed, run the bounded normal
    publisher only, then independently recheck the outbox receipt and the one
    remaining workbook date. Do not start a scrape.
