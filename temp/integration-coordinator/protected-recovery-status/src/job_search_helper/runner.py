@@ -96,6 +96,12 @@ Options for start (batch size, sync interval and request interval also apply to 
       Skip completed companies; retry partial results and unfinished fetches.
       Blocked/failed retries follow --retry-blocked. Never starts a new cycle.
 
+  --cycle-id CYCLE_ID
+      Sync only the exact saved cycle. Applies to sync only. Validates the
+      checkpoint and durable inventory under the normal writer lock before
+      Google access or publication; never fetches Companies or replays another
+      cycle's saved inventory.
+
   --retry-blocked / --no-retry-blocked
       Retry blocked saved work by default; start can also retry failed fetches.
       Use --no-retry-blocked to leave blocked work on manual-review hold.
@@ -297,6 +303,51 @@ def active_inbox_cycles(inbox, state, include_blocked=True):
     ]
 
 
+def validate_exact_sync_cycle(database, cycle_id, *, retry_blocked=True):
+    """Prove one exact saved cycle is selectable before any sync side effect."""
+    if (not isinstance(cycle_id, str) or cycle_id != cycle_id.strip()
+            or not cycle_id or len(cycle_id) > 128 or any(char.isspace() for char in cycle_id)):
+        raise ValueError('--cycle-id must be one exact saved cycle ID without whitespace.')
+    state = State(str(database), readonly=True)
+    try:
+        cycles = state.cycles()
+        cycle = state.cycle(cycle_id)
+        if cycle is None:
+            raise ValueError('Exact sync cycle checkpoint is missing; no sync was started.')
+        from .scan_request import superseded_cycle_ids
+        if (cycle.get('status') in FINISHED
+                or cycle_id in superseded_cycle_ids(cycles)):
+            raise ValueError(
+                'Exact sync cycle is finished or superseded, not an active blocker; '
+                'historical inventory was not replayed.')
+    finally:
+        state.close()
+    inventory_database = database.parent / 'inventories.sqlite3'
+    if not inventory_database.is_file():
+        raise ValueError('Saved-inventory database is missing; no sync was started.')
+    uri = inventory_database.resolve().as_uri() + '?mode=ro'
+    with sqlite3.connect(uri, uri=True) as connection:
+        sql = 'SELECT count(*) FROM inventories WHERE cycle=?'
+        parameters = [cycle_id]
+        if not retry_blocked:
+            sql += ' AND blocked=0'
+        count = connection.execute(sql, parameters).fetchone()[0]
+    if not count:
+        qualifier = 'eligible ' if not retry_blocked else ''
+        raise ValueError(f'Exact sync cycle has no {qualifier}saved inventories; no sync was started.')
+    return cycle_id
+
+
+def selected_sync_cycles(inbox, *, cycle_id=None, retry_blocked=True):
+    """Select either one prevalidated cycle or the legacy all-saved-work set."""
+    available = inbox.cycles(include_blocked=retry_blocked)
+    if cycle_id is None:
+        return available
+    if cycle_id not in available:
+        raise ValueError('Exact sync cycle changed after preflight; no inventory was processed.')
+    return [cycle_id]
+
+
 def _load_environment():
     load_environment(PROJECT_ROOT / ".env")
     for variable, default in (
@@ -439,7 +490,8 @@ def _review_queue_lifecycle(repo, database):
 def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASSIGNMENT_WINDOW,
               batch_size=DEFAULT_SCRAPER_BATCH_SIZE, sheet_request_interval=1.1,
               defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60,
-              browser_fallback=True, resume=False, partial_retries=DEFAULT_PARTIAL_RETRIES):
+              browser_fallback=True, resume=False, partial_retries=DEFAULT_PARTIAL_RETRIES,
+              sync_cycle_id=None):
     if type(partial_retries) is not int or not 0 <= partial_retries <= 2:
         raise ValueError('Partial retries must be between 0 and 2')
     if not 1 <= sync_interval <= 3600:
@@ -448,6 +500,8 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         raise ValueError(f"Fetch workers must be 1-{MAX_FETCH_WORKERS} and assignment window 1-100")
     if sync_only and resume:
         raise ValueError("--resume applies to start only.")
+    if sync_cycle_id is not None and not sync_only:
+        raise ValueError('--cycle-id applies to sync only.')
     run_started = time.monotonic()
     print("Syncing saved inventories" if sync_only else "Starting job scraping", flush=True)
     if not 0.5 <= sheet_request_interval <= 5.0:
@@ -468,6 +522,9 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         # therefore blocks the real scraper boundary after an interrupted install.
         from .integration_release import assert_release_settled
         assert_release_settled(database.parent)
+        if sync_cycle_id is not None:
+            sync_cycle_id = validate_exact_sync_cycle(
+                database, sync_cycle_id, retry_blocked=retry_blocked)
         repo = get_repository(write=True, interactive=True, renew_both=True,
                               min_request_interval=sheet_request_interval)
         repo.validate_schema()
@@ -528,7 +585,8 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                 if manual["skipped"]:
                     print(f"Skipped {manual['skipped']} manually selected job(s) missing a company, title, or valid URL.", flush=True)
                 if sync_only:
-                    cycle_ids = inbox.cycles(include_blocked=retry_blocked)
+                    cycle_ids = selected_sync_cycles(
+                        inbox, cycle_id=sync_cycle_id, retry_blocked=retry_blocked)
                     if not cycle_ids:
                         print("No saved inventories to sync.")
                         return 0
@@ -805,6 +863,7 @@ def scrape_main(argv=None):
     parser.add_argument("command")
     parser.add_argument("--defer-sync", action="store_true")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--cycle-id")
     parser.add_argument("--retry-blocked", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--partial-retries", type=int, default=DEFAULT_PARTIAL_RETRIES)
     parser.add_argument("--browser-fallback", action=argparse.BooleanOptionalAction, default=True)
@@ -825,6 +884,9 @@ def scrape_main(argv=None):
     if args.command == "sync" and (args.defer_sync or args.resume):
         print("ERROR: --defer-sync and --resume apply to start only.", file=sys.stderr)
         return 2
+    if args.command != "sync" and args.cycle_id is not None:
+        print("ERROR: --cycle-id applies to sync only.", file=sys.stderr)
+        return 2
     try:
         return run_start(
             fetch_workers=args.fetch_workers,
@@ -834,6 +896,7 @@ def scrape_main(argv=None):
             defer_sync=args.defer_sync, sync_only=args.command == "sync", retry_blocked=args.retry_blocked,
             sync_interval=args.sync_interval, browser_fallback=args.browser_fallback, resume=args.resume,
             partial_retries=args.partial_retries,
+            sync_cycle_id=args.cycle_id,
         )
     except KeyboardInterrupt:
         print("Stopped. Run ./job-search-helper start --resume to continue this scan; start without --resume begins a fresh scan.", file=sys.stderr)

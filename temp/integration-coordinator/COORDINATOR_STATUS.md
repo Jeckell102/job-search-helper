@@ -103,7 +103,7 @@ ten-minute user update. Update it immediately after any material result.
   duplicate jobs. Owner-reviewed protected integration is complete: the
   protected integration selection passes 202 checks and exact rollback/source
   hashes are recorded. The live release-to-saved-jobs proof remains.
-- Milestone 6: 58% — F4 receipt/recovery source review and controlled Jetson
+- Milestone 6: 61% — F4 receipt/recovery source review and controlled Jetson
   placement are complete. An isolated F8 candidate now extends the existing
   coordinator with one maintenance owner, durable boot/reconnect catch-up,
   disk-pressure holds, explicit evidence-retention counts, and planned
@@ -124,7 +124,13 @@ ten-minute user update. Update it immediately after any material result.
   integration lock with an exact rollback, and passed 113 protected checks.
   Its live read-only report safely refused the current cycle because 47 saved
   inventories and eight partially applied plans still require publication or
-  explicit reconciliation; no recovery was applied. The
+  explicit reconciliation; no recovery was applied. An exact-cycle sync path
+  was then independently accepted, installed with a separate exact rollback,
+  and passed 117 protected checks. It refuses completed/superseded historical
+  inventory and selects only the active named blocker. Live publication did
+  not start: the sandbox blocked the first attempt before lock acquisition and
+  permission review requires explicit user approval for the concrete Google
+  Sheets payload. The
   administrator-authenticated Jetson interruption proof and the full
   sequential acceptance matrix remain.
 

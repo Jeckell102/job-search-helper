@@ -229,6 +229,85 @@ class FreshStartLifecycleTests(unittest.TestCase):
                 self.assertEqual(runner.scrape_main(['sync', '--resume']), 2)
             run.assert_not_called()
 
+    def test_cli_routes_only_sync_cycle_id_and_rejects_it_for_start(self):
+        from unittest.mock import patch
+        from contextlib import redirect_stderr
+        from job_search_helper import runner
+        with patch.object(runner, 'run_start', return_value=0) as run:
+            self.assertEqual(
+                runner.scrape_main(['sync', '--cycle-id', 'CYC-EXACT', '--no-retry-blocked']), 0)
+            self.assertTrue(run.call_args.kwargs['sync_only'])
+            self.assertEqual(run.call_args.kwargs['sync_cycle_id'], 'CYC-EXACT')
+            self.assertFalse(run.call_args.kwargs['retry_blocked'])
+            run.reset_mock()
+            with redirect_stderr(StringIO()):
+                self.assertEqual(runner.scrape_main(['start', '--cycle-id', 'CYC-EXACT']), 2)
+            run.assert_not_called()
+
+    def test_exact_sync_selection_is_read_only_and_never_selects_other_cycle(self):
+        from job_search_helper.runner import selected_sync_cycles, validate_exact_sync_cycle
+        first = self.engine.start_cycle()
+        self.inbox.save(first, 'C-0', {'jobs': [], 'inventory_status': 'complete'})
+        second = dict(self.state.cycle(first))
+        second['id'] = 'CYC-OTHER-SAVED-WORK'
+        self.state.save_cycle(second)
+        self.inbox.save(second['id'], 'C-1', {'jobs': [], 'inventory_status': 'complete'})
+        cycle_before = self.state.cycle(first)
+        rows_before = list(self.inbox.connection.execute(
+            'SELECT cycle,company,payload,blocked FROM inventories ORDER BY cycle,company'))
+
+        self.assertEqual(validate_exact_sync_cycle(self.database, first), first)
+        self.assertEqual(selected_sync_cycles(self.inbox, cycle_id=first), [first])
+        self.assertEqual(set(selected_sync_cycles(self.inbox)), {first, second['id']})
+        with self.assertRaisesRegex(ValueError, 'checkpoint is missing'):
+            validate_exact_sync_cycle(self.database, 'CYC-MISSING')
+        with self.assertRaisesRegex(ValueError, 'without whitespace'):
+            validate_exact_sync_cycle(self.database, ' CYC-BAD ')
+
+        self.assertEqual(self.state.cycle(first), cycle_before)
+        self.assertEqual(list(self.inbox.connection.execute(
+            'SELECT cycle,company,payload,blocked FROM inventories ORDER BY cycle,company')),
+            rows_before)
+
+    def test_exact_sync_refuses_completed_historical_inventory_without_mutation(self):
+        from job_search_helper.runner import validate_exact_sync_cycle
+        cycle_id = self.engine.start_cycle()
+        self.inbox.save(cycle_id, 'C-0', {'jobs': [], 'inventory_status': 'complete'})
+        cycle = self.state.cycle(cycle_id)
+        cycle['status'] = 'Complete'
+        self.state.save_cycle(cycle)
+        cycle_before = self.state.cycle(cycle_id)
+        rows_before = list(self.inbox.connection.execute(
+            'SELECT cycle,company,payload,blocked FROM inventories ORDER BY cycle,company'))
+
+        with self.assertRaisesRegex(ValueError, 'finished or superseded'):
+            validate_exact_sync_cycle(self.database, cycle_id)
+
+        self.assertEqual(self.state.cycle(cycle_id), cycle_before)
+        self.assertEqual(list(self.inbox.connection.execute(
+            'SELECT cycle,company,payload,blocked FROM inventories ORDER BY cycle,company')),
+            rows_before)
+
+    def test_exact_sync_refuses_superseded_historical_inventory_without_mutation(self):
+        from job_search_helper.runner import validate_exact_sync_cycle
+        cycle_id = self.engine.start_cycle()
+        self.inbox.save(cycle_id, 'C-0', {'jobs': [], 'inventory_status': 'complete'})
+        replacement = dict(self.state.cycle(cycle_id))
+        replacement['id'] = 'CYC-REPLACEMENT'
+        replacement['supersedes'] = [cycle_id]
+        self.state.save_cycle(replacement)
+        cycle_before = self.state.cycle(cycle_id)
+        rows_before = list(self.inbox.connection.execute(
+            'SELECT cycle,company,payload,blocked FROM inventories ORDER BY cycle,company'))
+
+        with self.assertRaisesRegex(ValueError, 'finished or superseded'):
+            validate_exact_sync_cycle(self.database, cycle_id)
+
+        self.assertEqual(self.state.cycle(cycle_id), cycle_before)
+        self.assertEqual(list(self.inbox.connection.execute(
+            'SELECT cycle,company,payload,blocked FROM inventories ORDER BY cycle,company')),
+            rows_before)
+
     def test_summary_reports_run_counts_and_leaves_zero_skipped_blank(self):
         from job_search_helper.runner import _print_run_summary
         _, result = self.start()
