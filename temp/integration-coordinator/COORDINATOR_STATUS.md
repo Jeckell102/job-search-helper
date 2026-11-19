@@ -1344,3 +1344,10 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   verification passed 222 focused and 180 adjacent tests; independent QA
   separately accepted the source repair after 229 checks. No Google, scraper,
   job-data, queue, service, lock-deletion, or Jetson action occurred.
+- The authorized Davidson-only Google read preview has now completed. It
+  returned `REMOTE_PROFILE_INCOMPATIBLE`: current `Companies` lacks the legacy
+  plan's required control fields. The result has `mutation_performed: false`;
+  no write, receipt, cleanup, replay, migration, scrape, queue, or local state
+  change occurred. Davidson and `CYC-B639C6D864EC` are retained as explicit
+  legacy-profile holds. Evidence:
+  `DAVIDSON_LEGACY_PLAN_PREVIEW_20261119.md`.
