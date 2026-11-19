@@ -2,6 +2,7 @@ import copy
 import unittest
 
 from job_search_helper.repository import MemoryRepository, SCHEMAS
+from job_search_helper.repository import RepositoryError
 
 from preview_legacy_exact_plan import preview_legacy_plan
 
@@ -28,6 +29,13 @@ class Remote(MemoryRepository):
     def commit(self, operations):
         self.commit_calls.append(copy.deepcopy(operations))
         raise AssertionError("preview must never commit")
+
+
+class ControlProfileLimitedRemote(Remote):
+    def read_columns(self, tab, headers):
+        if tab == "Companies":
+            raise RepositoryError("Companies: missing required headers: Scan State")
+        return super().read_columns(tab, headers)
 
 
 def fixture(cursor=1):
@@ -99,6 +107,44 @@ class PreviewTests(unittest.TestCase):
                 cycle_id=cycle["id"], company_id="COMP-0035", cycle=cycle,
                 payload=payload, blocked=True, plan=plan, cursor=cursor,
                 local=local, remote=remote)
+        self.assertEqual(remote.commit_calls, [])
+
+    def test_historical_full_schema_is_required_before_remote_access(self):
+        local, cycle, payload, plan, cursor = fixture()
+        remote = Remote("after")
+        remote.schemas = {"Companies": copy.deepcopy(SCHEMAS["Companies"]),
+                          "Job History": ["Job Key"]}
+        with self.assertRaisesRegex(ValueError, "field_not_in_full_schema"):
+            preview_legacy_plan(
+                cycle_id=cycle["id"], company_id="COMP-0035", cycle=cycle,
+                payload=payload, blocked=False, plan=plan, cursor=cursor,
+                local=local, remote=remote)
+        self.assertEqual(remote.commit_calls, [])
+
+    def test_unavailable_legacy_tab_is_a_read_only_profile_hold(self):
+        local, cycle, payload, plan, cursor = fixture()
+        remote = Remote("after")
+        remote.schemas.pop("Job History")
+        report = preview_legacy_plan(
+            cycle_id=cycle["id"], company_id="COMP-0035", cycle=cycle,
+            payload=payload, blocked=False, plan=plan, cursor=cursor,
+            local=local, remote=remote)
+        self.assertEqual(report["decision"], "REMOTE_PROFILE_INCOMPATIBLE")
+        self.assertIn("Job History", report["reason"])
+        self.assertFalse(report["mutation_performed"])
+        self.assertEqual(remote.commit_calls, [])
+
+    def test_unavailable_company_controls_are_a_read_only_profile_hold(self):
+        local, cycle, payload, plan, cursor = fixture()
+        remote = ControlProfileLimitedRemote("after")
+        report = preview_legacy_plan(
+            cycle_id=cycle["id"], company_id="COMP-0035", cycle=cycle,
+            payload=payload, blocked=False, plan=plan, cursor=cursor,
+            local=local, remote=remote)
+        self.assertEqual(report["decision"], "REMOTE_PROFILE_INCOMPATIBLE")
+        self.assertIn("Scan State", report["reason"])
+        self.assertIsNone(report["current_controls_digest"])
+        self.assertFalse(report["mutation_performed"])
         self.assertEqual(remote.commit_calls, [])
 
 

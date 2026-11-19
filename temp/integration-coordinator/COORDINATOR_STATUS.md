@@ -1327,6 +1327,13 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   proposed. The next safe gate is a separately approved, selected-row,
   read-only Google preview with no commit, receipt, cleanup, or local state
   change; the approval packet has been corrected accordingly.
+- The read-only preview tool was tightened for the retained plan's historical
+  full workbook schema. It validates every frozen tab/field before remote
+  access and exposes no commit API; seven offline tests pass. Davidson's real
+  snapshot reaches the deliberately disabled remote boundary after all local
+  validation. The read-only OAuth token has a refresh grant but its access
+  token is expired, so an approved preview may refresh only that protected
+  read-token file. No Google request has been made.
 - The terminal-proof security repair is now installed in the protected source
   through the existing lock.  It changed exactly two files and retained a
   rollback receipt at

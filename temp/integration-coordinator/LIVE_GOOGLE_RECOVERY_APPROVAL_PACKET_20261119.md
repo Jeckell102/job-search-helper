@@ -60,6 +60,19 @@ legacy-plan migration design. Any mismatch, remote edit, missing row,
 ambiguous identity, changed Company control, lock contention, unavailable
 Google connection, or invalid legacy operation must stop without mutation.
 
+The preview now validates and reads the exact historical full workbook schema
+used by this retained plan, including Job Evidence. It does not reuse the
+current compact publication schema, which intentionally omits historical
+local-only fields. The read-only OAuth access token is expired but has a
+refresh token; running the preview may refresh the protected read-only token
+file (`0600`) but does not request write scope.
+
+The preview tool has no commit API. Seven offline tests cover exact match,
+mismatch, blocked inventory, incomplete local cursor, unavailable historical
+tabs or Company controls, and historical-field refusal. The real Davidson
+snapshot passes all local validation and stops at the deliberately disabled
+remote boundary.
+
 This approval would not authorize processing another Company, the remaining
 141 pending operations, a fresh scrape, a service restart, lock deletion,
 queue release, Jetson modification, or the final new-Company demonstration.

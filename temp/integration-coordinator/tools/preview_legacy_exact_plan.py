@@ -8,6 +8,7 @@ it never seals, migrates, publishes, acknowledges, blocks, or deletes work.
 from __future__ import annotations
 
 import argparse
+import copy
 import fcntl
 import hashlib
 import json
@@ -25,10 +26,16 @@ from job_search_helper.exact_cycle_sync import (
     _validate_chunkable,
 )
 from job_search_helper.publication_receipts import record_fingerprints
+from job_search_helper.repository import RepositoryError
+from job_search_helper.repository import SCHEMAS
 
 
 VERSION = "legacy-selected-row-preview-v1"
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+
+
+class LegacyProfileIncompatible(ValueError):
+    pass
 
 
 def _canonical(value):
@@ -38,6 +45,30 @@ def _canonical(value):
 
 def _digest(value):
     return hashlib.sha256(_canonical(value).encode("utf-8")).hexdigest()
+
+
+def _profile_hold(*, cycle_id, company_id, checkpoint, payload, plan, cursor,
+                  expected_full, controls, chunks, reason):
+    """Return a structured no-mutation hold for an obsolete remote profile."""
+    return {
+        "version": VERSION,
+        "read_only": True,
+        "cycle_id": cycle_id,
+        "company_id": company_id,
+        "checkpoint_stage": checkpoint["stage"],
+        "inventory_digest": _digest(payload),
+        "plan_digest": _digest(plan),
+        "cursor": cursor,
+        "operation_count": len(plan["operations"]),
+        "expected_records_digest": _digest(expected_full),
+        "current_controls_digest": _digest(controls) if controls is not None else None,
+        "chunks": chunks,
+        "all_remote_rows_match": None,
+        "possible_commit_operation_upper_bound": None,
+        "mutation_performed": False,
+        "decision": "REMOTE_PROFILE_INCOMPATIBLE",
+        "reason": reason,
+    }
 
 
 class ReadOnlyRemote:
@@ -52,6 +83,25 @@ class ReadOnlyRemote:
 
     def read_rows(self, tab, row_numbers):
         return self._remote.read_rows(tab, row_numbers)
+
+
+def _validate_legacy_schema(plan, schemas):
+    """Require the historical full schema for every frozen legacy field."""
+    if not isinstance(schemas, Mapping):
+        raise ValueError("legacy_remote_schema_invalid")
+    for operation in plan.get("operations", []):
+        tab = operation.get("tab")
+        if tab not in schemas:
+            raise LegacyProfileIncompatible(
+                "Historical tab unavailable in read-only profile: " + str(tab))
+        fields = set()
+        for key in ("identity", "values", "on_insert", "expected", "append_notes"):
+            value = operation.get(key, {})
+            if not isinstance(value, Mapping):
+                raise ValueError("legacy_operation_mapping_invalid")
+            fields.update(value)
+        if fields - set(schemas[tab]):
+            raise ValueError("legacy_operation_field_not_in_full_schema")
 
 
 def preview_legacy_plan(*, cycle_id, company_id, cycle, payload, blocked,
@@ -88,17 +138,39 @@ def preview_legacy_plan(*, cycle_id, company_id, cycle, payload, blocked,
         raise ValueError("legacy_plan_local_cursor_not_complete")
     _validate_chunkable(operations)
     expected_full = record_fingerprints(operations)
+    try:
+        _validate_legacy_schema(plan, remote.schemas)
+    except LegacyProfileIncompatible as exc:
+        return _profile_hold(
+            cycle_id=cycle_id, company_id=company_id, checkpoint=checkpoint,
+            payload=payload, plan=plan, cursor=cursor,
+            expected_full=expected_full, controls=None, chunks=[],
+            reason=str(exc))
 
     bounded_remote = ReadOnlyRemote(remote)
-    controls = _company_guard(
-        local, bounded_remote, company_id, payload["requested_url"])
+    try:
+        controls = _company_guard(
+            local, bounded_remote, company_id, payload["requested_url"])
+    except RepositoryError as exc:
+        return _profile_hold(
+            cycle_id=cycle_id, company_id=company_id, checkpoint=checkpoint,
+            payload=payload, plan=plan, cursor=cursor,
+            expected_full=expected_full, controls=None, chunks=[],
+            reason="remote_control_profile_incompatible:" + str(exc))
 
     chunks = []
     all_match = True
     possible = 0
     for start, chunk in _chunks(operations, 0):
         expected = record_fingerprints(chunk)
-        observed = _readback(bounded_remote, chunk)
+        try:
+            observed = _readback(bounded_remote, chunk)
+        except KeyError as exc:
+            return _profile_hold(
+                cycle_id=cycle_id, company_id=company_id, checkpoint=checkpoint,
+                payload=payload, plan=plan, cursor=cursor,
+                expected_full=expected_full, controls=controls, chunks=chunks,
+                reason="remote_tab_not_in_current_profile:" + str(exc).strip("'"))
         match = observed == expected
         all_match = all_match and match
         if not match:
@@ -189,7 +261,6 @@ def main(argv=None):
     )
     from job_search_helper.inbox import InventoryInbox
     from job_search_helper.runner import _load_environment
-    from job_search_helper.sheet_profile import profile_schemas
     from job_search_helper.sqlite_repository import SQLiteRepository
 
     _load_environment()
@@ -205,7 +276,11 @@ def main(argv=None):
         destination = InventoryInbox.destination_id(inventory_database)
         local = SQLiteRepository(job_database_path(), destination, readonly=True)
         try:
-            schemas = profile_schemas(local.get_meta("sheets_profile"))
+            # A retained legacy plan is bound to the historical full workbook
+            # schema. The current compact publication profile intentionally
+            # omits Job Evidence and local-only Job History fields, so using it
+            # here would make an exact historical readback falsely incomplete.
+            schemas = copy.deepcopy(SCHEMAS)
             remote = get_remote_repository(
                 write=False, interactive=False, min_request_interval=1.1,
                 schemas=schemas, evidence_archives=False)
