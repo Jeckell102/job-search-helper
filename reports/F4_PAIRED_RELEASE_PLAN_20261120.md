@@ -1,0 +1,11 @@
+# Sprint 2 paired release plan
+
+Change ID CHG-2026-11-20-F4-OWNED-RECEIPTS. Status staged pending independent review. The Jetson change limits duplicate responses to the same public fields as the authenticated status endpoint. The MuleLab change validates controlled synchronous replies before tool admission and lets the operator reconcile one saved request while its task is held.
+
+1. Freeze both accepted source sets and the test evidence. Capture the exact installed modes and hashes, named service state, idle queues and absence of unresolved receipts on both hosts.
+2. Save the old Jetson adapter and receipt-store module in a new private Jetson record outside the runtime package. Use atomic same-filesystem replacements. Stop and restore only the user orchestrator during installation. Keep Ollama running and record the previous runtime generation. Verify syntax, installed hash, status and tunnel health before changing MuleLab.
+3. Save and compare the old MuleLab coordinator and inference-store module in a private rollback record. Serialize installation with the wrapper development host stopped and persist the maintenance condition until both replacements and hashes are verified. Restore its prior state. Verify the queue flags, lock ownership and job data again.
+4. Run one reviewed synthetic cross-host proof with a disposable coordinator ledger. The proof must show one authenticated native request, dropped response, retained completion, one charge, and no replay. Use the prior independently verified backend interruption result for orphan settlement.
+5. Have an independent reviewer compare source, deployed services, rollback state, the private verification record and task policy. Record results and unmeasured performance in the Jetson changelog, register, catalog, system state and roadmap. Back up scoped sanitized source and reports. Use a new rollback record and preserve the earlier verified transport proof.
+
+If installation fails, retain the relevant service hold, verify the affected files, restore only the changed modules from the new record, and verify the named service. Remote-to-local repository backup should be sourced from the reviewed staged files and sanitized reports.

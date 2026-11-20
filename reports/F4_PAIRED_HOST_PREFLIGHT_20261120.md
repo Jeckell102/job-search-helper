@@ -1,0 +1,12 @@
+# F4 paired-host preflight
+
+November 20, 2026. Sprint 2 is open. The existing Jetson transport-interruption sub-gate remains accepted.
+
+- Read the Jetson README, documentation map, change procedure, system state, F4 changelog and rollback record. The Jetson orchestrator and Ollama are active. The health check through MuleLab's current inference tunnel returned HTTP 200 and version 0.2.2.
+- The installed Jetson server, wrapper and receipt store matched the authoritative installed manifest and the reviewed staging files. The Jetson ledger had one CANCELLED, one COMPLETED and one FAILED receipt, with zero unresolved requests. The MuleLab ledger had 20 COMPLETED and one RESPONSE_DROPPED receipt, with zero unresolved requests. The historical MuleLab dropped response has no stored owner binding available for an authenticated cross-host comparison.
+- Fresh checks passed 27 Jetson adapter tests and 35 MuleLab protocol and accounting tests. The MuleLab suite used a disposable exact copy of installed coordinator files. Jetson tests used a temporary loopback listener and reviewed local source.
+- Independent review reproduced missing/foreign synchronous response control being admitted by the MuleLab client and excess internal fields in the Jetson duplicate response. The installed Jetson source is an exact match to the reproduced adapter. The live coordinator also needs a supported exact-receipt recovery action for a terminal result retained after startup recovery has already run.
+- The MuleLab repair and Jetson projection repair are assigned in separate private staging directories. Before changes take fresh hashes and a private rollback copy, verify both queues and the Jetson lane are idle, and preserve the original deployment record. The Jetson-only compatibility repair can precede the stricter MuleLab client, since it changes the duplicate projection and preserves the synchronous success contract.
+- Review the paired candidate and test through the real coordinator sender, HTTP adapter, and disposable ledgers before changing either host. Verify one native dispatch, response-loss settlement, once-only usage and stale-owner refusal. The earlier live interruption evidence covers the backend generation change. The remaining bounded live check uses one synthetic request through the actual tunnel and excludes scraper work.
+
+This checkpoint made no source, service, database or queue changes on either host.

@@ -1,0 +1,158 @@
+import importlib.util
+from pathlib import Path
+import tempfile
+import types
+import unittest
+from unittest.mock import Mock, patch
+from inference_control_store import InferenceControlStore
+
+
+PUBLIC_CONTROL_FIELDS = {'request_id', 'status', 'created', 'updated',
+                         'response_digest', 'usage', 'cancel_requested'}
+
+
+class InferenceTests(unittest.TestCase):
+    def setUp(self):
+        self.native = Mock(return_value=(
+            {'role': 'assistant', 'content': 'ready', 'thinking': 'private', 'tool_calls': []},
+            {'done_reason': 'stop', 'prompt_eval_count': 100, 'eval_count': 4}))
+        self.room = Mock()
+        profile = types.SimpleNamespace(context_tokens=12288, temperature=0.2)
+        modules = {'context_budget': types.SimpleNamespace(estimate_context=Mock(), require_output_room=self.room),
+            'profile_policy': types.SimpleNamespace(resolve_profile=lambda name: profile),
+            'tool_runtime': types.SimpleNamespace(native_turn=self.native)}
+        patcher = patch.dict('sys.modules', modules)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        spec = importlib.util.spec_from_file_location('gateway_test', Path(__file__).with_name('wrapper_inference.py'))
+        self.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.module)
+        self.data = {'messages': [{'role': 'user', 'content': 'Inspect'}], 'tools': [], 'max_tokens': 500}
+        self.generation = lambda: {'service': 'ollama.service', 'pid': 101, 'start_monotonic': 202}
+
+    def test_inference_uses_shared_background_gate_and_omits_private_reasoning(self):
+        result = self.module.infer(object(), self.data)
+        self.assertFalse(self.native.call_args.kwargs['foreground'])
+        self.assertNotIn('thinking', result['message'])
+        self.assertEqual(result['context_tokens'], 12288)
+        self.room.assert_called_once()
+
+    def test_unsupported_tools_and_excess_output_rejected(self):
+        for changes in ({'tools': [{'function': {'name': 'shell'}}]}, {'max_tokens': 9000}, {'max_tokens': True}):
+            with self.assertRaises(ValueError):
+                self.module.infer(object(), {**self.data, **changes})
+        self.native.assert_not_called()
+
+    def controlled(self):
+        data = dict(self.data, request_id='a' * 32, owner_generation='c' * 64)
+        data['request_fingerprint'] = self.module._digest({
+            'messages': data['messages'], 'tools': data['tools'], 'max_tokens': data['max_tokens']})
+        return data
+
+    def test_controlled_turn_is_idempotent_and_keeps_only_a_digest(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            data = self.controlled()
+            result = self.module.infer(object(), data, control, self.generation)
+            self.assertEqual(result['control']['status'], 'COMPLETED')
+            self.assertNotIn('content', result['control'])
+            duplicate = self.module.infer(object(), data, control, self.generation)
+            owned = control.owned_status(data['request_id'], data['request_fingerprint'], data['owner_generation'])
+            self.assertEqual(duplicate, {'control': owned})
+            self.assertEqual(set(duplicate['control']), PUBLIC_CONTROL_FIELDS)
+            self.assertEqual(duplicate['control']['response_digest'], result['control']['response_digest'])
+            self.native.assert_called_once()
+
+    def test_running_duplicate_matches_owned_status_and_keeps_one_lane(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            data = self.controlled()
+            native_reply = self.native.return_value
+
+            def running_turn(*args, **kwargs):
+                self.native.assert_called_once()
+                self.assertTrue(control.lane_blocked())
+                duplicate = self.module.infer(object(), data, control, self.generation)
+                owned = control.owned_status(data['request_id'], data['request_fingerprint'],
+                                             data['owner_generation'])
+                self.assertEqual(duplicate, {'control': owned})
+                self.assertEqual(set(duplicate['control']), PUBLIC_CONTROL_FIELDS)
+                self.assertEqual(duplicate['control']['status'], 'RUNNING')
+                other_id = 'b' * 32
+                busy = self.module.infer(object(), {**data, 'request_id': other_id}, control, self.generation)
+                self.assertEqual(busy, {'control': {'request_id': other_id, 'status': 'BUSY'}})
+                return native_reply
+
+            self.native.side_effect = running_turn
+            result = self.module.infer(object(), data, control, self.generation)
+            self.assertEqual(result['control']['status'], 'COMPLETED')
+            self.assertFalse(control.lane_blocked())
+            self.native.assert_called_once()
+
+    def test_controlled_turn_rejects_a_payload_fingerprint_mismatch(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            data = self.controlled()
+            data['request_fingerprint'] = 'd' * 64
+            with self.assertRaisesRegex(ValueError, 'fingerprint'):
+                self.module.infer(object(), data, control, self.generation)
+            self.native.assert_not_called()
+
+    def test_controlled_turn_fails_closed_when_backend_generation_is_unavailable(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            with self.assertRaisesRegex(ValueError, 'generation'):
+                self.module.infer(object(), self.controlled(), control,
+                                  lambda: (_ for _ in ()).throw(ValueError('generation unavailable')))
+            self.native.assert_not_called()
+
+    def test_ambiguous_native_transport_error_blocks_the_lane_without_acknowledging_cancellation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            self.native.side_effect = RuntimeError('backend unavailable')
+            with self.assertRaisesRegex(RuntimeError, 'backend unavailable'):
+                self.module.infer(object(), self.controlled(), control, self.generation)
+            self.assertEqual(control.status('a' * 32)['status'], 'UNCERTAIN')
+            control.cancel('a' * 32, self.controlled()['request_fingerprint'], 'c' * 64)
+            self.assertEqual(control.status('a' * 32)['status'], 'UNCERTAIN')
+            self.assertEqual(control.begin('b' * 32, 'd' * 64, 'c' * 64)['status'], 'BUSY')
+
+    def test_legacy_payload_cannot_bypass_a_controlled_uncertain_lane(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            data = self.controlled()
+            control.begin(data['request_id'], data['request_fingerprint'], data['owner_generation'])
+            control.uncertain(data['request_id'])
+            with self.assertRaisesRegex(ValueError, 'Controlled'):
+                self.module.infer(object(), self.data, control, self.generation)
+            self.native.assert_not_called()
+
+    def test_invalid_post_turn_usage_settles_terminal_without_replay(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            self.native.return_value = ({'role': 'assistant', 'content': 'ready', 'tool_calls': []},
+                                        {'done_reason': 'stop'})
+            data = self.controlled()
+            with self.assertRaisesRegex(ValueError, 'usage'):
+                self.module.infer(object(), data, control, self.generation)
+            self.assertEqual(control.status(data['request_id'])['status'], 'COMPLETED')
+            self.module.infer(object(), data, control, self.generation)
+            self.assertEqual(self.native.call_count, 1)
+            self.assertTrue(control.begin('b' * 32, 'd' * 64, 'c' * 64)['start'])
+
+    def test_controlled_cancellation_during_a_turn_is_terminal(self):
+        with tempfile.TemporaryDirectory() as temp:
+            control = InferenceControlStore(Path(temp) / 'control.sqlite3')
+            data = self.controlled()
+            def cancelled_turn(*args, **kwargs):
+                control.cancel(data['request_id'], data['request_fingerprint'], data['owner_generation'])
+                return ({'role': 'assistant', 'content': 'cancelled', 'tool_calls': []},
+                        {'done_reason': 'stop', 'prompt_eval_count': 1, 'eval_count': 1})
+            self.native.side_effect = cancelled_turn
+            with self.assertRaisesRegex(ValueError, 'inference_cancelled'):
+                self.module.infer(object(), data, control, self.generation)
+            self.assertEqual(control.status('a' * 32)['status'], 'CANCELLED')
+
+
+if __name__ == '__main__':
+    unittest.main()
