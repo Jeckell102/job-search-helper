@@ -1,0 +1,13 @@
+{
+  "purpose": "offline design only; write only during separately approved sandboxed installation",
+  "required": ["version", "state", "sandbox_root", "targets", "managed", "expiry_preimage"],
+  "states": ["PREPARED", "WRITING", "COMMITTED", "INSTALLED", "ROLLED_BACK"],
+  "ownership_rule": "Persist PREPARED expected sha256/uid/mode for every target before any replace. The expiry preimage UID must equal the executing installer UID: this per-user harness has no fchown restore path. Persist WRITING before and COMMITTED after each replace. Rollback only mutates a path if its current bytes, uid, and mode match its receipt-owned expected content.",
+  "managed_targets": [
+    {"action": "create", "absolute_path": "/home/chris/.config/systemd/user/job-search-sync.service.d/20-retained.conf"},
+    {"action": "replace", "absolute_path": "/home/chris/.config/systemd/user/job-search-sync.service.d/expiry.conf"},
+    {"action": "create", "absolute_path": "/home/chris/.config/job-search-helper/retained-watch.env"}
+  ],
+  "expiry_preimage": {"logical_path": "expiry", "bytes_hex": "required", "sha256": "required", "uid": "required", "mode": "required"},
+  "managed": {"unit/env/expiry": {"sha256": "required", "uid": "required", "mode": "required", "state": "PREPARED then WRITING then COMMITTED"}}
+}

@@ -1,0 +1,25 @@
+{
+  "captured_at": "2026-11-19T23:35:25-05:00",
+  "service_id": "job-search-sync.service",
+  "service_active": "inactive",
+  "service_enabled": "disabled",
+  "condition_result": "no",
+  "fragment_path": "/home/chris/.config/systemd/user/job-search-sync.service",
+  "fragment_sha256": "b99e510cbaeca8fa9c056c0989c3489e112e4fb7e614e391b16af954d50c076c",
+  "expiry_dropin_path": "/home/chris/.config/systemd/user/job-search-sync.service.d/expiry.conf",
+  "expiry_dropin_sha256": "715ecf9626dc5a91b715c40ee7ed0aecec97455df118980441586c1fde8ec884",
+  "merged_unit_inspected": true,
+  "merged_unit_sha256": "4eebb5afea183c056453e108ce9e26cf49805b78fe908018bc24190b71729980",
+  "owner_uid": 1000,
+  "unit_mode": "0644",
+  "expiry_mode": "0644",
+  "intake_status": {
+    "state": "COMPANY_INTAKE_CONTROL",
+    "enabled": false,
+    "retained_enabled": false,
+    "retained_configured": false,
+    "dispatches": {},
+    "ownership": {},
+    "last_error": ""
+  }
+}

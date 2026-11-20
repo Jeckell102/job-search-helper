@@ -1,0 +1,9 @@
+# INSTALLATION TEMPLATE ONLY — per-user unit, do not install until approved.
+# Place as /home/chris/.config/systemd/user/job-search-sync.service.d/20-retained.conf
+[Service]
+# Root/user-owned file, mode 0600. It contains configuration values, never an
+# approval envelope or private key.
+EnvironmentFile=/home/chris/.config/job-search-helper/retained-watch.env
+# A single watcher remains the service entrypoint. Do not add a second ExecStart.
+ExecStart=
+ExecStart=/home/chris/job-search-helper_old/.venv/bin/python -m job_search_helper.sync_cli watch --interval 60 --max-batches 20

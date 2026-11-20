@@ -1,0 +1,4 @@
+# INSTALLATION TEMPLATE ONLY — per-user stale expiry replacement.
+[Service]
+ExecCondition=
+ExecCondition=/usr/bin/python3 /home/chris/job-search-helper_old/scripts/sync_expiry_guard.py REPLACE_WITH_FUTURE_RFC3339
