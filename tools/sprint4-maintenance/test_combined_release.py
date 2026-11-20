@@ -1,0 +1,424 @@
+"""Disposable acceptance harness for the Sprint 4 combined source controller."""
+import argparse
+from hashlib import sha256
+import json
+import os
+from pathlib import Path
+import shutil
+import stat
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+ROOT = Path(__file__).resolve().parent
+EARLIER = Path('/tmp/jsh-s4-scoped-release-rehearsal.lZ837nim')
+QA = Path('/tmp/jsh-s4-dispatch-binding-qa.i45G33KN')
+WRAPPER_BEFORE = Path('/home/chris/job-search-helper_old')
+TOOLS = ('controller.py', 'installer.py', 'gate.py', 'verify_hold')
+WRAPPER = 'dev/wrapper-coder/tools'
+WRAPPER_PATHS = tuple(f'{WRAPPER}/{name}' for name in (
+    'coordinator_receipt_host_bridge.py', 'coordinator_store.py', 'host_server.py',
+))
+PARKED = '.s4-maintenance-package'
+DROP_IN = 'zzzz-job-search-sprint4-maintenance.conf'
+MANIFEST_SCHEMA = 'sprint-4-source-manifest-v1'
+CONTROLLER_SCHEMA = 'sprint-4-controller-v1'
+TRANSACTION_SCHEMA = 'sprint-4-transaction-v1'
+HOLD_SCHEMA = 'sprint-4-hold-check-v1'
+HOST_SCHEMA = 'sprint-4-host-check-v1'
+CONTROL = None
+ARTIFACTS = None
+MARKER = 'integration-release-journal.json'
+UNITS = {
+    'wrapper-development-host.service': {'active': True, 'enabled': 'enabled'},
+    'job-search-sync.service': {'active': False, 'enabled': 'disabled'},
+}
+
+
+def encode(value):
+    return (json.dumps(value, sort_keys=True, separators=(',', ':')) + '\n').encode()
+
+
+def write(path, value, mode=0o600):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(value)
+    path.chmod(mode)
+
+
+def source_bytes(path, expected):
+    assert path.parent.resolve() == path.parent, path
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(descriptor, 'rb') as stream:
+        first = os.fstat(stream.fileno())
+        assert stat.S_ISREG(first.st_mode) and first.st_nlink == 1, path
+        data = stream.read()
+        current = path.lstat()
+        assert (first.st_dev, first.st_ino, first.st_mtime_ns, first.st_ctime_ns, first.st_size) == (
+            current.st_dev, current.st_ino, current.st_mtime_ns, current.st_ctime_ns, current.st_size), path
+    assert first.st_mode & 0o7777 == int(expected['mode'], 8), path
+    assert sha256(data).hexdigest() == expected['sha256'], path
+    return data
+
+
+def pin(data, mode):
+    return {'mode': mode, 'sha256': sha256(data).hexdigest()}
+
+
+def endpoints():
+    """Recover pinned earlier old images and freeze the specified newer QA after-images."""
+    earlier = json.loads((EARLIER / 'source-inventory.json').read_bytes())
+    old_fixture = EARLIER / 'fresh-namespace/project'
+    manifest, before, after = {}, {}, {}
+    source_changes = []
+    for name, row in earlier['supported_endpoints'].items():
+        previous = row['before']
+        if previous is not None:
+            before[name] = source_bytes(old_fixture / name, previous)
+        else:
+            assert not os.path.lexists(old_fixture / name), name
+        path = QA / name
+        actual = pin(path.read_bytes(), f'{path.stat().st_mode & 0o7777:04o}')
+        after[name] = source_bytes(path, actual)
+        if actual != row['after']:
+            source_changes.append(name)
+        manifest[name] = {'before': previous, 'after': actual, 'owner': [os.getuid(), os.getgid()]}
+    for name in WRAPPER_PATHS:
+        expected = earlier['outside_transaction'][name]
+        previous = {k: v for k, v in expected['before'].items() if k != 'owner'}
+        current = {k: v for k, v in expected['after'].items() if k != 'owner'}
+        # Only the three pinned historical source files are read from the host.
+        # A deviation from the earlier accepted pre-image aborts fixture assembly.
+        before[name] = source_bytes(WRAPPER_BEFORE / name, previous)
+        after[name] = source_bytes(QA / name, current)
+        manifest[name] = {'before': previous, 'after': current, 'owner': [os.getuid(), os.getgid()]}
+    assert len(manifest) == 47
+    assert set(source_changes) == {
+        'src/job_search_helper/company_intake_dispatcher.py',
+        'src/job_search_helper/ordinary_event_settlement.py',
+    }, source_changes
+    assert all(row['before'] != row['after'] for row in manifest.values())
+    return manifest, before, after
+
+
+def script(path, code):
+    write(path, (f'#!{Path(sys.executable).resolve()} -I\n' + code).encode(), 0o700)
+
+
+class Fixture:
+    def __init__(self, test_name, controller_source, *, legacy=False):
+        self.root = Path(tempfile.mkdtemp(prefix=test_name + '.', dir=ARTIFACTS))
+        self.project = self.root / 'project'
+        self.bundle = self.root / 'capsule'
+        self.bundle.mkdir(mode=0o700)
+        self.candidate = self.bundle / 'candidate'
+        self.package = self.project / 'src/job_search_helper'
+        self.parked = self.package.with_name(PARKED)
+        self.wrapper = self.project / WRAPPER
+        self.state = self.project / '.state'
+        self.marker = self.state / MARKER
+        self.unit_directory = self.root / 'units'
+        self.fault = self.root / 'fixture-fault.json'
+        self.hold = self.root / 'direct-admission-closed'
+        self.fake_systemctl = self.root / 'fake-systemctl'
+        self.manifest, before, after = endpoints()
+        self.hold_id = 's4-combined-disposable-' + self.root.name
+        for side, root, payloads in (('before', self.project, before), ('after', self.candidate, after)):
+            for name, data in payloads.items():
+                write(root / name, data, int(self.manifest[name][side]['mode'], 8))
+        write(self.package / '__init__.py', b'OFFLINE_FIXTURE_ONLY = True\n')
+        write(self.package / 'host_server.py', b'# same basename in package, preserve this file\n')
+        write(self.wrapper / 'unrelated_runtime.py', b'# preserve this fourth wrapper endpoint\n')
+        write(self.project / 'job-search-helper', b'# out-of-scope launcher witness\n', 0o755)
+        write(self.project / '.storage-backend', b'sqlite\n')
+        for previous in ('.s3-maintenance-package', '.f3-maintenance-package'):
+            write(self.package.with_name(previous) / '__init__.py', b'# previous namespace witness\n')
+        for name in ('state.db', 'jobs.sqlite3', 'inventories.sqlite3', 'retained-publication.lock',
+                     'scraper.lock', 'writer.lock', 'review-writeback.lock'):
+            write(self.state / name, f'opaque protected fixture {name}\n'.encode())
+        write(self.project / '.integration-install.lock', b'opaque fixture install lock\n')
+        for name in UNITS:
+            write(self.unit_directory / name, b'fake unit file\n')
+        write(self.unit_directory / 'job-search-sync.service.d/expiry.conf', b'keep expiry bytes\n')
+        write(self.root / 'services.json', encode(UNITS))
+        write(self.root / 'fixture-id', encode({'root': str(self.root), 'hold_id': self.hold_id, 'legacy': legacy}))
+        for name in TOOLS:
+            source = controller_source / name
+            assert source.is_file() and not source.is_symlink(), source
+            shutil.copy2(source, self.bundle / name)
+        tool_witness = {name: sha256((self.bundle / name).read_bytes()).hexdigest() for name in TOOLS}
+        write(self.root / 'tool-witness.json', encode(tool_witness))
+        manifest_schema = 'sprint-3-source-manifest-v1' if legacy else MANIFEST_SCHEMA
+        raw = encode({'schema': manifest_schema, 'paths': self.manifest})
+        write(self.bundle / 'manifest.json', raw)
+        write(self.bundle / 'plan.json', encode({
+            'project': str(self.project), 'hold_id': self.hold_id, 'unit_directory': str(self.unit_directory),
+            'systemctl': str(self.fake_systemctl), 'pycache_prefixes': [], 'manifest_sha256': sha256(raw).hexdigest(),
+        }))
+        for filename, entry in (('fake-systemctl', 'systemctl'), ('capsule/host-check', 'attest'),
+                                ('route-probe', 'route_cli')):
+            script(self.root / filename,
+                   'from pathlib import Path\nimport sys\n'
+                   'sys.dont_write_bytecode = True\n'
+                   f'sys.path.insert(0, {str(ROOT)!r})\n'
+                   f'from fixture_stubs import {entry}\n{entry}(Path(__file__).resolve())\n')
+        (self.root / 'home').mkdir()
+        self.environment = {'PATH': '/usr/bin:/bin', 'HOME': str(self.root / 'home'), 'TMPDIR': str(self.root),
+                            'LC_ALL': 'C.UTF-8', 'PYTHONDONTWRITEBYTECODE': '1',
+                            'JSH_COMBINED_FIXTURE_ROOT': str(self.root)}
+        self.package_inode = self.package.stat().st_ino
+        self.witnesses = self.protected()
+
+    def protected(self):
+        paths = [
+            self.package / '__init__.py', self.package / 'host_server.py', self.wrapper / 'unrelated_runtime.py',
+            self.package.with_name('.s3-maintenance-package') / '__init__.py',
+            self.package.with_name('.f3-maintenance-package') / '__init__.py',
+            self.unit_directory / 'job-search-sync.service.d/expiry.conf',
+            self.project / 'job-search-helper', self.project / '.storage-backend',
+            self.project / '.integration-install.lock',
+        ]
+        paths += [self.state / name for name in ('state.db', 'jobs.sqlite3', 'inventories.sqlite3',
+                                                'retained-publication.lock', 'scraper.lock', 'writer.lock',
+                                                'review-writeback.lock')]
+        return {str(path.relative_to(self.root)): (path.stat().st_ino, path.stat().st_mode,
+                                                  sha256(path.read_bytes()).hexdigest()) for path in paths}
+
+    def invoke(self, command, *args, timeout=120):
+        result = subprocess.run([*command, *args], cwd=self.root, env=self.environment,
+                                capture_output=True, text=True, timeout=timeout)
+        with (self.root / 'invocations.jsonl').open('a', encoding='utf-8') as stream:
+            stream.write(json.dumps({'command': [*command, *args], 'returncode': result.returncode,
+                                     'stdout': result.stdout, 'stderr': result.stderr}) + '\n')
+        return result
+
+    def run(self, action):
+        return self.invoke([sys.executable, '-I', '-B', str(self.bundle / 'controller.py')], action)
+
+    def probe(self, route, side):
+        return self.invoke([str(self.root / 'route-probe')], route, side, timeout=10)
+
+    def arm(self, stage):
+        write(self.fault, encode({'stage': stage, 'action': 'install'}))
+
+    def disarm(self):
+        self.fault.unlink()
+
+    def events(self):
+        path = self.root / 'attestations.jsonl'
+        return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+
+    def assert_tool_bytes(self):
+        witness = json.loads((self.root / 'tool-witness.json').read_bytes())
+        assert all(sha256((self.bundle / name).read_bytes()).hexdigest() == digest
+                   for name, digest in witness.items())
+
+    def assert_visible(self, side):
+        for name, row in self.manifest.items():
+            path = self.project / name
+            if row[side] is None:
+                assert not os.path.lexists(path), path
+            else:
+                source_bytes(path, row[side])
+                assert (path.stat().st_uid, path.stat().st_gid) == tuple(row['owner']), path
+        assert self.package.stat().st_ino == self.package_inode
+        assert self.protected() == self.witnesses
+        assert not self.marker.exists() and not (self.package / '__init__.so').exists()
+        assert json.loads((self.root / 'services.json').read_bytes()) == UNITS
+        assert all(not (self.unit_directory / (name + '.d') / DROP_IN).exists() for name in UNITS)
+        self.assert_tool_bytes()
+
+
+class CombinedReleaseTests(unittest.TestCase):
+    def fixture(self):
+        return Fixture(self._testMethodName, CONTROL)
+
+    def assert_holds(self, fixture, *, package_guard):
+        self.assertTrue(fixture.marker.is_file())
+        self.assertTrue(fixture.hold.is_file())
+        self.assertFalse(any(row['active'] for row in json.loads((fixture.root / 'services.json').read_bytes()).values()))
+        for unit in UNITS:
+            self.assertTrue((fixture.unit_directory / (unit + '.d') / DROP_IN).is_file())
+        for route in ('worker', 'direct-wrapper', 'supervised-wrapper'):
+            probe = fixture.probe(route, 'after')
+            self.assertEqual(probe.returncode, 23, (probe.stdout, probe.stderr))
+        if package_guard == 'parked':
+            self.assertIn('raise ImportError', (fixture.package / '__init__.py').read_text())
+        else:
+            self.assertEqual(b'', (fixture.package / '__init__.so').read_bytes())
+        force = fixture.invoke([str(fixture.fake_systemctl)], '--user', 'start', 'wrapper-development-host.service')
+        self.assertNotEqual(force.returncode, 0)
+        self.assertIn('fixture unit condition held', force.stderr)
+
+    def assert_receipt(self, fixture, reply, side):
+        self.assertEqual(reply.returncode, 0, reply.stderr)
+        value = json.loads(reply.stdout)
+        expected = 'INSTALLED' if side == 'after' else 'ROLLED_BACK'
+        self.assertEqual(value['phase'], 'RELEASED')
+        self.assertEqual(value['source'], expected)
+        receipt = value['receipt']
+        self.assertEqual(receipt['phase'], expected)
+        self.assertEqual(receipt['schema'], TRANSACTION_SCHEMA)
+        self.assertEqual(receipt['source_manifest_sha256'],
+                         sha256((fixture.bundle / 'manifest.json').read_bytes()).hexdigest())
+        directories = receipt['source_directories']
+        self.assertIsInstance(directories, dict)
+        self.assertTrue({'root', 'src', 'package', 'dev', 'wrapper', 'tools'} <= directories.keys())
+        for name, path in {'root': fixture.project, 'src': fixture.package.parent, 'package': fixture.package,
+                           'dev': fixture.project / 'dev', 'wrapper': fixture.wrapper.parent,
+                           'tools': fixture.wrapper}.items():
+            actual = path.stat()
+            self.assertEqual(directories[name]['identity'], [actual.st_dev, actual.st_ino])
+        self.assertEqual(len({row['mount'] for row in directories.values()}), 1)
+        controller_record = json.loads((fixture.bundle / 'controller.json').read_bytes())
+        self.assertEqual(controller_record['binding']['schema'], CONTROLLER_SCHEMA)
+        fixture.assert_visible(side)
+        return value
+
+    def test_mixed_wrapper_fault_then_published_fault_reentry_and_payloadless_rollback(self):
+        fixture = self.fixture()
+        fixture.assert_visible('before')
+        for route in ('worker', 'direct-wrapper', 'supervised-wrapper'):
+            self.assertEqual(fixture.probe(route, 'before').returncode, 0)
+        fixture.arm('after-one-wrapper')
+        interrupted = fixture.run('install')
+        self.assertNotEqual(interrupted.returncode, 0)
+        interruptions = [row for row in fixture.events() if row.get('fault') == 'after-one-wrapper']
+        self.assertEqual(len(interruptions), 1, interrupted.stderr)
+        self.assertEqual(interruptions[0]['wrapper_after_count'], 1)
+        self.assertEqual(sum(sha256((fixture.project / name).read_bytes()).hexdigest()
+                             == fixture.manifest[name]['after']['sha256'] for name in WRAPPER_PATHS), 1)
+        self.assert_holds(fixture, package_guard='parked')
+        self.assertFalse((fixture.root / 'unexpected-execution').exists())
+
+        fixture.arm('after-package-publication')
+        published = fixture.run('install')
+        self.assertEqual(published.returncode, -9, (published.stdout, published.stderr))
+        events = [row for row in fixture.events() if row.get('fault') == 'after-package-publication']
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]['wrapper_after_count'], 3)
+        self.assert_holds(fixture, package_guard='published')
+        self.assertFalse((fixture.root / 'unexpected-execution').exists())
+        fixture.disarm()
+        installed = self.assert_receipt(fixture, fixture.run('install'), 'after')
+        self.assertEqual(installed, self.assert_receipt(fixture, fixture.run('install'), 'after'))
+        fixture.hold.unlink()
+        for route in ('worker', 'direct-wrapper', 'supervised-wrapper'):
+            self.assertEqual(fixture.probe(route, 'after').returncode, 0)
+
+        # Remove the exact candidate tree. Revert solely from durable held payloads.
+        shutil.rmtree(fixture.candidate)
+        cache = fixture.wrapper / '__pycache__'
+        scoped_pycs = [cache / (Path(name).stem + '.cpython-311.pyc') for name in WRAPPER_PATHS]
+        for path in scoped_pycs:
+            write(path, b'stale scoped fixture bytecode')
+        keep_cache = cache / 'unrelated_runtime.cpython-311.pyc'
+        write(keep_cache, b'untouched fixture bytecode')
+        rolled_back = self.assert_receipt(fixture, fixture.run('rollback'), 'before')
+        self.assertEqual(rolled_back, self.assert_receipt(fixture, fixture.run('rollback'), 'before'))
+        self.assertTrue(all(not path.exists() for path in scoped_pycs))
+        self.assertEqual(keep_cache.read_bytes(), b'untouched fixture bytecode')
+        fixture.hold.unlink()
+        for route in ('worker', 'direct-wrapper', 'supervised-wrapper'):
+            self.assertEqual(fixture.probe(route, 'before').returncode, 0)
+        self.assertFalse((fixture.root / 'unexpected-execution').exists())
+
+    def test_wrong_wrapper_directory_symlink_refused_without_source_writes(self):
+        for side in ('project', 'candidate'):
+            with self.subTest(side=side):
+                fixture = self.fixture()
+                root = fixture.project if side == 'project' else fixture.candidate
+                directory = root / WRAPPER
+                reference = directory.with_name('alias-target')
+                directory.rename(reference)
+                directory.symlink_to(reference, target_is_directory=True)
+                witness = {p.name: p.read_bytes() for p in reference.iterdir()}
+                reply = fixture.run('install')
+                self.assertNotEqual(reply.returncode, 0)
+                self.assertEqual({p.name: p.read_bytes() for p in reference.iterdir()}, witness)
+                self.assertFalse(any(row.get('fault') for row in fixture.events()))
+                for name, row in fixture.manifest.items():
+                    if not name.startswith(WRAPPER):
+                        path = fixture.project / name
+                        if row['before'] is None:
+                            self.assertFalse(os.path.lexists(path))
+                        else:
+                            source_bytes(path, row['before'])
+
+    def test_reopened_wrapper_parent_inode_substitution_refused_under_hold(self):
+        fixture = self.fixture()
+        fixture.arm('after-one-wrapper')
+        self.assertNotEqual(fixture.run('install').returncode, 0)
+        self.assertTrue(any(row.get('fault') == 'after-one-wrapper' for row in fixture.events()))
+        fixture.disarm()
+        moved = fixture.wrapper.with_name('original-wrapper-tools')
+        fixture.wrapper.rename(moved)
+        shutil.copytree(moved, fixture.wrapper, copy_function=shutil.copy2)
+        try:
+            old_vector = {path.name: path.read_bytes() for path in moved.iterdir()}
+            reply = fixture.run('install')
+            self.assertNotEqual(reply.returncode, 0)
+            self.assert_holds(fixture, package_guard='parked')
+            self.assertEqual({path.name: path.read_bytes() for path in moved.iterdir()}, old_vector)
+            self.assertEqual({path.name: path.read_bytes() for path in fixture.wrapper.iterdir()}, old_vector)
+        finally:
+            shutil.rmtree(fixture.wrapper)
+            moved.rename(fixture.wrapper)
+
+    def test_occupied_new_namespace_refused_and_previous_names_preserved(self):
+        fixture = self.fixture()
+        occupant = fixture.parked / '__init__.py'
+        write(occupant, b'foreign namespace occupant\n')
+        reply = fixture.run('install')
+        self.assertNotEqual(reply.returncode, 0)
+        fixture.assert_visible('before')
+        self.assertEqual(occupant.read_bytes(), b'foreign namespace occupant\n')
+        self.assertFalse((fixture.bundle / 'controller.json').exists())
+
+    def test_missing_realistic_direct_fence_refuses_preflight(self):
+        fixture = self.fixture()
+        write(fixture.root / 'disable-direct-fence', b'explicit stub refusal\n')
+        reply = fixture.run('install')
+        self.assertNotEqual(reply.returncode, 0)
+        self.assertIn('direct route cannot be durably closed', reply.stderr)
+        fixture.assert_visible('before')
+
+
+def main():
+    global CONTROL, ARTIFACTS
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--controller-source', type=Path, required=True)
+    parser.add_argument('--legacy-negative-control', action='store_true')
+    parser.add_argument('tests', nargs='*', metavar='TEST')
+    args = parser.parse_args()
+    assert ROOT.parent == Path('/tmp') and ROOT.name.startswith('jsh-s4-combined-release-fixture.')
+    source = args.controller_source.resolve(strict=True)
+    ARTIFACTS = Path(tempfile.mkdtemp(prefix='run.', dir=ROOT))
+    CONTROL = ARTIFACTS / 'frozen-tool-input'
+    CONTROL.mkdir(mode=0o700)
+    tool_pins = {}
+    for name in TOOLS:
+        path = source / name
+        expected = pin(path.read_bytes(), f'{path.stat().st_mode & 0o7777:04o}')
+        write(CONTROL / name, source_bytes(path, expected), int(expected['mode'], 8))
+        tool_pins[name] = expected
+    write(ARTIFACTS / 'frozen-tool-input.json', encode(tool_pins))
+    print(f'Fixture evidence: {ARTIFACTS}', flush=True)
+    if args.legacy_negative_control:
+        fixture = Fixture('legacy', CONTROL, legacy=True)
+        fixture.assert_visible('before')
+        for route in ('worker', 'direct-wrapper', 'supervised-wrapper'):
+            assert fixture.probe(route, 'before').returncode == 0
+        refused = fixture.run('install')
+        assert refused.returncode and 'outside the allowed scope' in refused.stderr, refused
+        fixture.assert_visible('before')
+        assert not fixture.events()
+        print('Legacy control refused real wrapper scope before writes; original pair remained available.')
+        return
+    names = [f'CombinedReleaseTests.{name}' for name in args.tests]
+    unittest.main(argv=[__file__, '-v', *names])
+
+
+if __name__ == '__main__':
+    main()

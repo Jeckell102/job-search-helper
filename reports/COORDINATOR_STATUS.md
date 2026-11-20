@@ -18,6 +18,23 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Joint release fixture checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project about
+52% while independent tool QA and real host readiness are open. Five
+disposable joint release tests passed at the current tool pins. The
+47-path run interrupted after one wrapper change and again after package
+publication. Both fixture routes stayed held. Re-entry installed the
+matching pair; candidate-independent rollback restored the old pair and
+prior absences; install and rollback each replayed identical receipts.
+Wrong parent and occupied namespace refusal passed. See
+[joint fixture report](S4_JOINT_RELEASE_FIXTURE_20261120.md). Independent
+QA `01a1f97d-2e8c-7821-b5e1-d2019215036b` owns the tool verdict, and higher
+reasoning chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264` owns the follow-up
+MuleLab launch-fence recommendation. Next reconcile those results and
+verify hold/rollback with host-backed witnesses. The fake fence cannot
+prove actual direct or alternate runtime closure. No production, service or
+Jetson changes. The staged tools were backed up at verified `4b5d5a4`.
+
 Joint release tool checkpoint. Coordinator and release owner, same active
 goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project
 about 52%, with no new live gate accepted. The architecture reviewer chose
