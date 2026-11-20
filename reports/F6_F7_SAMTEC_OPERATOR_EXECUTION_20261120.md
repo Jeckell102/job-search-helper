@@ -41,3 +41,54 @@ were produced entirely with disposable stores and a simulated workbook and
 provider. Independent composed review and guarded deployment preparation are
 still in progress. No production runtime, queues, Sheets records or job data
 were changed, and no live Samtec scrape or approval was issued.
+
+## Existing records and intake timing
+
+Independent composed review exercised a selected Samtec posting whose saved
+row already contained a location, manual review decision, and salary estimate.
+The earlier candidate stopped before the Sheets write because the narrow
+planning view omitted Location and froze an empty guard. The coordinator
+changed the membership-only planner to take original values from its exact
+owner-checked SQLite row. The focused run passed 37 tests. The workbook
+fixture retained the salary when the posting supplied none, held without a
+repeat batch when the review decision changed after a lost acknowledgement,
+and settled from the original claim once the exact guard returned. No
+modification was made to the production workbook.
+
+The ordinary company-only scheduler targets no more than 60 seconds from
+durable enqueue when idle and no more than 60 seconds from ordinary safe
+cycle completion when busy. The two disposable admission tests passed both
+targets and the busy test kept the waiting request body unchanged. They
+measure the normal scheduler with disposable State and mirrored rows. The
+production request was still `WAITING_SAFE_BOUNDARY` at age 50,393 seconds,
+with `CYC-B639C6D864EC` its sole effective blocker. That historical cycle
+remains unfinished by policy. The operator pilot will measure queue age at
+the actual claimed provider start using the frozen inventory's
+`fetch_started_at`; it cannot claim that the ordinary busy boundary was
+reached. Preserve the historical checkpoint and use only the reviewed signed
+one-company exception after installation and independent readiness checks.
+
+## Receipt contract
+
+The operator path reads receipt stages from its signed reservation, frozen
+retained session, and job database. The synthetic selected cycle stays
+separate from the retained historical cycle. Use the same reservation,
+request, company, source revision, runtime digest and exact frozen plan for
+every stage.
+
+| Stage | Required durable evidence |
+| --- | --- |
+| `LOCAL_COMMITTED` | The exact local application and every planned local chunk are `VERIFIED`. The retained dirty ledger has independently sealed the same apply ID and cell values as `LOCAL_VERIFIED`. The plan stores exact stable record identities and fingerprints, including the full local description when applicable. Before a remote intent, the private session is still `RESERVED` with no remote acknowledgement. |
+| `SYNC_PENDING` | The private session has frozen the exact receipt, write intent and projection. The jobs database binds the same IDs. A claimed chunk with no confirmed readback remains ambiguous, so recovery reads that exact chunk without resending it. |
+| `SYNC_CONFIRMED` | Exact selected Sheets readback verifies the same projection. The private session's acknowledgement matches the local acknowledgement for the same apply and receipt, and the selected dirty cells have been cleared. The operator command reports terminal only after the sealed FIRST PASS evidence and exact request-consumption archive also verify. |
+
+The independent composed fixture captured the local-only boundary by stopping
+at publisher entry and reopening the stores. This preserved the unchanged
+workbook and pending request while proving every exact local record. It also
+found two recovery problems. A different local limit could redivide a saved
+chunk, and a small first chunk could require identities for rows that later
+chunks had yet to create. Initial one-operation chunking now has independent
+source acceptance. Dirty-cell attribution resolves only exact remote targets
+owned by the current local slice. The independent changed-bound recheck is a
+separate gate. See F6_S3_OPERATOR_RECEIPT_STAGE_REVIEW_20261120.md for the
+underlying authority checks and the saved independent QA report for outcomes.

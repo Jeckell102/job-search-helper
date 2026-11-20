@@ -13,6 +13,7 @@ from job_search_helper.cli import WriterLockBusy, writer_lock
 from job_search_helper.engine import Engine, State
 from job_search_helper.exact_cycle_planner import _exact_plan_digest
 from job_search_helper.exact_cycle_sync import _company_guard
+from job_search_helper.retained_dirty_provenance import retained_publication
 from job_search_helper.repository import GoogleRepository, MemoryRepository, SCHEMAS, UncertainWriteError
 from job_search_helper.retained_operator_authorization import operator_membership_claims
 from job_search_helper.retained_operator_journal import RetainedOperatorJournal, operator_journal_binding
@@ -299,6 +300,74 @@ class RetainedWorkOrchestratorTests(unittest.TestCase):
             self.run_operator(item, runtime)
         self.assertEqual("CLAIMED", self.store.load(reservation)["chunks"][0]["state"])
         self.assertEqual((reads, batches), (len(self.service.get_calls), len(self.service.batches)))
+
+    def test_operator_recovers_sealed_local_commit_with_smaller_bound(self):
+        item, runtime = self.freeze_operator(two_postings=True)
+        reservation = item.admission["reservation_digest"]
+        with patch("job_search_helper.retained_work_orchestrator._publish_retained_reservation",
+                   side_effect=RuntimeError("fixture before remote intent")):
+            with self.assertRaisesRegex(RuntimeError, "fixture before remote intent"):
+                self.run_operator(item, runtime)
+        before = self.store.load(reservation)
+        provenance = retained_publication(self.local, reservation)
+        self.assertEqual("RESERVED", before["state"])
+        self.assertIsNone(before["receipt_id"])
+        self.assertEqual([], before["chunks"])
+        self.assertEqual("LOCAL_VERIFIED", provenance["state"])
+        chunks_query = "SELECT * FROM exact_local_apply_chunks WHERE apply_id=? ORDER BY start_cursor"
+        chunks = self.local.db.execute(chunks_query, (provenance["local_apply_id"],)).fetchall()
+        self.assertEqual([(0, len(before["plan"]["local_operations"]))],
+                         [(row[1], row[2]) for row in chunks])
+        self.assertFalse(self.service.batches)
+        with patch.object(self.local, "_commit_in_transaction",
+                          side_effect=AssertionError("verified local commit must not replay")):
+            result = self.run_operator(item, runtime, max_operations=1)
+        self.assertEqual("SYNC_CONFIRMED", result["session"]["state"])
+        self.assertTrue(result["local"]["recovered"])
+        self.assertEqual(before["plan_digest"], result["session"]["plan_digest"])
+        self.assertEqual(provenance["cells_digest"], result["local"]["retained_provenance"]["cells_digest"])
+        self.assertEqual(chunks, self.local.db.execute(
+            chunks_query, (provenance["local_apply_id"],)).fetchall())
+
+    def test_operator_recovers_applied_local_prefix_with_larger_bound(self):
+        item, runtime = self.freeze_operator()
+        reservation = item.admission["reservation_digest"]
+        with patch("job_search_helper.exact_local_plan.verify_exact_local_chunk",
+                   side_effect=RuntimeError("fixture after local apply")):
+            with self.assertRaisesRegex(RuntimeError, "fixture after local apply"):
+                self.run_operator(item, runtime, max_operations=1)
+        before = self.store.load(reservation)
+        self.assertEqual("RESERVED", before["state"])
+        self.assertFalse(self.service.batches)
+        self.assertEqual(2, len(before["plan"]["local_operations"]))
+        chunks_query = ("SELECT start_cursor,operation_count,operations_digest,applied_at,state "
+                        "FROM exact_local_apply_chunks ORDER BY start_cursor")
+        applied, = self.local.db.execute(chunks_query).fetchall()
+        self.assertEqual((0, 1), applied[:2])
+        self.assertEqual("APPLIED", applied[-1])
+        self.assertEqual("RESERVED", retained_publication(self.local, reservation)["state"])
+
+        with self.local.transaction():
+            self.local.db.execute("UPDATE retained_dirty_chunks SET operation_count=2")
+        with patch.object(self.local, "_commit_in_transaction",
+                          side_effect=AssertionError("mismatched chunk must not write")):
+            with self.assertRaisesRegex(ValueError, "Exact retained local recovery chunk"):
+                self.run_operator(item, runtime, max_operations=2)
+        self.assertFalse(self.service.batches)
+        self.assertEqual([applied], self.local.db.execute(chunks_query).fetchall())
+        with self.local.transaction():
+            self.local.db.execute("UPDATE retained_dirty_chunks SET operation_count=1")
+
+        with patch.object(self.local, "_commit_in_transaction",
+                          wraps=self.local._commit_in_transaction) as commit:
+            result = self.run_operator(item, runtime, max_operations=2)
+        commit.assert_called_once_with(before["plan"]["local_operations"][1:])
+        prefix, suffix = self.local.db.execute(chunks_query).fetchall()
+        self.assertEqual((*applied[:-1], "VERIFIED"), prefix)
+        self.assertEqual((1, 1), suffix[:2])
+        self.assertEqual("VERIFIED", suffix[-1])
+        self.assertEqual("SYNC_CONFIRMED", result["session"]["state"])
+        self.assertEqual(before["plan_digest"], result["session"]["plan_digest"])
 
     def test_operator_recovers_after_dirty_ack_without_reapplying_local_plan(self):
         item, runtime = self.freeze_operator()

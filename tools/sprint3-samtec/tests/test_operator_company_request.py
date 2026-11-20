@@ -95,6 +95,48 @@ class OperatorCompanyRequestTests(unittest.TestCase):
             _read_request(path)
         self.assertTrue(fingerprint)
 
+    def test_idle_start_measures_from_durable_enqueue(self):
+        root = self.root / 'state'
+        database = root / 'state.db'
+        state = State(database)
+        self.addCleanup(state.close)
+        self.now = datetime.now(timezone.utc).replace(microsecond=0)
+        self.queue()
+        engine = Engine(self.repo, state)
+        cycle = state.cycle(requested_scan(engine, state, database))
+        measurement = cycle['intake_start_measurement']
+        self.assertEqual(measurement['condition'], 'idle')
+        self.assertEqual(measurement['target_anchor'], 'enqueued_at')
+        self.assertEqual(measurement['target_seconds'], 60)
+        self.assertTrue(measurement['target_met'], measurement)
+        self.assertEqual(set(cycle['companies']), {'COMP-1'})
+
+    def test_busy_start_measures_from_safe_boundary_and_keeps_waiting_request(self):
+        root = self.root / 'state'
+        database = root / 'state.db'
+        state = State(database)
+        self.addCleanup(state.close)
+        engine = Engine(self.repo, state)
+        blocking_id = engine.start_cycle(company_ids=['COMP-1'])
+        self.now = datetime.now(timezone.utc).replace(microsecond=0)
+        self.queue()
+        request = root / 'next-scan.json'
+        saved = request.read_bytes()
+        with self.assertRaisesRegex(ValueError, 'waiting for safe boundary'):
+            requested_scan(engine, state, database)
+        self.assertEqual(request.read_bytes(), saved)
+        blocking = state.cycle(blocking_id)
+        blocking['companies']['COMP-1']['stage'] = 'complete'
+        engine._sync_cycle(blocking)
+        cycle = state.cycle(requested_scan(engine, state, database))
+        measurement = cycle['intake_start_measurement']
+        self.assertEqual(measurement['condition'], 'busy')
+        self.assertEqual(measurement['safe_boundary_cycle_id'], blocking_id)
+        self.assertEqual(measurement['target_anchor'], 'safe_boundary_completed_at')
+        self.assertEqual(measurement['target_seconds'], 60)
+        self.assertTrue(measurement['target_met'], measurement)
+        self.assertEqual(set(cycle['companies']), {'COMP-1'})
+
     def test_normal_admission_keeps_bound_operator_provenance_and_rejects_stale_source(self):
         self.queue()
         database = self.root / 'state' / 'state.db'

@@ -202,7 +202,8 @@ def _run_retained_reservation_locked(prepared, engine, local, remote, store, *,
         else:
             local_result = commit_exact_local_plan(
                 local, cycle_id, company_id, plan,
-                max_operations=max_operations, reservation_digest=reservation)
+                max_operations=max_operations, reservation_digest=reservation,
+                recover_retained_chunks=membership_only)
         publication = _publish_retained_reservation(
             reservation, store, local, remote,
             max_operations=max_operations, runtime_binding=runtime_binding)

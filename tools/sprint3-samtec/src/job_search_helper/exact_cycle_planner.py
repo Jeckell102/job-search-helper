@@ -602,9 +602,10 @@ def _freeze(engine, planner, cycle, company_id, payload, *, drop_noops=False, me
                         if membership_only else None)
             tab = operation['tab']
             for number, row in planner.indexes[tab].matches(operation['identity']):
-                original = originals.setdefault((tab, number), copy.deepcopy(row))
-                if existing is not None and tab == 'Job History':
-                    original['Salary / Range'] = existing.get('Salary / Range', '')
+                # The narrow planning cache omits values that commit guards
+                # need, including Location and the estimated salary.
+                original = existing if existing is not None else row
+                originals.setdefault((tab, number), copy.deepcopy(original))
         return commit(operations)
     original_repo, original_state, original_notices = engine.repo, engine.state, engine._notices
     engine.repo, engine.state, engine._notices = planner, PendingState(original_state), []

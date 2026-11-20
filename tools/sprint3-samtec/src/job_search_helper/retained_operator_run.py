@@ -114,10 +114,12 @@ def run_operator_membership(local_reader, remote_reader, state, state_directory,
     record = journal.prepare(binding)
     if record["state"] == PREPARED:
         claim = journal.claim_fetch(binding)
+        fetch_started_at = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).isoformat()
         fetched = fetcher(company.get("ATS / Source", ""), company["Official Careers URL"], company_id,
                           company["Company"])
         stamp = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).isoformat()
         inventory = _inventory_snapshot(fetched, company, fetched_at=stamp)
+        inventory["fetch_started_at"] = fetch_started_at
         verify_operator_source_identity(manifest, {"company_id": company_id}, company, snapshot["company_fact"],
                                         inventory=inventory)
         record = journal.freeze_inventory(binding, claim, inventory)

@@ -12,13 +12,16 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from job_search_helper import ats, cli
+from job_search_helper import ats, cli, retained_work_orchestrator
 from job_search_helper.company_events import source_revision
 from job_search_helper.engine import State
+from job_search_helper.exact_cycle_planner import _exact_plan_digest
 from job_search_helper.inbox import InventoryInbox
+from job_search_helper.publication_receipts import record_fingerprints
 from job_search_helper.repository import (
     GoogleRepository, MemoryRepository, RepositoryError, UncertainWriteError,
 )
+from job_search_helper.retained_dirty_provenance import retained_publication
 from job_search_helper.retained_operator_command import operator_command
 from job_search_helper.retained_operator_journal import INVENTORY_FROZEN, SETTLED, RetainedOperatorJournal
 from job_search_helper.retained_session_store import RetainedSessionStore
@@ -398,4 +401,256 @@ def test_compact_operator_lost_ack_readback_and_terminal_replay(fixture, posting
         assert fixture.open_local.call_args.kwargs == {"write": False, "interactive": False}
     assert archive.read_bytes() == archived_bytes
     assert fixture.queue_path.read_bytes() == replacement_bytes
+    fixture.assert_historical_records_unchanged()
+
+
+def test_existing_selected_salary_and_manual_edit_remain_protected(fixture):
+    inventory = fixture.fetch.return_value
+    posting = inventory.jobs[0]
+    inventory.jobs[:] = [posting]
+    provider_observed_at = []
+
+    def fetch_inventory(*_args):
+        provider_observed_at.append(datetime.now(timezone.utc))
+        return inventory
+
+    fixture.fetch.side_effect = fetch_inventory
+    assert "compensation" not in posting
+    job_key = "comp-0739:jobvite:42"
+    estimate = "$120,000–$140,000 estimated"
+    prior = {
+        "Job Key": job_key, "Company": "Samtec", "Requisition ID": "42", "Job Title": posting["title"],
+        "Official Job URL": posting["url"], "Location": "Remote",
+        "Job Status": "Open and verified", "Added to Opportunities?": "Manual Review",
+        "Review Status": "Manual Review", "Review Notes": "Reviewer supplied salary estimate",
+        "Salary / Range": estimate,
+    }
+    with closing(fixture.local(write=True)) as local:
+        local.import_rows("Job History", [(4, prior)])
+    for header, value in prior.items():
+        fixture.service.set_cell("Job History", 3, header, value)
+    fixture.sign()
+    fixture.service.lose_response = True
+    with pytest.raises(UncertainWriteError):
+        fixture.command("execute")
+
+    journal = RetainedOperatorJournal(fixture.root).inspect()
+    reservation = journal["binding"]["reservation_digest"]
+    provider_entered_at, = provider_observed_at
+    frozen_inventory = journal["inventory"]
+    started_at = datetime.fromisoformat(frozen_inventory["fetch_started_at"])
+    completed_at = datetime.fromisoformat(frozen_inventory["fetched_at"])
+    assert fixture.now <= started_at <= provider_entered_at <= completed_at <= datetime.now(timezone.utc)
+    with closing(RetainedSessionStore(fixture.root / "retained-sessions.sqlite3")) as sessions:
+        pending = sessions.load(reservation)
+    local_operation, = (operation for operation in pending["plan"]["local_operations"]
+                        if operation["tab"] == "Job History")
+    remote_operation, = pending["plan"]["remote_projection"]
+    for operation in (local_operation, remote_operation):
+        assert operation["expected"]["Location"] == prior["Location"]
+        assert operation["expected"]["Salary / Range"] == estimate
+        assert "Salary / Range" not in operation.get("values", {})
+        assert operation["expected"]["Added to Opportunities?"] == "Manual Review"
+        assert "Added to Opportunities?" not in operation.get("values", {})
+
+    remote = fixture.remote()
+    row = remote.read_row("Job History", 4)
+    assert row["Location"] == posting["location"]
+    assert row["Salary / Range"] == estimate
+    assert row["Review Notes"] == prior["Review Notes"]
+    fixture.service.set_cell("Job History", 3, "Added to Opportunities?", "Yes")
+    with pytest.raises(ValueError, match="remote guard differs from the frozen projection"):
+        fixture.command("execute")
+    with closing(RetainedSessionStore(fixture.root / "retained-sessions.sqlite3")) as sessions:
+        assert sessions.load(reservation)["chunks"] == pending["chunks"]
+    assert fixture.remote().read_row("Job History", 4)["Added to Opportunities?"] == "Yes"
+    with closing(fixture.local()) as local:
+        assert local.db.execute("SELECT count(*) FROM exact_local_acknowledgements").fetchone() == (0,)
+    assert fixture.queue_path.exists()
+    assert len(fixture.service.batches) == 1
+
+    fixture.service.set_cell("Job History", 3, "Added to Opportunities?", "Manual Review")
+    result = fixture.command("execute")
+    assert result["state"] == "SYNC_CONFIRMED"
+    archived = RetainedOperatorJournal(fixture.root).read_archived(journal["binding"])
+    assert archived["inventory"]["fetch_started_at"] == frozen_inventory["fetch_started_at"]
+    assert result["inventory_sha256"] == archived["inventory_sha256"] == digest(frozen_inventory)
+    fixture.fetch.assert_called_once_with("Jobvite", BOARD, COMPANY_ID, "Samtec")
+    assert len(fixture.service.batches) == 1
+    with closing(fixture.local()) as local:
+        final = local.matches("Job History", {"Job Key": job_key})[0][1]
+        assert final["Salary / Range"] == estimate
+        assert final["Added to Opportunities?"] == "Manual Review"
+        assert final["Review Notes"] == prior["Review Notes"]
+    row = fixture.remote().read_row("Job History", 4)
+    assert row["Salary / Range"] == estimate
+    assert row["Added to Opportunities?"] == "Manual Review"
+    fixture.assert_historical_records_unchanged()
+
+
+def test_publisher_entry_stop_leaves_verified_local_commit_and_resumes_once(fixture, monkeypatch):
+    claims = fixture.sign()
+    envelope = json.loads(fixture.approval_path.read_bytes())
+    fixture.key.public_key().verify(base64.b64decode(envelope["signature"]), canonical(claims))
+
+    publisher = Mock(side_effect=InterruptedError("fixture stopped at publisher entry"))
+    with monkeypatch.context() as stop:
+        stop.setattr(retained_work_orchestrator, "_publish_retained_reservation", publisher)
+        with pytest.raises(InterruptedError, match="stopped at publisher entry"):
+            fixture.command("execute", max_operations=3)
+    publisher.assert_called_once()
+    fixture.fetch.assert_called_once_with("Jobvite", BOARD, COMPANY_ID, "Samtec")
+    assert not fixture.service.batches
+    assert json.loads(fixture.queue_path.read_bytes()) == fixture.request
+
+    frozen = RetainedOperatorJournal(fixture.root).inspect()
+    assert frozen["state"] == INVENTORY_FROZEN
+    binding = frozen["binding"]
+    reservation = binding["reservation_digest"]
+    assert binding["claims"] == claims
+    assert binding["authorization"]["claims_digest"] == digest(claims)
+    assert binding["runtime"] == fixture.runtime
+    assert claims["request_sha256"] == fixture.request_sha
+    assert claims["source_revision"] == fixture.request["source_revision"]
+
+    def read_session():
+        with closing(RetainedSessionStore(fixture.root / "retained-sessions.sqlite3")) as store:
+            return store.load(reservation)
+
+    local_only = read_session()
+    plan = local_only["plan"]
+    assert local_only["state"] == "RESERVED"
+    assert local_only["chunks"] == [] and local_only["remote_cursor"] == 0
+    assert all(local_only[field] is None for field in ("receipt_id", "intent_id", "acknowledgement_id"))
+    assert (local_only["request_id"], local_only["company_id"], local_only["source_revision"]) == (
+        REQUEST_ID, COMPANY_ID, claims["source_revision"],
+    )
+    assert local_only["exception_cycle_id"] == CYCLE_ID
+    assert local_only["cycle_id"] != CYCLE_ID
+    assert plan["runtime_binding_sha256"] == claims["runtime_sha256"]
+    assert _exact_plan_digest(plan) == local_only["plan_digest"]
+
+    def read_local_chunks(local, apply_id):
+        return local.db.execute(
+            "SELECT start_cursor,operation_count,operations_digest,expected_records,"
+            "expected_records_digest,state,applied_at,verified_at FROM exact_local_apply_chunks "
+            "WHERE apply_id=? ORDER BY start_cursor", (apply_id,),
+        ).fetchall()
+
+    with closing(fixture.local()) as local:
+        parent, = local.db.execute(
+            "SELECT apply_id,cycle,company,plan_digest,state FROM exact_local_applications"
+        ).fetchall()
+        apply_id = parent[0]
+        assert parent[1:] == (local_only["cycle_id"], COMPANY_ID, local_only["plan_digest"], "VERIFIED")
+        provenance = retained_publication(local, reservation)
+        assert provenance["state"] == "LOCAL_VERIFIED"
+        assert provenance["local_apply_id"] == apply_id
+        assert provenance["plan_digest"] == local_only["plan_digest"]
+        assert provenance["source_revision"] == claims["source_revision"]
+        assert provenance["cells_digest"]
+        assert all(provenance[field] is None for field in ("receipt_id", "intent_id", "acknowledgement_id"))
+        assert local.db.execute("SELECT count(*) FROM exact_local_acknowledgements").fetchone() == (0,)
+        chunks = read_local_chunks(local, apply_id)
+        operations = plan["local_operations"]
+        guard_only = plan.get("record_fingerprint_version", 1) == 2
+        assert len(operations) == 4
+        assert [(chunk[0], chunk[1]) for chunk in chunks] == [(0, 3), (3, 1)]
+        verified_records = {}
+        for cursor, count, operation_sha, records, records_sha, state, applied, verified in chunks:
+            assert state == "VERIFIED" and applied and verified
+            selected = operations[cursor:cursor + count]
+            assert operation_sha == digest(selected)
+            rows = {}
+            for operation in selected:
+                tab = operation["tab"]
+                (_, row), = local.matches(tab, operation["identity"])
+                rows.setdefault(tab, []).append(row)
+            observed = record_fingerprints(selected, rows, include_guard_only=guard_only)
+            assert observed == json.loads(records)
+            assert records_sha == digest(observed)
+            verified_records.update(observed)
+        assert verified_records == plan["local_expected_records"]
+        assert digest(verified_records) == plan["local_expected_records_digest"]
+    assert fixture.remote().read("Job History") == fixture.remote_before["Job History"]
+
+    mutation = Mock(side_effect=AssertionError("verified local operations were reapplied"))
+    with monkeypatch.context() as forbid_reapply:
+        forbid_reapply.setattr(SQLiteRepository, "_commit_in_transaction", mutation)
+        fixture.service.lose_response = True
+        with pytest.raises(UncertainWriteError):
+            fixture.command("execute", max_operations=100)
+        pending = read_session()
+        assert pending["state"] == "SYNC_PENDING"
+        dispatch, = pending["chunks"]
+        assert (dispatch["start_cursor"], dispatch["operation_count"], dispatch["state"]) == (0, 2, "CLAIMED")
+        assert pending["receipt_id"] and pending["intent_id"] and pending["acknowledgement_id"] is None
+        assert len(fixture.service.batches) == 1
+        assert fixture.queue_path.exists()
+
+        result = fixture.command("execute", max_operations=1)
+    mutation.assert_not_called()
+
+    confirmed = read_session()
+    assert result["state"] == confirmed["state"] == "SYNC_CONFIRMED"
+    assert result["reservation_digest"] == reservation
+    assert result["inventory_sha256"] == frozen["inventory_sha256"]
+    assert result["plan_digest"] == confirmed["plan_digest"] == local_only["plan_digest"]
+    assert result["projection_digest"] == confirmed["projection_digest"] == local_only["projection_digest"]
+    for field in ("receipt_id", "intent_id"):
+        assert result[field] == confirmed[field] == pending[field]
+    confirmed_dispatch, = confirmed["chunks"]
+    assert confirmed_dispatch["claim_id"] == dispatch["claim_id"]
+    assert confirmed_dispatch["state"] == "CONFIRMED" and confirmed_dispatch["readback_digest"]
+    assert result["acknowledgement_id"] == confirmed["acknowledgement_id"]
+    with closing(fixture.local()) as local:
+        assert read_local_chunks(local, apply_id) == chunks
+        assert local.db.execute(
+            "SELECT apply_id,receipt_id,acknowledgement_id FROM exact_local_acknowledgements"
+        ).fetchall() == [(apply_id, confirmed["receipt_id"], result["acknowledgement_id"])]
+        assert local.db.execute("SELECT count(*) FROM dirty").fetchone() == (0,)
+    remote_rows = fixture.remote().read("Job History")
+    assert record_fingerprints(
+        plan["remote_projection"], {"Job History": remote_rows}, include_guard_only=guard_only,
+    ) == plan["remote_records"]
+    assert not fixture.queue_path.exists()
+    fixture.fetch.assert_called_once_with("Jobvite", BOARD, COMPANY_ID, "Samtec")
+    assert len(fixture.service.batches) == 1
+    fixture.assert_historical_records_unchanged()
+
+
+def test_two_new_postings_can_start_with_one_operation_per_chunk(fixture):
+    fixture.sign()
+    result = fixture.command("execute", max_operations=1)
+    assert result["state"] == "SYNC_CONFIRMED"
+    reservation = result["reservation_digest"]
+    with closing(RetainedSessionStore(fixture.root / "retained-sessions.sqlite3")) as store:
+        session = store.load(reservation)
+    assert [(chunk["start_cursor"], chunk["operation_count"], chunk["state"])
+            for chunk in session["chunks"]] == [(0, 1, "CONFIRMED"), (1, 1, "CONFIRMED")]
+
+    operations = session["plan"]["local_operations"]
+    assert len(operations) == 4
+    assert {operation["tab"] for operation in operations} == {"Job History", "Job Evidence"}
+    with closing(fixture.local()) as local:
+        assert local.db.execute(
+            "SELECT start_cursor,operation_count,state FROM exact_local_apply_chunks ORDER BY start_cursor"
+        ).fetchall() == [(cursor, 1, "VERIFIED") for cursor in range(4)]
+        assert local.db.execute(
+            "SELECT start_cursor,operation_count FROM retained_dirty_chunks "
+            "WHERE reservation_digest=? ORDER BY start_cursor", (reservation,),
+        ).fetchall() == [(cursor, 1) for cursor in range(4)]
+        dirty_targets = local.db.execute(
+            "SELECT DISTINCT start_cursor,tab,identity FROM retained_dirty_cells "
+            "WHERE reservation_digest=? ORDER BY start_cursor", (reservation,),
+        ).fetchall()
+        assert [(cursor, tab, json.loads(identity)) for cursor, tab, identity in dirty_targets] == [
+            (cursor, operation["tab"], operation["identity"])
+            for cursor, operation in enumerate(operations) if operation["tab"] == "Job History"
+        ]
+        assert local.db.execute("SELECT count(*) FROM dirty").fetchone() == (0,)
+
+    fixture.fetch.assert_called_once_with("Jobvite", BOARD, COMPANY_ID, "Samtec")
+    assert len(fixture.service.batches) == 2
+    assert not fixture.queue_path.exists()
     fixture.assert_historical_records_unchanged()

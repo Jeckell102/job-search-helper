@@ -77,9 +77,9 @@ class ReleaseAdmissionBootstrapTests(unittest.TestCase):
             f"Path({str(self.imported)!r}).touch()\n"
         )
 
-    def run_launcher(self, command=OPERATOR_COMMAND, **environment):
+    def run_launcher(self, command=OPERATOR_COMMAND, *arguments, **environment):
         env = {**self.environment(), "PYTHON": sys.executable, **environment}
-        return subprocess.run([str(self.root / "job-search-scraper"), command], cwd=self.root,
+        return subprocess.run([str(self.root / "job-search-scraper"), command, *arguments], cwd=self.root,
                               env=env, text=True, capture_output=True, timeout=10)
 
     def test_operator_launcher_checks_the_scraper_lock_before_any_package_import(self):
@@ -151,7 +151,7 @@ class ReleaseAdmissionBootstrapTests(unittest.TestCase):
         self.assertIn("must be canonical", result.stderr)
         self.assertFalse(self.imported.exists())
 
-    def test_operator_launcher_with_real_runner_fails_closed_without_handler(self):
+    def test_operator_launcher_reaches_real_parser_and_declines_unscoped_launch(self):
         self.operator_fixture()
         package = self.root / "src/job_search_helper"
         shutil.copytree(PROJECT / "src/job_search_helper", package, dirs_exist_ok=True,
@@ -160,10 +160,17 @@ class ReleaseAdmissionBootstrapTests(unittest.TestCase):
             (package / (module + ".py")).write_text(
                 "raise AssertionError('Unexpected fallback into a different command')\n"
             )
+        databases = list((self.root / ".state").glob("*.sqlite3")) + [self.root / ".state/state.db"]
+        before = {path: path.read_bytes() for path in databases}
+        help_result = self.run_launcher(OPERATOR_COMMAND, "preview", "--help")
+        self.assertEqual(help_result.returncode, 0, help_result.stderr)
+        for option in ("--request-id", "--company-id", "--cycle-id", "--manifest-file"):
+            self.assertIn(option, help_result.stdout)
         result = self.run_launcher()
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn("Specify the retained operator command and exact request identity", result.stderr)
         self.assertEqual(result.stdout, "")
+        self.assertEqual({path: path.read_bytes() for path in databases}, before)
         with writer_lock(self.root / ".state/scraper.lock"):
             pass
         # Its ordinary module entry cannot create a post-import operator lease.
