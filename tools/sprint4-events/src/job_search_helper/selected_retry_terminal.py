@@ -5,18 +5,15 @@ import os
 from pathlib import Path
 
 from . import publication_receipts
-from .ats import validate_outcome_failure
 from .company_events import canonical_company_fact
-from .company_sources import repair_source
 from .exact_cycle_receipt import selected_retry_receipt_binding
 from .outcomes import classify_outcome
-from .repository import _url
 from .integration_release import assert_release_settled
 from .retained_event_outcome import retained_outcome_source_is_current
 from .retained_work_runner import assert_normal_lifecycle_not_held
 from .scan_request import _cycle_views, _timestamp, _unfinished_from_views, cycle_metadata
 from .sheet_profile import COMPACT_PROFILE
-from .scoped_provider_observation import provider_identity
+from .scoped_provider_observation import no_publication_result
 from .selected_temporary_retry_execution import load_selected_retry_inventory
 from .temporary_retry import _canonical, _selected_sha
 
@@ -117,30 +114,14 @@ def _settle_selected_retry_locked(sink, engine, cycle_id, frozen, workbook_guard
 
 
 def _decision(frozen, fact, cid, company_name):
-    inventory = frozen['inventory']
-    expected_ats, board, _ = repair_source(fact['ats_source'], inventory['requested_url'], cid, company_name)
-    provider = provider_identity(expected_ats, board)
-    if (inventory['jobs'] != [] or inventory['browser_pending_urls'] != []
-            or inventory['browser_discovery_incomplete'] is not False
-            or not provider or provider_identity(inventory['ats'], inventory['source_url']) != provider
-            or _url(inventory['requested_url']) != fact['official_careers_url']
-            or _timestamp(frozen['fetch_started_at'], 'Selected retry fetch start')
-            > _timestamp(inventory['fetched_at'], 'Selected retry fetch end')):
+    result = no_publication_result(frozen, fact, cid, company_name)
+    if result is None:
         return None
-    code = inventory.get('verified_zero')
-    if inventory['status'] == 'complete' and inventory.get('outcome_failure') is None:
-        if ((code == 'greenhouse_explicit_total_zero' and provider.startswith('greenhouse:'))
-                or (code == 'samtec_jobvite_explicit_zero' and cid == 'COMP-0739'
-                    and fact['official_careers_url'].rstrip('/') == 'https://jobs.jobvite.com/samtec/search')):
-            return 'VERIFIED_ZERO', 'complete', 'Complete', code
-    failure = validate_outcome_failure(inventory.get('outcome_failure'))
-    if code is not None or failure is None:
-        return None
-    if failure['category'] == 'temporary_transport' and inventory['status'] in {'failed', 'partial'}:
-        return 'HELD_TEMPORARY_RETRY_CAP', 'failed', 'Failed', failure['evidence_code']
-    if failure['category'] == 'access_denied' and inventory['status'] == 'blocked':
-        return 'HELD_ACCESS_DENIED', 'blocked', 'Blocked / Manual Review', failure['evidence_code']
-    return None
+    stage, scan_state, code = result
+    disposition = {
+        'complete': 'VERIFIED_ZERO', 'failed': 'HELD_TEMPORARY_RETRY_CAP', 'blocked': 'HELD_ACCESS_DENIED',
+    }[stage]
+    return disposition, stage, scan_state, code
 
 
 def _before(sink, engine, cycle, cid, parent_identity):

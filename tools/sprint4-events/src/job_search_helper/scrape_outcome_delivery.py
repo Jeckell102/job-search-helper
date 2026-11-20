@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import re
+import sqlite3
 from datetime import datetime, timezone
 
 from .repository import RepositoryError
@@ -125,6 +126,25 @@ class OutcomeDelivery:
             outcome_id = row[0]
             if terminal:
                 continue
+            identity = record['identity']
+            company_event = identity.get('company_event_id') or identity['request_id'].startswith('company-event:')
+            retained_event = identity.get('retained_reservation_sha256')
+            if company_event and not stale:
+                from .company_events import acknowledged_company_event_source_is_current
+                if not acknowledged_company_event_source_is_current(self.repository, identity):
+                    disposition = ('HELD_STALE_RETAINED_SOURCE' if retained_event
+                                   else 'HELD_STALE_COMPANY_EVENT_SOURCE')
+                    results.append({'outcome_id': outcome_id, 'disposition': disposition})
+                    continue
+            if company_event and not retained_event:
+                from .ordinary_event_settlement import ordinary_event_outcome_settled
+                try:
+                    settled = ordinary_event_outcome_settled(self.repository, record)
+                except (ValueError, OSError, sqlite3.Error, RepositoryError):
+                    settled = False
+                if not settled:
+                    results.append({'outcome_id': outcome_id, 'disposition': 'HELD_ORDINARY_EVENT_SETTLEMENT'})
+                    continue
             if stale:
                 receipt = {'schema': SCHEMA, 'consumer': self.consumer, 'outcome_id': outcome_id,
                            'record_sha256': digest, 'disposition': 'STALE_SUPPRESSED'}
@@ -133,20 +153,6 @@ class OutcomeDelivery:
                     self.consumer, outcome_id, digest, raw, _digest(raw), self.stamp())
                 results.append({'outcome_id': outcome_id, 'disposition': 'STALE_SUPPRESSED'})
                 continue
-            identity = record['identity']
-            if identity.get('company_event_id') or identity['request_id'].startswith('company-event:'):
-                from .company_events import acknowledged_company_event_source_is_current
-                if not acknowledged_company_event_source_is_current(self.repository, identity):
-                    disposition = ('HELD_STALE_RETAINED_SOURCE' if identity.get('retained_reservation_sha256')
-                                   else 'HELD_STALE_COMPANY_EVENT_SOURCE')
-                    results.append({'outcome_id': outcome_id, 'disposition': disposition})
-                    continue
-                if not identity.get('retained_reservation_sha256'):
-                    from .ordinary_event_settlement import ordinary_event_outcome_settled
-                    if not ordinary_event_outcome_settled(self.repository, record):
-                        results.append({'outcome_id': outcome_id,
-                                        'disposition': 'HELD_ORDINARY_EVENT_SETTLEMENT'})
-                        continue
             count, state, due = attempt
             if state == 'HELD_RETRY_CAP' or (state == 'WAITING' and due > now) or (state == 'IN_FLIGHT' and due > now):
                 continue

@@ -26,14 +26,16 @@ def _prepare(fixture):
     return workbook, provider
 
 
-def _publish(fixture, workbook):
+def _publish(fixture, workbook, *, remote_reader=None):
     root, cycle_id, digest = fixture
     with (writer_lock(root / 'scraper.lock'), writer_lock(root / 'writer.lock'),
           closing(SQLiteRepository(root / 'jobs.sqlite3', 'sheet')) as local,
           closing(State(str(root / 'state.db'))) as state,
           closing(InventoryInbox(root / 'inventories.sqlite3', 'sheet')) as inbox):
         engine = Engine(local, state, inbox=inbox, runtime_binding=RUNTIME, error_log_path=root / 'errors.jsonl')
-        return publish_ordinary_event_locked(engine, workbook, cycle_id=cycle_id, request_sha256=digest)
+        return publish_ordinary_event_locked(
+            engine, workbook, cycle_id=cycle_id, request_sha256=digest, remote_reader=remote_reader,
+        )
 
 
 def test_ordinary_event_recovers_lost_sheets_response_and_archives_exact_result(ordinary_cycle):
@@ -87,6 +89,8 @@ def test_ordinary_event_archive_and_inbox_cleanup_roll_back_together(ordinary_cy
 
 
 def test_archive_requires_the_same_jobs_acknowledgement_on_replay(ordinary_cycle):
+    from job_search_helper.scrape_outcome_delivery import OutcomeDelivery
+
     root, _cycle_id, _digest = ordinary_cycle
     workbook, _provider = _prepare(ordinary_cycle)
     result = _publish(ordinary_cycle, workbook)
@@ -98,6 +102,13 @@ def test_archive_requires_the_same_jobs_acknowledgement_on_replay(ordinary_cycle
     with pytest.raises(ValueError, match='lacks the exact Jobs acknowledgement'):
         _publish(ordinary_cycle, not_opened)
     not_opened.assert_not_called()
+    sink = Mock()
+    with closing(SQLiteRepository(root / 'jobs.sqlite3', 'sheet')) as local:
+        outcome_id = result['outcome']['outcome_id']
+        assert OutcomeDelivery(local, sink).drain(outcome_id=outcome_id) == [
+            {'outcome_id': outcome_id, 'disposition': 'HELD_ORDINARY_EVENT_SETTLEMENT'},
+        ]
+    sink.ingest_immutable.assert_not_called()
 
 
 def test_event_receipt_cannot_enter_legacy_reconciliation_before_remote_intent(ordinary_cycle):
@@ -277,7 +288,7 @@ def test_outcome_preserves_a_settled_publication_but_suppresses_a_superseded_eve
 
     root, cycle_id, _request = ordinary_cycle
     workbook, provider = _prepare(ordinary_cycle)
-    with patch('job_search_helper.ordinary_company_event_publication.settle_published_ordinary_event',
+    with patch('job_search_helper.ordinary_company_event_publication.settle_ordinary_event',
                side_effect=RuntimeError('interrupt before the outcome')):
         with pytest.raises(RuntimeError, match='interrupt before the outcome'):
             _publish(ordinary_cycle, workbook)
@@ -296,12 +307,20 @@ def test_outcome_preserves_a_settled_publication_but_suppresses_a_superseded_eve
             })
         assert not local.scrape_outcomes()
     unopened = Mock()
+    with patch.object(State, 'save_cycle', side_effect=RuntimeError('cut before stale terminal State')):
+        with pytest.raises(RuntimeError, match='cut before stale terminal State'):
+            _publish(ordinary_cycle, unopened)
+    sink = Mock()
+    with closing(SQLiteRepository(root / 'jobs.sqlite3', 'sheet')) as local:
+        stored = local.scrape_outcomes()[0]
+        assert OutcomeDelivery(local, sink).drain(outcome_id=stored['outcome_id']) == [
+            {'outcome_id': stored['outcome_id'], 'disposition': 'HELD_ORDINARY_EVENT_SETTLEMENT'},
+        ]
     result = _publish(ordinary_cycle, unopened)
     assert result['state'] == 'SYNC_CONFIRMED'
     outcome = result['outcome']
     assert outcome['outcome'] == 'STALE_OR_PAUSED'
     assert outcome['identity']['source_revision'] == events[-1]['source_revision']
-    sink = Mock()
     with closing(SQLiteRepository(root / 'jobs.sqlite3', 'sheet')) as local:
         assert local.scrape_outcomes() == [outcome]
         assert OutcomeDelivery(local, sink).drain(outcome_id=outcome['outcome_id']) == [

@@ -74,7 +74,7 @@ def has_ordinary_event_scope(cycle, request_id=None):
     )
 
 
-def ordinary_event_receipt_binding(cycle, company_id, payload, context):
+def ordinary_event_observation_binding(cycle, company_id, context):
     """Re-derive the exact publication authority from the admitted scope."""
     from .runner import _canonical_runtime_binding
 
@@ -101,8 +101,6 @@ def ordinary_event_receipt_binding(cycle, company_id, payload, context):
             or item.get('outcome_source_revision') != event['source_revision']
             or runtime != admitted['runtime']):
         raise ValueError('Ordinary Company-event plan context disagrees with the admitted source or runtime.')
-    if _canonical(payload) != _canonical(ordinary_event_plan_payload(context)):
-        raise ValueError('Ordinary Company-event Inbox payload disagrees with the frozen observation.')
     return {
         'authority': ORDINARY_EVENT_AUTHORITY, 'cycle_id': cycle['id'],
         'request_id': request['request_id'], 'request_sha256': admitted['request_sha256'],
@@ -115,6 +113,12 @@ def ordinary_event_receipt_binding(cycle, company_id, payload, context):
         'release_id': runtime.get('release_id', 'NO_RELEASE'),
         'release_binding_sha256': _digest(runtime),
     }
+
+
+def ordinary_event_receipt_binding(cycle, company_id, payload, context):
+    if _canonical(payload) != _canonical(ordinary_event_plan_payload(context)):
+        raise ValueError('Ordinary Company-event Inbox payload disagrees with the frozen observation.')
+    return ordinary_event_observation_binding(cycle, company_id, context)
 
 
 def _ordinary_event_receipt(cycle, company_id, payload, plan, timestamp, request_id, context):

@@ -4,7 +4,9 @@ import os
 import stat
 import tempfile
 
-from .ats import lever_location_scope, resolve_board
+from .ats import lever_location_scope, resolve_board, validate_outcome_failure
+from .company_sources import repair_source
+from .repository import _url
 from .retained_operator_journal import provider_inventory_digest
 from .retained_work_exception import _provider_identity
 from .scan_request import _timestamp
@@ -25,6 +27,36 @@ def provider_identity(ats, url):
     except ValueError:
         return ''
     return provider + ':' + board.casefold()
+
+
+def no_publication_result(frozen, fact, company_id, company_name):
+    """Recognize only scoped, definite provider results with no projected jobs."""
+    inventory = frozen['inventory']
+    expected_ats, board, _ = repair_source(
+        fact['ats_source'], inventory['requested_url'], company_id, company_name,
+    )
+    provider = provider_identity(expected_ats, board)
+    if (inventory['jobs'] != [] or inventory['browser_pending_urls'] != []
+            or inventory['browser_discovery_incomplete'] is not False
+            or not provider or provider_identity(inventory['ats'], inventory['source_url']) != provider
+            or _url(inventory['requested_url']) != fact['official_careers_url']
+            or _timestamp(frozen['fetch_started_at'], 'Scoped provider fetch start')
+            > _timestamp(inventory['fetched_at'], 'Scoped provider fetch end')):
+        return None
+    code = inventory.get('verified_zero')
+    if inventory['status'] == 'complete' and inventory.get('outcome_failure') is None:
+        if ((code == 'greenhouse_explicit_total_zero' and provider.startswith('greenhouse:'))
+                or (code == 'samtec_jobvite_explicit_zero' and company_id == 'COMP-0739'
+                    and fact['official_careers_url'].rstrip('/') == 'https://jobs.jobvite.com/samtec/search')):
+            return 'complete', 'Complete', code
+    failure = validate_outcome_failure(inventory.get('outcome_failure'))
+    if code is not None or failure is None:
+        return None
+    if failure['category'] == 'temporary_transport' and inventory['status'] in {'failed', 'partial'}:
+        return 'failed', 'Failed', failure['evidence_code']
+    if failure['category'] == 'access_denied' and inventory['status'] == 'blocked':
+        return 'blocked', 'Blocked / Manual Review', failure['evidence_code']
+    return None
 
 
 def read_observation(path, binding):

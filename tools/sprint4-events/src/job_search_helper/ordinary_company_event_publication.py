@@ -8,7 +8,7 @@ from .exact_cycle_recovery import _recover_exact_cycle_locked
 from .exact_cycle_sync import _company_guard
 from .integration_release import assert_release_settled
 from .ordinary_event_publication_archive import read_ordinary_event_publication
-from .ordinary_event_settlement import settle_published_ordinary_event
+from .ordinary_event_settlement import settle_ordinary_event
 from .repository import GoogleRepository
 from .retained_work_runner import assert_normal_lifecycle_not_held
 from .scan_request import _cycle_views, _unfinished_from_views, cycle_metadata
@@ -16,10 +16,11 @@ from .sheet_profile import COMPACT_SCHEMAS
 from .sqlite_repository import SQLiteRepository
 
 
-def publish_ordinary_event_locked(engine, remote_factory, *, cycle_id, request_sha256):
+def publish_ordinary_event_locked(engine, remote_factory, *, cycle_id, request_sha256, remote_reader=None):
     """Use the caller's scraper and writer leases, with no provider on this path."""
     from .exact_cycle_receipt import (
-        load_ordinary_event_plan_context, ordinary_event_plan_payload, ordinary_event_receipt_binding,
+        _ordinary_observation, load_ordinary_event_plan_context, ordinary_event_plan_payload,
+        ordinary_event_receipt_binding,
     )
 
     if not isinstance(engine, Engine) or not callable(remote_factory):
@@ -45,12 +46,17 @@ def publish_ordinary_event_locked(engine, remote_factory, *, cycle_id, request_s
     cycle = engine.state.cycle(cycle_id)
     event = cycle['company_event']
     cid = event['company_id']
+    inventory = _ordinary_observation(context)['inventory']
+    if not inventory['jobs'] or inventory['status'] not in {'complete', 'partial'}:
+        return settle_ordinary_event(
+            engine, cycle_id=cycle_id, request_sha256=request_sha256, remote_reader=remote_reader,
+        )
     payload = ordinary_event_plan_payload(context)
     binding = ordinary_event_receipt_binding(cycle, cid, payload, context)
 
     archived = read_ordinary_event_publication(engine.inbox, engine.repo, cycle_id, cid, binding=binding)
     if archived is not None:
-        return settle_published_ordinary_event(engine, cycle_id=cycle_id, request_sha256=request_sha256)
+        return settle_ordinary_event(engine, cycle_id=cycle_id, request_sha256=request_sha256)
 
     def current_company():
         local_cycles, mirrors = _cycle_views(engine.repo, engine.state)
@@ -105,4 +111,4 @@ def publish_ordinary_event_locked(engine, remote_factory, *, cycle_id, request_s
         return {'state': 'PUBLICATION_HELD', **report}
     if reopen() != context:
         raise ValueError('Ordinary event publication observation changed before settlement.')
-    return settle_published_ordinary_event(engine, cycle_id=cycle_id, request_sha256=request_sha256)
+    return settle_ordinary_event(engine, cycle_id=cycle_id, request_sha256=request_sha256)

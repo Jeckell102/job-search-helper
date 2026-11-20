@@ -32,6 +32,10 @@ COMPANY = {'Company ID': 'COMP-1', 'Company': 'Fixture', 'Company Status': 'Acti
 
 @pytest.fixture
 def ordinary_cycle(tmp_path):
+    return create_ordinary_cycle(tmp_path, COMPANY, BOARD)
+
+
+def create_ordinary_cycle(tmp_path, company, board):
     jobs, state_path = tmp_path / 'jobs.sqlite3', tmp_path / 'state.db'
     with (closing(SQLiteRepository(jobs, 'sheet', initialize=True)) as local,
           closing(State(str(state_path))) as state,
@@ -40,10 +44,10 @@ def ordinary_cycle(tmp_path):
             local.set_meta('ready', 'yes')
             local.set_meta('sheets_profile', COMPACT_PROFILE)
         local.ensure_columns('Opportunities', ['Opportunity ID'])
-        local.import_rows('Companies', [(2, COMPANY), (3, {**COMPANY, 'Company ID': 'COMP-2', 'Company': 'Other'})])
+        local.import_rows('Companies', [(2, company), (3, {**company, 'Company ID': 'COMP-2', 'Company': 'Other'})])
         event = local.mutate_company_with_event({
             'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
-            'values': {'Official Careers URL': BOARD},
+            'values': {'Official Careers URL': board},
         })['company_event']
         CompanyEventBridge(local, tmp_path).process_pending()
         with writer_lock(tmp_path / 'scraper.lock'), writer_lock(tmp_path / 'writer.lock'):
@@ -64,8 +68,8 @@ def observe(fixture, provider, workbook, *, request_sha256=None):
                                             fetcher=provider, remote_reader=workbook)
 
 
-def workbook_reader():
-    sheets = RangeSheets({'Companies': [{**COMPANY, 'Official Careers URL': BOARD}]}, schemas=COMPACT_SCHEMAS)
+def workbook_reader(company=COMPANY, board=BOARD):
+    sheets = RangeSheets({'Companies': [{**company, 'Official Careers URL': board}]}, schemas=COMPACT_SCHEMAS)
     return Mock(return_value=GoogleRepository(sheets, 'sheet', schemas=COMPACT_SCHEMAS, min_request_interval=0))
 
 

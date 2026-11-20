@@ -15,6 +15,10 @@ _DIGEST_FIELDS = {
 }
 _TABLE = 'ordinary_event_publication_archive'
 _ACK_TABLE = 'ordinary_event_exact_ack_proofs'
+_INBOX_WORK_TABLES = (
+    'inventories', 'sync_plans', 'exact_remote_plans', 'exact_sync_chunks', 'exact_plan_local_state',
+    'exact_legacy_plan_migrations', 'exact_selected_legacy_recoveries', 'exact_control_before_prefix_recoveries',
+)
 
 
 def _digest_text(value):
@@ -40,7 +44,8 @@ def _row(db, cycle_id, company_id, request_id):
     return rows[0]
 
 
-def _verify(inbox, local, evidence, cycle_id, company_id, binding):
+def _verify(db, local, evidence, cycle_id, company_id, binding):
+    from .inbox import InventoryInbox
     required = _DIGEST_FIELDS | {'schema', 'cycle_id', 'company_id', 'binding',
                                   'apply_id', 'intent_id', 'final_stage'}
     if (not isinstance(evidence, dict) or set(evidence) != required
@@ -56,14 +61,14 @@ def _verify(inbox, local, evidence, cycle_id, company_id, binding):
             or evidence['intent_id'] != _remote_intent_id(
                 cycle_id, company_id, evidence['plan_digest'], evidence['projection_digest'])):
         raise ValueError('Ordinary event publication archive identity or evidence changed.')
-    receipt = publication_receipts.receipt(inbox.connection, binding)
+    receipt = publication_receipts.receipt(db, binding)
     if (receipt is None or receipt['binding'] != binding or receipt['receipt_id'] != evidence['receipt_id']
             or receipt['state'] != publication_receipts.SYNC_CONFIRMED
             or receipt['acknowledgement_id'] != evidence['acknowledgement_id']
             or _digest(receipt['records']) != evidence['remote_records_digest']):
         raise ValueError('Ordinary event publication archive lacks the exact confirmed Sheets receipt.')
-    acknowledgement = inbox._require_exact_local_acknowledgement(
-        local, cycle_id, company_id, evidence['plan_digest'], evidence['receipt_id'],
+    acknowledgement = InventoryInbox._verify_exact_local_acknowledgement(
+        db, local, cycle_id, company_id, evidence['plan_digest'], evidence['receipt_id'],
         evidence['acknowledgement_id'], expected_apply_id=evidence['apply_id'],
     )
     if acknowledgement['selected_fields_digest'] != evidence['selected_fields_digest']:
@@ -158,7 +163,7 @@ def archive_before_cleanup(inbox, local, cycle_id, company_id, plan, *, binding)
         'acknowledgement_id': remote['acknowledgement_id'], 'apply_id': acknowledgement['apply_id'],
         'selected_fields_digest': acknowledgement['selected_fields_digest'], 'final_stage': plan['final']['stage'],
     }
-    _verify(inbox, local, evidence, cycle_id, company_id, binding)
+    _verify(db, local, evidence, cycle_id, company_id, binding)
     db.execute(
         'CREATE TABLE IF NOT EXISTS ordinary_event_publication_archive ('
         'cycle TEXT PRIMARY KEY, company TEXT NOT NULL, request_id TEXT NOT NULL UNIQUE, '
@@ -176,19 +181,21 @@ def archive_before_cleanup(inbox, local, cycle_id, company_id, plan, *, binding)
 def read_ordinary_event_publication(inbox, local, cycle_id, company_id, *, binding):
     """Recheck both durable acknowledgements against the independently reopened event."""
     with inbox.lock:
-        row = _row(inbox.connection, cycle_id, company_id, binding['request_id'])
-        if row is None:
-            return None
-        evidence = json.loads(row[-1])
-        if (not isinstance(evidence, dict)
-                or row[3:] != (evidence.get('receipt_id'), _digest(evidence), _encode(evidence))):
-            raise ValueError('Ordinary event publication archive bytes do not match its stored evidence.')
-        if any(inbox.connection.execute(
-                f'SELECT 1 FROM {table} WHERE cycle=? AND company=? LIMIT 1', (cycle_id, company_id),
-        ).fetchone() for table in (
-            'inventories', 'sync_plans', 'exact_remote_plans', 'exact_sync_chunks', 'exact_plan_local_state',
-            'exact_legacy_plan_migrations', 'exact_selected_legacy_recoveries', 'exact_control_before_prefix_recoveries',
-        )):
-            raise ValueError('Ordinary event publication archive conflicts with active Inbox work.')
-        _verify(inbox, local, evidence, cycle_id, company_id, binding)
-        return evidence
+        return verify_ordinary_event_publication(inbox.connection, local, cycle_id, company_id, binding=binding)
+
+
+def verify_ordinary_event_publication(db, local, cycle_id, company_id, *, binding):
+    """Use the same terminal proof from either an open Inbox or a read-only connection."""
+    row = _row(db, cycle_id, company_id, binding['request_id'])
+    if row is None:
+        return None
+    evidence = json.loads(row[-1])
+    if (not isinstance(evidence, dict)
+            or row[3:] != (evidence.get('receipt_id'), _digest(evidence), _encode(evidence))):
+        raise ValueError('Ordinary event publication archive bytes do not match its stored evidence.')
+    if any(db.execute(
+            f'SELECT 1 FROM {table} WHERE cycle=? AND company=? LIMIT 1', (cycle_id, company_id),
+    ).fetchone() for table in _INBOX_WORK_TABLES):
+        raise ValueError('Ordinary event publication archive conflicts with active Inbox work.')
+    _verify(db, local, evidence, cycle_id, company_id, binding)
+    return evidence

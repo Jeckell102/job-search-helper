@@ -348,12 +348,21 @@ class InventoryInbox:
                                              plan_digest, receipt_id,
                                              acknowledgement_id,
                                              expected_apply_id=None):
+        with self.lock:
+            return self._verify_exact_local_acknowledgement(
+                self.connection, local, cycle, company, plan_digest, receipt_id,
+                acknowledgement_id, expected_apply_id=expected_apply_id,
+            )
+
+    @staticmethod
+    def _verify_exact_local_acknowledgement(connection, local, cycle, company,
+                                            plan_digest, receipt_id, acknowledgement_id,
+                                            expected_apply_id=None):
         """Prove the concrete job DB durably acknowledged this exact receipt."""
         from .sqlite_repository import SQLiteRepository
         if not isinstance(local, SQLiteRepository):
             raise ValueError('Exact v2 finalization requires its SQLite repository.')
-        with self.lock:
-            destination = self.connection.execute('SELECT id FROM destination').fetchone()
+        destination = connection.execute('SELECT id FROM destination').fetchone()
         if destination != (local.spreadsheet_id,):
             raise ValueError('Exact v2 local acknowledgement belongs to another workbook.')
         tables = {row[0] for row in local.db.execute(

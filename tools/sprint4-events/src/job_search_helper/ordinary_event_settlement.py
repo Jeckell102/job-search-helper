@@ -8,18 +8,18 @@ import sqlite3
 from .ats import validate_outcome_failure
 from .company_events import read_verified_ordinary_event_admission
 from .engine import Engine, State, now
-from .ordinary_event_publication_archive import read_ordinary_event_publication
+from .ordinary_event_publication_archive import read_ordinary_event_publication, verify_ordinary_event_publication
 from .outcomes import classify_outcome
-from .scan_request import _timestamp
+from .scan_request import _cycle_views, _timestamp, _unfinished_from_views
+from .scoped_provider_observation import no_publication_result
 from .sqlite_repository import SQLiteRepository
 from .temporary_retry import _canonical, _selected_sha
 
 
-def settle_published_ordinary_event(engine, *, cycle_id, request_sha256):
+def settle_ordinary_event(engine, *, cycle_id, request_sha256, remote_reader=None):
     """Record one owned outcome and mirror, then checkpoint State last."""
     from .exact_cycle_receipt import (
-        _ordinary_observation, load_ordinary_event_plan_context,
-        ordinary_event_plan_payload, ordinary_event_receipt_binding,
+        _ordinary_observation, load_ordinary_event_plan_context, ordinary_event_observation_binding,
     )
 
     if (not isinstance(engine, Engine) or not isinstance(engine.repo, SQLiteRepository)
@@ -43,38 +43,74 @@ def settle_published_ordinary_event(engine, *, cycle_id, request_sha256):
     cycle = state.cycle(cycle_id)
     company_id = cycle['company_event']['company_id']
     observation = _ordinary_observation(context)
-    binding = ordinary_event_receipt_binding(cycle, company_id, ordinary_event_plan_payload(context), context)
-    proof = read_ordinary_event_publication(engine.inbox, repo, cycle_id, company_id, binding=binding)
-    if (proof is None
-            or observation['sha256'] != binding['observation_sha256']
-            or observation['inventory_sha256'] != binding['provider_inventory_sha256']
-            or cycle['companies'][company_id].get('stage') != proof['final_stage']):
-        raise ValueError('Ordinary event settlement has no exact terminal publication proof.')
-    fixed = {'schema': 'ordinary-company-event-settlement-v1', 'binding': binding,
-             'publication_sha256': _selected_sha(proof), 'stage': proof['final_stage']}
+    binding = ordinary_event_observation_binding(cycle, company_id, context)
+    inventory = observation['inventory']
+    published = bool(inventory['jobs']) and inventory['status'] in {'complete', 'partial'}
+    decision = None
+    if published:
+        proof = read_ordinary_event_publication(engine.inbox, repo, cycle_id, company_id, binding=binding)
+        if proof is None or cycle['companies'][company_id].get('stage') != proof['final_stage']:
+            raise ValueError('Ordinary event settlement has no exact terminal publication proof.')
+        stage = proof['final_stage']
+    else:
+        decision = no_publication_result(
+            observation, cycle['companies'][company_id]['outcome_source_fact'],
+            company_id, cycle['companies'][company_id]['company'],
+        )
+        if decision is None:
+            return {'state': 'HELD_NO_PUBLISHABLE_EVENT_INVENTORY', 'cycle_id': cycle_id,
+                    'company_id': company_id, 'inventory_status': inventory['status']}
+        stage, scan_state, code = decision
+        binding = {**binding, 'authority': 'ordinary-company-event-no-publication-v1'}
+        proof = None
+        _require_no_publication(engine, cycle_id, binding['request_id'])
+    fixed = {
+        'schema': 'ordinary-company-event-settlement-v1', 'binding': binding,
+        'publication_sha256': _selected_sha(proof) if proof else None, 'stage': stage,
+        'no_publication': {'scan_state': scan_state, 'evidence_code': code} if decision else None,
+    }
     saved = _read_settlement(repo, cycle_id, binding['request_id'])
     if saved is None:
+        company_snapshot = None
+        if decision:
+            if not callable(remote_reader):
+                raise ValueError('Ordinary event local-only settlement requires the compact workbook reader.')
+            from .ordinary_company_event_fetch import _verify_workbook
+            company_snapshot = _no_publication_company(engine, cycle, company_id)
+            _verify_workbook(repo, remote_reader, company_snapshot)
         with repo.transaction():
             if (_read_settlement(repo, cycle_id, binding['request_id']) is not None
                     or state.cycle(cycle_id) != cycle or cycle.get('status') != 'In Progress' or reopen() != context
-                    or read_ordinary_event_publication(engine.inbox, repo, cycle_id, company_id, binding=binding) != proof
                     or _outcome_rows(repo, binding)):
                 raise ValueError('Ordinary event settlement conflicts with its prior state or outcome.')
+            if decision:
+                _require_no_publication(engine, cycle_id, binding['request_id'])
+                if _no_publication_company(engine, cycle, company_id) != company_snapshot:
+                    raise ValueError('Ordinary event Company changed during the workbook read.')
+            elif read_ordinary_event_publication(engine.inbox, repo, cycle_id, company_id, binding=binding) != proof:
+                raise ValueError('Ordinary event publication changed before settlement.')
             admission = read_verified_ordinary_event_admission(repo, state, cycle_id)
             matches = repo.matches('Scan Cycles', {'Cycle ID': cycle_id})
             if len(matches) != 1 or matches[0][1].get('Cycle Status') != 'In Progress':
                 raise ValueError('Ordinary event settlement requires its exact unfinished mirror.')
             stamp = now()
             outcome = repo._record_scrape_outcome_in_transaction(
-                _facts(binding, observation, proof['final_stage'], admission['source_current']),
+                _facts(binding, observation, stage, admission['source_current'], published=published),
                 owned_company_event=True, recorded_at=stamp,
             )['outcome']
-            terminal = _terminal(cycle, proof['final_stage'], stamp)
-            values = _mirror_values(proof['final_stage'], stamp)
-            repo._commit_in_transaction([{
+            terminal = _terminal(cycle, company_id, stage, stamp)
+            values = _mirror_values(stage, stamp)
+            operations = [{
                 'tab': 'Scan Cycles', 'identity': {'Cycle ID': cycle_id}, 'values': values,
                 'expected': {'Cycle Status': 'In Progress'},
-            }])
+            }]
+            if decision:
+                operations.append({
+                    'tab': 'Companies', 'identity': {'Company ID': company_id},
+                    'values': {'Scan State': scan_state},
+                    'expected': {'Active Cycle ID': cycle_id, 'Scan State': 'Queued'},
+                })
+            repo._commit_in_transaction(operations)
             mirror = repo.matches('Scan Cycles', {'Cycle ID': cycle_id})
             if len(mirror) != 1 or any(mirror[0][1].get(key) != value for key, value in values.items()):
                 raise ValueError('Ordinary event settlement mirror did not persist.')
@@ -92,21 +128,68 @@ def settle_published_ordinary_event(engine, *, cycle_id, request_sha256):
                             (cycle_id, binding['request_id'], outcome['outcome_id'],
                              _selected_sha(saved), _canonical(saved)))
     _finish(engine, cycle, fixed, observation, saved)
-    return {'state': 'SYNC_CONFIRMED', **proof, 'outcome': saved['outcome'],
-            'settlement_sha256': _selected_sha(saved)}
+    result = {'outcome': saved['outcome'], 'settlement_sha256': _selected_sha(saved)}
+    if published:
+        return {'state': 'SYNC_CONFIRMED', **proof, **result}
+    return {'state': {'complete': 'VERIFIED_ZERO', 'failed': 'FETCH_TEMPORARY', 'blocked': 'FETCH_BLOCKED'}[stage],
+            'cycle_id': cycle_id, 'company_id': company_id, 'evidence_code': code, **result}
 
 
-def _facts(binding, observation, stage, current):
+def _no_publication_company(engine, cycle, company_id):
+    admission = read_verified_ordinary_event_admission(engine.repo, engine.state, cycle['id'])
+    rows = engine.repo.matches('Companies', {'Company ID': company_id})
+    if (not admission['source_current'] or len(rows) != 1
+            or _unfinished_from_views(*_cycle_views(engine.repo, engine.state)) != {cycle['id']}
+            or cycle['companies'][company_id].get('stage') != 'queued'):
+        raise ValueError('Ordinary event local-only settlement requires the current sole owning cycle.')
+    row = rows[0][1]
+    if (row.get('Active Cycle ID') != cycle['id'] or row.get('Scan State') != 'Queued'
+            or row.get('Company') != cycle['companies'][company_id]['company']
+            or any(str(row.get(key) or '').strip() for key in ('Claimed By', 'Claim Token'))):
+        raise ValueError('Ordinary event local-only settlement has different Company ownership.')
+    return row
+
+
+def _require_no_publication(engine, cycle_id, request_id):
+    with engine.inbox.lock:
+        if _has_publication_evidence(engine.inbox.connection, engine.repo, cycle_id, request_id):
+            raise ValueError('Ordinary event local-only settlement conflicts with publication evidence.')
+
+
+def _has_publication_evidence(db, repository, cycle_id, request_id):
+    from .ordinary_event_publication_archive import _INBOX_WORK_TABLES
+
+    return (any(db.execute(f'SELECT 1 FROM {table} WHERE cycle=? LIMIT 1', (cycle_id,)).fetchone()
+                for table in _INBOX_WORK_TABLES)
+            or db.execute(
+                "SELECT 1 FROM publication_receipts WHERE CASE WHEN json_valid(binding) "
+                "THEN json_extract(binding,'$.request_id') END IN (?,?) LIMIT 1",
+                (cycle_id, request_id),
+            ).fetchone() is not None
+            or (db.execute("SELECT 1 FROM sqlite_master WHERE name='ordinary_event_publication_archive'").fetchone()
+                is not None and db.execute(
+                    'SELECT 1 FROM ordinary_event_publication_archive WHERE cycle=? OR request_id=?',
+                    (cycle_id, request_id),
+                ).fetchone() is not None)
+            or repository.db.execute(
+                'SELECT 1 FROM exact_local_applications WHERE cycle=? LIMIT 1', (cycle_id,),
+            ).fetchone() is not None)
+
+
+def _facts(binding, observation, stage, current, *, published):
     inventory = observation['inventory']
     envelope = validate_outcome_failure(inventory.get('outcome_failure'))
     failure = ({'category': envelope['category'], 'provider_code': envelope['evidence_code']}
                if envelope is not None else {'category': 'none' if stage == 'complete' else 'unknown'})
+    zero = not published and stage == 'complete'
     return {
         **{key: binding[key] for key in ('request_id', 'company_event_id', 'company_id',
                                         'source_revision', 'cycle_id')},
         'source_current': current, 'company_status': 'Active', 'provider': inventory['ats'],
-        'adapter_version': 'normal-scraper-v1', 'storage_status': 'confirmed',
-        'inventory_status': stage, 'failure': failure, 'capability': 'unknown',
+        'adapter_version': 'normal-scraper-v1',
+        'storage_status': 'confirmed' if published else ('not_required' if zero else 'not_attempted'),
+        'inventory_status': 'zero' if zero else stage, 'zero_openings_verified': zero,
+        'failure': failure, 'capability': 'unknown',
     }
 
 
@@ -121,7 +204,7 @@ def _read_settlement(repo, cycle_id, request_id):
         return None
     value = json.loads(rows[0][-1])
     if (not isinstance(value, dict) or set(value) != {
-            'schema', 'binding', 'publication_sha256', 'stage', 'recorded_at', 'outcome',
+            'schema', 'binding', 'publication_sha256', 'stage', 'no_publication', 'recorded_at', 'outcome',
             'pre_state_sha256', 'terminal_state_sha256', 'mirror_sha256',
         } or rows != [(cycle_id, request_id, value['outcome']['outcome_id'],
                         _selected_sha(value), _canonical(value))]):
@@ -165,16 +248,39 @@ def ordinary_event_outcome_settled(repository, record):
     if (_selected_sha(core) != saved['terminal_state_sha256'] or len(mirrors) != 1
             or _selected_sha(mirrors[0][1]) != saved['mirror_sha256']):
         return False
+    if saved['no_publication'] is not None:
+        return _no_publication_outcome_verified(repository, cycle, saved)
     with closing(sqlite3.connect(inbox_path.as_uri() + '?mode=ro', uri=True)) as inbox:
-        if not inbox.execute(
-                "SELECT 1 FROM sqlite_master WHERE name='ordinary_event_publication_archive'").fetchone():
-            return False
-        row = inbox.execute(
-            'SELECT proof_sha256,evidence FROM ordinary_event_publication_archive '
-            'WHERE cycle=? AND company=? AND request_id=?',
-            (cycle_id, identity['company_id'], request_id),
-        ).fetchone()
-    return bool(row and row[0] == _selected_sha(json.loads(row[1])) == saved['publication_sha256'])
+        proof = verify_ordinary_event_publication(
+            inbox, repository, cycle_id, identity['company_id'], binding=saved['binding'],
+        )
+    return proof is not None and _selected_sha(proof) == saved['publication_sha256']
+
+
+def _no_publication_outcome_verified(repository, cycle, saved):
+    from .exact_cycle_receipt import (
+        _ordinary_observation, load_ordinary_event_plan_context, ordinary_event_observation_binding,
+    )
+    binding = saved['binding']
+    cycle_id, company_id = binding['cycle_id'], binding['company_id']
+    root = repository.path.resolve().parent
+    with (closing(SQLiteRepository(repository.path, repository.spreadsheet_id, readonly=True)) as reader,
+          closing(State(str(root / 'state.db'), readonly=True)) as state):
+        context = load_ordinary_event_plan_context(
+            reader, state, cycle['runtime_binding'], cycle_id=cycle_id,
+            request_sha256=binding['request_sha256'],
+        )
+    observation = _ordinary_observation(context)
+    derived = ordinary_event_observation_binding(cycle, company_id, context)
+    derived['authority'] = 'ordinary-company-event-no-publication-v1'
+    item = cycle['companies'][company_id]
+    no_publication = no_publication_result(observation, item['outcome_source_fact'], company_id, item['company'])
+    if (binding != derived or saved['publication_sha256'] is not None or no_publication is None
+            or no_publication != (saved['stage'], saved['no_publication']['scan_state'],
+                                  saved['no_publication']['evidence_code'])):
+        return False
+    with closing(sqlite3.connect((root / 'inventories.sqlite3').as_uri() + '?mode=ro', uri=True)) as inbox:
+        return not _has_publication_evidence(inbox, repository, cycle_id, binding['request_id'])
 
 
 def _outcome_rows(repo, binding):
@@ -190,14 +296,15 @@ def _mirror_values(stage, stamp):
     return {
         'Cycle Status': 'Complete' if stage == 'complete' else 'Complete with exceptions',
         'Companies Complete': int(stage == 'complete'), 'Companies Partial': int(stage == 'partial'),
-        'Companies Blocked': 0, 'Companies Remaining': 0, 'Completed At': stamp, 'Last Checkpoint At': stamp,
+        'Companies Blocked': int(stage in {'failed', 'blocked'}), 'Companies Remaining': 0, 'Completed At': stamp, 'Last Checkpoint At': stamp,
     }
 
 
-def _terminal(cycle, stage, stamp):
+def _terminal(cycle, company_id, stage, stamp):
     terminal = copy.deepcopy(cycle)
     terminal['status'] = _mirror_values(stage, stamp)['Cycle Status']
     terminal['completed_at'] = stamp
+    terminal['companies'][company_id]['stage'] = stage
     return terminal
 
 
@@ -211,7 +318,7 @@ def _finish(engine, cycle, fixed, observation, saved):
     _timestamp(stamp, 'Ordinary event settlement time')
     expected = (outcome['outcome_id'], binding['request_id'], binding['company_id'],
                 binding['source_revision'], outcome['outcome'], outcome['action'], _canonical(outcome), stamp)
-    if (outcome not in [classify_outcome(_facts(binding, observation, stage, current))
+    if (outcome not in [classify_outcome(_facts(binding, observation, stage, current, published=fixed['no_publication'] is None))
                         for current in (True, False)] or _outcome_rows(repo, binding) != [expected]):
         raise ValueError('Ordinary event settlement lacks its exact immutable scrape outcome.')
     mirrors = repo.matches('Scan Cycles', {'Cycle ID': cycle['id']})
@@ -225,7 +332,12 @@ def _finish(engine, cycle, fixed, observation, saved):
                 or _selected_sha(core) != saved['terminal_state_sha256']):
             raise ValueError('Ordinary event settlement terminal checkpoint changed.')
         return
-    terminal = _terminal(cycle, stage, stamp)
+    if fixed['no_publication'] is not None:
+        companies = repo.matches('Companies', {'Company ID': binding['company_id']})
+        if (len(companies) != 1 or companies[0][1].get('Active Cycle ID') != cycle['id']
+                or companies[0][1].get('Scan State') != fixed['no_publication']['scan_state']):
+            raise ValueError('Ordinary event settlement Company controls changed before State completion.')
+    terminal = _terminal(cycle, binding['company_id'], stage, stamp)
     if (_selected_sha(cycle) != saved['pre_state_sha256']
             or _selected_sha(terminal) != saved['terminal_state_sha256']):
         raise ValueError('Ordinary event settlement cannot finish a different State checkpoint.')
