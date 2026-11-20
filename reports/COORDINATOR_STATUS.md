@@ -58,8 +58,15 @@
   plus nine direct policy and Engine-entry checks. A frozen-plan fixture
   confirmed only the selected company against a memory-only workbook.
 - Sprint 1 now has accepted source evidence. Guarded production installation,
-  operational QA and roadmap acceptance remain open. The scoped GitHub
-  backup has not yet been verified for this checkpoint.
+  operational QA and roadmap acceptance remain open. Scoped GitHub backup
+  commit `ac2d02c51237eb8ffe17355a9437d133c4a42d6b` was pushed and its branch
+  ref independently read back. It contains exactly the scoped source/test
+  manifest plus five planning and evidence files. The copy excludes production
+  databases, locks, credentials, raw jobs and spreadsheet contents.
+- A separate source-only production rollback copy is saved at
+  `/tmp/jsh-f3-production-source-rollback.O6bjzo`. The exact file scope and
+  open crash-safe maintenance installation gate are recorded in
+  `F3_DEPLOYMENT_PREFLIGHT_20261120.md`. No installation has been performed.
 
 ### Concurrent task verified — 2026-11-20
 
