@@ -27,9 +27,20 @@ partial intent nor a request. Crash/idempotent recovery remains covered.
 `release_and_schedule` calls the bridge after `activate_release` exits its
 writer-lock context; QA verified no nested-lock path was introduced.
 
+## F2 partial-publication recovery — ACCEPT
+
+Independent QA ran 73 targeted local-pipeline/durable-inbox/retry checks and
+43 runner/fresh-request/release regressions. The new regression injects an
+ordinary `RepositoryError` after one acknowledged prefix of a release-bound
+retry plan. It verifies the frozen plan, cursor (`1`), release-bound receipt,
+and saved inventory survive. A later `sync_only` recovery finishes the same
+suffix with a fetcher that would fail if called, proving it did not refetch or
+replace the plan. Cursor-zero replan/discard behavior and non-retry/ambiguous
+paths remain unchanged.
+
 ## Boundaries still open
 
-F1 external Sheet/idle-busy proof remains open. F2 retry-specific publication
-recovery and outcome-precedence integration remain open. No Google client,
+F1 external Sheet/idle-busy proof remains open. F2 outcome-precedence
+integration remains open. No Google client,
 remote write, global sync, broad scan, old-cycle mutation, automatic release,
 or live Samtec action occurred in this QA work.

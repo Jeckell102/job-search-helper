@@ -6,7 +6,8 @@
   covers all six roadmap milestones and final acceptance; it is active and is
   not a completion claim.
 - Milestone status: F1's offline outbox/bridge/dispatcher boundary and F2's
-  admission serialization are independently accepted after narrow repairs.
+  admission serialization plus partial-publication recovery are independently
+  accepted after narrow repairs.
   F3–F8, the live
   Samtec proof, and final acceptance remain open. This does not enable broad
   backlog processing or an unqualified automatic release.
@@ -25,6 +26,12 @@
   QA accepted its focused retry/release/controller group (46/46) and normal
   request/runner regressions (31/31), with no nested-lock path. Evidence is
   recorded in `F1_F2_ADMISSION_QA_20261120.md`.
+- F2 partial-publication recovery: a generic later write failure after an
+  acknowledged prefix now retains the frozen plan, nonzero cursor, exact
+  release-bound receipt and saved inventory instead of discarding it. A
+  `sync_only` recovery completes the same suffix without refetching. Independent
+  QA accepted 73 targeted and 43 regression checks; no broader F2 outcome or
+  automatic-release claim follows from this source-only evidence.
 - Worker assignments: coordinator owns the next F2 recovery/outcome scope;
   independent QA completed adversarial review of the admission repair. Jetson retains exactly one inference lane and
   has no work in this checkpoint.
@@ -40,9 +47,9 @@
   global sync, automatic release, broad scan, or historical-cycle mutation
   has run. The trusted retained signer key remains absent, so the bounded live
   pilot remains closed.
-- Next action: preserve the F1/F2 source, tests, card and QA evidence in the
-  scoped GitHub backup, then continue the
-  retry-publication/recovery and outcome-precedence F2 gate work. Do not use a
+- Next action: preserve the F2 recovery source, test, card and QA evidence in
+  the scoped GitHub backup, then continue the outcome-precedence F2 gate work.
+  Do not use a
   test signer or weaken the external authorization gate.
 
 Reread this section first after every context reset and before a backup or
