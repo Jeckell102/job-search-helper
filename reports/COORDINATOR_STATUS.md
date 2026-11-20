@@ -1,5 +1,32 @@
 # Integration automation coordinator status
 
+## PAUSED_NOT_COMPLETE — 2026-11-20 operator-pilot authorization gate
+
+- Coordinator work is paused at the user's request. The persistent roadmap
+  goal remains active; this is not a completion claim and no worker or live
+  process is intentionally running.
+- The durable Samtec request `operator-samtec-m1-20261119` remains held at
+  `WAITING_SAFE_BOUNDARY` behind historical cycle `CYC-B639C6D864EC`. Its
+  Saronic source-provenance conflict has not been resumed, reconciled,
+  deleted, or changed. Broad backlog processing and unqualified automatic
+  releases remain disabled.
+- The authorization-preview repair is locally verified: 69 retained/operator
+  checks and 139 normal lifecycle/isolation checks passed, with clean diff
+  whitespace. The read-only command now emits only signable claims/digest and
+  leaves no SQLite WAL/SHM sidecars. The updated scoped GitHub backup is
+  commit `f34c786` on branch
+  `backup/integration-automation-m1-operator-20261120`.
+- Independent QA's prior verdict was a REJECT only for the now-repaired
+  preview crash. A fresh independent post-repair verdict has not yet been
+  recorded, so it remains an explicit acceptance gate after resume.
+- Resume order: reread this card and roadmap; independently retest the
+  preview; generate a fresh compact claim package; obtain a configured public
+  key and valid time-bounded external Ed25519 envelope; then run exactly one
+  Samtec private preflight. Do not use a test signer, normal resume, global
+  sync, or broad scan.
+
+Reread this section first after every context reset or before a live action.
+
 ## Active coordinator checkpoint — 2026-11-20 preview repair under independent QA
 
 - Persistent goal remains **active** and is not complete. Milestone 1 is
