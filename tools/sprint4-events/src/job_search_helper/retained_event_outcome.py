@@ -4,7 +4,8 @@ from pathlib import Path
 import re
 
 from .ats import validate_outcome_failure
-from .company_events import BRIDGE_CONSUMER, canonical_company_fact, current_company_source_revision
+from .company_events import BRIDGE_CONSUMER, canonical_company_fact
+from .company_events import acknowledged_company_event_source_is_current as retained_outcome_source_is_current
 from .company_sources import repair_source
 from .outcomes import classify_outcome
 from .repository import _url
@@ -276,21 +277,6 @@ def _verified_inventory(root, local, record, event_id, cycle_id, requested_url):
     payload['inventory_status'] = payload.pop('status')
     if plan.get('inventory_payload_digest') != digest(payload):
         raise ValueError('Retained event outcome inventory does not match the settled plan.')
-
-
-def retained_outcome_source_is_current(local, identity):
-    """Recheck the exact outbox revision before any retained result is sent."""
-    row = local.db.execute(
-        'SELECT 1 FROM company_event_outbox o '
-        'JOIN company_revisions r ON r.company_id=o.company_id AND r.revision=o.revision '
-        'AND r.source_revision=o.source_revision AND r.eligible=1 '
-        'WHERE o.event_id=? AND o.company_id=? AND o.source_revision=? '
-        "AND o.kind='company.eligible' AND NOT EXISTS (SELECT 1 FROM company_revisions newer "
-        'WHERE newer.company_id=o.company_id AND newer.revision>o.revision)',
-        (identity['company_event_id'], identity['company_id'], identity['source_revision']),
-    ).fetchone()
-    return (row is not None and current_company_source_revision(local, identity['company_id'])
-            == identity['source_revision'])
 
 
 def _existing_outcome(local, *allowed_facts):

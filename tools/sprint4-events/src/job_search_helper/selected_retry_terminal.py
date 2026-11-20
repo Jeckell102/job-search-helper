@@ -11,10 +11,12 @@ from .company_sources import repair_source
 from .exact_cycle_receipt import selected_retry_receipt_binding
 from .outcomes import classify_outcome
 from .repository import _url
+from .integration_release import assert_release_settled
 from .retained_event_outcome import retained_outcome_source_is_current
-from .retained_work_exception import _provider_identity
+from .retained_work_runner import assert_normal_lifecycle_not_held
 from .scan_request import _cycle_views, _timestamp, _unfinished_from_views, cycle_metadata
 from .sheet_profile import COMPACT_PROFILE
+from .selected_temporary_retry_execution import _selected_provider_identity, load_selected_retry_inventory
 from .temporary_retry import _canonical, _selected_sha
 
 
@@ -63,6 +65,8 @@ def _settle_selected_retry_locked(sink, engine, cycle_id, frozen, workbook_guard
     existing = _receipt(repo, fixed)
     if existing is not None:
         return _finish_state(engine, cycle, fixed, existing, stage, scan_state)
+    if _outcome_rows(repo, outcome):
+        raise ValueError('selected_retry_terminal_outcome_already_exists')
     if cycle.get('selected_retry_terminal_sha256') or item.get('stage') != 'queued':
         raise ValueError('selected_retry_terminal_state_conflicts')
     if not callable(workbook_guard):
@@ -72,7 +76,10 @@ def _settle_selected_retry_locked(sink, engine, cycle_id, frozen, workbook_guard
     workbook_guard(company)
     # Recheck the local facts with the Jobs transaction held after the remote read.
     with repo.transaction():
+        assert_release_settled(root)
+        assert_normal_lifecycle_not_held(root, repo.path, selected_retry_cycle_id=cycle_id)
         if (state.cycle(cycle_id) != cycle
+                or load_selected_retry_inventory(sink, state, engine.runtime_binding, cycle_id=cycle_id) != frozen
                 or _before(sink, engine, cycle, cid, parent['identity']) != (company, mirror)):
             raise ValueError('selected_retry_terminal_checkpoint_changed')
         _assert_no_publication(engine, cycle, cid)
@@ -111,10 +118,10 @@ def _settle_selected_retry_locked(sink, engine, cycle_id, frozen, workbook_guard
 def _decision(frozen, fact, cid, company_name):
     inventory = frozen['inventory']
     expected_ats, board, _ = repair_source(fact['ats_source'], inventory['requested_url'], cid, company_name)
-    provider = _provider_identity(expected_ats, board)
+    provider = _selected_provider_identity(expected_ats, board)
     if (inventory['jobs'] != [] or inventory['browser_pending_urls'] != []
             or inventory['browser_discovery_incomplete'] is not False
-            or not provider or _provider_identity(inventory['ats'], inventory['source_url']) != provider
+            or not provider or _selected_provider_identity(inventory['ats'], inventory['source_url']) != provider
             or _url(inventory['requested_url']) != fact['official_careers_url']
             or _timestamp(frozen['fetch_started_at'], 'Selected retry fetch start')
             > _timestamp(inventory['fetched_at'], 'Selected retry fetch end')):
@@ -197,8 +204,9 @@ def _outcome_rows(repo, outcome):
     identity = outcome['identity']
     return repo.db.execute(
         'SELECT outcome_id,request_id,company_id,source_revision,outcome,action,payload,recorded_at '
-        'FROM scrape_outcomes WHERE request_id=? OR outcome_id=?',
-        (identity['request_id'], outcome['outcome_id'])).fetchall()
+        "FROM scrape_outcomes WHERE request_id=? OR outcome_id=? OR CASE WHEN json_valid(payload) "
+        "THEN json_extract(payload, '$.identity.cycle_id') END=?",
+        (identity['request_id'], outcome['outcome_id'], identity['cycle_id'])).fetchall()
 
 
 def _receipt(repo, fixed):

@@ -96,7 +96,7 @@ def requested_scan(engine, state, database):
         engine._sync_cycle(cycle)
         if queued_event is not None:
             from .company_events import CompanyEventBridge
-            CompanyEventBridge(engine.repo, path.parent).archive_ordinary_admission(queued_event, cycle)
+            CompanyEventBridge(engine.repo, path.parent).archive_ordinary_admission(queued_event, cycle, state)
     path.replace(path.with_name('last-scan-request.json'))
     if mode == COMPANY_ONLY_MODE:
         print(f'Company-only scan: {cycle_id}. Only {len(company_ids)} declared company ID(s) are queued.', flush=True)

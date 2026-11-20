@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from job_search_helper.company_events import CompanyEventBridge
+from job_search_helper.company_events import CompanyEventBridge, read_verified_ordinary_event_admission
 from job_search_helper.repository import SCHEMAS
 from job_search_helper.sqlite_repository import SQLiteRepository
 
@@ -212,6 +212,18 @@ class CompanyEventBridgeTests(unittest.TestCase):
             self.repo, recovered_state, runtime_binding=cycles[0]["runtime_binding"],
         )._recover(cycles[0]["id"])
         self.assertEqual(recovered["company_event"], cycles[0]["company_event"])
+        selected = read_verified_ordinary_event_admission(self.repo, state, cycles[0]["id"])
+        self.assertEqual(selected["request"], receipt)
+        self.assertTrue(selected["source_current"])
+        self.event(**{"ATS / Source": "Greenhouse"})
+        later = self.event(**{"ATS / Source": "Lever"})
+        self.assertEqual(later["source_revision"], event["source_revision"])
+        reread = read_verified_ordinary_event_admission(self.repo, state, cycles[0]["id"])
+        self.assertEqual(reread["request_sha256"], selected["request_sha256"])
+        self.assertFalse(reread["source_current"])
+        admission.write_text(json.dumps({**receipt, "company_ids": ["COMP-OTHER"]}))
+        with self.assertRaisesRegex(RuntimeError, "identity is not bound"):
+            read_verified_ordinary_event_admission(self.repo, state, cycles[0]["id"])
 
     def test_ordinary_archive_keeps_the_queue_after_incomplete_company_membership(self):
         from contextlib import closing

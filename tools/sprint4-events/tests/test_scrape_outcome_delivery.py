@@ -86,6 +86,44 @@ class OutcomeDeliveryTests(unittest.TestCase):
         self.assertEqual(json.loads(row)['record_sha256'], hashlib.sha256(
             json.dumps(record, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
 
+    def test_ordinary_company_event_requires_the_current_acknowledged_revision(self):
+        from job_search_helper.company_events import BRIDGE_CONSUMER
+
+        self.repo.import_rows('Companies', [(2, {
+            'Company ID': 'COMP-1', 'Company': 'Fixture', 'Company Status': 'Active',
+        })])
+
+        def update(url):
+            return self.repo.mutate_company_with_event({
+                'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+                'values': {'Official Careers URL': url},
+            })['company_event']
+
+        def outcome(event, cycle_id):
+            return self.repo._record_scrape_outcome(facts(
+                request_id='company-event:' + event['event_id'], company_event_id=event['event_id'],
+                cycle_id=cycle_id, source_revision=event['source_revision'],
+            ), owned_company_event=True)['outcome']
+
+        board = 'https://jobs.example.test/a'
+        original = update(board)
+        first = outcome(original, 'CYC-000000000001')
+        sink = Sink(self._receipt)
+        delivery = OutcomeDelivery(self.repo, sink, clock=lambda: self.now[0])
+        held = [{'outcome_id': first['outcome_id'], 'disposition': 'HELD_STALE_COMPANY_EVENT_SOURCE'}]
+        self.assertEqual(delivery.drain(outcome_id=first['outcome_id']), held)
+        self.repo.acknowledge_company_event(original['event_id'], BRIDGE_CONSUMER)
+        update('https://jobs.example.test/b')
+        latest = update(board)
+        self.assertEqual(original['source_revision'], latest['source_revision'])
+        self.repo.acknowledge_company_event(latest['event_id'], BRIDGE_CONSUMER)
+        self.assertEqual(delivery.drain(outcome_id=first['outcome_id']), held)
+        self.assertEqual(sink.calls, [])
+        second = outcome(latest, 'CYC-000000000002')
+        self.assertEqual(delivery.drain(outcome_id=second['outcome_id']),
+                         [{'outcome_id': second['outcome_id'], 'disposition': 'ACCEPTED'}])
+        self.assertEqual(sink.calls, [second])
+
     def test_acceptance_is_idempotent_and_invalid_receipt_waits_without_ack(self):
         record = self._record()
         sink = Sink(lambda _record: {'ok': True})

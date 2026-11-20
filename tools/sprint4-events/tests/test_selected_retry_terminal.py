@@ -249,3 +249,92 @@ def test_incomplete_retry_evidence_preserves_selected_hold(admitted, mode):
     writer.assert_not_called()
     with pytest.raises(ValueError, match='Selected retry owns this cycle'):
         assert_normal_lifecycle_not_held(fixture.root, fixture.jobs_path)
+
+
+def test_malformed_failure_cannot_become_a_verified_zero(admitted):
+    fixture, _parent, sink, cycle_id = admitted
+    empty = _terminal('zero')
+    empty.outcome_failure = {
+        'schema': 'invalid', 'category': 'access_denied', 'evidence_code': 'public_access_denied',
+    }
+    provider = Mock(return_value=empty)
+    with pytest.raises(ValueError, match='inventory_failure_evidence_invalid'):
+        freeze(fixture, sink, cycle_id, provider)
+    reader, writer = Mock(), Mock()
+    with pytest.raises(ValueError, match='no verified frozen inventory'):
+        _publish(fixture, sink, cycle_id, reader, writer)
+    provider.assert_called_once()
+    reader.assert_not_called()
+    writer.assert_not_called()
+
+
+def test_greenhouse_zero_requires_a_verified_returned_endpoint():
+    from job_search_helper.company_events import canonical_company_fact
+    from job_search_helper.selected_retry_terminal import _decision
+
+    official = 'https://job-boards.greenhouse.io/example-board'
+    fact = canonical_company_fact({
+        'Company ID': 'COMP-FIXTURE', 'Company Status': 'Active',
+        'Official Careers URL': official, 'ATS / Source': 'Greenhouse',
+    })
+    saved = {'fetch_started_at': '2026-11-20T12:00:00+00:00', 'inventory': {
+        'status': 'complete', 'jobs': [], 'outcome_failure': None, 'ats': 'Greenhouse',
+        'requested_url': official, 'browser_pending_urls': [], 'browser_discovery_incomplete': False,
+        'fetched_at': '2026-11-20T12:00:01+00:00', 'verified_zero': 'greenhouse_explicit_total_zero',
+    }}
+    for endpoint in (official, 'https://boards-api.greenhouse.io/v1/boards/example-board/jobs'):
+        saved['inventory']['source_url'] = endpoint
+        assert _decision(saved, fact, 'COMP-FIXTURE', 'Fixture')[0] == 'VERIFIED_ZERO'
+    saved['inventory']['source_url'] = 'https://unrelated.example/v1/boards/example-board/jobs'
+    assert _decision(saved, fact, 'COMP-FIXTURE', 'Fixture') is None
+
+
+def test_frozen_inventory_is_revalidated_after_workbook_read(admitted):
+    import json
+
+    fixture, _parent, sink, cycle_id = admitted
+    freeze(fixture, sink, cycle_id, Mock(return_value=_terminal('failed')))
+    path = journal(fixture, cycle_id)
+    writer = Mock()
+
+    def corrupt(_kwargs):
+        payload = json.loads(path.read_bytes())
+        payload['inventory'].pop('outcome_failure', None)
+        path.write_text(json.dumps(payload, sort_keys=True, separators=(',', ':')) + '\n')
+        fixture.service.before_read = None
+
+    fixture.service.before_read = corrupt
+    with pytest.raises(ValueError, match='record conflicts with its exact admission'):
+        _publish(fixture, sink, cycle_id, fixture.remote, writer)
+    writer.assert_not_called()
+    with closing(fixture.local()) as local:
+        assert local.db.execute('SELECT COUNT(*) FROM scrape_outcomes').fetchone() == (1,)
+    with pytest.raises(ValueError, match='Selected retry owns this cycle'):
+        assert_normal_lifecycle_not_held(fixture.root, fixture.jobs_path)
+
+
+def test_competing_outcome_with_alias_to_same_cycle_blocks_settlement(admitted):
+    import json
+    from job_search_helper.outcomes import classify_outcome
+
+    fixture, parent, sink, cycle_id = admitted
+    freeze(fixture, sink, cycle_id, Mock(return_value=_terminal('failed')))
+    revision = parent['identity']['source_revision']
+    alias = classify_outcome({
+        'request_id': 'legacy-selected-cycle-alias', 'cycle_id': cycle_id, 'company_id': COMPANY_ID,
+        'source_revision': revision, 'inventory_status': 'failed', 'source_current': True,
+        'failure': {'category': 'temporary_transport'},
+    })
+    with closing(fixture.local(write=True)) as local, local.transaction():
+        local.db.execute(
+            'INSERT INTO scrape_outcomes VALUES (?,?,?,?,?,?,?,?)',
+            (alias['outcome_id'], alias['identity']['request_id'], COMPANY_ID, revision,
+             alias['outcome'], alias['action'], json.dumps(alias), '2026-11-20T12:00:00+00:00'),
+        )
+    reader, writer = Mock(), Mock()
+    with pytest.raises(ValueError, match='outcome_already_exists'):
+        _publish(fixture, sink, cycle_id, reader, writer)
+    reader.assert_not_called()
+    writer.assert_not_called()
+    with pytest.raises(ValueError, match='Selected retry owns this cycle'):
+        assert_normal_lifecycle_not_held(fixture.root, fixture.jobs_path)

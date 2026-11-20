@@ -55,7 +55,10 @@ def _inventory_snapshot(inventory, company, *, fetched_at, event_scope=False):
     if event_scope:
         from .ats import validate_outcome_failure
         statuses.update(("blocked", "failed", "unsupported"))
-        fields["outcome_failure"] = validate_outcome_failure(getattr(inventory, "outcome_failure", None))
+        raw_failure = getattr(inventory, "outcome_failure", None)
+        fields["outcome_failure"] = validate_outcome_failure(raw_failure)
+        if raw_failure is not None and fields["outcome_failure"] is None:
+            raise ValueError("retained_event_inventory_failure_evidence_invalid")
         verified_zero = getattr(inventory, "verified_zero", None)
         if verified_zero is not None:
             fields["verified_zero"] = verified_zero

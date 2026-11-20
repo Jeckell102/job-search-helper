@@ -7,7 +7,7 @@ import sqlite3
 import stat
 import tempfile
 
-from .ats import Inventory
+from .ats import Inventory, resolve_board
 from .company_events import canonical_company_fact, source_revision
 from .company_sources import repair_source
 from .engine import State
@@ -21,6 +21,18 @@ from .scan_request import _cycle_views, _timestamp, _unfinished_from_views, cycl
 from .selected_temporary_retry_admission import _bound_request, _require_saved_retry_identity, _saved_admission
 from .sqlite_repository import SQLiteRepository
 from .temporary_retry import SelectedTemporaryRetrySink, _canonical, _selected_sha, _sync_directory
+
+
+def _selected_provider_identity(ats, url):
+    identity = _provider_identity(ats, url)
+    provider = identity.partition(':')[0]
+    if provider not in {'greenhouse', 'lever', 'ashby'}:
+        return identity
+    try:
+        adapter, board, _ = resolve_board(ats, url)
+    except ValueError:
+        return ''
+    return provider + ':' + board.casefold() if adapter.casefold() == provider else ''
 
 
 def freeze_selected_temporary_retry_locked(sink, state, runtime_binding, *, cycle_id, fetcher,
@@ -107,7 +119,7 @@ def freeze_selected_temporary_retry_locked(sink, state, runtime_binding, *, cycl
     name, url = company['Company'], company['Official Careers URL']
     ats = company.get('ATS / Source', '')
     expected_ats, expected_url, _ = repair_source(ats, url, cid, name)
-    provider = _provider_identity(expected_ats, expected_url)
+    provider = _selected_provider_identity(expected_ats, expected_url)
     if not provider:
         raise ValueError('Selected retry provider source is unverified.')
     if workbook_guard is not None:
@@ -118,7 +130,7 @@ def freeze_selected_temporary_retry_locked(sink, state, runtime_binding, *, cycl
     if not isinstance(fetched, Inventory):
         raise ValueError('Selected retry returned an invalid inventory.')
     inventory = _inventory_snapshot(fetched, company, fetched_at=sink._now().isoformat(), event_scope=True)
-    if _provider_identity(inventory['ats'], inventory['source_url']) != provider:
+    if _selected_provider_identity(inventory['ats'], inventory['source_url']) != provider:
         raise ValueError('Selected retry inventory belongs to a different source.')
     inventory_sha256 = _inventory_digest(inventory, signed_binding)
     _write_record(path, {**claim, 'state': 'FROZEN', 'inventory': inventory,

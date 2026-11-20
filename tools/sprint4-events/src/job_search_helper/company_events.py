@@ -125,6 +125,28 @@ MANUAL_RETAINED_SCHEMA = "manual-retained-company-event-v1"
 MANUAL_RETAINED_HOLD = "HELD_MANUAL_RETAINED_EVENT"
 
 
+def acknowledged_company_event_source_is_current(repository, identity):
+    """Verify the acknowledged event still owns the latest eligible source."""
+    event_id = identity.get("company_event_id")
+    if (not isinstance(event_id, str) or not _EVENT_ID.fullmatch(event_id)
+            or identity.get("request_id") != "company-event:" + event_id):
+        return False
+    row = repository.db.execute(
+        "SELECT 1 FROM company_event_outbox o "
+        "JOIN company_revisions r ON r.company_id=o.company_id AND r.revision=o.revision "
+        "AND r.source_revision=o.source_revision AND r.eligible=1 "
+        "JOIN company_event_deliveries d ON d.event_id=o.event_id AND d.consumer=? "
+        "JOIN company_event_watermarks w ON w.consumer=d.consumer AND w.company_id=o.company_id "
+        "AND w.revision=o.revision AND w.source_revision=o.source_revision "
+        "WHERE o.event_id=? AND o.company_id=? AND o.source_revision=? "
+        "AND o.kind='company.eligible' AND NOT EXISTS (SELECT 1 FROM company_revisions newer "
+        "WHERE newer.company_id=o.company_id AND newer.revision>o.revision)",
+        (BRIDGE_CONSUMER, event_id, identity["company_id"], identity["source_revision"]),
+    ).fetchone()
+    return (row is not None and current_company_source_revision(repository, identity["company_id"])
+            == identity["source_revision"])
+
+
 def is_manual_retained_event_request(request):
     """Presence alone holds automatic routes, including malformed markers."""
     return isinstance(request, dict) and "manual_retained" in request
@@ -168,6 +190,39 @@ def read_verified_queued_event(repository, root):
         raise ValueError("Company-event request must be a regular queue file.")
     payload = path.read_bytes()
     request = json.loads(payload)
+    if is_manual_retained_event_request(request):
+        raise ValueError("Pending manual retained Company event is outside ordinary admission.")
+    event = request.get("company_event") if isinstance(request, dict) else None
+    receipt = _read_event_receipt(root, event)
+    _verify_ordinary_event_request(repository, request, receipt)
+    recorded = repository.db.execute(
+        "SELECT r.revision,r.source_revision,d.event_id FROM company_revisions r "
+        "LEFT JOIN company_event_deliveries d ON d.event_id=? AND d.consumer=? "
+        "WHERE r.company_id=? ORDER BY r.revision DESC LIMIT 1",
+        (event["event_id"], BRIDGE_CONSUMER, event["company_id"]),
+    ).fetchone()
+    if (recorded is None or tuple(recorded) != (event["revision"], event["source_revision"], event["event_id"])
+            or current_company_source_revision(repository, event["company_id"]) != event["source_revision"]):
+        raise ValueError("Company-event request is stale or lacks exact acknowledgement.")
+    return payload, request
+
+
+def _read_event_receipt(root, event):
+    event_id = event.get("event_id") if isinstance(event, dict) else None
+    if not isinstance(event_id, str) or not _EVENT_ID.fullmatch(event_id):
+        raise ValueError("Company event must have an exact event ID.")
+    path = Path(root).resolve() / "company-event-bridge" / "receipts" / (event_id + ".json")
+    return _read_ordinary_event_file(path)
+
+
+def _read_ordinary_event_file(path):
+    if path.resolve() != path or not path.is_file():
+        raise ValueError("Company-event evidence must be a regular file in the bridge directory.")
+    return CompanyEventBridge._read_json(path)
+
+
+def _verify_ordinary_event_request(repository, request, receipt):
+    """Verify the immutable request, receipt and outbox join without measuring freshness."""
     if not isinstance(request, dict):
         raise ValueError("Company-event request must be an object.")
     if is_manual_retained_event_request(request):
@@ -194,25 +249,83 @@ def read_verified_queued_event(repository, root):
     timing = _company_event_timing(request)
     if timing and timing["observed_at"] != observed_at:
         raise ValueError("Company-event request observation disagrees with its outbox.")
-    receipt = CompanyEventBridge._read_json(
-        root / "company-event-bridge" / "receipts" / (event["event_id"] + ".json"),
-    )
     if (receipt is None or set(receipt) != set(event) | {"state", "recorded_at", "request_sha256"}
             or any(receipt[key] != value for key, value in event.items())
             or receipt["state"] not in _DELIVERED_STATES
             or receipt["request_sha256"] != _json_digest(request)):
-        raise ValueError("Company-event request receipt does not bind the pending request.")
+        raise ValueError("Company-event request receipt does not bind the request.")
     _timestamp(receipt["recorded_at"], "Company-event request receipt")
-    recorded = repository.db.execute(
-        "SELECT r.revision,r.source_revision,d.event_id FROM company_revisions r "
-        "LEFT JOIN company_event_deliveries d ON d.event_id=? AND d.consumer=? "
-        "WHERE r.company_id=? ORDER BY r.revision DESC LIMIT 1",
-        (event["event_id"], BRIDGE_CONSUMER, event["company_id"]),
+
+
+def read_verified_ordinary_event_admission(repository, state, cycle_id):
+    """Reopen a consumed admission from State, its mirror and the immutable outbox."""
+    from .scan_request import cycle_metadata, request_fingerprint
+
+    if getattr(repository, "is_local", False) is not True or not state.path or state.path == ":memory:":
+        raise ValueError("Company-event readback requires durable local State and Jobs.")
+    root = Path(state.path).resolve().parent
+    cycle = state.cycle(cycle_id)
+    if not isinstance(cycle, dict) or cycle.get("id") != cycle_id or cycle.get("all") is not False:
+        raise ValueError("Company-event readback requires an exact company-only cycle.")
+    event = cycle.get("company_event")
+    receipt = _read_event_receipt(root, event)
+    digest = receipt.get("request_sha256") if receipt else None
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        raise ValueError("Company-event admission has no immutable request digest.")
+    archive = root / "company-event-bridge" / "ordinary-admissions" / (digest + ".json")
+    request = _read_ordinary_event_file(archive)
+    _verify_ordinary_event_request(repository, request, receipt)
+    archived = request["company_event"]
+    company_id = archived["company_id"]
+    if (archived != event or cycle.get("start_request_id") != request["request_id"]
+            or cycle.get("request_fingerprint") != request_fingerprint(request, [company_id])
+            or set(cycle.get("companies", {})) != {company_id}
+            or any(cycle.get(key) is not None for key in (
+                "operator_request", "temporary_retry", "repair_retry", "selected_retry_reservation_sha256"))):
+        raise ValueError("Company-event archive disagrees with its cycle identity.")
+
+    mirrors = repository.matches("Scan Cycles", {"Cycle ID": cycle_id})
+    if len(mirrors) != 1:
+        raise ValueError("Company-event archive requires one exact cycle mirror.")
+    mirror = mirrors[0][1]
+    notes = cycle_metadata(mirror)
+    if (notes.get("company_ids") != [company_id] or notes.get("all") is not False
+            or mirror.get("Cycle Status") != cycle.get("status")
+            or any(notes.get(key) != cycle.get(key) for key in (
+                "start_request_id", "request_fingerprint", "company_event", "runtime_binding"))):
+        raise ValueError("Company-event admission mirror disagrees with its checkpoint.")
+
+    row = repository.db.execute(
+        "SELECT o.payload,r.fact,(SELECT MAX(latest.revision) FROM company_revisions latest "
+        "WHERE latest.company_id=o.company_id) FROM company_event_outbox o "
+        "JOIN company_revisions r ON r.company_id=o.company_id AND r.revision=o.revision "
+        "AND r.source_revision=o.source_revision AND r.eligible=1 "
+        "JOIN company_event_deliveries d ON d.event_id=o.event_id AND d.consumer=? "
+        "JOIN company_event_watermarks w ON w.consumer=d.consumer AND w.company_id=o.company_id "
+        "AND w.revision>=o.revision "
+        "JOIN company_revisions wr ON wr.company_id=w.company_id AND wr.revision=w.revision "
+        "AND wr.source_revision=w.source_revision "
+        "WHERE o.event_id=?",
+        (BRIDGE_CONSUMER, archived["event_id"]),
     ).fetchone()
-    if (recorded is None or tuple(recorded) != (event["revision"], event["source_revision"], event["event_id"])
-            or current_company_source_revision(repository, event["company_id"]) != event["source_revision"]):
-        raise ValueError("Company-event request is stale or lacks exact acknowledgement.")
-    return payload, request
+    if row is None:
+        raise ValueError("Company-event archive lacks exact durable acknowledgement.")
+    outbox, fact = json.loads(row[0]), json.loads(row[1])
+    item = cycle["companies"][company_id]
+    if (not isinstance(fact, dict) or _json_digest(fact) != archived["source_revision"]
+            or fact.get("eligible") is not True or fact.get("company_id") != company_id
+            or not isinstance(outbox, dict) or outbox.get("fact") != fact
+            or outbox.get("kind") != "company.eligible"
+            or any(outbox.get(key) != archived[key] for key in (
+                "event_id", "company_id", "revision", "source_revision"))
+            or not isinstance(item, dict) or item.get("outcome_source_revision") != archived["source_revision"]
+            or item.get("outcome_source_fact") != fact):
+        raise ValueError("Company-event archive disagrees with the frozen outbox source.")
+    return {
+        "request": request, "request_sha256": digest, "receipt": receipt, "source_fact": fact,
+        "source_current": (row[2] == archived["revision"]
+                           and current_company_source_revision(repository, company_id) == archived["source_revision"]),
+    }
 
 
 class CompanyEventBridge:
@@ -253,7 +366,7 @@ class CompanyEventBridge:
     def evidence_directory(self):
         return self.root / "company-event-bridge"
 
-    def archive_ordinary_admission(self, request, cycle):
+    def archive_ordinary_admission(self, request, cycle, state):
         """Save the exact verified event request before its mutable slot is replaced."""
         from .scan_request import cycle_metadata, request_fingerprint
 
@@ -288,7 +401,9 @@ class CompanyEventBridge:
             raise ValueError("Company-event admission archive does not match the exact request.")
         self._fsync_directory(path.parent)
         self._fsync_directory(path.parent.parent)
-
+        admission = read_verified_ordinary_event_admission(self.repository, state, cycle_id)
+        if admission["request"] != request or not admission["source_current"]:
+            raise ValueError("Company-event admission archive changed before queue consumption.")
 
     def manually_held_request(self):
         """Read whether the slot is reserved for manually staged retained intake."""

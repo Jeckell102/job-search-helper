@@ -248,11 +248,11 @@ Exit gate: a supported company change creates one logical scoped request and
 realistic failures create exactly the correct retry, hold or repair task across
 duplicates, restarts and source drift.
 
-Current status: active in disposable source. The signed nonempty event route
-passed the combined fixture suite. Independent QA placed live use on hold.
-See `S4_RETAINED_EVENT_SOURCE_QA_HOLD_20261120.md` and the restart card for
-repairs, the outstanding expiry and zero cases, and current lane ownership.
-Live and full-chain evidence remain open.
+Current status is source staging. The selected successor's no-publication
+receipt and crash recovery passed the 198-test disposable regression.
+Independent QA is reviewing the terminal settlement. Live and full-chain
+evidence, including the applicable normal idle and busy paths, remains open.
+See the restart card and `S4_SELECTED_RETRY_TERMINAL_STAGED_20261120.md`.
 
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 
