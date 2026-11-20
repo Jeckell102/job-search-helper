@@ -76,6 +76,14 @@
   is byte-for-byte verified on GitHub branch
   `backup/integration-automation-current-20261119` at
   `a940524d1104aa4bd73537154491dfbb5c039df0`.
+- The accepted F1 source/test checkpoint `720c84e` is installed narrowly in the
+  protected MuleLab checkout. All four starting hashes matched `a940524`,
+  rollback copies are at
+  `/tmp/job-search-helper-protected-backup-f1-720c84e`, installed hashes match
+  `720c84e`, and 140 protected-runtime adjacent tests passed. No service, gate,
+  Google, database, request, cycle, receipt, credential, lock, Jetson, or raw
+  job state changed. The scoped GitHub backup is verified at
+  `720c84ecee1a325ab4f368d1f22882dd22c92e3b`.
 - A compact read-only live storage check found zero pending publication cells,
   zero pending publication rows, no last sync error, and zero pending Company
   events for the scan-request bridge. One pre-existing storage conflict remains;
