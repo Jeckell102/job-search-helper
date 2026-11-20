@@ -22,8 +22,8 @@ def assert_no_selected_retry_cycle(state_directory, *, permitted_cycle_id=None):
                 raise ValueError('Selected retry owns this cycle; use its dedicated execution and publication path.')
 
 
-def assert_generic_outcome_not_selected(repository, identity):
-    """Reserve the selected parent request and cycle for the sealed writer."""
+def assert_generic_outcome_not_selected(repository, identity, *, owned_company_event=False):
+    """Reserve selected retry and Company-event cycles for their sealed writers."""
     from .engine import State
     from .repository import RepositoryError
     from .scan_request import cycle_metadata
@@ -39,14 +39,21 @@ def assert_generic_outcome_not_selected(repository, identity):
     cycle_id = identity.get('cycle_id')
     if not cycle_id:
         return
+
+    def require_owned(checkpoint):
+        if 'selected_retry_reservation_sha256' in checkpoint:
+            raise RepositoryError('Selected retry outcomes require the sealed terminal writer.')
+        if not owned_company_event and checkpoint.get('company_event') is not None:
+            raise RepositoryError('Company-event outcomes require a sealed event writer.')
+
     mirrors = repository.matches('Scan Cycles', {'Cycle ID': cycle_id})
-    if any('selected_retry_reservation_sha256' in cycle_metadata(row) for _, row in mirrors):
-        raise RepositoryError('Selected retry outcomes require the sealed terminal writer.')
+    for _, row in mirrors:
+        require_owned(cycle_metadata(row))
     path = repository.path.parent / 'state.db'
     if path.is_file() and not path.is_symlink():
         with closing(State(str(path), readonly=True)) as state:
             if state.connection.execute(
                     "SELECT 1 FROM sqlite_master WHERE type='table' AND name='cycles'").fetchone():
                 cycle = state.cycle(cycle_id)
-                if cycle is not None and 'selected_retry_reservation_sha256' in cycle:
-                    raise RepositoryError('Selected retry outcomes require the sealed terminal writer.')
+                if cycle is not None:
+                    require_owned(cycle)

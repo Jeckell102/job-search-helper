@@ -14,6 +14,7 @@ _DIGEST_FIELDS = {
     'receipt_id', 'acknowledgement_id',
 }
 _TABLE = 'ordinary_event_publication_archive'
+_ACK_TABLE = 'ordinary_event_exact_ack_proofs'
 
 
 def _digest_text(value):
@@ -74,6 +75,50 @@ def _verify(inbox, local, evidence, cycle_id, company_id, binding):
     if applied != (evidence['inventory_payload_digest'], evidence['local_operations_digest'],
                    evidence['planned_projection_digest']):
         raise ValueError('Ordinary event publication archive lacks the exact local plan digests.')
+    witness = _local_ack_proof(local.db, evidence['apply_id'])
+    if witness != (evidence['apply_id'], evidence['receipt_id'], evidence['acknowledgement_id'],
+                   evidence['plan_digest'], evidence['local_records_digest'],
+                   evidence['projection_digest'], evidence['intent_id']):
+        raise ValueError('Ordinary event publication archive disagrees with its durable readback proof.')
+
+
+def _local_ack_proof(db, apply_id):
+    if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (_ACK_TABLE,)).fetchone() is None:
+        return None
+    return db.execute(
+        'SELECT apply_id,receipt_id,acknowledgement_id,plan_digest,local_records_digest,'
+        'projection_digest,intent_id FROM ordinary_event_exact_ack_proofs WHERE apply_id=?',
+        (apply_id,),
+    ).fetchone()
+
+
+def record_ordinary_event_ack_proof(inbox, local, cycle_id, company_id, *, apply_id, plan_digest,
+                                   receipt_id, acknowledgement_id, projection_digest, intent_id):
+    """Bind full readback evidence within the trusted Jobs acknowledgement transaction."""
+    saved = inbox.plan(cycle_id, company_id)
+    plan = saved[0] if saved else None
+    if not isinstance(plan, dict) or 'ordinary_company_event' not in plan:
+        return
+    local_state = inbox.exact_local_state(cycle_id, company_id)
+    digest = plan.get('local_expected_records_digest')
+    if (not local.db.in_transaction or local_state is None or local_state['state'] != 'LOCAL_VERIFIED'
+            or local_state['local_apply_id'] != apply_id or local_state['plan_digest'] != plan_digest
+            or plan.get('plan_digest') != _exact_plan_digest(plan)
+            or not _digest_text(digest) or local_state['local_records_digest'] != digest
+            or _digest(plan.get('local_expected_records')) != digest):
+        raise ValueError('Ordinary event lacks the verified local conditions for acknowledgement.')
+    witness = (apply_id, receipt_id, acknowledgement_id, plan_digest, digest, projection_digest, intent_id)
+    local.db.execute(
+        'CREATE TABLE IF NOT EXISTS ordinary_event_exact_ack_proofs ('
+        'apply_id TEXT PRIMARY KEY, receipt_id TEXT NOT NULL UNIQUE, acknowledgement_id TEXT NOT NULL, '
+        'plan_digest TEXT NOT NULL, local_records_digest TEXT NOT NULL, '
+        'projection_digest TEXT NOT NULL, intent_id TEXT NOT NULL)',
+    )
+    existing = _local_ack_proof(local.db, apply_id)
+    if existing is None:
+        local.db.execute('INSERT INTO ordinary_event_exact_ack_proofs VALUES (?,?,?,?,?,?,?)', witness)
+    elif existing != witness:
+        raise ValueError('Ordinary event acknowledgement conflicts with its existing exact proof.')
 
 
 def archive_before_cleanup(inbox, local, cycle_id, company_id, plan, *, binding):
@@ -138,8 +183,12 @@ def read_ordinary_event_publication(inbox, local, cycle_id, company_id, *, bindi
         if (not isinstance(evidence, dict)
                 or row[3:] != (evidence.get('receipt_id'), _digest(evidence), _encode(evidence))):
             raise ValueError('Ordinary event publication archive bytes do not match its stored evidence.')
-        if (inbox.get(cycle_id, company_id) is not None or inbox.plan(cycle_id, company_id) is not None
-                or inbox.exact_remote_state(cycle_id, company_id) is not None):
+        if any(inbox.connection.execute(
+                f'SELECT 1 FROM {table} WHERE cycle=? AND company=? LIMIT 1', (cycle_id, company_id),
+        ).fetchone() for table in (
+            'inventories', 'sync_plans', 'exact_remote_plans', 'exact_sync_chunks', 'exact_plan_local_state',
+            'exact_legacy_plan_migrations', 'exact_selected_legacy_recoveries', 'exact_control_before_prefix_recoveries',
+        )):
             raise ValueError('Ordinary event publication archive conflicts with active Inbox work.')
         _verify(inbox, local, evidence, cycle_id, company_id, binding)
         return evidence

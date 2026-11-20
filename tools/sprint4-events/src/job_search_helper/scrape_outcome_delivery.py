@@ -141,6 +141,12 @@ class OutcomeDelivery:
                                    else 'HELD_STALE_COMPANY_EVENT_SOURCE')
                     results.append({'outcome_id': outcome_id, 'disposition': disposition})
                     continue
+                if not identity.get('retained_reservation_sha256'):
+                    from .ordinary_event_settlement import ordinary_event_outcome_settled
+                    if not ordinary_event_outcome_settled(self.repository, record):
+                        results.append({'outcome_id': outcome_id,
+                                        'disposition': 'HELD_ORDINARY_EVENT_SETTLEMENT'})
+                        continue
             count, state, due = attempt
             if state == 'HELD_RETRY_CAP' or (state == 'WAITING' and due > now) or (state == 'IN_FLIGHT' and due > now):
                 continue

@@ -1526,6 +1526,12 @@ class SheetsSynchronizer:
             if parent is None or parent[1] != plan_digest or parent[2] != 'VERIFIED':
                 raise ValueError('Exact Sheets acknowledgement lacks a verified local plan binding.')
             apply_id = parent[0]
+            from .ordinary_event_publication_archive import record_ordinary_event_ack_proof
+            record_ordinary_event_ack_proof(
+                inbox, self.local, cycle_id, company_id, apply_id=apply_id, plan_digest=plan_digest,
+                receipt_id=receipt_id, acknowledgement_id=acknowledgement_id,
+                projection_digest=exact_plan['projection_digest'], intent_id=intent_id,
+            )
             prior = self.local.db.execute(
                 'SELECT acknowledgement_id,selected_fields_digest '
                 'FROM exact_local_acknowledgements WHERE apply_id=? AND receipt_id=?',

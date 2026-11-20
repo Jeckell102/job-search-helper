@@ -139,7 +139,7 @@ def _unique_company(repository, company_id, headers):
     return next(row for row_number, row in numbered if row_number == matches[0])
 
 
-def _company_guard(local, remote, company_id, requested_url):
+def _company_guard(local, remote, company_id, requested_url, *, additional_fields=()):
     """Bind local-only controls to the compact remote Company projection.
 
     Claims, scan state, and automatic-retry holds are authoritative only in
@@ -154,6 +154,8 @@ def _company_guard(local, remote, company_id, requested_url):
     local_headers = ['Company ID', 'Company Status', 'Official Careers URL',
                      'Claimed By', 'Claim Token', 'Scan State', 'Automatic Retry?']
     remote_headers = ['Company ID', 'Company Status', 'Official Careers URL']
+    local_headers.extend(additional_fields)
+    remote_headers.extend(additional_fields)
     local_company = _unique_company(local, company_id, local_headers)
     remote_company = _unique_company(remote, company_id, remote_headers)
     local_status = str(local_company.get('Company Status', '')).strip()

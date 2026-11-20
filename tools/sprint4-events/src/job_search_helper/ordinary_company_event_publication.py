@@ -5,10 +5,11 @@ from pathlib import Path
 from .company_events import read_verified_ordinary_event_admission
 from .engine import Engine, State
 from .exact_cycle_recovery import _recover_exact_cycle_locked
-from .exact_cycle_sync import _company_guard, _unique_company
+from .exact_cycle_sync import _company_guard
 from .integration_release import assert_release_settled
 from .ordinary_event_publication_archive import read_ordinary_event_publication
-from .repository import GoogleRepository, _equivalent
+from .ordinary_event_settlement import settle_published_ordinary_event
+from .repository import GoogleRepository
 from .retained_work_runner import assert_normal_lifecycle_not_held
 from .scan_request import _cycle_views, _unfinished_from_views, cycle_metadata
 from .sheet_profile import COMPACT_SCHEMAS
@@ -49,7 +50,7 @@ def publish_ordinary_event_locked(engine, remote_factory, *, cycle_id, request_s
 
     archived = read_ordinary_event_publication(engine.inbox, engine.repo, cycle_id, cid, binding=binding)
     if archived is not None:
-        return _confirmed(engine, cycle_id, cid, archived)
+        return settle_published_ordinary_event(engine, cycle_id=cycle_id, request_sha256=request_sha256)
 
     def current_company():
         local_cycles, mirrors = _cycle_views(engine.repo, engine.state)
@@ -92,10 +93,8 @@ def publish_ordinary_event_locked(engine, remote_factory, *, cycle_id, request_s
         if company_id != cid or requested_url != payload['requested_url']:
             raise ValueError('Ordinary event publication guard has a foreign scope.')
         previous = current_company()
-        control = _company_guard(engine.repo, remote, cid, requested_url)
-        observed = _unique_company(remote, cid, ['Company ID', 'ATS / Source'])
-        if (not _equivalent('ATS / Source', observed.get('ATS / Source', ''), previous.get('ATS / Source', ''))
-                or current_company() != previous):
+        control = _company_guard(engine.repo, remote, cid, requested_url, additional_fields=('ATS / Source',))
+        if current_company() != previous:
             raise ValueError('Ordinary event publication Company source changed during workbook verification.')
         return control
 
@@ -104,15 +103,6 @@ def publish_ordinary_event_locked(engine, remote_factory, *, cycle_id, request_s
     )
     if report['held'] or report['skipped']:
         return {'state': 'PUBLICATION_HELD', **report}
-    archived = read_ordinary_event_publication(engine.inbox, engine.repo, cycle_id, cid, binding=binding)
-    if archived is None:
-        raise ValueError('Ordinary event exact publication finished without archived proof.')
-    return _confirmed(engine, cycle_id, cid, archived)
-
-
-def _confirmed(engine, cycle_id, company_id, evidence):
-    cycle = engine.state.cycle(cycle_id)
-    if cycle['companies'][company_id].get('stage') != evidence['final_stage']:
-        raise ValueError('Ordinary event publication stage disagrees with its archived receipt.')
-    # Cycle completion and the immutable outcome follow this exact archive.
-    return {'state': 'SYNC_CONFIRMED', **evidence}
+    if reopen() != context:
+        raise ValueError('Ordinary event publication observation changed before settlement.')
+    return settle_published_ordinary_event(engine, cycle_id=cycle_id, request_sha256=request_sha256)

@@ -289,8 +289,12 @@ def read_verified_ordinary_event_admission(repository, state, cycle_id):
         raise ValueError("Company-event archive requires one exact cycle mirror.")
     mirror = mirrors[0][1]
     notes = cycle_metadata(mirror)
+    mirror_current = mirror.get("Cycle Status") == cycle.get("status")
+    if not mirror_current:
+        from .ordinary_event_settlement import ordinary_event_mirror_ahead
+        mirror_current = ordinary_event_mirror_ahead(repository, cycle, mirror)
     if (notes.get("company_ids") != [company_id] or notes.get("all") is not False
-            or mirror.get("Cycle Status") != cycle.get("status")
+            or not mirror_current
             or any(notes.get(key) != cycle.get(key) for key in (
                 "start_request_id", "request_fingerprint", "company_event", "runtime_binding"))):
         raise ValueError("Company-event admission mirror disagrees with its checkpoint.")

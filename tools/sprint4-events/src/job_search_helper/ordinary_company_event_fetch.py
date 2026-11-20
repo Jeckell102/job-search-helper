@@ -50,7 +50,9 @@ def assert_no_active_ordinary_event_observation(state_directory, *, permitted_cy
             cycle = state.cycle(cycle_id)
             if (not cycle or not cycle.get('company_event') or
                     (cycle_id != permitted_cycle_id and
-                     cycle.get('status') not in {'Complete', 'Complete with exceptions'})):
+                     (cycle.get('status') not in {'Complete', 'Complete with exceptions'}
+                      or not isinstance(cycle.get('ordinary_event_settlement_sha256'), str)
+                      or not re.fullmatch(r'[0-9a-f]{64}', cycle['ordinary_event_settlement_sha256'])))):
                 raise ValueError('Ordinary Company event owns the cycle; use its exact observation path.')
 
 

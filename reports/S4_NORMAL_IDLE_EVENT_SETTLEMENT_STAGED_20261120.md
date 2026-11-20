@@ -1,0 +1,9 @@
+# Ordinary Company-event publication repairs and settlement staged
+
+November 20, 2026. Independent QA held the first ordinary exact publication candidate. The three reproductions and original test evidence are preserved in `S4_NORMAL_IDLE_EVENT_PUBLICATION_INDEPENDENT_QA_20261120.md`.
+
+The ordinary Company-event request namespace now requires an exact frozen plan even at the lowest receipt creation boundary. Legacy reconcile and discard cannot act on a shorter or whitespace-aliased version of this request. The final workbook guard reads Company identity, status, careers source and ATS together. Archive replay rejects orphan Inbox stages and verifies both full projection and verified local record digests against a separate witness committed in the trusted Jobs acknowledgement transaction.
+
+The published-outcome producer accepts only canonical owned cycle and archived request identities. It loads the provider observation and exact publication evidence independently. The single Jobs transaction writes one immutable public outcome, one private settlement record and the exact cycle mirror. State closes last. Replay after a cut between Jobs and State finishes without a provider or workbook factory. The outbox sender holds delivery until terminal State points to the same settlement. A later Company revision can suppress stale delivery without changing the prior publication or the immutable outcome.
+
+The final combined suite passed 304 tests, including the new sender gate and the composed State-split delivery case. Independent QA is reviewing `/tmp/jsh-s4-ordinary-settlement-qa.q26bH57T`, including the archival regressions and the closed outcome path. An isolated lower-reasoning lane owns the exact CLI and runner wiring. Ordinary no-publication dispositions, guarded live pilot and deployed acceptance remain open. No production or Jetson change.

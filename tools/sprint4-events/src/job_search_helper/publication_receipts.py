@@ -146,6 +146,8 @@ def local_committed(connection, binding, records, schedule, *, timestamp):
     """
     receipt_id = _receipt_id(binding)
     records = _records(records)
+    if _is_company_event_request(binding):
+        _require_ordinary_event_plan(connection, binding, records)
     required_schedule = ("boundary", "enqueued_at")
     if not isinstance(schedule, Mapping) or any(not str(schedule.get(key, "")).strip()
                                                 for key in required_schedule):
@@ -164,6 +166,29 @@ def local_committed(connection, binding, records, schedule, *, timestamp):
     connection.execute("INSERT INTO publication_receipts VALUES (?,?,?,?,?,?,?,?)",
                        (receipt_id, *payload, LOCAL_COMMITTED, None, timestamp, timestamp))
     return receipt_id
+
+
+def _is_company_event_request(binding):
+    return str(binding.get('request_id', '')).strip().startswith('company-event:')
+
+
+def _require_ordinary_event_plan(connection, binding, records):
+    from .exact_cycle_planner import _exact_plan_digest
+
+    if (binding.get('authority') != 'ordinary-company-event-exact-v2'
+            or not isinstance(binding.get('cycle_id'), str)
+            or connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sync_plans'").fetchone() is None):
+        raise ValueError('Ordinary event receipts require their exact publication plan.')
+    row = connection.execute(
+        'SELECT payload FROM sync_plans WHERE cycle=? AND company=?',
+        (binding['cycle_id'], binding['company_id']),
+    ).fetchone()
+    plan = json.loads(row[0]) if row is not None else None
+    if (not isinstance(plan, dict)
+            or plan.get('exact_plan_version') != 2 or plan.get('plan_digest') != _exact_plan_digest(plan)
+            or plan.get('ordinary_company_event') != binding or plan.get('remote_records') != records):
+        raise ValueError('Ordinary event receipts require their exact publication plan.')
 
 
 def mark_sync_pending(connection, binding, *, timestamp):
@@ -188,6 +213,8 @@ def reconcile_sync(connection, binding, observed_records, acknowledgement_id, *,
     frozen records and manual-decision guards for later reconciliation.
     """
     receipt_id = _receipt_id(binding)
+    if _is_company_event_request(binding):
+        raise ValueError('Exact remote receipts require trusted Sheets confirmation.')
     has_exact_table = connection.execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='exact_remote_plans'"
     ).fetchone()
@@ -230,6 +257,8 @@ def discard_preflight_rejected(connection, binding, expected_records, *, cursor)
     if cursor != 0:
         raise ValueError("Cannot replace a receipt after partial publication")
     receipt_id = _receipt_id(binding)
+    if _is_company_event_request(binding):
+        raise ValueError('Ordinary event receipts require their exact publication plan.')
     row = connection.execute(
         "SELECT records,state,binding FROM publication_receipts WHERE receipt_id=?", (receipt_id,)
     ).fetchone()

@@ -6,7 +6,7 @@ The ordinary event proof is inserted in the Inbox cleanup transaction. It associ
 
 The legacy reconcile and discard operations inspect the stored receipt authority. This closes the window after local application and before registering the exact remote intent, even when a compatibility caller strips the ordinary event marker from its supplied binding.
 
-Focused tests exercised these paths using a temporary Jobs/State/Inbox, the real compact GoogleRepository adapter, and an offline workbook service. This is a source checkpoint. The ordinary event's immutable outcome and final cycle/mirror checkpoint still follow the verified archive. Complete, partial, no-publication dispositions and the guarded entry point require combined independent QA before any live pilot. Production and Jetson were unchanged.
+The combined candidate regression passed 298 tests. Focused tests exercised these paths using a temporary Jobs/State/Inbox, the real compact GoogleRepository adapter, and an offline workbook service. This is a source checkpoint. The ordinary event's immutable outcome and final cycle/mirror checkpoint still follow the verified archive. Complete, partial, no-publication dispositions and the guarded entry point require combined independent QA before any live pilot. Production and Jetson were unchanged.
 
 Selected retry terminal QA is accepted separately, including the saved Lever replay and the earlier four defects. See `S4_SELECTED_RETRY_LEVER_REPLAY_INDEPENDENT_QA_20261120.md`.
 

@@ -986,7 +986,7 @@ class SQLiteRepository:
             raise RepositoryError('Scrape outcome has incomplete immutable identity.')
         if not owned_selected_retry:
             from .selected_retry_lifecycle import assert_generic_outcome_not_selected
-            assert_generic_outcome_not_selected(self, identity)
+            assert_generic_outcome_not_selected(self, identity, owned_company_event=owned_company_event)
         public_identity = dict(identity)
         payload = {
             'outcome_id': outcome['outcome_id'], 'outcome': outcome['outcome'],

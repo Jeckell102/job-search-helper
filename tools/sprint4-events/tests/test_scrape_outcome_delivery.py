@@ -121,8 +121,8 @@ class OutcomeDeliveryTests(unittest.TestCase):
         self.assertEqual(sink.calls, [])
         second = outcome(latest, 'CYC-000000000002')
         self.assertEqual(delivery.drain(outcome_id=second['outcome_id']),
-                         [{'outcome_id': second['outcome_id'], 'disposition': 'ACCEPTED'}])
-        self.assertEqual(sink.calls, [second])
+                         [{'outcome_id': second['outcome_id'], 'disposition': 'HELD_ORDINARY_EVENT_SETTLEMENT'}])
+        self.assertEqual(sink.calls, [])
 
     def test_acceptance_is_idempotent_and_invalid_receipt_waits_without_ack(self):
         record = self._record()
