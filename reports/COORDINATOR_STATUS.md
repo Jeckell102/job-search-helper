@@ -27,6 +27,26 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Selected pilot restoration checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. `/root/s4_pilot_receipt_map`
+delivered the read-only selected application verifier under
+`/tmp/jsh-s4-retained-pilot-terminal.5kDzZq0X`. Coordinator owns the
+receiver verification at `/tmp/jsh-s4-pilot-receiver.PeoihJL1` and the
+approval and exchange composition at `/tmp/jsh-s4-pilot-restoration.hnm1IaiI`.
+Application 64 passed (one existing continuously running watch case
+excluded), receiver 9 passed, 20 exchange/restoration and one combined
+application/receiver/exchange case passed. Independent QA accepted
+fixture composition. All 15 exact joint-controller cases passed.
+The 47 live manifest before images matched as sampled. Live process check
+still sees checkout references from the wrapper, the Jetson assistant
+bridge and several Chromium/Codex helpers, with two standard same-owner
+session processes unreadable for route metadata. No live custody or
+approved policy exists. Next finalize the live invocation and signed
+maintenance boundary, account for active checkout references and preserve
+the agreed rollback recovery before changing source or staging the pilot.
+[Restoration evidence](S4_SELECTED_PILOT_RESTORATION_COMPOSITION_20261120.md) ·
+[Independent fixture QA](S4_PILOT_RESTORATION_INDEPENDENT_QA_20261120.md).
+
 Live pilot preflight checkpoint. The retained historical cycle is still
 In Progress in both live State and the Jobs mirror. The Company-event
 outbox and delivery table are empty. The coordinator selected Atomic
@@ -38,6 +58,9 @@ services changed. Coordinator owns exact admission, release, and selected
 receipt verification. Next bind exact terminal evidence to the approved
 exchange and bring the host maintenance gate to readiness. Ordinary idle
 and actively busy proof remain separate requirements. [Pilot preflight](S4_ATOMIC_MACHINES_PILOT_PREFLIGHT_20261120.md).
+The scoped terminal controller, tests, pilot preflight, and QA records
+were verified on the private GitHub branch at
+`bd26f77d9b8e80135eb2fee213bcceac7e482bc6`.
 
 Terminal release observation checkpoint. Coordinator and release owner,
 goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Staged the joint controller at
@@ -47,7 +70,8 @@ checking the released source, installer receipt, and restored units.
 One disposable end-to-end case passed, including independent QA's required
 follow-up to reject a noncanonical journal before issuing its exact digest.
 Independent recheck accepted staged source. The full 15-case pre-follow-up
-run (`40739`) passed. Full exact-source rerun session `29460` is underway.
+run (`40739`) passed. The full exact-source rerun, session `29460`, passed
+all 15 cases in 247.925 seconds.
 Coordinator owns the subsequent
 exchange-generation and actual selected pilot join. The ordinary evidence
 map identifies a global admission hold while the protected historical
