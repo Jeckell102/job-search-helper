@@ -33,11 +33,18 @@
   installed-code/release binding in retained receipt state. The existing
   roadmap's F1–F8 remain open unless version-bound evidence closes each one.
 - Next action: back up the scoped handoff change. After that generate fresh
-  paired manifest/claims; obtain a
-  configured public key plus valid external Ed25519 envelope; recheck request,
+  paired manifest/claims; obtain a configured public key plus valid external
+  Ed25519 envelope. A fresh environment/configuration check found both
+  `COMPANY_RETAINED_KEY_ID` and
+  `COMPANY_RETAINED_ED25519_PUBLIC_KEY_BASE64` absent, so no trusted signer is
+  currently configured and the live pilot remains closed. Recheck request,
   locks, historical evidence, and disjointness; then run exactly one private
   Samtec preflight. Do not use a test signer, normal resume, global sync, or
   broad scan.
+- Parallel offline F1 reconciliation evidence was rechecked: 68 outbox,
+  bootstrap/catch-up, publication-control, bridge and dispatcher tests passed
+  when run with the repository root available to test imports. The historical
+  F1 live Sheet/idle-busy evidence remains open.
 
 Reread this section first after every context reset or before a live action.
 
