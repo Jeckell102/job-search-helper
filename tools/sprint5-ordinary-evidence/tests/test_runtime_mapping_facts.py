@@ -13,7 +13,11 @@ import pytest
 from job_search_helper import source_configuration_snapshot as snapshot
 from job_search_helper.engine import Engine, State
 from job_search_helper.integration_release import source_tree_digest
-from job_search_helper.runtime_mapping_facts import persist_runtime_mapping_fact, read_runtime_mapping_fact
+from job_search_helper.runtime_mapping_facts import (
+    open_runtime_mapping_stores,
+    persist_runtime_mapping_fact,
+    read_runtime_mapping_fact,
+)
 from job_search_helper.sqlite_repository import SQLiteRepository
 
 
@@ -39,8 +43,9 @@ def custody(tmp_path, monkeypatch):
         copy2(ROOT / rel, path)
     monkeypatch.setattr(snapshot, '_root', lambda: installed)
     state_dir = tmp_path / 'state'
-    with (closing(State(str(state_dir / 'state.db'))) as state,
-          closing(SQLiteRepository(state_dir / 'jobs.sqlite3', WORKBOOK, initialize=True)) as repo):
+    state_path, jobs_path = state_dir / 'state.db', state_dir / 'jobs.sqlite3'
+    with (closing(State(state_path)) as state,
+          closing(SQLiteRepository(jobs_path, WORKBOOK, initialize=True)) as repo):
         repo.set_meta('ready', 'yes')
         row = {'Company ID': CID, 'Company': 'Forterra', 'Company Status': 'Active',
                'Official Careers URL': 'https://www.forterra.com/careers', 'ATS / Source': 'Rippling'}
@@ -63,6 +68,7 @@ def custody(tmp_path, monkeypatch):
                 **{key: sha256(key.encode()).hexdigest() for key in (
                     'authority_extraction_digest', 'candidate_inventory_digest', 'regression_inventory_digest')},
                 'evidence_code': 'rippling_verified_mapping_divergence'}
+    with open_runtime_mapping_stores(state_path, jobs_path, WORKBOOK, writable_state=True) as (state, repo):
         yield state, repo, runtime, fact, installed
 
 
@@ -91,16 +97,17 @@ def test_exact_replay_readonly_lookup_and_unchanged_runtime_source(custody):
     assert read(custody) is None
     assert state.connection.execute('SELECT name FROM sqlite_master WHERE name=?', (TABLE,)).fetchone() is None
     packaged_before = (installed / snapshot.MAPPING_FACTS_PATH).read_bytes()
+    jobs_before = Path(repo.path).read_bytes()
     before = state.cycle(cycle_id)
     fact_id = persist(custody)
     row_before, = state.connection.execute(f'SELECT * FROM {TABLE}').fetchall()
     assert persist(custody) == fact_id == snapshot.mapping_fact_id(fact)
     assert state.connection.execute(f'SELECT * FROM {TABLE}').fetchall() == [row_before]
     assert state.cycle(cycle_id) == before
+    assert Path(repo.path).read_bytes() == jobs_before
     assert (installed / snapshot.MAPPING_FACTS_PATH).read_bytes() == packaged_before
     assert source_tree_digest(installed) == runtime['source_manifest_sha256']
-    with (closing(State(state.path, readonly=True)) as readonly_state,
-          closing(SQLiteRepository(repo.path, WORKBOOK, readonly=True)) as reader):
+    with open_runtime_mapping_stores(state.path, repo.path, WORKBOOK) as (readonly_state, reader):
         assert snapshot.mapping_fact_by_id(cycle_id, CID, fact_id) is None
         assert snapshot.mapping_fact_by_id(cycle_id, CID, fact_id, state=readonly_state, repository=reader,
                                            runtime_binding=runtime) == fact
@@ -108,6 +115,19 @@ def test_exact_replay_readonly_lookup_and_unchanged_runtime_source(custody):
                                            runtime_binding=runtime) is None
         with pytest.raises(ValueError, match='writable State'):
             persist_runtime_mapping_fact(readonly_state, reader, runtime, cycle_id=cycle_id, company_id=CID, fact=fact)
+
+
+def test_managed_scope_can_reopen_while_runner_handles_are_open(custody):
+    state, repo, runtime, fact, _ = custody
+    cycle_id = fact['cycle_id']
+    with (closing(State(state.path)) as runner_state,
+          closing(SQLiteRepository(repo.path, WORKBOOK)) as runner_jobs,
+          open_runtime_mapping_stores(state.path, repo.path, WORKBOOK, writable_state=True) as (scope, jobs)):
+        assert runner_state.cycle(cycle_id)['id'] == cycle_id
+        assert len(runner_jobs.matches('Companies', {'Company ID': CID})) == 1
+        assert persist_runtime_mapping_fact(scope, jobs, runtime, cycle_id=cycle_id, company_id=CID,
+                                            fact=fact) == snapshot.mapping_fact_id(fact)
+    assert read(custody)['fact'] == fact
 
 
 def test_package_compatibility_and_conflicting_authority_does_not_win(custody):
@@ -128,6 +148,133 @@ def test_package_compatibility_and_conflicting_authority_does_not_win(custody):
     assert snapshot.mapping_fact_by_id(cycle_id, CID, other_id) == other
     assert snapshot.mapping_fact_by_id(cycle_id, CID, other_id, state=state, repository=repo,
                                        runtime_binding=runtime) is None
+
+
+def test_contextual_packaged_fallback_checks_exact_current_mapping_without_writes(custody):
+    state, repo, runtime, fact, installed = custody
+    cycle_id = fact['cycle_id']
+    stale = {**fact, 'mapping_digest': '1' * 64}
+    paths = Path(state.path), Path(repo.path)
+    before = tuple(path.read_bytes() for path in paths)
+    with open_runtime_mapping_stores(*paths, WORKBOOK) as (reader, jobs):
+        save_package_fact(installed, stale)
+        stale_id = snapshot.mapping_fact_id(stale)
+        assert snapshot.mapping_fact_by_id(cycle_id, CID, stale_id) == stale
+        assert snapshot.mapping_fact_by_id(cycle_id, CID, stale_id, state=reader, repository=jobs,
+                                           runtime_binding=runtime) is None
+        save_package_fact(installed, fact)
+        fact_id = snapshot.mapping_fact_id(fact)
+        assert snapshot.mapping_fact_by_id(cycle_id, CID, fact_id, state=reader, repository=jobs,
+                                           runtime_binding=runtime) == fact
+    assert state.connection.execute('SELECT name FROM main.sqlite_master WHERE name=?', (TABLE,)).fetchone() is None
+    assert tuple(path.read_bytes() for path in paths) == before
+
+
+def test_contextual_packaged_fallback_checks_existing_sealed_group(custody):
+    state, repo, runtime, fact, installed = custody
+    cycle_id = fact['cycle_id']
+    save_package_fact(installed, fact)
+    fact_id = snapshot.mapping_fact_id(fact)
+    cycle = state.cycle(cycle_id)
+    engine = Engine(repo, state, runtime_binding=runtime)
+    engine._accept_source_configuration_defect_evidence_loaded(cycle, cycle['companies'][CID], fact)
+    assert snapshot.mapping_fact_by_id(cycle_id, CID, fact_id, state=state, repository=repo,
+                                       runtime_binding=runtime) == fact
+    del cycle['companies'][CID]['source_configuration_qualification_evidence']
+    state.save_cycle(cycle)
+    assert snapshot.mapping_fact_by_id(cycle_id, CID, fact_id) == fact
+    with pytest.raises(ValueError, match='sealed cycle evidence'):
+        snapshot.mapping_fact_by_id(cycle_id, CID, fact_id, state=state, repository=repo,
+                                    runtime_binding=runtime)
+    assert state.connection.execute('SELECT name FROM main.sqlite_master WHERE name=?', (TABLE,)).fetchone() is None
+
+
+def test_temp_slot_cannot_hide_or_receive_a_durable_fact(custody):
+    state, repo, runtime, fact, installed = custody
+    connection = state.connection
+    connection.execute(
+        f'CREATE TEMP TABLE {TABLE} (cycle, company, fact_id, record_sha256, payload)',
+    )
+    fact_id = persist(custody)
+    other = {**fact, 'candidate_inventory_digest': '1' * 64}
+    save_package_fact(installed, other)
+    other_id = snapshot.mapping_fact_id(other)
+    assert snapshot.mapping_fact_by_id(fact['cycle_id'], CID, other_id, state=state, repository=repo,
+                                       runtime_binding=runtime) is None
+    with pytest.raises(ValueError, match='immutable'):
+        persist(custody, other)
+    assert persist(custody) == fact_id
+    assert connection.execute(f'SELECT fact_id FROM main.{TABLE}').fetchall() == [(fact_id,)]
+    assert connection.execute(f'SELECT fact_id FROM temp.{TABLE}').fetchall() == []
+    with open_runtime_mapping_stores(state.path, repo.path, WORKBOOK) as (reader, jobs):
+        assert read_runtime_mapping_fact(reader, jobs, runtime, cycle_id=fact['cycle_id'],
+                                         company_id=CID) == {'fact_id': fact_id, 'fact': fact}
+
+
+@pytest.mark.parametrize('target', ['state', 'jobs'])
+@pytest.mark.parametrize('already_recorded', [False, True])
+def test_replaced_canonical_file_does_not_rebind_its_open_connection(custody, target, already_recorded):
+    state, repo, runtime, fact, _ = custody
+    fact_id = persist(custody) if already_recorded else None
+    path, connection = (Path(state.path), state.connection) if target == 'state' else (Path(repo.path), repo.db)
+    replacement = path.with_suffix('.replacement')
+    with closing(sqlite3.connect(replacement)) as copy_connection:
+        connection.backup(copy_connection)
+        with copy_connection:
+            copy_connection.execute('PRAGMA journal_mode=DELETE')
+            copy_connection.execute('CREATE TABLE fixture_generation (kind)')
+            copy_connection.execute('INSERT INTO fixture_generation VALUES (?)', ('replacement',))
+    path.rename(path.with_suffix('.original'))
+    replacement.rename(path)
+    with closing(sqlite3.connect(f'{path.as_uri()}?mode=ro&immutable=1', uri=True)) as fresh:
+        assert fresh.execute('SELECT kind FROM main.fixture_generation').fetchall() == [('replacement',)]
+    assert connection.execute(
+        "SELECT name FROM main.sqlite_master WHERE name='fixture_generation'",
+    ).fetchall() == []
+    statements = []
+    state.connection.set_trace_callback(statements.append)
+    with pytest.raises(ValueError, match='opened database identity changed'):
+        persist(custody)
+    assert not any(statement.startswith('BEGIN') for statement in statements)
+    if already_recorded:
+        assert state.connection.execute(f'SELECT fact_id FROM main.{TABLE}').fetchall() == [(fact_id,)]
+    else:
+        assert state.connection.execute('SELECT name FROM main.sqlite_master WHERE name=?', (TABLE,)).fetchone() is None
+    with pytest.raises(ValueError, match='opened database identity changed'):
+        read(custody)
+    if already_recorded:
+        connection.close()
+        with open_runtime_mapping_stores(state.path, repo.path, WORKBOOK) as (reader, jobs):
+            with pytest.raises(ValueError, match='exact owner'):
+                read_runtime_mapping_fact(reader, jobs, runtime, cycle_id=fact['cycle_id'], company_id=CID)
+
+
+def test_rechecks_workbook_from_main_even_when_temp_meta_preserves_original_value(custody):
+    state, repo, runtime, fact, _ = custody
+    assert persist(custody) == snapshot.mapping_fact_id(fact)
+    repo.db.execute('CREATE TEMP TABLE meta AS SELECT * FROM main.meta')
+    assert read(custody)['fact'] == fact
+    with closing(sqlite3.connect(repo.path)) as other:
+        with other:
+            other.execute("UPDATE main.meta SET value='different_workbook' WHERE key='spreadsheet_id'")
+    assert repo.db.execute("SELECT value FROM temp.meta WHERE key='spreadsheet_id'").fetchone() == (WORKBOOK,)
+    with pytest.raises(ValueError, match='Jobs workbook identity changed'):
+        read(custody)
+    with pytest.raises(ValueError, match='Jobs workbook identity changed'):
+        persist(custody)
+    assert state.connection.execute(f'SELECT count(*) FROM main.{TABLE}').fetchone() == (1,)
+
+
+def test_temp_company_authority_holds_direct_and_contextual_reads(custody):
+    state, repo, runtime, fact, _ = custody
+    fact_id = persist(custody)
+    repo.db.execute('CREATE TEMP VIEW records AS SELECT * FROM main.records')
+    with pytest.raises(ValueError, match='Company authority is shadowed'):
+        read(custody)
+    with pytest.raises(ValueError, match='Company authority is shadowed'):
+        snapshot.mapping_fact_by_id(fact['cycle_id'], CID, fact_id, state=state, repository=repo,
+                                    runtime_binding=runtime)
+    assert state.connection.execute(f'SELECT fact_id FROM main.{TABLE}').fetchall() == [(fact_id,)]
 
 
 def test_replay_cannot_replace_another_fact_and_rehashed_substitution_is_rejected(custody):
@@ -175,8 +322,9 @@ def test_source_qualification_and_runtime_drift_hold_without_mutating_fact(custo
     persist(custody)
     original = state.connection.execute(f'SELECT * FROM {TABLE}').fetchall()
     if drift == 'company':
-        repo.commit([{'tab': 'Companies', 'identity': {'Company ID': CID},
-                      'values': {'Official Careers URL': 'https://www.forterra.com/changed'}}])
+        with closing(SQLiteRepository(repo.path, WORKBOOK)) as writer:
+            writer.commit([{'tab': 'Companies', 'identity': {'Company ID': CID},
+                            'values': {'Official Careers URL': 'https://www.forterra.com/changed'}}])
     elif drift == 'installed':
         path = installed / snapshot._PATHS[0]
         path.write_bytes(path.read_bytes() + b'\n# Fixture-only source drift\n')
@@ -218,23 +366,32 @@ def test_foreign_cycle_company_and_copied_state_do_not_adopt_fact(custody):
         read_runtime_mapping_fact(state, repo, runtime, cycle_id=fact['cycle_id'], company_id='COMP-0178')
     assert snapshot.mapping_fact_by_id(foreign_cycle['id'], CID, fact_id, state=state, repository=repo,
                                        runtime_binding=runtime) is None
-    with closing(State(Path(state.path).with_name('copied-state.db'))) as copied:
+    copied_path = Path(state.path).with_name('copied-state.db')
+    with closing(State(copied_path)) as copied:
         state.connection.backup(copied.connection)
+    with open_runtime_mapping_stores(copied_path, repo.path, WORKBOOK) as (copied, reader):
         with pytest.raises(ValueError, match='exact owner'):
-            read_runtime_mapping_fact(copied, repo, runtime, cycle_id=fact['cycle_id'], company_id=CID)
+            read_runtime_mapping_fact(copied, reader, runtime, cycle_id=fact['cycle_id'], company_id=CID)
     with pytest.raises(ValueError, match='complete admitted owner'):
         snapshot.mapping_fact_by_id(fact['cycle_id'], CID, fact_id, state=state)
 
 
 def test_aliased_state_is_rejected_before_beginning_writer_transaction(custody):
-    state, repo, runtime, fact, _ = custody
+    state, repo, _, _, _ = custody
     alias = Path(state.path).with_name('alias.db')
     alias.symlink_to(state.path)
-    with closing(State(alias)) as aliased:
+    with pytest.raises(ValueError, match='canonical durable database paths'):
+        with open_runtime_mapping_stores(alias, repo.path, WORKBOOK, writable_state=True):
+            pytest.fail('managed open accepted aliased State')
+
+
+def test_unmanaged_state_is_rejected_before_beginning_writer_transaction(custody):
+    state, repo, runtime, fact, _ = custody
+    with closing(State(state.path)) as unmanaged:
         statements = []
-        aliased.connection.set_trace_callback(statements.append)
-        with pytest.raises(ValueError, match='canonical durable database paths'):
-            persist_runtime_mapping_fact(aliased, repo, runtime, cycle_id=fact['cycle_id'], company_id=CID, fact=fact)
+        unmanaged.connection.set_trace_callback(statements.append)
+        with pytest.raises(ValueError, match='managed opened'):
+            persist_runtime_mapping_fact(unmanaged, repo, runtime, cycle_id=fact['cycle_id'], company_id=CID, fact=fact)
         assert not any(statement.startswith('BEGIN') for statement in statements)
 
 

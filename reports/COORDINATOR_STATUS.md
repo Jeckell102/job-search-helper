@@ -18,6 +18,18 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Supplemental checkpoint. Four disposable controller timeout tests passed,
+including process-group termination and reaping on timeout. The full
+controller rehearsal continues in session 30963. The three owned Sprint 5
+custody repairs passed 55 disposable cases, with pins verified in
+`/tmp/jsh-s5-runtime-mapping-fact-repair.jQCMdWmA`. Higher reasoning
+`01a1f97d-cebd-7910-8d31-a5f3e0dcd264` owns independent custody recheck.
+Sol High `01a1f979-8619-75d2-9973-047f3a5efb0c` owns separate Engine
+sealing composition only. Coordinator still owns Sprint 4 site gates.
+[Custody repair](S5_RUNTIME_MAPPING_FACT_REPAIR_HANDOFF_20261120.md).
+The integrated Sprint 4 source backup was verified at
+`efb103a1739d49409beff98fcf713e5e05401a10`.
+
 Protected continuity integrated checkpoint. Coordinator and release
 owner, goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%,
 project about 52% while live closure remains open. Integrated verifier

@@ -484,7 +484,9 @@ def mapping_fact_by_id(cycle_id, company_id, fact_id, *, state=None, repository=
 
     The existing three-argument lookup never consults runtime data. A runtime
     owner that has a fact reserves that owner even when a different ID is asked
-    for. A corrupt or stale runtime record raises and never falls back.
+    for. A corrupt or stale runtime record raises and never falls back. When
+    the owner has no runtime fact, packaged evidence must still match the
+    exact current source snapshot and any sealed cycle evidence.
     """
     if (not isinstance(cycle_id, str) or not cycle_id or not isinstance(company_id, str)
             or not company_id or not isinstance(fact_id, str) or not _SHA.fullmatch(fact_id)):
@@ -492,11 +494,10 @@ def mapping_fact_by_id(cycle_id, company_id, fact_id, *, state=None, repository=
     if any(value is not None for value in (state, repository, runtime_binding)):
         if any(value is None for value in (state, repository, runtime_binding)):
             raise ValueError('Runtime mapping fact lookup requires the complete admitted owner.')
-        from .runtime_mapping_facts import read_runtime_mapping_fact
+        from .runtime_mapping_facts import contextual_mapping_fact_by_id
 
-        runtime = read_runtime_mapping_fact(state, repository, runtime_binding, cycle_id=cycle_id, company_id=company_id)
-        if runtime is not None:
-            return runtime['fact'] if runtime['fact_id'] == fact_id else None
+        return contextual_mapping_fact_by_id(state, repository, runtime_binding, cycle_id=cycle_id,
+                                             company_id=company_id, fact_id=fact_id)
     records = read_source_configuration_mapping_facts()
     if records is None:
         return None
