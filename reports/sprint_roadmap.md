@@ -59,10 +59,20 @@ Restore alignment in this order:
 8. Classify the previous turn as progress, verified wait or no progress. A
    status-only turn is not progress; a lock or note alone is not a live process.
    Take the next safe action whenever useful work remains.
-9. Record the active sprint, overall gate percentage, current-sprint percentage,
+9. If a blocker repeats and the next attempt has no materially new evidence or
+   approach, stop retrying that path. Check the restart card for an active
+   higher-reasoning review and follow up with its owner if one exists.
+   Otherwise, send the blocker to a ChatGPT reviewer explicitly configured
+   for higher reasoning. Include the smallest reproducible failure, what has
+   already been tried, the affected versions and paths, and the safety and
+   acceptance requirements that still apply. Record the review owner, handoff,
+   evidence, and next action in the restart card. Continue independent work
+   while the review runs. Verify the recommendation before resuming the
+   blocked path. This escalation does not change the Jetson inference lane.
+10. Record the active sprint, overall gate percentage, current-sprint percentage,
    latest evidence, blockers and next action in `COORDINATOR_STATUS.md` at the
    next meaningful checkpoint.
-10. Never claim deployed, accepted, backed up or complete without current
+11. Never claim deployed, accepted, backed up or complete without current
     direct evidence at the required scope. A passing source suite is not live
     acceptance; a local commit is not a verified GitHub backup.
 

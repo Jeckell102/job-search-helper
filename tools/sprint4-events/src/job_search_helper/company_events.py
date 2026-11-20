@@ -255,7 +255,7 @@ class CompanyEventBridge:
 
     def archive_ordinary_admission(self, request, cycle):
         """Save the exact verified event request before its mutable slot is replaced."""
-        from .scan_request import request_fingerprint
+        from .scan_request import cycle_metadata, request_fingerprint
 
         _raw, verified = read_verified_queued_event(self.repository, self.root)
         event = verified["company_event"]
@@ -263,6 +263,17 @@ class CompanyEventBridge:
                 or cycle.get("request_fingerprint") != request_fingerprint(request, [event["company_id"]])
                 or cycle.get("company_event") != event or set(cycle.get("companies", {})) != {event["company_id"]}):
             raise ValueError("Company-event checkpoint does not own the exact queued admission.")
+        cycle_id, company_id = cycle["id"], event["company_id"]
+        membership = self.repository.matches("Companies", {"Company ID": company_id})
+        mirror = self.repository.matches("Scan Cycles", {"Cycle ID": cycle_id})
+        if (len(membership) != 1 or membership[0][1].get("Active Cycle ID") != cycle_id
+                or len(mirror) != 1 or mirror[0][1].get("Cycle Status") != cycle.get("status")):
+            raise ValueError("Company-event admission membership or mirror is incomplete; queued request retained.")
+        notes = cycle_metadata(mirror[0][1])
+        if (notes.get("company_ids") != [company_id]
+                or any(notes.get(key) != cycle.get(key) for key in (
+                    "start_request_id", "request_fingerprint", "company_event", "runtime_binding"))):
+            raise ValueError("Company-event admission mirror disagrees with its checkpoint.")
         path = self.root.resolve() / "company-event-bridge" / "ordinary-admissions" / (_json_digest(request) + ".json")
         if path.resolve() != path:
             raise ValueError("Company-event admission archive must be a regular file.")

@@ -1295,6 +1295,7 @@ def test_admit_retry_command_saves_only_pinned_eligible_successor(tmp_path, monk
 
     fixture = OperatorFixture(tmp_path, monkeypatch, company_event=True)
     fixture.sign()
+    success_inventory = fixture.fetch.return_value
     fixture.fetch.return_value = ats.Inventory(
         "failed", source_url=BOARD, ats="Jobvite", browser_fallback_allowed=False,
         outcome_failure=ats.outcome_failure("temporary_transport", "retryable_http_status"),
@@ -1343,3 +1344,33 @@ def test_admit_retry_command_saves_only_pinned_eligible_successor(tmp_path, monk
     assert command() == {**result, "recovered": True}
     fixture.open_remote.assert_not_called()
     fixture.fetch.assert_called_once()
+
+    # The exact successor is not available through generic scraper or sync admission.
+    from job_search_helper.retained_work_runner import assert_normal_lifecycle_not_held
+    with pytest.raises(ValueError, match="Selected retry owns this cycle"):
+        assert_normal_lifecycle_not_held(tmp_path, fixture.jobs_path)
+
+    args[0] = "fetch-retry"
+    args.extend(["--successor-cycle-id", result["cycle_id"]])
+    fixture.fetch.return_value = success_inventory
+    frozen = command()
+    assert frozen["state"] == "INVENTORY_FROZEN"
+    assert frozen["recovered"] is False
+    assert fixture.fetch.call_count == 2
+    assert all(not call.kwargs["write"] for call in fixture.open_remote.call_args_list)
+    fixture.open_remote.reset_mock()
+    assert command() == {**frozen, "recovered": True}
+    fixture.open_remote.assert_not_called()
+    assert fixture.fetch.call_count == 2
+
+    fixture.service.before_write = lambda: fixture.assert_held("scraper.lock", "writer.lock")
+    args[0] = "publish-retry"
+    receipt = command()
+    assert receipt["state"] == "SYNC_CONFIRMED"
+    assert receipt["binding"]["request_id"] == result["request_id"]
+    assert receipt["binding"]["source_revision"] == fixture.request["source_revision"]
+    assert receipt["binding"]["release_binding_sha256"] == digest(fixture.runtime)
+    assert fixture.fetch.call_count == 2
+    fixture.open_remote.reset_mock()
+    assert command() == receipt
+    fixture.open_remote.assert_not_called()

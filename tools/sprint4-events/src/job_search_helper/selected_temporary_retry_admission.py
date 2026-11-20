@@ -60,7 +60,8 @@ def admit_selected_temporary_retry_locked(sink, state, runtime_binding, *, workb
             # The ledger is written before Engine's separate State checkpoint.
             # Even an empty State cannot establish that a launch was absent.
             return {'state': 'HELD_CLAIM_WITHOUT_STATE', 'request_id': request_id}
-        return _saved_admission(reader, saved[0], mirror, request, runtime, recovered=True)
+        return _saved_admission(reader, saved[0], mirror, request, runtime,
+                                reservation=sink.reservation_digest, recovered=True)
 
     blockers = sorted(_unfinished_from_views(local_cycles, mirror_cycles))
     if blockers:
@@ -88,11 +89,13 @@ def admit_selected_temporary_retry_locked(sink, state, runtime_binding, *, workb
     with (closing(SQLiteRepository(jobs_path, reader.spreadsheet_id)) as writer,
           closing(State(str(state_path))) as writable_state):
         engine = Engine(writer, writable_state, runtime_binding=runtime, fetcher=None, error_log_path=None)
-        cycle_id = engine.start_cycle(company_ids=request['company_ids'], new_scan_request=admitted)
+        cycle_id = engine.start_cycle(company_ids=request['company_ids'], new_scan_request=admitted,
+                                      selected_retry_reservation=sink.reservation_digest)
     saved_cycle = state.cycle(cycle_id)
     mirrors = [row for row in _cycle_views(reader, state)[1]
                if cycle_metadata(row).get('start_request_id') == request_id]
-    return _saved_admission(reader, saved_cycle, mirrors, request, runtime, recovered=False)
+    return _saved_admission(reader, saved_cycle, mirrors, request, runtime,
+                            reservation=sink.reservation_digest, recovered=False)
 
 
 def _bound_request(outcome, scheduled_at):
@@ -138,9 +141,7 @@ def _workbook_hold(reader, snapshot, request, local_company):
     if any(cycle_metadata(row).get('start_request_id') == request['request_id'] for row in rows):
         return {'state': 'HELD_WORKBOOK_SUCCESSOR_EXISTS'}
     company = snapshot['company']
-    shared = ['Company ID', 'Company Status', 'Official Careers URL']
-    if isinstance(company, dict) and 'ATS / Source' in company:
-        shared.append('ATS / Source')
+    shared = ['Company ID', 'Company Status', 'Official Careers URL', 'ATS / Source', 'Automatic Retry?']
     if (not _company_ready(company, request['company_ids'][0])
             or any(key not in company or not _equivalent(key, company[key], local_company.get(key, ''))
                    for key in shared)):
@@ -148,13 +149,14 @@ def _workbook_hold(reader, snapshot, request, local_company):
     return None
 
 
-def _saved_admission(reader, cycle, mirrors, request, runtime, *, recovered):
+def _require_saved_retry_identity(cycle, request, runtime, *, reservation):
     cid = request['company_ids'][0]
     request_id = request['request_id']
     fingerprint = request_fingerprint(request, [cid])
     identity = {'start_request_id': request_id, 'request_fingerprint': fingerprint,
                 'temporary_retry': request['temporary_retry'], 'runtime_binding': runtime,
-                'all': False, 'supersedes': [], 'start_last': []}
+                'all': False, 'supersedes': [], 'start_last': [],
+                'selected_retry_reservation_sha256': reservation}
     if (not isinstance(cycle, dict) or not isinstance(cycle.get('id'), str)
             or not re.fullmatch(r'CYC-[0-9A-F]{12}', cycle['id'])
             or any(cycle.get(key) != value for key, value in identity.items()) or cycle['all'] is not False
@@ -164,6 +166,15 @@ def _saved_admission(reader, cycle, mirrors, request, runtime, *, recovered):
     item = cycle['companies'][cid]
     if item.get('outcome_source_revision') != request['source_revision']:
         raise ValueError('Selected retry saved source no longer matches its admission.')
+    return identity
+
+
+def _saved_admission(reader, cycle, mirrors, request, runtime, *, reservation, recovered):
+    identity = _require_saved_retry_identity(cycle, request, runtime, reservation=reservation)
+    cid = request['company_ids'][0]
+    request_id = identity['start_request_id']
+    fingerprint = identity['request_fingerprint']
+    item = cycle['companies'][cid]
     evidence = {'request_id': request_id, 'cycle_id': cycle['id'], 'company_id': cid}
     if item.get('stage') != 'queued' or cycle.get('status') != 'In Progress':
         return {'state': 'HELD_SUCCESSOR_PROGRESS', **evidence}

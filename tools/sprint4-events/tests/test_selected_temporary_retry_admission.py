@@ -86,7 +86,7 @@ def test_one_pinned_ordinary_cycle_is_saved_without_queue_writer_or_scan(schedul
     close_fixture_blocker(fixture)
     full = view(fixture, outcome)
     snapshot = {**full, 'cycles': None, 'company': {
-        key: full['company'][key] for key in ('Company ID', 'Company Status', 'Official Careers URL')}}
+        key: full['company'][key] for key in ('Company ID', 'Company Status', 'Official Careers URL', 'ATS / Source', 'Automatic Retry?')}}
     with closing(fixture.local()) as reader:
         before = {tab: reader.read(tab) for tab in ('Job History', 'Job Evidence', 'Opportunities')}
     result = admit(fixture, sink, snapshot=snapshot)
@@ -164,4 +164,18 @@ def test_same_hash_newer_source_event_still_refuses_admission(scheduled):
             writer.mutate_company_with_event({'tab': 'Companies', 'identity': identity,
                                               'values': {'Official Careers URL': url}})
     assert admit(fixture, sink, snapshot=snapshot)['state'] == 'HELD_SOURCE_CHANGED'
+    assert successors(fixture) == []
+
+
+@pytest.mark.parametrize("change", [{"ATS / Source": "Greenhouse"}, {"Automatic Retry?": "No"}])
+def test_projected_company_changes_hold_before_spending_retry(scheduled, change):
+    fixture, outcome, sink = scheduled
+    close_fixture_blocker(fixture)
+    snapshot = view(fixture, outcome)
+    snapshot['cycles'] = None
+    snapshot['company'].update(change)
+    ledger, = sink.directory.glob('*.json')
+    before = ledger.read_bytes()
+    assert admit(fixture, sink, snapshot=snapshot)['state'] == 'HELD_WORKBOOK_COMPANY'
+    assert ledger.read_bytes() == before
     assert successors(fixture) == []

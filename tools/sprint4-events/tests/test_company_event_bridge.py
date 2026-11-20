@@ -213,6 +213,41 @@ class CompanyEventBridgeTests(unittest.TestCase):
         )._recover(cycles[0]["id"])
         self.assertEqual(recovered["company_event"], cycles[0]["company_event"])
 
+    def test_ordinary_archive_keeps_the_queue_after_incomplete_company_membership(self):
+        from contextlib import closing
+        from unittest.mock import patch
+
+        from job_search_helper.engine import Engine, State
+        from job_search_helper.scan_request import requested_scan
+
+        event = self.event(**{"ATS / Source": "Lever"})
+        self.bridge = CompanyEventBridge(self.repo, self.bridge.root)
+        self.bridge.process_pending()
+        database = self.bridge.state_database
+        queued = self.bridge.request_path.read_bytes()
+        archives = self.bridge.evidence_directory / "ordinary-admissions"
+        with closing(State(str(database))) as state:
+            engine = Engine(self.repo, state)
+            proper_commit = engine._commit
+
+            def fail_membership(*operations):
+                if any(op.get("tab") == "Companies" and "Active Cycle ID" in op.get("values", {})
+                       for op in operations):
+                    raise InterruptedError("cut before membership")
+                return proper_commit(*operations)
+
+            with patch.object(engine, "_commit", side_effect=fail_membership):
+                with self.assertRaisesRegex(InterruptedError, "cut before membership"):
+                    requested_scan(engine, state, database)
+            self.assertEqual(len(state.cycles()), 1)
+            with patch.object(engine, "start_cycle", side_effect=AssertionError("duplicate start")):
+                with self.assertRaisesRegex(ValueError, "membership or mirror is incomplete"):
+                    requested_scan(engine, state, database)
+        self.assertEqual(self.bridge.request_path.read_bytes(), queued)
+        self.assertEqual(list(archives.glob("*.json")), [])
+        self.assertEqual(event["company_id"], "COMP-1")
+
+
     def test_terminal_intake_event_becomes_one_next_scan_after_current_cycle_stops(self):
         """A Company edit seen by final intake cannot start a second scrape."""
         from contextlib import contextmanager

@@ -760,6 +760,8 @@ def _readonly_named_exact_preflight(database, inventory_path, cycle_id, company_
             raise ValueError('Exact sync cycle is missing, finished, or superseded.')
         if cycle_id in superseded_cycle_ids(state.cycles()):
             raise ValueError('Exact sync cycle is missing, finished, or superseded.')
+        if 'selected_retry_reservation_sha256' in cycle:
+            raise ValueError('Selected retry requires its dedicated execution and publication path.')
         Engine.validate_cycle_runtime_binding(cycle, runtime_binding, sync_only=True)
     finally:
         state.close()
