@@ -28,8 +28,9 @@
 - Worker assignments: coordinator owns the next F2 recovery/outcome scope;
   independent QA completed adversarial review of the admission repair. Jetson retains exactly one inference lane and
   has no work in this checkpoint.
-- Scoped backup: commit `adbfa0f` (`backup F1 F2 admission QA`) was pushed to
-  the user's GitHub branch `backup/integration-automation-m1-operator-20261120`.
+- Scoped backup: commits `adbfa0f` (`backup F1 F2 admission QA`) and `7850f12`
+  (`record F1 F2 backup evidence`) were pushed to the user's GitHub branch
+  `backup/integration-automation-m1-operator-20261120`.
   It contains only the named F1/F2 source/test files plus this card and
   `F1_F2_ADMISSION_QA_20261120.md`; no databases, locks, credentials, raw job
   data, or Sheets content were included.
