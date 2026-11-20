@@ -18,6 +18,18 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Physical fence source QA checkpoint. Independent QA accepted all three
+recovery repairs at the exact repaired tool pin with 11 independent and
+five supplied cases. Explicit rollback from HOST_REOPEN or RELEASE_REFUSED
+must re-hold first. The complete controller fixture was still running at
+`/tmp/jsh-s4-combined-release-fixture.host-recovery.izeeo8lg/recovery-full.log`;
+its candidate-free rollback case had passed before this checkpoint. Both
+worker chats were already executing their distinct work when the user
+changed the model effort. No intervention needed for the running work.
+[Source verdict](S4_PHYSICAL_HOST_FENCE_RECOVERY_INDEPENDENT_QA_20261120.md)
+and [fixture handoff](S4_PHYSICAL_HOST_FENCE_RECOVERY_FIXTURE_20261120.md).
+The verified backup of candidate, tests and site witness is `040b63f`.
+
 Physical recovery and alternate route witness checkpoint. Coordinator and
 release owner, goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4
 about 80%, project about 52% with the live gate open. Independent QA
