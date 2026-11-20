@@ -140,6 +140,17 @@ def version(data, info):
 
 @contextmanager
 def directory(name, parent=None):
+    if parent is None:
+        path = Path(name)
+        if not path.is_absolute() or path.anchor != "/" or ".." in path.parts:
+            raise ValueError("Expected a physical absolute directory path")
+        with ExitStack() as ancestry:
+            fd = os.open("/", DIRECTORY)
+            ancestry.callback(os.close, fd)
+            for part in path.parts[1:]:
+                fd = ancestry.enter_context(directory(part, fd))
+            yield fd
+        return
     fd = os.open(name, DIRECTORY, dir_fd=parent)
     try:
         yield fd
@@ -192,8 +203,9 @@ def read_file(parent, name):
     fd = os.open(name, READ, dir_fd=parent)
     with os.fdopen(fd, "rb") as stream:
         info = os.fstat(fd)
-        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
-            raise ValueError(f"Expected a regular file with one link: {name}")
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                or mount_id(fd) != mount_id(parent)):
+            raise ValueError(f"Expected a regular same-mount file with one link: {name}")
         data = stream.read()
         after = os.stat(name, dir_fd=parent, follow_symlinks=False)
         if (identity(info), info.st_ctime_ns) != (identity(after), after.st_ctime_ns):

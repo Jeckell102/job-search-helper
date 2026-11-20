@@ -18,6 +18,27 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Release QA repair checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project about
+52%. Independent QA held the initial joint tools on file mount/physical
+ancestor identity and absent restored-host attestation. Coordinator
+repaired the two tools in
+`/tmp/jsh-s4-combined-release-tools-repair.JpgiG3IM`. Six targeted tests
+failed before and passed afterward. Independent QA
+`01a1f97d-2e8c-7821-b5e1-d2019215036b` owns the source recheck and the Sol
+medium lane `01a1f979-8619-75d2-9973-047f3a5efb0c` owns the full repaired
+fixture. The Astra High site review chose a durable canonical host script
+absence journal, post-fence process drain, and verified host reopening
+only after both runtime sides match. Disposable absolute/relative launches
+failed during absence and a pre-open file remained readable. No site fence
+implementation or live readiness yet. Coordinator owns that phase design
+and will preserve compatibility, recoverability and supported alternate
+runtime holds. No production, service or Jetson changes. Previous
+verified joint rehearsal backup `7c59f0ead342a368d024e345cbb732e21ac34681`.
+[Source QA hold](S4_JOINT_RELEASE_TOOL_SOURCE_QA_20261120.md),
+[repair](S4_JOINT_RELEASE_TOOL_QA_REPAIRS_20261120.md) and
+[site fence design](S4_WRAPPER_SITE_FENCE_DESIGN_20261120.md).
+
 Joint release fixture checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project about
 52% while independent tool QA and real host readiness are open. Five

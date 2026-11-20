@@ -370,7 +370,8 @@ class Systemd:
         return {value: ref(Path(value)) for value in paths if value != str(self.path(unit["Id"]))}
 
     def check_status(self, prior, *, held, restored=False):
-        for name, unit in self.status().items():
+        units = self.status()
+        for name, unit in units.items():
             expected = prior[name]
             loaded = unit["DropInPaths"].split()
             hold_path = self.path(name)
@@ -389,6 +390,7 @@ class Systemd:
                             f"Service process still present: {name}")
                     for group in {expected["cgroup"], unit["ControlGroup"]} - {""}:
                         self.check_cgroup(group)
+        return units
 
     @staticmethod
     def check_cgroup(group):
@@ -430,11 +432,11 @@ class Systemd:
                 path.parent.rmdir()
                 gate.syncdir(path.parent.parent)
         self.command("daemon-reload", timeout=30)
-        self.check_status(prior, held=False)
+        units = self.check_status(prior, held=False)
         if present(self.sentinel):
             check_file(self.sentinel, b"", 0o600)
             sync_unlink(self.sentinel)
-        if prior[UNITS[0]]["active"] == "active":
+        if prior[UNITS[0]]["active"] == "active" and units[UNITS[0]]["ActiveState"] != "active":
             self.command("start", UNITS[0], timeout=45)
         self.check_status(prior, held=False, restored=True)
 
@@ -790,12 +792,27 @@ class Controller:
         require(record["phase"] == "RELEASING", "Missing verified admission checkpoint")
         require(self.verify_tree(record, manifest) == self.canonical, "Package not published")
         self.verify_receipt(record, record["receipt"])
-        if present(self.marker):
-            check_file(self.marker, self.marker_data, 0o600)
-            sync_unlink(self.marker)
-        else:
-            gate.syncdir(self.marker.parent)
-        self.units.restore(record["prior"])
+        try:
+            self.hook("restoring", package=self.canonical, target=record["target"])
+            require(self.verify_tree(record, manifest) == self.canonical,
+                    "Source changed before host restoration")
+            self.verify_receipt(record, record["receipt"])
+            if present(self.marker):
+                check_file(self.marker, self.marker_data, 0o600)
+                sync_unlink(self.marker)
+            else:
+                gate.syncdir(self.marker.parent)
+            self.units.restore(record["prior"])
+            self.hook("restored", package=self.canonical, target=record["target"])
+            require(self.verify_tree(record, manifest) == self.canonical,
+                    "Source changed during host restoration")
+            self.verify_receipt(record, record["receipt"])
+            self.units.check_status(record["prior"], held=False, restored=True)
+            require(not present(self.marker) and not present(self.units.sentinel), "Release hold remains")
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+            ensure_file(self.marker, self.marker_data)
+            self.units.close(record["prior"])
+            raise
         self.save(record, "RELEASED")
 
     def begin_rehold(self, record):
