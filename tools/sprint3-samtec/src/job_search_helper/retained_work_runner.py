@@ -297,6 +297,9 @@ def assert_normal_lifecycle_not_held(state_directory, jobs_path=None):
     Sheets lifecycle until the dedicated retained path has settled it.
     Callers hold the normal scraper writer lock while making this check.
     """
+    from .retained_operator_journal import assert_no_unfinished_operator_journal
+
+    assert_no_unfinished_operator_journal(state_directory)
     path = Path(state_directory).resolve() / "retained-work-starts.sqlite3"
     record = _read_existing_journal(path)
     if record is not None:

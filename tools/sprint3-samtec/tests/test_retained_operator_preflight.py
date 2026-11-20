@@ -1,19 +1,32 @@
+import base64
 import json
 from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from datetime import datetime, timezone
+from unittest.mock import Mock
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from job_search_helper.company_events import source_revision
 from job_search_helper.engine import State
 from job_search_helper.retained_operator_preflight import measure_operator_membership, verify_operator_source_identity
+from job_search_helper.retained_operator_run import run_operator_membership
+from job_search_helper.retained_operator_journal import FETCH_CLAIMED, RetainedOperatorJournal
 from job_search_helper.retained_work_exception import build_manifest, digest
+from job_search_helper.repository import SCHEMAS
+from job_search_helper.selected_recovery_authorization import Ed25519AuthorizationVerifier, canonical
+from job_search_helper.sheet_profile import COMPACT_PROFILE, COMPACT_SCHEMAS
 
 
 class SnapshotRepository:
     is_local = True
     readonly = True
-    schemas = {"Companies": ["Company ID", "Company Status", "Official Careers URL"]}
+    spreadsheet_id = "workbook"
+    schemas = SCHEMAS
+    profile = None
 
     def __init__(self, path, company):
         self.path = path
@@ -23,6 +36,13 @@ class SnapshotRepository:
     def matches(self, tab, identity):
         assert tab == "Companies" and identity == {"Company ID": "COMP-0739"}
         return [(2, dict(self.company))]
+
+    def get_meta(self, key):
+        assert key == "sheets_profile"
+        return self.profile
+
+    def validate_schema(self):
+        return True
 
     def read_columns(self, tab, headers):
         if tab == "Companies":
@@ -89,9 +109,13 @@ class RetainedOperatorPreflightTest(unittest.TestCase):
     def measure(self):
         return measure_operator_membership(
             self.local, self.remote, self.state, self.root, self.manifest,
-            {"state": "NO_RELEASE", "source_manifest_sha256": digest("fixture")},
+            self.runtime(),
             expires_at="2026-11-21T00:00:00Z",
         )
+
+    def runtime(self):
+        return {"state": "NO_RELEASE", "source_manifest_sha256": digest("fixture"),
+                "config_sha256": digest("config"), "dependency_manifest_sha256": digest("dependencies")}
 
     def test_composed_scope_and_current_workbook_are_read_only(self):
         original = {path: path.read_bytes() for path in self.root.glob("*.sqlite3")}
@@ -103,9 +127,56 @@ class RetainedOperatorPreflightTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "workbook_blockers_changed"):
             self.measure()
 
+    def test_wrong_workbook_holds_even_when_company_fields_match(self):
+        self.remote.spreadsheet_id = "wrong"
+        with self.assertRaisesRegex(ValueError, "workbook_identity_changed"):
+            self.measure()
+
+    def test_compact_cycles_are_local_only_and_profile_mismatch_is_rejected(self):
+        self.local.profile = COMPACT_PROFILE
+        with self.assertRaisesRegex(ValueError, "workbook_schema_changed"):
+            self.measure()
+        self.remote.schemas = COMPACT_SCHEMAS
+        read = self.remote.read_columns
+
+        def read_compact(tab, headers):
+            self.assertNotEqual(tab, "Scan Cycles")
+            return read(tab, headers)
+
+        self.remote.read_columns = read_compact
+        self.assertEqual(self.measure()["company_id"], "COMP-0739")
+        self.local.remote_blocker = "CYC-FOREIGN"
+        with self.assertRaisesRegex(ValueError, "blocker"):
+            self.measure()
+
     def test_returned_provider_must_match_before_the_plan(self):
         fact = {"official_careers_url": self.company["Official Careers URL"]}
         scope = {"company_id": "COMP-0739"}
         with self.assertRaisesRegex(ValueError, "returned_source_changed"):
             verify_operator_source_identity(self.manifest, scope, self.company, fact,
                                             inventory={"ats": "Jobvite", "source_url": "https://jobs.jobvite.com/other/search"})
+
+    def test_execution_claim_survives_an_ambiguous_provider_exit(self):
+        claims = self.measure()
+        key = Ed25519PrivateKey.generate()
+        verifier = Ed25519AuthorizationVerifier({"fixture": key.public_key().public_bytes(
+            serialization.Encoding.Raw, serialization.PublicFormat.Raw)})
+        approval = {"payload": claims, "key_id": "fixture",
+                    "signature": base64.b64encode(key.sign(canonical(claims))).decode("ascii")}
+        fetch = Mock(side_effect=RuntimeError("fixture provider interrupted"))
+        open_local = Mock(side_effect=AssertionError("writer must stay unopened"))
+        open_remote = Mock(side_effect=AssertionError("writer must stay unopened"))
+        measure_remote = Mock(return_value=self.remote)
+        args = (self.local, measure_remote, self.state, self.root, self.manifest, self.runtime())
+        options = dict(approval=approval, verifier=verifier, fetcher=fetch, local_writer=open_local,
+                       remote_writer=open_remote, request_id="samtec-fixture", company_id="COMP-0739",
+                       now=datetime(2026, 11, 20, 12, tzinfo=timezone.utc))
+        with self.assertRaisesRegex(RuntimeError, "fixture provider interrupted"):
+            run_operator_membership(*args, **options)
+        self.assertEqual(RetainedOperatorJournal(self.root).inspect()["state"], FETCH_CLAIMED)
+        with self.assertRaisesRegex(ValueError, "journal_fetch_ambiguous"):
+            run_operator_membership(*args, **options)
+        fetch.assert_called_once()
+        measure_remote.assert_called_once()
+        open_local.assert_not_called()
+        open_remote.assert_not_called()

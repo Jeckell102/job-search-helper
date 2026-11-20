@@ -100,3 +100,16 @@ class RetainedOperatorScopeTest(unittest.TestCase):
         original = historical_work_evidence(inventory, jobs, scope)
         jobs.execute("INSERT INTO exact_local_acknowledgements VALUES ('old','late')")
         self.assertNotEqual(historical_work_evidence(inventory, jobs, scope), original)
+
+    def test_publication_table_creation_keeps_only_private_cycle_outside_history(self):
+        inventory, jobs = self.historical_databases()
+        scope = self.seal(self.rows)
+        original = historical_work_evidence(inventory, jobs, scope)
+        jobs.execute("CREATE TABLE retained_publications (cycle, company, payload)")
+        jobs.execute("INSERT INTO retained_publications VALUES ('PRIVATE','COMP-0739','new')")
+        self.assertEqual(historical_work_evidence(inventory, jobs, scope), original)
+        jobs.execute("INSERT INTO retained_publications VALUES ('CYC-ACTIVE','COMP-SARONIC','changed')")
+        self.assertNotEqual(historical_work_evidence(inventory, jobs, scope), original)
+        jobs.execute("INSERT INTO retained_publications VALUES ('CYC-ACTIVE','COMP-0739','prior')")
+        with self.assertRaisesRegex(ValueError, "prior_company_work"):
+            historical_work_evidence(inventory, jobs, scope)

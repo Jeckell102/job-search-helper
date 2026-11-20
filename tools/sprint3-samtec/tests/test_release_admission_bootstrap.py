@@ -162,7 +162,7 @@ class ReleaseAdmissionBootstrapTests(unittest.TestCase):
             )
         result = self.run_launcher()
         self.assertEqual(result.returncode, 1, result.stderr)
-        self.assertIn("Retained operator Company handler is not installed", result.stderr)
+        self.assertIn("Specify the retained operator command and exact request identity", result.stderr)
         self.assertEqual(result.stdout, "")
         with writer_lock(self.root / ".state/scraper.lock"):
             pass

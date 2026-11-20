@@ -1382,9 +1382,12 @@ def scrape_main(argv=None):
             return 1
     if argv[0] == 'run-retained-operator-company':
         try:
-            with _retained_operator_admission():
-                raise RuntimeError("Retained operator Company handler is not installed")
-        except (ValueError, RuntimeError, OSError, ImportError) as exc:
+            with _retained_operator_admission() as admission:
+                if argv[1:]:
+                    from .retained_operator_command import operator_command
+                    return operator_command(argv[1:], admission)
+                raise ValueError("Specify the retained operator command and exact request identity")
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
             print(f'ERROR: {exc}', file=sys.stderr)
             return 1
     if argv[0] == 'run-retained-company-event':

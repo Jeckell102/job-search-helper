@@ -57,7 +57,8 @@ def historical_work_evidence(inventory, jobs, cycle_scope):
         raise ValueError("retained_operator_historical_scope_invalid")
     evidence = {
         "inventory": _protected_tables(inventory, cycles, company, required={"inventories", "sync_plans"}),
-        "jobs": _protected_tables(jobs, cycles, company, required={"exact_local_applications"}),
+        "jobs": _protected_tables(jobs, cycles, company, required={"exact_local_applications"},
+                                  created_during_publication={"retained_publications"}),
         "application_details": _application_details(jobs, cycles),
         "receipts": {cycle: _receipt_records(inventory, cycle) for cycle in cycles},
     }
@@ -73,7 +74,7 @@ def historical_work_evidence(inventory, jobs, cycle_scope):
     return digest(evidence)
 
 
-def _protected_tables(db, cycles, company, *, required):
+def _protected_tables(db, cycles, company, *, required, created_during_publication=()):
     evidence = {}
     for name, in db.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"):
         quoted = '"' + name.replace('"', '""') + '"'
@@ -91,6 +92,10 @@ def _protected_tables(db, cycles, company, *, required):
             if selected:
                 raise ValueError("retained_operator_prior_company_work")
             facts[cycle] = _table_records(db, name, cycle)
+        # First use can create the isolated publication ledger. Its rows for
+        # this reservation have a private cycle, outside the historical seal.
+        if name in created_during_publication and all(not fact["row_count"] for fact in facts.values()):
+            continue
         evidence[name] = facts
     if not required <= evidence.keys():
         raise ValueError("retained_operator_historical_table_missing")
