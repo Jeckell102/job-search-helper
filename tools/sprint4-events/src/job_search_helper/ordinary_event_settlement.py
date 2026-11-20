@@ -8,7 +8,9 @@ import sqlite3
 from .ats import validate_outcome_failure
 from .company_events import read_verified_ordinary_event_admission
 from .engine import Engine, State, now
-from .ordinary_event_publication_archive import read_ordinary_event_publication, verify_ordinary_event_publication
+from .ordinary_event_publication_archive import (
+    inbox_has_exact_work, read_ordinary_event_publication, verify_ordinary_event_publication,
+)
 from .outcomes import classify_outcome
 from .scan_request import _cycle_views, _timestamp, _unfinished_from_views
 from .scoped_provider_observation import no_publication_result
@@ -157,14 +159,12 @@ def _require_no_publication(engine, cycle_id, request_id):
 
 
 def _has_publication_evidence(db, repository, cycle_id, request_id):
-    from .ordinary_event_publication_archive import _INBOX_WORK_TABLES
-
-    return (any(db.execute(f'SELECT 1 FROM {table} WHERE cycle=? LIMIT 1', (cycle_id,)).fetchone()
-                for table in _INBOX_WORK_TABLES)
+    return (inbox_has_exact_work(db, cycle_id)
             or db.execute(
                 "SELECT 1 FROM publication_receipts WHERE CASE WHEN json_valid(binding) "
-                "THEN json_extract(binding,'$.request_id') END IN (?,?) LIMIT 1",
-                (cycle_id, request_id),
+                "THEN (trim(json_extract(binding,'$.request_id')) IN (?,?) "
+                "OR trim(json_extract(binding,'$.cycle_id'))=?) ELSE 0 END LIMIT 1",
+                (cycle_id, request_id, cycle_id),
             ).fetchone() is not None
             or (db.execute("SELECT 1 FROM sqlite_master WHERE name='ordinary_event_publication_archive'").fetchone()
                 is not None and db.execute(

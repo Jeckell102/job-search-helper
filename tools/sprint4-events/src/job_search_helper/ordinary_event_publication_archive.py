@@ -18,6 +18,11 @@ _ACK_TABLE = 'ordinary_event_exact_ack_proofs'
 _INBOX_WORK_TABLES = (
     'inventories', 'sync_plans', 'exact_remote_plans', 'exact_sync_chunks', 'exact_plan_local_state',
     'exact_legacy_plan_migrations', 'exact_selected_legacy_recoveries', 'exact_control_before_prefix_recoveries',
+    'exact_legacy_delivery_evidence',
+)
+_INBOX_OTHER_ARCHIVE_TABLES = (
+    'exact_legacy_plan_migration_archive', 'exact_legacy_delivery_evidence_archive',
+    'exact_selected_legacy_recovery_archive', 'selected_retry_publication_archive',
 )
 
 
@@ -193,9 +198,18 @@ def verify_ordinary_event_publication(db, local, cycle_id, company_id, *, bindin
     if (not isinstance(evidence, dict)
             or row[3:] != (evidence.get('receipt_id'), _digest(evidence), _encode(evidence))):
         raise ValueError('Ordinary event publication archive bytes do not match its stored evidence.')
-    if any(db.execute(
-            f'SELECT 1 FROM {table} WHERE cycle=? AND company=? LIMIT 1', (cycle_id, company_id),
-    ).fetchone() for table in _INBOX_WORK_TABLES):
+    if inbox_has_exact_work(db, cycle_id):
         raise ValueError('Ordinary event publication archive conflicts with active Inbox work.')
     _verify(db, local, evidence, cycle_id, company_id, binding)
     return evidence
+
+
+def inbox_has_exact_work(db, cycle_id):
+    if any(db.execute(f'SELECT 1 FROM {table} WHERE cycle=? LIMIT 1', (cycle_id,)).fetchone()
+           for table in _INBOX_WORK_TABLES):
+        return True
+    return any(
+        db.execute("SELECT 1 FROM sqlite_master WHERE name=? AND type='table'", (table,)).fetchone()
+        and db.execute(f'SELECT 1 FROM {table} WHERE cycle=? LIMIT 1', (cycle_id,)).fetchone()
+        for table in _INBOX_OTHER_ARCHIVE_TABLES
+    )

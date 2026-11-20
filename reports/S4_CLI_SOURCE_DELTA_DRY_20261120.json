@@ -1,0 +1,453 @@
+{
+  "changes": [
+    {
+      "after": {
+        "mode": "0o755",
+        "sha256": "36124dd47557e3643ff9eba838b29f10a512e139d3a39ca9f28fe7473e44f740"
+      },
+      "before": {
+        "mode": "0o755",
+        "sha256": "a68fbe8d4531da53da1bba6570b27ccb752f5568d5e9b0312b966fb9700a78a4"
+      },
+      "path": "job-search-scraper"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "c508a85743d54f0840b4906d17bb6780c3c8daad2914d53f58a5006602e70862"
+      },
+      "path": "release_admission_bootstrap.py"
+    },
+    {
+      "after": {
+        "mode": "0o644",
+        "sha256": "a43ca8a0b337ff8a61d63a81619390c9860791af84cff6115f87581ff6313a29"
+      },
+      "before": {
+        "mode": "0o644",
+        "sha256": "74f3bb328a3907fb876b3f9ca97e44d5fb48025ba4df79208933a57009e62dba"
+      },
+      "path": "src/job_search_helper/ats.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "149ec39ca47f3adbb338fa77d95fc99d12db70ccbe6544a678c11a3d0ab422ea"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "c203c7a702d52e53665fe79e60a804e85301544ec5ee57da841c090a1bc8816d"
+      },
+      "path": "src/job_search_helper/company_events.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "32ee795ee531cbd145639aab9017c3be14aacec2c4e7fcf02881d290f5d8a523"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "fe7fc690678fb1520054133b2064255ed641f20ce6df22dd2acf251c2de66a4a"
+      },
+      "path": "src/job_search_helper/company_intake_dispatcher.py"
+    },
+    {
+      "after": {
+        "mode": "0o644",
+        "sha256": "3ede2b3b9ee4d3fa429c8eca2e4a96428ca69730dee71bf806165ce5812e17d9"
+      },
+      "before": {
+        "mode": "0o644",
+        "sha256": "faf5d9493dce9f1c6fdb569cffdf3481c2ea35a2e9c6091a04958b955be0e1b5"
+      },
+      "path": "src/job_search_helper/engine.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "b0aff54d63a97b77791f373ff622d56d3cba3caa573c31c2bc61981c11f8115c"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "6674f77a3a8c9e1b4a141053480dbc56ff882e6f460aac17091b0a9050cde0ac"
+      },
+      "path": "src/job_search_helper/exact_cycle_planner.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "fc0ca1b83324eacc8acad6d87136176c18a789fd38c95f5d86b7e7ca8becf7d9"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "6c95994af9d2ae66bb9589ecdae5f4e87da48e0f406a4c123ab52990d2b3cd61"
+      },
+      "path": "src/job_search_helper/exact_cycle_receipt.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "917cd5dd8f3aeb93110aeae692c4d51e6beb7b4c67bd9e8c1f7e8b533fd26f06"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "033a4bc48035cac0e28cb129029e88da12e7102e782679e7af3098fb9432b7a1"
+      },
+      "path": "src/job_search_helper/exact_cycle_recovery.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "148e9339d1d4580b471a1b69f486f265c44ffbba51b718573d5e4352e29305e7"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "d91e1c55f585cd961b8d87358f93edde4158a6d94b4ae21a97b89066f8a137c4"
+      },
+      "path": "src/job_search_helper/exact_cycle_sync.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "2e09cf06a5220162192a06dd76a9a903f2ba510266cef494315c41dfe28b529f"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "e100003bd7f04d1dc7109c1f07b44cf19d502ab25a3316f04bec9f8cb2d346ec"
+      },
+      "path": "src/job_search_helper/inbox.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "c585f583a07282f01447ca7999020d51bd5e8843bd9645a37469a54fad5859b8"
+      },
+      "before": null,
+      "path": "src/job_search_helper/ordinary_company_event_command.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "a181ade65535e514c4214c043d9a8bddf7709adbea0e783535ccb50caa045d87"
+      },
+      "before": null,
+      "path": "src/job_search_helper/ordinary_company_event_fetch.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "ffc8c480a15fa1d44b8305639ca569a5c44aaa8d0753093d35a5df27dd66c9fb"
+      },
+      "before": null,
+      "path": "src/job_search_helper/ordinary_company_event_publication.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "f876c234c86327f1be124db9b148886bbf88e66e5280f89dce1094cbd1f223af"
+      },
+      "before": null,
+      "path": "src/job_search_helper/ordinary_event_publication_archive.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "5a286f6daaa80b8e95c6a53f8afde78fd176907e9122f884a0a59e0e3f89fc5e"
+      },
+      "before": null,
+      "path": "src/job_search_helper/ordinary_event_settlement.py"
+    },
+    {
+      "after": {
+        "mode": "0o644",
+        "sha256": "dfa1e0552c1ef698f0adb078f83c813521a4d08da5f7d481e314aea9d7558472"
+      },
+      "before": {
+        "mode": "0o644",
+        "sha256": "78398b44e314fc16a898b0eac5e6d053c6458e2d60a23aca837edd57f4bc9025"
+      },
+      "path": "src/job_search_helper/outcomes.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "920865c13b2cf1acab6ed799bdd440ad13ee234b576f40424ceb528b9651933c"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "e57ab1bc4a603b512425e4626803fe27068d790dfeff68529a98f614caa82fae"
+      },
+      "path": "src/job_search_helper/publication_receipts.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "efa216f33466d18fd7afb95294327388fc4aa8d7fe7fe7b7bcbf62d6d1be2f47"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "cdfade3a00c00e2e71ae410454c123e09b8655935ce097d9fe36d0fe27945e27"
+      },
+      "path": "src/job_search_helper/retained_company_event.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "aae92a4777dad90fb50c49d6330320c356ded86e64a2fd8cc27e860f60f3c6db"
+      },
+      "before": null,
+      "path": "src/job_search_helper/retained_event_outcome.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "ba8e361dbf10d0277c091a73c83c699594c22d660b604f2911a8c7bf3b5621b5"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "bfe83db06ebcd4da2c6cd6320f65ab7127e0ef14f46276b60d74d91c4b2de395"
+      },
+      "path": "src/job_search_helper/retained_operator_authorization.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "d3708c7173d9a8653877116cae7fa41b53c902a8e3c929536edbaeee18fe0724"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "52f44da4ab019f427b142848ee524bb70fe8205bbc9b75e49142d3272582571e"
+      },
+      "path": "src/job_search_helper/retained_operator_command.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "f212de39499368b04bebdddecb201df0446c9cc824f9152fdfddf81aa0468936"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "de909d093b29ed7ed16fc86e18d31a9e1451c2a6a76469692fd258b2e93566db"
+      },
+      "path": "src/job_search_helper/retained_operator_journal.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "8eb58832bc6b1c1f37769150f683bdca3136ed4631e35a59ed25f2587eee8fb1"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "2f03e6592a94a3df6e31c6b08ea2950ec29a3b158cd3750c2dd1370018f15738"
+      },
+      "path": "src/job_search_helper/retained_operator_preflight.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "bc9a1c37ec661f8960613b522fcd20a3ca16c986514d4d9a812f5869c3a95506"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "03094d3f61cfcf6590e906b094cc8ff9fc3a132c6b10c801c9842e0976f1f9fc"
+      },
+      "path": "src/job_search_helper/retained_operator_run.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "4b9ca118ed4952a62afb2ffc41732ef774b22c8335acde9fa7f538389881c3ba"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "c868f04e3bf9044adc6b6bcbfa349c6dfff16acaa41969547f1fa0ee16744f4c"
+      },
+      "path": "src/job_search_helper/retained_operator_scope.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "cdc66ca465fa0bb37cbf4b831e8aa999c9e43063e5bf0521e702a58ad0229bbd"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "311ef13e89ea4f0a964483dfed72ac2c9f4afbeebc44c410a8e5abdc302f0f39"
+      },
+      "path": "src/job_search_helper/retained_work_orchestrator.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "d547a1ba4532ee96cf9e906ed82f7244c7d077f63e29faa362f2ef27699c8f33"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "829a9e17da1fc3a15a61ca4e5ffc287c5c7a652b8c3def042574a37ab1a322db"
+      },
+      "path": "src/job_search_helper/retained_work_publication.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "0532241fcff9c10e25b169b016ebf04107ae4574660e8e83ba4757dda704425a"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "82353933ccbf193171856159907caabe9786cf9fe9f139024c8a8f90311b6413"
+      },
+      "path": "src/job_search_helper/retained_work_runner.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "4e26c0a86eb0fb1136c47ac684f4f664de4fdd25ff5838f7b65216e3e5b8bbba"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "726b70749c644a606f774bcb6b2b772291c6e84e9c324bbb2c8777ee16a61729"
+      },
+      "path": "src/job_search_helper/runner.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "dde75760c6dec3503f792aa64059fbb5438d316107b4eb1ab40c46a099b05469"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "11d4b9bd82dd8923e2132f32fb5e200528965d8a3e160091988555e7637caea4"
+      },
+      "path": "src/job_search_helper/scan_request.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "b189b578aba4f8ff8f5837c7c17492e4581b652cdf2c33171161a9b666c0952d"
+      },
+      "before": null,
+      "path": "src/job_search_helper/scoped_provider_observation.py"
+    },
+    {
+      "after": {
+        "mode": "0o644",
+        "sha256": "6588cee5f818efd54262070f6fee977963c6c72dcfd3b194ec25d3ea764815d2"
+      },
+      "before": {
+        "mode": "0o644",
+        "sha256": "fe06905466d4a2d5d5a8fb4465d13a2fe25af2225efe7179a1bd9682bc82e219"
+      },
+      "path": "src/job_search_helper/scrape_outcome_delivery.py"
+    },
+    {
+      "after": {
+        "mode": "0o644",
+        "sha256": "7d8229a8bc4830842c80726039d8cb73f195d88cd06e8e17101eb873a25358f1"
+      },
+      "before": {
+        "mode": "0o644",
+        "sha256": "3d6c8a67b67224eb1ac62244f577d2618f136f858573142cfdfeda6e8a16583b"
+      },
+      "path": "src/job_search_helper/scrape_outcome_producer.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "4db7ecd21c41b4cea647177facd5fb1cc496ecf86572d63b0b0a23993564f43c"
+      },
+      "before": null,
+      "path": "src/job_search_helper/selected_retry_lifecycle.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "fe5430c37001c79813b49130920aec87d085923a500eb4d6de9e6e4f15c62b56"
+      },
+      "before": null,
+      "path": "src/job_search_helper/selected_retry_terminal.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "2dd33d01a562a225f26f9b57b72b9e0724dd59f566a1f4a180e0a6c2ea32ef35"
+      },
+      "before": null,
+      "path": "src/job_search_helper/selected_temporary_retry_admission.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "c4b64d39902571e830a41dbffa08eb8bc7d0be61551104a20bfbc25c6347e2ec"
+      },
+      "before": null,
+      "path": "src/job_search_helper/selected_temporary_retry_execution.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "8f3348e28cf41f69648e88f81c1a2e886b9576c36a1ef2a80f6a81e0cd6302fd"
+      },
+      "before": null,
+      "path": "src/job_search_helper/selected_temporary_retry_publication.py"
+    },
+    {
+      "after": {
+        "mode": "0o644",
+        "sha256": "a9ffabefcb8cf0504ebd847306261e7347162f9d08adfc8c7d162ed3711d147e"
+      },
+      "before": {
+        "mode": "0o644",
+        "sha256": "160139087a731028fba64a25efe35638786da36986dc4200621e11de2711214c"
+      },
+      "path": "src/job_search_helper/shared_boards.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "305c59767cf679b3d757f65c1d3e7eee2080e17c2df55ce8774cc6e62822d5fa"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "c25217362098132957d8fffc37a33e15b4e2a989b46db7a1d197abe2460f5bae"
+      },
+      "path": "src/job_search_helper/sheets_sync.py"
+    },
+    {
+      "after": {
+        "mode": "0o644",
+        "sha256": "de76d0329b726f475a399273af268366a6708973a9c5252995e68aa172ff4134"
+      },
+      "before": {
+        "mode": "0o644",
+        "sha256": "3ed4499e4acf99421588b02cf242e6976b3931be0e86fb7c07702bbbbafd86da"
+      },
+      "path": "src/job_search_helper/sqlite_repository.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "e5185c06e6d493a1b189e9c8300693c229c679d77fd1447ed08fd13d34a9bb8a"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "336f688967d463fda07f69ba5625cf7170749edbe55555dcd11b429b08fc5662"
+      },
+      "path": "src/job_search_helper/sync_cli.py"
+    },
+    {
+      "after": {
+        "mode": "0o664",
+        "sha256": "01574a4816f5e3a8ec4753f19407f2a921f982c00943e2e5bcae8b14e7014d75"
+      },
+      "before": {
+        "mode": "0o664",
+        "sha256": "dd7ad70dd46383ba56f4b01b89f35b1858d6e8dc0b3ca5b4ede1dfbfbe3bdf75"
+      },
+      "path": "src/job_search_helper/temporary_retry.py"
+    }
+  ],
+  "schema": "observational-source-delta-v1"
+}

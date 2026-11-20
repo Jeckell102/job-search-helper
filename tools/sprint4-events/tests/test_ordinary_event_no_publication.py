@@ -118,3 +118,63 @@ def test_local_only_disposition_cannot_override_a_claimed_publication_chunk(ordi
           closing(State(str(root / 'state.db'), readonly=True)) as state):
         assert state.cycle(cycle_id)['status'] == 'In Progress'
         assert not repo.scrape_outcomes()
+
+
+@pytest.mark.parametrize('table', [
+    'exact_legacy_plan_migration_archive', 'exact_legacy_delivery_evidence_archive',
+    'exact_selected_legacy_recovery_archive',
+])
+def test_historical_exact_archive_blocks_local_only_settlement(ordinary_cycle, table):
+    root, cycle_id, _request = ordinary_cycle
+    reader = workbook_reader()
+    observe(ordinary_cycle, Mock(return_value=_fetch_result('failed')), reader)
+    with closing(InventoryInbox(root / 'inventories.sqlite3', 'sheet')) as inbox, inbox.connection:
+        inbox.connection.execute(f'INSERT INTO {table} VALUES (?,?,?,?)',
+                                 (cycle_id, 'COMP-1', '{}', '2026-11-20T12:00:00Z'))
+    writer = Mock()
+    with pytest.raises(ValueError, match='local-only settlement conflicts with publication evidence'):
+        _publish(ordinary_cycle, writer, remote_reader=reader)
+    writer.assert_not_called()
+    reader.assert_called_once()
+    with (closing(SQLiteRepository(root / 'jobs.sqlite3', 'sheet', readonly=True)) as repo,
+          closing(State(str(root / 'state.db'), readonly=True)) as state):
+        assert state.cycle(cycle_id)['status'] == 'In Progress'
+        assert repo.matches('Scan Cycles', {'Cycle ID': cycle_id})[0][1]['Cycle Status'] == 'In Progress'
+        assert not repo.scrape_outcomes()
+
+
+@pytest.mark.parametrize('phase', ['before settlement', 'before delivery'])
+def test_receipt_alias_naming_exact_cycle_blocks_local_only_result(ordinary_cycle, phase):
+    root, cycle_id, _request = ordinary_cycle
+    reader = workbook_reader()
+    provider = Mock(return_value=_fetch_result('blocked'))
+    observe(ordinary_cycle, provider, reader)
+    writer = Mock()
+    result = _publish(ordinary_cycle, writer, remote_reader=reader) if phase == 'before delivery' else None
+    with closing(State(str(root / 'state.db'), readonly=True)) as state:
+        revision = state.cycle(cycle_id)['company_event']['source_revision']
+    receipt = {
+        'binding': {'request_id': 'legacy-alias', 'cycle_id': cycle_id, 'company_id': 'COMP-1',
+                    'source_revision': revision, 'release_id': 'legacy'},
+        'records': {'Job History|fixture': 'prior-record'},
+        'schedule': {'boundary': 'idle', 'enqueued_at': '2026-11-20T12:00:00Z'},
+        'timestamp': '2026-11-20T12:00:00Z',
+    }
+    with closing(InventoryInbox(root / 'inventories.sqlite3', 'sheet')) as inbox:
+        inbox.ensure_receipt(receipt)
+        inbox.mark_receipt_pending(receipt, timestamp=receipt['timestamp'])
+        assert inbox.reconcile_receipt(receipt, receipt['records'], 'prior-ack', timestamp=receipt['timestamp'])
+    if result:
+        sink = Mock()
+        outcome_id = result['outcome']['outcome_id']
+        with closing(SQLiteRepository(root / 'jobs.sqlite3', 'sheet')) as repo:
+            assert OutcomeDelivery(repo, sink).drain(outcome_id=outcome_id) == [
+                {'outcome_id': outcome_id, 'disposition': 'HELD_ORDINARY_EVENT_SETTLEMENT'},
+            ]
+        sink.ingest_immutable.assert_not_called()
+    else:
+        with pytest.raises(ValueError, match='local-only settlement conflicts with publication evidence'):
+            _publish(ordinary_cycle, writer, remote_reader=reader)
+        reader.assert_called_once()
+    writer.assert_not_called()
+    provider.assert_called_once()

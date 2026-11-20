@@ -161,33 +161,28 @@ class CompanyEventBridgeTests(unittest.TestCase):
         self.assertEqual(delivered[0]["state"], "WAITING_FOR_SAFE_REQUEST_BOUNDARY")
         self.assertEqual(self.repo.pending_company_events(self.bridge.consumer), [event])
 
-    def test_normal_start_admits_event_request_through_the_shared_writer_boundary(self):
-        """The real runner must bridge then admit exactly the declared Company."""
-        from unittest.mock import patch
-        from job_search_helper import runner
+    def test_ordinary_event_admission_archives_exact_request_under_the_shared_writer_boundary(self):
+        """Generic start leaves the event queued for the scoped admission owner."""
+        from contextlib import closing
+        from job_search_helper import cli
         from job_search_helper.engine import Engine, State
-        from test_fetch_pool import inventory
+        from job_search_helper.ordinary_company_event_command import guard_generic_ordinary_event
+        from job_search_helper.scan_request import requested_scan
+        from test_ordinary_company_event_fetch import RUNTIME
 
         event = self.event(**{"ATS / Source": "Lever"})
         database = self.root / "state" / "state.db"
-
-        def make_engine(repo, state, **kwargs):
-            return Engine(
-                repo, state,
-                fetcher=lambda source, url, company_id, name: inventory(company_id, name, url),
-                **kwargs,
-            )
-
-        with patch.object(runner, "_load_environment"), \
-             patch.object(runner, "load_title_blacklist"), \
-             patch.object(runner, "load_title_review_list"), \
-             patch.object(runner, "state_path", return_value=database), \
-             patch.object(runner, "get_repository", return_value=self.repo), \
-             patch.object(runner, "Engine", side_effect=make_engine), \
-             patch.object(runner, "_refresh_review_queue"):
-            self.assertEqual(
-                runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=True), 0,
-            )
+        self.bridge = CompanyEventBridge(self.repo, self.bridge.root)
+        self.bridge.process_pending()
+        raw = self.bridge.request_path.read_bytes()
+        with patch.object(cli, "storage_backend", return_value="sqlite"):
+            with self.assertRaisesRegex(ValueError, "ordinary-company-event"):
+                guard_generic_ordinary_event(database)
+        self.assertEqual(self.bridge.request_path.read_bytes(), raw)
+        with (cli.writer_lock(database.parent / "scraper.lock"), cli.writer_lock(database.parent / "writer.lock"),
+              closing(State(database)) as admission_state):
+            engine = Engine(self.repo, admission_state, runtime_binding=RUNTIME)
+            self.assertIsNotNone(requested_scan(engine, admission_state, database))
 
         self.assertFalse((database.parent / "next-scan.json").exists())
         receipt = json.loads((database.parent / "last-scan-request.json").read_text())

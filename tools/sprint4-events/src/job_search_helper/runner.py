@@ -212,6 +212,9 @@ Commands:
                Persist one explicit Company ID for the next normal start.
                Requires --company-id and a stable --request-id; does not fetch,
                create a cycle, change Sheets, or replace another pending request.
+  ordinary-company-event
+               Explicitly admit/fetch one verified request digest or publish its
+               exact saved cycle. See ordinary-company-event --help.
   retained-exception-preview
                Read and print the exact claims that an external signer must
                authorize for one retained historical cycle. `--output DIR`
@@ -400,7 +403,9 @@ def select_start_cycle(engine, state, repo, database, *, resume=False):
         cycle_id, action = resolve_cycle(engine, state, repo)
         print(f"{action}: {cycle_id}.", flush=True)
         return cycle_id
+    from .ordinary_company_event_command import guard_generic_ordinary_event
     from .scan_request import requested_scan
+    guard_generic_ordinary_event(database)
     cycle_id = requested_scan(engine, state, database)
     if cycle_id is None:
         cycle_id = engine.start_cycle(new_scan_request={
@@ -907,8 +912,10 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         database = state_path()
         database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with _scraper_admission(database) as runtime_binding:
+            from .ordinary_company_event_command import guard_generic_ordinary_event
             from .retained_work_runner import assert_no_manually_staged_event
             assert_no_manually_staged_event(database.parent)
+            guard_generic_ordinary_event(database, selected_cycle_id=sync_cycle_id, allow_queued=True)
             return _run_named_exact_cycle_sync(
                 sync_cycle_id=sync_cycle_id, sync_company_ids=sync_company_ids,
                 sheet_request_interval=sheet_request_interval,
@@ -935,6 +942,11 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         from .retained_work_runner import assert_normal_lifecycle_not_held
         from .cli import job_database_path
         assert_normal_lifecycle_not_held(database.parent, job_database_path())
+        from .ordinary_company_event_command import guard_generic_ordinary_event
+        guard_generic_ordinary_event(
+            database, allow_queued=resume and resume_cycle_id is not None,
+            fresh=not sync_only and not resume,
+        )
         from .integration_release import assert_release_settled
         assert_release_settled(database.parent)
         if exact_sync:
@@ -1033,18 +1045,6 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                             **({"fetcher": fetcher} if fetcher else {}))
             run_completed = False
             try:
-                if not sync_only and not resume and getattr(repo, 'is_local', False) is True:
-                    # This writer lock is also the bridge's standalone boundary,
-                    # so admission cannot race a Company-only request write.
-                    from .company_events import CompanyEventBridge
-                    bridge_results = CompanyEventBridge(repo, database.parent, state_database=database).process_pending(
-                        writer_lock_held=True,
-                    )
-                    if bridge_results:
-                        print(
-                            f"Company changes: safely handled {len(bridge_results)} queued change(s).",
-                            flush=True,
-                        )
                 from .closed_jobs import stage_closed_pending
                 while True:
                     closed = stage_closed_pending(repo)
@@ -1400,6 +1400,24 @@ def scrape_main(argv=None):
         except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError, json.JSONDecodeError) as exc:
             print(f'ERROR: {exc}', file=sys.stderr)
             return 1
+    if argv[0] == 'ordinary-company-event':
+        from .ordinary_company_event_command import execute_ordinary_event, parse_ordinary_event_command
+
+        args = parse_ordinary_event_command(argv[1:])
+        try:
+            with _retained_operator_admission() as admission:
+                result = execute_ordinary_event(
+                    args.action, admission, request_sha256=args.request_sha256, cycle_id=args.cycle_id,
+                )
+            print('Ordinary Company event: ' + json.dumps(result, sort_keys=True))
+            return 0 if result['state'] in {
+                'INVENTORY_FROZEN', 'SYNC_CONFIRMED', 'VERIFIED_ZERO', 'FETCH_TEMPORARY', 'FETCH_BLOCKED',
+            } else 1
+        except KeyboardInterrupt:
+            return 130
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+            print(f'ERROR: {exc}', file=sys.stderr)
+            return 1
     if argv[0] == 'run-retained-operator-company':
         try:
             with _retained_operator_admission() as admission:
@@ -1594,8 +1612,23 @@ def scrape_main(argv=None):
         return 1
 
 
+def _guard_public_workflow_start(arguments):
+    """Check before the broad workflow opens its preparation factories."""
+    from .ordinary_company_event_command import guard_generic_ordinary_event
+
+    _load_environment()
+    resume = '--resume' in arguments
+    exact_resume = any(
+        (argument == '--resume-cycle-id' and index + 1 < len(arguments)
+         and not arguments[index + 1].startswith('-'))
+        or (argument.startswith('--resume-cycle-id=') and argument.partition('=')[2])
+        for index, argument in enumerate(arguments)
+    )
+    guard_generic_ordinary_event(state_path(), allow_queued=resume and exact_resume, fresh=not resume)
+
+
 def main(argv=None):
-    """All public starts use the same scrape, publication, and review lifecycle."""
+    """Route ordinary starts to the review controller and exact actions separately."""
     arguments = list(sys.argv[1:] if argv is None else argv)
     if arguments and arguments[0] == 'start':
         forbidden = next((flag for flag in ('--cycle-id', '--company-id')
@@ -1604,10 +1637,20 @@ def main(argv=None):
         if forbidden is not None:
             print(f'ERROR: {forbidden} applies to sync only.', file=sys.stderr)
             return 2
-    if arguments and arguments[0] == 'start' and not any(
-            flag in arguments for flag in ('--help', '-h')):
-        from .scrape_first_pass import main as pipeline_main
-        return pipeline_main(['run', '--scraper-args', *arguments[1:]])
+    if arguments and arguments[0] in {'start', '--admitted-workflow'}:
+        pipeline_args = (
+            ['run', '--scraper-args', *arguments[1:]] if arguments[0] == 'start' else arguments[1:]
+        )
+        wants_help = any(flag in arguments for flag in ('--help', '-h'))
+        if arguments[0] == '--admitted-workflow' or not wants_help:
+            if not wants_help:
+                try:
+                    _guard_public_workflow_start(arguments[1:])
+                except (ValueError, RuntimeError, OSError, sqlite3.Error) as exc:
+                    print(f'ERROR: {exc}', file=sys.stderr)
+                    return 1
+            from .scrape_first_pass import main as pipeline_main
+            return pipeline_main(pipeline_args)
     return scrape_main(arguments)
 
 

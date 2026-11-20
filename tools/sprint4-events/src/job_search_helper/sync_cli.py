@@ -81,11 +81,7 @@ def main(argv=None):
                 print_status(result)
             return 0
         from .retained_work_runner import ManualRetainedEventHold, assert_normal_lifecycle_not_held
-        if args.command in {'once', 'watch'}:
-            with writer_lock(state_path().parent / 'writer.lock'):
-                assert_normal_lifecycle_not_held(state_path().parent, job_database_path())
-                local = SQLiteRepository(job_database_path(), spreadsheet_id)
-        else:
+        if args.command not in {'once', 'watch'}:
             local = SQLiteRepository(job_database_path(), spreadsheet_id,
                                      readonly=args.command in {'status', 'conflicts', 'backup', 'intake-status'})
         if args.command == 'status':
@@ -118,8 +114,8 @@ def main(argv=None):
             raise ValueError('Publication is disabled until JOB_STORAGE_BACKEND=sqlite is explicitly activated.')
         if not 5 <= args.interval <= 3600 or not 1 <= args.max_batches <= 100:
             raise ValueError('Sync interval must be 5–3600 seconds and max batches 1–100.')
+        from .ordinary_company_event_command import OrdinaryEventLifecycleHold, guard_generic_ordinary_event
         from .sheet_profile import profile_schemas
-        schemas = profile_schemas(local.get_meta('sheets_profile'))
         lock_path = state_path().parent / 'writer.lock'
         sync = None
         failures = 0
@@ -132,8 +128,12 @@ def main(argv=None):
                 with writer_lock(lock_path):
                     # Check before remote construction; SheetsSynchronizer
                     # repeats the retained embargo at each discovery/write.
-                    assert_normal_lifecycle_not_held(state_path().parent, local.path)
+                    guard_generic_ordinary_event(state_path(), allow_queued=True)
+                    assert_normal_lifecycle_not_held(state_path().parent, job_database_path())
+                    if local is None:
+                        local = SQLiteRepository(job_database_path(), spreadsheet_id)
                     if sync is None:
+                        schemas = profile_schemas(local.get_meta('sheets_profile'))
                         remote = get_remote_repository(write=True, interactive=args.authenticate,
                                                        schemas=schemas, evidence_archives=schemas is None)
                         sync = SheetsSynchronizer(local, remote)
@@ -168,17 +168,22 @@ def main(argv=None):
                 busy = True
                 print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_WRITER_BUSY',
                               'detail': 'Another publisher is active; queued local changes are retained.',
-                              **local.status()})
+                              **(local.status() if local is not None else {})})
+            except OrdinaryEventLifecycleHold as exc:
+                print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_ORDINARY_EVENT', 'detail': str(exc)})
+                if args.command == 'once':
+                    return 1
             except ManualRetainedEventHold as exc:
                 print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_RETAINED_EVENT', 'detail': str(exc)})
                 if args.command == 'once':
                     return 1
             except Exception as exc:
                 failures += 1
-                with local.transaction():
-                    local.set_meta('last_error', f'{timestamp()} {type(exc).__name__}: {exc}')
+                if local is not None:
+                    with local.transaction():
+                        local.set_meta('last_error', f'{timestamp()} {type(exc).__name__}: {exc}')
                 print_status({'at': timestamp(), 'state': 'SYNC_ERROR_LOCAL_WORK_RETAINED',
-                              'error': str(exc), **local.status()})
+                              'error': str(exc), **(local.status() if local is not None else {})})
                 if args.command == 'once':
                     return 1
             if args.command == 'once':
