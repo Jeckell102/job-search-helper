@@ -18,6 +18,24 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Joint release tool checkpoint. Coordinator and release owner, same active
+goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project
+about 52%, with no new live gate accepted. The architecture reviewer chose
+one installer transaction across the package and three wrapper files.
+Fresh dry inventory measured 47 endpoints and verified two package
+candidate after-pin changes. Coordinator owns staged tools at
+`/tmp/jsh-s4-combined-release-tools.wkZs5rUo`. Direct disposable routing,
+scoped cache, old-namespace and symlink checks passed. GPT-6.2 Sol medium
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns the full disposable controller
+fixture. Independent QA `01a1f97d-2e8c-7821-b5e1-d2019215036b` owns the
+read-only tool verdict. No site launch fence, live bundle, production,
+service or Jetson changes. Next reconcile fault rehearsal and QA, then
+prove the actual host can keep all supported routes held through install
+and rollback. Last verified source and QA backup before this tool checkpoint
+was `79d45974a9abaf3f8331e2793a25034c060193a0`.
+[Architecture](S4_JOINT_RELEASE_ARCHITECTURE_REVIEW_20261120.md) and
+[staged tools and probes](S4_JOINT_RELEASE_TOOLS_STAGED_20261120.md).
+
 Dispatcher source acceptance checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, full project
 about 52% after the dispatcher source gate passed. The 132 combined tests
