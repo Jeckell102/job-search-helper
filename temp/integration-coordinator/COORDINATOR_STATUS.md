@@ -1,6 +1,6 @@
 # Current protected-source reconciliation coordinator status
 
-## Active checkpoint — 2026-11-19 protected source installed and verified
+## Active checkpoint — 2026-11-19 activation ready; explicit approval required
 
 - Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains active.
 - The default-disabled Company intake dispatcher, exact controller handoff,
@@ -39,6 +39,12 @@
   enabling either gate, reconcile the signed exception approval, exact current
   historical blocker evidence, environment-only public-key configuration, and
   live Google authentication/readback.
+- That reconciliation is complete: independent signer ACCEPT, exact evidence
+  digests match, expiry is 2026-11-22T12:00Z, and the approval is local-only
+  with historical settlement/publication forbidden. The safety approval layer
+  nevertheless requires a fresh explicit user confirmation because the signed
+  exception is tied to an unfinished 800-company cycle. Its rejected activation
+  attempt made no state change. Both gates and the service remain off.
 - Nothing is deployed or activated. The historical cycle and its 45 retained
   inventories, six plans, and two confirmed receipts remain untouched.
 - Roadmap accounting remains 0 of 6 milestone gates closed and final
