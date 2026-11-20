@@ -4,17 +4,20 @@ import base64
 from contextlib import closing, redirect_stdout
 from datetime import datetime, timedelta, timezone
 import io
+from itertools import count
 import json
 import sqlite3
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from job_search_helper import ats, cli, retained_work_orchestrator
+from job_search_helper import ats, cli, repository, retained_work_orchestrator
 from job_search_helper.company_events import source_revision
 from job_search_helper.engine import State
+from job_search_helper.evidence_archives import EvidenceArchives
 from job_search_helper.exact_cycle_planner import _exact_plan_digest
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.publication_receipts import record_fingerprints
@@ -48,7 +51,7 @@ def write_json(path, value):
 
 
 class OperatorFixture:
-    def __init__(self, root, monkeypatch):
+    def __init__(self, root, monkeypatch, *, real_remote=False):
         self.root = root
         self.state_path = root / "state.db"
         self.jobs_path = root / "jobs.sqlite3"
@@ -165,7 +168,8 @@ class OperatorFixture:
             ats="Jobvite",
         ))
         monkeypatch.setattr(cli, "get_repository", self.open_local)
-        monkeypatch.setattr(cli, "get_remote_repository", self.open_remote)
+        if not real_remote:
+            monkeypatch.setattr(cli, "get_remote_repository", self.open_remote)
         monkeypatch.setattr(ats, "fetch_inventory", self.fetch)
         self.key = Ed25519PrivateKey.generate()
         public_key = self.key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
@@ -185,8 +189,8 @@ class OperatorFixture:
             self.assert_held("scraper.lock", "writer.lock")
         return self.local(write=write)
 
-    def open_sheet(self, *, write, interactive, schemas):
-        assert not interactive
+    def open_sheet(self, *, write, interactive, schemas, evidence_archives=True):
+        assert not interactive and not evidence_archives
         assert schemas == COMPACT_SCHEMAS
         if write:
             self.assert_held("scraper.lock", "writer.lock")
@@ -652,5 +656,88 @@ def test_two_new_postings_can_start_with_one_operation_per_chunk(fixture):
 
     fixture.fetch.assert_called_once_with("Jobvite", BOARD, COMPANY_ID, "Samtec")
     assert len(fixture.service.batches) == 2
+    assert not fixture.queue_path.exists()
+    fixture.assert_historical_records_unchanged()
+
+
+def test_real_remote_factory_uses_compact_main_workbook_with_archives_configured(tmp_path, monkeypatch):
+    fixture = OperatorFixture(tmp_path, monkeypatch, real_remote=True)
+    registry = fixture.root / "evidence-archives.json"
+    archive_id = "disposable-archive-never-opened"
+    write_json(registry, {"version": 1, "spreadsheet_id": WORKBOOK,
+                          "archives": [{"spreadsheet_id": archive_id, "reserved_bytes": 0}]})
+    registry_bytes = registry.read_bytes()
+    monkeypatch.setenv("SPREADSHEET_ID", WORKBOOK)
+    monkeypatch.setenv("EVIDENCE_ARCHIVES_FILE", str(registry))
+    # Advance only the repository's clock between fake calls to avoid quota waits.
+    monkeypatch.setattr(repository, "time", SimpleNamespace(monotonic=count(step=3).__next__))
+
+    serviced_workbooks = []
+
+    def checked(method):
+        def call(*, spreadsheetId, **kwargs):
+            serviced_workbooks.append(spreadsheetId)
+            assert spreadsheetId == WORKBOOK
+            return method(spreadsheetId=spreadsheetId, **kwargs)
+        return call
+
+    def values():
+        fixture_values = fixture.service.values()
+        return SimpleNamespace(get=checked(fixture_values.get), batchGet=checked(fixture_values.batchGet))
+
+    sheets = SimpleNamespace(get=checked(fixture.service.get),
+                             batchUpdate=checked(fixture.service.batchUpdate), values=values)
+
+    def open_service(*, write, interactive):
+        assert not interactive
+        if write:
+            fixture.assert_held("scraper.lock", "writer.lock")
+        return SimpleNamespace(spreadsheets=lambda: sheets)
+
+    authorize = Mock(side_effect=open_service)
+    monkeypatch.setattr(cli, "authorize", authorize)
+    legacy_default = cli.get_remote_repository(schemas=COMPACT_SCHEMAS)
+    assert isinstance(legacy_default, EvidenceArchives)
+    assert legacy_default.schemas != COMPACT_SCHEMAS
+    assert not serviced_workbooks
+
+    claims = fixture.sign()
+    assert claims["company_id"] == COMPANY_ID
+    assert registry.read_bytes() == registry_bytes
+
+    # The operator preview ignores the archive registry even if it is unavailable.
+    registry.unlink()
+    assert fixture.command("preview")["required_claims"] == claims
+    assert not registry.exists()
+    registry.write_bytes(registry_bytes)
+
+    # Actual main-workbook header validation continues to fail closed.
+    original_sheets = fixture.service.sheets[:]
+    fixture.service.sheets[:] = [
+        sheet for sheet in original_sheets if sheet["properties"]["title"] != "Job History"
+    ]
+    with pytest.raises(RepositoryError, match="Missing tab: Job History"):
+        fixture.command("execute")
+    fixture.fetch.assert_not_called()
+    assert not fixture.service.batches
+    assert RetainedOperatorJournal(fixture.root).inspect() is None
+    fixture.service.sheets[:] = original_sheets
+
+    result = fixture.command("execute")
+    assert result["state"] == "SYNC_CONFIRMED"
+    assert result["source_revision"] == claims["source_revision"]
+    fixture.fetch.assert_called_once_with("Jobvite", BOARD, COMPANY_ID, "Samtec")
+    assert [call.kwargs for call in authorize.call_args_list if call.kwargs["write"]] == [
+        {"write": True, "interactive": False}
+    ]
+    assert serviced_workbooks and set(serviced_workbooks) == {WORKBOOK}
+    assert len(fixture.service.batches) == 1
+    assert fixture.service.batches[0]["spreadsheetId"] == WORKBOOK
+    assert registry.read_bytes() == registry_bytes
+    with closing(fixture.local()) as local:
+        key = "comp-0739:jobvite:42"
+        (_, history), = local.matches("Job History", {"Job Key": key})
+        (_, evidence), = local.matches("Job Evidence", {"Job Key": key, "Source Hash": history["Source Hash"]})
+        assert evidence["Job Description"] == DESCRIPTION
     assert not fixture.queue_path.exists()
     fixture.assert_historical_records_unchanged()

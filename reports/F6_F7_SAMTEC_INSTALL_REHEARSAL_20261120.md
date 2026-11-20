@@ -45,3 +45,13 @@ installation before producing live signer claims or invoking Samtec.
 
 Production source, databases, services and the workbook have had no
 deployment or pilot changes in this rehearsal.
+
+The full read-only preflight attestation also ran on MuleLab. It verified
+the live-before package pin, approved source endpoint manifest, package
+resolution for both checkouts, effective user service environment, exact
+request and receipt, dormant sync, and current wrapper controls. This was
+observational and did not acquire or release any production hold.
+
+The source, tests and reviewed rehearsal materials were verified at GitHub
+commit `d46edc9d5be5b49a90e1d6d96878108b8ab348d3` on
+`backup/integration-automation-m1-operator-20261120`.

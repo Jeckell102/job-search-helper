@@ -63,3 +63,13 @@ A process-only diagnostic reused the production exact local-plan and dirty-prove
 ## Initial one-operation chunk recheck
 
 **ACCEPT for initial one-operation chunking.** A direct composed run with two new postings and `max_operations=1` reached SYNC_CONFIRMED after one provider call. The local database retained four one-operation VERIFIED chunks. Each dirty identity belonged to that chunk's Job History operation, while the Job Evidence slices advanced without remote dirty cells. Sheets recorded two one-operation CONFIRMED chunks, and the run cleared all selected dirty flags and consumed the exact request. Historical and manual sentinels stayed unchanged. The focused regression passed 49 tests with the separate known changed-limit publisher-entry case deselected. This gate used disposable stores only.
+
+## Independent frozen-source and rehearsal verdict
+
+**ACCEPT the frozen source and disposable install/rollback rehearsal.** The unmodified focused receipt suite passed 78 tests, including the publisher-entry boundary. Reopened stores proved LOCAL_COMMITTED before publisher entry. The same reservation resumed with a changed limit, dispatched one two-operation batch, stayed SYNC_PENDING after the lost acknowledgement, then reached SYNC_CONFIRMED on exact readback with the original claim and no refetch, resend or local reapplication.
+
+Independently matched manifest `d656cbc969868952382c3db16e8f2e9e4e94eefef94d8ae7dd332f2c41168ef9` to the complete 228-file before and 234-file after source inventories. The exact 19-path delta is 13 replacements and six additions. Recomputed SHA-256, modes and endpoint owners agreed with the capsule, and its attester package pins matched both source inventories. The capsule's four generic tools matched their reviewed files. The host attester differed from its reviewed template only in the manifest and package pins.
+
+A separate run on complete frozen source copies reproduced the same manifest. Install and rollback restored exact expected source bytes and modes in each direction, preserved non-scope file inodes, the original package inode, fixture database bytes, historical Sprint 1 parking and fake service state, and cleared the fixture marker. Eight generic crash/replay maintenance tests and three host-attester fixture tests passed. The real project was read for source comparison only. The production launcher, host attester, installer and rollback were never invoked against production.
+
+The provisional capsule under `/tmp` and the checkout use different mount IDs in this execution namespace. Live use requires the separately verified same-mount location and audited real host holds. This verdict covers only the frozen source and disposable rehearsal.

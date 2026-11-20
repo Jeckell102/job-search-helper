@@ -54,7 +54,10 @@ def operator_command(arguments, admission):
                 raise ValueError("retained_operator_projected_workbook_required")
 
             def remote(*, write=False):
-                return cli.get_remote_repository(write=write, interactive=False, schemas=schemas)
+                # Compact publication keeps full Job Evidence in SQLite.
+                # Route both snapshots and writes to the same main workbook.
+                return cli.get_remote_repository(write=write, interactive=False, schemas=schemas,
+                                                 evidence_archives=False)
 
             if args.operation == "preview":
                 claims = measure_operator_membership(
