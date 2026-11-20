@@ -8,8 +8,11 @@ from job_search_helper import ats, cli
 from job_search_helper import ordinary_company_event_command as command
 from job_search_helper.company_events import _json_digest, read_verified_queued_event
 from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
+from job_search_helper.ordinary_company_event_fetch import DIRECTORY
+from job_search_helper.retained_operator_journal import provider_inventory_digest
 from job_search_helper.scan_request import request_fingerprint
 from job_search_helper.sqlite_repository import SQLiteRepository
+from job_search_helper.temporary_retry import _canonical, _selected_sha
 from test_ordinary_company_event_command import execute, queued
 from test_ordinary_company_event_fetch import OBSERVED
 
@@ -79,6 +82,50 @@ def test_enabled_dispatch_admits_once_and_hands_off_exact_publish(queued):
         assert supervisor.reconcile_ordinary() is None
     provider.assert_called_once()
     assert [call.kwargs['write'] for call in factory.call_args_list] == [False, True]
+
+
+def test_replaced_published_observation_keeps_dispatch_claim_open(queued):
+    paths, _, _, provider, factory, remote, _ = queued
+    root = paths[0].parent
+    calls = []
+
+    def child(arguments):
+        calls.append(arguments)
+        assert execute(queued)['state'] == 'INVENTORY_FROZEN'
+        return 0
+
+    with closing(SQLiteRepository(paths[1], 'sheet')) as local:
+        dispatcher = CompanyIntakeDispatcher(local, root, child_runner=child)
+        dispatcher.set_enabled(True)
+        assert dispatcher.run_once()['state'] == 'ORDINARY_CHILD_RETURNED'
+        pending = dispatcher.reconcile_ordinary()
+        assert pending['state'] == 'HELD_ORDINARY_PUBLICATION'
+        cycle_id = pending['cycle_id']
+        assert execute(queued, 'publish', cycle_id=cycle_id)['state'] == 'SYNC_CONFIRMED'
+
+    path = root / DIRECTORY / (cycle_id + '.json')
+    original = path.read_bytes()
+    replacement = json.loads(original)
+    replacement['inventory']['jobs'][0]['title'] = 'Different title from the same source'
+    replacement['inventory_sha256'] = provider_inventory_digest(replacement['inventory'], event_scope=True)
+    del replacement['sha256']
+    replacement['sha256'] = _selected_sha(replacement)
+    path.write_text(_canonical(replacement) + '\n')
+
+    with closing(SQLiteRepository(paths[1], 'sheet', readonly=True)) as reader:
+        dispatcher = CompanyIntakeDispatcher(reader, root, child_runner=child)
+        held = dispatcher.reconcile_ordinary()
+        assert held['state'] == 'HELD_ORDINARY_EVIDENCE'
+        assert 'continuation' not in held
+        assert dispatcher.status()['dispatches'] == {'ORDINARY_ADMITTED': 1}
+        path.write_bytes(original)
+        assert dispatcher.reconcile_ordinary()['state'] == 'ORDINARY_SETTLED'
+        assert dispatcher.status()['dispatches'] == {'ORDINARY_SETTLED': 1}
+
+    assert len(calls) == 1
+    provider.assert_called_once()
+    assert [call.kwargs['write'] for call in factory.call_args_list] == [False, True]
+    assert len(remote.service.batches) == 1
 
 
 def test_moved_pointer_after_return_is_not_settlement(queued):

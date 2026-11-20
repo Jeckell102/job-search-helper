@@ -18,6 +18,20 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Binding repair checkpoint. Coordinator and release owner, same active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 75%, project about
+50%. Reproduced premature dispatcher settlement with replaced frozen
+observation, repaired shared terminal proof, and passed 132 disposable
+tests. The replacement holds the existing claim without a continuation,
+and the original bytes restore settlement without another fetch or write.
+Independent QA owns the version-pinned recheck in
+`01a1f97d-2e8c-7821-b5e1-d2019215036b`. Offline rehearsal worker
+`01a1f979-8619-75d2-9973-047f3a5efb0c` was asked to recover its local
+handoff after a chat transport interruption. The coordinator owns source and
+release integration. No production or Jetson action. Next collect QA and
+the rehearsal, then pin the release candidate and verify the eligible
+live-event gate. [Binding repair evidence](S4_ORDINARY_EVENT_DISPATCH_BINDING_REPAIR_20261120.md).
+
 Latest checkpoint. Coordinator and release owner, active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 remains about 75% and
 project about 50% while the dispatcher acceptance gate is held. The combined

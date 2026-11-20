@@ -229,9 +229,14 @@ def ordinary_event_mirror_ahead(repository, cycle, mirror):
 
 
 def ordinary_event_outcome_settled(repository, record):
-    """Fence delivery until the ordinary event's owning cycle is terminal."""
+    """Verify the terminal cycle against its original frozen provider observation."""
+    from .exact_cycle_receipt import (
+        _ordinary_observation, load_ordinary_event_plan_context, ordinary_event_observation_binding,
+    )
+
     identity = record['identity']
     cycle_id, request_id = identity.get('cycle_id'), identity['request_id']
+    company_id = identity['company_id']
     saved = _read_settlement(repository, cycle_id, request_id)
     if saved is None or saved['outcome'] != record:
         return False
@@ -241,46 +246,35 @@ def ordinary_event_outcome_settled(repository, record):
         return False
     with closing(State(str(state_path), readonly=True)) as state:
         cycle = state.cycle(cycle_id)
-    if cycle is None or cycle.get('ordinary_event_settlement_sha256') != _selected_sha(saved):
+        if cycle is None or cycle.get('ordinary_event_settlement_sha256') != _selected_sha(saved):
+            return False
+        core = {key: value for key, value in cycle.items() if key != 'ordinary_event_settlement_sha256'}
+        mirrors = repository.matches('Scan Cycles', {'Cycle ID': cycle_id})
+        if (_selected_sha(core) != saved['terminal_state_sha256'] or len(mirrors) != 1
+                or _selected_sha(mirrors[0][1]) != saved['mirror_sha256']):
+            return False
+        with closing(SQLiteRepository(repository.path, repository.spreadsheet_id, readonly=True)) as reader:
+            context = load_ordinary_event_plan_context(
+                reader, state, cycle['runtime_binding'], cycle_id=cycle_id,
+                request_sha256=saved['binding']['request_sha256'],
+            )
+    binding = ordinary_event_observation_binding(cycle, company_id, context)
+    no_publication = saved['no_publication']
+    if no_publication is not None:
+        binding['authority'] = 'ordinary-company-event-no-publication-v1'
+    if binding != saved['binding']:
         return False
-    core = {key: value for key, value in cycle.items() if key != 'ordinary_event_settlement_sha256'}
-    mirrors = repository.matches('Scan Cycles', {'Cycle ID': cycle_id})
-    if (_selected_sha(core) != saved['terminal_state_sha256'] or len(mirrors) != 1
-            or _selected_sha(mirrors[0][1]) != saved['mirror_sha256']):
-        return False
-    if saved['no_publication'] is not None:
-        return _no_publication_outcome_verified(repository, cycle, saved)
     with closing(sqlite3.connect(inbox_path.as_uri() + '?mode=ro', uri=True)) as inbox:
-        proof = verify_ordinary_event_publication(
-            inbox, repository, cycle_id, identity['company_id'], binding=saved['binding'],
-        )
+        if no_publication is not None:
+            item = cycle['companies'][company_id]
+            observed = no_publication_result(
+                _ordinary_observation(context), item['outcome_source_fact'], company_id, item['company'],
+            )
+            return (observed == (saved['stage'], no_publication['scan_state'], no_publication['evidence_code'])
+                    and saved['publication_sha256'] is None
+                    and not _has_publication_evidence(inbox, repository, cycle_id, request_id))
+        proof = verify_ordinary_event_publication(inbox, repository, cycle_id, company_id, binding=binding)
     return proof is not None and _selected_sha(proof) == saved['publication_sha256']
-
-
-def _no_publication_outcome_verified(repository, cycle, saved):
-    from .exact_cycle_receipt import (
-        _ordinary_observation, load_ordinary_event_plan_context, ordinary_event_observation_binding,
-    )
-    binding = saved['binding']
-    cycle_id, company_id = binding['cycle_id'], binding['company_id']
-    root = repository.path.resolve().parent
-    with (closing(SQLiteRepository(repository.path, repository.spreadsheet_id, readonly=True)) as reader,
-          closing(State(str(root / 'state.db'), readonly=True)) as state):
-        context = load_ordinary_event_plan_context(
-            reader, state, cycle['runtime_binding'], cycle_id=cycle_id,
-            request_sha256=binding['request_sha256'],
-        )
-    observation = _ordinary_observation(context)
-    derived = ordinary_event_observation_binding(cycle, company_id, context)
-    derived['authority'] = 'ordinary-company-event-no-publication-v1'
-    item = cycle['companies'][company_id]
-    no_publication = no_publication_result(observation, item['outcome_source_fact'], company_id, item['company'])
-    if (binding != derived or saved['publication_sha256'] is not None or no_publication is None
-            or no_publication != (saved['stage'], saved['no_publication']['scan_state'],
-                                  saved['no_publication']['evidence_code'])):
-        return False
-    with closing(sqlite3.connect((root / 'inventories.sqlite3').as_uri() + '?mode=ro', uri=True)) as inbox:
-        return not _has_publication_evidence(inbox, repository, cycle_id, binding['request_id'])
 
 
 def _outcome_rows(repo, binding):
