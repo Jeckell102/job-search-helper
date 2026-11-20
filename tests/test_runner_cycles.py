@@ -1,15 +1,15 @@
-from datetime import datetime, timezone
 from pathlib import Path
-import sqlite3
+from datetime import datetime, timezone
+import json
 import tempfile
-from types import SimpleNamespace
 import unittest
 from unittest.mock import MagicMock, patch
 
-from job_search_helper.engine import State
+from job_search_helper.engine import Engine, State
+from job_search_helper.repository import MemoryRepository
 from job_search_helper.runner import active_inbox_cycles
 from job_search_helper.runner import _print_run_status
-from contextlib import ExitStack, redirect_stderr, redirect_stdout
+from contextlib import redirect_stdout
 from io import StringIO
 
 
@@ -18,14 +18,49 @@ class DummyInbox:
         return ["CYC-DONE", "CYC-ACTIVE", "CYC-ORPHAN"]
 
 
-class RunnerCycleSelectionTests(unittest.TestCase):
-    def test_recovery_command_requires_explicit_apply(self):
-        from job_search_helper.runner import main
-        output = StringIO()
-        with redirect_stdout(output):
-            self.assertEqual(main(['recover-interrupted-cycle', '--cycle-id', 'CYC-1',
-                                   '--reason', 'planned recovery']), 2)
+class CompanyQueueStatusTests(unittest.TestCase):
+    def test_local_status_reports_waiting_request_without_mutation(self):
+        from job_search_helper import runner
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            database = root / 'state.db'
+            state = State(database)
+            self.addCleanup(state.close)
+            repo = MemoryRepository({'Companies': [
+                {'Company ID': 'C-0', 'Company': 'First', 'Company Status': 'Active'},
+                {'Company ID': 'C-1', 'Company': 'Second', 'Company Status': 'Active'},
+            ]})
+            active = Engine(repo, state).start_cycle(company_ids=['C-0'])
+            request = {
+                'mode': 'company-only', 'request_id': 'waiting-request',
+                'company_ids': ['C-1'], 'source_revision': 'revision-1',
+                'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
+                'company_event': {'schema': 'company-event-scan-request-v1',
+                    'event_id': 'event-1', 'company_id': 'C-1', 'revision': 1,
+                    'source_revision': 'revision-1'},
+            }
+            path = root / 'next-scan.json'
+            path.write_text(json.dumps(request))
+            before = state.cycle(active)
 
+            with patch.object(runner, 'state_path', return_value=database), \
+                    patch.object(runner, 'get_repository') as get_repository:
+                self.assertEqual(runner.main(['company-queue-status', '--local-only']), 0)
+
+            get_repository.assert_not_called()
+            self.assertEqual(state.cycle(active), before)
+            self.assertEqual(json.loads(path.read_text()), request)
+            status = runner.company_only_queue_status(
+                Engine(repo, state), state, database,
+                observed_at=datetime(2026, 11, 18, 0, 1, tzinfo=timezone.utc),
+            )
+            self.assertEqual(status['state'], 'WAITING_SAFE_BOUNDARY')
+            self.assertEqual(status['queue_age_seconds'], 60)
+            self.assertEqual(status['blocking_cycle_ids'], [active])
+            self.assertIn('do not delete locks', status['recovery'])
+
+
+class RunnerCycleSelectionTests(unittest.TestCase):
     def test_summary_separates_scrape_completion_from_global_review_backlog(self):
         output = StringIO()
         with redirect_stdout(output):
@@ -54,313 +89,200 @@ class RunnerCycleSelectionTests(unittest.TestCase):
                 ["CYC-ACTIVE", "CYC-ORPHAN"],
             )
 
-
-class ExactSyncRunnerAcceptanceTests(unittest.TestCase):
-    def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
-        self.database = self.root / 'state.db'
-        # Exact recovery deliberately requires a present regular State file.
-        state = State(self.database)
-        state.close()
-        from job_search_helper.inbox import InventoryInbox
-        inbox = InventoryInbox(self.root / 'inventories.sqlite3', 'fixture')
-        inbox.close()
-
-    def seed(self, *, cycle_id='CYC-EXACT', cycle_company='C-1', stage='queued',
-             status='In Progress', selected_company='C-1', saved=True,
-             blocked=False, plan=None, save_plan=False):
-        from job_search_helper.inbox import InventoryInbox
-        state = State(self.database)
-        state.save_cycle({
-            'id': cycle_id,
-            'started_at': '2026-11-19T00:00:00+00:00',
-            'status': status,
-            'all': False,
-            'companies': {cycle_company: {'stage': stage}},
-        })
-        state.close()
-        inbox = InventoryInbox(self.root / 'inventories.sqlite3', 'fixture')
-        if saved:
-            inbox.save(cycle_id, selected_company, {'company_id': selected_company})
-        if blocked:
-            inbox.block(cycle_id, selected_company)
-        if save_plan:
-            inbox.save_plan(cycle_id, selected_company, plan)
-        inbox.close()
-
-    def exact_runner_stack(self, stack, *, get_remote=None, make_engine=None):
-        """Install only external/dependency seams; State and Inbox remain real."""
+class ExactSyncContainmentTests(unittest.TestCase):
+    def test_cli_named_exact_sync_never_enters_normal_lifecycle(self):
+        """The named command dispatches before every global lifecycle hook."""
         from job_search_helper import runner
 
-        local = MagicMock(name='readonly_local')
-        local.get_meta.return_value = 'fixture-profile'
-        remote = MagicMock(name='remote')
-        engines = []
-        states = []
-        inboxes = []
-        real_state = runner.State
-        real_inbox = runner.InventoryInbox
-
-        def make_state(path):
-            state = real_state(path)
-            states.append(state)
-            return state
-
-        def make_inbox(path, spreadsheet_id):
-            inbox = real_inbox(path, spreadsheet_id)
-            inboxes.append(inbox)
-            return inbox
-
-        def default_engine(repository, state, **kwargs):
-            engine = SimpleNamespace(
-                state=state, inbox=kwargs['inbox'],
-                sync_manual_opportunities=MagicMock(name='sync_manual_opportunities'))
-            engines.append(engine)
-            return engine
-
-        stack.enter_context(patch.object(runner, '_load_environment'))
-        stack.enter_context(patch.object(runner, 'storage_backend', return_value='sqlite'))
-        stack.enter_context(patch.object(runner, 'load_title_blacklist'))
-        stack.enter_context(patch.object(runner, 'load_title_review_list'))
-        stack.enter_context(patch.object(runner, 'state_path', return_value=self.database))
-        stack.enter_context(patch.object(runner, 'State', side_effect=make_state))
-        inbox_class = stack.enter_context(patch.object(
-            runner, 'InventoryInbox', side_effect=make_inbox))
-        inbox_class.destination_id.side_effect = real_inbox.destination_id
-        outer_lock = stack.enter_context(patch.object(runner, 'writer_lock'))
-        repository = stack.enter_context(patch.object(runner, 'get_repository'))
-        engine = stack.enter_context(patch.object(
-            runner, 'Engine', side_effect=make_engine or default_engine))
-        stack.enter_context(patch('job_search_helper.cli.job_database_path',
-                                  return_value=self.root / 'jobs.db'))
-        stack.enter_context(patch('job_search_helper.sqlite_repository.SQLiteRepository',
-                                  return_value=local))
-        stack.enter_context(patch('job_search_helper.sheet_profile.profile_schemas',
-                                  return_value={'Companies': object()}))
-        get_remote_mock = stack.enter_context(patch(
-            'job_search_helper.cli.get_remote_repository', side_effect=get_remote)) \
-            if get_remote is not None else stack.enter_context(patch(
-                'job_search_helper.cli.get_remote_repository', return_value=remote))
-        release = stack.enter_context(patch(
-            'job_search_helper.integration_release.assert_release_settled'))
-        run_scoped = stack.enter_context(patch(
-            'job_search_helper.run_sync.run_scoped_sync'))
-        review = stack.enter_context(patch.object(runner, '_refresh_review_queue'))
-        review_lifecycle = stack.enter_context(patch.object(runner, '_review_queue_lifecycle'))
-        purge_reviews = stack.enter_context(patch.object(real_state, 'purge_reviews'))
-        closed_cleanup = stack.enter_context(patch(
-            'job_search_helper.closed_jobs.stage_closed_pending'))
-        outcomes = stack.enter_context(patch(
-            'job_search_helper.scrape_outcome_producer.record_cycle_outcomes'))
-        performance = stack.enter_context(patch.object(runner, '_save_performance'))
-        return SimpleNamespace(
-            local=local, remote=remote, engines=engines, states=states,
-            inboxes=inboxes, outer_lock=outer_lock,
-            repository=repository, engine=engine, get_remote=get_remote_mock,
-            release=release, run_scoped=run_scoped, review=review,
-            review_lifecycle=review_lifecycle, purge_reviews=purge_reviews,
-            closed_cleanup=closed_cleanup, outcomes=outcomes,
-            performance=performance,
+        forbidden = (
+            'get_repository', '_review_queue_lifecycle', '_run_scan_with_retries',
+            '_save_performance', '_refresh_review_queue', 'selected_sync_cycles',
         )
-
-    def test_public_cli_requires_cycle_and_one_or_more_repeatable_company_ids(self):
-        from job_search_helper import runner
-
-        with redirect_stderr(StringIO()), patch.object(runner, 'run_start') as run:
-            self.assertEqual(runner.main(['sync', '--company-id', 'C-1']), 2)
-            run.assert_not_called()
-
-        with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
-            self.assertEqual(runner.main(['sync', '--cycle-id', 'CYC-EXACT']), 1)
-
-        with patch.object(runner, 'run_start', return_value=0) as run:
-            self.assertEqual(runner.main([
-                'sync', '--cycle-id', 'CYC-EXACT',
-                '--company-id', 'C-1', '--company-id', 'C-2',
+        with (
+            patch.object(runner, '_run_named_exact_cycle_sync', return_value=0) as exact,
+            patch.multiple(runner, **{
+                name: MagicMock(side_effect=AssertionError(name + ' is global'))
+                for name in forbidden
+            }),
+            patch('job_search_helper.run_sync.run_scoped_sync',
+                  side_effect=AssertionError('global synchronizer')),
+            patch('job_search_helper.closed_jobs.stage_closed_pending',
+                  side_effect=AssertionError('global cleanup')),
+            patch.object(Engine, 'sync_manual_opportunities',
+                         side_effect=AssertionError('manual opportunity sync')),
+            patch('job_search_helper.scrape_outcome_producer.record_cycle_outcomes',
+                  side_effect=AssertionError('outcome delivery')),
+        ):
+            self.assertEqual(runner.scrape_main([
+                'sync', '--cycle-id', 'CYC-EXACT', '--company-id', 'COMP-EXACT',
             ]), 0)
-        self.assertEqual(run.call_args.kwargs['sync_cycle_id'], 'CYC-EXACT')
-        self.assertEqual(run.call_args.kwargs['sync_company_ids'], ['C-1', 'C-2'])
-
-    def test_invalid_exact_selections_stop_before_factory_or_remote(self):
-        from job_search_helper import runner
-
-        invalid = ([], [''], ['   '], ['C-1', 'C-1'],
-                   ['C-1', 'C-2', 'C-3', 'C-4', 'C-5', 'C-6'])
-        with patch('job_search_helper.exact_cycle_recovery.recover_exact_cycle_with_factory') as recover, \
-                patch('job_search_helper.cli.get_remote_repository') as get_remote, \
-                patch.object(runner, '_load_environment') as load_environment:
-            for selected in invalid:
-                with self.subTest(selected=selected), self.assertRaisesRegex(
-                        ValueError, 'unique and bounded'):
-                    runner.run_start(sync_only=True, sync_cycle_id='CYC-EXACT',
-                                     sync_company_ids=selected)
-        recover.assert_not_called()
-        get_remote.assert_not_called()
-        load_environment.assert_not_called()
-
-    def test_exact_run_uses_lock_owned_lazy_factory_orders_release_and_closes_dependencies(self):
-        from job_search_helper import runner
-        from job_search_helper.cli import WriterLockBusy, scraper_lock_name, writer_lock
-        from job_search_helper import exact_cycle_recovery
-
-        self.seed()
-        events = []
-
-        def get_remote(**kwargs):
-            events.append('remote')
-            with self.assertRaises(WriterLockBusy):
-                with writer_lock(self.root / scraper_lock_name()):
-                    pass
-            return MagicMock(name='remote')
-
-        output = StringIO()
-        with ExitStack() as stack:
-            seams = self.exact_runner_stack(stack, get_remote=get_remote)
-            seams.release.side_effect = lambda directory: events.append('release')
-            planner = stack.enter_context(patch.object(
-                exact_cycle_recovery, 'freeze_exact_cycle_plans',
-                return_value={'planned': ['C-1'], 'recovered': [], 'held': []}))
-            publisher = stack.enter_context(patch.object(
-                exact_cycle_recovery, 'publish_exact_cycle',
-                return_value={'confirmed': ['C-1'], 'held': [], 'skipped': []}))
-            with redirect_stdout(output):
-                self.assertEqual(runner.run_start(
-                    sync_only=True, sync_cycle_id='CYC-EXACT',
-                    sync_company_ids=['C-1']), 0)
-
-        seams.outer_lock.assert_not_called()
-        seams.repository.assert_not_called()
-        seams.release.assert_called_once_with(self.root)
-        self.assertEqual(events, ['release', 'remote'])
-        seams.local.close.assert_called_once_with()
-        self.assertEqual(len(seams.engines), 1)
-        with self.assertRaises(sqlite3.ProgrammingError):
-            seams.engines[0].state.connection.execute('SELECT 1')
-        with self.assertRaises(sqlite3.ProgrammingError):
-            seams.engines[0].inbox.connection.execute('SELECT 1')
-        planner.assert_called_once()
-        publisher.assert_called_once()
-        for hook in (seams.run_scoped, seams.review, seams.review_lifecycle,
-                     seams.purge_reviews, seams.closed_cleanup, seams.outcomes,
-                     seams.performance,
-                     seams.engines[0].sync_manual_opportunities):
-            hook.assert_not_called()
-        text = output.getvalue()
-        for field in ('planned', 'recovered', 'confirmed', 'held', 'skipped'):
-            self.assertIn(f'"{field}"', text)
-
-    def test_exact_dependency_context_closes_when_remote_construction_raises(self):
-        from job_search_helper import runner
-
-        self.seed()
-        with ExitStack() as stack:
-            seams = self.exact_runner_stack(
-                stack, get_remote=RuntimeError('remote construction failed'))
-            with redirect_stdout(StringIO()), self.assertRaisesRegex(
-                    RuntimeError, 'remote construction failed'):
-                runner.run_start(sync_only=True, sync_cycle_id='CYC-EXACT',
-                                 sync_company_ids=['C-1'])
-        seams.local.close.assert_called_once_with()
-        self.assertEqual(len(seams.states), 1)
-        self.assertEqual(len(seams.inboxes), 1)
-        with self.assertRaises(sqlite3.ProgrammingError):
-            seams.states[0].connection.execute('SELECT 1')
-        with self.assertRaises(sqlite3.ProgrammingError):
-            seams.inboxes[0].connection.execute('SELECT 1')
-        seams.outer_lock.assert_not_called()
-        seams.run_scoped.assert_not_called()
-
-    def test_local_exact_preflight_rejects_before_release_or_remote(self):
-        from job_search_helper import runner
-
-        cases = (
-            ('unknown', {'cycle_company': 'C-OTHER'}),
-            ('blocked', {'blocked': True}),
-            ('finished', {'status': 'Complete'}),
-            ('invalid-stage-plan', {'stage': 'inventory'}),
+        exact.assert_called_once_with(
+            sync_cycle_id='CYC-EXACT', sync_company_ids=['COMP-EXACT'],
+            sheet_request_interval=1.1,
         )
-        for label, seed_kwargs in cases:
-            with self.subTest(label=label):
-                # Each subcase gets independent State/inbox files.
-                case_root = self.root / label
-                case_root.mkdir()
-                original_root, original_database = self.root, self.database
-                self.root = case_root
-                self.database = case_root / 'state.db'
-                state = State(self.database)
-                state.close()
-                from job_search_helper.inbox import InventoryInbox
-                inbox = InventoryInbox(case_root / 'inventories.sqlite3', 'fixture')
-                inbox.close()
-                self.seed(**seed_kwargs)
-                try:
-                    with ExitStack() as stack:
-                        seams = self.exact_runner_stack(stack)
-                        with redirect_stdout(StringIO()), self.assertRaises(ValueError):
-                            runner.run_start(
-                                sync_only=True, sync_cycle_id='CYC-EXACT',
-                                sync_company_ids=['C-1'])
-                    seams.get_remote.assert_not_called()
-                    seams.release.assert_not_called()
-                    seams.local.close.assert_called_once_with()
-                finally:
-                    self.root, self.database = original_root, original_database
 
-    def test_empty_but_present_plan_is_recoverable(self):
+    def test_named_exact_sync_validates_request_interval_before_dispatch(self):
         from job_search_helper import runner
-        from job_search_helper import exact_cycle_recovery
 
-        self.seed(stage='inventory', plan={}, save_plan=True)
-        with ExitStack() as stack:
-            seams = self.exact_runner_stack(stack)
-            planner = stack.enter_context(patch.object(
-                exact_cycle_recovery, 'freeze_exact_cycle_plans'))
-            publisher = stack.enter_context(patch.object(
-                exact_cycle_recovery, 'publish_exact_cycle',
-                return_value={'confirmed': ['C-1'], 'held': [], 'skipped': []}))
-            with redirect_stdout(StringIO()):
-                self.assertEqual(runner.run_start(
+        with patch.object(runner, '_run_named_exact_cycle_sync') as exact:
+            with self.assertRaisesRegex(ValueError, 'request interval'):
+                runner.run_start(
                     sync_only=True, sync_cycle_id='CYC-EXACT',
-                    sync_company_ids=['C-1']), 0)
-        planner.assert_not_called()
-        publisher.assert_called_once()
-        seams.get_remote.assert_called_once()
+                    sync_company_ids=['COMP-EXACT'],
+                    sheet_request_interval=0.49,
+                )
+        exact.assert_not_called()
 
-    def test_legacy_direct_exact_sync_remains_contained_and_cli_never_passes_none(self):
+    def test_named_exact_local_validation_refuses_before_remote_factory(self):
+        """Missing selected durable state cannot even construct a remote client."""
+        from job_search_helper import runner
+
+        with tempfile.TemporaryDirectory() as temporary:
+            database = Path(temporary) / 'state.db'
+            database.touch()
+            local = MagicMock()
+            local.get_meta.return_value = 'full'
+            def invoke_factory(_database, factory, _cycle, _companies, **_kwargs):
+                with factory():
+                    self.fail('missing cycle must fail before yielding dependencies')
+
+            with (
+                patch.object(runner, '_load_environment'),
+                patch.object(runner, 'state_path', return_value=database),
+                patch.object(runner.InventoryInbox, 'destination_id', return_value='fixture'),
+                patch('job_search_helper.sqlite_repository.SQLiteRepository', return_value=local),
+                patch.object(runner, '_readonly_named_exact_preflight',
+                             side_effect=ValueError('missing, finished, or superseded')),
+                patch('job_search_helper.sheet_profile.profile_schemas', return_value={}),
+                patch('job_search_helper.cli.job_database_path', return_value=database),
+                patch('job_search_helper.cli.get_remote_repository') as remote_factory,
+                patch('job_search_helper.exact_cycle_recovery.recover_exact_cycle_with_factory',
+                      side_effect=invoke_factory),
+            ):
+                with self.assertRaisesRegex(ValueError, 'missing, finished, or superseded'):
+                    runner._run_named_exact_cycle_sync(
+                        sync_cycle_id='CYC-EXACT', sync_company_ids=['COMP-EXACT'],
+                        sheet_request_interval=1.1,
+                    )
+            remote_factory.assert_not_called()
+            local.close.assert_not_called()
+
+    def test_named_exact_preflight_is_readonly_for_selected_durable_records(self):
+        from job_search_helper import runner
+        from job_search_helper.inbox import InventoryInbox
+        import sqlite3
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            database = root / 'state.db'
+            inbox_path = root / 'inventories.sqlite3'
+            state = State(database)
+            inbox = InventoryInbox(inbox_path, 'fixture')
+            try:
+                state.save_cycle({
+                    'id': 'CYC-EXACT', 'status': 'In Progress',
+                    'companies': {'COMP-EXACT': {'stage': 'inventory'}},
+                })
+                inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': []})
+                inbox.save_plan('CYC-EXACT', 'COMP-EXACT', {'operations': []})
+            finally:
+                inbox.close()
+                state.close()
+            with sqlite3.connect(inbox_path) as connection:
+                before = connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+                ).fetchall()
+            runner._readonly_named_exact_preflight(
+                database, inbox_path, 'CYC-EXACT', ['COMP-EXACT'])
+            with sqlite3.connect(inbox_path) as connection:
+                after = connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+                ).fetchall()
+            self.assertEqual(after, before)
+
+    def test_supersession_between_local_open_and_remote_factory_never_authenticates(self):
+        """The final exact gate is after writable setup but before Google."""
+        from job_search_helper import runner
+
+        with tempfile.TemporaryDirectory() as temporary:
+            database = Path(temporary) / 'state.db'
+            database.touch()
+            local = MagicMock()
+            local.get_meta.return_value = 'full'
+            state = MagicMock()
+            inbox = MagicMock()
+
+            class FakeInbox:
+                @staticmethod
+                def destination_id(_path):
+                    return 'fixture'
+
+                def __new__(cls, *_args, **_kwargs):
+                    return inbox
+
+            def invoke_factory(_database, factory, _cycle, _companies, **_kwargs):
+                with factory():
+                    self.fail('supersession must reject before yielding remote')
+
+            with (
+                patch.object(runner, '_load_environment'),
+                patch.object(runner, 'state_path', return_value=database),
+                patch.object(runner, 'InventoryInbox', FakeInbox),
+                patch.object(runner, 'State', return_value=state),
+                patch('job_search_helper.sqlite_repository.SQLiteRepository', return_value=local),
+                patch('job_search_helper.sheet_profile.profile_schemas', return_value={}),
+                patch('job_search_helper.cli.job_database_path', return_value=database),
+                patch('job_search_helper.cli.get_remote_repository') as remote_factory,
+                patch('job_search_helper.integration_release.assert_release_settled'),
+                patch.object(runner, '_readonly_named_exact_preflight',
+                             side_effect=[None, ValueError('cycle superseded')]),
+                patch('job_search_helper.exact_cycle_recovery.recover_exact_cycle_with_factory',
+                      side_effect=invoke_factory),
+            ):
+                with self.assertRaisesRegex(ValueError, 'cycle superseded'):
+                    runner._run_named_exact_cycle_sync(
+                        sync_cycle_id='CYC-EXACT', sync_company_ids=['COMP-EXACT'],
+                        sheet_request_interval=1.1,
+                    )
+            remote_factory.assert_not_called()
+            local.close.assert_called_once_with()
+            inbox.close.assert_called_once_with()
+            state.close.assert_called_once_with()
+
+    def test_named_sync_holds_after_local_validation_before_repository_access(self):
+        """A selected cycle may not start the global Sheets synchronizer."""
         from job_search_helper import runner
         from job_search_helper.inbox import InventoryInbox
 
-        with patch.object(runner, '_load_environment'), \
-                patch.object(runner, 'storage_backend', return_value='sqlite'), \
-                patch.object(runner, 'load_title_blacklist'), \
-                patch.object(runner, 'load_title_review_list'), \
-                patch.object(runner, 'state_path', return_value=self.database), \
-                patch.object(InventoryInbox, 'has_unblocked_inventory', return_value=True), \
-                patch('job_search_helper.integration_release.assert_release_settled'), \
-                patch('job_search_helper.exact_cycle_recovery.recover_exact_cycle_with_factory') as recover, \
-                patch('job_search_helper.run_sync.run_scoped_sync') as run_scoped, \
-                patch.object(runner, 'get_repository') as get_repository, \
-                patch.object(runner, '_refresh_review_queue') as review, \
-                patch.object(runner, '_save_performance') as performance, \
-                redirect_stdout(StringIO()) as output:
-            self.assertEqual(runner.run_start(
-                sync_only=True, sync_cycle_id='CYC-EXACT',
-                sync_company_ids=None), 0)
-        self.assertIn('HELD_NO_EXACT_PLANNER', output.getvalue())
-        recover.assert_not_called()
-        run_scoped.assert_not_called()
-        get_repository.assert_not_called()
-        review.assert_not_called()
-        performance.assert_not_called()
-
-        with patch.object(runner, 'run_start', return_value=0) as run:
-            self.assertEqual(runner.main(['sync', '--cycle-id', 'CYC-EXACT']), 0)
-        self.assertEqual(run.call_args.kwargs['sync_company_ids'], [])
-        self.assertIsNotNone(run.call_args.kwargs['sync_company_ids'])
-
-
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            database = root / 'state.db'
+            state = State(database)
+            try:
+                state.save_cycle({
+                    'id': 'CYC-EXACT', 'started_at': '2026-11-19T00:00:00+00:00',
+                    'status': 'In Progress', 'all': False, 'companies': {},
+                })
+            finally:
+                state.close()
+            inbox = InventoryInbox(root / 'inventories.sqlite3', 'fixture')
+            try:
+                inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': [], 'marker': 'held'})
+            finally:
+                inbox.close()
+            output = StringIO()
+            with patch.object(runner, '_load_environment'), \
+                 patch.object(runner, 'state_path', return_value=database), \
+                 patch.object(runner, 'load_title_blacklist'), \
+                 patch.object(runner, 'load_title_review_list'), \
+                 patch.object(runner, 'get_repository') as get_repository, \
+                 redirect_stdout(output):
+                self.assertEqual(runner.run_start(
+                    sync_only=True, sync_cycle_id='CYC-EXACT', browser_fallback=False,
+                ), 0)
+            get_repository.assert_not_called()
+            self.assertIn('global repository and Sheets sync are disabled', output.getvalue())
+            self.assertIn('No inventory, workbook, review, or coordinator changes were applied.', output.getvalue())
 
 
 class FreshStartLifecycleTests(unittest.TestCase):
@@ -484,13 +406,13 @@ class FreshStartLifecycleTests(unittest.TestCase):
         from contextlib import redirect_stderr
         from job_search_helper import runner
         with patch.object(runner, 'run_start', return_value=0) as run:
-            self.assertEqual(runner.main(['start', '--fetch-workers', '15']), 0)
+            self.assertEqual(runner.scrape_main(['start', '--fetch-workers', '15']), 0)
             self.assertFalse(run.call_args.kwargs['resume'])
-            self.assertEqual(runner.main(['start', '--resume', '--fetch-workers', '15']), 0)
+            self.assertEqual(runner.scrape_main(['start', '--resume', '--fetch-workers', '15']), 0)
             self.assertTrue(run.call_args.kwargs['resume'])
             run.reset_mock()
             with redirect_stderr(StringIO()):
-                self.assertEqual(runner.main(['sync', '--resume']), 2)
+                self.assertEqual(runner.scrape_main(['sync', '--resume']), 2)
             run.assert_not_called()
 
     def test_summary_reports_run_counts_and_leaves_zero_skipped_blank(self):
@@ -518,45 +440,12 @@ class FreshStartLifecycleTests(unittest.TestCase):
              patch.object(runner, 'Engine', side_effect=make_engine), \
              patch.object(runner, '_refresh_review_queue'):
             self.assertEqual(runner.run_start(fetch_workers=1, browser_fallback=False), 0)
-            self.assertTrue(self.output.getvalue().endswith('Companies skipped: \n'))
+            self.assertRegex(self.output.getvalue(), r'Companies skipped: \nTotal run time: [^\n]+\n$')
             self.output.truncate(0); self.output.seek(0)
             self.assertEqual(runner.run_start(fetch_workers=1, browser_fallback=False), 0)
-        self.assertEqual(self.calls, ['C-0', 'C-1', 'C-0', 'C-1'])
+        self.assertEqual(self.calls, ['C-0', 'C-1', 'C-1', 'C-0', 'C-1', 'C-1'])
         self.assertIn('New jobs downloaded (new Job History rows): 0', self.output.getvalue())
-        self.assertTrue(self.output.getvalue().endswith('Companies skipped: \n'))
-
-    def test_actual_runner_processes_company_events_at_the_existing_writer_boundary(self):
-        from unittest.mock import patch
-        from job_search_helper import runner
-        from job_search_helper import company_events
-        from job_search_helper.engine import Engine
-
-        calls = []
-
-        class Bridge:
-            def __init__(self, repo, directory):
-                self.repo = repo
-                self.directory = directory
-
-            def process_pending(self, **kwargs):
-                calls.append((self.repo, self.directory, kwargs))
-                return []
-
-        def make_engine(repo, state, **kwargs):
-            return Engine(repo, state, fetcher=self.engine.fetcher,
-                          error_log_path=self.root / 'errors.jsonl', **kwargs)
-
-        with patch.object(runner, '_load_environment'), \
-             patch.object(runner, 'load_title_blacklist'), patch.object(runner, 'load_title_review_list'), \
-             patch.object(runner, 'state_path', return_value=self.database), \
-             patch.object(runner, 'get_repository', return_value=self.repo), \
-             patch.object(runner, 'Engine', side_effect=make_engine), \
-             patch.object(runner, '_refresh_review_queue'), \
-             patch.object(self.repo, 'is_local', True, create=True), \
-             patch.object(company_events, 'CompanyEventBridge', Bridge):
-            self.assertEqual(runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=True), 0)
-
-        self.assertEqual(calls, [(self.repo, self.root, {'writer_lock_held': True})])
+        self.assertRegex(self.output.getvalue(), r'Companies skipped: \nTotal run time: [^\n]+\n$')
 
     def test_resume_never_falls_back_to_older_unfinished_scan(self):
         from job_search_helper.runner import resolve_cycle
@@ -589,172 +478,6 @@ class FreshStartLifecycleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'fresh next-scan.json request is pending'):
             select_start_cycle(self.engine, self.state, self.repo, self.database, resume=True)
         self.assertTrue(request.exists())
-        self.assertEqual(self.state.cycles(), [])
-
-    def test_company_only_request_starts_only_declared_company(self):
-        from job_search_helper.runner import select_start_cycle
-        request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"one-company","company_ids":["C-1"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
-
-        cycle = select_start_cycle(self.engine, self.state, self.repo, self.database)
-
-        self.assertEqual(set(self.state.cycle(cycle)['companies']), {'C-1'})
-        self.assertFalse(self.state.cycle(cycle)['all'])
-        self.assertFalse(request.exists())
-        self.assertTrue((self.root / 'last-scan-request.json').exists())
-
-    def test_company_only_request_id_reuses_started_cycle_after_interrupted_receipt(self):
-        from job_search_helper.runner import select_start_cycle
-        request = self.root / 'next-scan.json'
-        payload = '{"mode":"company-only","request_id":"deduplicate","company_ids":["C-1"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}'
-        request.write_text(payload)
-        first = select_start_cycle(self.engine, self.state, self.repo, self.database)
-
-        # Models a crash after cycle creation but before the request receipt
-        # rename: retrying the same durable request cannot create another run.
-        request.write_text(payload)
-        second = select_start_cycle(self.engine, self.state, self.repo, self.database)
-
-        self.assertEqual(first, second)
-        self.assertEqual(len(self.state.cycles()), 1)
-        self.assertEqual(set(self.state.cycle(first)['companies']), {'C-1'})
-
-    def test_company_only_request_id_rejects_changed_scope_or_source_revision(self):
-        from job_search_helper.runner import select_start_cycle
-        request = self.root / 'next-scan.json'
-        original = ('{"mode":"company-only","request_id":"immutable","company_ids":["C-1"],'
-                    '"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
-        request.write_text(original)
-        select_start_cycle(self.engine, self.state, self.repo, self.database)
-        request.write_text(original.replace('rev-1', 'rev-2'))
-        with self.assertRaisesRegex(ValueError, 'different immutable request content'):
-            select_start_cycle(self.engine, self.state, self.repo, self.database)
-
-    def test_company_only_request_id_rejects_changed_company_set_replay(self):
-        from job_search_helper.runner import select_start_cycle
-        request = self.root / 'next-scan.json'
-        original = ('{"mode":"company-only","request_id":"immutable-scope","company_ids":["C-1"],'
-                    '"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
-        request.write_text(original)
-        cycle = select_start_cycle(self.engine, self.state, self.repo, self.database)
-
-        request.write_text(original.replace('["C-1"]', '["C-0","C-1"]'))
-        with self.assertRaisesRegex(ValueError, 'different immutable request content'):
-            select_start_cycle(self.engine, self.state, self.repo, self.database)
-
-        self.assertEqual(set(self.state.cycle(cycle)['companies']), {'C-1'})
-        self.assertTrue(request.exists())
-
-    def test_company_only_request_waits_without_superseding_active_cycle(self):
-        from job_search_helper.runner import company_only_queue_status, select_start_cycle
-        active = self.engine.start_cycle(company_ids=['C-0'])
-        request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"waiting","company_ids":["C-1"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
-
-        with self.assertRaisesRegex(ValueError, f'safe boundary.*{active}'):
-            select_start_cycle(self.engine, self.state, self.repo, self.database)
-
-        self.assertTrue(request.exists())
-        self.assertEqual(set(self.state.cycle(active)['companies']), {'C-0'})
-        self.assertEqual(len(self.state.cycles()), 1)
-        status = company_only_queue_status(
-            self.engine, self.state, self.database,
-            observed_at=datetime(2026, 11, 18, 0, 1, tzinfo=timezone.utc),
-        )
-        self.assertEqual(status['queue_age_seconds'], 60)
-        self.assertEqual(status['blocking_cycle_ids'], [active])
-
-    def test_company_only_request_keeps_paused_cycle_visible_and_unchanged(self):
-        from job_search_helper.runner import select_start_cycle
-        paused = self.engine.start_cycle(company_ids=['C-0'])
-        cycle = self.state.cycle(paused)
-        cycle['status'] = 'Paused'
-        self.state.save_cycle(cycle)
-        request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"paused","company_ids":["C-1"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
-
-        with self.assertRaisesRegex(ValueError, f'safe boundary.*{paused}'):
-            select_start_cycle(self.engine, self.state, self.repo, self.database)
-
-        self.assertTrue(request.exists())
-        self.assertEqual(self.state.cycle(paused)['status'], 'Paused')
-        self.assertEqual(set(self.state.cycle(paused)['companies']), {'C-0'})
-
-    def test_company_only_queue_status_reports_age_blocker_and_safe_paused_recovery(self):
-        from job_search_helper.runner import company_only_queue_status
-        paused = self.engine.start_cycle(company_ids=['C-0'])
-        cycle = self.state.cycle(paused)
-        cycle['status'] = 'Paused'
-        self.state.save_cycle(cycle)
-        (self.root / 'next-scan.json').write_text(
-            '{"mode":"company-only","request_id":"queued","company_ids":["C-1"],"source_revision":"rev-1",'
-            '"enqueued_at":"2026-11-18T00:00:00Z"}'
-        )
-
-        status = company_only_queue_status(
-            self.engine, self.state, self.database,
-            observed_at=datetime(2026, 11, 18, 0, 2, tzinfo=timezone.utc),
-        )
-
-        self.assertEqual(status['queue_age_seconds'], 120)
-        self.assertEqual(status['blocking_cycle_ids'], [paused])
-        self.assertIn('start --resume', status['recovery'])
-        self.assertIn('do not delete locks', status['recovery'])
-        self.assertTrue((self.root / 'next-scan.json').exists())
-
-    def test_company_queue_status_cli_is_read_only_and_can_degrade_to_local_state(self):
-        from unittest.mock import patch
-        from job_search_helper import runner
-        paused = self.engine.start_cycle(company_ids=['C-0'])
-        cycle = self.state.cycle(paused)
-        cycle['status'] = 'Paused'
-        self.state.save_cycle(cycle)
-        before = self.state.cycle(paused)
-        request = self.root / 'next-scan.json'
-        request.write_text(
-            '{"mode":"company-only","request_id":"operator-status","company_ids":["C-1"],'
-            '"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}'
-        )
-
-        with patch.object(runner, 'state_path', return_value=self.database), \
-                patch.object(runner, 'get_repository') as get_repository:
-            self.assertEqual(runner.main(['company-queue-status', '--local-only']), 0)
-
-        get_repository.assert_not_called()
-        self.assertEqual(self.state.cycle(paused), before)
-        self.assertTrue(request.exists())
-        output = self.output.getvalue()
-        self.assertIn('WAITING_SAFE_BOUNDARY', output)
-        self.assertIn('queue_age_seconds', output)
-        self.assertIn('local-only', output)
-
-    def test_company_only_request_requires_immutable_enqueue_timestamp(self):
-        from job_search_helper.runner import select_start_cycle
-        request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"missing-time","company_ids":["C-1"],"source_revision":"rev-1"}')
-        with self.assertRaisesRegex(ValueError, 'immutable enqueued_at is required'):
-            select_start_cycle(self.engine, self.state, self.repo, self.database)
-        self.assertEqual(self.state.cycles(), [])
-        self.assertTrue(request.exists())
-
-    def test_company_only_request_rejects_missing_or_unknown_ids_without_full_scan(self):
-        from job_search_helper.runner import select_start_cycle
-        request = self.root / 'next-scan.json'
-        request.write_text('{"mode":"company-only","request_id":"missing","company_ids":[],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
-        with self.assertRaisesRegex(ValueError, 'refusing to widen'):
-            select_start_cycle(self.engine, self.state, self.repo, self.database)
-        self.assertEqual(self.state.cycles(), [])
-        self.assertTrue(request.exists())
-
-        request.write_text('{"mode":"company-only","request_id":"unknown","company_ids":["C-404"],"source_revision":"rev-1","enqueued_at":"2026-11-18T00:00:00Z"}')
-        with self.assertRaisesRegex(ValueError, 'Unknown Company ID'):
-            select_start_cycle(self.engine, self.state, self.repo, self.database)
-        self.assertEqual(self.state.cycles(), [])
-        self.assertTrue(request.exists())
-
-    def test_engine_rejects_empty_explicit_company_scope(self):
-        with self.assertRaisesRegex(ValueError, 'requires at least one'):
-            self.engine.start_cycle(company_ids=[])
         self.assertEqual(self.state.cycles(), [])
 
     def test_blocked_failures_remain_separate_from_partial_and_skipped_counts(self):

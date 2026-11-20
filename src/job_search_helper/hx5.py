@@ -1,9 +1,11 @@
 """HX5's company-scoped Oracle Taleo TBE v2 board."""
 from __future__ import annotations
+import re
 from html.parser import HTMLParser
 from urllib.parse import urlencode, urlsplit, parse_qs
-from .ats import FetchError, HTTPTransport, Inventory, _base, text
+from .ats import FetchError, HTTPTransport, Inventory, text
 from .discovery import CareersTransport
+from .shared_boards import Scripts, schema_job
 SOURCE='https://phe.tbe.taleo.net/phe01/ats/careers/v2/jobSearch?cws=37&org=ACDY28'
 HOST='phe.tbe.taleo.net'; PREFIX='/phe01/ats/careers/v2'; ORG='ACDY28'; CWS='37'
 class _Page(HTMLParser):
@@ -36,6 +38,39 @@ def _search(html):
   if z.scheme=='https' and z.hostname==HOST and z.path==PREFIX+'/viewRequisition' and set(qs)=={'org','cws','rid'} and qs['org']==[ORG] and qs['cws']==[CWS] and qs['rid'][0].isdigit() and u not in out: out.append(u)
  return out
 
+def parse_posting(html, url, company_id, company):
+ """Use the actual JobPosting fields, never Taleo's generic page heading."""
+ parsed=urlsplit(url); query=parse_qs(parsed.query)
+ if (parsed.scheme!='https' or parsed.hostname!=HOST or parsed.path!=PREFIX+'/viewRequisition'
+     or set(query)!={'org','cws','rid'} or query['org']!=[ORG] or query['cws']!=[CWS]
+     or len(query['rid'])!=1 or not query['rid'][0].isdigit()):
+  raise FetchError('partial','HX5 detail URL is outside the verified employer scope.')
+ rid=query['rid'][0]
+ try:
+  records=Scripts(html).jobs()
+ except (ValueError,TypeError):
+  raise FetchError('partial','HX5 structured job data is malformed.')
+ if len(records)!=1:
+  raise FetchError('partial','HX5 structured JobPosting is missing or ambiguous.')
+ data=records[0]; employer=data.get('hiringOrganization') or {}; identifier=data.get('identifier') or {}
+ if (not isinstance(employer,dict) or text(employer.get('name')).casefold().replace('.','') not in {'hx5','hx5 llc','hx5, llc'}
+     or not isinstance(identifier,dict) or str(identifier.get('value',''))!=rid):
+  raise FetchError('partial','HX5 structured employer or requisition identity does not match.')
+ actual=urlsplit(str(data.get('url') or ''))
+ if (actual.scheme,actual.hostname,actual.path,parse_qs(actual.query)) != (parsed.scheme,parsed.hostname,parsed.path,query):
+  raise FetchError('partial','HX5 structured URL does not match the requested requisition.')
+ title=text(data.get('title'))
+ if not title or re.match(r'^position description\b',title,re.I):
+  raise FetchError('partial','HX5 structured job title is missing or generic.')
+ try:
+  posting=schema_job(data,url,rid,'Taleo TBE v2',company_id,company)
+ except (AttributeError,TypeError,ValueError):
+  raise FetchError('partial','HX5 structured posting fields are malformed.')
+ if len(posting['description'])<300 or 'HX5' not in posting['description'] or not posting['location']:
+  raise FetchError('partial','HX5 detail lacks full description or location.')
+ posting['location']=re.sub(r'\bUS-[A-Z]{2}-','',posting['location'])
+ return posting
+
 def fetch_hx5(careers_url,company_id,company,transport=None):
  client=CareersTransport() if transport is None or isinstance(transport,HTTPTransport) else transport; jobs=[]
  try:
@@ -58,9 +93,7 @@ def fetch_hx5(careers_url,company_id,company,transport=None):
    for url in links:
     rid=parse_qs(urlsplit(url).query)['rid'][0]
     if any(j['posting_id']==rid for j in jobs): raise FetchError('partial','HX5 duplicate requisition ID.')
-    detail=_read(client,url); dp=_Page(); dp.feed(detail); desc=text(' '.join(dp.parts)); title=text(' '.join(dp.title))
-    if not title or not desc or len(desc)<300 or 'HX5' not in desc: raise FetchError('partial','HX5 detail lacks identity or full description.')
-    rowdata=_base({'id':rid},'Taleo TBE v2',company_id,company); rowdata.update(title=title,description=desc,url=url,req_id=rid); jobs.append(rowdata)
+    jobs.append(parse_posting(_read(client,url),url,company_id,company))
    row+=len(links)
    if row>=total: break
   if total is None or len(jobs)!=total: raise FetchError('partial','HX5 inventory did not match published total.')

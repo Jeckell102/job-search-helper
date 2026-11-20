@@ -6,6 +6,7 @@ No login or application endpoint is used. Landing-page scopes remain unchanged.
 """
 from __future__ import annotations
 
+import logging
 from html.parser import HTMLParser
 import json
 import re
@@ -24,6 +25,7 @@ KNOWN_HOSTS = frozenset({
 })
 MAX_PAGES = 500
 MAX_RECONCILIATIONS = 3
+MAX_GAP_CHECKS = 3
 MAX_JOBS = 10000
 IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,199}")
 DIVISIONS = {
@@ -220,13 +222,23 @@ def _listing(page, offset, keywords):
                 or "external" not in entry.get("jobVisibility", [])):
             raise FetchError("partial", "Phenom listing contains invalid or non-public posting identity.")
         if entry["jobId"] in seen:
-            raise FetchError("partial", "Phenom listing repeats a posting ID.")
+            # Some public Phenom boards (including MITRE) publish the same
+            # posting more than once in their raw row count.  Preserve the
+            # raw count for pagination, but let the caller reconcile an
+            # identical row by canonical ID.  Conflicting rows remain a
+            # hard failure because they cannot be safely deduplicated.
+            raise FetchError("partial", "Phenom listing repeats a posting ID within one page.")
         seen.add(entry["jobId"])
     return entries, total, scope
 
 
 def _fingerprint(entries):
     return sorted((j["jobId"], j["jobSeqNo"], j["title"]) for j in entries)
+
+
+def _abb_robotics(company_id, company, host):
+    return (company_id == "COMP-0242" and company.strip().casefold() == "abb robotics"
+            and host == "careers.abb")
 
 
 def _posting(page, entry, identity, company_id, company):
@@ -241,6 +253,9 @@ def _posting(page, entry, identity, company_id, company):
             or "external" not in job.get("jobVisibility", [])
             or job.get("title") != entry["title"]):
         raise FetchError("partial", "Phenom detail identity/title no longer matches its public listing.")
+    if (_abb_robotics(company_id, company, urlsplit(app["baseUrl"]).hostname)
+            and job.get("businessSegment") != "Robotics"):
+        raise FetchError("partial", "ABB Robotics detail does not confirm the Robotics business segment.")
     params = page[3] if isinstance(page[3], dict) else {}
     canonical_urls = params.get("_canonical_urls")
     canonical = canonical_urls[0] if isinstance(canonical_urls, list) and len(canonical_urls) == 1 else ""
@@ -351,9 +366,21 @@ def fetch_phenom(ats, careers_url, company_id, company, transport=None, *, progr
         identity = _identity(page[1])
         keywords = dict(parse_qsl(urlsplit(source).query)).get("keywords", "")
         widget = standard and not keywords and hasattr(transport, 'search')
+        scoped_fields = ({"businessSegment": ["Robotics"]}
+                         if _abb_robotics(company_id, company, origin[0]) else {})
+        if scoped_fields and not widget:
+            raise FetchError("unsupported", "ABB Robotics requires its verified public business-segment search filter.")
         session_params = page[3]
         def search_page(offset):
-            result = transport.search(page[1], session_params, offset)
+            result = (transport.search(page[1], session_params, offset, selected_fields=scoped_fields)
+                      if scoped_fields else transport.search(page[1], session_params, offset))
+            if scoped_fields:
+                data = result.get('data') or {}
+                if ((data.get('ui_selections') or {}) != scoped_fields
+                        or (result.get('selected_fields') is not None and result['selected_fields'] != scoped_fields)):
+                    raise FetchError('partial', 'ABB Robotics search lost its business-segment filter.')
+                if any(e.get('businessSegment') != 'Robotics' for e in data.get('jobs', [])):
+                    raise FetchError('partial', 'ABB Robotics search returned a different business segment.')
             return (source, page[1], {'eagerLoadRefineSearch': result}, {'from': str(offset)})
         if widget:
             page = search_page(0)
@@ -369,7 +396,10 @@ def fetch_phenom(ats, careers_url, company_id, company, transport=None, *, progr
             nonlocal context
             current = first if first is not None else (search_page(0) if widget else _read(source, transport, origin))
             entries, total, current_scope = _listing(current, 0, keywords)
-            queued, seen, sequences, offset, count = [], set(), set(), 0, 0
+            queued, seen, sequences, offset, count = [], {}, set(), 0, 0
+            page_fingerprints = set()
+            gap_checks = 0
+            allow_duplicate_rows = company_id == "COMP-0025" and company.casefold() == "mitre"
             try:
                 while True:
                     count += 1
@@ -379,15 +409,32 @@ def fetch_phenom(ats, careers_url, company_id, company, transport=None, *, progr
                     entries, page_total, page_scope = _listing(current, offset, keywords)
                     if page_total != total or page_scope != scope or current_scope != scope:
                         raise FetchError('partial', 'Phenom total or search scope changed during pagination.')
+                    page_fingerprint = tuple((e['jobId'], e['jobSeqNo'], e['title']) for e in entries)
+                    if page_fingerprint in page_fingerprints:
+                        raise FetchError('partial', 'Phenom pagination gap: repeated page fingerprint.')
+                    page_fingerprints.add(page_fingerprint)
+                    novel = 0
                     for entry in entries:
-                        if entry['jobId'] in seen or entry['jobSeqNo'] in sequences:
-                            raise FetchError('partial', 'Phenom repeated a posting/page; inventory incomplete.')
-                        seen.add(entry['jobId']); sequences.add(entry['jobSeqNo'])
+                        ident = entry['jobId']
+                        prior = seen.get(ident)
+                        if prior is not None:
+                            if signature(prior) != signature(entry):
+                                raise FetchError('partial', 'Phenom duplicate posting ID has conflicting public rows.')
+                            continue
+                        if entry['jobSeqNo'] in sequences:
+                            raise FetchError('partial', 'Phenom duplicate sequence number has conflicting posting identity.')
+                        seen[ident] = entry
+                        sequences.add(entry['jobSeqNo'])
                         queued.append(entry)
+                        novel += 1
+                    if entries and not novel and offset < total:
+                        gap_checks += 1
+                        if not allow_duplicate_rows or gap_checks > MAX_GAP_CHECKS:
+                            raise FetchError('partial', 'Phenom pagination gap: repeated rows exhausted bounded gap checks.')
                     offset += len(entries)
-                    print(json.dumps({'event': 'inventory_page', 'provider': 'Phenom',
+                    logging.getLogger(__name__).debug("%s", json.dumps({'event': 'inventory_page', 'provider': 'Phenom',
                                       'company_id': company_id, 'page': count,
-                                      'postings_listed': len(queued), 'total': total}), file=sys.stderr)
+                                      'postings_listed': len(queued), 'total': total}))
                     if offset == total:
                         return queued, None
                     if count >= MAX_PAGES:
@@ -412,6 +459,7 @@ def fetch_phenom(ats, careers_url, company_id, company, transport=None, *, progr
                 cached = completed.get(ident) or saved.get(ident)
                 if (isinstance(cached, dict) and not cached.get('retired') and cached.get('identity') == list(identity)
                         and cached.get('revision') == revision
+                        and cached.get('scope_filters', {}) == scoped_fields
                         and isinstance(cached.get('job'), dict)
                         and cached['job'].get('posting_id') == ident
                         and cached['job'].get('description')):
@@ -428,7 +476,8 @@ def fetch_phenom(ats, careers_url, company_id, company, transport=None, *, progr
                 try:
                     detail = _read(app['baseUrl'] + 'job/' + ident, transport, origin)
                     job = _posting(detail, entry, identity, company_id, company)
-                    record = {'identity': list(identity), 'revision': revision, 'job': job}
+                    record = {'identity': list(identity), 'revision': revision, 'job': job,
+                              'scope_filters': scoped_fields}
                     completed[ident] = record
                     jobs = [item['job'] for item in completed.values()]
                     if progress is not None:
@@ -445,9 +494,9 @@ def fetch_phenom(ats, careers_url, company_id, company, transport=None, *, progr
                 if failures and failures[-1][0] == ident:
                     record_failure(failures[-1][1])
                 if len(jobs) and len(jobs) % 100 == 0:
-                    print(json.dumps({'event': 'posting_progress', 'provider': 'Phenom',
+                    logging.getLogger(__name__).debug("%s", json.dumps({'event': 'posting_progress', 'provider': 'Phenom',
                                       'company_id': company_id, 'postings_fetched': len(jobs),
-                                      'total': len(queued)}), file=sys.stderr)
+                                      'total': len(queued)}))
             if listing_error:
                 raise FetchError('partial', 'Phenom listing incomplete: ' + listing_error.reason)
             context = 'Phenom full inventory reconciliation'
@@ -468,14 +517,14 @@ def fetch_phenom(ats, careers_url, company_id, company, transport=None, *, progr
                         if ident not in after and isinstance(record, dict) and not record.get('retired'):
                             progress._write('phenom_detail_v1', ident, dict(record, retired=True))
                 return Inventory('complete', jobs,
-                                 f'Phenom: retrieved {len(jobs)} full postings; full inventory membership and revisions reconciled in {attempt + 1} rounds.',
+                                 f'Phenom{" ABB Robotics businessSegment=Robotics" if scoped_fields else ""}: retrieved {len(jobs)} full postings; full inventory membership and revisions reconciled in {attempt + 1} rounds.',
                                  source, 'Phenom')
-            print(json.dumps({'event': 'inventory_reconciliation', 'provider': 'Phenom',
+            logging.getLogger(__name__).debug("%s", json.dumps({'event': 'inventory_reconciliation', 'provider': 'Phenom',
                               'company_id': company_id, 'round': attempt + 1,
                               'added': len(after.keys() - before.keys()),
                               'removed': len(before.keys() - after.keys()),
                               'edited': sum(before[k] != after[k] for k in before.keys() & after.keys()),
-                              'unresolved': len(failures)}), file=sys.stderr)
+                              'unresolved': len(failures)}))
             if attempt == MAX_RECONCILIATIONS:
                 detail_reason = '; '.join(f'job detail {i}: {reason}' for i, reason in failures[:3])
                 raise FetchError('partial', 'Phenom bounded reconciliation exhausted; inventory remains incomplete. ' + detail_reason)

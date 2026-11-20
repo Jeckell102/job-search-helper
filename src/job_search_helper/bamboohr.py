@@ -6,6 +6,7 @@ Employer pages linking a subset of a shared board retain that subset.
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 import json
 import re
@@ -253,8 +254,8 @@ def fetch_bamboohr(ats, careers_url, company_id, company, transport=None, discov
         for item in selected:
             context = f"BambooHR job detail {item['id']}"
             jobs.append(_posting(scope.root, item, transport, company_id, company))
-            print(json.dumps({"event": "inventory_page", "provider": "BambooHR", "company_id": company_id,
-                              "postings_fetched": len(jobs), "total": len(selected)}), file=sys.stderr)
+            logging.getLogger(__name__).debug("%s", json.dumps({"event": "inventory_page", "provider": "BambooHR", "company_id": company_id,
+                              "postings_fetched": len(jobs), "total": len(selected)}))
         if saf_fs_scoped and any("safran federal systems" not in " ".join(job["description"].split()).casefold() for job in jobs):
             issues.append("A corporate-linked posting does not identify Safran Federal Systems; company scope requires review.")
         context = "BambooHR final inventory check"

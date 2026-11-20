@@ -119,6 +119,8 @@ def publication_lock(queue,exclusive=False):
 def read_snapshot(queue,*,decode=True):
     with publication_lock(queue):
         manifest_raw=(queue/"summary.json").read_bytes(); manifest=json.loads(manifest_raw); files={}
+        if not isinstance(manifest, dict):
+            raise ValueError("Queue summary must be a JSON object")
         for name in ("first-pass.jsonl","second-pass.jsonl"):
             raw=(queue/name).read_bytes(); expected=manifest.get("file_sha256",{}).get(name)
             if not expected or hashlib.sha256(raw).hexdigest()!=expected:
@@ -135,6 +137,7 @@ def safe_payload(row):
 class Runtime:
     def __init__(self,queue,*,clock=time.time,lease_seconds=LEASE_SECONDS):
         self.queue=Path(queue).resolve(); self.directory=self.queue/"concurrent"
+        self.snapshot_source = None
         self.directory.mkdir(parents=True,exist_ok=True,mode=0o700)
         self.clock,self.lease_seconds=clock,lease_seconds
         self.db=sqlite3.connect(self.directory/"review-runtime.sqlite3",timeout=30)
@@ -265,6 +268,7 @@ class Runtime:
         # An unchanged generation can skip parsing and rebuilding thousands of
         # rows, but corruption and new legacy assessments must still be detected.
         manifest,raw_files=read_snapshot(self.queue,decode=False)
+        self.snapshot_source = manifest.get("source_fingerprint")
         raw_imports={stage:read_stable_bytes(self.queue/name) for stage,name in LOGS.items()}
         input_fingerprint=digest({'version':SYNC_CACHE_VERSION,'manifest':manifest,
                        'imports':{stage:hashlib.sha256(raw).hexdigest() for stage,raw in raw_imports.items()}})
@@ -408,7 +412,26 @@ class Runtime:
                 if 'Written' in delivery: delivery['Saved Locally']=delivery.pop('Written')
                 result['run']['publication']=publication_counts(self,stage,run_id)
         return result
-    def next(self,stage,run_id,limit=None,*,repo=None,identities=None):
+    @contextmanager
+    def _first_pass_source(self, enabled, *, fence_writes=False):
+        if not enabled:
+            yield None
+            return
+        from .review_resume import first_pass_source
+
+        with first_pass_source(self.snapshot_source, fence_writes=fence_writes) as source:
+            if source is None:
+                raise RuntimeError("First-pass queue does not match the current source or policy; run a live refresh")
+            yield source
+
+    def _release_stale_claim(self, stage, run_id, key, source, token):
+        self.db.execute(
+            "UPDATE tasks SET state='ready',owner=NULL,token=NULL,lease_until=NULL "
+            "WHERE stage=? AND job_key=? AND source_hash=? AND state='claimed' AND owner=? AND token=?",
+            (stage, key, source, run_id, token),
+        )
+
+    def next(self,stage,run_id,limit=None,*,repo=None,identities=None,verify_source=False):
         limit={1:100,2:10,3:1}[stage] if limit is None else limit
         if not 1<=limit<={1:100,2:10,3:3}[stage]: raise ValueError("Batch exceeds per-pass context limit")
         scope_sql=""; scope_parameters=()
@@ -418,18 +441,27 @@ class Runtime:
             scope_sql=" AND (t.job_key,t.source_hash) IN ("+",".join("(?,?)" for _ in identities)+")"
             scope_parameters=tuple(value for pair in identities for value in pair)
         self.sync()
-        with self.transaction():
+        stale_inputs = 0
+        with self._first_pass_source(verify_source) as source_check, self.transaction():
             self._owned(stage,run_id)
             self._expire_claims(stage)
             if identities is not None:
                 held=self.db.execute("SELECT job_key,source_hash FROM tasks WHERE stage=? AND active=1 AND state='claimed' AND owner=?",(stage,run_id)).fetchall()
                 if any(tuple(row) not in identities for row in held):
                     raise RuntimeError("Run holds claims outside supplied scope; resume with the full scope or pause before narrowing")
-            rows=self.db.execute("SELECT t.* FROM tasks t WHERE stage=? AND active=1 AND (state='ready' OR (state='claimed' AND owner=?)) AND NOT EXISTS(SELECT 1 FROM conflicts c WHERE c.stage=t.stage AND c.job_key=t.job_key AND c.source_hash=t.source_hash)"+scope_sql+" ORDER BY CASE WHEN state='claimed' THEN 0 ELSE 1 END,CAST(json_extract(payload,'$.score') AS REAL) DESC,job_key LIMIT ?",(stage,run_id,*scope_parameters,limit)).fetchall()
+            rows=self.db.execute("SELECT t.* FROM tasks t WHERE stage=? AND active=1 AND (state='ready' OR (state='claimed' AND owner=?)) AND NOT EXISTS(SELECT 1 FROM conflicts c WHERE c.stage=t.stage AND c.job_key=t.job_key AND c.source_hash=t.source_hash)"+scope_sql+" ORDER BY CASE WHEN state='claimed' THEN 0 ELSE 1 END,CAST(json_extract(payload,'$.score') AS REAL) DESC,job_key LIMIT ?",(stage,run_id,*scope_parameters,-1 if source_check else limit)).fetchall()
             result=[]; payload_characters=0; estimated_characters=0
             for row in rows:
+                if len(result) == limit:
+                    break
+                item = json.loads(row["payload"])
+                if source_check and not source_check.accepts(item):
+                    stale_inputs += 1
+                    if row["state"] == "claimed":
+                        self._release_stale_claim(stage, run_id, row["job_key"], row["source_hash"], row["token"])
+                    continue
                 token=row["token"] if row["state"]=="claimed" else uuid.uuid4().hex
-                item=json.loads(row["payload"]); item.update(claim_token=token,input_version=row["version"])
+                item.update(claim_token=token,input_version=row["version"])
                 if stage==2 and not item.get("job_description"):
                     cached=self.db.execute("SELECT payload FROM evidence WHERE job_key=? AND source_hash=?",(row["job_key"],row["source_hash"])).fetchone()
                     if cached: item.update(json.loads(cached[0]))
@@ -449,6 +481,8 @@ class Runtime:
             self.event(stage,None,None,"batch_claimed",str(len(result)))
         self.checkpoint(stage,run_id)
         output={"pass":stage,"run_id":run_id,"items":result,"queue":self.status(stage),"checkpoint":str(self.checkpoint_path(stage,run_id)),"next_action":"ASSESS_AND_SUBMIT_THEN_NEXT" if result else "FRESH_FINISH_CHECK_REQUIRED"}
+        if stale_inputs:
+            output["stale_inputs"] = stale_inputs
         if stage==2:
             output['batch']={'max_jobs':limit,'soft_character_budget':TRIAGE_BATCH_CHARACTERS,
                              'payload_characters':payload_characters,'estimated_characters':estimated_characters,
@@ -465,16 +499,19 @@ class Runtime:
             choice=item.get("triage_decision")
             if choice not in {"ESCALATE","CLEAR_REJECT","NEEDS_INFO"}: raise ValueError("Invalid triage decision")
             if choice!="NEEDS_INFO" and item.get("description_complete") is not True: raise ValueError("Triage requires complete description evidence")
+            if choice=="NEEDS_INFO" and item.get("description_complete") is True:
+                raise ValueError("Complete description evidence must be CLEAR_REJECT or ESCALATE; NEEDS_INFO is only for unavailable or incomplete evidence")
             if choice=="ESCALATE" and not isinstance(item.get("evidence_packet"),dict): raise ValueError("ESCALATE requires an evidence packet")
             if not item.get("evidence_locator") or not item.get("evidence_source"): raise ValueError("Description result requires a retrievable locator")
         else:
             if item.get("decision") not in {"Accept","Reject","Needs Info"}: raise ValueError("Invalid final decision")
             if item.get("decision")=="Accept" and item.get("fit_level") not in {"Strong","Possible","Stretch"}: raise ValueError("Acceptance requires a fit level")
             if item.get("decision")!="Accept" and item.get("fit_level") is not None: raise ValueError("Nonacceptance requires null fit_level")
-    def submit(self,stage,run_id,results):
+    def submit(self,stage,run_id,results,*,verify_source=False):
         if not results: raise ValueError("Empty results file")
         self.sync(); saved=0; reused=0; skipped=[]
-        with self.transaction():
+        stale = []
+        with self._first_pass_source(verify_source, fence_writes=True) as source_check, self.transaction():
             self._owned(stage,run_id)
             for raw in results:
                 key,source=identity(raw)
@@ -490,6 +527,16 @@ class Runtime:
                     previous=json.loads(prior[0])
                     if previous.get("run_id")==run_id and assessment_signature(previous)==assessment_signature(raw):
                         reused+=1; continue
+                if source_check and row and (
+                    row["version"] != raw.get("input_version")
+                    or not source_check.accepts(json.loads(row["payload"]))
+                ):
+                    reason = "Review inputs changed; obtain a fresh claim after refresh"
+                    stale.append({"job_key": key, "source_hash": source, "reason": reason})
+                    self.event(stage, key, source, "submission_skipped_stale_input", reason)
+                    if row["version"] == raw.get("input_version"):
+                        self._release_stale_claim(stage, run_id, key, source, raw.get("claim_token"))
+                    continue
                 if not row or not row["active"] or row["state"]!="claimed" or row["owner"]!=run_id or row["lease_until"]<=self.clock() or row["token"]!=raw.get("claim_token") or row["version"]!=raw.get("input_version"):
                     raise RuntimeError("Stale/unowned claim or changed input; preserve result and reconcile")
                 if self.db.execute("SELECT 1 FROM conflicts WHERE stage=? AND job_key=? AND source_hash=?",(stage,key,source)).fetchone(): raise RuntimeError("Conflicting assessment must be reconciled")
@@ -501,7 +548,10 @@ class Runtime:
                 self.db.execute("UPDATE tasks SET state='done',token=NULL,lease_until=NULL WHERE stage=? AND job_key=? AND source_hash=?",(stage,key,source))
                 self.event(stage,key,source,"decision_saved",value.get("triage_decision",value.get("decision",""))); saved+=1
         self.sync(); self.export(stage); self.checkpoint(stage,run_id)
-        return {"saved":saved,"reused":reused,"skipped_manual":skipped,"pass":stage,"run_id":run_id,"queue":self.status(stage),"next_action":"NEXT_BATCH"}
+        result = {"saved":saved,"reused":reused,"skipped_manual":skipped,"pass":stage,"run_id":run_id,"queue":self.status(stage),"next_action":"NEXT_BATCH"}
+        if stale:
+            result["skipped_stale"] = stale
+        return result
     def amend_pending(self,stage,run_id,request):
         """Resolve this run's unwritten Needs Info after explicit user clarification."""
         if stage!=3: raise ValueError("Only pass 3 permits amend-pending")
@@ -660,6 +710,26 @@ def live_refresh(queue, *, reuse_if_current=False):
     finally:
         if getattr(repo,"is_local",False): repo.close()
 
+
+def reuse_first_pass_snapshot(queue):
+    """Reuse only a verified, compatible generation. Finish still refreshes."""
+    from .review_resume import first_pass_source
+
+    try:
+        manifest, _ = read_snapshot(queue, decode=False)
+    except (FileNotFoundError, RuntimeError, ValueError):
+        return None
+    with first_pass_source(manifest.get("source_fingerprint")) as source:
+        if source is None:
+            return None
+    return {"refresh": {
+        "reused": True,
+        "source": "published_snapshot",
+        "generated_at": manifest.get("generated_at"),
+        "fresh_finish_required": True,
+    }}
+
+
 def main(argv=None):
     parser=argparse.ArgumentParser(description="Multiple independent workers per pass. Supplies batches; never runs an AI model.")
     parser.add_argument("command",choices=["start","next","submit","amend-pending","promote-questions","correct-questions-reject","correct-published-reject","finish","pause","heartbeat","status","refresh","controls","evidence","writeback","publish"])
@@ -688,11 +758,20 @@ def main(argv=None):
         if not args.local_only and args.command not in {'pause','evidence','amend-pending'}:
             from .review_controls import refresh_sheet_controls
             controls=refresh_sheet_controls(runtime)
+        managed_first_pass = args.stage == 1 and (controls or {}).get("delivery_target") == "local_database"
         refresh_result=None
         if args.command in {"start","refresh","finish"} and not args.local_only:
-            refresh_result=live_refresh(queue,reuse_if_current=args.command=='start' and not (controls or {}).get('reopened_jobs'))
+            may_reuse = args.command == "start" and not (controls or {}).get("reopened_jobs")
+            if managed_first_pass and may_reuse:
+                refresh_result = reuse_first_pass_snapshot(queue)
+            if refresh_result is None:
+                refresh_result = live_refresh(queue, reuse_if_current=may_reuse)
         elif controls and controls['reopened_jobs']: refresh_result=live_refresh(queue)
         if args.command in {"start","refresh","status","controls","heartbeat"}: runtime.sync()
+        delivery_retry=None
+        if not args.local_only and args.command in {'next','heartbeat'}:
+            from .review_publication import retry_run_deliveries
+            delivery_retry=retry_run_deliveries(runtime,args.stage,args.run_id)
         if args.command=="start":
             result=runtime.start(args.stage,args.run_id); result["queue"]=runtime.status(args.stage)
         elif args.command=="next":
@@ -703,19 +782,22 @@ def main(argv=None):
                     from .cli import get_repository,storage_backend
                     _load_environment()
                     if storage_backend()=='sqlite': repo=get_repository(write=False,interactive=False)
-                result=runtime.next(args.stage,args.run_id,args.limit,repo=repo,identities=identities)
+                result=runtime.next(args.stage,args.run_id,args.limit,repo=repo,identities=identities,
+                                    verify_source=managed_first_pass)
             finally:
                 if repo is not None: repo.close()
         elif args.command=="submit":
             if not args.file: raise ValueError("--file containing model-assessed claimed-identity JSONL is required")
             submitted=read_jsonl(Path(args.file))
-            result=runtime.submit(args.stage,args.run_id,submitted)
+            result=runtime.submit(args.stage,args.run_id,submitted,verify_source=managed_first_pass)
             if args.stage in (1,2,3):
                 if not args.local_only:
                     from .review_writeback import sync_pending
-                    result["writeback"]=sync_pending(runtime,args.stage,args.run_id,100,identities={identity(item) for item in submitted})
                     from .review_publication import publish_reviews
-                    publication=publish_reviews(runtime,args.stage,args.run_id,100,identities={identity(item) for item in submitted})
+                    delivery_scope = {identity(item) for item in submitted}
+                    delivery_scope.difference_update(identity(item) for item in result.get("skipped_stale", ()))
+                    result["writeback"]=sync_pending(runtime,args.stage,args.run_id,100,identities=delivery_scope)
+                    publication=publish_reviews(runtime,args.stage,args.run_id,100,identities=delivery_scope)
                     if publication is not None: result['publication']=publication
                 result["queue"]=runtime.status(args.stage)
                 counts=result['queue']['passes'][str(args.stage)]
@@ -800,6 +882,8 @@ def main(argv=None):
             publication=publish_reviews(runtime,args.stage,None,args.limit or 25,identities=identities)
             if publication is not None: result['publication']=publication
         else: result=runtime.status(args.stage,args.run_id)
+        if delivery_retry is not None:
+            result['delivery_retry']=delivery_retry
         if isinstance(refresh_result,dict) and 'refresh' in refresh_result:
             result['queue_refresh']=refresh_result['refresh']
         if controls:

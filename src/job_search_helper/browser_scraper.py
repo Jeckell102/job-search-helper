@@ -397,6 +397,20 @@ def _description(page, fallback: str) -> str:
 # Briefly require stable text to avoid saving the first fragment of a render.
 DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
     const clean = value => (value || '').replace(/\s+/g, ' ').trim();
+    const addressText = value => {
+        if (!value) return '';
+        if (typeof value === 'string') return clean(value);
+        if (Array.isArray(value)) return [...new Set(value.map(addressText).filter(Boolean))].join('; ');
+        if (typeof value !== 'object') return '';
+        if (typeof value.address === 'string') return clean(value.address);
+        const address = value.address && typeof value.address === 'object' ? value.address : value;
+        const country = typeof address.addressCountry === 'object'
+            ? address.addressCountry.name || address.addressCountry.value || ''
+            : address.addressCountry || '';
+        return [...new Set([
+            address.addressLocality, address.addressRegion, country, address.name
+        ].map(clean).filter(Boolean))].join(', ');
+    };
     const body = clean(document.body?.innerText);
     if (/verify you are human|checking your browser|access denied|just a moment/i.test(body.slice(0, 1500))) return false;
     const mantechDetail = location.hostname === 'careers.mantech.com' &&
@@ -405,6 +419,7 @@ DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
         ? clean(document.querySelector('h2.banner__text__title')?.innerText) || fallbackTitle
         : clean(document.querySelector('h1')?.innerText) || fallbackTitle;
     let description = '';
+    let jobLocation = '';
     const walk = value => {
         if (!value || typeof value !== 'object') return;
         const types = [].concat(value['@type'] || []);
@@ -412,6 +427,7 @@ DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
             title = clean(value.title);
             const doc = new DOMParser().parseFromString(value.description, 'text/html');
             description = clean(doc.body.textContent);
+            jobLocation = addressText(value.jobLocation) || addressText(value.applicantLocationRequirements) || jobLocation;
         }
         for (const child of Object.values(value)) {
             if (Array.isArray(child)) child.forEach(walk);
@@ -429,10 +445,21 @@ DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
         const text = clean(document.querySelector('main, [role="main"], article')?.innerText) || body;
         if (/\b(responsibilities|requirements|qualifications|about the role|what you.ll do)\b/i.test(text)) description = text;
     }
+    if (!jobLocation) {
+        const root = document.querySelector('main, [role="main"], article') || document;
+        const selectors = [
+            '[itemprop="jobLocation"]', '[data-automation-id="locations"]',
+            '[data-automation-id="location"]', '[data-testid*="location"]',
+            '.job-location', '.job__location', '.jobLocation', '[class~="location"]'
+        ].join(', ');
+        jobLocation = [...root.querySelectorAll(selectors)]
+            .map(node => clean(node.innerText || node.textContent))
+            .find(value => value && value.length <= 180 && value.toLowerCase() !== 'location') || '';
+    }
     if (!title || description.length < 120) return false;
-    const value = {title, description};
+    const value = {title, location: jobLocation, description};
     if (!settle) return value;
-    const signature = title + '\n' + description;
+    const signature = title + '\n' + jobLocation + '\n' + description;
     const previous = window.__jshDetailContent;
     if (!previous || previous.signature !== signature) {
         window.__jshDetailContent = {signature, at: performance.now()};
@@ -440,6 +467,24 @@ DETAIL_CONTENT = r"""({fallbackTitle, settle}) => {
     }
     return performance.now() - previous.at >= 500 ? value : false;
 }"""
+
+
+def _detail_location(title: str, description: str) -> str:
+    """Recover a visible header location when a generic page has no location markup."""
+    text = plain_text(description)
+    prefix = re.compile(
+        rf"^(?:Back to all jobs\s+)?{re.escape(plain_text(title))}\s+(.{{2,180}}?)\s+"
+        r"(?:Company Overview|Position Summary|About (?:the |this )?(?:Company|Role|Job)|What You(?:'|’)ll Do)\b",
+        re.I,
+    )
+    match = prefix.search(text)
+    if not match:
+        return ""
+    candidate = plain_text(match.group(1)).strip(" ,-|")
+    looks_like_location = bool(
+        re.search(r"[,;]|\b(?:Remote|Hybrid|On[- ]site|United States|USA|U\.S\.|Worldwide)\b", candidate, re.I)
+    )
+    return candidate if looks_like_location else ""
 
 
 def _fetch_detail(browser, link, timeout_ms):
@@ -632,6 +677,14 @@ def fetch_browser_inventory(ats: str, careers_url: str, company_id: str, company
     from .mtsi import supports_mtsi, fetch_mtsi
     if supports_mtsi(careers_url):
         return fetch_mtsi(careers_url, company_id, company)
+    if (company_id == "COMP-0074" and company.casefold() == "lockheed martin"
+            and careers_url.rstrip("/") == "https://lockheedmartin.eightfold.ai/careers"):
+        from .lockheed import fetch_lockheed
+        return fetch_lockheed(careers_url, company_id, company, headless=headless)
+    if (company_id == 'COMP-0001' and company.casefold() == 'caci international'
+            and careers_url.rstrip('/') == 'https://searchcareers.caci.com/careers'):
+        from .caci import fetch_caci
+        return fetch_caci(careers_url, company_id, company)
     if ats.casefold() == "eightfold" or urlsplit(careers_url).hostname.endswith(".eightfold.ai"):
         from .eightfold import fetch_eightfold
         return fetch_eightfold(careers_url, company_id, company, ats)
@@ -735,12 +788,19 @@ def fetch_browser_inventory(ats: str, careers_url: str, company_id: str, company
                                 break
                             continue
                         consecutive_failures = 0
+                        template = link.get('template', {})
+                        location = plain_text(content.get("location") or template.get("location") or "")
+                        if not location:
+                            location = _detail_location(content['title'], content['description'])
+                        work_arrangement = plain_text(template.get("work_arrangement") or "")
+                        if not work_arrangement and "remote" in f"{location} {content['description']}".casefold():
+                            work_arrangement = "Remote"
                         job = {"company_id": company_id, "company": company, "ats": ats or "Browser",
                             "posting_id": _posting_id(url), "req_id": "", "url": url,
                             "location": "", "work_arrangement": "", "compensation": "",
                             "department": "", "created_at": "", "updated_at": "", "is_listed": True,
-                            **link.get('template', {}), "url": url, "title": content['title'],
-                            "description": content['description']}
+                            **template, "url": url, "title": content['title'], "location": location,
+                            "work_arrangement": work_arrangement, "description": content['description']}
                         # Commit each success before requesting the next page.
                         progress.save_job(url, job)
                     if budget_exhausted:
@@ -762,6 +822,38 @@ def fetch_browser_inventory(ats: str, careers_url: str, company_id: str, company
                      browser_pending_urls=pending, browser_discovery_incomplete=discovery_incomplete)
 
 
+def _merge_fallback_jobs(direct_jobs, browser_jobs):
+    """Prefer a native identity over the proven URL-derived browser identity.
+
+    A shared URL alone does not prove two provider IDs are the same vacancy.
+    Keep conflicting real IDs and unrelated hashes for the history owner's
+    explicit disambiguation, and preserve records whose identity is missing.
+    """
+    entries = []
+    native_urls = set()
+    for job in (*direct_jobs, *browser_jobs):
+        ident = str(job.get("posting_id") or "").strip()
+        try:
+            url = canonicalize_url(job.get("url") or "")
+        except ValueError:
+            url = ""
+        synthetic = bool(url and ident == _posting_id(url))
+        entries.append((job, ident, url, synthetic))
+        if url and ident and not ident.startswith("browser-"):
+            native_urls.add(url)
+    merged, seen = [], set()
+    for job, ident, url, synthetic in entries:
+        if synthetic and url in native_urls:
+            continue
+        key = str(job.get("posting_id") or job.get("url") or "")
+        if key and key in seen:
+            continue
+        if key:
+            seen.add(key)
+        merged.append(job)
+    return merged
+
+
 def with_browser_fallback(fetcher):
     def fetch_resolved(ats: str, careers_url: str, company_id: str, company: str, progress_factory=None):
         progress_fetcher = getattr(fetcher, 'fetch_with_progress', None)
@@ -769,6 +861,10 @@ def with_browser_fallback(fetcher):
             result = progress_fetcher(ats, careers_url, company_id, company, progress_factory=progress_factory)
         else:
             result = fetcher(ats, careers_url, company_id, company)
+        # A source adapter can explicitly deny fallback when employer scope is
+        # unverified. More visible links cannot establish the missing boundary.
+        if not result.browser_fallback_allowed:
+            return result
         # The generic browser cannot establish that a Lever UI filter was applied.
         if has_lever_scope(careers_url):
             return result
@@ -778,13 +874,22 @@ def with_browser_fallback(fetcher):
             # browser route uses a different URL contract and cannot fill a
             # structured-feed gap or establish its full description sections.
             return result
+        if (company_id == 'COMP-0001' and company.casefold() == 'caci international'
+                and careers_url.rstrip('/') == 'https://searchcareers.caci.com/careers'
+                and result.ats == 'Eightfold'):
+            # CACI already used its verified browser adapter. A second browser
+            # scan here would repeat the same expensive full-detail requests.
+            # Incomplete results get the bounded end-of-pass retry instead.
+            return result
         # Generic visible links cannot verify these adapters' inventory or
         # employer scopes and use different posting identifiers.
         from .shared_boards import FAMILIES, fetch_shared_browser
         if result.ats == "SAIC TalentBrew":
             if result.status in {"blocked", "partial"}:
                 from .saic import fetch_saic_browser
-                browser_result = fetch_saic_browser(careers_url, company_id, company)
+                browser_result = fetch_saic_browser(
+                    careers_url, company_id, company,
+                    progress=progress_factory(careers_url) if progress_factory is not None else None)
                 return browser_result if len(browser_result.jobs) >= len(result.jobs) else result
             return result
         if result.ats in FAMILIES:
@@ -803,6 +908,11 @@ def with_browser_fallback(fetcher):
             return result
         if result.ats in {"Phenom", "BambooHR", "Paycom", "UKG", "Gem", "ApplicantStack", "Teamtailor", "AcquireTM", "KBR"}:
             return result
+        if result.ats == "PAR Government (official browser)":
+            # The official route currently hands off to Booz Allen's shared
+            # parent board. A generic browser scrape would misattribute those
+            # postings, so preserve the adapter's fail-closed scope result.
+            return result
         if result.status not in {"blocked", "failed", "unsupported", "partial"}:
             return result
         if (ats.casefold() in {"", "browser", "unknown"} and
@@ -816,13 +926,12 @@ def with_browser_fallback(fetcher):
             browser_result.reason = f"Direct fetch returned {result.status}: {result.reason}. {browser_result.reason}"
             return browser_result
         if result.jobs and browser_result.jobs:
-            merged = {}
-            for job in (*result.jobs, *browser_result.jobs):
-                key = str(job.get("posting_id") or job.get("url") or "")
-                if key:
-                    merged.setdefault(key, job)
-            result.jobs = list(merged.values())
-        chosen = browser_result if len(browser_result.jobs) > len(result.jobs) else result
+            result.jobs = _merge_fallback_jobs(result.jobs, browser_result.jobs)
+            # Use the reconciled list even when repeated browser deliveries
+            # made the original browser list appear longer.
+            chosen = result
+        else:
+            chosen = browser_result if len(browser_result.jobs) > len(result.jobs) else result
         chosen.browser_pending_urls = browser_result.browser_pending_urls
         chosen.browser_discovery_incomplete = browser_result.browser_discovery_incomplete
         if chosen.browser_pending_urls or chosen.browser_discovery_incomplete:

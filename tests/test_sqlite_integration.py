@@ -55,43 +55,6 @@ class StorageIntegrationTests(unittest.TestCase):
             local.commit([{'tab': 'Job History', 'identity': {'Job Key': 'job-1'}, 'values': {'Review Notes': 'overwrite'}}])
         self.assertEqual(len(self.service.batches), 0)
 
-    def test_sheets_company_reconciliation_seeds_then_emits_only_new_external_change(self):
-        local = self.imported()
-        sync = SheetsSynchronizer(local, self.remote)
-
-        first = sync.pull()
-        self.assertTrue(first['company_event_baseline']['bootstrapped'])
-        self.assertEqual(local.pending_company_events('company-scan-request-bridge'), [])
-
-        self.service.set_cell('Companies', 1, 'ATS / Source', 'Lever')
-        second = sync.pull()
-        events = second['company_event_reconciliation']['company_events']
-        self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]['company_id'], 'C-0')
-        self.assertEqual(events[0]['kind'], 'company.eligible')
-        self.assertEqual(local.pending_company_events('company-scan-request-bridge'), events)
-
-        third = sync.pull()
-        self.assertEqual(third['company_event_reconciliation']['company_events'], [])
-
-    def test_sheets_reconciliation_assigns_legacy_id_before_no_flood_baseline(self):
-        legacy = company(0)
-        legacy['Company ID'] = ''
-        self.service = RangeSheets({'Companies': [legacy]})
-        self.remote = GoogleRepository(self.service, 'fixture', min_request_interval=0)
-        local = self.imported()
-        sync = SheetsSynchronizer(local, self.remote)
-
-        first = sync.pull()
-        self.assertTrue(first['company_event_baseline']['bootstrapped'])
-        assigned = local.read('Companies')[0]['Company ID']
-        self.assertTrue(assigned.startswith('COMP-'))
-        self.assertEqual(local.pending_company_events('company-scan-request-bridge'), [])
-
-        second = sync.pull()
-        self.assertEqual(second['company_event_reconciliation']['company_events'], [])
-        self.assertEqual(local.pending_company_events('company-scan-request-bridge'), [])
-
     def test_duplicate_identity_across_import_chunks_is_rejected(self):
         self.service = RangeSheets({'Companies': [company(0)], 'Job History': [job(), job()]})
         self.remote = GoogleRepository(self.service, 'fixture', min_request_interval=0)

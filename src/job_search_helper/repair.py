@@ -155,13 +155,15 @@ def _operation(finding: RepairFinding) -> dict:
     }
     if finding.jobs:
         values["Last Inventory Count"] = finding.jobs
-    return {"tab": "Companies", "identity": {"Company ID": finding.company_id}, "values": values}
+    return {"tab": "Companies", "identity": {"Company ID": finding.company_id},
+            "expected": {"Official Careers URL": finding.current_url}, "values": values}
 
 
 def _candidate_operation(finding: RepairFinding) -> dict:
     return {
         "tab": "Companies",
         "identity": {"Company ID": finding.company_id},
+        "expected": {"Official Careers URL": finding.current_url},
         "values": {
             CANDIDATE_COLUMN: finding.proposed_url,
             "Next Action": "Review candidate careers URL; repair command could not validate jobs automatically",
@@ -198,6 +200,11 @@ def repair_careers_urls(
         repo.ensure_columns("Companies", [CANDIDATE_COLUMN])
     operations = [_operation(finding) for finding in updates]
     operations.extend(_candidate_operation(finding) for finding in candidates)
+    original = {row.get("Company ID"): row for row in rows}
+    for operation in operations:
+        before = original[operation["identity"]["Company ID"]]
+        operation["expected"] = {field: before.get(field, "") for field in
+            ("Official Careers URL", "ATS / Source", "Company Status", "Scan State", "Automatic Retry?")}
     if operations:
         try:
             result["commit"] = repo.commit(operations)
@@ -207,7 +214,7 @@ def repair_careers_urls(
         except RepositoryError as exc:
             if candidates and not hasattr(repo, "ensure_columns"):
                 result["candidate_write_skipped"] = f"{CANDIDATE_COLUMN} column is missing or unavailable."
-                retry_operations = [_operation(finding) for finding in updates]
+                retry_operations = [operation for operation in operations if CANDIDATE_COLUMN not in operation["values"]]
                 result["commit"] = repo.commit(retry_operations) if retry_operations else {"requests": 0}
                 result["spreadsheet_changes"] = len(retry_operations)
             else:

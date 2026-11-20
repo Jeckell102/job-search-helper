@@ -14,7 +14,8 @@ import json
 import time
 from typing import Mapping
 
-from .repository import RepositoryError, USER_FIELDS, _equivalent, _identity_key
+from .repository import (BatchPayloadTooLarge, MissingIdentityError, PreflightWriteError, ReviewFieldsChangedError, RepositoryError,
+                         USER_FIELDS, IdentityIndex, _equivalent, _identity_key)
 from .sqlite_repository import REVIEW_FIELDS, encode, identity_for, timestamp
 from .sheet_profile import COMPACT_PULL_FIELDS, profile_schemas, prune_local_only_delivery
 from . import publication_receipts
@@ -35,12 +36,14 @@ HUMAN_FIELDS = {
     'Job History': {'Added to Opportunities?', 'Review Notes'},
 }
 ORDER = {'Job Evidence': 0, 'Job History': 1, 'Opportunities': 2, 'Companies': 3, 'Scan Cycles': 4}
+COMPANY_CONTROLS = ('Company Status', 'Official Careers URL', 'ATS / Source', 'Claimed By', 'Claim Token')
+COMPANY_SOURCES = {'Official Careers URL', 'ATS / Source'}
+COMPANY_ALIAS_PREFIX = 'company_owner_alias:'
 
 
 # A posting with no compensation is persisted by the scraper as this exact,
-# structured empty envelope.  It is deliberately narrower than "any JSON" or
-# "any falsy value": a malformed or unfamiliar source value must remain under
-# reconciliation rather than being silently replaced by a spreadsheet value.
+# structured empty envelope. It is deliberately narrower than "any JSON" or
+# "any falsy value": unfamiliar source data remains under reconciliation.
 _EMPTY_EXTRACTED_SALARY = {
     'compensationTierSummary': None,
     'compensationTiers': [],
@@ -75,6 +78,31 @@ def _required_id(value, label):
     return value.strip()
 
 
+def _clean_observation_field(header, baseline, current, frozen_operation):
+    """Prove a clean field or a pinned blank awaiting read-only observation."""
+    if header in baseline:
+        return _equivalent(header, baseline[header], current.get(header, ''))
+    if not isinstance(frozen_operation, Mapping):
+        return False
+    frozen_values = {}
+    for group in ('values', 'on_insert'):
+        selected = frozen_operation.get(group, {})
+        if not isinstance(selected, Mapping):
+            return False
+        for name, value in selected.items():
+            if (name in frozen_values
+                    and not _equivalent(name, frozen_values[name], value)):
+                return False
+            frozen_values[name] = value
+    frozen_notes = frozen_operation.get('append_notes', {})
+    if not isinstance(frozen_notes, Mapping):
+        return False
+    return (header not in frozen_notes
+            and header in frozen_values
+            and _equivalent(header, frozen_values[header], '')
+            and _equivalent(header, current.get(header, ''), ''))
+
+
 def unique_rows(tab, numbered):
     seen = set()
     for number, row in numbered:
@@ -94,11 +122,89 @@ class SheetsSynchronizer:
         self.publication = profile_schemas(local.get_meta('sheets_profile'))
         self.pull_fields = COMPACT_PULL_FIELDS if self.publication is not None else PULL_FIELDS
         self.last_pull = 0.0
+        self._publish_limit = 500
 
-    def merge_remote(self, tab, numbered, *, complete_snapshot=True):
+    def _company_alias_ids(self, name):
+        key = COMPANY_ALIAS_PREFIX + _identity_key('Company', name)
+        try:
+            ids = json.loads(self.local.get_meta(key) or '[]')
+        except (ValueError, TypeError) as exc:
+            raise RepositoryError('Invalid saved company ownership aliases; reconciliation required.') from exc
+        if not isinstance(ids, list) or any(type(rid) is not int or rid < 1 for rid in ids):
+            raise RepositoryError('Invalid saved company ownership aliases; reconciliation required.')
+        return set(ids)
+
+    def _remember_company_names(self, rid, *names):
+        # A running worker or retained inventory can still refer to an old
+        # display name. Preserve that ownership across intake and restarts.
+        for name in {_identity_key('Company', name) for name in names if name} - {''}:
+            ids = self._company_alias_ids(name) | {rid}
+            self.local.set_meta(COMPANY_ALIAS_PREFIX + name, encode(sorted(ids)))
+
+    def _company_context(self, tab, rid, row):
+        if tab == 'Companies':
+            return rid, row, self.local.baseline(tab, rid)
+        name = row.get('Company')
+        if not name:
+            return None
+        ids = {rid for rid, _ in self.local.matches('Companies', {'Company': name})}
+        ids.update(self._company_alias_ids(name))
+        matches = [(rid, self.local.row('Companies', rid)) for rid in sorted(ids)]
+        if any(company is None for _, company in matches):
+            raise RepositoryError('Saved company ownership no longer resolves; reconciliation required.')
+        if len(matches) > 1:
+            raise RepositoryError('Pending publication has an ambiguous company owner; reconcile company identities.')
+        if not matches:
+            return None  # Historical orphan records have no company controls to assert.
+        company_id, company = matches[0]
+        return company_id, company, self.local.baseline('Companies', company_id)
+
+    @staticmethod
+    def _company_held(company):
+        return (str(company.get('Company Status', '')).strip().casefold() in {'pause', 'paused', 'remove'}
+                or bool(company.get('Claimed By') or company.get('Claim Token')))
+
+    def _hold_changed_company_source(self, company_id, current, observed, field):
+        # The outbox predates a company-source version field. Conservatively
+        # retain old-board outputs until an explicit provenance reconciliation;
+        # importing the new URL must not silently validate an older inventory.
+        owned = {('Companies', company_id)}
+        names = {current.get('Company'), observed.get('Company')} - {None, ''}
+        for key, _ in self.local.db.execute('SELECT key,value FROM meta WHERE key GLOB ?', (COMPANY_ALIAS_PREFIX + '*',)):
+            name = key[len(COMPANY_ALIAS_PREFIX):]
+            if company_id in self._company_alias_ids(name):
+                names.add(name)
+        for tab in ('Job History', 'Job Evidence', 'Opportunities'):
+            for name in names:
+                owned.update((tab, rid) for rid, _ in self.local.matches(tab, {'Company': name}))
+        cycle = current.get('Active Cycle ID')
+        if cycle:
+            owned.update(('Scan Cycles', rid) for rid, _ in self.local.matches('Scan Cycles', {'Cycle ID': cycle}))
+        for tab, rid in owned:
+            if tab == 'Companies' or self.local.db.execute('SELECT 1 FROM dirty WHERE tab=? AND row_id=?', (tab, rid)).fetchone():
+                self.local.conflict(tab, rid, '__company_source__',
+                    f'Company {field} changed; reconcile saved inventories and outputs against the new source before publication.')
+
+    def baseline_tokens(self, tab, *, keys=None):
+        """Fence a remote control read against acknowledgements during that read."""
+        fields = ('Job Key', 'Added to Opportunities?', 'Review Notes')
+        paths = ['$.' + json.dumps(h) for h in fields]
+        columns = ','.join('json_extract(data,?)' for _ in fields)
+        clause, parameters = '', ()
+        if keys is not None:
+            keys = list(keys)
+            if not keys:
+                return {}
+            clause = ' AND row_id IN (SELECT row_id FROM lookups WHERE tab=? AND header=? AND value IN (' + ','.join('?' for _ in keys) + '))'
+            parameters = (tab, 'Job Key', *[_identity_key('Job Key', key) for key in keys])
+        return {rid: tuple('' if v is None else v for v in values)
+                for rid, *values in self.local.db.execute(
+                    f'SELECT row_id,{columns} FROM baseline WHERE tab=?' + clause, (*paths, tab, *parameters))}
+
+    def merge_remote(self, tab, numbered, *, complete_snapshot=True, expected_baselines=None):
         """Import changed fields, not stale whole-row snapshots."""
         numbered = unique_rows(tab, list(numbered))
-        imported = changed = 0
+        imported = changed = stale = 0
         seen = set()
         with self.local.transaction():
             # During a local key upgrade, Sheets still names the record by
@@ -140,7 +246,20 @@ class SheetsSynchronizer:
                     raise RepositoryError(f'{tab}: multiple remote identities resolve to one local record; reconciliation required.')
                 seen.add(rid)
                 base = self.local.baseline(tab, rid) or {}
+                if expected_baselines is not None:
+                    token = tuple(base.get(h) or '' for h in ('Job Key', 'Added to Opportunities?', 'Review Notes')) if base else None
+                    if token != expected_baselines.get(rid):
+                        # Another publisher acknowledged a newer control value
+                        # while this Google response was in flight. Its older
+                        # contents cannot establish a subsequent human edit.
+                        stale += 1
+                        continue
                 dirty = {h for (h,) in self.local.db.execute('SELECT header FROM dirty WHERE tab=? AND row_id=?', (tab, rid))}
+                original_company = dict(current) if tab == 'Companies' else None
+                if tab == 'Companies':
+                    names = (base.get('Company'), current.get('Company'), observed.get('Company'))
+                    if len({_identity_key('Company', name) for name in names if name}) > 1:
+                        self._remember_company_names(rid, *names)
                 manual = False
                 missing = self.local.db.execute('SELECT 1 FROM conflicts WHERE tab=? AND row_id=? AND header=?', (tab, rid, '__missing__')).fetchone()
                 if missing and tab == 'Companies':
@@ -175,14 +294,24 @@ class SheetsSynchronizer:
                         if self.local.db.execute('SELECT 1 FROM manual_choices WHERE tab=? AND row_id=?', (tab, rid)).fetchone():
                             self.local.conflict(tab, rid, header, 'Remote review conflicts with a protected manual choice.')
                             continue
+                    elif (tab == 'Opportunities' and header == 'Fit Review'
+                          and value in {'Strong Potential Fit', 'Potential Fit', 'Not Relevant', ''}
+                          and header not in dirty and header not in attempted
+                          and _equivalent(header, local_value, before)):
+                        # A review made in Sheets is a one-sided change when
+                        # local processing has not changed this rating. Import
+                        # it without letting an unrelated date update veto it.
+                        # Concurrent local ratings and uncertain deliveries
+                        # still take the conflict path below.
+                        pass
                     elif (tab == 'Opportunities' and header == 'Salary / Range'
                           and header not in dirty
                           and _missing_extracted_salary(local_value)
                           and _plausible_salary_estimate(value)):
                         # User-maintained estimates are a fallback only when
-                        # the current posting yielded no salary at all.  A
-                        # nonblank or newly-updated extracted value continues
-                        # to be locally managed and therefore conflicts.
+                        # the current posting yielded no salary at all. A
+                        # nonblank or newly-updated extracted value remains
+                        # locally managed and therefore conflicts.
                         pass
                     elif header not in HUMAN_FIELDS.get(tab, set()):
                         # Source/version and progress fields belong to local processing.
@@ -203,6 +332,8 @@ class SheetsSynchronizer:
                         self.local.event('notes_merged', tab, rid, {'field': header})
                         changed += 1; touched = True
                         continue
+                    if tab == 'Companies' and header in COMPANY_SOURCES:
+                        self._hold_changed_company_source(rid, original_company, observed, header)
                     current[header] = value
                     base[header] = value
                     self.local.db.execute('DELETE FROM dirty WHERE tab=? AND row_id=? AND header=?', (tab, rid, header))
@@ -250,7 +381,7 @@ class SheetsSynchronizer:
                 if tab == 'Companies':
                     row = self.local.row(tab, rid); row['Company Status'] = 'Paused'
                     self.local._put(tab, rid, row)
-        return {'imported': imported, 'changed_fields': changed}
+        return {'imported': imported, 'changed_fields': changed, **({'stale_rows': stale} if stale else {})}
 
     def pull(self):
         main = getattr(self.remote, 'main', self.remote)
@@ -259,12 +390,22 @@ class SheetsSynchronizer:
             main._header_cache.clear()
         totals = {}
         for tab, headers in self.pull_fields.items():
-            if headers is None:
-                # Cell-aware reads preserve rich hyperlink targets, dates, and labels.
-                numbered = list(enumerate(self.remote.read(tab), 2))
+            total = {'imported': 0, 'changed_fields': 0}
+            for attempt in range(2):
+                tokens = self.baseline_tokens(tab) if tab == 'Job History' else None
+                if headers is None:
+                    # Cell-aware reads preserve rich hyperlink targets, dates, and labels.
+                    numbered = list(enumerate(self.remote.read(tab), 2))
+                else:
+                    numbered = self.remote.read_columns(tab, headers)
+                merged = self.merge_remote(tab, numbered, expected_baselines=tokens)
+                for key in total:
+                    total[key] += merged[key]
+                if not merged.get('stale_rows'):
+                    break
             else:
-                numbered = self.remote.read_columns(tab, headers)
-            totals[tab] = self.merge_remote(tab, numbered)
+                raise RepositoryError('Review publication advanced during both Sheet reads; retry fresh controls.')
+            totals[tab] = total
         from .engine import Engine
         engine = Engine(self.local, None)
         # Stable IDs must exist before the first external watermark is seeded.
@@ -273,10 +414,8 @@ class SheetsSynchronizer:
         for row in self.local.read('Companies'):
             if row.get('Company') and not row.get('Company ID'):
                 engine._assign_company_id(row)
-        # The first full Companies snapshot is only a durable watermark.  On
-        # subsequent pulls, changed external Company facts enter the same
-        # transactional outbox as supported local mutations.  This remains a
-        # one-shot reconciliation during a normal sync, not a resident watcher.
+        # The first full Companies snapshot is a durable watermark only. Later
+        # normal pulls emit a scoped change event rather than watching Sheets.
         if hasattr(self.local, 'bootstrap_company_event_reconciliation'):
             baseline = self.local.bootstrap_company_event_reconciliation()
             totals['company_event_baseline'] = baseline
@@ -302,6 +441,11 @@ class SheetsSynchronizer:
                 continue
             current = self.local.row(tab, rid)
             base = self.local.baseline(tab, rid)
+            if row_scope is None:
+                owner = self._company_context(tab, rid, current)
+                if owner and (self._company_held(owner[1]) or self.local.db.execute(
+                        "SELECT 1 FROM conflicts WHERE tab='Companies' AND row_id=? AND header='__company_source__'", (owner[0],)).fetchone()):
+                    continue  # Keep every dirty field, including outputs arriving after intake.
             if tab == 'Opportunities' and base is None:
                 history = self.local.matches('Job History', {'Company': current.get('Company', ''),
                     'Official Job URL': current.get('Job URL', '')})
@@ -373,6 +517,14 @@ class SheetsSynchronizer:
                     if suffix:
                         notes['Notes'] = suffix
             expected = {h: base.get(h, '') for h in set(values) | set(notes)} if base else {}
+            if self.publication is not None and tab == 'Job History' and row_scope is None:
+                # Compact Sheets is a projection of locally owned source/review
+                # outputs. Intake refreshes only human choices and notes, so an
+                # old display value must not permanently veto their publication.
+                # Keep human edits and key migrations guarded. Explicit scoped
+                # review writes retain all of their expected-field checks.
+                expected = {h: v for h, v in expected.items()
+                            if h in HUMAN_FIELDS[tab] or h == 'Job Key'}
             if base and tab == 'Job History':
                 guards = ('Added to Opportunities?', 'Review Status', 'Source Hash') if self.publication is None else ('Added to Opportunities?',)
                 expected.update({h: base.get(h, '') for h in guards})
@@ -446,7 +598,8 @@ class SheetsSynchronizer:
                                             for key, value in sorted(expected.items())}})
         return sorted(normalized, key=lambda item: (ORDER[item['tab']], item['row_id']))
 
-    def _plan_exact_row(self, item, frozen_operation=None):
+    def _plan_exact_row(self, item, frozen_operation=None, *,
+                        delivery_mode='write_once'):
         """Derive one operation from only one explicitly named local row."""
         tab, row_id = item['tab'], item['row_id']
         current = self.local.row(tab, row_id)
@@ -476,9 +629,14 @@ class SheetsSynchronizer:
         # mutable field to remain dirty.
         base = self.local.baseline(tab, row_id)
         if not item['append_if_missing'] and base is not None and missing_dirty:
-            raise ValueError(
-                'Exact Sheets frozen scope is no longer dirty: '
-                + ', '.join(sorted(missing_dirty)))
+            clean_verified = (delivery_mode == 'observation_only'
+                              and all(_clean_observation_field(
+                                  header, base, current, frozen_operation)
+                                      for header in missing_dirty))
+            if not clean_verified:
+                raise ValueError(
+                    'Exact Sheets frozen scope is no longer dirty: '
+                    + ', '.join(sorted(missing_dirty)))
 
         # A blank scraper salary must not replace a user estimate.  Removing
         # the field here makes an unsafe frozen projection fail equality.
@@ -524,7 +682,8 @@ class SheetsSynchronizer:
                 if suffix:
                     notes['Notes'] = suffix
         expected = copy.deepcopy(item['expected'])
-        if base and not item['append_if_missing']:
+        if (base and not item['append_if_missing']
+                and delivery_mode != 'observation_only'):
             required_expected = set(values) | set(notes)
             if tab == 'Job History':
                 required_expected.add('Added to Opportunities?')
@@ -547,21 +706,34 @@ class SheetsSynchronizer:
                             if header in self.publication[tab]}
         if not values and not notes and not inserted:
             raise ValueError('Exact Sheets scoped operation has no remote mutation.')
+        # Local row-scope guards may be stronger than the compact Sheets
+        # projection (for example Job History Source Hash).  They are checked
+        # above against the local record, but an absent compact column must
+        # not be injected into the sealed remote operation.
+        remote_expected = expected
+        if self.publication is not None:
+            remote_expected = {
+                header: value for header, value in expected.items()
+                if header in self.publication[tab]
+            }
         operation = {'tab': tab, 'identity': identity, 'values': values,
                      'append_if_missing': item['append_if_missing'], 'on_insert': inserted,
-                     'expected': expected, 'append_notes': notes}
+                     'expected': remote_expected, 'append_notes': notes}
         return {'tab': tab, 'row_id': row_id, 'identity': item['identity'],
                 'fields': sorted(fields), 'sent': copy.deepcopy(current),
                 'guards': copy.deepcopy(item['guards']),
                 'expected': copy.deepcopy(item['expected']), 'operation': operation}
 
-    def plan_exact_scope(self, row_scope, frozen_projection):
+    def plan_exact_scope(self, row_scope, frozen_projection, *,
+                         delivery_mode='write_once'):
         """Plan only explicit rows and require exact frozen-projection equality.
 
         This method does not call ``pull``, ``once``, ``publish_batch``,
         ``prune_local_only_delivery`` or global dirty-candidate discovery.
         """
-        if not isinstance(frozen_projection, list) or not frozen_projection:
+        if (delivery_mode not in {'write_once', 'observation_only'}
+                or not isinstance(frozen_projection, list)
+                or not frozen_projection):
             raise ValueError('Exact Sheets frozen projection must be a nonempty operation list.')
         normalized = self._normalize_exact_scope(row_scope)
         if len(normalized) != len(frozen_projection):
@@ -571,17 +743,25 @@ class SheetsSynchronizer:
                or item['append_if_missing'] != operation['append_if_missing']
                for item, operation in zip(normalized, frozen_projection)):
             raise ValueError('Exact Sheets sealed insert semantics differ from the frozen projection.')
-        rows = [self._plan_exact_row(item, operation)
+        rows = [self._plan_exact_row(
+                    item, operation, delivery_mode=delivery_mode)
                 for item, operation in zip(normalized, frozen_projection)]
         operations = [row['operation'] for row in rows]
         if encode(operations) != encode(frozen_projection):
             raise ValueError('Exact Sheets scoped plan differs from the frozen projection.')
         return {'operations': copy.deepcopy(operations), 'rows': rows,
-                'projection_digest': _digest(operations)}
+                'projection_digest': _digest(operations),
+                'delivery_mode': delivery_mode}
 
     def _validate_exact_plan(self, exact_plan):
         if (not isinstance(exact_plan, Mapping)
-                or set(exact_plan) != {'operations', 'rows', 'projection_digest'}
+                or not {'operations', 'rows', 'projection_digest'} <= set(exact_plan)
+                or set(exact_plan) - {
+                    'operations', 'rows', 'projection_digest',
+                    'record_fingerprint_version', 'delivery_mode'}
+                or exact_plan.get('delivery_mode', 'write_once') not in {
+                    'write_once', 'observation_only'}
+                or exact_plan.get('record_fingerprint_version', 1) not in {1, 2}
                 or not isinstance(exact_plan.get('operations'), list)
                 or not exact_plan['operations']
                 or not isinstance(exact_plan.get('rows'), list)
@@ -611,9 +791,17 @@ class SheetsSynchronizer:
                 'SELECT header FROM dirty WHERE tab=? AND row_id=?',
                 (evidence['tab'], evidence['row_id']))}
             baseline = self.local.baseline(evidence['tab'], evidence['row_id'])
-            if (baseline is not None
-                    and not (set(evidence['fields']) - set(evidence['identity'])) <= dirty):
-                raise ValueError('Exact Sheets selected field was acknowledged before remote write.')
+            missing_dirty = ((set(evidence['fields']) - set(evidence['identity']))
+                             - dirty)
+            if baseline is not None and missing_dirty:
+                clean_verified = (
+                    exact_plan.get('delivery_mode') == 'observation_only'
+                    and all(_clean_observation_field(
+                        header, baseline, current, evidence.get('operation'))
+                            for header in missing_dirty))
+                if not clean_verified:
+                    raise ValueError(
+                        'Exact Sheets selected field lost its delivery evidence.')
 
     def readback_exact_scope(self, exact_plan, *, receipt_id, intent_id,
                              intent_projection_digest):
@@ -648,12 +836,33 @@ class SheetsSynchronizer:
             for header, suffix in operation.get('append_notes', {}).items():
                 if str(suffix) not in str(actual.get(header, '')):
                     raise ValueError('Exact Sheets remote note readback is missing its frozen suffix.')
-            observed.append({'tab': tab, 'row_id': evidence['row_id'],
-                             'identity': copy.deepcopy(evidence['identity']),
-                             'fields': list(evidence['fields']),
-                             'sent': copy.deepcopy(evidence['sent']),
-                             'actual': {header: actual.get(header, '')
-                                        for header in evidence['fields']}})
+            mutated = set(operation.get('on_insert', {}))
+            mutated.update(operation.get('values', {}))
+            mutated.update(operation.get('append_notes', {}))
+            guard_only = {header: value for header, value
+                          in operation.get('expected', {}).items()
+                          if header not in mutated}
+            if any(header not in actual for header in guard_only):
+                raise ValueError('Exact Sheets remote guard readback is incomplete.')
+            if any(not _equivalent(header, actual.get(header, ''), value)
+                   for header, value in guard_only.items()):
+                raise ValueError('Exact Sheets remote guard differs from the frozen projection.')
+            observed_row = {
+                'tab': tab, 'row_id': evidence['row_id'],
+                'identity': copy.deepcopy(evidence['identity']),
+                'fields': list(evidence['fields']),
+                'sent': copy.deepcopy(evidence['sent']),
+                'actual': {header: actual.get(header, '')
+                           for header in evidence['fields']},
+            }
+            # Preserve the byte-for-byte acknowledgement contract for v1
+            # plans that may already be durably confirmed.  Version 2 is the
+            # explicit format that carries guard values in its receipt proof.
+            if exact_plan.get('record_fingerprint_version', 1) == 2:
+                observed_row['remote_guards'] = {
+                    header: copy.deepcopy(actual[header])
+                    for header in sorted(guard_only)}
+            observed.append(observed_row)
         acknowledgement_id = _digest({
             'receipt_id': receipt_id, 'intent_id': intent_id,
             'projection_digest': exact_plan['projection_digest'],
@@ -675,8 +884,11 @@ class SheetsSynchronizer:
                                  if key in identity})
             row = dict(identity)
             row.update(observed['actual'])
+            row.update(observed.get('remote_guards', {}))
             rows.setdefault(operation['tab'], []).append(row)
-        return record_fingerprints(exact_plan['operations'], rows)
+        return record_fingerprints(
+            exact_plan['operations'], rows,
+            include_guard_only=exact_plan.get('record_fingerprint_version', 1) == 2)
 
     def _require_exact_inbox(self, inbox):
         """Require the concrete durable authority for this exact workbook."""
@@ -689,19 +901,72 @@ class SheetsSynchronizer:
             raise ValueError('Exact Sheets inventory inbox belongs to another workbook.')
         return inbox
 
+    @staticmethod
+    def _require_observation_read_guard(exact_plan, callback):
+        """Reject an observation read unless its post-read guard is callable."""
+        if exact_plan.get('delivery_mode', 'write_once') != 'observation_only':
+            return
+        if not callable(callback):
+            raise ValueError(
+                'Exact Sheets observation requires a post-read Company guard.')
+
+    @classmethod
+    def _post_observation_read_guard(cls, exact_plan, callback):
+        """Revalidate external controls after a read and before confirmation."""
+        cls._require_observation_read_guard(exact_plan, callback)
+        if exact_plan.get('delivery_mode', 'write_once') != 'observation_only':
+            return
+        callback()
+
     def _readback_and_confirm_chunk(self, exact_plan, inbox, *, cycle_id,
                                     company_id, plan_digest, receipt_id,
                                     intent_id, remote_projection_digest,
-                                    remote_cursor):
+                                    remote_cursor,
+                                    post_observation_read_guard=None):
         """Perform the remote read and consume its chunk evidence internally."""
+        self._require_observation_read_guard(
+            exact_plan, post_observation_read_guard)
+        before_read = self._durable_exact_plan(
+            inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
+        stop = remote_cursor + len(exact_plan['operations'])
+        durable_operations = before_read.get('operations', [])[remote_cursor:stop]
+        durable_rows = before_read.get('rows', [])[remote_cursor:stop]
+        if (durable_operations != exact_plan.get('operations')
+                or len(durable_rows) != len(durable_operations)
+                or exact_plan.get('projection_digest') != _digest(durable_operations)
+                or before_read.get('delivery_mode')
+                != exact_plan.get('delivery_mode', 'write_once')):
+            raise ValueError('Exact Sheets durable chunk scope changed before remote read.')
+        # Row metadata supplied by the caller is deliberately not trusted here.
+        # Rebuild the chunk from the durable local application and frozen remote
+        # projection so readback and acknowledgement cannot be redirected.
+        durable_chunk = {
+            'operations': copy.deepcopy(durable_operations),
+            'rows': copy.deepcopy(durable_rows),
+            'projection_digest': _digest(durable_operations),
+            'delivery_mode': before_read.get('delivery_mode', 'write_once'),
+            'record_fingerprint_version': before_read.get(
+                'record_fingerprint_version', 1),
+        }
         readback = self.readback_exact_scope(
-            exact_plan, receipt_id=receipt_id, intent_id=intent_id,
-            intent_projection_digest=exact_plan['projection_digest'])
+            durable_chunk, receipt_id=receipt_id, intent_id=intent_id,
+            intent_projection_digest=durable_chunk['projection_digest'])
+        self._post_observation_read_guard(
+            durable_chunk, post_observation_read_guard)
+        after_read = self._durable_exact_plan(
+            inbox, cycle_id=cycle_id, company_id=company_id,
+            plan_digest=plan_digest, receipt_id=receipt_id,
+            intent_id=intent_id)
+        if encode(after_read) != encode(before_read):
+            raise ValueError('Exact Sheets durable scope changed during remote read.')
         stamp = timestamp()
         with inbox.lock, inbox.connection:
             remote = inbox.connection.execute(
                 'SELECT local_plan_digest,projection_digest,receipt_id,intent_id,'
-                'remote_cursor,state,first_attempt_claimed,projection FROM exact_remote_plans '
+                'remote_cursor,state,first_attempt_claimed,projection,'
+                'delivery_mode,observed_at FROM exact_remote_plans '
                 'WHERE cycle=? AND company=?', (cycle_id, company_id)).fetchone()
             expected = (plan_digest, remote_projection_digest, receipt_id, intent_id)
             if remote is None or tuple(remote[:4]) != expected:
@@ -723,8 +988,11 @@ class SheetsSynchronizer:
             next_cursor = remote_cursor + chunk[0]
             if chunk[2] == 'CONFIRMED' and remote[4] == next_cursor:
                 return readback
+            delivery_ready = (remote[8] == 'write_once' and bool(remote[6])) or (
+                remote[8] == 'observation_only' and not remote[6] and remote[9])
             if (remote[4] != remote_cursor or remote[5] != 'SYNC_PENDING'
-                    or not remote[6] or chunk[2] != 'PENDING'):
+                    or remote[8] != exact_plan.get('delivery_mode', 'write_once')
+                    or not delivery_ready or chunk[2] != 'PENDING'):
                 raise ValueError('Exact remote chunk confirmation cursor/state is invalid.')
             inbox.connection.execute(
                 "UPDATE exact_sync_chunks SET state='CONFIRMED' "
@@ -740,15 +1008,29 @@ class SheetsSynchronizer:
         return readback
 
     def _readback_and_confirm_full(self, *, inbox, cycle_id, company_id,
-                                   plan_digest, receipt_id, intent_id):
+                                   plan_digest, receipt_id, intent_id,
+                                   post_observation_read_guard=None):
         """Perform full remote readback and atomically confirm its receipt."""
+        # This entrypoint is also used directly by recovery tests and callers;
+        # reject a missing observation guard before even rebuilding the durable
+        # plan, so no remote read can precede the fail-closed decision.
+        remote_state = inbox.exact_remote_state(cycle_id, company_id)
+        if (isinstance(remote_state, Mapping)
+                and remote_state.get('delivery_mode') == 'observation_only'
+                and not callable(post_observation_read_guard)):
+            raise ValueError(
+                'Exact Sheets observation requires a post-read Company guard.')
         exact_plan = self._durable_exact_plan(
             inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
             intent_id=intent_id)
+        self._require_observation_read_guard(
+            exact_plan, post_observation_read_guard)
         readback = self.readback_exact_scope(
             exact_plan, receipt_id=receipt_id, intent_id=intent_id,
             intent_projection_digest=exact_plan['projection_digest'])
+        self._post_observation_read_guard(
+            exact_plan, post_observation_read_guard)
         after_read = self._durable_exact_plan(
             inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
@@ -760,7 +1042,8 @@ class SheetsSynchronizer:
         with inbox.lock, inbox.connection:
             remote = inbox.connection.execute(
                 'SELECT local_plan_digest,projection_digest,receipt_id,intent_id,'
-                'remote_cursor,state,first_attempt_claimed,acknowledgement_id,projection '
+                'remote_cursor,state,first_attempt_claimed,acknowledgement_id,projection,'
+                'delivery_mode,observed_at '
                 'FROM exact_remote_plans WHERE cycle=? AND company=?',
                 (cycle_id, company_id)).fetchone()
             expected = (plan_digest, exact_plan['projection_digest'],
@@ -771,9 +1054,12 @@ class SheetsSynchronizer:
             if (frozen != exact_plan['operations']
                     or _digest(frozen) != exact_plan['projection_digest']):
                 raise ValueError('Exact remote projection changed during full readback.')
+            delivery_ready = (remote[9] == 'write_once' and bool(remote[6])) or (
+                remote[9] == 'observation_only' and not remote[6] and remote[10])
             if (remote[5] not in {'SYNC_PENDING', 'SYNC_CONFIRMED'}
                     or remote[4] != len(exact_plan['operations'])
-                    or not remote[6]):
+                    or remote[9] != exact_plan.get('delivery_mode', 'write_once')
+                    or not delivery_ready):
                 raise ValueError('Exact remote confirmation cursor/state is invalid.')
             if remote[7] is not None and remote[7] != acknowledgement_id:
                 raise ValueError('Exact remote acknowledgement changed after confirmation.')
@@ -830,7 +1116,8 @@ class SheetsSynchronizer:
                             plan_digest, receipt_id, intent_id,
                             remote_projection_digest=None, remote_cursor=0,
                             max_operations=100,
-                            max_bytes=500_000):
+                            max_bytes=500_000,
+                            post_observation_read_guard=None):
         """Claim one durable intent, then write once or perform readback only.
 
         The inbox, not the caller, decides whether this is the one permitted
@@ -854,6 +1141,11 @@ class SheetsSynchronizer:
                 or type(max_bytes) is not int or not 1 <= max_bytes <= 500_000):
             raise ValueError('Exact Sheets remote bounds are invalid.')
         operations = exact_plan['operations']
+        delivery_mode = exact_plan.get('delivery_mode', 'write_once')
+        if (delivery_mode == 'observation_only'
+                and not callable(post_observation_read_guard)):
+            raise ValueError(
+                'Exact Sheets observation requires a post-read Company guard.')
         size = len(encode(operations).encode('utf-8'))
         if len(operations) > max_operations or size > max_bytes:
             raise ValueError('Exact Sheets frozen projection exceeds the remote bound.')
@@ -861,6 +1153,9 @@ class SheetsSynchronizer:
         # acknowledgement path deliberately preserves it.  A never-attempted
         # intent is checked both before and immediately after its atomic claim.
         remote_state = inbox.exact_remote_state(cycle_id, company_id)
+        if (not isinstance(remote_state, Mapping)
+                or remote_state.get('delivery_mode', 'write_once') != delivery_mode):
+            raise ValueError('Exact Sheets delivery mode differs from its durable intent.')
         prior_chunk = inbox.exact_chunk(cycle_id, company_id, remote_cursor)
         if prior_chunk is not None and prior_chunk.get('state') == 'CONFIRMED':
             if (prior_chunk.get('count') != len(operations)
@@ -868,24 +1163,40 @@ class SheetsSynchronizer:
                     or not isinstance(remote_state, Mapping)
                     or remote_state.get('remote_cursor') < remote_cursor + len(operations)):
                 raise ValueError('Exact Sheets confirmed chunk binding is invalid.')
-            readback = self.readback_exact_scope(
-                exact_plan, receipt_id=receipt_id, intent_id=intent_id,
-                intent_projection_digest=exact_plan['projection_digest'])
+            readback = self._readback_and_confirm_chunk(
+                exact_plan, inbox, cycle_id=cycle_id, company_id=company_id,
+                plan_digest=plan_digest, receipt_id=receipt_id,
+                intent_id=intent_id,
+                remote_projection_digest=remote_projection_digest,
+                remote_cursor=remote_cursor,
+                post_observation_read_guard=post_observation_read_guard)
             return {'commit': None, 'readback': readback, 'first_attempt': False,
                     'acknowledgement_id': readback['acknowledgement_id']}
         if not isinstance(remote_state, Mapping) or not remote_state.get(
                 'first_attempt_claimed'):
             self._revalidate_exact_rows(exact_plan)
-        claim = inbox.claim_exact_remote_attempt(
-            cycle_id, company_id, local_plan_digest=plan_digest,
-            projection_digest=remote_projection_digest,
-            receipt_id=receipt_id, intent_id=intent_id, cursor=remote_cursor,
-            count=len(operations), chunk_digest=exact_plan['projection_digest'],
-            timestamp=timestamp())
-        if not isinstance(claim, Mapping) or type(claim.get('first_attempt')) is not bool:
-            raise ValueError('Exact Sheets durable intent claim is invalid.')
         result = None
-        if claim['first_attempt']:
+        if delivery_mode == 'observation_only':
+            claim = inbox.begin_exact_remote_observation(
+                cycle_id, company_id, local_plan_digest=plan_digest,
+                projection_digest=remote_projection_digest,
+                receipt_id=receipt_id, intent_id=intent_id, cursor=remote_cursor,
+                count=len(operations), chunk_digest=exact_plan['projection_digest'],
+                timestamp=timestamp())
+            if (not isinstance(claim, Mapping)
+                    or type(claim.get('first_observation')) is not bool):
+                raise ValueError('Exact Sheets durable observation is invalid.')
+        else:
+            claim = inbox.claim_exact_remote_attempt(
+                cycle_id, company_id, local_plan_digest=plan_digest,
+                projection_digest=remote_projection_digest,
+                receipt_id=receipt_id, intent_id=intent_id, cursor=remote_cursor,
+                count=len(operations), chunk_digest=exact_plan['projection_digest'],
+                timestamp=timestamp())
+            if (not isinstance(claim, Mapping)
+                    or type(claim.get('first_attempt')) is not bool):
+                raise ValueError('Exact Sheets durable intent claim is invalid.')
+        if delivery_mode == 'write_once' and claim['first_attempt']:
             self._revalidate_exact_rows(exact_plan)
             result = self.remote.commit(copy.deepcopy(operations))
         readback = self._readback_and_confirm_chunk(
@@ -893,9 +1204,11 @@ class SheetsSynchronizer:
             plan_digest=plan_digest, receipt_id=receipt_id,
             intent_id=intent_id,
             remote_projection_digest=remote_projection_digest,
-            remote_cursor=remote_cursor)
+            remote_cursor=remote_cursor,
+            post_observation_read_guard=post_observation_read_guard)
         return {'commit': result, 'readback': readback,
-                'first_attempt': claim['first_attempt'],
+                'first_attempt': claim.get('first_attempt', False),
+                'observation_only': delivery_mode == 'observation_only',
                 'acknowledgement_id': readback['acknowledgement_id']}
 
     def _durable_exact_plan(self, inbox, *, cycle_id, company_id, plan_digest,
@@ -910,8 +1223,13 @@ class SheetsSynchronizer:
         with inbox.lock:
             remote = inbox.connection.execute(
                 'SELECT local_plan_digest,projection,projection_digest,'
-                'receipt_id,intent_id FROM exact_remote_plans '
+                'receipt_id,intent_id,delivery_mode FROM exact_remote_plans '
                 'WHERE cycle=? AND company=?', (cycle_id, company_id)).fetchone()
+            delivery = inbox.connection.execute(
+                'SELECT delivery_mode,plan_digest,state,evidence '
+                'FROM exact_legacy_delivery_evidence '
+                'WHERE cycle=? AND company=?',
+                (cycle_id, company_id)).fetchone()
             frozen = inbox.connection.execute(
                 'SELECT p.payload,l.plan_digest,l.state FROM sync_plans p '
                 'JOIN exact_plan_local_state l '
@@ -942,6 +1260,16 @@ class SheetsSynchronizer:
         stored_projection = plan.get('remote_projection', plan.get('operations'))
         if stored_projection != projection:
             raise ValueError('Exact Sheets durable projection conflicts with its local plan.')
+        delivery_mode = remote[5]
+        if delivery_mode not in {'write_once', 'observation_only'}:
+            raise ValueError('Exact Sheets durable delivery mode is invalid.')
+        if delivery_mode == 'observation_only':
+            if (delivery is None
+                    or tuple(delivery[:3]) != (
+                        'observation_only', plan_digest, 'BOUND')):
+                raise ValueError('Exact Sheets observation evidence is unavailable.')
+        elif delivery is not None and delivery[0] != 'write_once':
+            raise ValueError('Exact Sheets delivery evidence conflicts with its mode.')
         if not self.local.db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' "
                 "AND name='exact_local_applications'").fetchone():
@@ -985,12 +1313,29 @@ class SheetsSynchronizer:
                                   for header in item['fields']},
                          'operation': copy.deepcopy(operation)})
         exact_plan = {'operations': copy.deepcopy(projection), 'rows': rows,
-                      'projection_digest': remote[2]}
+                      'projection_digest': remote[2],
+                      'delivery_mode': delivery_mode,
+                      'record_fingerprint_version': plan.get(
+                          'record_fingerprint_version', 1)}
         self._validate_exact_plan(exact_plan)
+        if delivery_mode == 'observation_only':
+            # Observation has no write claim to define a point of no return;
+            # local selected values and manual/source guards must therefore
+            # remain exact on both sides of every remote read.
+            self._revalidate_exact_rows(exact_plan)
+            try:
+                delivery_evidence = json.loads(delivery[3])
+            except (TypeError, ValueError) as error:
+                raise ValueError(
+                    'Exact Sheets observation evidence is invalid.') from error
+            from .exact_legacy_migration import validate_legacy_delivery_evidence
+            validate_legacy_delivery_evidence(
+                self.local, exact_plan['operations'], delivery_evidence)
         return exact_plan
 
     def confirm_exact_scope(self, *, inbox, cycle_id, company_id,
-                            plan_digest, receipt_id, intent_id):
+                            plan_digest, receipt_id, intent_id,
+                            post_observation_read_guard=None):
         """Read back the complete scope and durably confirm it as one operation."""
         exact_plan = self._durable_exact_plan(
             inbox, cycle_id=cycle_id, company_id=company_id,
@@ -1007,19 +1352,23 @@ class SheetsSynchronizer:
         return self._readback_and_confirm_full(
             inbox=inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
-            intent_id=intent_id)
+            intent_id=intent_id,
+            post_observation_read_guard=post_observation_read_guard)
 
     def confirm_and_acknowledge_exact_scope(self, *, inbox, cycle_id,
                                             company_id, plan_digest, receipt_id,
-                                            intent_id):
+                                            intent_id,
+                                            post_observation_read_guard=None):
         """Fresh-read, durably confirm, then acknowledge only the exact scope."""
         return self._acknowledge_exact_readback(
             inbox=inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
-            intent_id=intent_id)
+            intent_id=intent_id,
+            post_observation_read_guard=post_observation_read_guard)
 
     def _acknowledge_exact_readback(self, *, inbox, cycle_id, company_id,
-                                    plan_digest, receipt_id, intent_id):
+                                    plan_digest, receipt_id, intent_id,
+                                    post_observation_read_guard=None):
         """Fresh-read and consume only canonical durable exact evidence."""
         exact_plan = self._durable_exact_plan(
             inbox, cycle_id=cycle_id, company_id=company_id,
@@ -1028,7 +1377,8 @@ class SheetsSynchronizer:
         readback = self._readback_and_confirm_full(
             inbox=inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
-            intent_id=intent_id)
+            intent_id=intent_id,
+            post_observation_read_guard=post_observation_read_guard)
         acknowledgement_id = readback['acknowledgement_id']
         expected_acknowledgement = _digest({
             'receipt_id': receipt_id,
@@ -1107,19 +1457,55 @@ class SheetsSynchronizer:
                 'apply_id': apply_id, 'acknowledgement_id': acknowledgement_id,
                 'readback': readback}
 
-    def publish_batch(self, limit=500, *, row_scope=None, guards=()):
+    def publish_batch(self, limit=None, *, row_scope=None, guards=()):
+        """Grow successful small-payload batches, retaining the encoded byte cap.
+
+        Scoped review calls keep their caller's row bound. Only an explicitly
+        typed pre-write size rejection can be retried here; ambiguous writes
+        retain their durable receipts and propagate for keyed reconciliation.
+        """
+        adaptive = limit is None and row_scope is None
+        selected_limit = self._publish_limit if adaptive else (500 if limit is None else limit)
+        guards = tuple(guards)
+        started = time.monotonic()
+        while True:
+            try:
+                result = self._publish_batch(selected_limit, row_scope=row_scope, guards=guards)
+                break
+            except BatchPayloadTooLarge:
+                if not adaptive or selected_limit <= 1:
+                    raise
+                selected_limit = max(1, selected_limit // 2)
+                self._publish_limit = selected_limit
+        if adaptive:
+            elapsed = time.monotonic() - started
+            if elapsed > 45:
+                self._publish_limit = max(1, selected_limit // 2)
+            elif result.get('published_rows', 0) >= selected_limit and elapsed < 30:
+                self._publish_limit = min(2000, selected_limit * 2)
+        return result
+
+    def _publish_batch(self, limit, *, row_scope=None, guards=()):
         """Publish queued fields, optionally restricted to explicit local rows/fields."""
         plans = self._operations(limit, row_scope=row_scope)
         if not plans:
             return {'published_rows': 0}
-        # Record attempted values before sending, so a later pull can distinguish
-        # a lost acknowledgement from an unrelated manual choice matching an AI result.
-        with self.local.transaction():
-            for tab, rid, fields, sent, op in plans:
-                attempted = {h: sent.get(h, '') for h in fields}
-                self.local.db.execute('INSERT INTO delivery_attempts VALUES (?,?,?) ON CONFLICT(tab,row_id) DO UPDATE SET data=excluded.data',
-                                      (tab, rid, encode(attempted)))
         operations = [*guards, *(p[4] for p in plans)]
+        guarded_companies = {}
+        if row_scope is None:
+            for tab, rid, fields, sent, op in plans:
+                owner = self._company_context(tab, rid, sent)
+                if owner is None or owner[2] is None:
+                    continue
+                company_id, company, base = owner
+                if company_id in guarded_companies:
+                    continue
+                identity = identity_for('Companies', base)
+                expected = {h: base.get(h, '') for h in COMPANY_CONTROLS
+                            if h in self.remote.schemas['Companies']}
+                guard = {'tab': 'Companies', 'identity': identity, 'values': {}, 'expected': expected}
+                guarded_companies[company_id] = guard
+            operations = [*guarded_companies.values(), *operations]
         for tab, rid, fields, sent, op in plans:
             if tab == 'Opportunities' and op['append_if_missing']:
                 history = self.local.matches('Job History', {'Company': sent['Company'], 'Official Job URL': sent['Job URL']})
@@ -1135,22 +1521,77 @@ class SheetsSynchronizer:
                 # append after a No edit already visible at Google's fresh read.
                 operations.insert(0, {'tab': 'Job History', 'identity': {'Job Key': row['Job Key']},
                                       'values': values, 'expected': values})
+        # Record attempted values before sending, so a later pull can distinguish
+        # a lost acknowledgement from an unrelated manual choice matching an AI result.
+        with self.local.transaction():
+            for tab, rid, fields, sent, op in plans:
+                attempted = {h: sent.get(h, '') for h in fields}
+                self.local.db.execute('INSERT INTO delivery_attempts VALUES (?,?,?) ON CONFLICT(tab,row_id) DO UPDATE SET data=excluded.data',
+                                      (tab, rid, encode(attempted)))
         try:
             result = self.remote.commit(operations)
+        except BatchPayloadTooLarge:
+            # Encoding failed before any network write. These are not lost
+            # acknowledgements and must not later be mistaken for our own echo.
+            with self.local.transaction():
+                for tab, rid, _, _, _ in plans:
+                    self.local.db.execute('DELETE FROM delivery_attempts WHERE tab=? AND row_id=?', (tab, rid))
+            raise
+        except ReviewFieldsChangedError:
+            # The rejection happened before submission. An attempted No/Yes
+            # therefore cannot establish that a Sheet value is our own echo.
+            # Discard these receipts so the fresh pull protects manual choices,
+            # even when the user's selection happens to match our planned value.
+            with self.local.transaction():
+                for tab, rid, _, _, _ in plans:
+                    self.local.db.execute('DELETE FROM delivery_attempts WHERE tab=? AND row_id=?', (tab, rid))
+            raise
+        except MissingIdentityError as error:
+            # An existing company can be removed while a long scrape is still
+            # running. A typed pre-write failure proves no batch was submitted.
+            # Preserve and pause that record instead of reinserting it or
+            # retrying the same invalid identity forever. Exact scoped review
+            # publication retains its existing failure/reconciliation behavior.
+            missing_ids = {p[1] for p in plans if p[0] == 'Companies'
+                           and p[4]['identity'] == error.identity and not p[4]['append_if_missing']}
+            missing_ids.update(rid for rid, guard in guarded_companies.items() if guard['identity'] == error.identity)
+            with self.local.transaction():
+                for tab, rid, _, _, _ in plans:
+                    self.local.db.execute('DELETE FROM delivery_attempts WHERE tab=? AND row_id=?', (tab, rid))
+            if error.tab != 'Companies' or not missing_ids or row_scope is not None or guards:
+                raise
+            with self.local.transaction():
+                for rid in missing_ids:
+                    tab = 'Companies'
+                    self.local.conflict(tab, rid, '__missing__',
+                        'Previously synchronized row is missing remotely; it will not be reinserted automatically.')
+                    current = self.local.row(tab, rid)
+                    current['Company Status'] = 'Paused'
+                    self.local._put(tab, rid, current)
+                    self.local.event('remote_missing_company', tab, rid, {'identity': error.identity})
+            return {'published_rows': 0, 'held_missing_rows': len(missing_ids)}
+        except PreflightWriteError:
+            # Formula/schema/identity validation and failed prerequisite reads
+            # prove no write was sent, just like changed review-field guards.
+            with self.local.transaction():
+                for tab, rid, _, _, _ in plans:
+                    self.local.db.execute('DELETE FROM delivery_attempts WHERE tab=? AND row_id=?', (tab, rid))
+            raise
         except Exception:
             # A timeout may follow a successful remote write. Do not clear any
             # delivery state; the same identities/values are safe to reconcile.
             raise
         committed = dict(getattr(self.remote, '_committed_rows', {}))
+        committed_indexes = {tab: IdentityIndex(enumerate(rows)) for tab, rows in committed.items()}
         # A replay may be a no-op and return no touched rows. Resolve by stable
         # identity, then read back only missing rows, outside the local lock.
         def find_actual(tab, sent):
             target = identity_for(tab, sent)
-            matches = [row for row in committed.get(tab, [])
-                       if all(_equivalent(h, row.get(h, ''), v) for h, v in target.items())]
+            index = committed_indexes.get(tab)
+            matches = index.matches(target) if index is not None else []
             if len(matches) > 1:
                 raise RepositoryError(f'{tab}: ambiguous publication acknowledgement.')
-            return matches[0] if matches else None
+            return matches[0][1] if matches else None
         for tab, rid, fields, sent, op in plans:
             if find_actual(tab, sent) is not None:
                 continue
@@ -1164,17 +1605,14 @@ class SheetsSynchronizer:
                 if not all(_equivalent(h, row.get(h, ''), v) for h, v in target.items()):
                     raise RepositoryError(f'{tab}: row moved during acknowledgement; retry a fresh sync.')
                 committed.setdefault(tab, []).append(row)
+                committed_indexes.setdefault(tab, IdentityIndex(())).put(len(committed[tab]) - 1, row)
         published = 0
         with self.local.transaction():
             for tab, rid, fields, sent, op in plans:
                 base = self.local.baseline(tab, rid) or {}
                 current = self.local.row(tab, rid)
                 # A repository review lock can skip a row without failing the batch.
-                actual = None
-                for row in committed.get(tab, []):
-                    target = identity_for(tab, sent)
-                    if all(_equivalent(h, row.get(h, ''), value) for h, value in target.items()):
-                        actual = row; break
+                actual = find_actual(tab, sent)
                 if actual is None:
                     continue
                 acknowledged = set()

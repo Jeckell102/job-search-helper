@@ -763,6 +763,28 @@ class ExactCycleRecoveryTests(unittest.TestCase):
                 recover_exact_cycle(engine, remote, 'CYC', ['A', 'B'])
         planner.assert_not_called(); remote.read_columns.assert_not_called()
 
+    def test_supersession_race_fails_before_remote_or_unrelated_dirty_state(self):
+        """A cycle changing after preflight cannot fall back to another cycle."""
+        engine = self.fake_engine(
+            {'A': {'stage': 'queued'}, 'UNRELATED': {'stage': 'queued'}},
+            {'A': ({}, False), 'UNRELATED': ({'dirty': 'local-only'}, False)},
+            {'A': None, 'UNRELATED': None},
+        )
+        remote = MagicMock()
+        unrelated_before = copy.deepcopy(engine.inbox.get('CYC', 'UNRELATED'))
+        with (
+            patch('job_search_helper.scan_request.superseded_cycle_ids',
+                  side_effect=[set(), {'CYC'}]),
+            patch('job_search_helper.exact_cycle_recovery.freeze_exact_cycle_plans') as planner,
+        ):
+            with self.assertRaisesRegex(ValueError, 'cycle_superseded'):
+                recover_exact_cycle(engine, remote, 'CYC', ['A'])
+        planner.assert_not_called()
+        remote.read_columns.assert_not_called()
+        remote.read_rows.assert_not_called()
+        remote.commit.assert_not_called()
+        self.assertEqual(engine.inbox.get('CYC', 'UNRELATED'), unrelated_before)
+
     def test_new_and_existing_selected_plans_are_processed_one_company_at_a_time(self):
         engine = self.fake_engine({'A': {'stage': 'queued'}, 'B': {'stage': 'inventory'}},
                                   {'A': ({}, False), 'B': ({}, False)}, {'A': None, 'B': ({}, 0)})

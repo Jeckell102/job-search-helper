@@ -253,8 +253,8 @@ class LocalPipelineTests(unittest.TestCase):
     def test_plan_saved_before_checkpoint_is_found_after_restart(self):
         self.defer()
         save = self.inbox.save_plan
-        def interrupt(*args):
-            save(*args)
+        def interrupt(*args, **kwargs):
+            save(*args, **kwargs)
             raise KeyboardInterrupt()
         with patch.object(self.inbox, 'save_plan', side_effect=interrupt):
             with self.assertRaises(KeyboardInterrupt):
@@ -507,14 +507,18 @@ class LocalPipelineTests(unittest.TestCase):
         with patch.object(LocalPipeline, 'flush', invalid):
             self.engine.resume_local(self.cycle, sync_only=True)
         self.assertEqual(self.engine._dashboard.new_job_count, 5)
-        self.assertTrue(self.inbox.get(self.cycle, 'C-0')[1])
+        self.assertIsNone(self.inbox.get(self.cycle, 'C-0'))
+        self.assertEqual(self.state.cycle(self.cycle)['companies']['C-0']['stage'], 'complete')
         row = next(r for r in self.repo.read('Job History') if r['Company'] == 'Company 0')
         self.assertEqual(row['Added to Opportunities?'], 'No')
 
     def test_sync_interval_cli_and_validation(self):
         from job_search_helper import runner
         with patch.object(runner, 'run_start', return_value=0) as run:
-            self.assertEqual(runner.main(['start', '--sync-interval', '120']), 0)
+            # Unit-test only the scraper CLI forwarding boundary. The public
+            # main(start ...) path intentionally retains its FIRST PASS
+            # preflight and is covered by its own orchestration tests.
+            self.assertEqual(runner.scrape_main(['start', '--sync-interval', '120']), 0)
             self.assertEqual(run.call_args.kwargs['sync_interval'], 120)
         with self.assertRaises(ValueError):
             self.engine.resume_local(self.cycle, sync_interval=0)

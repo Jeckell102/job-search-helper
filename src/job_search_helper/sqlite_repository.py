@@ -233,6 +233,16 @@ class SQLiteRepository:
             return verify_exact_local_plan(self, cycle_id, company_id, plan)
         return verify_exact_local_chunk(self, cycle_id, company_id, plan, cursor)
 
+    def adopt_verified_legacy_local_plan(self, cycle_id, company_id, plan,
+                                         *, timestamp_value,
+                                         delivery_evidence=None):
+        """Journal a reviewed completed legacy prefix without replaying it."""
+        from .exact_local_plan import adopt_verified_legacy_local_plan
+        return adopt_verified_legacy_local_plan(
+            self, cycle_id, company_id, plan,
+            timestamp_value=timestamp_value,
+            delivery_evidence=delivery_evidence)
+
     @contextmanager
     def transaction(self):
         if self.readonly:
@@ -355,6 +365,20 @@ class SQLiteRepository:
         return result
 
     read_cached_columns = read_columns
+
+    def read_company_columns(self, tab, headers, company):
+        """Reload one company's planning inputs without scanning other companies."""
+        _tab(tab)
+        if set(headers) - set(self.schemas[tab]):
+            raise RepositoryError(f'{tab}: unknown requested columns.')
+        expressions = ','.join('json_extract(data,?)' for _ in headers)
+        paths = ['$.' + json.dumps(h) for h in headers]
+        rows = self.db.execute(
+            f'SELECT row_id,{expressions} FROM records WHERE tab=? AND row_id IN '
+            '(SELECT row_id FROM lookups WHERE tab=? AND header=? AND value=?) ORDER BY row_id',
+            (*paths, tab, tab, 'Company', _identity_key('Company', company)))
+        return [(values[0] + 1, {h: '' if v is None else v for h, v in zip(headers, values[1:])})
+                for values in rows]
 
     def read_row(self, tab, row_number):
         _tab(tab)

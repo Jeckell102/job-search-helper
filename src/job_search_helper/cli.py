@@ -112,7 +112,7 @@ def get_remote_repository(write: bool = False, interactive: bool = False, min_re
 def detached_repository(repo: GoogleRepository) -> MemoryRepository:
     """A dry run may read Sheets, but all proposed changes go to memory only."""
     # The local SQLite authority can carry a deliberately published schema
-    # extension (currently ``Opportunity ID`` in the compact profile).  A
+    # extension (currently ``Opportunity ID`` in the compact profile). A
     # dry-run snapshot must retain that schema rather than silently falling
     # back to the legacy global schema, or a harmless read-only command fails
     # before it can report its normal scope/cycle guard.
@@ -128,18 +128,35 @@ class WriterLockBusy(RuntimeError):
 
 
 @contextmanager
-def writer_lock(path: Path):
-    """Reject a second local writer; this is not a cross-machine claim lock."""
+def writer_lock(path: Path, *, timeout=0):
+    """Serialize a local writer, optionally waiting for a bounded interval."""
     import fcntl
 
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    handle = path.open("a", encoding="utf-8")
+    import time
+    handle = path.open("a+", encoding="utf-8")
     os.chmod(path, 0o600)
     try:
-        try:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise WriterLockBusy("Another local helper holds the writer lock.") from exc
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError as exc:
+                if time.monotonic() < deadline:
+                    time.sleep(min(0.05, max(0, deadline - time.monotonic())))
+                    continue
+                handle.seek(0)
+                owner = handle.read(160).strip()
+                role = {'scraper.lock': 'Another scraper or scraper maintenance command',
+                        'review-writeback.lock': 'Another local review writeback',
+                        'writer.lock': 'Another Google Sheets publisher'}.get(path.name, 'Another local helper')
+                raise WriterLockBusy(f"{role} holds the writer lock {path}"
+                                     + (f" (recorded owner: {owner})" if owner else "") + ".") from exc
+        handle.seek(0)
+        handle.truncate()
+        handle.write(f"PID {os.getpid()}")
+        handle.flush()
         yield
     finally:
         fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
@@ -306,7 +323,7 @@ def execute_setup_evidence_tab(args: argparse.Namespace) -> None:
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description="Manual, resumable job inventory and reviewed-decision helper.")
     commands = result.add_subparsers(dest="command", required=True)
-    commands.add_parser("test", help="Run offline unittest suite; no credentials or network needed.")
+    commands.add_parser("test", help="Run the full offline pytest suite; install the optional test extra first.")
     demo = commands.add_parser("demo", help="Run an isolated offline end-to-end demonstration.")
     demo.add_argument("--output", help="New/empty output directory; defaults to a temporary directory.")
     preflight = commands.add_parser("preflight", help="Validate access and workbook headers; never change cells.")
@@ -341,6 +358,12 @@ def parser() -> argparse.ArgumentParser:
     closed.add_argument("--dry-run", action="store_true", help="Preview without changes (the default).")
     closed.add_argument("--limit", type=int, default=100, help="Bounded cleanup size, 1–100.")
     closed.add_argument("--authenticate", action="store_true", help="Permit interactive Google authorization if needed.")
+
+    locations = commands.add_parser("cleanup-locations", help="Reject clearly overseas Pending jobs, preserving choices and Opportunities.")
+    locations.add_argument("--apply", action="store_true", help="Apply guarded changes and verify scoped Sheet delivery.")
+    locations.add_argument("--dry-run", action="store_true", help="Preview without changes (the default).")
+    locations.add_argument("--limit", type=int, default=100, help="Bounded cleanup size, 1–100.")
+    locations.add_argument("--authenticate", action="store_true", help="Permit interactive Google authorization if needed.")
 
     repair = commands.add_parser(
         "repair-careers-urls",
@@ -394,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
             environment = dict(os.environ)
             environment["PYTHONPATH"] = str(PROJECT_ROOT / "src")
             return subprocess.call(
-                [sys.executable, "-m", "unittest", "discover", "-s", str(PROJECT_ROOT / "tests"), "-v"],
+                [sys.executable, "-m", "pytest", str(PROJECT_ROOT / "tests"), "-q"],
                 cwd=PROJECT_ROOT, env=environment,
             )
         if args.command == "demo":
@@ -448,8 +471,11 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command in {"cleanup-blacklist", "cleanup-titles"}:
             execute_cleanup(args)
         elif args.command == "cleanup-closed":
-            from .closed_jobs import execute_cleanup
-            execute_cleanup(args)
+            from .closed_jobs import execute_cleanup as execute_closed_cleanup
+            execute_closed_cleanup(args)
+        elif args.command == "cleanup-locations":
+            from .location_cleanup import execute_cleanup as execute_location_cleanup
+            execute_location_cleanup(args)
         elif args.command == "repair-careers-urls":
             execute_repair_careers(args)
         elif args.command == "setup-evidence-tab":

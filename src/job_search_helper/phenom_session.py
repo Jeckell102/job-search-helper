@@ -72,15 +72,20 @@ class PhenomSession:
     def get(self, url):
         return self._request(url)
 
-    def search(self, app, params, offset):
+    def search(self, app, params, offset, *, selected_fields=None):
         endpoint = app.get('widgetApiEndpoint')
         if endpoint != 'https://' + self.host + '/widgets':
             raise FetchError('unsupported', 'Phenom search endpoint is not the employer public widget route.')
+        selected_fields = selected_fields or {}
+        if selected_fields and not (self.host == 'careers.abb' and selected_fields == {'businessSegment': ['Robotics']}):
+            raise FetchError('unsupported', 'Unverified Phenom division filter.')
         payload = {k: app.get(k) for k in ('deviceType','country','pageName','pageId')}
         payload.update(lang=app['locale'], ddoKey='refineSearch', jobs=True, counts=True,
-                       size=50, keywords='', selected_fields={},
+                       size=50, keywords='', selected_fields=selected_fields,
                        all_fields=['city','state','category','type','orgFunction','country'],
                        sortBy='Most recent', sort={'order':'desc','field':'postedDate'})
+        if selected_fields:
+            payload['all_fields'].append('businessSegment')
         payload.update({'from':offset, 'global':True})
         r = self._request(endpoint, payload, params.get('csrfToken',''))
         if r.status in (401,403,429) or _challenge(r):
@@ -90,7 +95,8 @@ class PhenomSession:
         try:
             result = json.loads(r.body)['refineSearch']
             data = result['data']
-            if data.get('keywords') or data.get('ui_selections') or result.get('selected_fields'):
+            if (data.get('keywords') or (data.get('ui_selections') or {}) != selected_fields
+                    or (result.get('selected_fields') is not None and result['selected_fields'] != selected_fields)):
                 raise FetchError('partial','Phenom search returned unexpected filters.')
             entries, total = data['jobs'], result['totalHits']
             if type(total) is not int or len(entries) != min(50, total-offset):

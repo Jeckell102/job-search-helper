@@ -741,7 +741,7 @@ class ExactCyclePublisherTests(unittest.TestCase):
         report = publish_exact_cycle(self.inbox, 'CYC-PREFIX', remote, state=self.state)
 
         self.assertEqual(report['held'], [{'company_id': 'COMP-EXACT',
-                                           'reason': 'RepositoryError'}])
+                                           'reason': 'ReviewFieldsChangedError'}])
         self.assertEqual(len(remote.commits), 1)
         self.assertEqual(self.inbox.plan('CYC-PREFIX', 'COMP-EXACT')[1], 20)
 
@@ -799,6 +799,23 @@ class ExactCyclePublisherTests(unittest.TestCase):
         self.assertEqual(shared['schedule']['enqueued_at'], 'CYC-NO-DATES')
         self.assertEqual(shared['binding'], planner_receipt(cycle, 'COMP-EXACT', payload, frozen, 'later-stamp')['binding'])
         self.assertEqual(shared['schedule'], terminal_receipt(cycle, 'COMP-EXACT', payload, frozen)['schedule'])
+
+    def test_v2_exact_receipt_uses_cycle_id_without_changing_legacy_default(self):
+        cycle = cycle_state('CYC-V2-RECEIPT')
+        cycle['start_request_id'] = 'start-normal-scan'
+        operation = plan('job-exact', 'after-exact')['operations'][0]
+        legacy = derive_receipt(
+            cycle, 'COMP-EXACT', PAYLOAD, {'operations': [operation]}, 'legacy-stamp')
+        exact_v2 = _fallback_receipt(
+            cycle, 'COMP-EXACT', {
+                'exact_plan_version': 2,
+                'remote_projection': [operation],
+                'final': {'stage': 'complete'},
+            }, PAYLOAD)
+
+        self.assertEqual(legacy['binding']['request_id'], 'start-normal-scan')
+        self.assertEqual(exact_v2['binding']['request_id'], 'CYC-V2-RECEIPT')
+        self.assertEqual(exact_v2['binding']['company_id'], 'COMP-EXACT')
 
     def test_post_state_save_ack_failure_recovers_without_replay(self):
         self.add_plan('CYC-POST-SAVE', 'COMP-EXACT', 'job-exact', 'after-exact')

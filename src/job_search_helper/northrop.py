@@ -4,9 +4,12 @@ The corporate /careers page links to jobs.northropgrumman.com; its Sitecore
 navigation records are not jobs. Read only the observed public search/detail
 routes on the jobs host, with count/ID checks and no account actions.
 """
+import logging
 from datetime import datetime, timezone
 import json
+import os
 import re
+import shutil
 import sys
 import time
 from urllib.parse import parse_qsl, urlsplit
@@ -92,6 +95,12 @@ def _page(client, start, expected=None):
         raise FetchError('partial', 'Northrop listing count, pagination, or scope changed; inventory incomplete.')
     for entry in entries:
         _identity(entry)
+        # Northrop's public contract sorts by timestamp.  The API does not
+        # expose a cursor for equal timestamps, so equal-timestamp pages are
+        # accepted only when their complete ordered ID sequence is reproduced
+        # by the bounded reconciliation passes below.
+        if type(entry.get('postedTs')) not in (int, float):
+            raise FetchError('partial', 'Northrop listing timestamp is missing or malformed.')
     return entries, count
 
 
@@ -117,31 +126,57 @@ def _posting(client, entry, company_id, company):
     return row
 
 
-def _scan(client, company_id, company, max_jobs=MAX_JOBS):
-    jobs, seen, snapshots = [], set(), []
+def _scan(client, company_id, company, max_jobs=MAX_JOBS, reconciliation_rounds=1):
+    jobs, seen, snapshots, gaps = [], set(), [], []
     try:
         entries,total = _page(client,0)
-        for start in range(0,max(1,total),10):
+        initial_total = total
+        start = 0
+        while start < max(1,total):
             if start and len(jobs) >= max_jobs:
                 raise FetchError('partial',f'Northrop bounded validation stopped after {len(jobs)} of {total} postings.')
             if start:
-                entries,_ = _page(client,start,total)
+                entries,current_total = _page(client,start)
+                if current_total != initial_total:
+                    gaps.append('Northrop inventory total changed during pagination.')
+                total = max(total,current_total)
             ids = [_identity(e) for e in entries]
-            if len(set(ids)) != len(ids) or seen.intersection(ids):
-                raise FetchError('partial','Northrop pagination repeated posting identities.')
-            seen.update(ids);snapshots.append(ids)
-            for entry in entries:
+            fresh = []
+            for entry, ident in zip(entries, ids):
+                if ident in seen:
+                    gaps.append('Northrop pagination repeated posting identities.')
+                else:
+                    seen.add(ident)
+                    fresh.append(entry)
+            snapshots.append(ids)
+            for entry in fresh:
                 if len(jobs) >= max_jobs:
                     raise FetchError('partial',f'Northrop bounded validation stopped after {len(jobs)} of {total} postings.')
-                jobs.append(_posting(client,entry,company_id,company))
-            print(json.dumps({'event':'inventory_page','provider':'Northrop Grumman','company_id':company_id,
-                              'postings_fetched':len(jobs),'total':total}),file=sys.stderr)
-        # Re-read all listing pages; detail reads can take time on this large board.
-        for page_number, ids in enumerate(snapshots):
-            check,_ = _page(client,page_number*10,total)
-            if [_identity(e) for e in check] != ids:
-                raise FetchError('partial','Northrop inventory changed during the scan; no closure inference.')
-        return Inventory('complete',jobs,f'Northrop: retrieved {len(jobs)} full postings and rechecked every inventory page.',BOARD,'Eightfold')
+                try:
+                    jobs.append(_posting(client,entry,company_id,company))
+                except FetchError as error:
+                    if error.status == 'blocked':
+                        raise
+                    gaps.append(f"Posting {_identity(entry)}: {error.reason}")
+                except Exception as error:
+                    gaps.append(f"Posting {_identity(entry)}: {type(error).__name__}")
+            logging.getLogger(__name__).debug("%s", json.dumps({'event':'inventory_page','provider':'Northrop Grumman','company_id':company_id,
+                              'postings_fetched':len(jobs),'total':total}))
+            start += 10
+        if gaps:
+            raise FetchError('partial', f'Northrop saved {len(jobs)} of {total} postings; '
+                             f'{len(gaps)} collection gaps remain. ' + '; '.join(gaps[:3]))
+        if type(reconciliation_rounds) is not int or not 1 <= reconciliation_rounds <= 3:
+            raise FetchError('unsupported', 'Northrop reconciliation rounds must be bounded from one to three.')
+        # Re-read the complete ordered set more than once.  Exact sequence
+        # comparison is intentional: it verifies stable ordering at timestamp
+        # ties as well as additions, closures, and page-boundary movement.
+        for round_number in range(reconciliation_rounds):
+            for page_number, ids in enumerate(snapshots):
+                check,_ = _page(client,page_number*10,total)
+                if [_identity(e) for e in check] != ids:
+                    raise FetchError('partial',f'Northrop inventory changed during reconciliation pass {round_number + 1}; no closure inference.')
+        return Inventory('complete',jobs,f'Northrop: retrieved {len(jobs)} full postings and completed {reconciliation_rounds} bounded inventory reconciliations.',BOARD,'Eightfold')
     except FetchError as e:
         return Inventory('blocked' if e.status=='blocked' else 'partial',jobs,e.reason,BOARD,'Eightfold')
     except Exception as e:
@@ -158,7 +193,11 @@ def fetch_northrop(url, company_id, company, *, headless=True, timeout_ms=30000,
         _source(url)
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=headless)
+            executable = os.environ.get('JOB_SCRAPER_CHROMIUM_EXECUTABLE') or shutil.which('google-chrome')
+            options = {'headless': headless, 'args': ['--no-sandbox']}
+            if executable:
+                options['executable_path'] = executable
+            browser = p.chromium.launch(**options)
             try:
                 context = browser.new_context()
                 page = context.new_page()
@@ -167,7 +206,7 @@ def fetch_northrop(url, company_id, company, *, headless=True, timeout_ms=30000,
                     raise FetchError('blocked','Northrop public jobs page did not grant access in the browser.')
                 if urlsplit(page.url).hostname != urlsplit(BOARD).hostname:
                     raise FetchError('unsupported','Northrop jobs page redirected to an unverified host.')
-                return _scan(BrowserClient(context),company_id,company,max_jobs)
+                return _scan(BrowserClient(context),company_id,company,max_jobs,reconciliation_rounds=2)
             finally:
                 browser.close()
     except FetchError as e:

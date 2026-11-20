@@ -104,6 +104,18 @@ class OutcomeClassificationTests(unittest.TestCase):
         with self.assertRaisesRegex(OutcomeFactsError, "http_status"):
             classify_outcome(facts(failure={"category": "timeout", "http_status": 999}))
 
+    def test_release_retry_outcome_cannot_use_release_id_without_full_binding_digest(self):
+        with self.assertRaisesRegex(OutcomeFactsError, "retry outcome identity requires"):
+            classify_outcome(facts(
+                failed_request_id="REQ-failed", release_version="REL-1",
+                failure={"category": "timeout"},
+            ))
+        complete = classify_outcome(facts(
+            failed_request_id="REQ-failed", release_version="REL-1",
+            release_binding_sha256="a" * 64, failure={"category": "timeout"},
+        ))
+        self.assertEqual(complete["identity"]["release_binding_sha256"], "a" * 64)
+
     def test_identity_and_classification_facts_are_strictly_bounded_text(self):
         with self.assertRaisesRegex(OutcomeFactsError, "company_id must be text"):
             classify_outcome(facts(company_id={"private": "body"}, failure={"category": "adapter_regression"}))

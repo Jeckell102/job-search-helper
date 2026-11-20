@@ -31,8 +31,20 @@ def _request(client, jid: int | None = None) -> list[dict]:
         rows = json.loads(response.body.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise FetchError("partial", "Kratos public job API returned invalid JSON.") from None
+    # The normal Pereless response is a bare list.  Some legacy board
+    # deployments wrap an explicit zero in {jobs: [], total: 0}; accept that
+    # shape because it is evidence of zero, but never infer zero from an
+    # unqualified empty/HTML/error response.
+    if isinstance(rows, dict):
+        items = rows.get("jobs")
+        total = rows.get("total", rows.get("count"))
+        if isinstance(items, list) and total == 0 and not items:
+            return []
+        rows = items
     if not isinstance(rows, list):
         raise FetchError("partial", "Kratos public job API returned an invalid inventory schema.")
+    if not rows:
+        raise FetchError("partial", "Kratos public job API returned an empty inventory without an explicit zero count.")
     return rows
 
 

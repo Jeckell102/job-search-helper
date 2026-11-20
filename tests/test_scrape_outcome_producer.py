@@ -1,6 +1,10 @@
 import unittest
 
 from job_search_helper.company_events import source_revision
+from job_search_helper.repair_retry import (
+    REPAIR_RETRY_SCHEMA, RELEASE_BINDING_SCHEMA, release_binding_sha256,
+    retry_attempt_id,
+)
 from job_search_helper.scrape_outcome_producer import record_cycle_outcomes
 
 
@@ -47,11 +51,25 @@ class OutcomeProducerTests(unittest.TestCase):
 
     def test_repaired_retry_outcome_preserves_attempt_and_release_identity(self):
         repo = Repository()
+        release = {'schema': RELEASE_BINDING_SCHEMA, 'release_id': 'REL-1',
+                   'source_manifest_sha256': '1' * 64,
+                   'dependency_manifest_sha256': '2' * 64,
+                   'config_sha256': '3' * 64}
+        retry = {'schema': REPAIR_RETRY_SCHEMA, 'attempt_id': '', 'failed_request_id': 'REQ-failed',
+                 'company_id': 'COMP-1', 'source_revision': source_revision(self.company),
+                 'activated_at': '2026-11-19T12:00:00Z', 'release': release}
+        retry['attempt_id'] = retry_attempt_id(retry)
         cycle = {'id': 'CYC-1', 'companies': {'COMP-1': {'stage': 'complete'}},
-                 'repair_retry': {'attempt_id': 'RTRY-1', 'failed_request_id': 'REQ-failed',
-                                  'source_revision': source_revision(self.company),
-                                  'release': {'release_id': 'REL-1'}}}
+                 'repair_retry': retry}
         record_cycle_outcomes(repo, cycle, [self.company], storage_confirmed=True)
-        self.assertEqual(repo.facts[0]['attempt_id'], 'RTRY-1')
+        self.assertEqual(repo.facts[0]['attempt_id'], retry['attempt_id'])
         self.assertEqual(repo.facts[0]['failed_request_id'], 'REQ-failed')
         self.assertEqual(repo.facts[0]['release_version'], 'REL-1')
+        self.assertEqual(repo.facts[0]['release_binding_sha256'], release_binding_sha256(release))
+
+    def test_malformed_retry_lineage_cannot_produce_a_repair_outcome(self):
+        repo = Repository()
+        cycle = {'id': 'CYC-1', 'companies': {'COMP-1': {'stage': 'complete'}},
+                 'repair_retry': {'attempt_id': 'RTRY-1', 'release': {'release_id': 'REL-1'}}}
+        self.assertEqual(record_cycle_outcomes(repo, cycle, [self.company], storage_confirmed=True), [])
+        self.assertEqual(repo.facts, [])

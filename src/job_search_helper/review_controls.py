@@ -109,6 +109,8 @@ def refresh_sheet_controls(runtime, *, local=None, remote=None):
                         evidence_archives=False)
                 if remote.spreadsheet_id != local.spreadsheet_id:
                     raise RepositoryError('Live review workbook differs from local storage.')
+                sync = SheetsSynchronizer(local, remote)
+                tokens = sync.baseline_tokens('Job History')
                 rows = unique_rows('Job History', list(remote.read_columns('Job History', FIELDS)))
                 signature = _signature(local, rows)
                 cached = _reuse_controls(runtime, local, signature)
@@ -136,8 +138,10 @@ def refresh_sheet_controls(runtime, *, local=None, remote=None):
                         sent = attempts.get(base['row_id'], {}).get('Added to Opportunities?')
                         if str(sent).strip().casefold() != 'pending':
                             reopened.add(key)
-                merged = SheetsSynchronizer(local, remote).merge_remote(
-                    'Job History', changed_rows, complete_snapshot=False)
+                merged = sync.merge_remote('Job History', changed_rows, complete_snapshot=False,
+                                           expected_baselines=tokens)
+                if merged.get('stale_rows'):
+                    raise RepositoryError('Review publication advanced during the Sheet read; retry fresh controls.')
                 changed = merged['changed_fields']
                 with local.transaction():
                     current = _local_rows(local)

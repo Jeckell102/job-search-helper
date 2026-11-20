@@ -4,15 +4,7 @@ from __future__ import annotations
 import copy
 import uuid
 
-from .core import canonicalize_url
 from .repository import SCHEMAS, RepositoryError, _equivalent, IdentityIndex
-
-
-def _safe_canonical_url(value):
-    try:
-        return canonicalize_url(value)
-    except ValueError:
-        return ""
 
 
 def _identity_label(identity):
@@ -69,7 +61,7 @@ class PlanningRepository:
             "Companies": repository.read("Companies"),
             "Job History": cls._read_column_rows(repository, "Job History", [
                 "Company", "Job Key", "Official Job URL", "Requisition ID", "Job Title",
-                "Current Snapshot", "Added to Opportunities?", "Review Status",
+                "Current Snapshot", "Added to Opportunities?", "Review Status", "Review Started At",
                 "Decision", "Reconsideration Count", "Description Hash", "Source Hash",
                 "Rejection Reason", "Review Notes", "Job Status",
                 "Consecutive Missing Scans", "Prior Job Key",
@@ -83,12 +75,44 @@ class PlanningRepository:
     def _reindex(self):
         self.indexes = {tab: IdentityIndex(enumerate(rows)) for tab, rows in self.rows.items()}
 
+    def reload_company(self, company):
+        """Replace a rejected company's speculative rows with authoritative inputs.
+
+        Other companies may still have frozen, uncommitted plans in this cache.
+        Their speculative state must survive a different company's replan.
+        """
+        name = str(company['Company']).strip().casefold()
+        tabs = ('Companies', 'Job History', 'Job Evidence', 'Opportunities')
+        read_company = getattr(self.base, 'read_company_columns', None)
+        if read_company is not None:
+            fresh = {tab: [self._blank_row(tab, row) for _, row in read_company(
+                tab, list(self.rows[tab][0]) if self.rows[tab] else list(self.schemas[tab]), company['Company'])]
+                for tab in tabs}
+        else:
+            fresh = self._load_planning_rows(self.base)
+            evidence = fresh['Job Evidence']
+            for tab in tabs:
+                fresh[tab] = [row for row in fresh[tab]
+                              if str(row.get('Company', '')).strip().casefold() == name]
+        keys = {row.get('Job Key') for row in self.rows['Job History'] + fresh['Job History']
+                if str(row.get('Company', '')).strip().casefold() == name}
+        if read_company is None:
+            # Evidence planning rows can omit Company; resolve them by job key.
+            fresh['Job Evidence'] = [row for row in evidence
+                                     if row.get('Job Key') in keys]
+        for tab in tabs:
+            if tab == 'Job Evidence':
+                keep = lambda row: row.get('Job Key') not in keys
+            else:
+                keep = lambda row: str(row.get('Company', '')).strip().casefold() != name
+            self.rows[tab] = [row for row in self.rows[tab] if keep(row)] + fresh[tab]
+        self._reindex()
+
     def history_candidates(self, company, key, url):
         index = self.indexes["Job History"]
         candidates = dict(index.matches({"Company": company, "Job Key": key}))
-        for number, row in index.matches({"Company": company}):
-            if row.get("Official Job URL") and _safe_canonical_url(row["Official Job URL"]) == url:
-                candidates[number] = row
+        if url:
+            candidates.update(index.matches({"Company": company, "Official Job URL": url}))
         return list(candidates.values())
 
     def opportunity_candidates(self, company, urls):
@@ -196,7 +220,14 @@ class PlanningRepository:
                             else {key: row[key] for key in keys})
                 matches = index.matches(identity)
                 if len(matches) == 1:
-                    self.rows[tab][matches[0][0]] = copy.deepcopy(row)
+                    fields = getattr(self.base, '_committed_field_masks', {}).get(tab)
+                    if fields is None:
+                        self.rows[tab][matches[0][0]] = copy.deepcopy(row)
+                    else:
+                        # Targeted reads omit unrelated fields. Their missing
+                        # values are not authoritative blanks in the planner.
+                        self.rows[tab][matches[0][0]].update(
+                            {h: copy.deepcopy(row[h]) for h in fields})
                 elif not matches:
                     self.rows[tab].append(copy.deepcopy(row))
         self.operations = []

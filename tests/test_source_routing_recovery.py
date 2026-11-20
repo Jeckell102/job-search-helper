@@ -39,7 +39,7 @@ class RoutingRecoveryTests(unittest.TestCase):
     CASES = [
         ('COMP-0143', 'MultiTech', 'https://us231.dayforcehcm.com/CandidatePortal/en-US/multitech', 'Dayforce'),
         ('COMP-0260', 'Advanced Navigation', 'https://www.advancednavigation.com/careers/', 'Rippling'),
-        ('COMP-0274', 'Particle', 'https://www.particle.io/careers/', 'Rippling'),
+        ('COMP-0274', 'Particle', 'https://www.particle.io/careers/', 'Particle UKG'),
         ('COMP-0284', 'OnLogic', 'https://www.onlogic.com/about/careers/', 'Workable'),
         ('COMP-0390', 'Vertech', 'https://www.vertech.com/open-positions', 'Paycor Recruiting'),
         ('COMP-0098', 'Blue Origin', 'https://www.blueorigin.com/careers', 'Workday'),
@@ -57,11 +57,14 @@ class RoutingRecoveryTests(unittest.TestCase):
                     self.assertEqual(repair_source('Shared ATS', changed_url, changed_id, changed_name),
                                      ('Shared ATS', changed_url, ''))
 
-    def test_unverified_and_real_parent_sources_stay_restricted(self):
-        for cid, company, url in [
-                ('COMP-0016', 'LinQuest', 'https://kbr.wd5.myworkdayjobs.com/en-US/KBR_Careers')]:
-            label = 'Workday (shared parent board)' if cid == 'COMP-0016' else 'Shared ATS'
-            self.assertEqual(repair_source(label, url, cid, company), (label, url, ''))
+    def test_verified_linquest_scope_does_not_generalize_to_parent_edits(self):
+        url = 'https://kbr.wd5.myworkdayjobs.com/en-US/KBR_Careers'
+        label = 'Workday (shared parent board)'
+        self.assertEqual(repair_source(label, url, 'COMP-0016', 'LinQuest')[:2],
+                         ('Workday (LinQuest scoped)', url + '?q=LinQuest'))
+        changed = url + '?q=Other'
+        self.assertEqual(repair_source(label, changed, 'COMP-0016', 'LinQuest'),
+                         (label, changed, ''))
         from job_search_helper.discovery import discover_board
         with self.assertRaises(FetchError):
             discover_board('Greenhouse (shared parent board)', 'https://example.com/careers', MagicMock())

@@ -32,14 +32,11 @@ def _canonical(value):
 
 def _fallback_receipt(cycle, company_id, plan, payload):
     """Compatibility name for the shared exact receipt contract."""
-    if isinstance(plan, Mapping) and plan.get('exact_plan_version') == 2:
-        receipt_plan = {
-            'operations': copy.deepcopy(plan.get('remote_projection')),
-            'final': copy.deepcopy(plan.get('final', {})),
-        }
-    else:
-        receipt_plan = plan
-    return derive_receipt(cycle, company_id, payload, receipt_plan, timestamp())
+    request_id = cycle['id'] if (
+        isinstance(plan, Mapping) and plan.get('exact_plan_version') == 2
+    ) else None
+    return derive_receipt(
+        cycle, company_id, payload, plan, timestamp(), request_id=request_id)
 
 
 def _readback(remote, operations):
@@ -344,7 +341,9 @@ def _validate_exact_plan_v2(plan, payload, remote, cycle_id, company_id):
             or plan.get('inventory_payload_digest') != _digest(payload)
             or plan.get('plan_digest') != _exact_plan_digest(plan)
             or plan.get('remote_projection_digest') != _digest(remote_projection)
-            or plan.get('remote_records') != record_fingerprints(remote_projection)
+            or plan.get('remote_records') != record_fingerprints(
+                remote_projection,
+                include_guard_only=plan.get('record_fingerprint_version', 1) == 2)
             or plan.get('remote_records_digest') != _digest(plan.get('remote_records'))
             or not isinstance(final, Mapping)
             or plan.get('local_finalization_digest') != _digest({
@@ -358,11 +357,15 @@ def _validate_exact_plan_v2(plan, payload, remote, cycle_id, company_id):
     return plan, local_operations, remote_projection
 
 
-def _remote_intent_id(cycle_id, company_id, plan_digest, projection_digest):
-    return 'ERI-' + _digest({
+def _remote_intent_id(cycle_id, company_id, plan_digest, projection_digest,
+                      delivery_mode='write_once'):
+    binding = {
         'cycle_id': cycle_id, 'company_id': company_id,
         'plan_digest': plan_digest, 'projection_digest': projection_digest,
-    })[:32]
+    }
+    if delivery_mode != 'write_once':
+        binding['delivery_mode'] = delivery_mode
+    return 'ERI-' + _digest(binding)[:32]
 
 
 def _readback_records(exact_plan, readback):
@@ -373,8 +376,11 @@ def _readback_records(exact_plan, readback):
             identity.update({key: value for key, value in values.items() if key in identity})
         row = dict(identity)
         row.update(observed['actual'])
+        row.update(observed.get('remote_guards', {}))
         rows.setdefault(operation['tab'], []).append(row)
-    return record_fingerprints(exact_plan['operations'], rows)
+    return record_fingerprints(
+        exact_plan['operations'], rows,
+        include_guard_only=exact_plan.get('record_fingerprint_version', 1) == 2)
 
 
 def _bounded_exact_chunks(exact_plan, *, max_operations=100, max_bytes=500_000):
@@ -397,6 +403,7 @@ def _bounded_exact_chunks(exact_plan, *, max_operations=100, max_bytes=500_000):
             'operations': selected,
             'rows': copy.deepcopy(rows[start:stop]),
             'projection_digest': _digest(selected),
+            'delivery_mode': exact_plan.get('delivery_mode', 'write_once'),
         }))
         start = stop
     return chunks
@@ -451,6 +458,12 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
     from .exact_local_plan import VERIFIED, exact_local_plan
     from .sheets_sync import SheetsSynchronizer
 
+    # A late-Company control successor is deliberately a signed local-only
+    # hold.  It must never fall through the generic v2 publisher: that path
+    # creates a receipt and remote intent before any future dedicated release
+    # contract has been reviewed.
+    if 'selected_legacy_control_before_prefix_recovery' in plan:
+        raise ValueError('control_before_prefix_dedicated_release_gate_required')
     plan, local_operations, remote_projection = _validate_exact_plan_v2(
         plan, payload, remote, cycle_id, company_id)
     if local is None:
@@ -470,6 +483,11 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
             or authoritative['plan_digest'] != plan['plan_digest']
             or authoritative['remote_projection_digest'] != plan['remote_projection_digest']):
         raise ValueError('exact_plan_v2_local_verification_mismatch')
+    # A selected legacy successor reaches this point only through its separate
+    # signed journal.  Normal exact-v2 plans receive ``None`` and retain their
+    # current publication behavior unchanged.
+    selected_recovery = inbox.require_selected_legacy_publication(
+        cycle_id, company_id, plan)
     controls = company_guard(company_id, plan.get('requested_url'))
     _validate_controls(plan, controls)
     cycle = state.cycle(cycle_id)
@@ -495,14 +513,34 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
 
     _save_inventory_checkpoint(state, cycle_id, company_id, payload)
     sync = synchronizer or SheetsSynchronizer(local, remote)
-    exact_plan = sync.plan_exact_scope(authoritative['row_scope'], remote_projection)
+    delivery = inbox.exact_legacy_delivery_evidence(cycle_id, company_id)
+    delivery_mode = 'write_once'
+    if delivery is not None:
+        if (delivery.get('plan_digest') != plan['plan_digest']
+                or delivery.get('state') != 'BOUND'):
+            raise ValueError('exact_plan_v2_delivery_evidence_mismatch')
+        delivery_mode = delivery.get('delivery_mode')
+    post_observation_read_guard = None
+    if delivery_mode == 'observation_only':
+        def post_observation_read_guard():
+            refreshed_controls = company_guard(
+                company_id, plan.get('requested_url'))
+            _validate_controls(plan, refreshed_controls)
+    exact_plan = sync.plan_exact_scope(
+        authoritative['row_scope'], remote_projection,
+        delivery_mode=delivery_mode)
     intent_id = _remote_intent_id(
-        cycle_id, company_id, plan['plan_digest'], exact_plan['projection_digest'])
+        cycle_id, company_id, plan['plan_digest'], exact_plan['projection_digest'],
+        delivery_mode)
     remote_state = inbox.freeze_exact_remote_plan(
         cycle_id, company_id, local_plan_digest=plan['plan_digest'],
         projection=exact_plan['operations'],
         projection_digest=exact_plan['projection_digest'], receipt_id=receipt_id,
-        intent_id=intent_id, timestamp=timestamp())
+        intent_id=intent_id, timestamp=timestamp(),
+        delivery_mode=delivery_mode)
+    if selected_recovery is not None:
+        inbox.mark_selected_legacy_remote_plan_frozen(
+            cycle_id, company_id, plan, timestamp=timestamp())
     if remote_state['state'] not in {'SYNC_CONFIRMED', 'LOCAL_ACKNOWLEDGED'}:
         chunks = _bounded_exact_chunks(exact_plan)
         starts = {start for start, _chunk in chunks}
@@ -517,14 +555,16 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
                 plan_digest=plan['plan_digest'], receipt_id=receipt_id,
                 intent_id=intent_id,
                 remote_projection_digest=exact_plan['projection_digest'],
-                remote_cursor=start)
+                remote_cursor=start,
+                post_observation_read_guard=post_observation_read_guard)
             remote_cursor = start + len(chunk['operations'])
         if remote_cursor != len(exact_plan['operations']):
             raise ValueError('exact_plan_v2_remote_cursor_incomplete')
     acknowledged = sync.confirm_and_acknowledge_exact_scope(
         inbox=inbox, cycle_id=cycle_id, company_id=company_id,
         plan_digest=plan['plan_digest'], receipt_id=receipt_id,
-        intent_id=intent_id)
+        intent_id=intent_id,
+        post_observation_read_guard=post_observation_read_guard)
     acknowledgement_id = acknowledged['acknowledgement_id']
     inbox.mark_exact_remote_locally_acknowledged(
         cycle_id, company_id, local=local,

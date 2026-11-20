@@ -14,12 +14,13 @@ from job_search_helper.repository import MemoryRepository
 
 class TitleScreeningTests(unittest.TestCase):
     def test_exclusions_win_only_for_current_hard_title_rules(self):
-        for title in ("Principal: Field Applications Engineer", "Software Engineer / Solutions Engineer",
-                      "Systems Engineer - Mission Integration"):
+        for title in ("Principal Software Engineer", "Software Engineer / Solutions Engineer",
+                      "Systems Engineer - Mission Integration", "Technical Account Manager", "Staffing Specialist"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "reject")
                 self.assertTrue(excluded_title(title))
-        for title in ("STAFF Solutions Engineer", "Director of Field Engineering",
+        for title in ("Principal: Field Applications Engineer", "Principal Product Manager",
+                      "STAFF Solutions Engineer", "Director of Field Engineering",
                       "Solutions Engineering Director", "Associate Director, Technical Training",
                       "Field Test Engineer, Maritime", "Applications Engineer, Learning & Development"):
             with self.subTest(title=title):
@@ -30,12 +31,12 @@ class TitleScreeningTests(unittest.TestCase):
         for title in ("Solutions Engineer", "Field-Applications Engineer", "Associate Product Manager",
                       "Field Service Engineer", "Field Support Engineer", "Technical Product Manager",
                       "Staff Field Solutions Engineer", "Director of Field Engineering",
-                      "Technical Program Manager", "Technical Account Manager", "Network Deployment Engineer"):
+                      "Technical Program Manager", "Network Deployment Engineer"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "review")
                 self.assertFalse(excluded_title(title))
         for title in ("", "Operations Manager", "Program Manager", "Support Engineer",
-                      "Staffing Specialist", "Directorate Liaison", "Principalship Coordinator",
+                      "Staffing Coordinator", "Directorate Liaison", "Principalship Coordinator",
                       "Systems Integration Engineer", "Implementation Manager", "Technical Product Marketing Manager"):
             with self.subTest(title=title):
                 self.assertEqual(classify_title(title), "ambiguous")
@@ -56,10 +57,10 @@ class TitleScreeningTests(unittest.TestCase):
                 _load_title_patterns(path)
 
     def test_cleanup_preserves_manual_no_and_only_updates_identifiable_unlocked_exclusions(self):
-        titles = ["Software Engineer", "Principal Field Applications Engineer",
+        titles = ["Software Engineer", "SaaS Field Applications Engineer",
                   "Systems Engineer", "Staff Solutions Engineer", "Director of Field Engineering",
                   "Technical Program Manager", "Software Engineer / Solutions Engineer",
-                  "Principal Customer Engineer", "Principal Customer Engineer"]
+                  "SaaS Customer Engineer", "SaaS Customer Engineer"]
         rows = [{"Company": "Acme", "Job Title": title, "Job Key": str(index),
                  "Added to Opportunities?": "Yes", "Review Notes": "keep me"}
                 for index, title in enumerate(titles)]

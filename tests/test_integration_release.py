@@ -16,6 +16,7 @@ from job_search_helper.integration_release import (
     source_tree_digest,
     config_tree_digest,
     digest,
+    release_binding,
 )
 
 
@@ -77,6 +78,7 @@ class IntegrationReleaseTests(unittest.TestCase):
             self.assertEqual(metadata(self.project / name), metadata(self.candidate / name))
         journal = assert_release_settled(self.state)
         self.assertEqual(journal["state"], "COMPLETE")
+        self.assertEqual(journal["release"], release_binding(self.manifest))
         saved = json.loads((self.records / self.manifest["release_id"] / "receipt.json").read_text())
         self.assertEqual(saved, receipt)
 

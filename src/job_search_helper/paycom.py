@@ -6,6 +6,7 @@ No account, application, analytics, or saved-search requests are made.
 """
 from __future__ import annotations
 
+import logging
 import base64
 import json
 import re
@@ -185,8 +186,8 @@ def fetch_paycom(ats, url, company_id, company, transport=None, pages=None):
         entries = _inventory(transport, token)
         for entry in entries:
             jobs.append(_posting(transport, token, client, source, entry, company_id, company))
-            print(json.dumps({'event': 'inventory_page', 'provider': 'Paycom', 'company_id': company_id,
-                              'postings_fetched': len(jobs), 'total': len(entries)}), file=sys.stderr)
+            logging.getLogger(__name__).debug("%s", json.dumps({'event': 'inventory_page', 'provider': 'Paycom', 'company_id': company_id,
+                              'postings_fetched': len(jobs), 'total': len(entries)}))
         if _inventory(transport, token) != entries:
             raise FetchError('partial', 'Paycom public inventory changed during the scan; retry to establish completeness.')
         return Inventory('complete', jobs, f'Paycom: retrieved {len(jobs)} full postings and rechecked every inventory page.', source, 'Paycom')

@@ -2,7 +2,7 @@ import json
 import unittest
 
 from job_search_helper.ats import HTTPResponse, fetch_inventory
-from job_search_helper.kratos import SEARCH, SOURCE
+from job_search_helper.kratos import SEARCH, SOURCE, _filters
 
 
 def posting(jid, title, description=""):
@@ -26,6 +26,25 @@ class KratosTests(unittest.TestCase):
         self.assertEqual(result.status, "complete")
         self.assertEqual([job["title"] for job in result.jobs], ["Engineer", "Analyst"])
         self.assertEqual(len(public.calls), 4)
+        self.assertEqual(public.calls[0][1], _filters())
+        self.assertEqual(public.calls[1][1], _filters(1))
+        self.assertEqual(public.calls[2][1], _filters(2))
+        self.assertEqual(public.calls[3][1], _filters())
+
+    def test_empty_response_is_partial_without_explicit_zero(self):
+        result = fetch_inventory(
+            "Kratos careers", SOURCE, "COMP-0068",
+            "Kratos Defense & Security Solutions", Public([[]]))
+        self.assertEqual(result.status, "partial")
+        self.assertIn("empty inventory", result.reason)
+
+    def test_explicit_zero_response_is_allowed(self):
+        result = fetch_inventory(
+            "Kratos careers", SOURCE, "COMP-0068",
+            "Kratos Defense & Security Solutions",
+            Public([{"jobs": [], "total": 0}, {"jobs": [], "total": 0}]))
+        self.assertEqual(result.status, "complete")
+        self.assertEqual(result.jobs, [])
 
     def test_detail_mismatch_fails_closed(self):
         listing = [posting(1, "Engineer")]

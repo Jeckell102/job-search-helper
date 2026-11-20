@@ -83,22 +83,22 @@ class CoreTests(unittest.TestCase):
 
     def test_ambiguous_titles_remain_for_review(self):
         for title in ("Product Marketing Manager", "Field Applications Engineer", "Solutions Engineer",
-                      "Manager, Field Engineering", "Mobile Communications Specialist",
-                      "Quality Audit Program Manager", "Medical Device Field Specialist", "Mission Controller",
-                      "Systems Integration Engineer", "Technical Support Manager"):
+                      "Manager, Field Engineering", "Technical Program Manager",
+                      "Field Operations Manager", "Deployment Manager", "Mission Controller",
+                      "Customer Applications Engineer", "Technical Support Manager"):
             with self.subTest(title=title):
                 self.assertFalse(excluded_title(title))
 
     def test_keeper_words_do_not_override_clear_exclusions(self):
         for title in ("Payroll Operations Manager", "Legal Counsel, Product", "Software Engineer, Customer Support",
                       "Field Test Automation Engineer", "Talent Acquisition Program Manager", "Graphic Designer",
-                      "Senior Staff Engineer, Survivability Materials", "Staff Engineer", "Electrical Engineer",
+                      "Systems Engineer", "Software Developer", "Electrical Engineer",
                       "Mechanical Engineer", "Materials Engineer"):
             with self.subTest(title=title):
                 self.assertTrue(excluded_title(title))
 
     def test_current_title_exclusions_do_not_reject_seniority_alone(self):
-        for title in ("Principal Field Applications Engineer", "Systems Engineer", "Maintenance Operations Lead"):
+        for title in ("Principal Software Engineer", "Systems Engineer", "Maintenance Operations Lead"):
             with self.subTest(title=title):
                 self.assertTrue(excluded_title(title))
         for title in ("Staff Solutions Engineer", "Director, Field Engineering", "Technical Support Director"):
@@ -164,15 +164,17 @@ class CoreTests(unittest.TestCase):
         validate_decision(assessment(base_max_usd=None), POSTING, {})
         validate_decision(assessment(base_max_usd=120000), POSTING, {})
 
-    def test_acceptance_requires_false_for_every_hard_blocker(self):
-        for field in ("mandatory_clearance", "code_authoring_required", "primary_test_automation"):
-            for value in (True, None, 0, "false"):
-                with self.subTest(field=field, value=value), self.assertRaises(ValueError):
-                    validate_decision(assessment(**{field: value}), POSTING, {})
-            missing = assessment()
-            del missing[field]
-            with self.subTest(field=field, value="missing"), self.assertRaises(ValueError):
-                validate_decision(missing, POSTING, {})
+    def test_legacy_decision_validation_requires_identity_policy_and_fit(self):
+        # Modern eligibility assessment belongs to review_runtime; this legacy
+        # JSON reader validates its persisted identity and schema, not retired
+        # ai_worker boolean flags.
+        for field in ("job_key", "description_hash", "decision", "narrative", "reviewer", "policy_version"):
+            value = assessment()
+            del value[field]
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                validate_decision(value, POSTING, {})
+        with self.assertRaises(ValueError):
+            validate_decision(assessment(fit_level="Unverified"), POSTING, {})
 
     def test_below_floor_acceptance_is_rejected(self):
         with self.assertRaises(ValueError):
@@ -229,7 +231,7 @@ class CliTests(unittest.TestCase):
     def test_scraper_start_still_runs_start_command(self):
         with patch.object(runner, "run_start", return_value=0) as start:
             self.assertEqual(runner.main(["start"]), 0)
-            start.assert_called_once_with(fetch_workers=5, assignment_window=100, batch_size=200, sheet_request_interval=1.1, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True, resume=False)
+            start.assert_called_once_with(fetch_workers=5, assignment_window=100, batch_size=200, sheet_request_interval=1.1, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True, resume=False, partial_retries=1)
 
     def test_scraper_start_passes_parallel_options(self):
         with patch.object(runner, "run_start", return_value=0) as start:
@@ -237,7 +239,7 @@ class CliTests(unittest.TestCase):
                 "start", "--fetch-workers", "4", "--assignment-window", "25",
                 "--batch-size", "150", "--sheet-request-interval", "0.8", "--browser-fallback",
             ]), 0)
-            start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True, resume=False)
+            start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True, resume=False, partial_retries=1)
 
     def test_scraper_start_can_disable_blocked_retry(self):
         with patch.object(runner, "run_start", return_value=0) as start:
@@ -373,8 +375,21 @@ class CliTests(unittest.TestCase):
             self.assertEqual(cli.main(["test"]), 0)
             args, kwargs = run.call_args
             self.assertIn(str(Path(temporary) / "tests"), args[0])
+            self.assertEqual(args[0][1:3], ["-m", "pytest"])
             self.assertEqual(kwargs["cwd"], Path(temporary))
             self.assertEqual(kwargs["env"]["PYTHONPATH"], str(Path(temporary) / "src"))
+
+    def test_cleanup_dispatch_does_not_shadow_title_cleanup(self):
+        for command, target in (
+            ("cleanup-titles", "job_search_helper.cli.execute_cleanup"),
+            ("cleanup-blacklist", "job_search_helper.cli.execute_cleanup"),
+            ("cleanup-closed", "job_search_helper.closed_jobs.execute_cleanup"),
+            ("cleanup-locations", "job_search_helper.location_cleanup.execute_cleanup"),
+        ):
+            with self.subTest(command=command), patch(target) as cleanup, \
+                    patch.object(cli, "load_environment"), redirect_stderr(io.StringIO()):
+                self.assertEqual(cli.main([command, "--dry-run"]), 0)
+                self.assertEqual(cleanup.call_args.args[0].command, command)
 
     def test_status_does_not_create_state(self):
         with tempfile.TemporaryDirectory() as temporary, patch.object(cli, "PROJECT_ROOT", Path(temporary)), patch.dict(os.environ, {}, clear=True), redirect_stdout(io.StringIO()) as output:

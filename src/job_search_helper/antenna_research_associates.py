@@ -72,7 +72,7 @@ def _board_link(page):
 def fetch_antenna_research_associates(url, company_id, company, transport=None):
     if not _verified_source(url, company_id, company):
         return Inventory("unsupported", reason="ARA adapter requires the verified company and careers source.",
-                         source_url=SOURCE, ats=ATS)
+                         source_url=SOURCE, ats=ATS, browser_fallback_allowed=False)
     client = transport or CareersTransport()
     try:
         source = _Page()
@@ -94,6 +94,6 @@ def fetch_antenna_research_associates(url, company_id, company, transport=None):
             raise FetchError("blocked", "ARA's linked SAASHR job board is a JavaScript shell; its public search/config API currently returns HTTP 404, so inventory cannot be verified.")
         raise FetchError("partial", "ARA linked job board had no verifiable public inventory.")
     except FetchError as error:
-        return Inventory(error.status, [], error.reason, SOURCE, ATS)
+        return Inventory(error.status, [], error.reason, SOURCE, ATS, browser_fallback_allowed=False)
     except (AttributeError, TypeError, UnicodeError, ValueError, OSError):
-        return Inventory("partial", [], "ARA careers response validation failed.", SOURCE, ATS)
+        return Inventory("partial", [], "ARA careers response validation failed.", SOURCE, ATS, browser_fallback_allowed=False)

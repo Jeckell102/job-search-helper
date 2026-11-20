@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from job_search_helper.repository import MemoryRepository, GoogleRepository, SCHEMAS
+from job_search_helper.repository import MemoryRepository, GoogleRepository, SCHEMAS, ReviewFieldsChangedError
 from job_search_helper.sqlite_repository import SQLiteRepository
 from job_search_helper.sheets_sync import SheetsSynchronizer
 from job_search_helper.sheet_profile import COMPACT_PROFILE, COMPACT_SCHEMAS, prune_local_only_delivery
@@ -64,6 +64,42 @@ class CompactSheetsTests(unittest.TestCase):
         self.assertNotIn('Current Snapshot', self.remote.read('Job History')[0])
         self.assertEqual(len(self.local.read('Job Evidence')), 2)
         self.assertEqual(self.local.status()['pending_cells'], 0)
+
+    def test_stale_review_date_cannot_block_jobs_or_company_dates(self):
+        self.local.commit([operation(**{'Last Evaluated': 'old review'})])
+        self.sync.publish_batch()
+        self.local.commit([operation(**{'Last Evaluated': 'new review', 'Last Checked': 'today'}),
+            {'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+             'values': {'Last Checked': 'today'}}])
+        self.service.set_cell('Job History', 1, 'Last Evaluated', '')
+        self.sync.pull()
+        self.assertEqual(self.sync.publish_batch()['published_rows'], 2)
+        self.assertEqual(self.remote.read('Job History')[0]['Last Evaluated'], 'new review')
+        self.assertEqual(self.remote.read('Companies')[0]['Last Checked'], 'today')
+        self.assertEqual(self.local.status()['pending_cells'], 0)
+
+    def test_stale_output_does_not_weaken_manual_choice_or_note_guards(self):
+        for field, value in [('Added to Opportunities?', 'No'), ('Review Notes', 'My new note')]:
+            with self.subTest(field=field):
+                self.local.commit([operation(**{'Last Evaluated': 'new review',
+                                                'Review Notes': 'Generated note'})])
+                self.service.set_cell('Job History', 1, field, value)
+                with self.assertRaises(ReviewFieldsChangedError):
+                    self.sync.publish_batch()
+                self.assertEqual(self.remote.read('Job History')[0]['Last Evaluated'], '')
+                self.assertEqual(self.remote.read('Job History')[0][field], value)
+                self.service.set_cell('Job History', 1, field,
+                                      'Pending' if field == 'Added to Opportunities?' else '')
+
+    def test_scoped_review_publication_still_checks_output_preconditions(self):
+        self.local.commit([operation(**{'Last Evaluated': 'old review'})])
+        self.sync.publish_batch()
+        self.local.commit([operation(**{'Last Evaluated': 'new review'})])
+        self.service.set_cell('Job History', 1, 'Last Evaluated', '')
+        rid = self.local.matches('Job History', {'Job Key': 'job-1'})[0][0]
+        with self.assertRaises(ReviewFieldsChangedError):
+            self.sync.publish_batch(row_scope={('Job History', rid): {'Last Evaluated'}})
+        self.assertEqual(self.remote.read('Job History')[0]['Last Evaluated'], '')
 
     def test_old_queue_flags_pruned_without_erasing_records_or_visible_work(self):
         with self.local.transaction():

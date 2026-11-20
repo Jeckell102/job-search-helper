@@ -4,6 +4,10 @@ No profile, account, application submission, or authenticated recruiting API is
 used. A partial/blocked adapter result cannot be replaced by generic link scraping.
 """
 from __future__ import annotations
+from contextlib import closing, contextmanager
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+import logging
 from dataclasses import dataclass
 from html.parser import HTMLParser
 import json,math,re,sys,time
@@ -11,7 +15,9 @@ from urllib.parse import urlsplit,urljoin,parse_qsl,urlencode
 from urllib.request import Request,build_opener
 from urllib.error import HTTPError,URLError
 from http.client import IncompleteRead
+from threading import BoundedSemaphore, Event, Lock, local
 from .ats import FetchError,HTTPResponse,Inventory,MAX_RESPONSE_BYTES,_NoRedirect,_challenge,_base,text,_delay,RETRY_STATUSES
+from .cooperative_fetch import get_shared_resource, iter_details
 from .discovery import CareersTransport,public_careers_url,_BoardLinks,_cta_candidates,_same_public_host
 
 MAX_JOBS=10000
@@ -117,6 +123,8 @@ def board_link(url):
     else:
         if not parts or not re.fullmatch(SLUG,parts[0]):raise ValueError('Invalid Jobvite board.')
         name,slug='Jobvite',parts[0];path='/'+slug+'/jobs'
+        if slug=='samtec':
+            path='/'+slug+'/search'
         if len(parts)==3 and parts[1]=='job':ident=parts[2]
         elif len(parts)>1 and parts[1:] not in (['jobs'],['search']):raise ValueError('Invalid Jobvite scope.')
     seen=set()
@@ -129,6 +137,10 @@ def board_link(url):
         if name=='ClearCompany' and ((k=='search' and v=='true') or (k=='frameborder' and v=='0') or (k in {'req','req_loc'} and v.isdigit())):continue
         if name=='Workable' and k=='lng' and v=='en':continue
         if name=='Jobvite' and k in {'c','l','q'} and not v:continue
+        # Jobvite's employer embed adds these display flags to its otherwise
+        # unfiltered board URL.  They do not select a location, category, or
+        # keyword; normalize only these exact documented values to the board.
+        if name=='Jobvite' and (k,v) in {('nl','1'),('fr','true')}:continue
         raise ValueError('Filtered board URL requires explicit company scope support.')
     return Board(name,root,slug,path,ident)
 
@@ -183,6 +195,12 @@ def allowed(b,url,payload=None):
     p=urlsplit(url)
     if p.scheme!='https' or p.username or p.password or p.port not in (None,443) or p.fragment or '\\' in url or any(ord(c)<=32 for c in url):return False
     if b.name=='SmartRecruiters':
+        # Only the verified Bosch U.S. wrapper may use this extra listing route.
+        if (b.slug == 'BoschGroup' and payload is None
+                and p.hostname == 'api.smartrecruiters.com'
+                and p.path == '/v1/companies/BoschGroup/postings'
+                and re.fullmatch(r'limit=100&offset=[0-9]+&country=us', p.query)):
+            return True
         return payload is None and p.hostname=='api.smartrecruiters.com' and bool(re.fullmatch('/v1/companies/'+re.escape(b.slug)+r'/postings(?:/[0-9]+)?',p.path)) and (not p.query or bool(re.fullmatch(r'limit=100&offset=[0-9]+',p.query)))
     if p.hostname!=urlsplit(b.root).hostname:return False
     if b.name=='Jibe':return payload is None and p.path=='/api/jobs' and bool(re.fullmatch(r'page=[1-9][0-9]*&limit=100',p.query))
@@ -200,28 +218,128 @@ def allowed(b,url,payload=None):
     if b.name=='Workable':
         return ((payload is not None and p.path=='/api/v3/accounts/'+b.slug+'/jobs') or (payload is None and (p.path in {b.path} or bool(re.fullmatch('/api/v2/accounts/'+re.escape(b.slug)+r'/jobs/[A-Z0-9]+',p.path))))) and not p.query
     if b.name=='JazzHR':return payload is None and (p.path in {'/','/apply','/apply/'} or bool(re.fullmatch(r'/apply/[A-Za-z0-9]+/[A-Za-z0-9_-]+',p.path))) and not p.query
+    if b.name=='Jobvite' and b.slug=='samtec' and b.root=='https://jobs.jobvite.com' and p.hostname=='jobs.jobvite.com' and p.path in {'/samtec/search','/samtec/search/'}:
+        return payload is None and (not p.query or bool(re.fullmatch(r'p=[0-9]+',p.query)))
     if b.name=='Jobvite':return payload is None and bool(re.fullmatch('/'+re.escape(b.slug)+r'/(?:jobs|job/[A-Za-z0-9]+)',p.path)) and not p.query
     return False
 
 
+class _HostRequestLimit:
+    """Share request spacing, cooldown, and in-flight bounds across helpers."""
+
+    def __init__(self, interval=0.4, concurrency=4, max_wait=60):
+        self.interval = interval
+        self.max_wait = max_wait
+        self._slots = BoundedSemaphore(concurrency)
+        self._lock = Lock()
+        self._next_request = 0.0
+        self._cooldown = 0.0
+
+    @contextmanager
+    def request_slot(self):
+        with self._slots:
+            deadline = time.monotonic() + self.max_wait
+            while True:
+                with self._lock:
+                    current = time.monotonic()
+                    delay = max(self._next_request, self._cooldown) - current
+                    if delay <= 0:
+                        self._next_request = current + self.interval
+                        break
+                    if current + delay > deadline:
+                        raise FetchError('partial', 'Public host cooldown exceeds the automatic wait limit; retry later.')
+                # Release the clock lock while waiting so a response can extend
+                # the shared cooldown before this request starts.
+                time.sleep(delay)
+            yield
+
+    def defer(self, seconds):
+        with self._lock:
+            self._cooldown = max(self._cooldown, time.monotonic() + seconds)
+
+
+class _HostRequestLimits:
+    def __init__(self):
+        self._limits = {}
+        self._lock = Lock()
+
+    def for_url(self, url):
+        host = urlsplit(url).hostname
+        with self._lock:
+            if host not in self._limits:
+                self._limits[host] = _HostRequestLimit()
+            return self._limits[host]
+
+
+def _shared_retry_delay(headers, attempt):
+    """Honor Retry-After without letting helper requests bypass its deadline."""
+    value = next((v for k, v in headers.items() if k.lower() == 'retry-after'), '')
+    try:
+        seconds = float(value)
+    except (ValueError, TypeError):
+        try:
+            stamp = parsedate_to_datetime(value)
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            seconds = (stamp - datetime.now(timezone.utc)).total_seconds()
+        except (ValueError, TypeError, OverflowError):
+            return _delay(headers, attempt)
+    return max(0.0, seconds) if math.isfinite(seconds) else float(2 ** attempt)
+
+
 class Transport:
-    def __init__(self,b):self.board=b;self.opener=build_opener(_NoRedirect());self.last=0.
-    def request(self,url,payload=None):
-        if not allowed(self.board,url,payload):raise FetchError('unsupported','Only this employer’s pinned public listing and job-detail endpoints are allowed.')
+    """Pinned HTTP requests with thread-local clients and shared host limits."""
+
+    def __init__(self, board):
+        self.board = board
+        self._clients = local()
+        self._limits = get_shared_resource(('shared_board_host_limits',), _HostRequestLimits)
+
+    def _opener(self):
+        if not hasattr(self._clients, 'opener'):
+            self._clients.opener = build_opener(_NoRedirect())
+        return self._clients.opener
+
+    def request(self, url, payload=None):
+        if not allowed(self.board, url, payload):
+            raise FetchError('unsupported', 'Only this employer’s pinned public listing and job-detail endpoints are allowed.')
+        limit = self._limits.for_url(url)
+        request = Request(
+            url,
+            data=json.dumps(payload).encode() if payload is not None else None,
+            headers={
+                'User-Agent': 'JobSearchHelper/1.0 (public job-board inventory; read-only)',
+                'Content-Type': 'application/json',
+                'Accept-Encoding': 'identity',
+            },
+        )
         for attempt in range(3):
-            time.sleep(max(0,.4-(time.monotonic()-self.last)));self.last=time.monotonic()
-            req=Request(url,data=json.dumps(payload).encode() if payload is not None else None,headers={'User-Agent':'JobSearchHelper/1.0 (public job-board inventory; read-only)','Content-Type':'application/json','Accept-Encoding':'identity'})
             try:
-                with self.opener.open(req,timeout=25) as r:result=HTTPResponse(r.status,r.read(MAX_RESPONSE_BYTES+1),dict(r.headers))
-            except HTTPError as e:result=HTTPResponse(e.code,e.read(8192),dict(e.headers));e.close()
-            except (URLError,TimeoutError,ConnectionError,IncompleteRead):
-                if attempt==2:raise FetchError('partial','Public job request timed out after bounded retries.') from None
-                time.sleep(2**attempt);continue
-            if result.status in RETRY_STATUSES and attempt<2:time.sleep(_delay(result.headers,attempt));continue
-            return result
-        raise FetchError('partial','Public job request failed.')
-    def get(self,url):return self.request(url)
-    def post(self,url,payload):return self.request(url,payload)
+                with limit.request_slot():
+                    try:
+                        with self._opener().open(request, timeout=25) as response:
+                            result = HTTPResponse(response.status, response.read(MAX_RESPONSE_BYTES + 1), dict(response.headers))
+                    except HTTPError as error:
+                        try:
+                            result = HTTPResponse(error.code, error.read(8192), dict(error.headers))
+                        finally:
+                            error.close()
+                    if result.status in RETRY_STATUSES:
+                        limit.defer(_shared_retry_delay(result.headers, attempt))
+            except (URLError, TimeoutError, ConnectionError, IncompleteRead):
+                if attempt == 2:
+                    raise FetchError('partial', 'Public job request timed out after bounded retries.') from None
+                time.sleep(2 ** attempt)
+                continue
+            if result.status not in RETRY_STATUSES or attempt == 2:
+                return result
+        raise FetchError('partial', 'Public job request failed.')
+
+    def get(self, url):
+        return self.request(url)
+
+    def post(self, url, payload):
+        return self.request(url, payload)
 
 
 class Scripts(HTMLParser):
@@ -290,6 +408,36 @@ def rippling_locations(items):
     return unique(result)
 
 
+def _rippling_filters(query_key, slug, page):
+    """Validate the unfiltered public Rippling query-key variants.
+
+    Rippling currently appends the UI locale after the filter object.  Older
+    public boards do not include that final value.  Do not accept a generic
+    dictionary from the key: it could be a changed query shape or a filter
+    that narrows the employer's public inventory.
+    """
+    if not isinstance(query_key, list) or len(query_key) not in {5, 6}:
+        raise FetchError('partial', 'Rippling listing query-key shape is unrecognized.')
+    if query_key[:3] != ['board', slug, 'job-posts'] or type(query_key[3]) is not bool:
+        raise FetchError('partial', 'Rippling listing query-key identity or public-scope flag is invalid.')
+    filters = query_key[4]
+    expected = {
+        'searchQuery': '',
+        'departments': [],
+        'workplaceType': None,
+        'country': '',
+        'state': '',
+        'city': '',
+        'page': page,
+        'pageSize': 20,
+    }
+    if not isinstance(filters, dict) or filters != expected:
+        raise FetchError('partial', 'Rippling listing pagination or scope cannot be verified.')
+    if len(query_key) == 6 and query_key[5] != 'en-US':
+        raise FetchError('partial', 'Rippling listing locale is not the verified public en-US scope.')
+    return filters
+
+
 def listing(b,t):
     if b.name in {'Dayforce','Comeet','ClearCompany','ApplicantPro','Paycor Recruiting','isolved','Jibe','TalentBrew'}:
         from .shared_extended import listing_extended
@@ -301,8 +449,9 @@ def listing(b,t):
             if state['apiData']['jobBoardSlug']!=b.slug or state['apiData']['jobBoard']['slug']!=b.slug:raise FetchError('partial','Rippling board identity mismatch.')
             qs=[q for q in state['dehydratedState']['queries'] if q.get('queryKey',[])[:3]==['board',b.slug,'job-posts']]
             if len(qs)!=1:raise FetchError('partial','Rippling listing state is missing.')
-            key=qs[0]['queryKey'][-1];d=qs[0]['state']['data'];n=d['totalItems']
-            if type(n) is not int or not 0<=n<=MAX_JOBS or d['page']!=page or d['pageSize']!=20 or d['totalPages']!=math.ceil(n/20) or key.get('page')!=page or any(key.get(k) for k in ('searchQuery','departments','workplaceType','country','state','city')):raise FetchError('partial','Rippling pagination or scope cannot be verified.')
+            key=qs[0]['queryKey'];d=qs[0]['state']['data'];n=d['totalItems']
+            _rippling_filters(key,b.slug,page)
+            if type(n) is not int or not 0<=n<=MAX_JOBS or d['page']!=page or d['pageSize']!=20 or d['totalPages']!=math.ceil(n/20):raise FetchError('partial','Rippling pagination metadata is invalid.')
             if total is None:total=n
             if total!=n or len(d['items'])!=min(20,n-page*20):raise FetchError('partial','Rippling count changed during pagination.')
             out.extend(d['items'])
@@ -421,7 +570,134 @@ class PublicMetadata(HTMLParser):
         if tag=='meta' and a.get('property')=='og:url':self.urls.append(a.get('content',''))
 
 
+class _SamtecListingPage(HTMLParser):
+    """Read actual listing/range elements; scripts and CSS are not evidence."""
+    _void = {'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'}
+
+    def __init__(self, body):
+        super().__init__(convert_charrefs=True)
+        self.stack = []
+        self.ranges = []
+        self.links = []
+        self.next_links = []
+        self.visible = []
+        self.anchor = None
+        self.has_list = False
+        self.feed(body)
+        self.close()
+        if any(frame[1] or frame[2] is not None for frame in self.stack) or self.anchor:
+            raise FetchError('partial', 'Samtec listing structure is unfinished.')
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        inherited = self.stack[-1] if self.stack else ('', False, None, False)
+        ignored = inherited[3] or tag in {'script', 'style'}
+        in_list, range_index = inherited[1], inherited[2]
+        if not ignored:
+            if len(a) != len(attrs):
+                raise FetchError('partial', 'Samtec HTML has ambiguous attributes.')
+            classes = a.get('class', '').split()
+            if 'jv-job-list' in classes:
+                in_list = self.has_list = True
+            if 'jv-pagination-text' in classes:
+                range_index = len(self.ranges)
+                self.ranges.append('')
+            if tag == 'a' and (in_list or 'jv-pagination-next' in classes):
+                if self.anchor is not None:
+                    raise FetchError('partial', 'Samtec listing contains nested anchors.')
+                self.anchor = {'href': a.get('href'), 'title': '', 'job': in_list,
+                               'next': 'jv-pagination-next' in classes}
+        if tag not in self._void:
+            self.stack.append((tag, in_list, range_index, ignored))
+
+    def handle_data(self, data):
+        if self.stack and self.stack[-1][3]:
+            return
+        self.visible.append(data)
+        if self.stack and self.stack[-1][2] is not None:
+            self.ranges[self.stack[-1][2]] += data
+        if self.anchor is not None:
+            self.anchor['title'] += data
+
+    def handle_endtag(self, tag):
+        if tag in self._void:
+            return
+        if not self.stack or self.stack[-1][0] != tag:
+            raise FetchError('partial', 'Samtec HTML nesting is ambiguous.')
+        if tag == 'a' and self.anchor is not None:
+            if self.anchor['job']:
+                self.links.append(self.anchor.copy())
+            if self.anchor['next']:
+                self.next_links.append(self.anchor.copy())
+            self.anchor = None
+        self.stack.pop()
+
+
+def _samtec_html_listing(b, t):
+    if b.name != 'Jobvite' or b.slug != 'samtec' or b.root != 'https://jobs.jobvite.com' or b.path not in {'/samtec/search', '/samtec/search/'}:
+        raise FetchError('unsupported', 'Samtec listing identity is not the bound public board.')
+    url, visited, entries, total, end = b.url, set(), [], None, 0
+    for page_number in range(20):
+        if url in visited or not allowed(b, url):
+            raise FetchError('partial', 'Samtec pagination URL is repeated or outside its scope.')
+        visited.add(url)
+        parsed = _SamtecListingPage(checked(t.get(url), True))
+        if not parsed.has_list or len(parsed.ranges) != 1:
+            raise FetchError('partial', 'Samtec listing container or unique displayed range is missing.')
+        match = re.fullmatch(r'([0-9]+)-([0-9]+) of ([0-9]+)', ' '.join(parsed.ranges[0].split()))
+        if not match:
+            raise FetchError('partial', 'Samtec displayed range is malformed.')
+        start, stop, count = map(int, match.groups())
+        if count > MAX_JOBS or (total is not None and count != total):
+            raise FetchError('partial', 'Samtec displayed total changed or exceeds the job limit.')
+        total = count
+        if len(parsed.next_links) > 1:
+            raise FetchError('partial', 'Samtec advertises multiple next pages.')
+        rows = []
+        for anchor in parsed.links:
+            if not isinstance(anchor['href'], str) or not anchor['href']:
+                raise FetchError('partial', 'Samtec job link has no target.')
+            job_url = urljoin(url, anchor['href'])
+            if not allowed(b, job_url):
+                raise FetchError('partial', 'Samtec job link leaves its pinned scope.')
+            try:
+                linked = board_link(job_url)
+            except ValueError as exc:
+                raise FetchError('partial', 'Samtec job link is invalid.') from exc
+            if linked.name != b.name or linked.root != b.root or linked.slug != b.slug or not linked.ident or not text(anchor['title']):
+                raise FetchError('partial', 'Samtec job identity or title is invalid.')
+            rows.append({'id': linked.ident, 'title': text(anchor['title']), 'url': job_url})
+        unique(entries + rows)
+        if total == 0:
+            if page_number or start or stop or rows or parsed.next_links or not re.search(r'\bno (?:current |open )?(?:jobs|positions|openings)\b', ' '.join(parsed.visible), re.I):
+                raise FetchError('partial', 'Samtec zero inventory lacks explicit consistent evidence.')
+            return []
+        if start != end + 1 or stop < start or stop > total or len(rows) != stop - start + 1:
+            raise FetchError('partial', 'Samtec displayed range is not contiguous or disagrees with its rows.')
+        entries.extend(rows)
+        end = stop
+        if end == total:
+            if parsed.next_links or len(entries) != total:
+                raise FetchError('partial', 'Samtec terminal page disagrees with the full inventory.')
+            return unique(entries)
+        if not parsed.next_links:
+            raise FetchError('partial', 'Samtec inventory is incomplete without its next page.')
+        href = parsed.next_links[0]['href']
+        if not isinstance(href, str) or not href:
+            raise FetchError('partial', 'Samtec next link has no target.')
+        next_url = urljoin(url, href)
+        parts = urlsplit(next_url)
+        if (not allowed(b, next_url) or parts.hostname != 'jobs.jobvite.com'
+                or parts.path not in {'/samtec/search', '/samtec/search/'}
+                or parts.query != 'p=' + str(page_number + 1) or next_url in visited):
+            raise FetchError('partial', 'Samtec next page is not the scoped consecutive page.')
+        url = next_url
+    raise FetchError('partial', 'Samtec inventory exceeds the twenty-page bound.')
+
+
 def html_listing(b,t):
+    if b.name=='Jobvite' and b.slug=='samtec':
+        return _samtec_html_listing(b,t)
     body=checked(t.get(b.url),True);p=Links(body)
     marker='jobs-list' if b.name=='JazzHR' else 'jv-job-list'
     if marker not in p.containers:
@@ -460,8 +736,107 @@ def schema_job(data,url,ident,name,cid,company):
     return row
 
 
+class _SamtecDetailPage(HTMLParser):
+    """Collect complete actual HTML targets; never use script/style content."""
+    _void = _SamtecListingPage._void
+    _targets = {'jv-job-detail-description': 'description', 'jv-job-detail-meta': 'location', 'jv-header': 'title', 'jv-meta': 'employer'}
+
+    def __init__(self, body):
+        super().__init__(convert_charrefs=True)
+        self.active = []
+        self.values = {key: [] for key in self._targets.values()}
+        self.apply = []
+        self.ignored = None
+        self.feed(body)
+        self.close()
+        if self.active or self.ignored:
+            raise FetchError('partial', 'Samtec detail target is unfinished.')
+
+    def handle_starttag(self, tag, attrs):
+        if self.ignored:
+            return
+        if tag in {'script', 'style'}:
+            self.ignored = tag
+            return
+        a = dict(attrs)
+        classes = (a.get('class') or '').split()
+        targets = [value for key, value in self._targets.items() if key in classes]
+        if (targets or self.active or 'jv-button-apply' in classes) and len(a) != len(attrs):
+            raise FetchError('partial', 'Samtec detail has duplicate attributes.')
+        for target in self.active:
+            if target['key'] == 'location' and 'jv-inline-separator' in classes:
+                target['parts'].append(' SAMTEC_META_SEPARATOR ')
+            target['parts'].append(self.get_starttag_text())
+            if tag not in self._void:
+                target['stack'].append(tag)
+        for key in targets:
+            if (key == 'title' and tag != 'h2') or (key != 'title' and tag not in {'div', 'p'}):
+                raise FetchError('partial', 'Samtec detail target tag is unexpected.')
+            if key == 'employer' and not any(x['key'] == 'description' for x in self.active):
+                continue
+            self.active.append({'key': key, 'stack': [tag], 'parts': []})
+        if 'jv-button-apply' in classes:
+            if tag != 'a':
+                raise FetchError('partial', 'Samtec apply target is not a link.')
+            self.apply.append(a.get('href'))
+
+    def handle_data(self, data):
+        if self.ignored:
+            return
+        from html import escape
+        for target in self.active:
+            target['parts'].append(escape(data))
+
+    def handle_endtag(self, tag):
+        if self.ignored:
+            if tag == self.ignored:
+                self.ignored = None
+            return
+        if tag in self._void:
+            return
+        for target in list(self.active):
+            if not target['stack'] or target['stack'][-1] != tag:
+                raise FetchError('partial', 'Samtec detail target nesting is ambiguous.')
+            target['stack'].pop()
+            if target['stack']:
+                target['parts'].append('</' + tag + '>')
+            else:
+                self.values[target['key']].append(text(''.join(target['parts'])))
+                self.active.remove(target)
+
+
+def _samtec_html_posting(body, b, e, cid, company):
+    if (b.name != 'Jobvite' or b.root != 'https://jobs.jobvite.com' or b.slug != 'samtec'
+            or cid != 'COMP-0739' or company != 'Samtec' or not allowed(b, e['url'])):
+        raise FetchError('partial', 'Samtec detail binding does not match the assigned company.')
+    linked = board_link(e['url'])
+    if linked.ident != e['id'] or linked.slug != 'samtec':
+        raise FetchError('partial', 'Samtec requested detail identity differs from its listing.')
+    parsed = _SamtecDetailPage(body)
+    values = parsed.values
+    if (len(values['description']) != 1 or len(values['description'][0]) < 100
+            or values['title'] != [text(e['title'])]
+            or values['employer'] != ['Position at Samtec, Inc']
+            or len(values['location']) != 1 or not values['location'][0]
+            or len(parsed.apply) != 1 or not isinstance(parsed.apply[0], str)):
+        raise FetchError('partial', 'Samtec full description, title, employer, location or apply identity is missing or ambiguous.')
+    apply = urljoin(e['url'], parsed.apply[0])
+    if apply != 'https://jobs.jobvite.com/samtec/job/' + e['id'] + '/apply':
+        raise FetchError('partial', 'Samtec apply link disagrees with its exact listing identity.')
+    meta = values['location'][0].split('SAMTEC_META_SEPARATOR')
+    if len(meta) < 2 or not all(part.strip() for part in meta):
+        raise FetchError('partial', 'Samtec department and location separator is missing or ambiguous.')
+    department = meta[0].strip()
+    location = '; '.join(part.strip() for part in meta[1:])
+    row = _base({'id': e['id']}, b.name, cid, company)
+    row.update(title=text(e['title']), url=e['url'], description=values['description'][0], location=location, department=department)
+    return row
+
+
 def html_posting(b,t,e,cid,company):
     body=checked(t.get(e['url']),True);p=Links(body);jobs=Scripts(body).jobs()
+    if not jobs and b.name=='Jobvite' and b.slug=='samtec':
+        return _samtec_html_posting(body,b,e,cid,company)
     if not jobs and b.name=='JazzHR':
         from .shared_extended import Elements
         descriptions=Elements(body,{'id:job-description'}).values
@@ -506,46 +881,104 @@ def _inventory_changes(before, after):
                      for label, values in [('added', added), ('removed', removed), ('edited', edited)])
 
 
+def _detail_policy(company_id, company):
+    from pathlib import Path
+    from .derived_cache import content_digest
+    root = Path(__file__).parent
+    return content_digest([company_id, company, *(root.joinpath(name).read_bytes() for name in
+        ('shared_boards.py', 'shared_extended.py', 'ats.py', 'core.py'))])
+
+
 MAX_INVENTORY_RECONCILIATIONS = 3
 
 
-def _fetch(b,t,cid,company,source,ids=None,max_jobs=MAX_JOBS):
+def _detail_results(board, transport, entries, company_id, company):
+    """Fetch independent details; only the company owner merges the outcomes."""
+    blocked = Event()
+
+    def fetch_entry(entry):
+        if blocked.is_set():
+            return entry, None, FetchError('blocked', 'Detail fetching stopped after an access-denied response.')
+        try:
+            return entry, posting(board, transport, entry, company_id, company), None
+        except FetchError as error:
+            if error.status == 'blocked':
+                blocked.set()
+            return entry, None, error
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            return entry, None, FetchError('partial', 'malformed posting data')
+
+    # Browser pages and injected transports may be bound to their owner thread.
+    # Only the built-in HTTP transport has shared pacing and per-thread clients.
+    if type(transport) is Transport:
+        results = iter_details(fetch_entry, entries)
+    else:
+        results = (fetch_entry(entry) for entry in entries)
+    with closing(results):
+        yield from results
+
+
+def _fetch(b,t,cid,company,source,ids=None,max_jobs=MAX_JOBS,*,progress=None):
     jobs=[]; completed={}; revisions=[]
+    policy = _detail_policy(cid, company) if progress is not None else ''
+    reused = fetched = 0
     try:
         if b.name=='Jibe' and urlsplit(b.root).hostname.endswith('.jibeapply.com'):
             words=re.findall('[a-z0-9]+',company.casefold());initials=''.join(w[0] for w in words if w not in {'and','inc','group','the'})
             if b.slug.casefold() not in ''.join(words) and b.slug.casefold()!=initials:raise FetchError('unsupported','Shared Jibe tenant does not establish this company scope.')
         entries=listing(b,t)
         _inventory_changes(entries, entries)  # Validate IDs before fetching details.
+        saved = progress.completed_details(policy) if progress is not None else {}
         for attempt in range(MAX_INVENTORY_RECONCILIATIONS + 1):
             selected=entries if ids is None else [e for e in entries if str(e['id']) in ids or str(e.get('shortcode','')) in ids or any(i in e.get('url','').split('/') for i in ids)]
             partial=ids is not None and (len(selected)!=len(entries) or not ids.issubset({str(e['id']) for e in selected}|{str(e.get('shortcode','')) for e in selected}|{i for e in selected for i in e.get('url','').split('/')}))
-            failures=[]
-            for e in selected:
-                ident=str(e['id'])
-                if ident in completed:
-                    continue
-                if len(jobs)>=max_jobs:raise FetchError('partial',f'Bounded validation stopped at {len(jobs)} of {len(selected)} postings.')
-                try:
-                    completed[ident]=(e, posting(b,t,e,cid,company))
-                    jobs=[record[1] for record in completed.values()]
-                except FetchError as error:
-                    if error.status=='blocked':raise
-                    failures.append(ident+': '+error.reason)
-                except (ValueError,TypeError,KeyError,AttributeError,IndexError):
-                    failures.append(ident+': malformed posting data')
-                print(json.dumps({'event':'inventory_page','provider':b.name,'company_id':cid,'postings_fetched':len(jobs),'total':len(selected)}),file=sys.stderr)
+            if attempt == 0:
+                for entry in selected:
+                    ident = str(entry['id'])
+                    if ident in saved and saved[ident][0] == entry and len(completed) < max_jobs:
+                        completed[ident] = saved[ident]
+                jobs = [record[1] for record in completed.values()]
+                reused = len(jobs)
+            failures = []
+            pending = [entry for entry in selected if str(entry['id']) not in completed]
+            offset = 0
+            while offset < len(pending):
+                capacity = max_jobs - len(jobs)
+                if capacity <= 0:
+                    raise FetchError('partial', f'Bounded validation stopped at {len(jobs)} of {len(selected)} postings.')
+                # Never schedule more possible successes than the inventory cap.
+                # Failed entries leave room for another bounded group.
+                batch = pending[offset:offset + capacity]
+                with closing(_detail_results(b, t, batch, cid, company)) as results:
+                    for entry, record, error in results:
+                        ident = str(entry['id'])
+                        if error is not None:
+                            if error.status == 'blocked':
+                                raise error
+                            failures.append(ident + ': ' + error.reason)
+                        else:
+                            completed[ident] = (entry, record)
+                            jobs.append(record)
+                            fetched += 1
+                            if progress is not None:
+                                progress.save_detail(entry, record, policy)
+                        logging.getLogger(__name__).debug('%s', json.dumps({
+                            'event': 'inventory_page', 'provider': b.name, 'company_id': cid,
+                            'postings_fetched': len(jobs), 'total': len(selected),
+                        }))
+                offset += len(batch)
             current=listing(b,t)
             changes=_inventory_changes(entries,current)
             if not changes:
                 reason=f'{b.name}: retrieved {len(jobs)} full postings and rechecked the public inventory.'
+                if reused:reason+=f' Reused {reused} validated details from this cycle; fetched {fetched} details.'
                 if revisions:reason+=' Reconciled inventory changes: '+' | '.join(revisions)+'.'
                 if failures:reason+=' '+str(len(failures))+' postings failed validation: '+'; '.join(failures[:3])+'.'
                 if partial:reason+=' Employer links only a subset of its board; company scope remains partial.'
                 return Inventory('partial' if partial or failures else 'complete',jobs,reason,source,b.name)
             revisions.append(changes)
-            print(json.dumps({'event':'inventory_changed','provider':b.name,'company_id':cid,
-                              'reconciliation':attempt+1,'changes':changes}),file=sys.stderr)
+            logging.getLogger(__name__).debug('%s', json.dumps({'event':'inventory_changed','provider':b.name,'company_id':cid,
+                              'reconciliation':attempt+1,'changes':changes}))
             # Keep only full details that still match the latest listing. Deleted
             # entries leave this inventory; edited/new entries need fresh details.
             current_by_id={str(e['id']):e for e in current}
@@ -561,7 +994,7 @@ def _fetch(b,t,cid,company,source,ids=None,max_jobs=MAX_JOBS):
     except Exception as e:return Inventory('partial',jobs,f'Public board data/transport failed validation ({type(e).__name__}); inventory incomplete.',source,b.name)
 
 
-def fetch_shared(ats,url,cid,company,transport=None,pages=None,max_jobs=MAX_JOBS):
+def fetch_shared(ats,url,cid,company,transport=None,pages=None,max_jobs=MAX_JOBS,*,progress_factory=None):
     # Unknown discovery is not a provider and says nothing about parent scope.
     # Persisting "Shared ATS" here makes subsequent runs treat it as a scope
     # restriction. Report an ATS only once a board has actually been resolved.
@@ -575,7 +1008,8 @@ def fetch_shared(ats,url,cid,company,transport=None,pages=None,max_jobs=MAX_JOBS
         else:b,ids=discover(url,pages or CareersTransport());name=b.name
         if any(k in ats.casefold() for k in ('shared','parent')) and ids is None:raise FetchError('unsupported','Parent board requires a company-specific job scope.')
         if b.name=='TalentBrew':return Inventory('blocked',reason='TalentBrew public inventory requires its browser pagination adapter.',source_url=url,ats=b.name)
-        result=_fetch(b,transport or Transport(b),cid,company,url if ids is not None else b.url,ids,max_jobs)
+        result=_fetch(b,transport or Transport(b),cid,company,url if ids is not None else b.url,ids,max_jobs,
+                      progress=progress_factory(b.url) if progress_factory is not None else None)
         if not direct and result.status=='complete' and discover(url,pages or CareersTransport())!=(b,ids):
             result.status='partial';result.reason+=' Employer board links changed during the scan.'
         return result
@@ -665,7 +1099,8 @@ def fetch_shared_browser(ats,url,cid,company,max_jobs=MAX_JOBS,*,progress_factor
                 if b.name=='TalentBrew':
                     from .talentbrew import scan
                     return scan(b,context,cid,company,max_jobs,progress=progress_factory(b.url) if progress_factory is not None else None)
-                result=_fetch(b,BrowserTransport(b,context),cid,company,url if ids else b.url,ids,max_jobs)
+                result=_fetch(b,BrowserTransport(b,context),cid,company,url if ids else b.url,ids,max_jobs,
+                              progress=progress_factory(b.url) if progress_factory is not None else None)
                 if not known_host(urlsplit(url).hostname) and result.status=='complete' and discover(url,pages)!=(b,ids):result.status='partial';result.reason+=' Employer scope changed.'
                 return result
             finally:browser.close()

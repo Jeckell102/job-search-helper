@@ -51,7 +51,6 @@ def fetch_freefly(careers_url, company_id, company, transport=None):
     client=transport or CareersTransport(); jobs=[]
     try:
         first=_listing(_read(client,SOURCE))
-        if len(first) != 15: raise FetchError("partial", f"Freefly careers inventory changed; found {len(first)} postings.")
         for ident,title in first:
             url=f"https://{HOST}/careers/{ident}"
             p=_Page(); p.feed(_read(client,url)); body=text(" ".join(p.parts))

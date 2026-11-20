@@ -150,6 +150,31 @@ class TitleAuditRegressions(unittest.TestCase):
         self.assertFalse(result["first_pass"])
         self.assertEqual(result["summary"]["local_title_audit_existing_history_skipped"], 1)
 
+    def test_removed_title_rule_restores_retained_jobs_to_normal_review(self):
+        self.posting["title"] = "Principal Product Manager"
+        with patch("job_search_helper.title_audit.classify_title", return_value="reject"):
+            self.inbox.save("old-policy", "company-id", self.payload)
+        for acknowledged in (False, True):
+            with self.subTest(acknowledged=acknowledged):
+                if acknowledged:
+                    self.inbox.acknowledge("old-policy", "company-id")
+                records, _ = load_title_audits(self.path, "test-sheet")
+                self.assertEqual(len(records), 1)
+                result = build_review_queues(repo_for([]), inventory_database=self.path)
+                queue = result["first_pass"] + result["second_pass"]
+                self.assertEqual(len(queue), 1)
+                self.assertNotEqual(queue[0]["band"], "FIRST_PASS_TITLE_FILTER_AUDIT")
+                self.assertFalse(result["deterministic_filtered"])
+
+    def test_new_complete_inventory_retires_a_formerly_excluded_posting(self):
+        self.posting["title"] = "Principal Product Manager"
+        with patch("job_search_helper.title_audit.classify_title", return_value="reject"):
+            self.inbox.save("old-policy", "company-id", self.payload)
+        self.inbox.acknowledge("old-policy", "company-id")
+        self.inbox.save("new-policy", "company-id", dict(
+            self.payload, jobs=[], fetched_at="2026-09-26T12:00:00Z"))
+        self.assertEqual(load_title_audits(self.path, "test-sheet")[0], [])
+
     def test_failed_inventory_keeps_audit_but_complete_empty_retires_it(self):
         self.inbox.save("one", "company-id", self.payload)
         self.inbox.acknowledge("one", "company-id")
@@ -170,32 +195,32 @@ class TitleAuditRegressions(unittest.TestCase):
 
 
 class RunnerRefreshRegressions(unittest.TestCase):
-    def test_lifecycle_refreshes_before_and_after(self):
+    def test_lifecycle_refreshes_after_without_delaying_first_fetch(self):
         events = []
         with patch.object(runner, "_refresh_review_queue", side_effect=lambda *a: events.append("refresh")):
             with runner._review_queue_lifecycle(object(), Path("unused")):
                 events.append("work")
-        self.assertEqual(events, ["refresh", "work", "refresh"])
+        self.assertEqual(events, ["work", "refresh"])
 
     def test_interruption_still_refreshes(self):
         with patch.object(runner, "_refresh_review_queue") as refresh:
             with self.assertRaises(KeyboardInterrupt):
                 with runner._review_queue_lifecycle(object(), Path("unused")):
                     raise KeyboardInterrupt()
-        self.assertEqual(refresh.call_count, 2)
+        self.assertEqual(refresh.call_count, 1)
 
     def test_failed_final_refresh_does_not_hide_original_error(self):
-        with patch.object(runner, "_refresh_review_queue", side_effect=[None, RuntimeError("refresh failed")]), redirect_stderr(io.StringIO()):
+        with patch.object(runner, "_refresh_review_queue", side_effect=RuntimeError("refresh failed")), redirect_stderr(io.StringIO()):
             with self.assertRaisesRegex(ValueError, "original scrape error"):
                 with runner._review_queue_lifecycle(object(), Path("unused")):
                     raise ValueError("original scrape error")
 
-    def test_empty_sync_runs_both_refreshes(self):
+    def test_empty_sync_still_refreshes_on_exit(self):
         with tempfile.TemporaryDirectory() as directory:
             repo = MagicMock(spreadsheet_id="test-sheet", metrics={})
             engine = MagicMock(performance={})
             engine.sync_manual_opportunities.return_value = {"added": 0, "skipped": 0}
             with patch.object(runner, "_load_environment"), patch.object(runner, "state_path", return_value=Path(directory) / "state.db"), patch.object(runner, "get_repository", return_value=repo), patch.object(runner, "Engine", return_value=engine), patch.object(runner, "_refresh_review_queue") as refresh, redirect_stdout(io.StringIO()):
                 self.assertEqual(runner.run_start(sync_only=True, browser_fallback=False), 0)
-            self.assertEqual(refresh.call_count, 2)
+            self.assertEqual(refresh.call_count, 1)
             engine.resume_local.assert_not_called()

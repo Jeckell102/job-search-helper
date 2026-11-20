@@ -1,5 +1,6 @@
-"""Per-job browser checkpoints, isolated by cycle, company and source URL."""
+"""Per-job fetch checkpoints, isolated by cycle, company and source URL."""
 import json
+import time
 
 
 SCHEMA = """CREATE TABLE IF NOT EXISTS browser_progress (
@@ -63,3 +64,18 @@ class BrowserProgress:
 
     def save_listing(self, state):
         self._write('listing', 'state', state)
+
+    def completed_details(self, policy, *, max_age=6 * 60 * 60):
+        """Only current-cycle successes under the same adapter policy qualify.
+
+        The adapter must also compare each entry to a fresh listing. A resumed
+        cycle older than six hours must fetch details again, even if unchanged.
+        """
+        now = time.time()
+        return {key: (value['entry'], value['job'])
+                for key, value in self._read('validated_detail').items()
+                if value.get('policy') == policy and 0 <= now - value.get('saved_at', 0) <= max_age}
+
+    def save_detail(self, entry, job, policy):
+        self._write('validated_detail', str(entry['id']), {
+            'entry': entry, 'job': job, 'policy': policy, 'saved_at': time.time()})

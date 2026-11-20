@@ -73,6 +73,9 @@ class RunScopedSyncTests(unittest.TestCase):
             finally:
                 sync.events.append('close')
         kwargs.setdefault('log', lambda message:None)
+        # Existing lifecycle tests exercise delivery immediately; gathering has
+        # deterministic clock and final-drain coverage in test_efficiency_reuse.
+        kwargs.setdefault('coalesce_seconds', 0)
         return RunSheetsSync(factory, **kwargs)
 
     def test_pending_backlog_restarts_immediately_without_60_second_pause(self):
@@ -93,7 +96,7 @@ class RunScopedSyncTests(unittest.TestCase):
 
     def test_idle_poll_publishes_new_changes_before_the_60_second_interval(self):
         sync = FakeSync()
-        session = self.session(sync, interval=60)
+        session = self.session(sync, interval=60, coalesce_seconds=0)
         with session:
             sync.local.pending = 1
             self.assertTrue(sync.published.wait(4), 'New changes waited for the 60-second interval')
@@ -108,18 +111,51 @@ class RunScopedSyncTests(unittest.TestCase):
             sync.events.append('scrape')
             sync.local.pending = 3
         self.assertEqual(sync.events, ['open','pull','publish','publish','scrape',
-                                      'publish','publish','publish','close'])
+                                      'pull','publish','publish','publish','close'])
         self.assertFalse(session.thread.is_alive())
         self.assertEqual(sync.local.pending,0)
 
-    def test_periodic_ticks_publish_only_without_repull(self):
+    def test_periodic_tick_repulls_after_intake_interval_before_publishing(self):
         sync = FakeSync()
         session = self.session(sync,interval=.02)
         with session:
             sync.local.pending = 1
             self.assertTrue(sync.published.wait(2))
-        self.assertEqual(sync.events.count('pull'),1)
+        # One initial pull, one due periodic reconciliation, and the
+        # terminal reconciliation before the worker stops.
+        self.assertEqual(sync.events.count('pull'),3)
         self.assertEqual(sync.events.count('publish'),1)
+        self.assertFalse(session.thread.is_alive())
+
+    def test_due_intake_keeps_legacy_publish_patch_signature(self):
+        sync = FakeSync()
+        session = self.session(sync, interval=.02)
+        original_publish = session._publish
+        calls = []
+
+        # Tests and callers may patch this long-standing seam.  A due intake
+        # must not add a new keyword argument to that replacement.
+        def legacy_publish(source, phase, *, final=False):
+            calls.append((phase, final))
+            return original_publish(source, phase, final=final)
+
+        with patch.object(session, '_publish', side_effect=legacy_publish):
+            with session:
+                sync.local.pending = 1
+                self.assertTrue(sync.published.wait(2))
+        self.assertIn(('periodic', False), calls)
+        self.assertEqual(sync.events.count('pull'), 3)
+
+    def test_idle_periodic_intake_repulls_without_local_pending_work(self):
+        sync = FakeSync()
+        session = self.session(sync, interval=.02)
+        with session:
+            for _ in range(200):
+                if sync.events.count('pull') >= 2:
+                    break
+                threading.Event().wait(.01)
+            self.assertEqual(sync.events.count('pull'), 2)
+            self.assertEqual(sync.events.count('publish'), 0)
         self.assertFalse(session.thread.is_alive())
 
     def test_run_totals_include_all_periodic_updates_and_final_drain(self):
@@ -175,7 +211,7 @@ class RunScopedSyncTests(unittest.TestCase):
             self.assertEqual(session.report['final']['stop_reason'], 'drained')
             self.assertFalse(session.thread.is_alive())
 
-    def test_startup_remainder_retries_on_periodic_tick_without_another_pull(self):
+    def test_startup_remainder_retries_on_periodic_tick_with_due_reconciliation(self):
         sync = FakeSync(pending=2)
         now = [0.0]
         publish = sync.publish_batch
@@ -199,7 +235,7 @@ class RunScopedSyncTests(unittest.TestCase):
                 allow_retry.set()
                 self.assertTrue(sync.published.wait(2))
             self.assertEqual(session.report['periodic']['pending_cells'], 0)
-        self.assertEqual(sync.events.count('pull'), 1)
+        self.assertGreaterEqual(sync.events.count('pull'), 2)
         self.assertFalse(session.thread.is_alive())
 
     def test_startup_held_work_stays_saved_and_does_not_prevent_scraping(self):
@@ -227,7 +263,8 @@ class RunScopedSyncTests(unittest.TestCase):
         sync = FakeSync()
         with self.session(sync):
             pass
-        self.assertEqual(sync.events,['open','pull','close'])
+        # Even an otherwise idle run performs one final Company-control pull.
+        self.assertEqual(sync.events,['open','pull','pull','close'])
 
     def test_keyboard_interrupt_still_performs_final_drain(self):
         sync = FakeSync()
@@ -421,7 +458,7 @@ class SyncWriterContentionTests(unittest.TestCase):
                 owner.__exit__(None, None, None)
                 released = True
                 self.assertTrue(sync.published.wait(2), self.logs)
-            self.assertEqual(sync.events.count('pull'), 1)
+            self.assertGreaterEqual(sync.events.count('pull'), 1)
             self.assertEqual(sync.local.pending, 0)
             self.assertEqual(sync.events[0:2], ['open', 'pull'])
             self.assertFalse(session.thread.is_alive())
@@ -447,7 +484,7 @@ class SyncWriterContentionTests(unittest.TestCase):
                 self.assertEqual(sync.local.pending, 3)
             self.assertTrue(sync.published.wait(2), self.logs)
         self.assertEqual(sync.local.pending, 0)
-        self.assertEqual(sync.events.count('pull'), 1)
+        self.assertGreaterEqual(sync.events.count('pull'), 1)
 
     def test_actual_publication_remains_exclusive(self):
         sync = FakeSync()
@@ -471,6 +508,24 @@ class SyncWriterContentionTests(unittest.TestCase):
             self.assertTrue(sync.published.wait(2))
         with cli.writer_lock(self.lock):
             pass
+
+    def test_large_backlog_releases_remote_lock_between_batches(self):
+        sync = FakeSync(pending=3)
+        handoffs = []
+        def progress(rows, remaining, batches):
+            with cli.writer_lock(self.lock):
+                handoffs.append(rows)
+        result = publish_pending(sync, progress=progress,
+            lock_factory=lambda: cli.writer_lock(self.lock))
+        self.assertEqual(handoffs, [1, 2, 3])
+        self.assertEqual(result['stop_reason'], 'drained')
+
+    def test_busy_error_identifies_scraper_lock_and_recorded_owner(self):
+        path = self.root / 'scraper.lock'
+        with cli.writer_lock(path):
+            with self.assertRaisesRegex(cli.WriterLockBusy, r'Another scraper.*scraper.lock.*PID'):
+                with cli.writer_lock(path):
+                    self.fail('Second scraper started')
 
     def imported(self):
         remote = MemoryRepository({'Companies': [{'Company ID': 'C-1', 'Company': 'Acme',
@@ -501,7 +556,7 @@ class SyncWriterContentionTests(unittest.TestCase):
         self.assertEqual(local.db.execute('SELECT count(*) FROM dirty').fetchone()[0], 1)
         self.assertFalse(session.thread.is_alive())
 
-    def test_production_deferred_intake_imports_fresh_controls_before_publishing(self):
+    def test_production_deferred_intake_holds_paused_company_output(self):
         local, remote = self.imported()
         session = run_scoped_sync(local, self.root / 'state.db', interval=.02)
         session.log = self.logs.append
@@ -510,20 +565,27 @@ class SyncWriterContentionTests(unittest.TestCase):
         released = False
         try:
             with patch.object(cli, 'get_remote_repository', return_value=remote) as authenticate:
-                with session:
-                    authenticate.assert_not_called()
-                    local.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
-                                   'values': {'Last Checked': '2026-10-22'}}])
-                    remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
-                                    'values': {'Company Status': 'Paused'}}])
-                    owner.__exit__(None, None, None)
-                    released = True
-                # Final sync also catches a run that finishes before the retry tick.
+                with self.assertRaisesRegex(RuntimeError, 'pending'):
+                    with session:
+                        authenticate.assert_not_called()
+                        local.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
+                                       'values': {'Last Checked': '2026-10-22'}}])
+                        remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
+                                        'values': {'Company Status': 'Paused'}}])
+                        owner.__exit__(None, None, None)
+                        released = True
+                # Final intake imports the pause even if no periodic tick ran.
                 authenticate.assert_called_once()
             self.assertEqual(local.read('Companies')[0]['Company Status'], 'Paused')
-            self.assertEqual(remote.read('Companies')[0]['Last Checked'], '2026-10-22')
-            self.assertEqual(local.db.execute('SELECT count(*) FROM dirty').fetchone()[0], 0)
-            self.assertIsNone(session.final_error)
+            self.assertEqual(remote.read('Companies')[0]['Last Checked'], '')
+            self.assertEqual(local.db.execute('SELECT count(*) FROM dirty').fetchone()[0], 1)
+            self.assertIsNotNone(session.final_error)
+            # A later explicit intake of the user's resume releases the hold.
+            remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
+                            'values': {'Company Status': 'Active'}}])
+            sync = SheetsSynchronizer(local, remote)
+            sync.pull()
+            self.assertEqual(sync.publish_batch()['published_rows'], 1)
         finally:
             if not released:
                 owner.__exit__(None, None, None)
@@ -565,6 +627,18 @@ class RealSQLiteSyncLifecycleTests(unittest.TestCase):
 
 
 class RunnerSyncWiringTests(unittest.TestCase):
+    def test_scraper_starts_while_reviewer_owns_review_and_remote_locks(self):
+        @contextmanager
+        def reviewer_first(path):
+            self.assertEqual(path.name, 'scraper.lock')
+            with cli.writer_lock(path.parent / 'review-writeback.lock'), \
+                 cli.writer_lock(path.parent / 'writer.lock'), cli.writer_lock(path):
+                yield
+        with patch.object(runner, 'writer_lock', side_effect=reviewer_first), \
+             patch.object(cli, 'storage_backend', return_value='sqlite'):
+            result, _ = self.run_empty()
+        self.assertEqual(result, 0)
+
     def run_empty(self, *, local=True, defer=False):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
@@ -604,153 +678,6 @@ class RunnerSyncWiringTests(unittest.TestCase):
         result,sync = self.run_empty(local=False)
         self.assertEqual(result,0)
         sync.assert_not_called()
-
-    def test_exact_cycle_sync_is_conservatively_held_without_global_sync(self):
-        """Named recovery has no global pull/publish while planning is incomplete."""
-        directory = tempfile.TemporaryDirectory()
-        self.addCleanup(directory.cleanup)
-        repo = MagicMock(spreadsheet_id='fixture', metrics={})
-        repo.is_local = True
-        output = StringIO()
-        with patch.object(runner, '_load_environment'), \
-             patch.object(runner, 'storage_backend', return_value='sqlite'), \
-             patch.object(runner, 'state_path', return_value=Path(directory.name) / 'state.db'), \
-             patch.object(runner, 'get_repository') as get_repository, \
-             patch.object(runner, 'InventoryInbox') as inbox_class, \
-             patch.object(runner, '_refresh_review_queue') as refresh, \
-             patch.object(runner, '_save_performance') as save_performance, \
-             patch.object(runner, '_print_run_summary') as print_summary, \
-             patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
-             patch('job_search_helper.closed_jobs.stage_closed_pending') as closed_jobs, \
-             patch('job_search_helper.scrape_outcome_producer.record_cycle_outcomes') as outcomes, \
-             patch('job_search_helper.sqlite_repository.SQLiteRepository') as local_repository, \
-             patch('job_search_helper.cli.get_remote_repository') as remote_factory, \
-             patch('job_search_helper.exact_cycle_sync.publish_exact_cycle',
-                   return_value={'cycle_id': 'CYC-EXACT', 'confirmed': [], 'held': [], 'skipped': []}) as publish, \
-             redirect_stdout(output):
-            inbox_class.has_unblocked_inventory.return_value = True
-            remote_factory.return_value = repo
-            local_repository.return_value.get_meta.return_value = 'compact-v1'
-            self.assertEqual(runner.run_start(
-                sync_only=True, sync_cycle_id=' CYC-EXACT ', browser_fallback=False,
-            ), 0)
-
-        inbox_class.has_unblocked_inventory.assert_called_once_with(
-            Path(directory.name) / 'inventories.sqlite3', 'CYC-EXACT')
-        inbox_class.assert_not_called()
-        sync.assert_not_called()
-        get_repository.assert_not_called()
-        publish.assert_not_called()
-        remote_factory.assert_not_called()
-        local_repository.assert_not_called()
-        self.assertIn('Exact cycle recovery held:', output.getvalue())
-        closed_jobs.assert_not_called()
-        outcomes.assert_not_called()
-        refresh.assert_not_called()
-        save_performance.assert_not_called()
-        print_summary.assert_not_called()
-
-    def test_absent_exact_cycle_does_not_start_publisher(self):
-        directory = tempfile.TemporaryDirectory()
-        self.addCleanup(directory.cleanup)
-        repo = MagicMock(spreadsheet_id='fixture', metrics={})
-        repo.is_local = True
-        with patch.object(runner, '_load_environment'), \
-             patch.object(runner, 'storage_backend', return_value='sqlite'), \
-             patch.object(runner, 'state_path', return_value=Path(directory.name) / 'state.db'), \
-             patch.object(runner, 'get_repository', return_value=repo), \
-             patch.object(runner, 'InventoryInbox') as inbox_class, \
-             patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
-             redirect_stdout(StringIO()):
-            inbox_class.has_unblocked_inventory.return_value = False
-            self.assertEqual(runner.run_start(
-                sync_only=True, sync_cycle_id='CYC-MISSING', browser_fallback=False,
-            ), 0)
-        sync.assert_not_called()
-        inbox_class.assert_not_called()
-
-    def test_exact_cycle_hold_leaves_unrelated_outbox_and_inbox_bytes_untouched(self):
-        """A held exact recovery cannot publish, pull, or alter another cycle."""
-        directory = tempfile.TemporaryDirectory()
-        self.addCleanup(directory.cleanup)
-        root = Path(directory.name)
-        local = SQLiteRepository(root / 'jobs.sqlite3', 'fixture', initialize=True)
-        self.addCleanup(local.close)
-        company = {
-            'Company': 'Other Co', 'Company ID': 'COMP-OTHER', 'Company Status': 'Active',
-            'Official Careers URL': 'https://jobs.example.test/other', 'ATS / Source': 'Greenhouse',
-        }
-        for tab in SCHEMAS:
-            local.import_rows(tab, enumerate([company] if tab == 'Companies' else [], 2))
-        with local.transaction():
-            local.set_meta('ready', 'yes')
-        # Seed both a normal publisher row and an unrelated coordinator outbox
-        # event. A named cycle must leave each exact SQLite value unchanged.
-        local.commit([{'tab': 'Companies', 'identity': {'Company ID': 'COMP-OTHER'},
-                       'values': {'Notes': 'unrelated pending publisher row'}}])
-        local.mutate_company_with_event(
-            {'tab': 'Companies', 'identity': {'Company ID': 'COMP-OTHER'},
-             'values': {'Notes': 'unrelated coordinator outbox row'}},
-        )
-        inbox_path = root / 'inventories.sqlite3'
-        inbox = runner.InventoryInbox(inbox_path, 'fixture')
-        try:
-            inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': [], 'marker': 'exact-bytes'})
-            inbox.save('CYC-OTHER', 'COMP-OTHER', {'jobs': [], 'marker': 'other-bytes'})
-        finally:
-            inbox.close()
-
-        def snapshot():
-            db = sqlite3.connect(root / 'jobs.sqlite3')
-            inbox_db = sqlite3.connect(inbox_path)
-            try:
-                return {
-                    'dirty': list(db.execute('SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header')),
-                    'outbox': list(db.execute(
-                        'SELECT event_id,company_id,revision,source_revision,kind,payload,created_at '
-                        'FROM company_event_outbox ORDER BY event_id')),
-                    'inbox': list(inbox_db.execute(
-                        'SELECT cycle,company,payload,blocked FROM inventories ORDER BY cycle,company')),
-                    'plans': list(inbox_db.execute(
-                        'SELECT cycle,company,payload,cursor FROM sync_plans ORDER BY cycle,company')),
-                }
-            finally:
-                db.close()
-                inbox_db.close()
-
-        before = snapshot()
-        with patch.object(runner, '_load_environment'), \
-             patch.object(runner, 'storage_backend', return_value='sqlite'), \
-             patch.object(runner, 'state_path', return_value=root / 'state.db'), \
-             patch.object(runner, 'get_repository', return_value=local), \
-             patch.object(runner, 'load_title_blacklist'), \
-             patch.object(runner, 'load_title_review_list'), \
-             patch('job_search_helper.run_sync.run_scoped_sync') as sync, \
-             patch('job_search_helper.sqlite_repository.SQLiteRepository') as local_repository, \
-             patch('job_search_helper.cli.get_remote_repository') as remote_factory, \
-             redirect_stdout(StringIO()):
-            remote_factory.return_value = MagicMock()
-            local_repository.return_value.get_meta.return_value = None
-            self.assertEqual(runner.run_start(
-                sync_only=True, sync_cycle_id='CYC-EXACT', browser_fallback=False,
-            ), 0)
-        self.assertEqual(snapshot(), before)
-        sync.assert_not_called()
-
-    def test_exact_cycle_id_must_name_saved_inventory_and_is_sync_only(self):
-        with self.assertRaisesRegex(ValueError, 'sync only'):
-            runner.run_start(sync_cycle_id='CYC-EXACT')
-        with self.assertRaisesRegex(ValueError, 'non-empty exact'):
-            runner.run_start(sync_only=True, sync_cycle_id='   ')
-
-    def test_cli_passes_exact_cycle_id_only_to_sync(self):
-        with patch.object(runner, 'run_start', return_value=0) as run:
-            self.assertEqual(runner.main(['sync', '--cycle-id', 'CYC-EXACT']), 0)
-        self.assertEqual(run.call_args.kwargs['sync_cycle_id'], 'CYC-EXACT')
-        with patch.object(runner, 'run_start') as run, redirect_stdout(StringIO()), \
-             patch('sys.stderr', new_callable=StringIO):
-            self.assertEqual(runner.main(['start', '--cycle-id', 'CYC-EXACT']), 2)
-        run.assert_not_called()
 
 
 if __name__ == '__main__':

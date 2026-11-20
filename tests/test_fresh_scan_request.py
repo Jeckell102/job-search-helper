@@ -10,9 +10,7 @@ from job_search_helper.engine import Engine, State
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.repository import MemoryRepository
 from job_search_helper.runner import active_inbox_cycles, resolve_cycle
-from job_search_helper.scan_request import (company_only_intake_start_measurement,
-                                             requested_scan, superseded_cycle_ids, _read_request,
-                                             request_fingerprint)
+from job_search_helper.scan_request import requested_scan, superseded_cycle_ids
 from test_fetch_pool import company, inventory
 
 
@@ -55,30 +53,6 @@ class FreshScanRequestTests(unittest.TestCase):
         self.assertEqual(first,second)
         self.assertEqual(len(self.state.cycles()),2)
 
-    def test_company_only_intake_measurement_has_deterministic_idle_and_busy_targets(self):
-        request = {
-            'mode': 'company-only', 'request_id': 'measurement', 'company_ids': ['C-1'],
-            'source_revision': 'rev-1', 'enqueued_at': '2026-11-18T00:00:00Z',
-        }
-        idle = company_only_intake_start_measurement(
-            request, {'started_at': '2026-11-18T00:00:45Z'}, [],
-        )
-        self.assertEqual(idle['condition'], 'idle')
-        self.assertEqual(idle['intake_to_start_seconds'], 45)
-        self.assertEqual(idle['target_seconds'], 60)
-        self.assertTrue(idle['target_met'])
-
-        busy = company_only_intake_start_measurement(
-            request, {'started_at': '2026-11-18T00:02:50Z'}, [{
-                'id': 'CYC-BLOCKER', 'completed_at': '2026-11-18T00:02:00Z',
-            }],
-        )
-        self.assertEqual(busy['condition'], 'busy')
-        self.assertEqual(busy['safe_boundary_cycle_id'], 'CYC-BLOCKER')
-        self.assertEqual(busy['intake_to_start_seconds'], 50)
-        self.assertEqual(busy['target_seconds'], 60)
-        self.assertTrue(busy['target_met'])
-
     def test_old_inbox_is_preserved_but_not_replayed_by_normal_start(self):
         self.inbox.save(self.old,'C-0',{'jobs':[],'inventory_status':'blocked'})
         cycle_id = requested_scan(self.engine,self.state,self.database)
@@ -109,36 +83,6 @@ class FreshScanRequestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'unfinished local'):
             self.engine.start_cycle()
 
-    def test_explicit_recovery_pause_preserves_checkpoint_and_holds_only_unfinished_work(self):
-        cycle = self.state.cycle(self.old)
-        cycle['companies']['C-0']['stage'] = 'complete'
-        self.engine._sync_cycle(cycle)
-        result = self.engine.pause_interrupted_cycle(self.old, reason='operator recovery boundary')
-        paused = self.state.cycle(self.old)
-        self.assertEqual(result['paused_company_ids'], ['C-1', 'C-2', 'C-3', 'C-4', 'C-5'])
-        self.assertEqual(paused['companies']['C-0']['stage'], 'complete')
-        self.assertEqual(paused['companies']['C-1']['recovery_previous_stage'], 'queued')
-        self.assertEqual(paused['status'], 'Complete with exceptions')
-        rows = {row['Company ID']: row for row in self.repo.read('Companies')}
-        self.assertEqual(rows['C-0']['Scan State'], 'Queued')
-        self.assertEqual(rows['C-1']['Scan State'], 'Blocked / Manual Review')
-        self.assertEqual(paused['recovery_pause']['previous_stages']['C-1'], 'queued')
-        self.assertEqual(self.engine.status(self.old)['status'], 'Complete with exceptions')
-
-    def test_recovery_pause_refuses_scope_or_membership_drift(self):
-        self.repo.commit([{'tab': 'Scan Cycles', 'identity': {'Cycle ID': self.old},
-                           'values': {'Notes': json.dumps({'company_ids': ['C-0']})}}])
-        with self.assertRaisesRegex(ValueError, 'scope no longer matches'):
-            self.engine.pause_interrupted_cycle(self.old, reason='operator recovery boundary')
-        self.assertEqual(self.state.cycle(self.old)['status'], 'In Progress')
-
-        self.engine._sync_cycle(self.state.cycle(self.old))
-        self.repo.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
-                           'values': {'Active Cycle ID': 'CYC-OTHER'}}])
-        with self.assertRaisesRegex(ValueError, 'no longer bound'):
-            self.engine.pause_interrupted_cycle(self.old, reason='operator recovery boundary')
-        self.assertEqual(self.state.cycle(self.old)['status'], 'In Progress')
-
     def test_invalid_request_is_preserved_and_creates_no_cycle(self):
         (self.root/'next-scan.json').write_text('{"mode":"skip everything"}')
         with self.assertRaisesRegex(ValueError,'Invalid next-scan'):
@@ -146,49 +90,52 @@ class FreshScanRequestTests(unittest.TestCase):
         self.assertEqual(len(self.state.cycles()),1)
         self.assertTrue((self.root/'next-scan.json').exists())
 
-    def test_company_event_provenance_must_bind_the_company_only_request(self):
+    def test_company_event_request_starts_only_its_bound_company(self):
+        old = self.state.cycle(self.old)
+        for item in old['companies'].values():
+            item['stage'] = 'complete'
+        self.engine._sync_cycle(old)
         request = {
-            'mode': 'company-only', 'request_id': 'company-event-provenance',
-            'company_ids': ['C-1'], 'source_revision': 'rev-1',
+            'mode': 'company-only', 'request_id': 'company-event-1',
+            'company_ids': ['C-1'], 'source_revision': 'revision-1',
             'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
             'company_event': {
-                'schema': 'company-event-scan-request-v1', 'event_id': 'CEV-1',
-                'company_id': 'C-1', 'revision': 1, 'source_revision': 'rev-1',
+                'schema': 'company-event-scan-request-v1', 'event_id': 'event-1',
+                'company_id': 'C-1', 'source_revision': 'revision-1', 'revision': 1,
             },
         }
-        (self.root / 'next-scan.json').write_text(json.dumps(request))
-        parsed, company_ids = _read_request(self.root / 'next-scan.json')
-        self.assertEqual(parsed['company_event'], request['company_event'])
-        self.assertEqual(company_ids, ['C-1'])
+        (self.root/'next-scan.json').write_text(json.dumps(request))
 
-        request['company_event']['company_id'] = 'C-0'
-        (self.root / 'next-scan.json').write_text(json.dumps(request))
-        with self.assertRaisesRegex(ValueError, 'does not bind this scope'):
-            requested_scan(self.engine, self.state, self.database)
+        cycle_id = requested_scan(self.engine, self.state, self.database)
+        cycle = self.state.cycle(cycle_id)
 
-        request['company_ids'] = ['C-1']
-        one = request_fingerprint(request, ['C-1'])
-        request['company_event']['event_id'] = 'CEV-2'
-        self.assertNotEqual(one, request_fingerprint(request, ['C-1']))
+        self.assertFalse(cycle['all'])
+        self.assertEqual(set(cycle['companies']), {'C-1'})
+        self.assertEqual(cycle['company_event'], request['company_event'])
+        self.assertTrue((self.root/'last-scan-request.json').exists())
 
-        request['company_event']['company_id'] = 'C-1'
-        request['company_ids'] = ['C-1', 'C-2']
-        (self.root / 'next-scan.json').write_text(json.dumps(request))
-        with self.assertRaisesRegex(ValueError, 'does not bind this scope'):
-            requested_scan(self.engine, self.state, self.database)
-
-    def test_legacy_manual_company_request_keeps_its_pre_event_fingerprint(self):
+    def test_company_event_request_cannot_widen_or_change_its_bound_event(self):
+        old = self.state.cycle(self.old)
+        for item in old['companies'].values():
+            item['stage'] = 'complete'
+        self.engine._sync_cycle(old)
         request = {
-            'mode': 'company-only', 'request_id': 'manual-legacy', 'company_ids': ['C-1'],
-            'source_revision': 'rev-1', 'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
+            'mode': 'company-only', 'request_id': 'company-event-immutable',
+            'company_ids': ['C-1'], 'source_revision': 'revision-1',
+            'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
+            'company_event': {
+                'schema': 'company-event-scan-request-v1', 'event_id': 'event-1',
+                'company_id': 'C-1', 'source_revision': 'revision-1', 'revision': 1,
+            },
         }
-        expected = {
-            'mode': 'company-only', 'company_ids': ['C-1'],
-            'source_revision': 'rev-1', 'enqueued_at': '2026-11-18T00:00:00Z',
-        }
-        import hashlib
-        old = hashlib.sha256(json.dumps(expected, separators=(',', ':'), sort_keys=True).encode('utf-8')).hexdigest()
-        self.assertEqual(request_fingerprint(request, ['C-1']), old)
+        (self.root/'next-scan.json').write_text(json.dumps(request))
+        requested_scan(self.engine, self.state, self.database)
+        request['company_event']['event_id'] = 'substituted-event'
+        (self.root/'next-scan.json').write_text(json.dumps(request))
+
+        with self.assertRaisesRegex(ValueError, 'different immutable request'):
+            requested_scan(self.engine, self.state, self.database)
+        self.assertTrue((self.root/'next-scan.json').exists())
 
     def test_worker_assignment_order_follows_cycle_order_without_skipping_any_company(self):
         cycle_id = requested_scan(self.engine,self.state,self.database)

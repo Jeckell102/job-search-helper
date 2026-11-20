@@ -89,6 +89,20 @@ class ReviewDeliveryTests(unittest.TestCase):
         self.assertEqual(repo.read("Opportunities")[0]["Notes"],"")
         self.assertEqual(sync_pending(self.runtime,3,owner,repo=repo)["selected"],0)
 
+    def test_known_overseas_jobs_cannot_be_accepted_or_routed_as_questions(self):
+        for decision in ("Accept", "Needs Info"):
+            with self.subTest(decision=decision):
+                key = "overseas-" + decision.replace(" ", "-")
+                owner, items = self.claim(3, [key])
+                self.assess(owner, items, [decision])
+                repo = self.repository([key])
+                repo.commit([{"tab": "Job History", "identity": {"Job Key": key},
+                              "values": {"Location": "Hachioji, Japan"}}])
+                result = sync_pending(self.runtime, 3, owner, repo=repo)
+                self.assertEqual(result["counts"], {"Conflict": 1})
+                self.assertEqual(repo.read("Opportunities"), [])
+                self.assertEqual(repo.read("Job History")[0]["Added to Opportunities?"], "Pending")
+
     def test_older_saved_third_manual_intent_retries_as_opportunity(self):
         owner,items=self.claim(3,["manual"])
         self.assess(owner,items,["Needs Info"])
@@ -293,5 +307,22 @@ class ReviewDeliveryTests(unittest.TestCase):
         with patch.object(repo,"commit",wraps=repo.commit) as commit:
             self.assertEqual(sync_pending(self.runtime,2,owner,repo=repo)["counts"],{"Written":1})
             commit.assert_not_called()
+
+
+
+class ExplicitDependencyTests(unittest.TestCase):
+    def test_fixture_writeback_does_not_load_credentials_or_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            queue = Path(directory) / 'queue'
+            publish(queue)
+            runtime = Runtime(queue)
+            try:
+                owner = runtime.start(3)['run_id']
+                with patch('job_search_helper.runner._load_environment', side_effect=AssertionError('Unexpected environment read')):
+                    result = sync_pending(runtime, 3, owner, repo=MemoryRepository(),
+                                          lock_path=Path(directory) / 'fixture.lock')
+                self.assertEqual(result['selected'], 0)
+            finally:
+                runtime.close()
 
 if __name__=="__main__": unittest.main()

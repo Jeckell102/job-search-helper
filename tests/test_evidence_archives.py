@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from job_search_helper.evidence_archives import EvidenceArchives, ArchiveRepository, save_registry, TAB, ROW_STRIDE
-from job_search_helper.repository import MemoryRepository, RepositoryError, UncertainWriteError, SCHEMAS
+from job_search_helper.repository import MemoryRepository, PreflightWriteError, RepositoryError, UncertainWriteError, SCHEMAS
 
 
 def evidence(key='job', text='Full original description'):
@@ -52,6 +52,18 @@ class ArchiveTests(unittest.TestCase):
         self.repo.commit(ops)
         self.assertEqual(len(self.repo.read(TAB)),1)
         self.assertEqual(len(self.main.read('Job History')),1)
+
+    def test_later_preflight_failure_preserves_partial_archive_delivery(self):
+        operations = [evidence(), {'tab': 'Job History', 'identity': {'Job Key': 'missing'}}]
+        with self.assertRaises(UncertainWriteError):
+            self.repo.commit(operations)
+        self.assertEqual(len(self.children['archive1'].read(TAB)), 1)
+        self.assertEqual(self.repo._committed_rows, {})
+
+    def test_preflight_failure_without_prior_writes_is_proven_unsent(self):
+        with self.assertRaises(PreflightWriteError):
+            self.repo.commit([{'tab': 'Job History', 'identity': {'Job Key': 'missing'}}])
+        self.assertEqual(self.children['archive1'].read(TAB), [])
 
     def test_uncertain_evidence_write_that_landed_replays_by_identity(self):
         original=self.children['archive1'].commit

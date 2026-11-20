@@ -59,6 +59,19 @@ def canonical_release_binding(value):
     return result
 
 
+def release_binding_sha256(value):
+    """Return the immutable digest for a fully validated release binding.
+
+    A release ID is useful for humans, but it is not sufficient provenance at
+    every storage boundary: a receipt must also carry a value that commits to
+    the installed source, dependency, and configuration manifests.  This
+    helper deliberately canonicalizes first so malformed or partial bindings
+    cannot acquire a plausible-looking digest.
+    """
+    canonical = canonical_release_binding(value)
+    return hashlib.sha256(_canonical(canonical).encode("utf-8")).hexdigest()
+
+
 def canonical_retry_binding(value):
     """Validate one immutable release-to-retry identity."""
     required = {

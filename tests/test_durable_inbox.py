@@ -12,6 +12,7 @@ from job_search_helper.batching import PlanningRepository
 from job_search_helper.company_events import source_revision
 from job_search_helper.engine import Engine, State, inventory_payload
 from job_search_helper.inbox import InventoryInbox
+from job_search_helper.integration_release import JOURNAL_SCHEMA
 from job_search_helper.publication_receipts import LOCAL_COMMITTED, receipt, record_fingerprints
 from job_search_helper.repository import GoogleRepository, RepositoryError, SCHEMAS
 from sheets_fixture import RangeSheets
@@ -46,6 +47,16 @@ class DurablePipelineTests(unittest.TestCase):
         bindings = [json.loads(row[0]) for row in rows]
         binding = next(item for item in bindings if item['company_id'] == company_id)
         return receipt(inbox.connection, binding)
+
+    def activate_retry_release(self, cycle):
+        """Seed the same durable activation fact a retry must retain."""
+        release = cycle['repair_retry']['release']
+        (self.root / 'integration-release-journal.json').write_text(json.dumps({
+            'schema': JOURNAL_SCHEMA,
+            'state': 'COMPLETE',
+            'release_id': release['release_id'],
+            'release': release,
+        }))
 
     def test_frozen_plan_and_local_receipt_commit_in_one_sqlite_transaction(self):
         payload = inventory_payload(inventory('C-0', 'Company 0', company(0)['Official Careers URL']), company(0))
@@ -106,12 +117,16 @@ class DurablePipelineTests(unittest.TestCase):
         from job_search_helper.repair_retry import retry_attempt_id
         cycle['repair_retry']['attempt_id'] = retry_attempt_id(cycle['repair_retry'])
         self.state.save_cycle(cycle)
+        self.activate_retry_release(cycle)
         self.engine.resume_local(self.cycle, defer_sync=True)
         self.engine.resume_local(self.cycle, sync_only=True)
         saved = self.company_receipt('C-0')
         self.assertEqual(saved['binding']['source_revision'], revision)
         self.assertEqual(saved['binding']['source_revision_origin'], 'repair_retry')
         self.assertEqual(saved['binding']['release_id'], 'REL-reviewed-7')
+        from job_search_helper.repair_retry import release_binding_sha256
+        self.assertEqual(saved['binding']['release_binding_sha256'], release_binding_sha256(
+            cycle['repair_retry']['release']))
 
     def test_company_change_after_retry_admission_blocks_storage(self):
         self.repo.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-0'},
@@ -133,6 +148,7 @@ class DurablePipelineTests(unittest.TestCase):
         from job_search_helper.repair_retry import retry_attempt_id
         cycle['repair_retry']['attempt_id'] = retry_attempt_id(cycle['repair_retry'])
         self.state.save_cycle(cycle)
+        self.activate_retry_release(cycle)
         self.repo.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-0'},
                            'values': {'Official Careers URL': 'https://changed.example.test'}}])
         self.engine.resume_local(self.cycle)
@@ -285,7 +301,10 @@ class DurablePipelineTests(unittest.TestCase):
         self.service.set_cell('Job History', 1, 'Added to Opportunities?', 'No')
         self.engine.resume_local(self.cycle, sync_only=True, retry_blocked=True)
         self.assertEqual(self.repo.read('Job History')[0]['Added to Opportunities?'], 'No')
-        self.assertEqual(self.company_receipt('C-0')['state'], 'SYNC_PENDING')
+        # Current production's legacy publisher confirms the frozen receipt
+        # after preserving the newer manual choice. Exact-v2 has its separate
+        # selected-field acknowledgement tests.
+        self.assertEqual(self.company_receipt('C-0')['state'], 'SYNC_CONFIRMED')
 
     def test_fresh_pause_preserves_saved_inventory_for_explicit_retry(self):
         self.engine.resume_parallel(self.cycle, defer_sync=True)
@@ -347,13 +366,13 @@ class DurablePipelineTests(unittest.TestCase):
     def test_sync_and_defer_options_are_forwarded(self):
         from job_search_helper import runner
         with patch.object(runner, 'run_start', return_value=0) as start:
-            self.assertEqual(runner.main(['sync', '--batch-size', '25']), 0)
+            self.assertEqual(runner.scrape_main(['sync', '--batch-size', '25']), 0)
             self.assertTrue(start.call_args.kwargs['sync_only'])
             self.assertTrue(start.call_args.kwargs['retry_blocked'])
             self.assertEqual(start.call_args.kwargs['batch_size'], 25)
-            self.assertEqual(runner.main(['sync', '--no-retry-blocked']), 0)
+            self.assertEqual(runner.scrape_main(['sync', '--no-retry-blocked']), 0)
             self.assertFalse(start.call_args.kwargs['retry_blocked'])
-            self.assertEqual(runner.main(['start', '--defer-sync']), 0)
+            self.assertEqual(runner.scrape_main(['start', '--defer-sync']), 0)
             self.assertTrue(start.call_args.kwargs['defer_sync'])
             self.assertFalse(start.call_args.kwargs['sync_only'])
 

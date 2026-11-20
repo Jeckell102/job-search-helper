@@ -27,7 +27,7 @@ class DirectSheetWorkflowTests(unittest.TestCase):
 
     def test_title_rules(self):
         self.assertTrue(excluded_title("Systems Engineer"))
-        self.assertTrue(excluded_title("Senior Staff Engineer, Survivability Materials"))
+        self.assertFalse(excluded_title("Senior Staff Engineer, Survivability Materials"))
         self.assertTrue(excluded_title("Electrical Engineer"))
         self.assertFalse(excluded_title("Staff Solutions Engineer"))
         self.assertFalse(excluded_title("Field Applications Engineer"))

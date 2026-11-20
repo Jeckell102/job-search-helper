@@ -15,6 +15,9 @@ from job_search_helper.core import POLICY_VERSION, job_key, material_hash, pack_
 from job_search_helper.engine import Engine, State
 from job_search_helper.batching import PlanningRepository
 from job_search_helper.repository import MemoryRepository, RepositoryError
+from job_search_helper.review_runtime import Runtime
+from job_search_helper.review_writeback import sync_pending
+from test_concurrent_review import publish, response
 
 
 def company(name="Acme", company_id="C-1"):
@@ -46,7 +49,11 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.print_capture = redirect_stdout(io.StringIO())
         self.print_capture.__enter__()
         self.addCleanup(self.print_capture.__exit__, None, None, None)
-        self.file_number = 0
+        self.review_queue = self.directory / "review-queue"
+        publish(self.review_queue)
+        self.runtime = Runtime(self.review_queue)
+        self.addCleanup(self.runtime.close)
+        self.review_owner = None
 
     def fetch(self, *args):
         self.fetch_count += 1
@@ -58,27 +65,48 @@ class EngineAcceptanceTests(unittest.TestCase):
         return cycle
 
     def pending(self, cycle):
-        return self.state.reviews(cycle, "pending")
+        # Scraping records review state in History; it no longer fills State.reviews.
+        return [{"job_key": row["Job Key"], "source_hash": row["Source Hash"],
+                 "posting": unpack_snapshot(row["Current Snapshot"]).get("pending"),
+                 "row": row} for row in self.repo.read("Job History")
+                if row["Review Status"] == "Needs Review"]
+
+    def request_review(self):
+        # Explicit user choice is required to reopen an already accepted job.
+        self.user_edit("Job History", 0, **{"Added to Opportunities?": "Pending",
+                                              "Review Status": "Needs Review"})
 
     def decision(self, cycle, result="accept", **changes):
         review = self.pending(cycle)[0]
-        value = {"job_key": review["job_key"], "description_hash": review["description_hash"],
-                 "decision": result, "fit_level": "Strong", "narrative": "Customer integration and training fit; verify travel.",
-                 "reviewer": "Offline test reviewer", "policy_version": POLICY_VERSION,
-                 "mandatory_clearance": False, "code_authoring_required": False,
-                 "primary_test_automation": False, "base_max_usd": 180000, "material_change": True}
+        self.assertEqual(review["row"]["Added to Opportunities?"], "Pending")
+        evidence = next(row for row in self.repo.read("Job Evidence")
+                        if row["Job Key"] == review["job_key"] and row["Source Hash"] == review["source_hash"])
+        publish(self.review_queue, second=[{"job_key": review["job_key"],
+            "source_hash": review["source_hash"], "job_title": review["row"]["Job Title"],
+            "job_description": evidence["Job Description"], "score": 20}])
+        owner = self.runtime.start(2)["run_id"]
+        item = self.runtime.next(2, owner)["items"][0]
+        self.runtime.submit(2, owner, [response(item, 2, "ESCALATE")])
+        self.review_owner = self.runtime.start(3)["run_id"]
+        item = self.runtime.next(3, self.review_owner)["items"][0]
+        value = response(item, 3, {"accept":"Accept", "reject":"Reject", "needs_info":"Needs Info"}[result])
+        value["reason"] = changes.pop("narrative", "Customer integration and training fit; verify travel.")
+        value["location_check"] = {"status":"verified_us", "source_value":review["row"]["Location"],
+                                   "evidence":"Explicit U.S. posting location fixture"}
+        if "description_hash" in changes:
+            changes["source_hash"] = changes.pop("description_hash")
         value.update(changes)
         return value
 
-    def import_values(self, cycle, *values):
-        self.file_number += 1
-        path = self.directory / f"decision-{self.file_number}.jsonl"
-        path.write_text("".join(json.dumps(value) + "\n" for value in values), encoding="utf-8")
-        return self.engine.import_decisions(cycle, path)
+    def deliver_values(self, cycle, *values):
+        # Exercise the current managed delivery path, not the retired scraper queue.
+        self.runtime.submit(3, self.review_owner, list(values))
+        return sync_pending(self.runtime, 3, self.review_owner, repo=self.repo,
+                            lock_path=self.directory / "review.lock")
 
     def accept_initial(self):
         cycle = self.begin()
-        self.import_values(cycle, self.decision(cycle))
+        self.deliver_values(cycle, self.decision(cycle))
         return cycle
 
     def user_edit(self, tab, row_index, **values):
@@ -97,7 +125,8 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(self.history()["Last Evaluated"], "")
         self.assertEqual(self.history()["Description Hash"], "")
         self.assertEqual(len(self.pending(cycle)), 1)
-        self.assertEqual(self.engine.status(cycle)["status"], "Awaiting Review")
+        self.assertEqual(self.engine.status(cycle)["status"], "Complete")
+        self.assertEqual(self.state.reviews(cycle), [])
 
     def test_parallel_fetch_workers_keep_writer_owned_job_fields(self):
         cycle = self.engine.start_cycle(["C-1"])
@@ -123,29 +152,32 @@ class EngineAcceptanceTests(unittest.TestCase):
                                              "Notes": "PERSONAL: spoke to Alex; do not remove."})
         self.inventory.jobs[0]["location"] = "Colorado"
         cycle = self.begin()
-        self.import_values(cycle, self.decision(cycle))
+        self.request_review()
+        self.deliver_values(cycle, self.decision(cycle))
         row = self.repo.read("Opportunities")[0]
         self.assertEqual(row["Application Status"], "Applied")
         self.assertEqual(row["Date Applied"], "2026-09-10")
         self.assertTrue(row["Notes"].startswith("PERSONAL: spoke to Alex; do not remove."))
-        self.assertEqual(row["Location"], "Colorado")
+        self.assertEqual(row["Location"], "Ohio")  # existing personal/practical fields are preserved
+        self.assertEqual(self.history()["Location"], "Colorado")
         self.assertEqual(len(self.repo.read("Opportunities")), 1)
 
     def test_rejection_stored_only_in_history(self):
         cycle = self.begin()
-        self.import_values(cycle, self.decision(cycle, "reject", narrative="Requires code authoring."))
+        self.deliver_values(cycle, self.decision(cycle, "reject", narrative="Requires code authoring."))
         self.assertEqual(self.repo.read("Opportunities"), [])
         self.assertEqual(self.history()["Added to Opportunities?"], "No")
         self.assertEqual(self.history()["Rejection Reason"], "Requires code authoring.")
 
-    def test_title_exclusions_are_recorded_and_queued_for_reviewer(self):
+    def test_title_exclusions_skip_insertion_but_count_in_inventory(self):
         self.inventory.jobs = [posting("a", title="Software Engineer"), posting("b", title="Payroll Operations Manager")]
         cycle = self.begin()
-        self.assertEqual(len(self.repo.read("Job History")), 2)
-        self.assertEqual(len(self.pending(cycle)), 2)
+        self.assertEqual(self.repo.read("Job History"), [])
+        self.assertEqual(self.pending(cycle), [])
         self.assertEqual(self.repo.read("Opportunities"), [])
         self.assertEqual(self.repo.read("Companies")[0]["Last Inventory Count"], 2)
-        self.assertEqual(self.engine.status(cycle)["status"], "Awaiting Review")
+        self.assertEqual(self.engine.status(cycle)["status"], "Complete")
+        self.assertEqual(self.state.reviews(cycle), [])
 
     def test_new_unlisted_posting_not_queued(self):
         self.inventory.jobs = [posting(is_listed=False)]
@@ -223,15 +255,18 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(self.history()["Last Evaluated"], old_evaluated)
         self.assertEqual(len(self.pending(cycle)), 1)
 
-    def test_needs_info_is_deferred_and_does_not_consume_limit(self):
+    def test_third_pass_questions_do_not_consume_reconsideration_limit(self):
         self.accept_initial()
         self.inventory.jobs[0]["location"] = "Florida"
         cycle = self.begin()
-        self.import_values(cycle, self.decision(cycle, "needs_info", narrative="Confirm a hard requirement."))
+        self.request_review()
+        self.deliver_values(cycle, self.decision(cycle, "needs_info", narrative="Confirm a hard requirement."))
         self.assertEqual(self.history()["Reconsideration Count"], 0)
         self.assertEqual(len(self.pending(cycle)), 0)
-        self.assertEqual(len(self.state.reviews(cycle, "deferred")), 1)
-        self.assertEqual(self.engine.status(cycle)["status"], "Complete with exceptions")
+        self.assertEqual(self.state.reviews(cycle), [])
+        self.assertEqual(self.history()["Decision"], "Needs Info")
+        self.assertIn("Confirm a hard requirement.", self.repo.read("Opportunities")[0]["Review Questions"])
+        self.assertEqual(self.engine.status(cycle)["status"], "Complete")
 
     def test_second_completed_reconsideration_freezes_all_job_updates(self):
         self.accept_initial()
@@ -239,7 +274,8 @@ class EngineAcceptanceTests(unittest.TestCase):
             self.inventory.jobs[0]["location"] = location
             cycle = self.begin()
             self.assertEqual(self.history()["Reconsideration Count"], number - 1)
-            self.import_values(cycle, self.decision(cycle))
+            self.request_review()
+            self.deliver_values(cycle, self.decision(cycle))
             self.assertEqual(self.history()["Reconsideration Count"], number)
         self.assertEqual(self.history()["Reconsideration Status"], "Frozen after 2")
         before_history = self.history()
@@ -255,13 +291,15 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(self.history(), before_history)
         self.assertEqual(self.repo.read("Opportunities"), before_opportunity)
 
-    def test_nonmaterial_refresh_does_not_consume_reconsideration(self):
+    def test_source_change_keeps_previous_assessment_until_explicit_reopen(self):
         self.accept_initial()
+        baseline = self.history()["Description Hash"]
         self.inventory.jobs[0]["description"] += " Updated company tagline."
-        cycle = self.begin()
-        self.import_values(cycle, self.decision(cycle, material_change=False))
+        self.begin()
         self.assertEqual(self.history()["Reconsideration Count"], 0)
-        self.assertIn("Nonmaterial source refresh", self.history()["Review Notes"])
+        self.assertEqual(self.history()["Description Hash"], baseline)
+        self.assertNotEqual(self.history()["Source Hash"], baseline)
+        self.assertEqual(self.history()["Added to Opportunities?"], "Yes")
 
     def test_legacy_missing_hash_is_initial_evidence_baseline(self):
         self.repo = MemoryRepository({"Companies": [company()], "Job History": [{
@@ -270,9 +308,12 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.engine.repo = self.repo
         cycle = self.begin()
         review = self.pending(cycle)[0]
-        self.assertEqual(review["job_key"], "LEGACY-123")
-        self.assertEqual(review["changed_fields"], ["Initial evidence baseline"])
-        self.import_values(cycle, self.decision(cycle))
+        self.assertEqual(review["job_key"], "c-1:greenhouse:123")
+        self.assertEqual(review["row"]["Prior Job Key"], "LEGACY-123")
+        self.assertTrue(review["source_hash"])
+        self.assertEqual(review["row"]["Description Hash"], "")
+        self.request_review()
+        self.deliver_values(cycle, self.decision(cycle))
         self.assertEqual(self.history()["Reconsideration Count"], 0)
         self.assertEqual(len(self.repo.read("Job History")), 1)
 
@@ -292,21 +333,19 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(len(rows), 2)
         self.assertEqual(self.engine.status(cycle)["companies"]["C-1"]["stage"], "complete")
 
-    def test_remote_commit_local_checkpoint_crash_recovery_no_duplicate(self):
+    def test_lost_managed_commit_response_is_verified_without_duplicate(self):
         cycle = self.begin()
         decision = self.decision(cycle)
-        original = self.state.apply_buffer
-        def fail_completed(updates, cycles):
-            if any(status == "completed" for data, status in updates.values()):
-                raise RuntimeError("Injected interruption after remote commit")
-            return original(updates, cycles)
-        with patch.object(self.state, "apply_buffer", side_effect=fail_completed):
-            with self.assertRaises(RuntimeError):
-                self.import_values(cycle, decision)
+        original = self.repo.commit
+        def lost_response(operations):
+            original(operations)
+            raise RuntimeError("Injected response loss after commit")
+        with patch.object(self.repo, "commit", side_effect=lost_response):
+            result = self.deliver_values(cycle, decision)
+        self.assertEqual(result["counts"], {"Written":1})
         self.assertEqual(len(self.repo.read("Opportunities")), 1)
         notes_before = self.repo.read("Opportunities")[0]["Notes"]
-        self.assertEqual(len(self.pending(cycle)), 1)
-        self.import_values(cycle, decision)
+        self.deliver_values(cycle, decision)
         self.assertEqual(len(self.repo.read("Opportunities")), 1)
         self.assertEqual(self.repo.read("Opportunities")[0]["Notes"], notes_before)
         self.assertEqual(self.pending(cycle), [])
@@ -315,8 +354,8 @@ class EngineAcceptanceTests(unittest.TestCase):
     def test_stale_decision_hash_rejected_without_mutation(self):
         cycle = self.begin()
         before = self.repo.tables
-        with self.assertRaisesRegex(ValueError, "Stale assessment"):
-            self.import_values(cycle, self.decision(cycle, description_hash="outdated-hash"))
+        with self.assertRaisesRegex(RuntimeError, "Stale/unowned claim"):
+            self.deliver_values(cycle, self.decision(cycle, description_hash="outdated-hash"))
         self.assertEqual(self.repo.tables, before)
         self.assertEqual(len(self.pending(cycle)), 1)
 
@@ -329,7 +368,7 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(len(self.state.cycles()), 1)
         self.assertEqual(len(self.repo.read("Scan Cycles")), 1)
 
-    def test_awaiting_review_resume_does_not_refetch_inventory(self):
+    def test_pending_review_does_not_refetch_completed_inventory(self):
         cycle = self.begin()
         self.engine.resume(cycle)
         self.assertEqual(self.fetch_count, 1)
@@ -365,7 +404,8 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(self.repo.tables, before_tables)
         self.assertEqual((self.directory / "state.db").read_bytes(), before_db)
         self.assertEqual(self.state.cycles(), [])
-        self.assertEqual(len(isolated_state.reviews(cycle, "pending")), 1)
+        self.assertEqual(isolated_state.reviews(cycle, "pending"), [])
+        self.assertEqual(isolated_repo.read("Job History")[0]["Review Status"], "Needs Review")
 
     def test_atomic_job_commit_rolls_back_history_when_opportunity_fails(self):
         cycle = self.begin()
@@ -374,8 +414,8 @@ class EngineAcceptanceTests(unittest.TestCase):
         sheet.cells[(1, col)] = {"dataValidation": {"strict": True, "condition": {
             "type": "ONE_OF_LIST", "values": [{"userEnteredValue": "NOT-A-VALID-FIT"}]}}}
         before = self.repo.tables
-        with self.assertRaises(RepositoryError):
-            self.import_values(cycle, self.decision(cycle))
+        result = self.deliver_values(cycle, self.decision(cycle))
+        self.assertEqual(result["counts"], {"Pending":1})
         self.assertEqual(self.repo.tables, before)
         self.assertEqual(self.repo.read("Opportunities"), [])
         self.assertEqual(len(self.pending(cycle)), 1)
@@ -395,7 +435,7 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.inventory.jobs.append(posting("456"))
         cycle = self.begin()
         self.assertEqual(len(self.pending(cycle)), 1)
-        self.import_values(cycle, self.decision(cycle))
+        self.deliver_values(cycle, self.decision(cycle))
         self.assertEqual(len(self.repo.read("Job History")), 2)
         self.assertEqual(len(self.repo.read("Opportunities")), 2)
 
@@ -441,7 +481,7 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(self.fetch_count, 2)
         self.assertEqual(engine.status(fresh_cycle)["status"], "Complete")
 
-    def test_import_after_interrupted_staging_does_not_skip_remaining_job(self):
+    def test_managed_review_during_interrupted_scan_does_not_skip_remaining_job(self):
         self.engine.batch_size = 1  # This test interrupts between two committed batches.
         self.inventory.jobs.append(posting("456"))
         cycle = self.engine.start_cycle(["C-1"])
@@ -454,14 +494,16 @@ class EngineAcceptanceTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 self.engine.resume(cycle)
         self.assertEqual(len(self.pending(cycle)), 1)
-        self.import_values(cycle, self.decision(cycle))
+        self.deliver_values(cycle, self.decision(cycle))
         self.assertNotEqual(self.engine.status(cycle)["status"], "Complete")
         self.assertNotEqual(self.repo.read("Companies")[0]["Scan State"], "Complete")
         self.engine.resume(cycle)
-        self.assertEqual(self.fetch_count, 1)
+        # This direct repository fixture has no durable Inbox; stripped local
+        # state must refetch to recover the remaining inventory safely.
+        self.assertEqual(self.fetch_count, 2)
         self.assertEqual(len(self.pending(cycle)), 1)
         self.assertEqual(self.pending(cycle)[0]["posting"]["posting_id"], "456")
-        self.import_values(cycle, self.decision(cycle))
+        self.deliver_values(cycle, self.decision(cycle))
         self.assertEqual(len(self.repo.read("Opportunities")), 2)
         self.assertEqual(self.engine.status(cycle)["status"], "Complete")
 
@@ -472,7 +514,7 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.inventory.jobs[0]["url"] = "https://careers.acme.example/new-path?id=123"
         self.inventory.jobs[0]["location"] = "Colorado"
         cycle = self.begin()
-        self.import_values(cycle, self.decision(cycle))
+        self.assertEqual(self.history()["Added to Opportunities?"], "Yes")
         self.assertEqual(len(self.repo.read("Opportunities")), 1)
         row = self.repo.read("Opportunities")[0]
         self.assertEqual(row["Job URL"], original_url)
@@ -641,15 +683,15 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.begin()
         self.assertEqual(self.history(), original)
 
-    def test_external_claim_blocks_decision_import(self):
+    def test_manual_choice_blocks_managed_delivery(self):
         cycle = self.begin()
         decision = self.decision(cycle)
-        self.user_edit("Companies", 0, **{"Claimed By": "other-worker", "Claim Token": "active-other-token"})
+        self.user_edit("Job History", 0, **{"Added to Opportunities?": "Manual Review"})
         before = self.repo.tables
-        with self.assertRaisesRegex(ValueError, "[Cc]laim"):
-            self.import_values(cycle, decision)
+        result = self.deliver_values(cycle, decision)
+        self.assertEqual(result["counts"], {"Conflict":1})
         self.assertEqual(self.repo.tables, before)
-        self.assertEqual(len(self.pending(cycle)), 1)
+        self.assertEqual(self.repo.read("Opportunities"), [])
 
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ FIELD_CLASSES = {
     "career-reference__reference-number": "reference",
     "accordion__content__inner": "description",
 }
+STALE_MARKERS = re.compile(r"\b(?:closed|filled|expired|no longer available|position has been filled|removed)\b", re.I)
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 
 
@@ -61,11 +62,22 @@ class _ScopedPage(HTMLParser):
         self.cards: list[dict] = []
         self.card: dict | None = None
         self.anchor: dict | None = None
+        self._select: dict | None = None
+        self.organization_options: list[tuple[str, str]] = []
+        self.organization_selector_seen = False
+        self.organization_option_failure = False
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag not in VOID_TAGS:
             self.depth += 1
+        if tag == "select":
+            name = str(attrs.get("name") or attrs.get("id") or "").casefold()
+            if "organization" in name or "organisation" in name:
+                self.organization_selector_seen = True
+                self._select = {"depth": self.depth, "options": []}
+        if tag == "option" and self._select is not None:
+            self._select["option"] = {"value": str(attrs.get("value") or ""), "parts": []}
         classes = set(str(attrs.get("class", "")).split())
         if tag == "div" and "career-reference-wrapper" in classes and self.card is None:
             self.card = {
@@ -93,6 +105,8 @@ class _ScopedPage(HTMLParser):
 
     def handle_data(self, data):
         self.parts.append(data)
+        if self._select is not None and self._select.get("option") is not None:
+            self._select["option"]["parts"].append(data)
         if self.card is None:
             return
         self.card["parts"].append(data)
@@ -114,6 +128,12 @@ class _ScopedPage(HTMLParser):
             if tag == "div" and self.card["depth"] == self.depth:
                 self.cards.append(self.card)
                 self.card = None
+        if tag == "option" and self._select is not None and self._select.get("option") is not None:
+            option = self._select.pop("option")
+            self._select["options"].append((option["value"], plain_text(" ".join(option["parts"]))))
+        if tag == "select" and self._select is not None and self._select["depth"] == self.depth:
+            self.organization_options.extend(self._select["options"])
+            self._select = None
         self.depth = max(0, self.depth - 1)
 
     @property
@@ -196,6 +216,25 @@ def _posting(card: dict, company_id: str, company: str) -> dict | None:
     return row
 
 
+def _stale_card(card: dict) -> bool:
+    """Closed cards are lifecycle residue, not current scoped IDs."""
+    text = plain_text(" ".join(card.get("parts", [])))
+    return bool(STALE_MARKERS.search(text))
+
+
+def _organization_scope(parser: _ScopedPage, company: str) -> str | None:
+    """Validate an optional Taleo organization selector when the mirror exposes one."""
+    if not parser.organization_selector_seen:
+        return None
+    labels = [plain_text(label) for _, label in parser.organization_options if plain_text(label)]
+    if not labels:
+        return "Taleo organization option was present but returned no organizations."
+    wanted = plain_text(company).casefold()
+    if not any(wanted in label.casefold() or label.casefold() in wanted for label in labels):
+        return "Taleo organization option did not expose the exact employer scope."
+    return None
+
+
 def _pagination_links(parser: _ScopedPage, source: str) -> list[str]:
     origin = urlsplit(source)
     results = []
@@ -233,6 +272,8 @@ def fetch_scoped_taleo_careers(careers_url: str, company_id: str, company: str, 
     maximum_total = None
     first_ids: list[str] | None = None
     issues: list[str] = []
+    page_signatures: set[tuple[str, ...]] = set()
+    observed_totals: set[int] = set()
     try:
         while queue and len(visited) < MAX_CAREERS_PAGES and len(jobs) < MAX_CAREERS_JOBS:
             url = queue.pop(0)
@@ -240,16 +281,22 @@ def fetch_scoped_taleo_careers(careers_url: str, company_id: str, company: str, 
                 continue
             visited.add(url)
             parser = _page(url, transport)
+            organization_issue = _organization_scope(parser, company)
+            if organization_issue:
+                issues.append(organization_issue)
             if expected_total is None:
                 expected_total = parser.total
             elif parser.total is not None and parser.total != expected_total:
                 issues.append("Scoped careers listing count changed during pagination.")
             if parser.total is not None:
+                observed_totals.add(parser.total)
                 maximum_total = max(maximum_total or 0, parser.total)
             page_ids = []
             for card in parser.cards:
                 row = _posting(card, company_id, company)
                 if row is None:
+                    if _stale_card(card):
+                        continue
                     issues.append("One or more scoped careers postings were malformed or incomplete.")
                     continue
                 page_ids.append(row["posting_id"])
@@ -257,6 +304,11 @@ def fetch_scoped_taleo_careers(careers_url: str, company_id: str, company: str, 
                     continue
                 seen.add(row["posting_id"])
                 jobs.append(row)
+            signature = tuple(page_ids)
+            if signature and signature in page_signatures:
+                issues.append("Scoped careers pagination repeated a page of posting IDs.")
+            elif signature:
+                page_signatures.add(signature)
             if first_ids is None:
                 first_ids = page_ids
             for link in _pagination_links(parser, source):
@@ -272,6 +324,8 @@ def fetch_scoped_taleo_careers(careers_url: str, company_id: str, company: str, 
             issues.append("Scoped careers page did not expose a trustworthy listing total.")
         elif len(jobs) != maximum_total:
             issues.append(f"Scoped careers page returned {len(jobs)} unique postings out of maximum reported total {maximum_total}.")
+        if len(observed_totals) > 1:
+            issues.append("Scoped careers listing total changed during the lifecycle scan; inventory is not stable.")
         if queue and len(visited) >= MAX_CAREERS_PAGES:
             issues.append("Scoped careers pagination limit was reached.")
         if len(jobs) >= MAX_CAREERS_JOBS and expected_total != len(jobs):

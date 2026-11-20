@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from job_search_helper.ats import HTTPResponse
 from job_search_helper.ericsson import fetch_ericsson
@@ -29,3 +30,22 @@ def test_ericsson_normal_inventory_and_reread():
 def test_ericsson_rejects_wrong_scope():
     result = fetch_ericsson("https://jobs.ericsson.com/careers?query=us", "COMP-0136", "Ericsson", Transport())
     assert result.status == "unsupported"
+
+
+def test_ericsson_checkpoint_resumes_completed_details(tmp_path):
+    checkpoint = tmp_path / "ericsson.json"
+    first = fetch_ericsson("https://jobs.ericsson.com/careers", "COMP-0136", "Ericsson",
+                           Transport(), checkpoint_path=checkpoint)
+    assert first.status == "complete"
+    saved = json.loads(checkpoint.read_text())
+    assert saved["phase"] == "complete"
+    assert saved["total"] == 1
+    assert len(saved["jobs"]) == 1
+
+    second_transport = Transport()
+    second = fetch_ericsson("https://jobs.ericsson.com/careers", "COMP-0136", "Ericsson",
+                            second_transport, checkpoint_path=checkpoint)
+    assert second.status == "complete"
+    assert second.jobs == first.jobs
+    # The resumed call rereads the listing for stability but does not refetch the detail.
+    assert sum("position_details" in url for url in second_transport.calls) == 0

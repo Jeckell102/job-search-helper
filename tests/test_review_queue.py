@@ -96,6 +96,21 @@ class ReviewQueueTests(unittest.TestCase):
             self.assertTrue((output / "first-pass.jsonl").exists())
             self.assertTrue((output / "deterministic-filtered.jsonl").exists())
 
+    def test_duplicate_exact_evidence_is_not_selected_by_row_order(self):
+        for second_description in ("Different customer hardware field deployment evidence.", ""):
+            with self.subTest(second_description=second_description):
+                original = self.make_repo().tables
+                first = original["Job Evidence"][0]
+                original["Job Evidence"].append({**first, "Job Description": second_description})
+                for evidence in (original["Job Evidence"], list(reversed(original["Job Evidence"]))):
+                    repo = MemoryRepository({**original, "Job Evidence": evidence})
+                    result = build_review_queues(repo)
+                    self.assertNotIn("a", {row["job_key"] for row in result["second_pass"]})
+                    candidate = next(row for row in result["first_pass"] if row["job_key"] == "a")
+                    self.assertTrue(candidate["evidence_missing"])
+                    self.assertNotIn("job_description", candidate)
+                    self.assertEqual(repo.read("Job Evidence"), evidence)
+
 
 if __name__ == "__main__":
     unittest.main()

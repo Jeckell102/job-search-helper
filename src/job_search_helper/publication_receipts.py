@@ -40,6 +40,14 @@ def _receipt_id(binding):
     missing = [name for name, value in values.items() if not value]
     if missing:
         raise ValueError("Receipt binding requires " + ", ".join(missing))
+    # Retry-originated receipts additionally bind the full reviewed release,
+    # rather than trusting the release ID as a shorthand for its manifests.
+    if "release_binding_sha256" in binding:
+        value = binding["release_binding_sha256"]
+        if not isinstance(value, str) or len(value) != 64 or any(
+                character not in "0123456789abcdef" for character in value):
+            raise ValueError("Receipt release_binding_sha256 must be lowercase SHA-256")
+        values["release_binding_sha256"] = value
     return hashlib.sha256(_canonical(values).encode("utf-8")).hexdigest()
 
 
@@ -52,7 +60,7 @@ def _records(records):
     return dict(sorted(result.items()))
 
 
-def record_fingerprints(operations, rows_by_tab=None):
+def record_fingerprints(operations, rows_by_tab=None, *, include_guard_only=False):
     """Fingerprint the final guarded values for each frozen remote record.
 
     With no ``rows_by_tab`` this returns the fingerprint of the frozen plan.
@@ -72,16 +80,24 @@ def record_fingerprints(operations, rows_by_tab=None):
             if not isinstance(values, Mapping):
                 raise ValueError("Receipt operation values must be mappings")
             fields.update({str(key): value for key, value in values.items()})
+        notes_source = operation.get("append_notes", {})
+        expected = operation.get("expected", {})
+        if not isinstance(notes_source, Mapping) or not isinstance(expected, Mapping):
+            raise ValueError("Receipt operation guards and notes must be mappings")
         # A guarded legacy-key migration can legitimately alter an identity
         # column.  The post-commit readback must locate its final identity,
         # while the repository itself still validates the original one.
         final_identity = dict(identity)
         final_identity.update({key: value for key, value in fields.items() if key in final_identity})
+        if include_guard_only:
+            mutated = set(fields) | {str(key) for key in notes_source}
+            fields.update({str(key): value for key, value in expected.items()
+                           if str(key) not in mutated})
         label = tab + ":" + _canonical(final_identity)
         target = grouped.setdefault(label, {"tab": tab, "identity": final_identity,
                                             "fields": {}, "notes": {}})
         target["fields"].update(fields)
-        for field, note in operation.get("append_notes", {}).items():
+        for field, note in notes_source.items():
             notes = target["notes"].setdefault(str(field), [])
             if note not in notes:
                 notes.append(note)
@@ -198,6 +214,29 @@ def reconcile_sync(connection, binding, observed_records, acknowledgement_id, *,
     connection.execute("UPDATE publication_receipts SET state=?, acknowledgement_id=?, updated_at=? WHERE receipt_id=?",
                        (SYNC_CONFIRMED, str(acknowledgement_id), timestamp, receipt_id))
     return True
+
+
+def discard_preflight_rejected(connection, binding, expected_records, *, cursor):
+    """Remove only a never-started receipt after a typed no-write rejection.
+
+    The caller supplies the frozen plan cursor. Any prior acknowledged slice
+    makes replacement unsafe, so a partially published repair stays pending
+    for operator reconciliation instead of silently acquiring new records.
+    """
+    if cursor != 0:
+        raise ValueError("Cannot replace a receipt after partial publication")
+    receipt_id = _receipt_id(binding)
+    row = connection.execute(
+        "SELECT records,state FROM publication_receipts WHERE receipt_id=?", (receipt_id,)
+    ).fetchone()
+    if row is None:
+        raise ValueError("Cannot discard an unknown publication receipt")
+    if row[1] == SYNC_CONFIRMED:
+        raise ValueError("Cannot discard a confirmed publication receipt")
+    if _records(expected_records) != json.loads(row[0]):
+        raise ValueError("Cannot discard a receipt for different frozen records")
+    connection.execute("DELETE FROM publication_receipts WHERE receipt_id=?", (receipt_id,))
+    return receipt_id
 
 
 def receipt(connection, binding):

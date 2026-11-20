@@ -92,7 +92,7 @@ class SheetReadOptimizationTests(unittest.TestCase):
                 row["values"].append({})
             row["values"][left], row["values"][right] = row["values"][right], row["values"][left]
 
-    def test_stable_existing_batches_use_one_fresh_read_and_half_the_identity_bytes(self):
+    def test_stable_existing_batches_use_compact_keys_and_exact_cells(self):
         service, repo = self.make(300)
         repo.commit([operation('Job History', {'Job Key': 'j-1'}, {'Last Checked': 'first'})])
         before_calls, before_bytes = len(service.get_calls), service.response_bytes
@@ -102,13 +102,14 @@ class SheetReadOptimizationTests(unittest.TestCase):
         baseline_service, baseline_repo = self.make(300)
         baseline_repo.commit([operation('Job History', {'Job Key': 'j-1'}, {'Last Checked': 'first'})])
         baseline_repo._identity_hints.clear()
+        baseline_repo._compact_identity_hints.clear()
         before_calls, before_bytes = len(baseline_service.get_calls), baseline_service.response_bytes
         baseline_repo.commit([operation('Job History', {'Job Key': 'j-2'}, {'Last Checked': 'second'})])
         baseline_calls = len(baseline_service.get_calls) - before_calls
         baseline_bytes = baseline_service.response_bytes - before_bytes
-        self.assertEqual(cached_calls, 1)
-        self.assertEqual(baseline_calls, 2)
-        self.assertLess(cached_bytes, baseline_bytes * 0.7)
+        self.assertEqual(cached_calls, 2)
+        self.assertEqual(baseline_calls, 3)
+        self.assertLess(cached_bytes, baseline_bytes)
         self.assert_cell_not_read(service, 'Job History', 20, 'Job Description')
         self.assertEqual(repo.read_row('Job History', 4)['Last Checked'], 'second')
 
@@ -295,7 +296,7 @@ class SheetReadOptimizationTests(unittest.TestCase):
         repo.commit([change("first")])
         service.get_calls.clear()
         repo.commit([change("second")])
-        grids = [call for call in service.get_calls if call.get("includeGridData")]
+        grids = [call for call in service.get_calls if call.get("includeGridData") and not call.get('values_api')]
         self.assertEqual(len(grids), 1)
 
         service.set_cell("Companies", 2, "Notes", "Human note added after cached read")

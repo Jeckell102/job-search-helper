@@ -81,7 +81,7 @@ class NextCompanyRoutes(unittest.TestCase):
     CASES = {
         "COMP-0082": ("Thales Defense & Security", "https://careers.thalesdsi.com/?locale=en_US", "SuccessFactors", "https://careers.thalesdsi.com/search/?q="),
         "COMP-0091": ("Saab Inc", "https://www.saab.com/markets/united-states/career", "Workday", "https://saabusa.wd1.myworkdayjobs.com/wday/cxs/saabusa/Saab_careers"),
-        "COMP-0136": ("Ericsson", "https://jobs.ericsson.com/careers", "Browser", "https://jobs.ericsson.com/careers"),
+        "COMP-0136": ("Ericsson", "https://jobs.ericsson.com/careers", "Ericsson Eightfold", "https://jobs.ericsson.com/careers"),
         "COMP-0143": ("MultiTech", "", "Dayforce", "https://us231.dayforcehcm.com/CandidatePortal/en-US/multitech"),
         "COMP-0147": ("Moxa", "https://www.moxa.work/en", "Taleo", "https://tas-moxa.taleo.net/careersection/mx_ext/jobsearch.ftl?lang=en"),
         "COMP-0248": ("Dematic", "https://www.dematic.com/en-us/about/careers/", "Workday", "https://kiongroup.wd3.myworkdayjobs.com/wday/cxs/kiongroup/KION_SCS"),

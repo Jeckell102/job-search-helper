@@ -12,7 +12,12 @@ from .discovery import CareersTransport
 PAGE_SIZE = 20
 MAX_PAGES = 200
 DETAIL_WORKERS = 16
-SITE = r"CX_[0-9]{1,12}"
+HONEYWELL_SORTS = ("POSTING_DATES_DESC", "POSTING_DATES_ASC", "REQUISITION_ID_ASC")
+# Most Candidate Experience boards publish numeric CX site IDs.  Texas
+# Instruments' public custom-host page explicitly identifies its canonical
+# Oracle board as the legacy ``CX`` site, which is equally scoped but lacks
+# the numeric suffix.
+SITE = r"(?:CX_[0-9]{1,12}|CX)"
 IDENT = r"[0-9]{1,24}"
 EXTERNAL_FIELDS = ('ExternalDescriptionStr', 'ExternalResponsibilitiesStr', 'ExternalQualificationsStr')
 PUBLIC_BODY_FIELDS = ('CorporateDescriptionStr', 'OrganizationDescriptionStr', *EXTERNAL_FIELDS)
@@ -41,7 +46,7 @@ def _site_number(url: str, transport) -> str:
     if response.status < 200 or response.status >= 300:
         raise FetchError("failed", f"Oracle public careers page returned HTTP {response.status}.")
     body = response.body.decode("utf-8", "replace")
-    values = set(re.findall(r"siteNumber=(CX_[0-9]{1,12})", body))
+    values = set(re.findall(r"siteNumber=(" + SITE + r")", body))
     if len(values) != 1:
         raise FetchError("unsupported", "Oracle careers page did not expose one verified candidate-site identifier.")
     return values.pop()
@@ -54,9 +59,119 @@ def _page(data, offset: int):
     if not isinstance(result, dict) or type(result.get("TotalJobsCount")) is not int or result["TotalJobsCount"] < 0:
         raise FetchError("partial", "Oracle listing omitted its total inventory count.")
     rows = result.get("requisitionList")
-    if not isinstance(rows, list) or len(rows) != min(PAGE_SIZE, max(0, result["TotalJobsCount"] - offset)):
-        raise FetchError("partial", "Oracle listing page does not match its reported inventory.")
+    # Oracle's counter is not authoritative for the page boundary.  Some
+    # tenants return a short page before the advertised end, and Honeywell's
+    # Aerospace board has been observed at both 788 and 789 while publishing
+    # the same requisition set.  The scanner must continue to the first empty
+    # page and reconcile the counter against the actual published IDs.
+    if not isinstance(rows, list) or len(rows) > PAGE_SIZE:
+        raise FetchError("partial", "Oracle listing page has an invalid page size.")
     return result["TotalJobsCount"], rows
+
+
+def _oracle_listing_url(root: str, site: str, offset: int, sort: str) -> str:
+    finder = f"findReqs;siteNumber={site},facetsList=NONE,limit={PAGE_SIZE},offset={offset},sortBy={sort}"
+    return root + "recruitingCEJobRequisitions?" + urlencode({
+        "onlyData": "true", "expand": "requisitionList.secondaryLocations", "finder": finder,
+    })
+
+
+def _scan_oracle_partition(root: str, site: str, transport, sort: str):
+    """Scan one Oracle sort partition through its real empty-page boundary."""
+    seen, ids, snapshots, totals = set(), [], {}, set()
+    for page in range(MAX_PAGES):
+        offset = page * PAGE_SIZE
+        total, rows = _page(_json(_oracle_listing_url(root, site, offset, sort), transport), offset)
+        totals.add(total)
+        if len(totals) > 1:
+            raise FetchError("partial", f"Oracle {sort} counter changed during pagination.")
+        if not rows:
+            return next(iter(totals)), ids, snapshots, page + 1
+        page_ids = []
+        for item in rows:
+            ident = str(item.get("Id", "")) if isinstance(item, dict) else ""
+            if not re.fullmatch(IDENT, ident):
+                raise FetchError("partial", f"Oracle {sort} listing has a missing job identifier.")
+            if ident in seen:
+                raise FetchError("partial", f"Oracle {sort} listing contains an overlap or duplicate identifier.")
+            seen.add(ident)
+            page_ids.append(ident)
+            ids.append(ident)
+        snapshots[offset] = (total, page_ids)
+    raise FetchError("partial", f"Oracle {sort} page cap reached before an empty boundary.")
+
+
+def _recheck_oracle_partition(root: str, site: str, transport, sort: str, snapshots) -> None:
+    """Re-read every observed page to catch same-count membership drift."""
+    for offset, snapshot in snapshots.items():
+        total, rows = _page(_json(_oracle_listing_url(root, site, offset, sort), transport), offset)
+        current = [str(row.get("Id", "")) for row in rows if isinstance(row, dict)]
+        if (total, current) != snapshot:
+            raise FetchError("partial", f"Oracle {sort} membership changed during the scan.")
+
+
+def _fetch_honeywell(ats: str, careers_url: str, company_id: str, company: str, transport, discovery_transport):
+    """Honeywell-specific Oracle scan with counter and partition reconciliation."""
+    p = urlsplit(careers_url)
+    source = careers_url.rstrip("/")
+    root = f"https://{p.hostname}/hcmRestApi/resources/latest/"
+    try:
+        site = _site_number(careers_url, discovery_transport or CareersTransport())
+        partitions = {}
+        errors = []
+        for sort in HONEYWELL_SORTS:
+            try:
+                partitions[sort] = _scan_oracle_partition(root, site, transport, sort)
+            except FetchError as error:
+                errors.append(f"{sort}: {error.reason}")
+        primary = partitions.get(HONEYWELL_SORTS[0])
+        if primary is None:
+            return Inventory("partial" if errors else "failed", reason="; ".join(errors), source_url=source)
+        counters = {value[0] for value in partitions.values()}
+        ordered_ids = []
+        union = set()
+        for sort in HONEYWELL_SORTS:
+            part = partitions.get(sort)
+            if not part:
+                continue
+            for ident in part[1]:
+                if ident not in union:
+                    union.add(ident)
+                    ordered_ids.append(ident)
+        if not counters or len(union) not in counters:
+            return Inventory("partial", reason=(
+                f"Honeywell published counters {sorted(counters)} do not reconcile with {len(union)} unique published IDs. "
+                + "; ".join(errors)), source_url=source)
+
+        def detail_for(ident):
+            detail_finder = f'ById;Id="{ident}",siteNumber={site}'
+            detail = root + "recruitingCEJobRequisitionDetails?" + urlencode({"expand": "all", "onlyData": "true", "finder": detail_finder})
+            try:
+                return _detail(_json(detail, transport), ident, company_id, company, source), None
+            except FetchError as error:
+                return None, f"Posting {ident}: {error.reason}"
+
+        with ThreadPoolExecutor(max_workers=DETAIL_WORKERS) as pool:
+            details = list(pool.map(detail_for, ordered_ids))
+        jobs, detail_errors = [], []
+        for row, error in details:
+            if error:
+                detail_errors.append(error)
+            else:
+                jobs.append(row)
+        for sort, (_, _, snapshots, _) in partitions.items():
+            _recheck_oracle_partition(root, site, transport, sort, snapshots)
+        if errors or detail_errors or len(jobs) != len(union):
+            reason = "; ".join(errors + detail_errors)
+            return Inventory("partial", jobs, reason or "Honeywell detail membership is incomplete.", source)
+        counter_note = ""
+        if len(counters) > 1:
+            counter_note = f" Counter discrepancy {min(counters)} vs {max(counters)} reconciled against {len(union)} unique published IDs."
+        return Inventory("complete", jobs, f"Honeywell Oracle inventory verified: {len(jobs)} unique IDs and full descriptions across {len(partitions)} sort partitions.{counter_note}", source)
+    except FetchError as error:
+        return Inventory("partial", reason=error.reason, source_url=source)
+    except (OSError, ValueError, TypeError, AttributeError):
+        return Inventory("failed", reason="Honeywell Oracle board access or payload validation failed.", source_url=source)
 
 
 def _detail(data, ident: str, company_id: str, company: str, source: str):
@@ -126,6 +241,8 @@ def fetch_oracle(ats: str, careers_url: str, company_id: str, company: str, tran
     if any(name in configured for name in ("greenhouse", "lever", "ashby", "workday", "icims", "adp", "paylocity")):
         return Inventory("unsupported", reason="ATS / Source disagrees with the verified Oracle URL.", source_url=careers_url)
     p = urlsplit(careers_url)
+    if company_id == "COMP-0436" and company.casefold() == "honeywell aerospace technologies":
+        return _fetch_honeywell(ats, careers_url, company_id, company, transport, discovery_transport)
     source = careers_url.rstrip("/")
     root = f"https://{p.hostname}/hcmRestApi/resources/latest/"
     jobs, issues = [], []

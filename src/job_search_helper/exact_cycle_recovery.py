@@ -148,7 +148,8 @@ def recover_exact_cycle(engine, remote, cycle_id, company_ids):
 
 
 def recover_exact_cycle_with_factory(state_db_path, dependency_context_factory,
-                                     cycle_id, company_ids):
+                                     cycle_id, company_ids, *,
+                                     require_frozen_plans=False):
     """Construct exact-recovery dependencies only while the normal lock is held."""
     cycle_id, selected = _normalize_request(cycle_id, company_ids)
     if not callable(dependency_context_factory):
@@ -161,10 +162,13 @@ def recover_exact_cycle_with_factory(state_db_path, dependency_context_factory,
                 raise ValueError('exact_recovery_dependency_context_must_yield_engine_remote')
             engine, remote = dependencies
             _require_engine_state_path(engine, state_path)
-            return _recover_exact_cycle_locked(engine, remote, cycle_id, selected)
+            return _recover_exact_cycle_locked(
+                engine, remote, cycle_id, selected,
+                require_frozen_plans=require_frozen_plans)
 
 
-def _recover_exact_cycle_locked(engine, remote, cycle_id, selected):
+def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
+                                require_frozen_plans=False):
     cycle = engine.state.cycle(cycle_id)
     if not isinstance(cycle, dict) or cycle.get('id') != cycle_id:
         raise ValueError('exact_recovery_cycle_missing')
@@ -186,6 +190,8 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected):
             raise ValueError('exact_recovery_durable_inventory_blocked')
         stage = item.get('stage')
         has_plan = engine.inbox.plan(cycle_id, company_id) is not None
+        if require_frozen_plans and not has_plan:
+            raise ValueError('exact_recovery_frozen_plan_required')
         # Allowed local combinations: queued with/without a plan (the
         # plan-save/State-save split), inventory with a plan, or a terminal
         # final checkpoint with its retained plan for cleanup-only recovery.
@@ -215,7 +221,8 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected):
         facts = preflight[company_id]
         # A queued checkpoint and plan is the deliberate plan-save/State-save
         # split: re-enter the planner to validate/reconcile it before delivery.
-        needs_plan = not facts['has_plan'] or facts['stage'] == 'queued'
+        needs_plan = not facts['has_plan'] or (
+            facts['stage'] == 'queued' and not require_frozen_plans)
         if needs_plan:
             planned = freeze_exact_cycle_plans(
                 engine, cycle_id, [company_id], company_guard=guard,

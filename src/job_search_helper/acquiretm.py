@@ -1,65 +1,205 @@
-"""AcquireTM public browser pagination and structured job details."""
-import re,time
-from urllib.parse import urlsplit,urljoin,parse_qs
-from .ats import Inventory,FetchError,text,HTTPResponse
-from .shared_boards import checked,Links,Scripts,schema_job
-SOURCE='https://amphenol-aerospace.acquiretm.com/home.aspx'
+"""Amphenol Aerospace's employer-scoped AcquireTM board."""
+from __future__ import annotations
 
-def parse_listing(body):
- totals=re.findall(r'\b(\d+) positions found\.',text(body))
- if len(totals)!=1 or int(totals[0])>10000:raise FetchError('partial','AcquireTM listing total missing or ambiguous.')
- rows={};pages=set()
- for a,title in Links(body).links:
-  u=urljoin(SOURCE,a.get('href',''));p=urlsplit(u);q=parse_qs(p.query)
-  if p.scheme=='https' and p.hostname==urlsplit(SOURCE).hostname and p.path=='/job_details_clean.aspx' and set(q)=={'ID'} and len(q['ID'])==1 and q['ID'][0].isdigit():
-   ident=q['ID'][0]
-   if ident in rows or not text(title):raise FetchError('partial','AcquireTM duplicate job or missing title.')
-   rows[ident]={'id':ident,'title':text(title),'url':u}
-  m=re.fullmatch('Go to page ([0-9]+) of job results',a.get('aria-label',''))
-  if m:pages.add(int(m[1]))
- return int(totals[0]),rows,pages
+import re
+import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+from urllib.parse import parse_qs, urljoin, urlsplit
+
+from .ats import FetchError, HTTPResponse, Inventory, text
+from .shared_boards import Links, Scripts, checked, schema_job
+
+SOURCE = "https://amphenol-aerospace.acquiretm.com/home.aspx"
+HOST = urlsplit(SOURCE).hostname
+DETAIL_PATH = "/job_details_clean.aspx"
+MAX_LISTINGS = 10_000
+MAX_PAGES = 400
+MIN_DESCRIPTION = 120
+RATE_MARKERS = ("too many requests", "rate limit", "rate-limit", "temporarily blocked", "request limit", "try again later", "service unavailable")
+EMPLOYER_LABELS = {"amphenol aerospace", "amphenol aerospace operations"}
+
+
+def _label(value: object) -> str:
+    return re.sub(r"\s+", " ", text(value)).strip().casefold()
+
+
+def _rate_limited(body: bytes) -> bool:
+    sample = body[:64_000].decode("utf-8", "replace").casefold()
+    return any(marker in sample for marker in RATE_MARKERS)
+
+
+def parse_listing(body: str):
+    totals = re.findall(r"\b(\d+)\s+positions found\.", text(body), re.I)
+    if len(totals) != 1 or not 0 <= int(totals[0]) <= MAX_LISTINGS:
+        raise FetchError("partial", "AcquireTM listing total missing or ambiguous.")
+    rows: dict[str, dict[str, str]] = {}
+    pages: set[int] = set()
+    for attrs, title in Links(body).links:
+        url = urljoin(SOURCE, attrs.get("href", ""))
+        parsed = urlsplit(url)
+        query = parse_qs(parsed.query)
+        if (parsed.scheme == "https" and parsed.hostname == HOST and parsed.path == DETAIL_PATH
+                and set(query) == {"ID"} and len(query["ID"]) == 1 and query["ID"][0].isdigit()):
+            ident = query["ID"][0]
+            role = text(title)
+            if ident in rows or not role:
+                raise FetchError("partial", "AcquireTM duplicate job or missing title.")
+            rows[ident] = {"id": ident, "title": role, "url": url}
+        match = re.fullmatch(r"Go to page ([0-9]+) of job results", attrs.get("aria-label", ""))
+        if match:
+            pages.add(int(match[1]))
+    return int(totals[0]), rows, pages
+
+
+def _wait_for_update(page, previous: str, timeout: int = 12) -> None:
+    try:
+        page.wait_for_function(
+            "(old) => document.body && document.body.innerHTML !== old",
+            arg=previous,
+            timeout=timeout * 1000,
+        )
+    except Exception as exc:
+        raise FetchError("partial", "AcquireTM pagination did not complete its UpdatePanel refresh.") from exc
+
 
 def inventory(page):
- page.goto(SOURCE,wait_until='domcontentloaded',timeout=30000)
- if page.url!=SOURCE:raise FetchError('partial','AcquireTM board redirected.')
- total,rows,pages=parse_listing(page.content());visited={1};pending=pages-{1}
- while pending:
-  number=min(pending)
-  if number>400:raise FetchError('partial','AcquireTM page bound exceeded.')
-  page.get_by_role('link',name=f'Go to page {number} of job results',exact=True).click()
-  # AcquireTM's ASP.NET UpdatePanel leaves analytics requests open forever.
-  # The bounded settle is followed by strict listing-count and ID checks below.
-  time.sleep(1)
-  if page.url!=SOURCE:raise FetchError('partial','AcquireTM pagination left verified board.')
-  n,part,links=parse_listing(page.content())
-  if n!=total or rows.keys() & part.keys():raise FetchError('partial','AcquireTM total changed or pagination repeated.')
-  rows.update(part);visited.add(number);pending=(pending|links)-visited
- if len(rows)!=total:raise FetchError('partial','AcquireTM retrieved count disagrees with public total.')
- return rows
+    page.goto(SOURCE, wait_until="domcontentloaded", timeout=30_000)
+    if page.url != SOURCE:
+        raise FetchError("partial", "AcquireTM board redirected.")
+    total, rows, pages = parse_listing(page.content())
+    visited = {1}
+    pending = pages - visited
+    while pending:
+        number = min(pending)
+        if not 1 < number <= MAX_PAGES:
+            raise FetchError("partial", "AcquireTM page bound exceeded.")
+        previous = page.content()
+        try:
+            page.get_by_role("link", name=f"Go to page {number} of job results", exact=True).click(timeout=8_000)
+        except Exception as exc:
+            raise FetchError("partial", "AcquireTM pagination control disappeared.") from exc
+        _wait_for_update(page, previous)
+        if page.url != SOURCE:
+            raise FetchError("partial", "AcquireTM pagination left the verified board.")
+        current_total, part, discovered = parse_listing(page.content())
+        if current_total != total or rows.keys() & part.keys():
+            raise FetchError("partial", "AcquireTM total changed or pagination repeated.")
+        rows.update(part)
+        visited.add(number)
+        pending = (pending | discovered) - visited
+    if len(rows) != total:
+        raise FetchError("partial", "AcquireTM retrieved count disagrees with public total.")
+    return rows
 
-def posting(body,e,cid,company):
- records=Scripts(body).jobs()
- if len(records)!=1:raise FetchError('partial','AcquireTM unique job schema missing.')
- j=records[0]
- if j.get('url')!=e['url'] or str((j.get('identifier') or {}).get('value'))!=e['id'] or text(j.get('title'))!=e['title']:raise FetchError('partial','AcquireTM job identity mismatch.')
- return schema_job(j,e['url'],e['id'],'AcquireTM',cid,company)
 
-def fetch_acquiretm(url,cid,company):
- jobs=[]
- if url!=SOURCE:return Inventory('unsupported',reason='AcquireTM requires the verified unfiltered employer board.',source_url=url,ats='AcquireTM')
- try:
-  from playwright.sync_api import sync_playwright
-  with sync_playwright() as p:
-   browser=p.chromium.launch(headless=True)
-   try:
-    context=browser.new_context();page=context.new_page();entries=inventory(page)
-    for e in entries.values():
-     time.sleep(.4);response=context.request.get(e['url'],max_redirects=0,timeout=30000)
-     try:body=checked(HTTPResponse(response.status,response.body(),response.headers),True)
-     finally:response.dispose()
-     jobs.append(posting(body,e,cid,company))
-    if inventory(page)!=entries:raise FetchError('partial','AcquireTM listing changed during scan.')
-   finally:browser.close()
-  return Inventory('complete',jobs,f'AcquireTM: verified all {len(jobs)} full postings and rechecked every listing page.',url,'AcquireTM')
- except FetchError as e:return Inventory(e.status,jobs,str(e),url,'AcquireTM')
- except Exception as e:return Inventory('partial',jobs,f'AcquireTM public scan failed ({type(e).__name__}).',url,'AcquireTM')
+def _employer_matches(value: object) -> bool:
+    return _label(value) in EMPLOYER_LABELS
+
+
+def _description_from_jsonld(record: dict) -> str:
+    description = text(record.get("description"))
+    if len(description) < MIN_DESCRIPTION:
+        raise FetchError("partial", "AcquireTM JobPosting does not contain a full description body.")
+    if _rate_limited(description.encode()):
+        raise FetchError("blocked", "AcquireTM detail returned a rate-limit body.")
+    return description
+
+
+def posting(body: str, entry: dict, cid: str, company: str):
+    if _rate_limited(body.encode("utf-8", "replace")):
+        raise FetchError("blocked", "AcquireTM detail returned a rate-limit page.")
+    records = Scripts(body).jobs()
+    if len(records) != 1:
+        raise FetchError("partial", "AcquireTM detail lacks one unique JSON-LD JobPosting.")
+    record = records[0]
+    identifier = record.get("identifier") or {}
+    value = identifier.get("value") if isinstance(identifier, dict) else identifier
+    if (record.get("url") != entry["url"] or str(value) != entry["id"] or text(record.get("title")) != entry["title"]):
+        raise FetchError("partial", "AcquireTM job identity does not match its listing.")
+    organization = record.get("hiringOrganization") or {}
+    if not isinstance(organization, dict) or not _employer_matches(organization.get("name")):
+        raise FetchError("partial", "AcquireTM detail employer label is outside Amphenol Aerospace scope.")
+    _description_from_jsonld(record)
+    return schema_job(record, entry["url"], entry["id"], "AcquireTM", cid, company)
+
+
+class _DetailClient:
+    """Bounded detail client with a per-scan cache of validated response bodies."""
+    def __init__(self, request, *, interval: float = 0.8, max_attempts: int = 3, sleep=time.sleep):
+        self.request, self.interval, self.max_attempts, self.sleep = request, interval, max_attempts, sleep
+        self.last_request = 0.0
+        self.bodies: dict[str, str] = {}
+
+    def _cooldown(self, headers, attempt: int) -> None:
+        elapsed = time.monotonic() - self.last_request
+        if elapsed < self.interval:
+            self.sleep(self.interval - elapsed)
+        value = next((v for k, v in headers.items() if k.casefold() == "retry-after"), "")
+        try:
+            delay = float(value)
+        except (TypeError, ValueError):
+            try:
+                stamp = parsedate_to_datetime(value)
+                if stamp.tzinfo is None:
+                    stamp = stamp.replace(tzinfo=timezone.utc)
+                delay = (stamp - datetime.now(timezone.utc)).total_seconds()
+            except (TypeError, ValueError, OverflowError):
+                delay = 2 ** attempt
+        self.sleep(max(0.0, min(8.0, delay)))
+
+    def get_body(self, url: str) -> str:
+        if url in self.bodies:
+            return self.bodies[url]
+        for attempt in range(self.max_attempts):
+            self._cooldown({}, attempt)
+            self.last_request = time.monotonic()
+            try:
+                response = self.request.get(url, max_redirects=0, timeout=30_000)
+                body = response.body() if callable(getattr(response, "body", None)) else response.body
+                status, headers = response.status, response.headers
+            except Exception as exc:
+                if attempt + 1 == self.max_attempts:
+                    raise FetchError("partial", "AcquireTM detail request timed out after bounded retries.") from exc
+                continue
+            if status == 429 or status in {408, 500, 502, 503, 504}:
+                if attempt + 1 == self.max_attempts:
+                    status_name = "blocked" if status == 429 else "partial"
+                    raise FetchError(status_name, "AcquireTM detail request remained rate-limited or unavailable.")
+                self._cooldown(headers, attempt)
+                continue
+            decoded = checked(HTTPResponse(status, body, headers), True)
+            if _rate_limited(body):
+                if attempt + 1 == self.max_attempts:
+                    raise FetchError("blocked", "AcquireTM detail returned a rate-limit page after bounded retries.")
+                self._cooldown(headers, attempt)
+                continue
+            self.bodies[url] = decoded
+            return decoded
+        raise FetchError("partial", "AcquireTM detail request failed.")
+
+
+def fetch_acquiretm(url, cid, company, *, request_factory=None):
+    if url != SOURCE:
+        return Inventory("unsupported", reason="AcquireTM requires the verified unfiltered employer board.", source_url=url, ats="AcquireTM")
+    jobs: list[dict] = []
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            try:
+                context = browser.new_context()
+                page = context.new_page()
+                entries = inventory(page)
+                client = _DetailClient(request_factory or context.request)
+                for entry in entries.values():
+                    jobs.append(posting(client.get_body(entry["url"]), entry, cid, company))
+                if inventory(page) != entries:
+                    raise FetchError("partial", "AcquireTM listing changed during detail scan.")
+            finally:
+                browser.close()
+        return Inventory("complete", jobs, f"AcquireTM: verified all {len(jobs)} full postings and rechecked the complete scoped listing.", url, "AcquireTM")
+    except FetchError as exc:
+        return Inventory(exc.status, jobs, str(exc), url, "AcquireTM")
+    except Exception as exc:
+        return Inventory("partial", jobs, f"AcquireTM public scan failed ({type(exc).__name__}).", url, "AcquireTM")

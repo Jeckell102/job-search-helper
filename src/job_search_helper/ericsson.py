@@ -1,6 +1,10 @@
 """Scoped normal-transport adapter for Ericsson's public Eightfold board."""
 from __future__ import annotations
 
+import json
+import os
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 from urllib.parse import urlencode, urlsplit
 
 from .ats import FetchError, Inventory, _base, _json, text
@@ -77,30 +81,88 @@ def _detail(client, entry):
     return row
 
 
-def _snapshot(client):
+def _checkpoint_read(path):
+    if path is None:
+        return None
+    try:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (FileNotFoundError, OSError, UnicodeError, ValueError, TypeError):
+        return None
+    if (not isinstance(value, dict) or value.get("source_url") != SOURCE
+            or value.get("company_id") != COMPANY_ID
+            or type(value.get("total")) is not int
+            or not isinstance(value.get("entries"), list)
+            or not isinstance(value.get("ids"), list)
+            or not isinstance(value.get("jobs"), list)):
+        return None
+    return value
+
+
+def _checkpoint_write(path, *, total, entries, ids, jobs, phase):
+    if path is None:
+        return
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "source_url": SOURCE, "company_id": COMPANY_ID, "total": total,
+        "entries": entries, "ids": ids, "jobs": jobs, "phase": phase,
+    }
+    with NamedTemporaryFile("w", encoding="utf-8", dir=target.parent,
+                            prefix=target.name + ".", delete=False) as stream:
+        json.dump(payload, stream, sort_keys=True)
+        stream.flush()
+        os.fsync(stream.fileno())
+        temporary = stream.name
+    os.replace(temporary, target)
+
+
+def _snapshot(client, checkpoint_path=None):
+    saved = _checkpoint_read(checkpoint_path)
+    if saved and saved["phase"] in {"listing", "details", "complete"}:
+        entries, ids, total = saved["entries"], saved["ids"], saved["total"]
+        if len(entries) == total and len(ids) == total and len(set(ids)) == total:
+            return entries, ids, total, saved.get("jobs", [])
     first, total = _search(client, 0)
     entries = list(first)
+    _checkpoint_write(checkpoint_path, total=total, entries=entries,
+                      ids=[], jobs=[], phase="listing")
     for start in range(PAGE_SIZE, total, PAGE_SIZE):
         page, page_total = _search(client, start)
         if page_total != total:
             raise FetchError("partial", "Ericsson Eightfold total changed during pagination.")
         entries.extend(page)
+        _checkpoint_write(checkpoint_path, total=total, entries=entries,
+                          ids=[], jobs=[], phase="listing")
     ids = [_identity(entry) for entry in entries]
     if len(ids) != total or len(set(ids)) != len(ids):
         raise FetchError("partial", "Ericsson Eightfold inventory has duplicate or missing postings.")
-    return entries, ids
+    _checkpoint_write(checkpoint_path, total=total, entries=entries,
+                      ids=ids, jobs=[], phase="details")
+    return entries, ids, total, []
 
 
-def fetch_ericsson(careers_url: str, company_id: str, company: str, transport=None) -> Inventory:
+def fetch_ericsson(careers_url: str, company_id: str, company: str, transport=None,
+                   checkpoint_path=None) -> Inventory:
     if not _source_ok(careers_url, company_id, company):
         return Inventory("unsupported", reason="Ericsson requires its verified Eightfold careers board.", source_url=SOURCE, ats=ATS)
     client = transport or CareersTransport(interval=0.15)
     try:
-        entries, ids = _snapshot(client)
-        jobs = [_detail(client, entry) for entry in entries]
-        reread, reread_ids = _snapshot(client)
+        entries, ids, total, jobs = _snapshot(client, checkpoint_path)
+        completed = {str(job.get("posting_id")): job for job in jobs if isinstance(job, dict)}
+        for entry in entries:
+            ident = _identity(entry)
+            if ident not in completed:
+                completed[ident] = _detail(client, entry)
+                _checkpoint_write(checkpoint_path, total=total, entries=entries,
+                                  ids=ids, jobs=list(completed.values()), phase="details")
+        jobs = [completed[ident] for ident in ids]
+        reread, reread_ids, reread_total, _ = _snapshot(client, None)
+        if reread_total != total:
+            raise FetchError("partial", "Ericsson Eightfold inventory count changed during reread.")
         if reread_ids != ids:
             raise FetchError("partial", "Ericsson Eightfold inventory changed during reread.")
+        _checkpoint_write(checkpoint_path, total=total, entries=entries,
+                          ids=ids, jobs=jobs, phase="complete")
         return Inventory("complete", jobs, f"Ericsson: retrieved {len(jobs)} full postings and rechecked the published inventory.", SOURCE, ATS)
     except FetchError as error:
         return Inventory(error.status, [], error.reason, SOURCE, ATS)

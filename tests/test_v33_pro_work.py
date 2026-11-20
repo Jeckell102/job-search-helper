@@ -32,7 +32,7 @@ class V33ProWorkTests(unittest.TestCase):
 
     def test_excluded_titles_are_skipped_before_insertion(self):
         c, repo, state, engine = self.make()
-        for title in ("Systems Engineer", "Principal Field Applications Engineer"):
+        for title in ("Systems Engineer", "Principal Software Engineer"):
             with self.subTest(title=title):
                 engine._stage_posting({"id": "CYC"}, c, posting(title=title))
                 self.assertEqual(repo.read("Job History"), [])
@@ -63,7 +63,11 @@ class V33ProWorkTests(unittest.TestCase):
         self.assertEqual(row["Review Status"], "Needs Review")
         self.assertEqual(row["Salary / Range"], "$150,000-$190,000")
         self.assertEqual(row["Work Arrangement"], "Remote")
-        self.assertIn("Deploy and integrate", row["Job Description"])
+        self.assertIn("See Job Evidence tab:", row["Job Description"])
+        evidence = [item for item in repo.read("Job Evidence")
+                    if item["Job Key"] == row["Job Key"] and item["Source Hash"] == row["Source Hash"]]
+        self.assertEqual(len(evidence), 1)
+        self.assertIn("Deploy and integrate", evidence[0]["Job Description"])
         self.assertTrue(row["Source Hash"])
         self.assertEqual(row["Description Hash"], "")
         state.close()
@@ -79,7 +83,11 @@ class V33ProWorkTests(unittest.TestCase):
         }}])
         engine._stage_posting({"id": "CYC"}, c, posting(description="VERSION TWO"))
         after = repo.read("Job History")[0]
-        self.assertEqual(after["Job Description"], "VERSION ONE")
+        self.assertEqual(after["Job Description"], row["Job Description"])
+        evidence = repo.read("Job Evidence")
+        self.assertEqual(len(evidence), 1)
+        self.assertEqual(evidence[0]["Job Description"], "VERSION ONE")
+        self.assertEqual(after["Source Hash"], row["Source Hash"])
         self.assertEqual(after["Review Status"], "In Progress")
         state.close()
 

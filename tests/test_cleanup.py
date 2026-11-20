@@ -70,6 +70,43 @@ class BlacklistCleanupTests(unittest.TestCase):
                          for operation in operations])
         self.assertEqual(repo.read("Job History")[0]["Added to Opportunities?"], "Yes")
 
+    @patch("job_search_helper.cleanup.classify_title", return_value="reject")
+    @patch("job_search_helper.cleanup.load_title_blacklist")
+    def test_choice_changed_after_planning_is_preserved_by_each_writer(self, _load, _classify):
+        planning = MemoryRepository({"Job History": [{
+            "Company": "Acme", "Job Title": "Software Engineer", "Job Key": "one",
+            "Official Job URL": "https://example.com/1", "Review Status": "Reviewed",
+            "Added to Opportunities?": "Pending"}]})
+        operations, _ = plan_blacklist_cleanup(planning)
+        planning.commit([{"tab": "Job History", "identity": {"Job Key": "one"},
+                          "values": {"Added to Opportunities?": "Yes"}}])
+        with self.assertRaises(RepositoryError):
+            planning.commit([{k: v for k, v in operation.items() if k != "row_number"}
+                             for operation in operations])
+        self.assertEqual(planning.read("Job History")[0]["Added to Opportunities?"], "Yes")
+        repo, service, _ = self.google_repo(value="Yes")
+        with self.assertRaises(RepositoryError):
+            repo.commit_existing_job_history_flags(operations)
+        service.spreadsheets.return_value.batchUpdate.assert_not_called()
+
+    def test_targeted_writer_checks_choice_from_latest_cell_response(self):
+        for initial in ('Pending', 'No'):
+            with self.subTest(initial=initial):
+                repo, service, operation = self.google_repo(value=initial)
+                operation['expected']['Added to Opportunities?'] = 'Pending'
+                latest = service.spreadsheets.return_value.get.return_value.execute.return_value
+                latest['sheets'][0]['data'][0]['rowData'][0]['values'][0]['userEnteredValue'] = {'stringValue': 'Yes'}
+                with self.assertRaises(RepositoryError):
+                    repo.commit_existing_job_history_flags([operation])
+                service.spreadsheets.return_value.batchUpdate.assert_not_called()
+
+    def test_targeted_writer_accepts_latest_already_no_replay_without_write(self):
+        repo, service, operation = self.google_repo(value='Pending')
+        latest = service.spreadsheets.return_value.get.return_value.execute.return_value
+        latest['sheets'][0]['data'][0]['rowData'][0]['values'][0]['userEnteredValue'] = {'stringValue': 'No'}
+        self.assertEqual(repo.commit_existing_job_history_flags([operation])['updated'], 0)
+        service.spreadsheets.return_value.batchUpdate.assert_not_called()
+
     def google_repo(self, *, value="Yes", formula=False):
         service = MagicMock()
         grid = {"sheets": [{"data": [{"startRow": 1, "startColumn": 2, "rowData": [
@@ -91,7 +128,8 @@ class BlacklistCleanupTests(unittest.TestCase):
         repo.read_columns = MagicMock(return_value=[(2, row)])
         operation = {"tab": "Job History", "row_number": 2,
                      "identity": {"Job Key": "one", "Job Title": "Software Engineer", "Review Status": "Reviewed"},
-                     "values": {"Added to Opportunities?": "No"}}
+                     "values": {"Added to Opportunities?": "No"},
+                     "expected": {"Added to Opportunities?": value}}
         return repo, service, operation
 
     def test_targeted_google_commit_accepts_large_empty_grid_and_updates_only_column_c(self):

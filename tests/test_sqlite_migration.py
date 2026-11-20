@@ -53,6 +53,36 @@ class MigrationTests(unittest.TestCase):
         cell = sheet.cells.setdefault((index, sheet.headers.index(field)), {})
         cell['userEnteredValue'] = cell['effectiveValue'] = _encoded(value)
 
+    def test_formula_rejection_does_not_turn_later_user_choice_into_delivery_echo(self):
+        self.local.commit([operation(**{'Added to Opportunities?': 'No', 'Last Checked': 'today'})])
+        sheet = self.remote._sheets['Job History']
+        col = sheet.headers.index('Last Checked')
+        sheet.cells[(1, col)] = {'userEnteredValue': {'formulaValue': '=""'},
+                                'effectiveValue': {'stringValue': ''}}
+        with self.assertRaisesRegex(RepositoryError, 'formula'):
+            self.sync.publish_batch()
+        self.assertEqual(self.local.db.execute('SELECT count(*) FROM delivery_attempts').fetchone()[0], 0)
+        self.edit('Job History', 'Added to Opportunities?', 'No')
+        self.sync.pull()
+        self.assertEqual(self.local.db.execute('SELECT value FROM manual_choices').fetchone()[0], 'No')
+
+    def test_google_preflight_rejection_clears_receipt_without_writing(self):
+        from job_search_helper.repository import GoogleRepository, PreflightWriteError
+        from sheets_fixture import RangeSheets
+        service = RangeSheets(self.remote.tables)
+        remote = GoogleRepository(service, 'test-sheet', min_request_interval=0)
+        service.set_cell('Job History', 1, 'Last Checked', cell={
+            'userEnteredValue': {'formulaValue': '=""'}, 'effectiveValue': {'stringValue': ''}})
+        self.local.commit([operation(**{'Added to Opportunities?': 'No', 'Last Checked': 'today'})])
+        sync = SheetsSynchronizer(self.local, remote)
+        with self.assertRaises(PreflightWriteError):
+            sync.publish_batch()
+        self.assertEqual(remote.metrics['write_requests'], 0)
+        self.assertEqual(self.local.db.execute('SELECT count(*) FROM delivery_attempts').fetchone()[0], 0)
+        service.set_cell('Job History', 1, 'Added to Opportunities?', 'No')
+        sync.pull()
+        self.assertEqual(self.local.db.execute('SELECT value FROM manual_choices').fetchone()[0], 'No')
+
     def test_bootstrap_has_no_pending_writes(self):
         self.assertEqual(self.local.status()['pending_cells'], 0)
         self.assertEqual(self.local.read('Job History'), self.remote.read('Job History'))
@@ -81,8 +111,10 @@ class MigrationTests(unittest.TestCase):
         self.assertTrue(recorded['recorded'])
         self.assertEqual(self.local.pending_scrape_outcomes('repair-coordinator'), [outcome])
         self.assertEqual(self.local.pending_scrape_outcomes('another-consumer'), [outcome])
+
         acknowledgement = self.local.acknowledge_scrape_outcome(
             outcome['outcome_id'], 'repair-coordinator')
+
         self.assertTrue(acknowledgement['acknowledged'])
         self.assertEqual(self.local.pending_scrape_outcomes('repair-coordinator'), [])
         self.assertEqual(self.local.pending_scrape_outcomes('another-consumer'), [outcome])
@@ -242,9 +274,7 @@ class MigrationTests(unittest.TestCase):
             row['Salary / Range'] = empty
             self.local._put('Opportunities', rid, row)
         self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
-
         self.sync.pull()
-
         self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'], '$125,000-$150,000 estimated')
         self.assertEqual(self.local.status()['conflicts'], 0)
         self.assertEqual(self.local.status()['pending_cells'], 0)
@@ -257,9 +287,7 @@ class MigrationTests(unittest.TestCase):
         self.local.commit([{'tab': 'Opportunities', 'identity': identity,
                             'values': {'Salary / Range': '$180,000 posting range'}}])
         self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
-
         self.sync.pull()
-
         rid, row = self.local.matches('Opportunities', identity)[0]
         self.assertEqual(row['Salary / Range'], '$180,000 posting range')
         conflicts = self.local.db.execute(
@@ -277,22 +305,17 @@ class MigrationTests(unittest.TestCase):
             row['Salary / Range'] = '{not-valid-json}'
             self.local._put('Opportunities', rid, row)
         self.edit('Opportunities', 'Salary / Range', 'see recruiter')
-
         self.sync.pull()
-
         self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'], '{not-valid-json}')
         self.assertEqual(self.local.status()['conflicts'], 1)
-
         with self.local.transaction():
             row = self.local.row('Opportunities', rid)
             row['Salary / Range'] = '{"compensationTierSummary": null}'
             self.local._put('Opportunities', rid, row)
-            self.local.db.execute(
-                'DELETE FROM conflicts WHERE tab=? AND row_id=? AND header=?',
-                ('Opportunities', rid, 'Salary / Range'))
+            self.local.db.execute('DELETE FROM conflicts WHERE tab=? AND row_id=? AND header=?',
+                                  ('Opportunities', rid, 'Salary / Range'))
         self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
         self.sync.pull()
-
         self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'],
                          '{"compensationTierSummary": null}')
         self.assertEqual(self.local.status()['conflicts'], 1)

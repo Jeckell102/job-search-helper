@@ -64,10 +64,15 @@ def _facts(cycle, company, item, *, storage_confirmed):
     }
     retry = cycle.get('repair_retry')
     if isinstance(retry, dict):
-        facts['attempt_id'] = _optional_text(retry.get('attempt_id'))
-        facts['failed_request_id'] = _optional_text(retry.get('failed_request_id'))
-        release = retry.get('release') or {}
-        facts['release_version'] = _optional_text(release.get('release_id'))
+        # A retry outcome must never be attributed merely to a friendly
+        # release ID.  Canonicalizing here keeps a malformed recovered cycle
+        # from producing an apparently authoritative repair outcome.
+        from .repair_retry import canonical_retry_binding, release_binding_sha256
+        retry = canonical_retry_binding(retry)
+        facts['attempt_id'] = retry['attempt_id']
+        facts['failed_request_id'] = retry['failed_request_id']
+        facts['release_version'] = retry['release']['release_id']
+        facts['release_binding_sha256'] = release_binding_sha256(retry['release'])
     return facts
 
 

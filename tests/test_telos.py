@@ -10,7 +10,7 @@ from job_search_helper.ats import HTTPResponse, _safe_api_url
 from job_search_helper.telos import VIEW, fetch_telos
 
 
-EVIDENCE = pathlib.Path("/home/chris/.codex/.chatgpt-projects/g-p-6ab70f626df48191a04039506182677f/work/full-integrations-20261029/telos/evidence")
+EVIDENCE = ROOT / 'tests' / 'fixtures' / 'adapter_contracts' / 'telos'
 
 
 class EvidenceTransport:
@@ -29,7 +29,7 @@ class EvidenceTransport:
 
 
 class TelosTests(unittest.TestCase):
-    def test_live_evidence_retrieves_all_sixteen_and_rechecks(self):
+    def test_synthetic_inventory_retrieves_all_sixteen_and_rechecks(self):
         transport = EvidenceTransport()
         result = fetch_telos("https://www.telos.com/careers", "COMP-0308", "Telos Corporation", transport)
         self.assertEqual(result.status, "complete")

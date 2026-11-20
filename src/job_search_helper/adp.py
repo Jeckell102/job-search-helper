@@ -5,6 +5,7 @@ Only the public job-requisitions GET endpoint is used.
 """
 from __future__ import annotations
 
+import logging
 import json
 import re
 import sys
@@ -213,8 +214,8 @@ def fetch_adp(board, root, company_id, company, transport):
             if page == 0:
                 first_ids = page_ids
             offset += len(entries)
-            print(json.dumps({"event": "inventory_page", "provider": "ADP", "company_id": company_id,
-                              "page": page + 1, "postings_fetched": len(jobs), "expected": expected}), file=sys.stderr)
+            logging.getLogger(__name__).debug("%s", json.dumps({"event": "inventory_page", "provider": "ADP", "company_id": company_id,
+                              "page": page + 1, "postings_fetched": len(jobs), "expected": expected}))
             if len(jobs) == expected:
                 break
         else:

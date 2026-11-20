@@ -32,19 +32,20 @@ def detail_record(item):
 
 
 class ReplayClient:
-    def __init__(self, pages, details):
+    def __init__(self, pages, details, count=11):
         self.pages = pages
         self.details = details
         self.search_calls = []
         self.detail_calls = []
         self.root = ROOT
         self.domain = DOMAIN
+        self.count = count
 
     def data(self, kind, value):
         if kind == "search":
             self.search_calls.append(value)
             page = self.pages[len(self.search_calls) - 1]
-            return {"count": 11, "positions": page, "appliedFilters": {}}
+            return {"count": self.count, "positions": page, "appliedFilters": {}}
         self.detail_calls.append(value)
         return self.details[value]
 
@@ -64,13 +65,48 @@ class EightfoldScanTests(unittest.TestCase):
         self.assertEqual(client.search_calls, [0, 10, 0, 10])
         self.assertTrue(all(job["description"] for job in result.jobs))
 
-    def test_later_page_duplicate_stops_before_detail_requests(self):
+    def test_later_page_duplicate_retains_unique_details_without_claiming_complete(self):
         duplicate_page = [self.items[0]]
         client = ReplayClient([self.items[:10], duplicate_page], self.details)
         result = scan(client, CID, COMPANY, listing_first=True)
         self.assertEqual(result.status, "partial")
-        self.assertEqual(client.detail_calls, [])
+        self.assertEqual(len(client.detail_calls), 10)
+        self.assertEqual(len(result.jobs), 10)
         self.assertIn("repeated job IDs", result.reason)
+
+    def test_bad_detail_does_not_hide_jobs_later_in_the_inventory(self):
+        self.details[self.items[1]['id']]['name'] = 'Wrong identity'
+        client = ReplayClient(self.pages, self.details)
+        result = scan(client, CID, COMPANY, listing_first=True)
+        self.assertEqual(result.status, 'partial')
+        self.assertEqual(len(result.jobs), 10)
+        self.assertIn(self.items[-1]['id'], {job['posting_id'] for job in result.jobs})
+        self.assertIn(self.items[1]['id'], result.reason)
+
+    def test_duplicate_boundary_does_not_hide_later_pages(self):
+        items = [listing_record(i) for i in range(21)]
+        details = {e['id']: detail_record(e) for e in items}
+        pages = [items[:10], [items[9]] + items[11:20], items[20:]]
+        client = ReplayClient(pages, details, count=21)
+        result = scan(client, CID, COMPANY, listing_first=True)
+        self.assertEqual(result.status, 'partial')
+        self.assertEqual(len(result.jobs), 20)
+        self.assertEqual(client.search_calls, [0, 10, 20])
+        self.assertIn(items[20]['id'], {job['posting_id'] for job in result.jobs})
+
+    def test_growing_published_total_keeps_collecting_but_remains_partial(self):
+        items = self.items + [listing_record(11)]
+        details = {e['id']: detail_record(e) for e in items}
+        class GrowingBoard(ReplayClient):
+            def data(self, kind, value):
+                if kind == 'search':
+                    self.count = 11 if value == 0 else 12
+                return super().data(kind, value)
+        client = GrowingBoard([items[:10], items[10:]], details)
+        result = scan(client, CID, COMPANY, listing_first=True)
+        self.assertEqual(result.status, 'partial')
+        self.assertEqual(len(result.jobs), 12)
+        self.assertIn('total changed', result.reason)
 
     def test_default_scan_preserves_verified_partial_details(self):
         duplicate_page = [self.items[0]]

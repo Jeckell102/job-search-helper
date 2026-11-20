@@ -190,6 +190,66 @@ class CompanyEventBridgeTests(unittest.TestCase):
         recovered = Engine(self.repo, recovered_state)._recover(cycles[0]["id"])
         self.assertEqual(recovered["company_event"], cycles[0]["company_event"])
 
+    def test_terminal_intake_event_becomes_one_next_scan_after_current_cycle_stops(self):
+        """A Company edit seen by final intake cannot start a second scrape."""
+        from contextlib import contextmanager
+        from unittest.mock import patch
+        from job_search_helper import runner
+        from job_search_helper.engine import Engine, State
+        from test_fetch_pool import inventory
+
+        database = self.root / "state" / "state.db"
+        fetches = []
+
+        class FinalIntake:
+            totals = {}
+
+            def __enter__(self):
+                return self
+
+            def __exit__(inner_self, exc_type, exc, traceback):
+                # Model the exact timing that matters: the final run-scoped
+                # pull commits a Company event while the scraper still owns
+                # its normal lock, before terminal bridge delivery.
+                self.event(**{"ATS / Source": "Lever"})
+                return False
+
+        def make_engine(repo, state, **kwargs):
+            return Engine(
+                repo, state,
+                fetcher=lambda source, url, company_id, name: (
+                    fetches.append(company_id) or inventory(company_id, name, url)),
+                **kwargs,
+            )
+
+        with patch.object(runner, "_load_environment"), \
+             patch.object(runner, "load_title_blacklist"), \
+             patch.object(runner, "load_title_review_list"), \
+             patch.object(runner, "state_path", return_value=database), \
+             patch.object(runner, "get_repository", return_value=self.repo), \
+             patch.object(runner, "Engine", side_effect=make_engine), \
+             patch.object(runner, "_refresh_review_queue"), \
+             patch("job_search_helper.run_sync.run_scoped_sync", return_value=FinalIntake()):
+            self.assertEqual(
+                runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=False), 0,
+            )
+
+        # Current work ran exactly once.  The newly discovered Company fact is
+        # durably queued for the next invocation, not recursively admitted.
+        self.assertEqual(fetches, ["COMP-1"])
+        state = State(database, readonly=True)
+        self.addCleanup(state.close)
+        self.assertEqual(len(state.cycles()), 1)
+        request = json.loads((database.parent / "next-scan.json").read_text())
+        self.assertEqual(request["mode"], "company-only")
+        self.assertEqual(request["company_ids"], ["COMP-1"])
+        receipts = list((database.parent / "company-event-bridge" / "receipts").glob("*.json"))
+        self.assertEqual(len(receipts), 1)
+        # Re-delivery after a restart is idempotent: no second request or
+        # receipt is created after the durable acknowledgement watermark.
+        self.assertEqual(self.bridge.process_pending(), [])
+        self.assertEqual(len(list((database.parent / "company-event-bridge" / "receipts").glob("*.json"))), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

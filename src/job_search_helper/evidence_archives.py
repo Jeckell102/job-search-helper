@@ -13,7 +13,7 @@ import re
 import tempfile
 from pathlib import Path
 
-from .repository import GoogleRepository, RepositoryError, SCHEMAS, _tab
+from .repository import GoogleRepository, PreflightWriteError, RepositoryError, UncertainWriteError, SCHEMAS, _tab
 
 TAB = 'Job Evidence'
 ROW_STRIDE = 100_000
@@ -214,6 +214,7 @@ class EvidenceArchives:
         self._committed_rows = {}
         results = []
         evidence_rows = []
+        writes_before = getattr(self.main, 'metrics', {}).get('write_requests', 0)
         try:
             if evidence:
                 self._reload()
@@ -275,7 +276,14 @@ class EvidenceArchives:
             return {**{key: sum(r.get(key, 0) for r in results)
                        for key in ('inserted', 'updated', 'requests')},
                     'new_jobs': [job for result in results for job in result.get('new_jobs', [])]}
-        except Exception:
+        except Exception as error:
             self._committed_rows = {}
             self._repos.clear()
+            # An archive commit spans several workbooks. A later preflight
+            # rejection cannot prove that earlier volume/directory writes did
+            # not land; preserve the outer delivery receipts for keyed replay.
+            submitted = (any(result.get('requests', 0) for result in results)
+                         or getattr(self.main, 'metrics', {}).get('write_requests', 0) > writes_before)
+            if isinstance(error, PreflightWriteError) and submitted:
+                raise UncertainWriteError('An earlier archive write may already be applied; replay the saved keyed operations.') from error
             raise

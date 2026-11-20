@@ -13,9 +13,16 @@ from .discovery import CareersTransport
 
 ABACO_SOURCE = "https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc"
 KOMATSU_SOURCE = "https://komatsu.jobs/viewalljobs/"
+QORVO_SOURCE = "https://careers.qorvo.com/search/?q=&sortColumn=referencedate&sortDirection=desc"
+DANFOSS_SOURCE = "https://jobs.danfoss.com/search/?q=&sortColumn=referencedate&sortDirection=desc"
+FESTO_SOURCE = "https://jobs.festo.com/viewalljobs/"
+CROWN_SOURCE = "https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch="
 SITES = {
     ABACO_SOURCE: "jobs.ametek.com",
-    "https://careers.qorvo.com/search/?locale=en_US": "careers.qorvo.com",
+    QORVO_SOURCE: "careers.qorvo.com",
+    DANFOSS_SOURCE: "jobs.danfoss.com",
+    FESTO_SOURCE: "jobs.festo.com",
+    CROWN_SOURCE: "us-careers.crown.com",
     "https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=": "careers.ses.com",
     "https://careers.belden.com/search/?q=": "careers.belden.com",
     "https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc": "jobs.hii-tsd.com",
@@ -26,6 +33,7 @@ SITES = {
     "https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc": "jobs.teradyne.com",
     KOMATSU_SOURCE: "komatsu.jobs",
     "https://jobs.sick.com/usa?locale=en_US": "jobs.sick.com",
+    "https://jobs.atsautomation.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_brand=&optionsFacetsDD_country=&optionsFacetsDD_location=&optionsFacetsDD_lang=": "jobs.atsautomation.com",
 }
 PAGE_SIZE, MAX_PAGES = 25, 100
 KOMATSU_PAGE_SIZE = 50
@@ -108,6 +116,8 @@ def _listing(client, source, start):
         url = source + ("" if start == 0 else str(start) + "/") + "?q=&sortColumn=referencedate&sortDirection=desc"
     elif source == "https://careers.thalesdsi.com/search/?q=":
         url = source + "&sortColumn=referencedate&sortDirection=desc" + ("&startrow=" + str(start) if start else "")
+    elif source == QORVO_SOURCE:
+        url = source + ("&startrow=" + str(start) if start else "")
     elif source == "https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc":
         url = source + ("&startrow=" + str(start) if start else "")
     else:
@@ -169,7 +179,7 @@ def _leonardo_sitemap(client, source, expected_total):
         if ident in by_id or candidate in by_id.values():
             raise FetchError("partial", "Leonardo DRS sitemap contained duplicate job identities.")
         by_id[ident] = candidate
-    if len(by_id) != expected_total:
+    if expected_total is not None and len(by_id) != expected_total:
         raise FetchError("partial", "Leonardo DRS sitemap count disagrees with the published inventory.")
     return by_id
 
@@ -181,7 +191,9 @@ def fetch_successfactors(url, company_id, company, transport=None):
     try:
         total,first,_next=_listing(client,url,0)
         if url == "https://careers.leonardodrs.com/go/All-Jobs/8131200/":
-            sitemap = _leonardo_sitemap(client, url, total)
+            # A temporarily stale published total must not suppress hundreds
+            # of individually verifiable job pages. Keep membership partial.
+            sitemap = _leonardo_sitemap(client, url, None)
             first_map = {ident: (title, detail_url) for ident, title, detail_url in first}
             if not set(first_map) <= set(sitemap) or any(sitemap[ident] != detail_url for ident, (_, detail_url) in first_map.items()):
                 raise FetchError("partial", "Leonardo DRS first listing page is outside the verified sitemap.")
@@ -220,7 +232,26 @@ def fetch_successfactors(url, company_id, company, transport=None):
                     raise FetchError("partial", "Abaco detail does not expose a complete, company-scoped job body.")
                 description=text(''.join(detail.display))
             row=_base({"id":ident},"SuccessFactors",company_id,company); row.update(title=detail_title if not title else title,url=detail_url,description=description,req_id=requisition); return row
-        with ThreadPoolExecutor(max_workers=12) as pool: jobs=list(pool.map(detail_row,entries_all))
+        def available_detail(entry):
+            try:
+                return detail_row(entry), None
+            except FetchError as error:
+                return None, f'Posting {entry[0]}: {error.reason}'
+            except Exception as error:
+                return None, f'Posting {entry[0]}: {type(error).__name__}'
+        # A missing or malformed detail must not discard every other verified
+        # body returned by the pool. Save successes, but never infer closures
+        # from an inventory with even one unresolved detail.
+        with ThreadPoolExecutor(max_workers=12) as pool:
+            results=list(pool.map(available_detail,entries_all))
+        jobs=[job for job, error in results if job is not None]
+        gaps=[error for job, error in results if error is not None]
+        if gaps:
+            raise FetchError('partial', f'SuccessFactors saved {len(jobs)} of {total} postings; '
+                             f'{len(gaps)} detail gaps remain. ' + '; '.join(gaps[:3]))
+        if sitemap is not None and len(sitemap) != total:
+            raise FetchError('partial', f'Leonardo DRS sitemap count disagrees with the published inventory; '
+                             f'saved {len(jobs)} verified postings for retry.')
         if len(jobs) != total: raise FetchError("partial","SuccessFactors records do not match published total.")
         if sitemap is not None:
             job_titles = {job["posting_id"]: job["title"] for job in jobs}
@@ -236,7 +267,7 @@ def fetch_successfactors(url, company_id, company, transport=None):
                                            or job_titles.get(ident) != title
                                            for ident, title, detail_url in check_first):
                 raise FetchError("partial", "Leonardo DRS first listing page changed during the scan.")
-        elif url in {"https://careers.thalesdsi.com/search/?q=", ABACO_SOURCE, KOMATSU_SOURCE}:
+        elif url in {"https://careers.thalesdsi.com/search/?q=", ABACO_SOURCE, KOMATSU_SOURCE, QORVO_SOURCE}:
             for page_start, (saved_total, saved_entries, saved_next) in page_snapshots.items():
                 check_total, check_entries, check_next = _listing(client, url, page_start)
                 if (check_total, check_entries, check_next) != (saved_total, saved_entries, saved_next):

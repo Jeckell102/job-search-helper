@@ -185,6 +185,38 @@ def assert_release_settled(state_directory):
     return journal
 
 
+def assert_active_release_binding(state_directory, binding):
+    """Require a retry's exact release to remain the active completed release.
+
+    A repair request is intentionally not an authorization to run whatever
+    happens to be installed later.  Its full release binding must still be
+    present in the durable activation journal, and that journal must describe
+    the currently active, successfully completed release.  Missing legacy
+    journal bindings and every non-COMPLETE state fail closed.
+    """
+    from .repair_retry import canonical_release_binding
+
+    required = canonical_release_binding(binding)
+    path = Path(state_directory) / "integration-release-journal.json"
+    try:
+        journal = _read_json(path)
+        actual = canonical_release_binding(journal.get("release"))
+    except (RuntimeError, ValueError, TypeError) as exc:
+        raise ValueError(
+            "Repair retry release binding is not the active COMPLETE release; "
+            "keeping its durable request and saved work on hold."
+        ) from exc
+    if (journal.get("schema") != JOURNAL_SCHEMA
+            or journal.get("state") != "COMPLETE"
+            or actual != required
+            or journal.get("release_id") != required["release_id"]):
+        raise ValueError(
+            "Repair retry release binding is not the active COMPLETE release; "
+            "keeping its durable request and saved work on hold."
+        )
+    return journal
+
+
 def activate_release(project_root, candidate_root, database, record_root, manifest,
                      *, current_source_revision, dependency_digest, verify=None, fault=None):
     """Activate exact reviewed files while excluding all normal scraper runs."""
@@ -223,7 +255,8 @@ def activate_release(project_root, candidate_root, database, record_root, manife
         journal = {
             "schema": JOURNAL_SCHEMA, "state": "PREPARED",
             "release_id": manifest["release_id"], "manifest_sha256": digest(manifest),
-            "record": str(record.resolve()), "paths": list(manifest["files"]),
+            "release": release_binding(manifest), "record": str(record.resolve()),
+            "paths": list(manifest["files"]),
         }
         _write_json(journal_path, journal)
         _write_json(record / "manifest.json", manifest)

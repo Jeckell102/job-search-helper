@@ -5,6 +5,7 @@ import tempfile
 import unittest
 
 from job_search_helper.company_events import source_revision
+from job_search_helper.ats import Inventory
 from job_search_helper.engine import Engine, State
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.repair_retry import (
@@ -14,6 +15,7 @@ from job_search_helper.repair_retry import (
     retry_attempt_id,
     retry_request,
 )
+from job_search_helper.integration_release import JOURNAL_SCHEMA
 from job_search_helper.repository import MemoryRepository
 from job_search_helper.scan_request import _read_request, request_fingerprint
 from test_fetch_pool import company
@@ -128,9 +130,27 @@ class RepairRetryAdmissionTests(unittest.TestCase):
         value = binding(company_id="C-1", revision=revision or self.revision)
         return retry_request(value, enqueued_at=ACTIVATED)
 
+    def activate(self, request, *, state="COMPLETE", release=None):
+        """Write only the durable activation fact required by intake admission."""
+        release = release if release is not None else request["repair_retry"]["release"]
+        (self.root / "integration-release-journal.json").write_text(json.dumps({
+            "schema": JOURNAL_SCHEMA,
+            "state": state,
+            "release_id": release["release_id"],
+            "release": release,
+        }))
+
+    def admitted_cycle(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.request()
+        self.activate(request)
+        (self.root / "next-scan.json").write_text(json.dumps(request))
+        return select_start_cycle(self.engine, self.state, self.repo, self.database), request
+
     def test_normal_admission_carries_full_release_pin_into_recoverable_cycle(self):
         from job_search_helper.runner import select_start_cycle
         request = self.request()
+        self.activate(request)
         (self.root / "next-scan.json").write_text(json.dumps(request))
         cycle_id = select_start_cycle(self.engine, self.state, self.repo, self.database)
         cycle = self.state.cycle(cycle_id)
@@ -145,12 +165,52 @@ class RepairRetryAdmissionTests(unittest.TestCase):
     def test_stale_retry_is_rejected_before_cycle_or_request_consumption(self):
         from job_search_helper.runner import select_start_cycle
         request = self.request(revision="stale-revision")
+        self.activate(request)
         path = self.root / "next-scan.json"
         path.write_text(json.dumps(request))
         with self.assertRaisesRegex(ValueError, "source revision is stale"):
             select_start_cycle(self.engine, self.state, self.repo, self.database)
         self.assertTrue(path.exists())
         self.assertEqual(self.state.cycles(), [])
+
+    def test_missing_active_release_holds_request_and_saved_inventory(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.request()
+        path = self.root / "next-scan.json"
+        path.write_text(json.dumps(request))
+        self.inbox.save("CYC-SAVED", "C-1", {"jobs": [], "cursor": "preserve"})
+        before = path.read_bytes()
+        with self.assertRaisesRegex(ValueError, "active COMPLETE release"):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(self.state.cycles(), [])
+        self.assertEqual(self.inbox.get("CYC-SAVED", "C-1")[0]["cursor"], "preserve")
+
+    def test_release_mismatch_holds_request_without_cycle_consumption(self):
+        from job_search_helper.runner import select_start_cycle
+        request = self.request()
+        self.activate(request, release=release("REL-other"))
+        path = self.root / "next-scan.json"
+        path.write_text(json.dumps(request))
+        before = path.read_bytes()
+        with self.assertRaisesRegex(ValueError, "active COMPLETE release"):
+            select_start_cycle(self.engine, self.state, self.repo, self.database)
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(self.state.cycles(), [])
+
+    def test_nonterminal_and_rolled_back_release_hold_request_without_cycle_consumption(self):
+        from job_search_helper.runner import select_start_cycle
+        for state in ("INSTALLING", "ROLLED_BACK"):
+            with self.subTest(state=state):
+                request = self.request()
+                self.activate(request, state=state)
+                path = self.root / "next-scan.json"
+                path.write_text(json.dumps(request))
+                before = path.read_bytes()
+                with self.assertRaisesRegex(ValueError, "active COMPLETE release"):
+                    select_start_cycle(self.engine, self.state, self.repo, self.database)
+                self.assertEqual(path.read_bytes(), before)
+                self.assertEqual(self.state.cycles(), [])
 
     def test_request_parser_rejects_release_or_attempt_mutation(self):
         request = self.request()
@@ -177,6 +237,74 @@ class RepairRetryAdmissionTests(unittest.TestCase):
         path.write_text(json.dumps(request))
         with self.assertRaisesRegex(ValueError, "mutually exclusive"):
             _read_request(path)
+
+    def test_local_retry_resume_revalidates_every_inactive_release_state_before_fetch_or_write(self):
+        cycle_id, request = self.admitted_cycle()
+        self.inbox.save(cycle_id, "C-1", {"jobs": [], "cursor": "preserve"})
+        before_cycle = self.state.cycle(cycle_id)
+        before_inbox = self.inbox.get(cycle_id, "C-1")
+        before_remote = self.repo.tables
+        calls = []
+        self.engine.fetcher = lambda *args: calls.append(args) or Inventory("complete")
+        for name, release_state, active_release in (
+                ("missing", None, None),
+                ("mismatch", "COMPLETE", release("REL-other")),
+                ("non-complete", "INSTALLING", None),
+                ("rolled-back", "ROLLED_BACK", None)):
+            with self.subTest(name=name):
+                if release_state is None:
+                    (self.root / "integration-release-journal.json").unlink()
+                else:
+                    self.activate(request, state=release_state, release=active_release)
+                with self.assertRaisesRegex(ValueError, "active COMPLETE release"):
+                    self.engine.resume_local(cycle_id)
+                self.assertEqual(calls, [])
+                self.assertEqual(self.state.cycle(cycle_id), before_cycle)
+                self.assertEqual(self.inbox.get(cycle_id, "C-1"), before_inbox)
+                self.assertEqual(self.repo.tables, before_remote)
+
+    def test_remote_reconstruction_revalidates_every_inactive_release_state_before_local_rebuild(self):
+        cycle_id, request = self.admitted_cycle()
+        self.inbox.save(cycle_id, "C-1", {"jobs": [], "cursor": "preserve"})
+        before_remote = self.repo.tables
+        before_inbox = self.inbox.get(cycle_id, "C-1")
+        for name, release_state, active_release in (
+                ("missing", None, None),
+                ("mismatch", "COMPLETE", release("REL-other")),
+                ("non-complete", "INSTALLING", None),
+                ("rolled-back", "ROLLED_BACK", None)):
+            with self.subTest(name=name):
+                if release_state is None:
+                    (self.root / "integration-release-journal.json").unlink()
+                else:
+                    self.activate(request, state=release_state, release=active_release)
+                recovered_state = State(self.root / f"remote-recovered-{name}.db")
+                self.addCleanup(recovered_state.close)
+                calls = []
+                recovered = Engine(self.repo, recovered_state, inbox=self.inbox,
+                                   fetcher=lambda *args: calls.append(args) or Inventory("complete"),
+                                   error_log_path=self.root / "remote-recovery-errors.jsonl")
+                with self.assertRaisesRegex(ValueError, "active COMPLETE release"):
+                    recovered._recover(cycle_id)
+                self.assertEqual(calls, [])
+                self.assertIsNone(recovered_state.cycle(cycle_id))
+                self.assertEqual(self.repo.tables, before_remote)
+                self.assertEqual(self.inbox.get(cycle_id, "C-1"), before_inbox)
+
+    def test_matching_release_allows_local_pipeline_resume_and_remote_reconstruction(self):
+        cycle_id, request = self.admitted_cycle()
+        calls = []
+        self.engine.fetcher = lambda *args: calls.append(args) or Inventory("complete")
+        result = self.engine.resume_local(cycle_id)
+        self.assertEqual(result["status"], "Complete")
+        self.assertEqual(len(calls), 1)
+
+        remote_state = State(self.root / "matching-remote.db")
+        self.addCleanup(remote_state.close)
+        remote_engine = Engine(self.repo, remote_state, inbox=self.inbox,
+                               error_log_path=self.root / "matching-remote-errors.jsonl")
+        recovered = remote_engine._recover(cycle_id)
+        self.assertEqual(recovered["repair_retry"], request["repair_retry"])
 
 
 if __name__ == "__main__":

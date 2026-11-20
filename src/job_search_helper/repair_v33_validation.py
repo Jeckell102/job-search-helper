@@ -4,8 +4,8 @@ import copy
 import json
 import os
 import tempfile
-from .cli import get_repository, state_path, writer_lock
-from .repository import PROTECTED_BACKUP_ID
+from .cli import state_path, writer_lock
+from .repository import GoogleRepository, PROTECTED_BACKUP_ID
 from .runner import _load_environment
 
 FIELDS = ('Source Hash', 'Salary / Range', 'Work Arrangement', 'Job Description')
@@ -47,6 +47,9 @@ def repair_requests(sheet):
 
 
 def repair(repo, backup_dir):
+    if (not isinstance(repo, GoogleRepository)
+            or not set(FIELDS) <= set(repo.schemas.get('Job History', ()))):
+        raise ValueError('This legacy repair requires a full-schema Google repository; SQLite and compact Sheets are not supported.')
     if repo.spreadsheet_id == PROTECTED_BACKUP_ID:
         raise ValueError('Refusing to modify the protected backup spreadsheet.')
     sheet = repo._load(['Job History'])['Job History']
@@ -76,10 +79,13 @@ def repair(repo, backup_dir):
 
 def main():
     _load_environment()
+    from .cli import get_remote_repository, storage_backend
+    if storage_backend() != 'sheets':
+        raise ValueError('This legacy full-schema repair is unavailable with SQLite/compact storage; no repair attempted.')
     database = state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with writer_lock(database.parent / 'writer.lock'):
-        repo = get_repository(write=True, interactive=False)
+        repo = get_remote_repository(write=True, interactive=False, evidence_archives=False)
         repair(repo, database.parent)
     return 0
 

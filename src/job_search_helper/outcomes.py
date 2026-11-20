@@ -79,8 +79,20 @@ def _identity(facts):
     required = ("request_id", "company_id", "source_revision")
     identity = {key: _required_text(facts, key) for key in required}
     optional = ("company_event_id", "cycle_id", "attempt_id", "failed_request_id",
-                "provider", "adapter_version", "release_version")
+                "provider", "adapter_version", "release_version", "release_binding_sha256")
     identity.update({key: _text(facts.get(key), key) for key in optional if _text(facts.get(key), key)})
+    # Non-retry cycles may have their own attempt IDs.  But once an outcome
+    # claims release-to-retry lineage, retain all its immutable components;
+    # otherwise a release ID alone could merge outcomes from distinct
+    # source/dependency/configuration installations.
+    retry_fields = ("attempt_id", "failed_request_id", "release_version", "release_binding_sha256")
+    if any(key in identity for key in ("failed_request_id", "release_version", "release_binding_sha256")):
+        missing = [key for key in retry_fields if key not in identity]
+        if missing:
+            raise OutcomeFactsError("retry outcome identity requires " + ", ".join(missing))
+        digest = identity["release_binding_sha256"]
+        if len(digest) != 64 or any(character not in "0123456789abcdef" for character in digest):
+            raise OutcomeFactsError("retry outcome release_binding_sha256 must be lowercase SHA-256")
     return identity
 
 

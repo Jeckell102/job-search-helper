@@ -154,7 +154,15 @@ def fetch_deployable(careers_url, company_id, company, transport=None):
             if job is None: raise FetchError("partial", "Deployable listing status contradicted its detail page.")
             jobs.append(job)
         check, check_pages = _listing(client)
-        if check_pages != pages or [r["id"] for r in check] != ids:
+        if check_pages != pages:
+            raise FetchError("partial", "Deployable listing changed during reread.")
+        check = list(check)
+        for page in range(2, pages + 1):
+            current, current_pages = _listing(client, page)
+            if current_pages != pages:
+                raise FetchError("partial", "Deployable pagination changed during reread.")
+            check.extend(current)
+        if check != records:
             raise FetchError("partial", "Deployable listing changed during reread.")
         return Inventory("complete", jobs, f"Deployable Technologies: retrieved {len(jobs)} active postings and rechecked the full listing.", SOURCE, ATS)
     except FetchError as error:

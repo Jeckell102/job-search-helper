@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from html.parser import HTMLParser
+import re
 from urllib.parse import urljoin, urlsplit
 
 from .ats import FetchError, Inventory, _base, text
@@ -9,7 +10,7 @@ from .discovery import CareersTransport
 
 SOURCE = "https://www.blackriversystems.com/job-opportunities/"
 HOST = "www.blackriversystems.com"
-PREFIX = "/2026/"
+JOB_PATH = re.compile(r"/20[0-9]{2}/(?:0[1-9]|1[0-2])/[a-z0-9][a-z0-9-]*/?", re.IGNORECASE)
 
 
 class _Page(HTMLParser):
@@ -53,7 +54,7 @@ def _links(html):
     for href in page.links:
         url = urljoin(SOURCE, href); parsed = urlsplit(url)
         if (parsed.scheme == "https" and parsed.hostname == HOST
-                and parsed.path.startswith(PREFIX) and parsed.path.rstrip("/") != PREFIX.rstrip("/")
+                and JOB_PATH.fullmatch(parsed.path)
                 and not parsed.query and not parsed.fragment and url not in out):
             out.append(url)
     return out
@@ -64,8 +65,8 @@ def fetch_black_river(careers_url, company_id, company, transport=None):
     jobs = []
     try:
         first = _links(_read(client, SOURCE))
-        if len(first) != 14:
-            raise FetchError("partial", f"Black River job link set changed; found {len(first)} links.")
+        if not first:
+            raise FetchError("partial", "Black River listing has no verifiable public job links.")
         seen = set()
         for url in first:
             page = _Page(); page.feed(_read(client, url))

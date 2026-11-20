@@ -64,6 +64,39 @@ class MemoryRepositoryTests(unittest.TestCase):
                               operation(key="missing", values={"Company": "oops"})])
         self.assertEqual(before, self.repo.tables)
 
+    def test_expected_only_guard_rejects_changed_source_atomically(self):
+        self.repo.commit([operation(values={"Job Status": "Open and verified"})])
+        with self.assertRaises(RepositoryError):
+            self.repo.commit([
+                operation(expected={"Job Status": "Closed"}),
+                operation(values={"Added to Opportunities?": "No"}),
+            ])
+        self.assertEqual(self.repo.read("Job History")[0]["Added to Opportunities?"], "")
+
+    def test_matching_output_does_not_bypass_changed_unwritten_guard(self):
+        self.repo.commit([operation(values={"Source Hash": "new", "Decision": "Reject"})])
+        with self.assertRaises(RepositoryError):
+            self.repo.commit([operation(values={"Decision": "Reject"},
+                expected={"Source Hash": "old", "Decision": ""})])
+
+    def test_acknowledged_values_and_notes_replay_is_idempotent(self):
+        op = operation(values={"Decision": "Reject"},
+                       expected={"Decision": "", "Review Notes": ""},
+                       append_notes={"Review Notes": "Recorded assessment"})
+        self.repo.commit([op])
+        self.repo.commit([op])
+        self.assertEqual(self.repo.read("Job History")[0]["Review Notes"], "Recorded assessment")
+
+    def test_guarded_append_rejects_unrelated_note_change_but_replays_own_note(self):
+        op = operation(expected={"Review Notes": ""}, append_notes={"Review Notes": "Own note"})
+        self.repo.commit([operation(values={"Review Notes": "User note"})])
+        with self.assertRaises(RepositoryError):
+            self.repo.commit([op])
+        fresh = operation(expected={"Review Notes": "User note"}, append_notes={"Review Notes": "Own note"})
+        self.repo.commit([fresh])
+        self.repo.commit([fresh])
+        self.assertEqual(self.repo.read("Job History")[0]["Review Notes"], "User note\n\nOwn note")
+
     def test_unknown_header_rejected(self):
         with self.assertRaises(RepositoryError):
             self.repo.commit([operation(values={"Title": "wrong header"})])
@@ -207,6 +240,18 @@ class GoogleRepositoryTests(unittest.TestCase):
                                                      "Application Status": "Applied", "Notes": "Mine"}]})
         self.repo = GoogleRepository(self.service, "test-spreadsheet-id", min_request_interval=0)
 
+    def test_missing_value_column_response_is_not_interpreted_as_manual_blanks(self):
+        from sheets_fixture import RangeSheets
+        repo = GoogleRepository(RangeSheets({'Job History': [{'Job Key': 'job-1',
+            'Added to Opportunities?': 'Yes'}]}), 'fixture', min_request_interval=0)
+        headers, _ = repo._headers('Job History')
+        repo._write_layout['Job History'] = (headers, 1)
+        for reader in (repo.read_columns, repo.read_cached_columns):
+            with self.subTest(reader=reader.__name__), patch.object(repo, '_execute', return_value={
+                    'valueRanges': [{'values': [['job-1']]}]}):
+                with self.assertRaises(RepositoryError):
+                    reader('Job History', ['Job Key', 'Added to Opportunities?'])
+
     def test_validate_required_headers(self):
         self.assertTrue(self.repo.validate_schema())
         self.service.sheet("Job History")["data"][0]["rowData"][0]["values"][10] = {}
@@ -330,7 +375,7 @@ class GoogleRepositoryTests(unittest.TestCase):
                 patch("job_search_helper.repository.time.sleep") as sleep:
             repo.read("Job History")
         sleep.assert_called_once()
-        self.assertAlmostEqual(sleep.call_args[0][0], 1.1)
+        self.assertAlmostEqual(sleep.call_args[0][0], 2.5)
 
 
 class AuthTests(unittest.TestCase):
@@ -351,15 +396,22 @@ class AuthTests(unittest.TestCase):
         self.scope = "https://www.googleapis.com/auth/spreadsheets.readonly"
         self.interactions = []
         modules = {name: types.ModuleType(name) for name in (
-            "google", "google.auth", "google.auth.transport", "google.auth.transport.requests",
-            "google.oauth2", "google.oauth2.credentials", "google_auth_oauthlib",
-            "google_auth_oauthlib.flow", "googleapiclient", "googleapiclient.discovery")}
+            "google", "google.auth", "google.auth.exceptions", "google.auth.transport", "google.auth.transport.requests",
+            "google.oauth2", "google.oauth2.credentials", "google_auth_httplib2", "google_auth_oauthlib",
+            "google_auth_oauthlib.flow", "googleapiclient", "googleapiclient.discovery", "googleapiclient.http")}
+        for name, module in modules.items():
+            module.__path__ = []
+            parent, _, child = name.rpartition(".")
+            if parent:
+                setattr(modules[parent], child, module)
         owner = self
 
         class Credentials:
             valid = True
             expired = False
             refresh_token = "not-a-real-token"
+            token = "not-real"
+            expiry = None
 
             @classmethod
             def from_authorized_user_info(cls, saved, scopes):
@@ -385,6 +437,9 @@ class AuthTests(unittest.TestCase):
                 credentials.scopes = self.scopes
                 return credentials
 
+        modules["google.auth.exceptions"].RefreshError = type("RefreshError", (Exception,), {})
+        modules["google_auth_httplib2"].AuthorizedHttp = lambda credentials, http=None: types.SimpleNamespace(credentials=credentials, http=http)
+        modules["googleapiclient.http"].build_http = object
         modules["google.auth.transport.requests"].Request = lambda: None
         modules["google.oauth2.credentials"].Credentials = Credentials
         modules["google_auth_oauthlib.flow"].InstalledAppFlow = Flow
@@ -401,7 +456,7 @@ class AuthTests(unittest.TestCase):
         path.chmod(0o600)
 
     def test_no_implicit_browser_authentication(self):
-        with self.assertRaisesRegex(RepositoryError, "explicit authenticate"):
+        with self.assertRaisesRegex(RepositoryError, "No valid token"):
             authorize(write=False, interactive=False)
         self.assertEqual(self.interactions, [])
         self.assertFalse(self.read.exists())
@@ -413,7 +468,7 @@ class AuthTests(unittest.TestCase):
 
     def test_read_token_cannot_be_reused_for_writes(self):
         self.token(self.read)
-        with self.assertRaisesRegex(RepositoryError, "explicit authenticate"):
+        with self.assertRaisesRegex(RepositoryError, "No valid token"):
             authorize(write=True)
         self.assertFalse(self.write.exists())
 

@@ -13,6 +13,32 @@ from .sheets_sync import SheetsSynchronizer, unique_rows
 from .review_writeback import requires_opportunity, preserved_rejection
 
 
+def retry_run_deliveries(runtime, stage, run_id, limit=25):
+    """Retry this run's older saved outcomes without taking or assessing jobs."""
+    rows = runtime.db.execute('''SELECT d.job_key,d.source_hash FROM decisions d
+      LEFT JOIN review_publications p USING(stage,job_key,source_hash)
+      WHERE d.stage=? AND json_extract(d.payload,'$.run_id')=?
+      AND (json_extract(d.payload,'$.writeback_status')='Pending'
+           OR (json_extract(d.payload,'$.writeback_status')='Written'
+               AND COALESCE(p.state,'Pending')='Pending'))
+      AND NOT EXISTS (SELECT 1 FROM conflicts c WHERE c.stage=d.stage
+        AND c.job_key=d.job_key AND c.source_hash=d.source_hash)
+      ORDER BY d.updated,d.job_key LIMIT ?''', (stage, run_id, limit)).fetchall()
+    if not rows:
+        return None
+    identities = {(row['job_key'], row['source_hash']) for row in rows}
+    from .review_writeback import sync_pending
+    report = {'writeback': sync_pending(runtime, stage, run_id, limit, identities=identities)}
+    publication = publish_reviews(runtime, stage, run_id, limit, identities=identities)
+    if publication is not None:
+        report['publication'] = publication
+        report['writeback']['delivery_target'] = 'local_database'
+        counts = report['writeback'].get('counts', {})
+        if 'Written' in counts:
+            counts['Saved Locally'] = counts.pop('Written')
+    return report
+
+
 def publication_counts(runtime, stage, run_id=None):
     """Include pre-upgrade locally Written outcomes with no publication receipt."""
     params = [stage]
@@ -83,7 +109,7 @@ def _acknowledged_baseline(local, intent):
 
 
 def publish_reviews(runtime, stage, run_id=None, limit=25, *, identities=None,
-                    local=None, remote=None, lock_path=None):
+                    local=None, remote=None, lock_path=None, lock_timeout=30):
     """Retry this worker's saved review deliveries, including older Written ones.
 
     A receipt is Written only after live readback of the visible intent and its
@@ -142,7 +168,10 @@ def publish_reviews(runtime, stage, run_id=None, limit=25, *, identities=None,
         # Use the single remote publisher lock, after local writeback released its
         # own lock. Never hold a SQLite transaction across network operations.
         publication_lock=Path(lock_path) if lock_path is not None else state_path().parent / 'writer.lock'
-        with sheet_writer_lock(publication_lock), sheet_writer_lock(publication_lock.parent / 'review-writeback.lock'):
+        # Saved intents cannot be amended after local writeback. Network work
+        # needs only the remote publisher lock; unrelated local reviews must be
+        # able to save while this upload/readback is in flight.
+        with sheet_writer_lock(publication_lock, timeout=lock_timeout):
             if remote is None:
                 remote = get_remote_repository(write=True, interactive=False,
                     schemas=profile_schemas(local.get_meta('sheets_profile')),
@@ -158,6 +187,7 @@ def publish_reviews(runtime, stage, run_id=None, limit=25, *, identities=None,
                 if hasattr(remote, 'read_rows'):
                     return remote.read_rows(tab, numbers)
                 return {n: remote.read_row(tab, n) for n in numbers}
+            tokens = sync.baseline_tokens('Job History', keys=[saved['job_key'] for saved in selected])
             observed_history = read_rows('Job History',
                 [by_key[s['job_key']] for s in selected if s['job_key'] in by_key])
             for saved in selected:
@@ -167,8 +197,11 @@ def publish_reviews(runtime, stage, run_id=None, limit=25, *, identities=None,
             # The complete selected rows are loaded in bounded sparse-range
             # batches. Fresh human inputs merge before planning any delivery.
             headers = sync.pull_fields['Job History']
-            sync.merge_remote('Job History', [(n, {h: row.get(h, '') for h in headers})
-                for n, row in observed_history.items()], complete_snapshot=False)
+            merged = sync.merge_remote('Job History', [(n, {h: row.get(h, '') for h in headers})
+                for n, row in observed_history.items()], complete_snapshot=False,
+                expected_baselines=tokens)
+            if merged.get('stale_rows'):
+                raise RepositoryError('Review publication advanced during the Sheet read; retry fresh controls.')
             wanted_opps = set()
             for saved in selected:
                 matches = local.matches('Job History', {'Job Key': saved['job_key']})

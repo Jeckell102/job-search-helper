@@ -101,6 +101,49 @@ def parse_annual_base_max_usd(text: str) -> float | None:
     return max(amounts) if amounts else None
 
 
+def parse_hourly_base_max_usd(text: str) -> float | None:
+    """Highest advertised USD hourly base, including starting rates.
+
+    The caller annualizes at 2,080 hours/year. Keep unclear units, currencies,
+    combined compensation and unrelated dollar amounts for individual review.
+    """
+    value = " ".join(str(text or "").split())
+    unit = r"(?:/\s*(?:hours?|hrs?)\b|per\s+hour\b|an?\s+hour\b)"
+    if not re.search(unit + r"|\bhourly\b", value, re.I):
+        return None
+    if re.search(r"\b(?:EUR|GBP|CAD|AUD|NZD|SGD|HKD|INR|JPY|CHF)\b|[€£]|\b(?:C|A|NZ|S|HK)\$", value, re.I):
+        return None
+    other = r"\b(?:OTE|on[- ]target earnings|total (?:compensation|rewards|cash)|bonus|commission|equity|stock|incentive|overtime|reimbursement)\b"
+    if re.search(other, value, re.I):
+        return None
+    if re.search(r"/(?:year|yr|month|mo|week|wk)|per\s+(?:year|month|week)|\b(?:annual|annually|monthly|weekly)\b", value, re.I):
+        return None
+    number = r"\d{1,3}(?:\.\d{1,2})?"
+    money = rf"(?:USD\s*\$?\s*|\$\s*)({number})(?![\d,]|\.\d)"
+    range_pattern = rf"{money}\s*(?:{unit})?\s*(?:[-–—]|to)\s*(?:USD\s*\$?\s*|\$\s*)?({number})(?![\d,]|\.\d)\s*{unit}"
+    single_pattern = rf"{money}\s*{unit}"
+    amounts, spans = [], []
+    for pattern in (range_pattern, single_pattern):
+        for match in re.finditer(pattern, value, re.I):
+            if any(start <= match.start() < end for start, end in spans):
+                continue
+            amounts.extend(float(n) for n in match.groups())
+            spans.append(match.span())
+    # Also accept clearly labeled compensation fields such as Hourly base: $32-$34.
+    if not spans and re.search(r"\bhourly\s+(?:base\s+)?(?:pay|rate|salary|wage|base)\b", value, re.I):
+        labeled = rf"{money}(?:\s*(?:[-–—]|to)\s*(?:USD\s*\$?\s*|\$\s*)?({number})(?![\d,]|\.\d))?"
+        for match in re.finditer(labeled, value, re.I):
+            amounts.extend(float(n) for n in match.groups() if n)
+            spans.append(match.span())
+    # A separate dollar amount might be another base-pay option or another unit.
+    remainder = value
+    for start, end in sorted(spans, reverse=True):
+        remainder = remainder[:start] + " " + remainder[end:]
+    if re.search(r"\$|\bUSD\s*\d", remainder, re.I):
+        return None
+    return max(amounts) if amounts and all(n > 0 for n in amounts) else None
+
+
 # Only unmistakable trailing legal/corporate boilerplate is removed. The
 # responsibilities, qualifications, clearance, travel, benefits, location and
 # compensation sections remain available to the reviewer.

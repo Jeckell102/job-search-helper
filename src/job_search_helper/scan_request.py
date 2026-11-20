@@ -45,6 +45,12 @@ def requested_scan(engine, state, database):
     request, company_ids = _read_request(path)
     request = dict(request, request_fingerprint=request_fingerprint(request, company_ids))
     mode = request['mode']
+    if request.get('repair_retry') is not None:
+        # This happens before cycle creation, checkpointing, or renaming the
+        # request.  A release change therefore leaves the exact request and
+        # any prior inventory/cursor available for an explicit later recovery.
+        from .integration_release import assert_active_release_binding
+        assert_active_release_binding(database.parent, request['repair_retry']['release'])
     measurement_cycles = list(state.cycles())
     if mode == COMPANY_ONLY_MODE:
         if hasattr(engine.repo, 'read_columns'):
