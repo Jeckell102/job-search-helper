@@ -1,5 +1,46 @@
 # Integration automation coordinator status
 
+## Sprint 1 model handoff
+
+At 10:08 Eastern the installer worker reported 11 passing disposable tests, including process death during forward install and rollback. The gate QA worker passed five tests and moved to full transaction review. The controller lead (01a1f97d-cebd-7910-8d31-a5f3e0dcd264) owns controller.py, verify_hold, and test_controller.py. The independent QA lead (01a1f97d-2e8c-7821-b5e1-d2019215036b) owns test_gate.py and the end-to-end QA verdict. The gate design reviewer finished. No live installation has started. Workers may split when useful with explicit ownership and a bounded stopping condition. The user removed the three-worker cap.
+
+The eight temporary-retry files matched commit 37512dd again. A read-only protected-state fingerprint covering all three databases, their WALs, the Samtec control and receipt, and lifecycle controls is local at /tmp/jsh-s1-maint/witness-before.json. Its SHA-256 is bc594f8e0ba9695f1d3e6c07822dee576136f652e6689b451db545bd26fcc708. The separate scraper copy shares the workbook and its editable Python setup points at production. No active scraper was observed. The sync unit was inactive and disabled; its preexisting expiry drop-in must survive maintenance. The host's cron service was active. The per-user cron listing was unreadable under this session's OS privileges, and visible recent cron logs contained zero scraper references. Validate actual route closures independently.
+
+The existing goal resumed on Astra High. Two Sol Medium chats are active. The installer lead owns the disposable installer and tests under /tmp/jsh-s1-maint and can delegate its tests to one worker. The independent gate reviewer owns the route assessment in /tmp/jsh-s1-guard-review.md. Chat IDs are 01a1f979-6f67-78c3-9e53-dcf45072cb5a and 01a1f979-8619-75d2-9973-047f3a5efb0c respectively. The release owner controls production.
+
+Fresh host preflight found all 13 base files and modes match the rollback snapshot. Across 225 package Python/JSON files, the candidate differs only at the expected ten modules. The wrapper coordinator holds its scheduler and supervision locks. The queue, campaign, and autopilot flags are all false, with zero running or queued tasks. Its host imports the affected CLI during periodic catch-up. The assistant bridge shares Python but its program imports no job-search modules. The saved Samtec request is intact. Next is disposable installer/rollback verification, then the pre-deployment gate and independent installed QA.
+
+On resume, finish Sprint 1 under the existing goal. After independent deployed QA accepts and the scoped backup is verified, save the evidence and pause the goal before starting Sprint 2. The operator can then select GPT-6.2 Sol Medium for the coordinator and resume the same goal.
+
+## 2026-11-20 — Timed-window checkpoint after source acceptance
+
+- Coordinator/release owner, same six-milestone goal. The app goal counter was
+  manually paused during the model change. Sprint 1 implementation has scoped
+  independent source acceptance; production installation and QA are open.
+- The app's one-time timer became paused before its deadline. The original
+  09:54 Eastern cutoff was tracked directly and the expired timer was removed.
+- Verified private GitHub backup head:
+  `5a67c428eaa25cdba8f88325789627d8fd458da8` on
+  `backup/integration-automation-m1-operator-20261120`. The underlying accepted
+  source/evidence commit is `ac2d02c51237eb8ffe17355a9437d133c4a42d6b`.
+- Latest verification: 321 combined tests passed, 179 broader regressions
+  passed, and independent QA accepted after 225 tests plus nine focused
+  checks. The other task's default-off temporary-retry install was verified
+  and preserved. Both exact source copies and rollback scope are indexed in
+  `F3_DEPLOYMENT_PREFLIGHT_20261120.md`.
+- New fixture evidence after model change: `/tmp/test_jsh_f3_foundation_handoff.py`
+  passed under project Python 3.11. Both stored bootstrap versions refused
+  startup after the maintenance lock holder was killed with a partial fixture
+  install and a durable nonterminal hold. The synthetic worker started on
+  the completed fixture after the hold was cleared. This does not yet prove a
+  full maintenance installer, service coverage, or rollback replay.
+- Best next action: finish the maintenance route inventory, implement and
+  verify exact install and rollback in a disposable version-matched fixture,
+  including supported writers and supervised services. Reconfirm live scope
+  and rollback digests immediately before any guarded deployment. Protected
+  production files, job data, and services were left untouched during the
+  timed work. The Samtec scope remains held and no broad processing was enabled.
+
 ## 2026-11-20 — Sprint 1 resumed in an isolated source copy
 
 - Role: senior engineering coordinator and release owner. The resumed roadmap

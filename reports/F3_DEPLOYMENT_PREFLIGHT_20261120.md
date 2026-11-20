@@ -56,3 +56,30 @@ deciding whether it needs a hold. No service was stopped or changed.
 Restore only the exact prior source files from the rollback copy if a guarded
 installation fails. Preserve existing user changes and mutable state. Retain
 the maintenance hold until hashes and expected launcher behavior are verified.
+
+## Disposable bootstrap hold test
+
+`/tmp/test_jsh_f3_foundation_handoff.py` uses both saved bootstrap versions with a
+synthetic worker and a synthetic nonterminal maintenance journal. It acquired
+the scraper lock, durably wrote the journal, changed part of the fixture, and
+killed the maintenance process. Each bootstrap rejected startup after the
+lock was released by process death. After completing the fixture and clearing
+the hold, the candidate bootstrap loaded the new worker. The test passed under
+the production virtual environment's Python 3.11.18. System Python 3.10.12
+cannot run the candidate launcher and is outside the project's documented
+Python requirement. Installer and rollback replay, supervisor coverage, and
+production route closure still require proof.
+
+## Independent route inventory
+
+The existing nonterminal release journal guards the normal public bootstrap,
+normal runner startup, guarded retained fetch and named recovery, dispatcher
+child admission, and release-bound retry delivery. The reviewer identified
+separate routes to include in the durable maintenance hold: legacy applied
+commands, direct sync publisher/import/control commands, direct legacy
+pipeline entry, and review writeback. Quiesce existing processes that already
+loaded affected modules, including the wrapper development host, and preserve
+the disabled sync service. Depend on the bootstrap journal for documented
+covered paths and use persistent maintenance controls for the remaining paths.
+Prove this coverage with the exact 13-file installer and an external recovery
+path in a fixture before production installation.

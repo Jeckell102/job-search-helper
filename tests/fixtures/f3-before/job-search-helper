@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+jsh_root="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+case "${1:-}" in
+  start)
+    exec env PYTHONPATH="$jsh_root/src" "$jsh_root/.venv/bin/python" "$jsh_root/release_admission_bootstrap.py" "$@"
+    ;;
+  resume|-resume)
+    shift
+    exec env PYTHONPATH="$jsh_root/src" "$jsh_root/.venv/bin/python" "$jsh_root/release_admission_bootstrap.py" start --resume "$@"
+    ;;
+  *)
+    exec env PYTHONPATH="$jsh_root/src" "$jsh_root/.venv/bin/python" -m job_search_helper.launcher "$@"
+    ;;
+esac
