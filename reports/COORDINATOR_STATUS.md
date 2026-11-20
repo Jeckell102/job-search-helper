@@ -18,6 +18,18 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Parallel Milestone 5 validation assignment. User asked for a separate chat.
+Created **Job Search Helper — Milestone 5 Candidate Validation**, thread
+`01a1fadd-ef16-7311-a3b5-9fd1740b13e9`, GPT-6.2 Sol High. It owns only
+pre-release candidate validation in a fresh
+`/tmp/jsh-m5-pre-release-validation.*` tree. Its three proposed lanes are
+scope and identity, pagination and description checks with exact validation
+evidence, and independent QA. The chat reads the current roadmap/card and
+reports to main release chat `01a1f11f-e014-7493-8441-2f66502e23a9` at
+`/tmp/jsh-m5-pre-release-validation-handoff.md`. Sprint 4 rollout, Sprint 5
+custody and Engine, and release/retry plumbing all retain their current
+owners. Production read-only; no live or release actions assigned.
+
 Host route and exchange witness checkpoint. Coordinator and release
 owner, active goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Read-only
 MuleLab process census found no exact alternate process reference but
