@@ -108,6 +108,32 @@ def parse_json_file(path):
     raise Blocked(f'No complete JSON receipt in {path}')
 
 
+def company_intake_handoff(root):
+    """Read a dispatcher handoff before creating any scrape workflow."""
+    path = Path(root) / 'company-intake-handoff.json'
+    if not path.exists():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError) as exc:
+        raise Blocked('Company intake handoff is unreadable; no scrape was started.') from exc
+    if (not isinstance(value, dict) or set(value) != {'request_id', 'request_digest'}
+            or not all(isinstance(value[key], str) and value[key] for key in value)):
+        raise Blocked('Company intake handoff is invalid; no scrape was started.')
+    try:
+        from job_search_helper.scan_request import _read_request
+        from job_search_helper.company_events import _json_digest
+        from job_search_helper.company_intake_dispatcher import is_event_bound_company_request
+        request, company_ids = _read_request(Path(root).parent / 'next-scan.json')
+    except (OSError, ValueError) as exc:
+        raise Blocked('Company intake request is unreadable; no scrape was started.') from exc
+    if (not is_event_bound_company_request(request) or len(company_ids) != 1
+            or request.get('request_id') != value['request_id']
+            or _json_digest(request) != value['request_digest']):
+        raise Blocked('Company intake handoff does not match the durable request.')
+    return value
+
+
 def extract_prompt(events):
     """Use actual successful connector bytes, never a model's summary of policy."""
     documents = []
@@ -586,6 +612,9 @@ class Controller:
                 if previous:
                     self.state['previous_workflow'] = str(previous_path)
                     self.announce(f'Starting a new scrape and FIRST PASS; previous workflow preserved at {previous_path}.')
+                handoff = company_intake_handoff(root)
+                if handoff is not None:
+                    self.state['company_intake'] = handoff
                 if scraper_args is not None:
                     self.state['scraper_args'] = scraper_args
                 if requested_cycle:
@@ -598,6 +627,11 @@ class Controller:
                     self.state['before_cycles'] = [c['id'] for c in info['cycles'][:-1]]
                 self.save()
                 atomic(latest, {'workflow': str(self.work / 'workflow.json')})
+                if self.state.get('company_intake'):
+                    # The immutable copy is now sealed in workflow.json;
+                    # remove the one-shot handoff so later manual starts do
+                    # not inherit a consumed request.
+                    (root / 'company-intake-handoff.json').unlink(missing_ok=True)
             try:
                 self.save(status='RUNNING', error=None)
                 if self.state['stage'] == 'PREFLIGHT':

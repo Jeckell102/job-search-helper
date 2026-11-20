@@ -9,8 +9,8 @@ or modify protected source/data.
 
 The decisive remaining gap is live acceptance, not source installation.  The
 post-install addendum below supersedes the initial snapshot's stale
-not-installed/hash-drift observations: the protected code/tests/coordinator
-files now match the reviewed overlay.  That establishes a version-bound
+not-installed/hash-drift observations: the protected application source/tests
+now match the reviewed overlay.  That establishes a version-bound
 installed source checkpoint; it does not prove a normal automatic workflow,
 Google publication, managed FIRST PASS, or the final demonstration.
 
@@ -35,10 +35,11 @@ An earlier level never substitutes for a later one.
   is recorded as installed, with a reported protected focused matrix of
   127/127.
 * Fresh independent file comparison after that installation checked all 516
-  overlay-tracked `src/job_search_helper/*.py`, `tests/*.py`, and
-  `dev/wrapper-coder/tools/*.py` files against the protected tree:
-  `MISMATCH_COUNT=0`.  Older per-file hash lists remain historical evidence,
-  but the current protected/overlay identity is re-established.
+  overlay-tracked application files—216 `src/job_search_helper/*.py` and 300
+  `tests/*.py`—against the protected tree: `MISMATCH_COUNT=0`.  The overlay
+  currently contains no tracked `dev/wrapper-coder/tools/*.py` files, so this
+  comparison establishes application source/test identity only.  Coordinator
+  tool and F8 service identity remain separately version/service-bound.
 * No Job Search Helper worker was found by the local process-name check.  The
   persisted scraper/writer/controller locks name absent PIDs `207238`,
   `717646`, and `283795`; they were retained.  This is not permission to remove
@@ -88,8 +89,9 @@ An earlier level never substitutes for a later one.
   and most F2/F3/F6/F7 evidence are valuable but do not activate a workflow.
 * **Installed historical evidence:** the protected integration and F2/F3/F8
   installer reports show guarded installations.  The post-install comparison
-  now also binds the current protected code/tests/tools to reviewed overlay
-  `6ab14d1`; it does not establish a current service run.
+  binds current protected application source/tests to reviewed overlay
+  `6ab14d1`; it does not bind coordinator tools or establish a current service
+  run.
 * **Live current evidence:** only read-only evidence is current in this audit:
   no matching worker process, retained lock records, and significant unfinished
   saved work.  No final company/release/Sheets proof was attempted or inferred.
@@ -115,9 +117,11 @@ The user approved and the coordinator applied patch
 The updated reviewed overlay is
 `6ab14d17d5064b706a4795efea43006465c87e8f`, and its handoff now reads
 **APPROVED AND INSTALLED; PROJECT NOT COMPLETE**.  I independently compared
-516 tracked source, test, and coordinator Python files to the protected tree
-and obtained `MISMATCH_COUNT=0`.  The reported focused protected matrix is
-127/127.  Retained modules are therefore installed source, but their
+216 tracked application source files and 300 tracked tests (516 files total)
+to the protected tree and obtained `MISMATCH_COUNT=0`.  The overlay has no
+tracked coordinator tool files, so F8 identity remains separately bounded.
+The reported focused protected matrix is 127/127.  Retained modules are
+therefore installed source, but their
 orchestration entry points are referenced only by retained tests; they do not
 prove production normal add-Company wiring.
 

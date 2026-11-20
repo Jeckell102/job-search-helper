@@ -1,5 +1,36 @@
 # Integration automation coordinator status
 
+## Active coordinator checkpoint — 2026-11-19 Company intake source accepted
+
+- Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains **active**.
+  This is a source-only acceptance checkpoint, not a deployed milestone or
+  project completion.
+- The default-disabled, one-tick Company intake dispatcher now uses the normal
+  durable Company-event bridge and only the public `job-search-scraper start`
+  lifecycle. It reconciles an existing controller workflow before processing a
+  new event, respects scraper/controller and retained/release holds, and binds
+  its durable dispatch reservation to the exact request digest.
+- The controller handoff now independently validates the full canonical
+  event/request/company/source-revision identity as well as the digest. The
+  final adversarial regression proves that a forged current request plus a
+  matching forged sidecar is rejected before workflow creation.
+- Independent QA **accepted** the hardened dispatcher/controller boundary. Its
+  strict focused review passed **42/42** checks. The coordinator's broader
+  adjacent strict suite passed **88/88** checks. `git diff --check` passes.
+- No protected checkout, live database, Google Sheet, scraper process, lock,
+  service, Jetson host, or GitHub remote changed in this source checkpoint.
+- Roadmap accounting remains **0 of 6 milestone gates closed** and final
+  independent acceptance remains **0%**. The accepted intake component is not
+  yet connected to an enabled watcher and has not been proven live.
+- Next action: commit and back up this accepted source checkpoint, then connect
+  the dispatcher to the existing sync watcher with explicit status and
+  enable/disable controls. Keep it disabled until the historical blocking
+  cycle is safely reconciled and live proof is authorized and prepared.
+
+Reread this section after every context reset and before a major/live action or
+user update. It supersedes older current-status claims; older sections remain
+historical evidence.
+
 ## Active coordinator checkpoint — 2026-11-19 protected install and completion re-audit
 
 - Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains **active**.
@@ -27,12 +58,22 @@
   publication, managed FIRST PASS start, and the final sequential demonstration
   with three unfinished Companies plus shared-adapter regression. The automatic
   repair profile registry was empty at the last protected snapshot.
-- Corrected user-facing estimate: overall release readiness is approximately
-  **75–80%**, not the earlier 96% estimate. Milestones 1–5 have substantial
-  installed/tested implementation but are not all live-accepted; Milestone 6
-  remains materially open at its three-company and restart/failure demonstration
-  gates. Rough ETA is hours for remaining source/audit closure and **1–3 days**
-  for genuine completion if guarded live access and selected Companies cooperate.
+- Post-install independent reconciliation compared **516 tracked Python
+  files** across the reviewed overlay and protected MuleLab checkout and found
+  zero mismatches: 216 application modules and 300 tests. The overlay contains
+  no tracked `dev/wrapper-coder` files, so this comparison does **not** establish
+  current coordinator-host identity. The exact current application/test version
+  is installed and reviewable; the amended independent audit is
+  `INDEPENDENT_FULL_ROADMAP_AUDIT_20261119.md`.
+- Corrected user-facing accounting uses two separate measures. Installed source
+  identity is **100%** for those 516 tracked files, while roadmap acceptance is
+  **0 of 6 milestone gates closed** and final independent acceptance is **0%**.
+  The earlier **75–80%** is at most a rough source/release-readiness estimate,
+  not milestone credit. Substantial implementation exists, but every milestone
+  still needs its required current live evidence. Rough ETA is hours for the
+  remaining source/audit closure and at least **1–3 days** for guarded live
+  demonstrations if access and selected Companies cooperate; source failures or
+  historical-cycle reconciliation can extend it.
 - Next action: incorporate the independent completion audit, distinguish the
   ordinary add-Company call path from the retained historical exception, and
   close any missing production wiring in a safe copy before scheduling a guarded
