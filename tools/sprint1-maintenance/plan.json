@@ -1,0 +1,7 @@
+{
+  "project": "/home/chris/job-search-helper_old",
+  "hold_id": "f3-foundation-20261120",
+  "unit_directory": "/home/chris/.config/systemd/user",
+  "systemctl": "/usr/bin/systemctl",
+  "pycache_prefixes": []
+}
