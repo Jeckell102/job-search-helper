@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from job_search_helper.engine import Engine, State
+from job_search_helper.inbox import InventoryInbox
 from job_search_helper.repository import GoogleRepository, MemoryRepository, SCHEMAS
 from job_search_helper.retained_session_store import RetainedSessionStore
 from job_search_helper.retained_work_orchestrator import run_retained_reservation
@@ -75,8 +76,12 @@ class RetainedWorkOrchestratorTests(unittest.TestCase):
         source = MemoryRepository({"Companies": [company()]}, schemas=self.local.schemas)
         for tab in SCHEMAS:
             self.local.import_rows(tab, enumerate(source.read(tab), 2))
-        self.state = State()
+        self.state_path = self.root / "state.db"
+        self.inbox_path = self.root / "inventories.sqlite3"
+        self.state = State(str(self.state_path))
         self.addCleanup(self.state.close)
+        inbox = InventoryInbox(self.inbox_path, "fixture")
+        inbox.close()
         self.engine = Engine(
             self.local, self.state, error_log_path=self.root / "errors.jsonl")
         rows = {"Companies": [company()]}
@@ -86,6 +91,12 @@ class RetainedWorkOrchestratorTests(unittest.TestCase):
             min_request_interval=0)
         self.store = RetainedSessionStore(self.root / "retained.sqlite3")
         self.addCleanup(self.store.close)
+
+    @staticmethod
+    def database_snapshot(path):
+        """Read a file-backed SQLite database through its transactional view."""
+        with sqlite3.connect(path) as database:
+            return list(database.iterdump())
 
     def freeze_start(self, item):
         journal = _StartJournal(self.root / "retained-work-starts.sqlite3")
@@ -110,6 +121,8 @@ class RetainedWorkOrchestratorTests(unittest.TestCase):
     def test_frozen_company_reaches_saved_job_and_first_pass_then_releases(self):
         item = prepared()
         self.freeze_start(item)
+        state_before = self.database_snapshot(self.state_path)
+        inbox_before = self.database_snapshot(self.inbox_path)
         result = run_retained_reservation(
             item, self.engine, self.local, self.remote, self.store)
         self.assertEqual("FIRST_PASS_RELEASED",
@@ -127,6 +140,8 @@ class RetainedWorkOrchestratorTests(unittest.TestCase):
                 "SELECT count(*) FROM retained_work_starts").fetchone()[0])
         assert_normal_lifecycle_not_held(self.root, self.local.path)
         self.assertEqual([], self.state.cycles())
+        self.assertEqual(state_before, self.database_snapshot(self.state_path))
+        self.assertEqual(inbox_before, self.database_snapshot(self.inbox_path))
         batches = len(self.service.batches)
         recovered = run_retained_reservation(
             item, self.engine, self.local, self.remote, self.store)
@@ -134,6 +149,8 @@ class RetainedWorkOrchestratorTests(unittest.TestCase):
         self.assertEqual("FIRST_PASS_RELEASED",
                          recovered["publication"]["state"])
         self.assertEqual(batches, len(self.service.batches))
+        self.assertEqual(state_before, self.database_snapshot(self.state_path))
+        self.assertEqual(inbox_before, self.database_snapshot(self.inbox_path))
 
     def test_finished_journal_can_accept_a_later_retained_request(self):
         first = prepared()

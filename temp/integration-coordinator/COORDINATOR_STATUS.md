@@ -23,6 +23,11 @@
   orchestration review passed 78/78 and reported no must-fix finding. No live
   Sheet/provider, MuleLab/Jetson service, protected checkout, lock, or GitHub
   remote changed.
+- Latest supplemental independent source QA: **ACCEPT for source-only
+  protected integration**. It verified the reversed multi-row exact-scope
+  regression and file-backed State/Inbox snapshots across bridge and recovery;
+  103 focused checks passed in 11.042 seconds. This is offline fixture
+  evidence, not a deployment or live-company acceptance.
 - User-facing estimate: Milestone 6 is about 94%. Remaining gates are a narrow
   local source checkpoint, fresh guarded operational preflight/proof, final
   independent deployed-system acceptance, and a verified scoped GitHub backup.
