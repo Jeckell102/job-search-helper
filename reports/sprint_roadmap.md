@@ -163,8 +163,12 @@ Required work and evidence:
 Exit gate: lost transport can be reconciled to an authenticated retained result
 or an explicit safe terminal state without issuing a second inference request.
 
-Current status: open/rejected. Mock-only evidence is insufficient and the
-reviewed MuleLab/Jetson message contracts currently disagree.
+Sprint 2 passed independent deployed QA on November 20. The installed pair
+reconciled a deliberately dropped response from one live synthetic turn.
+Usage settled at one call and 19 tokens with zero tool executions. The
+previous independently accepted Ollama interruption covers safe terminal
+orphan recovery. See `F4_PAIRED_DEPLOYED_QA_20261120.md`. Production queues
+remain held, and Jetson retains one inference lane.
 
 ## Sprint 3 — Milestone 1 company-only storage and synchronization
 

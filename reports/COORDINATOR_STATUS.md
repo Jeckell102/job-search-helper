@@ -1,6 +1,22 @@
 # Integration automation coordinator status
 
+## Sprint 2 resumed on November 20
+
+Sprint 2 passed independent deployed QA. The installed MuleLab client and Jetson adapter reconciled one authenticated synthetic request after intentional response loss in a fresh process. Verified one call, 19 tokens, zero tool executions, no replay, and no production MuleLab receipt or policy changes. The original real interruption test remains the evidence for safe terminal orphan recovery. See F4_PAIRED_DEPLOYED_QA_20261120.md. Source and proof were backed up at 5dfdf916a5ca9a40035754b48d6640b9bb4e0b59. Next is Sprint 3 Samtec safe admission, with the retained historical cycle and broad controls held. Continue under the same goal.
+
+The independent paired source QA accepted 57 MuleLab and 28 Jetson tests, including the exact owned recovery route, projection, and paired dropped-response accounting. Applied the two reviewed modules on each host under persistent service holds with exact before copies. Both named services restarted successfully and Ollama retained the same generation. Jetson change CHG-2026-11-20-F4-OWNED-RECEIPTS is recorded as deployed pending independent installed acceptance. The private Jetson and MuleLab rollback records retain the matching before and installed files. User's separate job-search-scraper repository retains backup/integration-automation-2026-11-19 at 712c505 and historical branches. Primary scoped backups remain in job-search-helper.
+
+Independent reviewer chat is verifying the deployed pair. The accounting proof lead is preparing a single bounded live cross-host proof with a disposable local ledger. Next action is review and execute that proof, save independent verdict and update the authoritative Jetson change records. No live inference has been sent in this sprint yet.
+
+MuleLab audit confirmed the deployed ownership binding and restart-time recovery are present. It identified the remaining in-place settlement gap and exact-receipt validation work. The audit lead owns coordinator.py, coordinator_inference.py and focused tests in /tmp/jsh-s2-coordinator-candidate. The accounting proof lead owns the integrated test harness. Independent QA owns the acceptance decision. The release owner will compare source and deploy only after a fixture pass. No production change has been made.
+
+The existing six-milestone goal is active. The coordinator owns live preflight and the release decision. Read the Jetson README, documentation index, procedure, system state and F4 changelog. The installed Jetson adapter matches all three files in the authoritative manifest and reviewed staging. Both Jetson services are active, MuleLab tunnel health is 200/ok and the receipt aggregate is terminal-only (one CANCELLED, one COMPLETED, one FAILED). The original real transport-interruption proof remains verified. Fresh test runs passed 27 Jetson adapter checks and 35 MuleLab checks against a disposable copy of installed coordinator source.
+
+The MuleLab audit (01a1f979-8619-75d2-9973-047f3a5efb0c), independent evidence review (01a1f97d-2e8c-7821-b5e1-d2019215036b), and integrated accounting fixture (01a1f979-6f67-78c3-9e53-dcf45072cb5a) are in progress. No live inference or source change was made in this checkpoint. Next, reconcile the current paired-host evidence, run the missing bounded cross-host check if needed, and obtain independent acceptance. Retain one Jetson inference lane.
+
 ## Sprint 1 model handoff
+
+Final private backup verified by remote branch lookup at ea7c47015a3c4ad9690a164cc12f3bb18827164c. The Sprint 1 maintenance window is closed.
 
 Sprint 1 is deployed and independently accepted. All four development chats have finished. The installed QA verdict is F3_DEPLOYED_INDEPENDENT_QA_20261120.md. The initial protected-state discrepancy and its resolution are preserved. Replaying schema initialization on the exact before image reproduced the entire live database hash, and comparison of all 898,061 original rows across 23 tables found zero data changes. QA passed 171 application and 41 maintenance tests. Samtec and Saronic remain held. Keep broad processing and automatic releases disabled. On the next operator resume, begin Sprint 2 F4 Jetson reconciliation with exactly one inference lane. The coordinator stops here for the requested model handoff after remote backup verification.
 
