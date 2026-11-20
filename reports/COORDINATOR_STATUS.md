@@ -27,6 +27,26 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+MuleLab owner-window checkpoint. The operator provided a one-hour window.
+Coordinator used a brief reversible diagnostic stop of wrapper host and
+Jetson assistant bridge. Under the existing leases, all 61 protected
+logical fields were measured and physical evidence stayed stable. Both
+services were restored and independently checked active/enabled. Scheduled
+sync stayed inactive/disabled, and the Saronic State digest and empty
+queues matched. One independently identified stale disposable pytest was
+interrupted and verified gone. No live install, exchange, Company addition
+or pilot took place. Source-only payload assembled at
+`/tmp/jsh-s4-live-release-candidate.mvidk96r`, with all 47 live before images
+and 68 staged files verified. The actual custody gate remains held on
+three checkout-attached Codex tool workers and two standard same-owner
+system processes with unreadable metadata. Native administrator inspection
+is unavailable to the desktop process. Operator was notified that the
+system is available again. Next complete independently approved host
+attribution and release stale checkout contexts without closing the two
+project chats, then re-enroll under a fresh quiet window. The same approved
+candidate and held baseline must be reverified before any live change.
+[Owner-window evidence](S4_MULELAB_OWNER_WINDOW_REHEARSAL_20261120.md).
+
 Pre-pilot rollback checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Staged a separate pre-pilot rollback
 selection and approval in `/tmp/jsh-s4-rollback-restoration.lGqG60sR`.
@@ -40,6 +60,7 @@ archive. Next prepare the verified live owner window and remeasure
 baseline under holds before approval. No live writes or rollout. Updated
 high-level acceptance-weighted planning estimate is about 55% overall,
 with approximate milestone ETAs recorded separately.
+Verified source, test and QA backup `5be87f7a7cf944043624b368f2712c56cbb71258`.
 [Rollback evidence](S4_PRE_PILOT_ROLLBACK_RESTORATION_20261120.md) ·
 [Roadmap planning estimate](ROADMAP_PROGRESS_ESTIMATE_20261120.md).
 
