@@ -1,0 +1,459 @@
+"""Pure-function and CLI safety checks: no credentials, internet, or Google writes."""
+from __future__ import annotations
+
+import argparse
+import base64
+from contextlib import redirect_stderr, redirect_stdout
+import copy
+import io
+import json
+import os
+from pathlib import Path
+import random
+import tempfile
+import unittest
+from unittest.mock import patch
+import zlib
+
+from job_search_helper import cli
+from job_search_helper import runner
+from job_search_helper.ats import Inventory
+from job_search_helper.core import (
+    POLICY_VERSION, canonicalize_url, changed_fields, excluded_title, job_key,
+    material_hash, pack_snapshot, plain_text, reconsiderations,
+    unpack_snapshot, validate_decision,
+)
+from job_search_helper.engine import Engine, State
+from job_search_helper.repository import MemoryRepository, SCHEMAS
+
+
+POSTING = {
+    "title": "Field Solutions Lead", "location": "Remote US",
+    "work_arrangement": "Remote", "compensation": "USD 150,000–190,000 annual base",
+    "description": "Lead customer discovery, deployments and troubleshooting. No coding or clearance required.",
+}
+
+
+def assessment(**changes):
+    value = {
+        "job_key": "comp-1:greenhouse:123", "description_hash": material_hash(POSTING),
+        "decision": "accept", "fit_level": "Possible",
+        "narrative": "Customer discovery matches the approved profile. Reviewed requirements contain no mandatory clearance or code authorship.",
+        "reviewer": "Offline test", "policy_version": POLICY_VERSION,
+        "mandatory_clearance": False, "code_authoring_required": False,
+        "primary_test_automation": False, "base_max_usd": 190000,
+    }
+    value.update(changes)
+    return value
+
+
+class CoreTests(unittest.TestCase):
+    def test_canonical_url_preserves_greenhouse_identity(self):
+        first = canonicalize_url("https://EXAMPLE.com/careers?utm_source=x&gh_jid=123&gh_src=z#top")
+        second = canonicalize_url("https://example.com/careers?gh_jid=124")
+        self.assertEqual(first, "https://example.com/careers?gh_jid=123")
+        self.assertNotEqual(first, second)
+
+    def test_unknown_query_identity_is_not_discarded(self):
+        self.assertEqual(
+            canonicalize_url("https://example.com/job?source=42&jobId=123&utm_campaign=x"),
+            "https://example.com/job?jobId=123&source=42",
+        )
+
+    def test_url_requires_http_and_no_embedded_credentials(self):
+        for value in ("file:///tmp/job", "javascript:alert(1)", "https://user:password@example.com/job", "[https://example.com](https://example.com)"):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                canonicalize_url(value)
+
+    def test_job_keys_include_provider_and_posting_identity(self):
+        first = job_key("COMP-1", "Greenhouse", "123", "https://example.com/job")
+        self.assertEqual(first, "comp-1:greenhouse:123")
+        self.assertNotEqual(first, job_key("COMP-1", "Lever", "123", "https://example.com/job"))
+        self.assertNotEqual(first, job_key("COMP-1", "Greenhouse", "124", "https://example.com/job"))
+
+    def test_url_fallback_keys_ignore_only_tracking(self):
+        first = job_key("COMP-1", "Greenhouse", "", "https://example.com/?gh_jid=1&utm_source=x")
+        self.assertEqual(first, job_key("COMP-1", "Greenhouse", "", "https://example.com/?gh_jid=1"))
+        self.assertNotEqual(first, job_key("COMP-1", "Greenhouse", "", "https://example.com/?gh_jid=2"))
+
+    def test_job_requires_stable_company_and_identity(self):
+        for args in (("", "Lever", "1", ""), ("COMP-1", "Lever", "", "")):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                job_key(*args)
+
+    def test_ambiguous_titles_remain_for_review(self):
+        for title in ("Product Marketing Manager", "Field Applications Engineer", "Solutions Engineer",
+                      "Manager, Field Engineering", "Technical Program Manager",
+                      "Field Operations Manager", "Deployment Manager", "Mission Controller",
+                      "Customer Applications Engineer", "Technical Support Manager"):
+            with self.subTest(title=title):
+                self.assertFalse(excluded_title(title))
+
+    def test_keeper_words_do_not_override_clear_exclusions(self):
+        for title in ("Payroll Operations Manager", "Legal Counsel, Product", "Software Engineer, Customer Support",
+                      "Field Test Automation Engineer", "Talent Acquisition Program Manager", "Graphic Designer",
+                      "Systems Engineer", "Software Developer", "Electrical Engineer",
+                      "Mechanical Engineer", "Materials Engineer"):
+            with self.subTest(title=title):
+                self.assertTrue(excluded_title(title))
+
+    def test_current_title_exclusions_do_not_reject_seniority_alone(self):
+        for title in ("Principal Software Engineer", "Systems Engineer", "Maintenance Operations Lead"):
+            with self.subTest(title=title):
+                self.assertTrue(excluded_title(title))
+        for title in ("Staff Solutions Engineer", "Director, Field Engineering", "Technical Support Director"):
+            with self.subTest(title=title):
+                self.assertFalse(excluded_title(title))
+
+    def test_html_normalization_removes_script_style(self):
+        self.assertEqual(plain_text("<p>Hello&nbsp;world</p><script>ignore()</script><style>x{}</style><p>Team</p>"), "Hello world Team")
+        self.assertEqual(plain_text("&lt;p&gt;Hello world&lt;/p&gt;"), "Hello world")
+
+    def test_hash_normalizes_markup_case_and_whitespace(self):
+        first = dict(POSTING, description="<p>Lead  customers</p>")
+        second = dict(POSTING, description="lead customers")
+        self.assertEqual(material_hash(first), material_hash(second))
+        self.assertEqual(changed_fields(first, second), [])
+
+    def test_hash_tracks_compensation_and_responsibilities(self):
+        for change in ({"description": "Write production firmware"}, {"compensation": "USD 90000 annual base"}, {"location": "Ohio"}):
+            new = dict(POSTING, **change)
+            with self.subTest(change=change):
+                self.assertNotEqual(material_hash(POSTING), material_hash(new))
+                self.assertEqual(changed_fields(POSTING, new), list(change))
+
+    def test_snapshot_roundtrip_retains_evidence(self):
+        value = {"v": 1, "evaluated": POSTING, "pending": dict(POSTING, title="New title"), "evaluations": [{"decision": "accept", "note": "Résumé – verified"}]}
+        self.assertEqual(unpack_snapshot(pack_snapshot(value)), value)
+        self.assertEqual(unpack_snapshot("")["evaluations"], [])
+
+    def test_snapshot_corruption_refuses_silent_reset(self):
+        for value in ("not-a-snapshot", "JSH1:!!!", "JSH1:AAAA", 123):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                unpack_snapshot(value)
+
+    def test_snapshot_rejects_unknown_version_and_invalid_shapes(self):
+        for value in ({"v": 2, "evaluations": []}, {"v": 1, "evaluations": "bad"}, {"v": 1, "evaluations": ["bad"]}, {"v": 1, "evaluations": [], "pending": 5}):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                unpack_snapshot(pack_snapshot(value))
+
+    def test_snapshot_limits_uncompressed_evidence(self):
+        with self.assertRaises(ValueError):
+            pack_snapshot({"v": 1, "evaluations": [], "huge": "x" * 2_000_001})
+
+    def test_snapshot_limits_compressed_cell_size(self):
+        noise = base64.b64encode(random.Random(42).randbytes(90_000)).decode()
+        with self.assertRaises(ValueError):
+            pack_snapshot({"v": 1, "evaluations": [], "noise": noise})
+
+    def test_snapshot_limits_decompression(self):
+        raw = json.dumps({"v": 1, "evaluations": [], "huge": "x" * 2_100_000}).encode()
+        compressed = "JSH1:" + base64.b64encode(zlib.compress(raw)).decode()
+        with self.assertRaises(ValueError):
+            unpack_snapshot(compressed)
+
+    def test_reconsideration_counts_do_not_reset_corruption(self):
+        self.assertEqual(reconsiderations({"Reconsideration Count": "2"}), 2)
+        self.assertEqual(reconsiderations(None), 0)
+        for value in ("bad", -1, "1.5", True):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                reconsiderations({"Reconsideration Count": value})
+
+    def test_valid_acceptance_and_missing_salary(self):
+        validate_decision(assessment(), POSTING, {})
+        validate_decision(assessment(base_max_usd=None), POSTING, {})
+        validate_decision(assessment(base_max_usd=120000), POSTING, {})
+
+    def test_legacy_decision_validation_requires_identity_policy_and_fit(self):
+        # Modern eligibility assessment belongs to review_runtime; this legacy
+        # JSON reader validates its persisted identity and schema, not retired
+        # ai_worker boolean flags.
+        for field in ("job_key", "description_hash", "decision", "narrative", "reviewer", "policy_version"):
+            value = assessment()
+            del value[field]
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                validate_decision(value, POSTING, {})
+        with self.assertRaises(ValueError):
+            validate_decision(assessment(fit_level="Unverified"), POSTING, {})
+
+    def test_below_floor_acceptance_is_rejected(self):
+        with self.assertRaises(ValueError):
+            validate_decision(assessment(base_max_usd=119999), POSTING, {})
+        validate_decision(assessment(decision="reject", base_max_usd=100000), POSTING, {})
+
+    def test_salary_must_be_number_not_bool_nan_or_string(self):
+        for value in (True, "180000", -1, float("nan"), float("inf"), 10_000_001):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                validate_decision(assessment(base_max_usd=value), POSTING, {})
+
+    def test_decision_must_match_current_hash_and_policy(self):
+        for changes in ({"description_hash": "stale"}, {"policy_version": "old"}, {"reviewer": ""}, {"narrative": ""}, {"fit_level": "No Match"}, {"decision": "maybe"}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                validate_decision(assessment(**changes), POSTING, {})
+
+    def test_changed_baseline_needs_explicit_material_judgment(self):
+        previous = {"evaluated": dict(POSTING, compensation="USD 120000 annual base")}
+        with self.assertRaises(ValueError):
+            validate_decision(assessment(), POSTING, previous)
+        validate_decision(assessment(material_change=False), POSTING, previous)
+        validate_decision(assessment(material_change=True), POSTING, previous)
+
+    def test_missing_description_stays_needs_info(self):
+        pending = dict(POSTING, description="")
+        decision = assessment(description_hash=material_hash(pending))
+        with self.assertRaises(ValueError):
+            validate_decision(decision, pending, {})
+        decision["decision"] = "needs_info"
+        validate_decision(decision, pending, {})
+
+
+class CliTests(unittest.TestCase):
+    def test_scraper_help_lists_available_commands(self):
+        for args in ([], ["help"], ["--help"], ["-h"]):
+            with self.subTest(args=args), redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(runner.main(args), 0)
+                text = output.getvalue()
+                self.assertIn("Usage: ./job-search-scraper <command>", text)
+                self.assertIn("start        Start a fresh scan of all currently active companies.", text)
+                self.assertIn("--fetch-workers N", text)
+                self.assertIn("--assignment-window N", text)
+                self.assertIn("--batch-size N", text)
+                self.assertIn("--sheet-request-interval SECONDS", text)
+                self.assertIn("--browser-fallback", text)
+                self.assertIn("./job-search-scraper cleanup-blacklist", text)
+                self.assertIn("repair-careers-urls", text)
+
+    def test_scraper_unknown_command_points_to_help(self):
+        with redirect_stderr(io.StringIO()) as output:
+            self.assertEqual(runner.main(["bogus"]), 2)
+            self.assertIn("Run ./job-search-scraper help", output.getvalue())
+
+    def test_scraper_start_still_runs_start_command(self):
+        with patch.object(runner, "run_start", return_value=0) as start:
+            self.assertEqual(runner.scrape_main(["start"]), 0)
+            start.assert_called_once_with(fetch_workers=5, assignment_window=100, batch_size=200, sheet_request_interval=1.1, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True, resume=False, partial_retries=1, sync_cycle_id=None, sync_company_ids=[])
+
+    def test_scraper_start_passes_parallel_options(self):
+        with patch.object(runner, "run_start", return_value=0) as start:
+            self.assertEqual(runner.scrape_main([
+                "start", "--fetch-workers", "4", "--assignment-window", "25",
+                "--batch-size", "150", "--sheet-request-interval", "0.8", "--browser-fallback",
+            ]), 0)
+            start.assert_called_once_with(fetch_workers=4, assignment_window=25, batch_size=150, sheet_request_interval=0.8, defer_sync=False, sync_only=False, retry_blocked=True, sync_interval=60, browser_fallback=True, resume=False, partial_retries=1, sync_cycle_id=None, sync_company_ids=[])
+
+    def test_scraper_start_can_disable_blocked_retry(self):
+        with patch.object(runner, "run_start", return_value=0) as start:
+            self.assertEqual(runner.scrape_main(["start", "--no-retry-blocked"]), 0)
+            self.assertFalse(start.call_args.kwargs["retry_blocked"])
+
+    def test_scraper_start_can_disable_browser_fallback(self):
+        with patch.object(runner, "run_start", return_value=0) as start:
+            self.assertEqual(runner.scrape_main(["start", "--no-browser-fallback"]), 0)
+            self.assertFalse(start.call_args.kwargs["browser_fallback"])
+
+    def test_scraper_errors_command_prints_recent_log(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(
+            runner, "project_path", side_effect=lambda value: Path(directory) / value
+        ):
+            log = Path(directory) / ".state" / "scraper-errors.jsonl"
+            log.parent.mkdir()
+            log.write_text(json.dumps({
+                "at": "2026-09-24T01:00:00+00:00",
+                "company": "Saildrone",
+                "context": "saving inventory",
+                "error_type": "ValueError",
+                "error": "duplicate legacy key",
+            }) + "\n", encoding="utf-8")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(runner.main(["errors"]), 0)
+            text = output.getvalue()
+            self.assertIn("Saildrone", text)
+            self.assertIn("duplicate legacy key", text)
+
+    def test_scraper_cleanup_blacklist_applies_by_default(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["cleanup-blacklist"]), 0)
+            delegated.assert_called_once_with(["cleanup-blacklist", "--apply", "--exclusive-writer"])
+
+    def test_scraper_cleanup_blacklist_preserves_explicit_dry_run(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["cleanup-blacklist", "--dry-run"]), 0)
+            delegated.assert_called_once_with(["cleanup-blacklist", "--dry-run"])
+
+    def test_scraper_delegates_cleanup_blacklist_apply_options(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["cleanup-blacklist", "--apply", "--exclusive-writer"]), 0)
+            delegated.assert_called_once_with(["cleanup-blacklist", "--apply", "--exclusive-writer"])
+
+    def test_scraper_accepts_cleanup_flag_alias(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["--cleanup-blacklist"]), 0)
+            delegated.assert_called_once_with(["cleanup-blacklist", "--apply", "--exclusive-writer"])
+
+
+    def test_scraper_repair_careers_defaults_to_dry_run(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["repair-careers-urls"]), 0)
+            delegated.assert_called_once_with(["repair-careers-urls"])
+
+    def test_scraper_delegates_repair_careers_apply_options(self):
+        with patch.object(runner.helper_cli, "main", return_value=0) as delegated:
+            self.assertEqual(runner.main(["repair-careers-urls", "--apply", "--exclusive-writer"]), 0)
+            delegated.assert_called_once_with(["repair-careers-urls", "--apply", "--exclusive-writer"])
+
+
+    def test_setup_evidence_tab_migrates_existing_descriptions(self):
+        repo = MemoryRepository({"Job History": [{
+            "Company": "Acme", "Job Title": "Solutions Engineer", "Job Key": "job-1",
+            "Official Job URL": "https://example.com/job", "Source Hash": "abc123def456",
+            "Job Description": "Full description text for review.",
+        }]})
+        with tempfile.TemporaryDirectory() as directory, patch.object(cli, "get_repository", return_value=repo), \
+                patch.object(cli, "state_path", return_value=Path(directory) / "state.db"):
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(cli.main(["setup-evidence-tab", "--apply", "--exclusive-writer"]), 0)
+        history = repo.read("Job History")[0]
+        evidence = repo.read("Job Evidence")[0]
+        self.assertTrue(history["Job Description"].startswith("See Job Evidence tab:"))
+        self.assertEqual(evidence["Job Key"], "job-1")
+        self.assertEqual(evidence["Source Hash"], "abc123def456")
+        self.assertEqual(evidence["Job Description"], "Full description text for review.")
+        self.assertIn("migrated_descriptions", output.getvalue())
+
+    def test_start_requires_an_explicit_scope(self):
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            cli.parser().parse_args(["start"])
+        self.assertTrue(cli.parser().parse_args(["start", "--all"]).all)
+        self.assertEqual(cli.parser().parse_args(["start", "--company-id", "COMP-1", "--company-id", "COMP-2"]).company_id, ["COMP-1", "COMP-2"])
+
+    def test_all_and_specific_company_are_mutually_exclusive(self):
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            cli.parser().parse_args(["start", "--all", "--company-id", "COMP-1"])
+
+    def test_apply_requires_exclusive_writer(self):
+        with self.assertRaises(ValueError):
+            cli.require_single_writer(argparse.Namespace(workers=1, apply=True, exclusive_writer=False))
+        cli.require_single_writer(argparse.Namespace(workers=1, apply=True, exclusive_writer=True))
+
+    def test_multiple_workers_are_refused_even_without_apply(self):
+        for workers in (0, 2, -1):
+            with self.subTest(workers=workers), self.assertRaises(ValueError):
+                cli.require_single_writer(argparse.Namespace(workers=workers, apply=False, exclusive_writer=True))
+
+    def test_apply_dry_run_conflict_never_opens_repository(self):
+        with patch.object(cli, "get_repository") as repository, redirect_stderr(io.StringIO()):
+            self.assertEqual(cli.main(["start", "--all", "--apply", "--dry-run"]), 2)
+            repository.assert_not_called()
+
+    def test_known_backup_is_refused_before_authorization(self):
+        with patch.dict(os.environ, {"SPREADSHEET_ID": "1avssxbKDXMrKS0oFHNAfhbQ2HWNz3T_jkn4DSUEmqv0"}), patch.object(cli, "authorize") as auth:
+            with self.assertRaises(ValueError):
+                cli.get_repository(write=True)
+            auth.assert_not_called()
+
+    def test_environment_is_not_shell_evaluated(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {}, clear=True):
+            path = Path(temporary) / "example.env"
+            path.write_text("# comment\nJSH_VALUE='$(touch SHOULD_NOT_EXIST)'\nJSH_NUMBER=42\n", encoding="utf-8")
+            cli.load_environment(path)
+            self.assertEqual(os.environ["JSH_VALUE"], "$(touch SHOULD_NOT_EXIST)")
+            self.assertEqual(os.environ["JSH_NUMBER"], "42")
+            self.assertFalse((Path(temporary) / "SHOULD_NOT_EXIST").exists())
+
+    def test_environment_rejects_malformed_entries(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "example.env"
+            for value in ("source script.sh", "BAD NAME=value", "NAME='unclosed"):
+                path.write_text(value, encoding="utf-8")
+                with self.subTest(value=value), self.assertRaises(ValueError):
+                    cli.load_environment(path)
+
+    def test_test_command_uses_project_tests_regardless_of_cwd(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(cli, "PROJECT_ROOT", Path(temporary)), patch.object(cli.subprocess, "call", return_value=0) as run:
+            self.assertEqual(cli.main(["test"]), 0)
+            args, kwargs = run.call_args
+            self.assertIn(str(Path(temporary) / "tests"), args[0])
+            self.assertEqual(args[0][1:3], ["-m", "pytest"])
+            self.assertEqual(kwargs["cwd"], Path(temporary))
+            self.assertEqual(kwargs["env"]["PYTHONPATH"], str(Path(temporary) / "src"))
+
+    def test_cleanup_dispatch_does_not_shadow_title_cleanup(self):
+        for command, target in (
+            ("cleanup-titles", "job_search_helper.cli.execute_cleanup"),
+            ("cleanup-blacklist", "job_search_helper.cli.execute_cleanup"),
+            ("cleanup-closed", "job_search_helper.closed_jobs.execute_cleanup"),
+            ("cleanup-locations", "job_search_helper.location_cleanup.execute_cleanup"),
+        ):
+            with self.subTest(command=command), patch(target) as cleanup, \
+                    patch.object(cli, "load_environment"), redirect_stderr(io.StringIO()):
+                self.assertEqual(cli.main([command, "--dry-run"]), 0)
+                self.assertEqual(cleanup.call_args.args[0].command, command)
+
+    def test_status_does_not_create_state(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(cli, "PROJECT_ROOT", Path(temporary)), patch.dict(os.environ, {}, clear=True), redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(cli.main(["status"]), 0)
+            self.assertEqual(json.loads(output.getvalue())["cycles"], [])
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_dry_start_neither_changes_source_repo_nor_saves_state(self):
+        source = MemoryRepository({"Companies": [{"Company": "Fixture Company", "Company ID": "COMP-1", "Company Status": "Active", "ATS / Source": "Greenhouse", "Official Careers URL": "https://boards.greenhouse.io/fixture"}]})
+        before = copy.deepcopy(source.tables)
+        def offline_engine(repo, state, dry_run=False, batch_size=25):
+            return Engine(repo, state, dry_run=dry_run, batch_size=batch_size, fetcher=lambda *args: Inventory("blocked", reason="Offline test block"))
+        with tempfile.TemporaryDirectory() as temporary, patch.object(cli, "PROJECT_ROOT", Path(temporary)), patch.dict(os.environ, {}, clear=True), patch.object(cli, "get_repository", return_value=source) as repository, patch.object(cli, "Engine", side_effect=offline_engine), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as error:
+            self.assertEqual(cli.main(["start", "--company-id", "COMP-1", "--dry-run"]), 0, error.getvalue())
+            self.assertEqual(source.tables, before)
+            self.assertFalse((Path(temporary) / ".state").exists())
+            repository.assert_called_once_with(write=False, interactive=False)
+
+    def test_dry_start_with_compact_opportunity_id_reaches_cycle_guard(self):
+        """A read-only compact-profile snapshot keeps its local schema extension."""
+        schemas = copy.deepcopy(SCHEMAS)
+        schemas['Opportunities'].append('Opportunity ID')
+        source = MemoryRepository({
+            'Companies': [{'Company': 'Fixture Company', 'Company ID': 'COMP-1',
+                           'Company Status': 'Active', 'ATS / Source': 'Greenhouse',
+                           'Official Careers URL': 'https://boards.greenhouse.io/fixture'}],
+            'Opportunities': [{'Company': 'Fixture Company', 'Job Title': 'Existing role',
+                               'Job URL': 'https://jobs.example.com/existing',
+                               'Opportunity ID': 'OPP-1'}],
+            'Scan Cycles': [{'Cycle ID': 'CYCLE-HELD', 'Cycle Status': 'Running'}],
+        }, schemas=schemas)
+        before = copy.deepcopy(source.tables)
+        with tempfile.TemporaryDirectory() as temporary, patch.object(cli, 'PROJECT_ROOT', Path(temporary)), \
+                patch.dict(os.environ, {}, clear=True), patch.object(cli, 'get_repository', return_value=source), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as error:
+            self.assertEqual(cli.main(['start', '--company-id', 'COMP-1', '--dry-run']), 1)
+        self.assertIn('An unfinished workbook cycle exists', error.getvalue())
+        self.assertEqual(source.tables, before)
+
+    def test_dry_resume_clones_and_preserves_saved_state(self):
+        source = MemoryRepository()
+        class ModifyingEngine:
+            def __init__(self, repo, state, dry_run=False, batch_size=25):
+                self.state = state
+                if not dry_run:
+                    raise AssertionError("Expected dry run")
+            def resume(self, cycle_id, retry_blocked=False):
+                self.state.save_cycle({"id": cycle_id, "status": "changed-in-memory"})
+                return {"cycle": cycle_id}
+        with tempfile.TemporaryDirectory() as temporary, patch.object(cli, "PROJECT_ROOT", Path(temporary)), patch.dict(os.environ, {}, clear=True):
+            database = Path(temporary) / ".state" / "state.db"
+            state = State(database)
+            state.save_cycle({"id": "CYCLE-1", "status": "original"})
+            state.close()
+            before = database.read_bytes()
+            with patch.object(cli, "get_repository", return_value=source), patch.object(cli, "Engine", ModifyingEngine), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as error:
+                self.assertEqual(cli.main(["resume", "--cycle", "CYCLE-1", "--dry-run"]), 0, error.getvalue())
+            self.assertEqual(database.read_bytes(), before)
+            check = State(database, readonly=True)
+            try:
+                self.assertEqual(check.cycle("CYCLE-1")["status"], "original")
+            finally:
+                check.close()
+
+
+if __name__ == "__main__":
+    unittest.main()

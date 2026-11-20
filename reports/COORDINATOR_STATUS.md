@@ -1,5 +1,219 @@
 # Integration automation coordinator status
 
+## 2026-11-20 — Sprint 1 resumed in an isolated source copy
+
+- Role: senior engineering coordinator and release owner. The resumed roadmap
+  goal covers all six milestones and final acceptance. Goal task reference
+  `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 1/F3 remains open; project
+  acceptance estimate remains approximately 25%.
+- Source snapshot under test: `/tmp/jsh-f3-resume.ErTFRd`. Preserve the
+  protected checkout and use this snapshot for further repairs. No current
+  Sprint 1 release or GitHub backup is verified.
+- Baseline rerun against the handoff candidate: 139 passed, 13 failed. Fixed
+  stale fixture setup and production startup identity consistency, moved
+  resume verification before the writable repository opens, restored
+  pre-upgrade inventory processing for sync-only/no-release, routed installed
+  start and direct controller worker launches through bootstrap, and changed
+  operational import lock order to scraper, publisher, then review writer.
+- Latest finished broader suite: 183 passed in 28.81s in the isolated copy.
+  Named exact sync now also checks any saved runtime pin before writable
+  handles and the remote factory. That final change has a separate test run.
+- Ownership: coordinator owns implementation and evidence; architecture QA
+  is reviewing read-only; the release interleaving test lane owns only
+  `tests/test_f3_release_process_interleavings.py` in the isolated copy.
+- Next: prove the real public/controller and exact-sync subprocess routes,
+  finish crash interleavings and freeze the candidate before final independent
+  F3 QA. Production release, Jetson, Sheets, retained cycle, and Samtec remain
+  outside this source-only test window. The one-time app timer is
+  `30-minute-sprint-1-timer`.
+
+### Source candidate sent to independent QA
+
+- Public controller lock handoff and exact-sync admission passed subprocess
+  fixtures. The exact-sync subprocess currently proves routing through the
+  admitted boundary and failure on missing saved inventory. It does not
+  demonstrate successful real publication.
+- Four separate-process release tests passed, including worker-first and
+  activation-first ordering, process death after a partial install, process
+  death after writing the rollback receipt, and process death after making
+  the backup durable but before publishing the active journal.
+- A broad regression group passed 179 checks, including existing Engine,
+  scoped request, retained work, exact recovery and SQLite integration tests.
+  The combined group including the other task's retry tests passed 317 and
+  had two failures from outdated default-option mock expectations in
+  `test_core_cli.py`. No temporary-retry, intake, or outcome tests failed.
+- Independent architecture QA is reviewing this frozen candidate. The branch
+  remains open pending its verdict and an exact frozen-plan CLI success
+  fixture. The lock and evidence contract is recorded in
+  `F3_ADMISSION_LOCK_CONTRACT_20261120.md`.
+
+### Scoped source acceptance
+
+- Final independent source verdict: **ACCEPT** for the frozen isolated
+  candidate. `F3_SOURCE_ACCEPTANCE_20261120.md` binds the reviewed scope and
+  tests. The previous exact-sync rejection remains recorded separately in
+  `F3_EXACT_SYNC_QA_REJECT_20261120.md`.
+- Final combined suite passed 321 tests. The Engine/scoped/retained/SQLite
+  suite passed 179 tests again. Independent QA passed 225 regression tests
+  plus nine direct policy and Engine-entry checks. A frozen-plan fixture
+  confirmed only the selected company against a memory-only workbook.
+- Sprint 1 now has accepted source evidence. Guarded production installation,
+  operational QA and roadmap acceptance remain open. The scoped GitHub
+  backup has not yet been verified for this checkpoint.
+
+### Concurrent task verified — 2026-11-20
+
+- The separate Codex task `Implement integration automation`
+  (`01a1f124-9793-7e53-9d37-92f11052c967`) is idle after the user's pause.
+  Its task record confirms installation of the default-off temporary retry
+  capability from local commit `37512dd`, plus a later rejected supervisor
+  slice that remains isolated.
+- Production matched all seven installed source files and
+  `tests/test_temporary_retry.py` byte for byte. Of those files, only `engine.py`
+  is also being edited for Sprint 1. The Sprint 1 copy was created at 09:25
+  Eastern, after the 09:12 install. Comparing production and the candidate
+  shows only the expected Sprint 1 recovery guards in that file, with the
+  temporary retry work preserved. The production intake dispatcher differs
+  from the later supervisor candidate, consistent with its staged-only state.
+- Recheck production against both snapshots and rerun temporary-retry,
+  outcome-delivery, and intake regressions before any guarded merge. Preserve
+  the installed default-off controls and keep the rejected supervisor change
+  out of the Sprint 1 file set.
+
+## PAUSED_NOT_COMPLETE — 2026-11-20 Sprint 1 mid-repair checkpoint
+
+- Pause reason: user requested a safe stopping point to upgrade the ChatGPT
+  app. The persistent all-six-milestone goal remains intact and must be
+  resumed; this is not a blocked or completion claim.
+- Active sprint: Sprint 1 / F3 release-startup version safety. Overall roadmap
+  completion remains approximately 25% by acceptance gates. Sprint 1 remains
+  **REJECTED / OPEN** pending repaired tests and a fresh independent verdict.
+- Last fully executed coordinator suite before the newest repairs: 80/80
+  bootstrap, runner-cycle, release, controller and repair-admission tests
+  passed. Independent QA separately ran 108 focused tests but correctly
+  rejected the candidate because passing tests missed real public-route and
+  version-identity gaps.
+- Independent QA findings retained: public pipeline self-conflicted with its
+  inherited admission; exact selected sync reacquired its own lock; unlocked
+  lookalike FDs and substituted bindings were accepted; dependency bytes and
+  runtime/filter inputs were incompletely pinned; resume checked the pin after
+  mutation-capable startup work; real subprocess interleavings and global lock
+  order remained incomplete.
+- Coordinator-owned repairs saved in the working tree but **not yet accepted**:
+  inherited-FD ownership now combines a blocked second-open check with
+  successful reassertion on the exact FD and remeasures installed identity;
+  cycle runtime binding is durable and enforced in Engine/local resume paths;
+  resume preflight moved ahead of synchronizer/cleanup/event/publication work;
+  public controller admission is being handed to its scan child and then
+  released; `job-search-helper` start/resume is routed through the stable
+  bootstrap; exact selected sync has an admitted no-reacquire seam; completed
+  release A can advance to a fresh validated B while stale A replay is refused;
+  terminal COMPLETE/ROLLED_BACK startup requires matching receipts; dependency
+  identity now includes installed package bytes, while config identity includes
+  integration configs, `.env`, backend marker, title lists and selected
+  effective environment values.
+- Verification at pause: `git diff --check` passed for the scoped files and 11
+  changed Python files parsed successfully. The newest multi-file repairs have
+  **not** had their focused suite run. They may contain behavioral test
+  failures and must not be deployed, backed up as accepted, or submitted for a
+  passing QA verdict yet.
+- Known remaining work before rerunning independent QA: execute the focused
+  suite and repair failures; add real public-controller and exact-sync
+  subprocess tests; prove unlocked/stale/substituted/lost descriptor failures;
+  add a real `run_start(resume=True)` zero-side-effect drift test; repair and
+  document the remaining `sync_cli` writer-to-scraper lock ordering; assess
+  dependency-hash startup cost; run broader regressions; freeze the candidate;
+  then request a fresh read-only independent verdict.
+- Safety state: no live scraper, release, Sheets write, global sync, Jetson
+  mutation or job-data operation was run in this checkpoint. The retained
+  historical cycle/Saronic conflict and held Samtec request were untouched.
+  Broad backlog processing and unqualified automatic releases remain disabled.
+- Working-tree caution: the protected checkout was already heavily dirty and
+  several scoped candidate files are untracked relative to its current Git
+  index. Preserve all unrelated files and job data. Do not stage the main
+  checkout wholesale. No GitHub backup was made for this unaccepted mid-repair
+  state.
+- Exact resume action: reread `sprint_roadmap.md` and this checkpoint, inspect
+  the scoped diff/live state, run the focused tests from this saved source,
+  repair failures one boundary at a time, then continue the remaining F3
+  evidence above. Do not move to Sprint 2 until independent QA accepts F3.
+
+Reread this section first after the app upgrade. It supersedes the active-focus
+sections below; older sections remain evidence.
+
+## Active coordinator checkpoint — 2026-11-20 gated sprint execution overlay saved
+
+- Role remains senior engineering coordinator and release owner for the one
+  persistent goal covering all six milestones and final acceptance. The goal
+  is active and is not replaced or completed by an individual sprint.
+- The execution overlay is saved at
+  `/tmp/job-search-helper-integration-automation/temp/integration-coordinator/sprint_roadmap.md`.
+  It defines seven gated sprints: F3 version safety; F4 Jetson inference
+  reconciliation; Milestone 1 Samtec storage/synchronization; F1/F2 plus
+  Milestones 2–3; bounded repair/release/retry across Milestones 4–5;
+  Milestone 6 reliability/sequential activation; and final deployed QA/backup.
+- The overlay includes mandatory context-reset instructions that restore the
+  coordinator role, reread authoritative plans/evidence, inspect live state,
+  preserve safety boundaries and lane ownership, and resume the first
+  unproven gate without resetting or inflating completion.
+- Current status remains approximately 25% by roadmap acceptance gates. Sprint
+  1 (F3 release/startup version safety) is in progress; later sprints remain
+  gated. This documentation checkpoint does not change any runtime state.
+- Safety remains unchanged: the retained historical cycle and Saronic conflict
+  are untouched; the Samtec request remains scoped/held; broad backlog
+  processing and unqualified automatic releases remain disabled; Jetson has
+  exactly one inference lane.
+- Next action: continue Sprint 1 by running the bootstrap/subprocess candidate
+  tests, repair exact attempt runtime binding and lock-order evidence, then
+  submit the complete candidate to independent adversarial QA.
+
+Reread this section and `sprint_roadmap.md` after every context reset. This is
+the current execution checkpoint; older sections remain evidence.
+
+## Active coordinator checkpoint — 2026-11-20 F3/F4 independent rejections
+
+- Role: senior engineering coordinator and release owner. The persistent goal
+  remains all six milestones plus final acceptance. Overall completion is
+  approximately **25% by acceptance gates**; prior 80% statements measured
+  apparent implementation/offline coverage and were not a valid roadmap
+  completion measure.
+- Accepted progress remains intact: F1 stale-withdrawal isolation and the F2
+  admission, partial-publication recovery, and retry-outcome provenance
+  boundaries passed independent source QA and are backed up through GitHub
+  commit `ca7b658` on
+  `backup/integration-automation-m1-operator-20261120`.
+- F3 independent verdict: **REJECT / OPEN**. The normal scraper lock excludes
+  concurrent file installation, but `runner.py` imports application modules
+  before acquiring that lock. A suspended old process can therefore resume
+  after activation and combine old loaded modules with new lazily imported
+  files. Existing tests contend the lock but do not exercise the real
+  pre-import startup path. Additional gaps include replay of an old completed
+  release receipt while another release is active, missing under-lock Company
+  revision recheck, non-idempotent rollback receipt recovery, and an
+  undocumented writer/scraper lock order.
+- F4 independent verdict: **REJECT / OPEN**. Fifty-two mock-based tests pass,
+  but the MuleLab coordinator sends request ID/fingerprint/owner-generation
+  controls that the current reviewed Jetson wrapper source rejects. No current
+  reviewed authenticated wrapper-control status or POST-only orphan-recovery
+  route was found. A real lost transport would remain UNCERTAIN rather than
+  proving retained-result reconciliation. No live F4 test is authorized until
+  that source contract is repaired and independently reviewed.
+- Current focus and ownership: coordinator owns the MuleLab F3 bootstrap,
+  measured-version and crash-recovery repair; independent QA owns adversarial
+  subprocess review after implementation. The F4 adapter remains a separate
+  later lane requiring the mandatory Jetson documentation/change process.
+- Safety state: the durable Samtec request remains held, the historical
+  Saronic conflict remains untouched, and broad backlog processing plus
+  unqualified automatic releases remain disabled. No live scrape, Google
+  write, release, or Jetson mutation occurred in these reviews.
+- Next action: implement a stable pre-import admission bootstrap and exact
+  active-release/runtime pin, then add real subprocess barriers for startup,
+  activation, and rollback in both orderings. Do not claim F3 from unit lock
+  contention alone.
+
+Reread this section first after every context reset. It supersedes earlier
+percentage and current-focus statements; older sections remain evidence.
+
 ## Active coordinator checkpoint — 2026-11-20 F1 and F2 admission serialization accepted
 
 - Role: senior engineering coordinator and release owner. The persistent goal

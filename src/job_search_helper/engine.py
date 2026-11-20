@@ -20,7 +20,8 @@ from queue import Empty, SimpleQueue
 from threading import Event, Lock, get_ident
 from urllib.parse import urlencode, urlsplit
 
-from .ats import Inventory, fetch_inventory, resolve_board, lever_location_scope
+from .ats import (Inventory, fetch_inventory, resolve_board, lever_location_scope,
+                  validate_outcome_failure)
 from .batching import PlanningRepository, PendingState
 from .cooperative_fetch import CooperativeFetchWork
 from .core import (FIT_LABELS, POLICY_VERSION, canonicalize_url, changed_fields,
@@ -83,6 +84,8 @@ def _compact_evaluation_history(snapshot: dict) -> None:
 
 
 def inventory_payload(inventory, company):
+    # This payload is part of the F6 durable inbox/receipt contract.  M3
+    # provenance belongs in the saved cycle item, never in these bytes.
     return {"jobs": inventory.jobs, "inventory_status": inventory.status,
             "reason": inventory.reason, "source_url": inventory.source_url, "ats": inventory.ats,
             "browser_pending_urls": inventory.browser_pending_urls,
@@ -142,6 +145,14 @@ class State:
         self.checkpoint_seconds += time.monotonic() - started
         self.checkpoint_bytes += len(encoded.encode("utf-8"))
 
+    def source_configuration_evidence(self, cycle_id, company_id):
+        """Bound read-only descriptor used only by a repository at construction."""
+        cycle = self.cycle(cycle_id)
+        item = cycle.get('companies', {}).get(company_id) if isinstance(cycle, dict) else None
+        if not isinstance(cycle, dict) or not isinstance(item, dict):
+            return None
+        return copy.deepcopy(cycle), copy.deepcopy(item)
+
     def purge_reviews(self):
         if self.readonly:
             return
@@ -196,9 +207,11 @@ def _fetch_pool(workers):
 
 class Engine:
     def __init__(self, repo, state, dry_run=False, fetcher=fetch_inventory, batch_size=DEFAULT_BATCH_SIZE,
-                 checkpoint_hook=None, error_log_path=DEFAULT_ERROR_LOG, inbox=None):
+                 checkpoint_hook=None, error_log_path=DEFAULT_ERROR_LOG, inbox=None,
+                 runtime_binding=None):
         self.repo, self.state, self.dry_run, self.fetcher = repo, state, dry_run, fetcher
         self.inbox = inbox
+        self.runtime_binding = copy.deepcopy(runtime_binding)
         self.performance = {"staging_seconds": 0.0, "checkpoint_seconds": 0.0}
         self.checkpoint_hook = checkpoint_hook
         self.error_log_path = Path(error_log_path) if error_log_path else None
@@ -323,6 +336,230 @@ class Engine:
     def _verify_same_board(before, after):
         if canonicalize_url(before.get("Official Careers URL", "")) != canonicalize_url(after.get("Official Careers URL", "")):
             raise ValueError("Company careers board changed during the run; saved inventory needs explicit reconciliation")
+
+    @staticmethod
+    def _source_guard(company, frozen_revision):
+        """Return an ephemeral commit guard for source-derived work.
+
+        The guard deliberately never enters an inbox plan or publication
+        receipt: it is reconstructed from a fresh Company row for this one
+        commit attempt and makes a changed source fail preflight.
+        """
+        from .company_events import canonical_company_fact, source_revision
+        if not isinstance(frozen_revision, str) or not frozen_revision:
+            raise ValueError("Missing frozen Company source revision; saved work is held for reconciliation")
+        fact = canonical_company_fact(company)
+        if not fact["eligible"]:
+            raise ValueError("Company source is no longer eligible; saved work is held for reconciliation")
+        if company.get("Claimed By") or company.get("Claim Token"):
+            raise ValueError("Company has an external claim; saved work is held for reconciliation")
+        if source_revision(company) != frozen_revision:
+            raise ValueError("Company source revision changed; saved work is held for reconciliation")
+        return {"tab": "Companies", "identity": {"Company ID": fact["company_id"]},
+                "values": {}, "expected": {
+                    "Company Status": company.get("Company Status", ""),
+                    "Official Careers URL": company.get("Official Careers URL", ""),
+                    "ATS / Source": company.get("ATS / Source", ""),
+                }}
+
+    def _admit_source_fact(self, item, company):
+        """Durably bind the whole canonical Company source at admission.
+
+        ``outcome_source_revision`` fences normal commits.  The fact is kept
+        alongside it (never in the F6 payload or frozen plan) so a lost
+        response may prove that only the scanner's own planned source update
+        occurred before its receipt is reconciled.
+        """
+        from .company_events import canonical_company_fact, source_revision
+        fact = canonical_company_fact(company)
+        if not fact['eligible']:
+            raise ValueError('Company source is not eligible for automatic scanning')
+        if company.get('Claimed By') or company.get('Claim Token'):
+            raise ValueError('Company has an external claim')
+        revision = source_revision(company)
+        # Admission is freeze-once.  A checkpoint that already records the
+        # source fact never re-resolves a missing configuration snapshot.
+        if 'outcome_source_revision' in item or 'outcome_source_fact' in item:
+            if 'installed_source_configuration' in item:
+                from .source_configuration_snapshot import validate_installed_source_configuration
+                if (item.get('outcome_source_revision') != revision
+                        or item.get('outcome_source_fact') != fact):
+                    raise ValueError('Company source revision changed; saved work is held for reconciliation')
+                if validate_installed_source_configuration(item['installed_source_configuration']) is None:
+                    raise ValueError('Frozen installed source configuration is malformed')
+            else:
+                # Preserve the established retry behavior for cycles without
+                # installed-capability evidence.  The scanner may have filled
+                # ATS / Source from its own confirmed inventory.  Refresh the
+                # ordinary source fence, but never reconstruct the missing
+                # configuration snapshot after a crash or legacy admission.
+                item['outcome_source_revision'] = revision
+                item['outcome_source_fact'] = fact
+            return
+        item['outcome_source_revision'] = revision
+        item['outcome_source_fact'] = fact
+        # This is cycle-only admission evidence.  It is never carried through
+        # Inventory/F6 worker or publication payloads, and a lost checkpoint
+        # deliberately degrades to no installed-capability evidence.
+        item.pop('installed_source_configuration', None)
+        from .source_configuration_snapshot import (resolve_installed_source_configuration,
+                                                    _resolve_authoritative_installed_source_configuration,
+                                                    validate_installed_source_configuration)
+        try:
+            candidate = validate_installed_source_configuration(
+                resolve_installed_source_configuration(self.repo, fact['company_id']))
+            authoritative = validate_installed_source_configuration(
+                _resolve_authoritative_installed_source_configuration(self.repo, fact['company_id']))
+        except (AttributeError, OSError, TypeError, ValueError):
+            candidate = authoritative = None
+        snapshot = authoritative if candidate is not None and candidate == authoritative else None
+        if (snapshot is not None
+                and snapshot['schema'] == 'installed-source-configuration-v1'
+                and snapshot['company_id'] == fact['company_id']
+                and snapshot['source_revision'] == revision
+                and snapshot['company'] == str(company.get('Company', '')).strip()
+                and snapshot['official_careers_url'] == fact['official_careers_url']
+                and snapshot['ats_source'] == fact['ats_source']):
+                item['installed_source_configuration'] = copy.deepcopy(snapshot)
+
+    def _accept_source_configuration_defect_evidence(self, cycle_id, company_id, fact_id):
+        """Atomically checkpoint one already-produced, closed F5 evidence group.
+
+        There intentionally is no production caller in Slice B.  This narrow
+        seam is for the later authorized immutable F5 verifier; it never
+        fetches, parses a reason, or accepts a worker/coordinator sidecar.
+        """
+        if (not isinstance(cycle_id, str) or not cycle_id
+                or not isinstance(company_id, str) or not company_id
+                or not isinstance(fact_id, str) or not fact_id):
+            raise ValueError('Source-configuration evidence identifiers are required')
+        cycle = self.state.cycle(cycle_id)
+        if not isinstance(cycle, dict) or not isinstance(cycle.get('companies'), dict):
+            raise ValueError('Source-configuration evidence cycle is unavailable')
+        item = cycle['companies'].get(company_id)
+        from .source_configuration_snapshot import mapping_fact_by_id
+        machine_fact = mapping_fact_by_id(cycle_id, company_id, fact_id)
+        if not isinstance(item, dict) or machine_fact is None:
+            raise ValueError('Source-configuration evidence is not durably owned')
+        return self._accept_source_configuration_defect_evidence_loaded(cycle, item, machine_fact)
+
+    def _accept_source_configuration_defect_evidence_loaded(self, cycle, item, machine_fact):
+        """Internal implementation over a cycle/fact loaded by the stable-ID seam."""
+        from .company_events import canonical_company_fact
+        from .source_configuration_snapshot import (
+            _resolve_authoritative_installed_source_configuration,
+            qualification_for_snapshot, validate_installed_source_configuration,
+            validate_mapping_divergence_fact, validate_source_configuration_defect,
+            validate_source_configuration_qualification_evidence)
+        if (not isinstance(cycle, dict) or not isinstance(item, dict)
+                or not isinstance(cycle.get('id'), str) or not cycle['id']
+                or cycle.get('company_event') is not None
+                or not isinstance(cycle.get('companies'), dict)):
+            raise ValueError('Source-configuration evidence requires an ordinary saved cycle')
+        company_id = item.get('outcome_source_fact', {}).get('company_id') if isinstance(item.get('outcome_source_fact'), dict) else None
+        if not isinstance(company_id, str) or cycle['companies'].get(company_id) is not item:
+            raise ValueError('Source-configuration evidence owner is not exact')
+        frozen_fact = item.get('outcome_source_fact')
+        frozen_revision = item.get('outcome_source_revision')
+        frozen_snapshot = validate_installed_source_configuration(item.get('installed_source_configuration'))
+        if (not isinstance(frozen_fact, dict) or frozen_fact.get('company_id') != company_id
+                or not isinstance(frozen_revision, str) or not frozen_revision
+                or frozen_snapshot is None or frozen_snapshot.get('company_id') != company_id
+                or frozen_snapshot.get('source_revision') != frozen_revision):
+            raise ValueError('Source-configuration evidence has no frozen admission')
+        rows = [row for row in self._company_rows()
+                if isinstance(row, dict) and str(row.get('Company ID', '')).strip() == company_id]
+        if len(rows) != 1 or canonical_company_fact(rows[0]) != frozen_fact:
+            raise ValueError('Company source changed before configuration qualification')
+        current = validate_installed_source_configuration(
+            _resolve_authoritative_installed_source_configuration(self.repo, company_id))
+        if current != frozen_snapshot:
+            raise ValueError('Installed source configuration changed before qualification')
+        fact = validate_mapping_divergence_fact(machine_fact, cycle_id=cycle['id'], snapshot=frozen_snapshot)
+        qualified = qualification_for_snapshot(frozen_snapshot)
+        if fact is None or qualified is None:
+            raise ValueError('No exact held source-configuration qualification exists')
+        sidecar = validate_source_configuration_defect({
+            'schema': 'source-configuration-defect-v1',
+            'capability_id': frozen_snapshot['capability_id'],
+            'capability_digest': frozen_snapshot['capability_digest'],
+            'mapping_digest': frozen_snapshot['mapping_digest'],
+            'configuration_digest': frozen_snapshot['configuration_digest'],
+            'category': 'same_provider_source_mapping',
+            'evidence_code': 'rippling_verified_mapping_divergence',
+        }, snapshot=frozen_snapshot)
+        evidence = validate_source_configuration_qualification_evidence({
+            'schema': 'source-configuration-qualification-evidence-v1',
+            'matrix_digest': qualified['matrix_digest'],
+            'qualification': qualified['qualification'],
+        }, snapshot=frozen_snapshot)
+        if sidecar is None or evidence is None:
+            raise ValueError('Source-configuration evidence failed sealed validation')
+        # Build on a detached checkpoint.  A save failure must not leave a
+        # partial group in the caller's in-memory cycle to leak through a
+        # later unrelated checkpoint.
+        checkpoint = copy.deepcopy(cycle)
+        saved_item = checkpoint['companies'][company_id]
+        saved_item['source_configuration_mapping_fact'] = fact
+        saved_item['source_configuration_defect'] = sidecar
+        saved_item['source_configuration_qualification_evidence'] = evidence
+        self.state.save_cycle(checkpoint)
+        item['source_configuration_mapping_fact'] = fact
+        item['source_configuration_defect'] = sidecar
+        item['source_configuration_qualification_evidence'] = evidence
+
+    def _fresh_source_guard(self, company_id, frozen_revision):
+        matches = [row for row in self._company_rows() if row.get("Company ID") == company_id]
+        if len(matches) != 1:
+            raise ValueError("Company was removed or its identity is ambiguous; saved work is held for reconciliation")
+        return self._source_guard(matches[0], frozen_revision), matches[0]
+
+    @staticmethod
+    def _validate_company_event_start_admission(request, company_ids, rows):
+        """Fail closed before an event-bound request can create a cycle.
+
+        This is deliberately a direct-call boundary as well as a companion to
+        scan_request._read_request: no caller may turn an event into scope
+        membership without proving its immutable request/event/current-Company
+        binding first.
+        """
+        if not isinstance(request, dict):
+            return
+        if request.get('company_event') is None:
+            if isinstance(request.get('request_id'), str) and request['request_id'].startswith('company-event:'):
+                raise ValueError('Company-event request admission is invalid; request is held unchanged.')
+            return
+        event = request.get('company_event')
+        if (request.get('mode') != 'company-only'
+                or not isinstance(company_ids, (list, tuple)) or len(company_ids) != 1
+                or not isinstance(company_ids[0], str) or not company_ids[0].strip()
+                or request.get('company_ids') != [company_ids[0]]
+                or request.get('repair_retry') is not None
+                or request.get('operator_request') is not None
+                or not isinstance(event, dict)
+                or set(event) != {'schema', 'event_id', 'company_id', 'revision', 'source_revision'}
+                or event.get('schema') != 'company-event-scan-request-v1'
+                or not isinstance(event.get('event_id'), str) or not event['event_id'].strip()
+                or not isinstance(event.get('company_id'), str) or not event['company_id'].strip()
+                or type(event.get('revision')) is not int or event['revision'] < 1
+                or not isinstance(event.get('source_revision'), str) or not event['source_revision'].strip()
+                or request.get('request_id') != 'company-event:' + event['event_id']
+                or request.get('source_revision') != event['source_revision']
+                or company_ids[0] != event['company_id']):
+            raise ValueError('Company-event request admission is invalid; request is held unchanged.')
+        matches = [row for row in rows if row.get('Company ID') == event['company_id']]
+        if len(matches) != 1:
+            raise ValueError('Company-event request admission is held: current Company identity is missing or ambiguous.')
+        from .company_events import canonical_company_fact, source_revision
+        company = matches[0]
+        try:
+            fact = canonical_company_fact(company)
+        except (TypeError, ValueError) as exc:
+            raise ValueError('Company-event request admission is held: current Company is invalid.') from exc
+        if not fact['eligible'] or company.get('Claimed By') or company.get('Claim Token'):
+            raise ValueError('Company-event request admission is held: current Company is ineligible or claimed.')
+        if source_revision(company) != event['source_revision']:
+            raise ValueError('Company-event request admission is held: current Company source revision changed.')
 
     def _stage_inventory(self, cycle, company, item, planner, progress_hook=None, status_hook=None):
         jobs = item.get("jobs", [])
@@ -453,11 +690,30 @@ class Engine:
             if not company.get("Company ID"):
                 # New intake: date is first detection, not a fabricated entry date.
                 self._assign_company_id(company)
-            scope[company["Company ID"]] = {"company": company["Company"], "stage": "queued"}
+            # Preserve the established queue/status behavior for legacy rows
+            # that do not yet have a careers URL.  They receive no source
+            # fence and therefore cannot publish source-derived work.  Rows
+            # that do provide a source must pass the full admission guard.
+            if company.get('Claimed By') or company.get('Claim Token'):
+                continue
+            admitted = {}
+            if str(company.get('Official Careers URL') or '').strip():
+                try:
+                    self._admit_source_fact(admitted, company)
+                except ValueError:
+                    continue
+            scope[company["Company ID"]] = {
+                "company": company["Company"], "stage": "queued",
+                **{key: admitted[key] for key in (
+                    'outcome_source_revision', 'outcome_source_fact',
+                    'installed_source_configuration') if key in admitted},
+            }
         if not scope:
             raise ValueError("No active companies selected")
         cycle = {"id": "CYC-" + uuid.uuid4().hex[:12].upper(), "started_at": now(), "status": "In Progress",
                  "all": selected is None, "companies": scope}
+        if self.runtime_binding is not None:
+            cycle["runtime_binding"] = copy.deepcopy(self.runtime_binding)
         if new_scan_request is not None:
             last = set(new_scan_request.get('start_last', []))
             cycle['companies'] = dict(sorted(scope.items(), key=lambda pair: pair[0] in last))
@@ -489,6 +745,17 @@ class Engine:
                 if source_revision(company) != operator['source_revision']:
                     raise ValueError('Operator company request source revision is stale; refusing to start a cycle.')
                 cycle['operator_request'] = dict(operator)
+            if new_scan_request.get('temporary_retry') is not None:
+                from .company_events import current_company_source_revision
+                from .temporary_retry import is_temporary_retry_request
+                retry = new_scan_request['temporary_retry']
+                if (not is_temporary_retry_request(new_scan_request)
+                        or current_company_source_revision(self.repo, retry['company_id']) != retry['source_revision']):
+                    raise ValueError('Temporary retry source revision is stale; refusing to start a cycle.')
+                company = next(row for row in rows if row.get('Company ID') == retry['company_id'])
+                if company.get('Claimed By') or company.get('Claim Token'):
+                    raise ValueError('Temporary retry Company is claimed; refusing to start a cycle.')
+                cycle['temporary_retry'] = dict(retry)
         self.state.save_cycle(cycle)
         self._sync_cycle(cycle)
         # Persist membership before fetching; reconstructible if local cache is lost.
@@ -508,7 +775,7 @@ class Engine:
             self._commit(*membership)
         return cycle["id"]
 
-    def _recover(self, cycle_id):
+    def _recover(self, cycle_id, *, persist=True, sync_only=False):
         matches = [r for r in self.repo.read("Scan Cycles") if r.get("Cycle ID") == cycle_id]
         if len(matches) != 1:
             raise ValueError("Unknown/ambiguous cycle ID. Start a cycle explicitly.")
@@ -530,7 +797,7 @@ class Engine:
                 scope[cid] = {"company": by_id[cid]["Company"], "stage": "queued"}
         cycle = {"id": cycle_id, "started_at": row.get("Started At") or now(), "status": row.get("Cycle Status"),
                  "all": bool(control.get("all", False)), "companies": scope}
-        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'operator_request', 'repair_retry', 'recovery_pause')
+        cycle.update({key: control[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'operator_request', 'repair_retry', 'temporary_retry', 'recovery_pause', 'runtime_binding')
                       if key in control})
         if cycle.get('repair_retry') is not None:
             from .repair_retry import validate_retry_request
@@ -544,8 +811,43 @@ class Engine:
             cycle['companies'] = dict(sorted(scope.items(), key=lambda pair: pair[0] in last))
         if not scope and cycle["status"] not in {"Complete", "Complete with exceptions"}:
             raise ValueError("Cannot reconstruct cycle scope; restore the local state backup")
-        self.state.save_cycle(cycle)
+        self.check_admitted_cycle(cycle, sync_only=sync_only)
+        if persist:
+            self.state.save_cycle(cycle)
         return cycle
+
+    def assert_runtime_binding(self, cycle_id, *, sync_only=False):
+        """Hold an attempt rather than continue it on a different runtime."""
+        cycle = self.state.cycle(cycle_id)
+        if not cycle:
+            raise ValueError("Runtime binding requires an exact saved cycle")
+        return self._check_runtime_binding(cycle, sync_only=sync_only)
+
+    def _check_runtime_binding(self, cycle, *, sync_only=False):
+        return self.validate_cycle_runtime_binding(cycle, self.runtime_binding, sync_only=sync_only)
+
+    def check_admitted_cycle(self, cycle, *, sync_only=False):
+        if self.runtime_binding is not None or 'runtime_binding' in cycle:
+            self._check_runtime_binding(cycle, sync_only=sync_only)
+
+    @staticmethod
+    def validate_cycle_runtime_binding(cycle, runtime_binding, *, sync_only=False):
+        """One policy for preflight and execution in every admitted scan route."""
+        if runtime_binding is None:
+            raise ValueError("Scraper runtime admission identity is unavailable")
+        if (sync_only and "runtime_binding" not in cycle
+                and runtime_binding["state"] == "NO_RELEASE"
+                and "repair_retry" not in cycle):
+            # A pre-upgrade inventory may still be processed without a fetch
+            # before any integration release is installed. Preserve its
+            # original provenance and never assign a retroactive runtime pin.
+            return None
+        if cycle.get("runtime_binding") != runtime_binding:
+            raise ValueError(
+                "Saved cycle runtime differs from this admitted worker; keeping "
+                "the cycle and saved work on hold."
+            )
+        return copy.deepcopy(runtime_binding)
 
     def _assert_repair_retry_release(self, cycle):
         """Fail closed before a retry cycle can fetch or change saved work.
@@ -581,7 +883,7 @@ class Engine:
                   "Companies Partial": partial, "Companies Blocked": blocked, "Companies Remaining": remaining,
                   "Last Checkpoint At": now(), "Notes": json.dumps({"all": cycle["all"], "company_ids": list(cycle["companies"]),
                     "helper_version": 1, "mode": "single writer; no model calls",
-                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'operator_request', 'repair_retry', 'recovery_pause')
+                    **{key: cycle[key] for key in ('start_request_id', 'supersedes', 'start_last', 'comparison_baseline_id', 'request_fingerprint', 'company_event', 'operator_request', 'repair_retry', 'temporary_retry', 'recovery_pause', 'runtime_binding')
                        if key in cycle}}, separators=(",", ":"))}
         if status in {"Complete", "Complete with exceptions"}:
             values["Completed At"] = cycle.setdefault("completed_at", now())
@@ -1117,6 +1419,7 @@ class Engine:
     def resume(self, cycle_id, retry_blocked=False):
         self.repo.validate_schema()
         cycle = self.state.cycle(cycle_id) or self._recover(cycle_id)
+        self.check_admitted_cycle(cycle)
         self._assert_repair_retry_release(cycle)
         if cycle["status"] in {"Complete", "Complete with exceptions"} and not retry_blocked:
             return self.status(cycle_id)
@@ -1142,18 +1445,28 @@ class Engine:
             rows = self._company_rows()
             if cycle["all"]:
                 for company in rows:
-                    if str(company.get("Company Status", "Active")).strip().casefold() in {"pause", "paused", "remove"}:
-                        continue
-                    self._assign_company_id(company)
+                    if not company.get("Company ID"):
+                        self._assign_company_id(company)
                     cid = company.get("Company ID")
-                    if cid and cid not in cycle["companies"] and not company.get("Last Successful Scan") and str(company.get("Company Status", "Active")).strip().casefold() not in {"pause", "paused", "remove"}:
-                        cycle["companies"][cid] = {"company": company["Company"], "stage": "queued"}
-                        self.state.save_cycle(cycle)
-                        self._sync_cycle(cycle)
-                        values = {"Active Cycle ID": cycle_id, "Record Updated": now()}
-                        if company.get("Scan State") != "Blocked / Manual Review":
-                            values["Scan State"] = "Queued"
-                        self._commit(self._company_op(company, values))
+                    if not cid or cid in cycle["companies"] or company.get("Last Successful Scan"):
+                        continue
+                    admitted = {}
+                    try:
+                        self._admit_source_fact(admitted, company)
+                    except ValueError:
+                        continue
+                    cycle["companies"][cid] = {
+                        "company": company["Company"], "stage": "queued",
+                        **{key: admitted[key] for key in (
+                            'outcome_source_revision', 'outcome_source_fact',
+                            'installed_source_configuration') if key in admitted},
+                    }
+                    self.state.save_cycle(cycle)
+                    self._sync_cycle(cycle)
+                    values = {"Active Cycle ID": cycle_id, "Record Updated": now()}
+                    if company.get("Scan State") != "Blocked / Manual Review":
+                        values["Scan State"] = "Queued"
+                    self._commit(self._company_op(company, values))
             available = [(cid, data) for cid, data in cycle["companies"].items() if cid not in processed]
             if not available:
                 break
@@ -1177,12 +1490,23 @@ class Engine:
                     item.update(stage="blocked", reason="Manual-review hold; explicit --retry-blocked required")
                     self.state.save_cycle(cycle)
                     continue
+                item.pop('outcome_failure', None)
+                self.state.save_cycle(cycle)
                 self._commit(self._company_op(company, {"Active Cycle ID": cycle_id, "Scan State": "In Progress", "Record Updated": now()}))
                 with fetch_work.bind_worker(company["Company"]):
                     inventory = self.fetcher(str(company.get("ATS / Source", "")), str(company.get("Official Careers URL", "")), cid, company["Company"])
+                from .company_events import source_revision as company_source_revision
                 item.update(jobs=inventory.jobs, inventory_status=inventory.status, reason=inventory.reason,
                             source_url=inventory.source_url, ats=inventory.ats, fetched_at=now(), stage="inventory",
-                            staging_complete=False, next_job_index=0)
+                            browser_pending_urls=inventory.browser_pending_urls,
+                            browser_discovery_incomplete=inventory.browser_discovery_incomplete,
+                            staging_complete=False, next_job_index=0,
+                            outcome_source_revision=company_source_revision(company))
+                failure = validate_outcome_failure(inventory.outcome_failure)
+                if failure is not None:
+                    item['outcome_failure'] = failure
+                else:
+                    item.pop('outcome_failure', None)
                 self.state.save_cycle(cycle)
                 if inventory.status in {"blocked", "failed", "unsupported"}:
                     item["stage"] = inventory.status
@@ -1209,7 +1533,8 @@ class Engine:
 
     def resume_local(self, cycle_id, sync_interval=60, **options):
         from .local_pipeline import LocalPipeline
-        return LocalPipeline(self, cycle_id, sync_interval=sync_interval).run(**options)
+        return LocalPipeline(self, cycle_id, sync_interval=sync_interval,
+                             sync_only=options.get('sync_only', False)).run(**options)
 
     def resume_parallel(self, cycle_id, retry_blocked=False, fetch_workers=1, assignment_window=25,
                         sync_only=False, defer_sync=False):
@@ -1229,7 +1554,8 @@ class Engine:
             raise ValueError("Assignment window must be between 1 and 100")
 
         self.repo.validate_schema()
-        cycle = self.state.cycle(cycle_id) or self._recover(cycle_id)
+        cycle = self.state.cycle(cycle_id) or self._recover(cycle_id, sync_only=sync_only)
+        self.check_admitted_cycle(cycle, sync_only=sync_only)
         self._assert_repair_retry_release(cycle)
         if self.inbox is not None:
             for cid, item in cycle["companies"].items():
@@ -1301,10 +1627,11 @@ class Engine:
                         inventory = Inventory("failed", reason=f"Fetch worker failed: {type(exc).__name__}")
                     # Durability failures must surface, never replace a fetched
                     # inventory with an error payload or a success checkpoint.
+                    payload = inventory_payload(inventory, snapshot)
                     if self.inbox is not None:
-                        self.inbox.save(cycle_id, cid, inventory_payload(inventory, snapshot))
+                        self.inbox.save(cycle_id, cid, payload)
                     dashboard.worker_handoff(slot, snapshot["Company"], len(inventory.jobs))
-                    return cid, inventory
+                    return cid, inventory, payload
             finally:
                 shared_work.company_done()
 
@@ -1352,17 +1679,24 @@ class Engine:
                         continue
                     cid = in_flight.pop(future)
                     item = cycle["companies"][cid]
+                    fetched_payload = None
                     try:
-                        result_cid, inventory = future.result()
+                        result_cid, inventory, fetched_payload = future.result()
                         if result_cid != cid or not isinstance(inventory, Inventory):
                             inventory = Inventory("failed", reason="Fetch worker returned an invalid inventory result")
+                            fetched_payload = None
                     except (sqlite3.Error, OSError):
                         raise  # Local durability failed; keep the previous checkpoint.
                     except Exception as exc:
                         inventory = Inventory("failed", reason=f"Fetch worker failed: {type(exc).__name__}")
                     saved = self.inbox.get(cycle_id, cid) if self.inbox is not None else None
-                    payload = saved[0] if saved else inventory_payload(inventory, item)
+                    payload = saved[0] if saved else (fetched_payload or inventory_payload(inventory, item))
                     item.update(payload, stage="inventory", staging_complete=False, next_job_index=0)
+                    failure = validate_outcome_failure(inventory.outcome_failure)
+                    if failure is not None:
+                        item['outcome_failure'] = failure
+                    else:
+                        item.pop('outcome_failure', None)
                     self.state.save_cycle(cycle)
                     if self.inbox is not None:
                         item.pop("jobs", None)
@@ -1412,6 +1746,12 @@ class Engine:
                     else:
                         operations.append(self._company_op(company, {"Active Cycle ID": cycle_id, "Scan State": "Queued", "Record Updated": now()}))
                         item["requested_url"] = company["Official Careers URL"]
+                        item.pop('outcome_failure', None)
+                        # Keep M3's source fence in durable cycle state.  The
+                        # inbox payload is F6-bound and must remain byte-for-
+                        # byte compatible with existing receipt semantics.
+                        from .company_events import source_revision as company_source_revision
+                        item["outcome_source_revision"] = company_source_revision(company)
                         assignments.append((cid, copy.deepcopy(company)))
                         capacity -= 1
                         continue

@@ -14,7 +14,7 @@ from threading import Event
 import time
 from urllib.parse import urlsplit
 
-from .ats import Inventory
+from .ats import Inventory, validate_outcome_failure
 from .browser_progress import BrowserProgress
 from .batching import PlanningRepository, PendingState
 from .cooperative_fetch import CooperativeFetchWork
@@ -35,14 +35,15 @@ def _stale_scoped_taleo_payload(company, payload):
 
 
 class LocalPipeline:
-    def __init__(self, engine, cycle_id, sync_interval=60):
+    def __init__(self, engine, cycle_id, sync_interval=60, *, sync_only=False):
         if engine.inbox is None:
             raise ValueError("Local processing requires a durable inventory inbox")
         if not 1 <= sync_interval <= 3600:
             raise ValueError("Sync interval must be between 1 and 3600 seconds")
         self.engine = engine
         self.repo, self.state, self.inbox = engine.repo, engine.state, engine.inbox
-        self.cycle = self.state.cycle(cycle_id) or engine._recover(cycle_id)
+        self.cycle = self.state.cycle(cycle_id) or engine._recover(cycle_id, sync_only=sync_only)
+        self.engine.check_admitted_cycle(self.cycle, sync_only=sync_only)
         # A retry release can be superseded or rolled back while its durable
         # cycle remains paused.  Revalidate before this pipeline reads saved
         # inventories, alters a cursor, or starts a fetch worker.
@@ -294,7 +295,15 @@ class LocalPipeline:
                         # replanned instead of overwritten.
                         if 'Job Key' in expected:
                             op['expected']['Job Key'] = expected['Job Key']
-            final = {k: v for k, v in local_item.items() if k != 'jobs'}
+            # M3 companion evidence belongs only to durable cycle state.  It
+            # must never enter F6 plan/receipt canonical bytes.
+            # Installed configuration is cycle-owned admission evidence only.
+            # It must never enter the frozen F6 final/plan/receipt bytes.
+            final = {k: v for k, v in local_item.items()
+                     if k not in {'jobs', 'outcome_failure', 'installed_source_configuration',
+                                  'source_configuration_mapping_fact',
+                                  'source_configuration_defect',
+                                  'source_configuration_qualification_evidence'}}
             plan = {'operations': self.planner.operations, 'final': final,
                     'requested_url': payload.get('requested_url', '')}
             self.inbox.save_plan(self.cid, cid, plan,
@@ -536,6 +545,7 @@ class LocalPipeline:
 
     def run(self, fetch_workers=5, assignment_window=100, sync_only=False, defer_sync=False, retry_blocked=False,
             retry_partial=False, retry_company_ids=None):
+        self.engine.check_admitted_cycle(self.cycle, sync_only=sync_only)
         if not 1 <= fetch_workers <= MAX_FETCH_WORKERS or not 1 <= assignment_window <= 100:
             raise ValueError(f'Fetch workers must be 1-{MAX_FETCH_WORKERS} and assignment window 1-100')
         if sync_only and defer_sync:
@@ -600,6 +610,7 @@ class LocalPipeline:
                 item.update(stage='blocked', reason='Manual-review hold; explicit retry required')
                 continue
             item['stage'] = 'queued'
+            item.pop('outcome_failure', None)
             # This lives beside the cycle checkpoint rather than the F6 inbox
             # payload, whose canonical bytes feed publication receipts.
             item['outcome_source_revision'] = company_source_revision(company)
@@ -647,7 +658,10 @@ class LocalPipeline:
             # durability failure must propagate rather than replace its result.
             self.inbox.save(self.cid, cid, inventory_payload(result, company))
             self.refresh_queue_status()
-            completed.put(cid)
+            # The envelope is intentionally not part of the inbox payload.
+            # A crash after this durable save and before this handoff safely
+            # leaves the resumed cycle with unknown failure classification.
+            completed.put((cid, validate_outcome_failure(result.outcome_failure)))
             self.dashboard.worker_handoff(
                 slot, company['Company'], len(result.jobs), status=result.status,
                 pending_urls=len(result.browser_pending_urls),
@@ -684,7 +698,13 @@ class LocalPipeline:
             workers = [pool.submit(worker, slot) for slot in range(1, fetch_workers + 1)]
             while True:
                 try:
-                    cid = completed.get(timeout=.1)
+                    completed_item = completed.get(timeout=.1)
+                    if isinstance(completed_item, tuple):
+                        cid, failure = completed_item
+                        fresh_handoff = True
+                    else:
+                        cid, failure = completed_item, None
+                        fresh_handoff = False
                 except Empty:
                     if all(f.done() for f in workers):
                         # Surface durability failures; do not silently lose a
@@ -695,9 +715,15 @@ class LocalPipeline:
                         break
                 else:
                     handled.add(cid)
+                    item = self.cycle['companies'][cid]
+                    if fresh_handoff:
+                        if failure is not None:
+                            item['outcome_failure'] = failure
+                        else:
+                            item.pop('outcome_failure', None)
                     if defer_sync:
                         payload = self.inbox.get(self.cid, cid)[0]
-                        self.cycle['companies'][cid].update(
+                        item.update(
                             {k: v for k, v in payload.items() if k != 'jobs'}, stage='inventory', durable_inventory=True)
                         self.state.save_cycle(self.cycle)
                         self.refresh_queue_status()

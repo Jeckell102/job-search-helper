@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -26,6 +27,103 @@ DEFAULT_FETCH_WORKERS = 5
 DEFAULT_ASSIGNMENT_WINDOW = 100
 DEFAULT_SCRAPER_BATCH_SIZE = MAX_BATCH_SIZE
 DEFAULT_PARTIAL_RETRIES = 1
+
+
+_RUNTIME_DIGEST_FIELDS = (
+    "source_manifest_sha256",
+    "config_sha256",
+    "dependency_manifest_sha256",
+)
+
+
+def _canonical_runtime_binding(value):
+    """Validate the small immutable identity inherited from stable admission."""
+    if not isinstance(value, dict) or value.get("state") not in {
+            "NO_RELEASE", "COMPLETE", "ROLLED_BACK"}:
+        raise RuntimeError("Inherited runtime binding is incomplete")
+    required = {"state", *_RUNTIME_DIGEST_FIELDS}
+    if value["state"] != "NO_RELEASE":
+        required.add("release_id")
+    if set(value) != required:
+        raise RuntimeError("Inherited runtime binding has unsupported fields")
+    result = {"state": value["state"]}
+    if "release_id" in required:
+        release_id = value.get("release_id")
+        if not isinstance(release_id, str) or not release_id.startswith("REL-"):
+            raise RuntimeError("Inherited runtime release identity is invalid")
+        result["release_id"] = release_id
+    for field in _RUNTIME_DIGEST_FIELDS:
+        digest = value.get(field)
+        if (not isinstance(digest, str) or len(digest) != 64
+                or any(character not in "0123456789abcdef" for character in digest)):
+            raise RuntimeError("Inherited runtime digest is invalid: " + field)
+        result[field] = digest
+    return result
+
+
+@contextmanager
+def _scraper_admission(database):
+    """Use the pre-import launcher lock, or reject unsafe released runtimes."""
+    lock_path = (database.parent / scraper_lock_name()).resolve()
+    descriptor_text = os.environ.pop("JSH_SCRAPER_ADMISSION_FD", "")
+    inherited_path = os.environ.pop("JSH_SCRAPER_ADMISSION_PATH", "")
+    runtime_binding = os.environ.pop("JSH_SCRAPER_RUNTIME_BINDING", "")
+    if any((descriptor_text, inherited_path, runtime_binding)) and not all(
+            (descriptor_text, inherited_path, runtime_binding)):
+        raise RuntimeError("Inherited scraper admission is incomplete")
+    if descriptor_text:
+        try:
+            descriptor = int(descriptor_text)
+            descriptor_stat = os.fstat(descriptor)
+            path_stat = lock_path.stat()
+        except (OSError, TypeError, ValueError) as exc:
+            raise RuntimeError("Inherited scraper admission descriptor is invalid") from exc
+        if (inherited_path != str(lock_path)
+                or (descriptor_stat.st_dev, descriptor_stat.st_ino)
+                != (path_stat.st_dev, path_stat.st_ino)):
+            raise RuntimeError("Inherited scraper admission does not own the expected lock")
+        # Prove this exact inherited open-file description owns the flock.
+        # A second open must be blocked, while reasserting on the inherited
+        # description must succeed.  Together those checks reject both an
+        # unlocked lookalike FD and a lock owned by another process.
+        probe = os.open(lock_path, os.O_RDWR)
+        try:
+            try:
+                fcntl.flock(probe, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                pass
+            else:
+                fcntl.flock(probe, fcntl.LOCK_UN)
+                raise RuntimeError("Inherited scraper admission descriptor is not locked")
+        finally:
+            os.close(probe)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError("Inherited scraper admission lock belongs to another process") from exc
+        try:
+            try:
+                binding = _canonical_runtime_binding(json.loads(runtime_binding))
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError("Inherited runtime binding is invalid") from exc
+            from release_admission_bootstrap import _validate_runtime
+            measured = _canonical_runtime_binding(
+                _validate_runtime(PROJECT_ROOT, database.parent))
+            if binding != measured:
+                raise RuntimeError("Inherited runtime binding no longer matches installed state")
+            yield binding
+        finally:
+            os.close(descriptor)
+        return
+    with writer_lock(lock_path):
+        # Check only after taking the same lock as activation.  Checking before
+        # it would allow a first release to complete between the check and lock
+        # acquisition, after this process had already imported the old source.
+        if (database.parent / "integration-release-journal.json").exists():
+            raise RuntimeError(
+                "Released scraper start/sync requires ./job-search-scraper pre-import admission")
+        from release_admission_bootstrap import _validate_runtime
+        yield _canonical_runtime_binding(_validate_runtime(PROJECT_ROOT, database.parent))
 
 
 def print_help():
@@ -236,7 +334,7 @@ def _started_at(cycle):
     return str(cycle.get("started_at") or cycle.get("Started At") or "")
 
 
-def resolve_cycle(engine, state, repo):
+def resolve_cycle(engine, state, repo, *, persist_recovery=True):
     """Resolve an explicit resume, never an older cycle or an implicit new scan."""
     from .scan_request import superseded_cycle_ids
     local = state.cycles()
@@ -256,7 +354,9 @@ def resolve_cycle(engine, state, repo):
     if (chosen.get("status") or chosen.get("Cycle Status")) == "Complete":
         raise ValueError("The latest scan is already complete. Run start without --resume for a fresh scan.")
     if "id" not in chosen:
-        engine._recover(cycle_id)
+        engine._recover(cycle_id, persist=persist_recovery)
+    elif engine.runtime_binding is not None:
+        engine.assert_runtime_binding(cycle_id)
     return cycle_id, "resuming latest scan; completed companies are skipped"
 
 
@@ -608,7 +708,8 @@ def _review_queue_lifecycle(repo, database):
         _refresh_review_queue(repo, database)
 
 
-def _readonly_named_exact_preflight(database, inventory_path, cycle_id, company_ids):
+def _readonly_named_exact_preflight(database, inventory_path, cycle_id, company_ids,
+                                    *, runtime_binding=None):
     """Validate only the selected durable records without opening a writer.
 
     This runs while exact recovery owns the normal scraper lock.  It must stay
@@ -626,6 +727,7 @@ def _readonly_named_exact_preflight(database, inventory_path, cycle_id, company_
             raise ValueError('Exact sync cycle is missing, finished, or superseded.')
         if cycle_id in superseded_cycle_ids(state.cycles()):
             raise ValueError('Exact sync cycle is missing, finished, or superseded.')
+        Engine.validate_cycle_runtime_binding(cycle, runtime_binding, sync_only=True)
     finally:
         state.close()
     location = Path(inventory_path)
@@ -659,7 +761,8 @@ def _readonly_named_exact_preflight(database, inventory_path, cycle_id, company_
 
 
 def _run_named_exact_cycle_sync(*, sync_cycle_id, sync_company_ids,
-                                sheet_request_interval):
+                                sheet_request_interval, database=None,
+                                runtime_binding=None):
     """Run the dedicated exact-cycle recovery boundary.
 
     This command intentionally lives outside ``run_start``'s ordinary
@@ -670,9 +773,9 @@ def _run_named_exact_cycle_sync(*, sync_cycle_id, sync_company_ids,
     repository used by ``recover_exact_cycle_with_factory``.
     """
     _load_environment()
-    database = state_path()
+    database = database or state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    from .exact_cycle_recovery import recover_exact_cycle_with_factory
+    from .exact_cycle_recovery import _recover_exact_cycle_with_factory_admitted
     from .cli import get_remote_repository, job_database_path
     from .sheet_profile import profile_schemas
     from .sqlite_repository import SQLiteRepository
@@ -685,7 +788,7 @@ def _run_named_exact_cycle_sync(*, sync_cycle_id, sync_company_ids,
         # before opening the writable local store or constructing Google.
         _readonly_named_exact_preflight(
             database, database.parent / 'inventories.sqlite3',
-            sync_cycle_id, sync_company_ids)
+            sync_cycle_id, sync_company_ids, runtime_binding=runtime_binding)
         local = SQLiteRepository(job_database_path(), spreadsheet_id, readonly=False)
         state = inbox = None
         try:
@@ -701,12 +804,13 @@ def _run_named_exact_cycle_sync(*, sync_cycle_id, sync_company_ids,
             # factory call.
             _readonly_named_exact_preflight(
                 database, database.parent / 'inventories.sqlite3',
-                sync_cycle_id, sync_company_ids)
+                sync_cycle_id, sync_company_ids, runtime_binding=runtime_binding)
             remote = get_remote_repository(
                 write=True, interactive=True, renew_both=True,
                 min_request_interval=sheet_request_interval,
                 schemas=schemas, evidence_archives=False)
             yield Engine(local, state, inbox=inbox,
+                         runtime_binding=runtime_binding,
                          error_log_path=database.parent / 'errors.jsonl'), remote
         finally:
             if inbox is not None:
@@ -715,7 +819,7 @@ def _run_named_exact_cycle_sync(*, sync_cycle_id, sync_company_ids,
                 state.close()
             local.close()
 
-    report = recover_exact_cycle_with_factory(
+    report = _recover_exact_cycle_with_factory_admitted(
         database, exact_dependencies, sync_cycle_id, sync_company_ids,
         require_frozen_plans=True)
     print('Exact cycle recovery: ' + json.dumps(report, sort_keys=True), flush=True)
@@ -760,9 +864,14 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         # Keep every exact selected invocation before the normal startup
         # lifecycle.  In particular it must not enter run_scoped_sync or any
         # cleanup/review/outcome path below.
-        return _run_named_exact_cycle_sync(
-            sync_cycle_id=sync_cycle_id, sync_company_ids=sync_company_ids,
-            sheet_request_interval=sheet_request_interval)
+        _load_environment()
+        database = state_path()
+        database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        with _scraper_admission(database) as runtime_binding:
+            return _run_named_exact_cycle_sync(
+                sync_cycle_id=sync_cycle_id, sync_company_ids=sync_company_ids,
+                sheet_request_interval=sheet_request_interval,
+                database=database, runtime_binding=runtime_binding)
     run_started = time.monotonic()
     print("Syncing saved inventories" if sync_only else "Starting job scraping", flush=True)
     if not 1 <= batch_size <= MAX_BATCH_SIZE:
@@ -776,7 +885,7 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
     load_title_review_list()
     database = state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
+    with _scraper_admission(database) as runtime_binding, ExitStack() as resources:
         # Activation uses this same lock. A durable nonterminal release journal
         # therefore blocks the real scraper boundary after an interrupted install.
         # A retained company-only preflight is not represented in ordinary
@@ -806,6 +915,38 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
             print('Exact cycle recovery held: '
                   + json.dumps(report, sort_keys=True), flush=True)
             return 0
+        preselected_resume_cycle = None
+        preselected_sync_cycles = []
+        if sync_only:
+            preselected_sync_cycles = InventoryInbox.saved_cycle_ids(
+                database.parent / 'inventories.sqlite3', include_blocked=retry_blocked)
+        if resume or preselected_sync_cycles:
+            # A resumed attempt must be pinned before the synchronizer,
+            # review cleanup, event bridge, closed-job cleanup, manual sync,
+            # provider fetch, or publication can change anything.
+            if resume and (database.parent / "next-scan.json").exists():
+                raise ValueError(
+                    "A fresh next-scan.json request is pending. Run start without --resume to use it.")
+            with ExitStack() as preflight_resources:
+                preflight_state = State(str(database), readonly=True) if database.is_file() else State()
+                preflight_resources.callback(preflight_state.close)
+                preflight_repo = get_repository(write=False, interactive=False,
+                                                min_request_interval=sheet_request_interval)
+                close = getattr(preflight_repo, 'close', None)
+                if callable(close):
+                    preflight_resources.callback(close)
+                preflight_engine = Engine(
+                    preflight_repo, preflight_state, runtime_binding=runtime_binding)
+                if resume:
+                    preselected_resume_cycle, action = resolve_cycle(
+                        preflight_engine, preflight_state, preflight_repo, persist_recovery=False)
+                    print(f"{action}: {preselected_resume_cycle}.", flush=True)
+                else:
+                    for selected_cycle in preselected_sync_cycles:
+                        if preflight_state.cycle(selected_cycle) is None:
+                            preflight_engine._recover(selected_cycle, persist=False, sync_only=True)
+                        else:
+                            preflight_engine.assert_runtime_binding(selected_cycle, sync_only=True)
         repo = get_repository(write=True, interactive=True, renew_both=True,
                               min_request_interval=sheet_request_interval)
         repo.validate_schema()
@@ -839,6 +980,7 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                 from .ats import fetch_inventory
                 fetcher = with_browser_fallback(fetch_inventory)
             engine = Engine(repo, state, dry_run=False, batch_size=batch_size, inbox=inbox,
+                            runtime_binding=runtime_binding,
                             **({"fetcher": fetcher} if fetcher else {}))
             run_completed = False
             try:
@@ -868,14 +1010,17 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
                 if manual["skipped"]:
                     print(f"Skipped {manual['skipped']} manually selected job(s) missing a company, title, or valid URL.", flush=True)
                 if sync_only:
-                    cycle_ids = selected_sync_cycles(
-                        inbox, cycle_id=sync_cycle_id, retry_blocked=retry_blocked)
+                    cycle_ids = preselected_sync_cycles
                     if not cycle_ids:
                         print("No saved inventories to sync.")
                         return 0
                 else:
-                    cycle_ids = [select_start_cycle(engine, state, repo, database, resume=resume)]
+                    cycle_ids = ([preselected_resume_cycle] if resume else
+                                 [select_start_cycle(engine, state, repo, database, resume=False)])
                 for cycle_id in cycle_ids:
+                    if (resume or sync_only) and state.cycle(cycle_id) is None:
+                        engine._recover(cycle_id, sync_only=sync_only)
+                    engine.assert_runtime_binding(cycle_id, sync_only=sync_only)
                     result = _run_scan_with_retries(engine, cycle_id, partial_retries=partial_retries,
                                         fetch_workers=fetch_workers, assignment_window=assignment_window,
                                         sync_interval=sync_interval,
