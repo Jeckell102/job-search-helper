@@ -9,6 +9,7 @@ import re
 import sqlite3
 
 from .ats import validate_outcome_failure
+from .company_events import canonical_company_fact
 from .repository import RepositoryError, _url
 from .runtime_mapping_facts import _open_store, _store_identity
 from .source_configuration_snapshot import _duplicate_free_json, validate_installed_source_configuration
@@ -107,6 +108,49 @@ def _check_stores(stores, owner):
         raise RepositoryError("The current stores differ from the original ordinary verification enrollment.")
 
 
+_COMPANY_ROW_FIELDS = ("Company ID", "Company", "Company Status",
+                       "Official Careers URL", "ATS / Source")
+
+
+def _company_row(stores, company_id):
+    repository = stores.jobs
+    if repository.db.execute(
+        "SELECT 1 FROM temp.sqlite_master WHERE name COLLATE NOCASE IN ('records','lookups') LIMIT 1"
+    ).fetchone() is not None:
+        raise RepositoryError("The Jobs Company authority is shadowed.")
+    definitions = repository.db.execute(
+        "SELECT name,type FROM main.sqlite_master WHERE name COLLATE NOCASE IN ('records','lookups')"
+    ).fetchall()
+    if set(definitions) != {("records", "table"), ("lookups", "table")}:
+        raise RepositoryError("The main Jobs Company relations are unavailable.")
+    match = repository.matches("Companies", {"Company ID": company_id})
+    if len(match) != 1:
+        raise RepositoryError("The owned Jobs store must contain one enrolled Company.")
+    row = match[0][1]
+    projection = {key: row.get(key) for key in _COMPANY_ROW_FIELDS}
+    if (projection["Company ID"] != company_id or projection["Company Status"] != "Active"
+            or projection["ATS / Source"] != "Rippling"
+            or any(not isinstance(value, str) or not value or value != value.strip()
+                   for value in projection.values())):
+        raise RepositoryError("The current Jobs Company row is outside the exact reviewed projection.")
+    return projection
+
+
+def company_source_sha256(stores, company_id):
+    """Hash the literal reviewed Company projection used by the offline verifier."""
+    store_binding(stores)
+    return digest(_company_row(stores, company_id))
+
+
+def _check_company(stores, cycle, owner):
+    company_id = owner["company_id"]
+    row = _company_row(stores, company_id)
+    item = _item(cycle, company_id)
+    if (digest(row) != owner["company_source_sha256"] or row["Company"] != item.get("company")
+            or canonical_company_fact(row) != item.get("outcome_source_fact")):
+        raise RepositoryError("The current Jobs Company row differs from its exact enrolled source.")
+
+
 def _is_digest(value):
     return isinstance(value, str) and _DIGEST.fullmatch(value) is not None
 
@@ -142,7 +186,6 @@ def _scope(cycle, company_id, owner, admission):
             or owner["source_revision"] != item.get("outcome_source_revision")
             or not isinstance(fact, dict) or not fact.get("eligible")
             or owner["source_revision"] != digest(fact)
-            or owner["company_source_sha256"] != digest({"company": item.get("company"), "fact": fact})
             or source is None or source["company_id"] != company_id
             or source["source_revision"] != owner["source_revision"]
             or source["company"] != item.get("company")
@@ -240,6 +283,7 @@ def arm(stores, owner, admission):
     cycle_id, company_id = owner["cycle_id"], owner["company_id"]
     cycle, original = _read_cycle(state, cycle_id)
     _scope(cycle, company_id, owner, admission)
+    _check_company(stores, cycle, owner)
     marker = {"schema": SCHEMA, "state": "ARMED", "owner": owner, "admission": admission}
     existing = read_marker(cycle, company_id)
     if (_item(cycle, company_id).get("stage") != "queued" or cycle.get("status") != "In Progress"
@@ -275,11 +319,13 @@ def read_prepared_inventory(stores, cycle_id, company_id):
     if marker is None or marker["state"] != "PREPARED":
         raise RepositoryError("There is no prepared ordinary inventory handoff to resume.")
     _check_stores(stores, marker["owner"])
+    _check_company(stores, cycle, marker["owner"])
     stored = _matches_inventory(marker, inbox.get(cycle_id, company_id))
     current, _ = _read_cycle(state, cycle_id)
     if read_marker(current, company_id) != marker:
         raise RepositoryError("The prepared ordinary inventory handoff changed during readback.")
     _check_stores(stores, marker["owner"])
+    _check_company(stores, current, marker["owner"])
     return current, stored
 
 
@@ -292,6 +338,7 @@ def prepare_inventory(stores, cycle_id, company_id, payload, *,
     if marker is None or dispatch_digest != _dispatch_sha256(marker):
         raise RepositoryError("Ordinary verification inventory does not belong to the frozen dispatch.")
     _check_stores(stores, marker["owner"])
+    _check_company(stores, cycle, marker["owner"])
     _validate_observation(observation, marker["admission"])
     if (not isinstance(payload, dict) or not isinstance(payload.get("jobs"), list)
             or (failure is not None and validate_outcome_failure(failure) != failure)):

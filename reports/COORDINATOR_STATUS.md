@@ -132,6 +132,29 @@ Company input and rerun both pins as appropriate.
 
 
 
+18:36 Eastern. Private GitHub readback verified
+`13155bc38080c9d93686b92eb2376faaf13ced3c` after typed provider acceptance.
+The actual old pending record returned `CHANGED_INPUT` from the exact
+offline verifier. Same-source and employer authority matched; the two
+components hashed different Company representations. Root staged an exact
+five-field literal Company projection derived from the unique owned Jobs
+row in `/tmp/jsh-s5-ordinary-company-proof.h9DoUArv`, retaining the
+separate State canonical fact, display and source-revision checks. Local run
+passed 30 focused and 107 combined. The revised source pin is
+`efda2b34c9550c56bb0e974194a9ce9d82d1db29343ef97c29b5697ff8c20bdd`.
+Independent QA is rerunning the positive and changed-generation
+offline composition with the original verifier and capture pins. Real
+ordinary worker wiring and published outcome remain open.
+[Initial composed QA](S5_HANDOFF_VERIFIER_COMPOSITION_INITIAL_QA_20261120.md).
+The repaired exact pending-to-verifier composition passed independently:
+the genuine State export verified the mismatch in 114 reads, preserved
+the reviewed candidate/control inventory digests, and a changed generation
+refused before reservation. Thirty focused cases independently reproduced.
+The native observer remained absent at 18:35. Next implement the measured
+normal worker handoff and capture exact publication proof before cleanup.
+[Final composed QA](S5_HANDOFF_VERIFIER_COMPOSITION_FINAL_QA_20261120.md).
+
+
 Prepared live enrollment checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
 from about 17:47 Eastern and authorized routine in-scope work without

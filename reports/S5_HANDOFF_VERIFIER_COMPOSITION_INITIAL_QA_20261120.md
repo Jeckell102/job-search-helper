@@ -1,0 +1,11 @@
+# Independent pending handoff to offline verifier composition
+
+2026-11-20 18:34 EST
+
+**HOLD positive composition on the unchanged pins. The changed-generation rejection passed.**
+
+- A disposable State, Jobs and Inbox produced the actual `verifier_payload` using the original reviewed capture's target Company and the accepted configured-response fixture. The exact verifier accepted the input shape, then returned `CHANGED_INPUT` with `replay_company_is_not_pending_company`, zero metered reads and no positive evidence. The source revision and employer authority matched exactly. The captured Official Careers URL is the pinned employer authority and differs from the independently verified candidate board. The Company digest is the mismatch. `ordinary_verification_pending.py:135-158,327-335`, `ordinary_rippling_verifier.py:203-215`, `validate_candidate.py:203-220`.
+- A second genuine export from the same disposable stores changed only the observation generation. Submitted with the first generation's unchanged pending and job pins, it returned `CHANGED_INPUT / REJECTED` and left no reservation or receipt.
+- The pending core hashes the displayed name plus normalized Company fact. The reviewed replay pins the exact raw five-field Company projection. No valid fixture-only adjustment can make these JSON encodings equivalent. The smallest compatible source adjustment is to derive `company_source_sha256` from the unique current Jobs Company row's exact five reviewed fields under the existing verified custody and leases at both enrollment and reread. Keep the separate State name, canonical fact and source revision checks. Preserve the existing capture and verifier pins, review the new core pin, and rerun this same composition. An alternative is a separately reviewed verifier that derives the normalized pending projection only after authenticating the unchanged raw Company pin.
+
+Verified implementation pins `c2b38e2cbed6d9ab33e95a2163d572b08d10cc96d2531f5748dec0efa4986856` for the pending core and `2925328cfae39a390cbac072a0834d10a580b0174555c1ef00fa9e418f7564c6` for the offline verifier. The harness used a private disposable /tmp directory. No raw capture contents, network use, implementation edits, live workflow or application admission were involved.

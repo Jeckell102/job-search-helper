@@ -29,6 +29,7 @@ def attempt(tmp_path):
     inbox = InventoryInbox(inbox_path, "fixture-workbook")
     jobs = SQLiteRepository(jobs_path, "fixture-workbook", initialize=True)
     jobs.set_meta("ready", "yes")
+    jobs.import_rows("Companies", [(2, COMPANY)])
     jobs.close()
     inbox.close()
     fact = canonical_company_fact(COMPANY)
@@ -59,7 +60,7 @@ def attempt(tmp_path):
         "cycle_id": CYCLE_ID, "cycle_started_at": "2026-11-20T21:00:00+00:00",
         "request_id": "test-ordinary-request", "request_fingerprint": "1" * 64,
         "company_id": COMPANY_ID, "source_revision": revision,
-        "company_source_sha256": pending.digest({"company": COMPANY["Company"], "fact": fact}),
+        "company_source_sha256": pending.digest(COMPANY),
         "store_binding_sha256": "3" * 64, "observation_generation": 1,
     }
     admission = {key: snapshot[key] for key in ("configured_url", "capability_id", "capability_digest",
@@ -70,6 +71,7 @@ def attempt(tmp_path):
     state.close()
     with pending.open_verification_stores(state_path, jobs_path, inbox_path, "fixture-workbook") as stores:
         owner["store_binding_sha256"] = pending.store_binding(stores)
+        assert pending.company_source_sha256(stores, COMPANY_ID) == owner["company_source_sha256"]
         yield stores, owner, admission, payload
 
 
@@ -324,3 +326,27 @@ def test_prepared_replay_never_returns_different_valid_dispatch(attempt, monkeyp
     with pytest.raises(RepositoryError, match="no longer matches the original dispatch"):
         prepare(attempt)
     assert stores.inbox.saved == 1
+
+
+def test_normalized_only_company_hash_cannot_enroll(attempt):
+    stores, owner, admission, _ = attempt
+    legacy = {**owner, "company_source_sha256": pending.digest(
+        {"company": COMPANY["Company"], "fact": canonical_company_fact(COMPANY)}
+    )}
+    with pytest.raises(RepositoryError, match="differs from its exact enrolled source"):
+        pending.arm(stores, legacy, admission)
+
+
+def test_jobs_row_drift_holds_pending_verifier_export(attempt):
+    stores, owner, admission, _ = attempt
+    pending.arm(stores, owner, admission)
+    prepare(attempt)
+    writable = SQLiteRepository(stores.jobs.path, "fixture-workbook")
+    revised = {**COMPANY, "Official Careers URL": COMPANY["Official Careers URL"] + "?utm_source=changed"}
+    assert canonical_company_fact(revised) == canonical_company_fact(COMPANY)
+    try:
+        writable.import_rows("Companies", [(2, revised)])
+    finally:
+        writable.close()
+    with pytest.raises(RepositoryError, match="differs from its exact enrolled source"):
+        pending.verifier_payload(stores, CYCLE_ID, COMPANY_ID)
