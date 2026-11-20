@@ -18,6 +18,32 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Dispatcher source acceptance checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, full project
+about 52% after the dispatcher source gate passed. The 132 combined tests
+passed. Independent QA accepted the frozen source after 46 focused tests
+and two composed probes covering dispatcher and sender hold, restoration,
+no refetch, and preserved exact publication and local-only outcomes. The
+offline prior-pin rehearsal recovered the interrupted swap, installed and
+rolled back 44 scoped endpoints, and refused all three out-of-scope wrapper
+runtime files. Its synthetic witnesses and older candidate pin do not
+authorize deployment. The wrapper source dependency and existing parked
+namespace mean no safe mixed-version release is approved. The already
+assigned GPT-6.2 Astra High architecture chat
+`01a1f97d-cebd-7910-8d31-a5f3e0dcd264` owns the specific transaction/hold
+decision; requested durable advice at
+`/tmp/jsh-s4-wrapper-release-architecture-review.md`. The coordinator owns
+implementation and version/host witness reconciliation. Independent QA owns
+the final release recheck. Fresh read-only production preflight found zero
+outbox and dirty rows, no queue or dispatcher journal (default-off), no
+ordinary settlement schema, and the protected historical cycle still in
+progress. Next reconcile the release mechanism with the current pin and
+rehearse crash/rollback of both source sets. No production or Jetson
+changes. Repair source backup was verified at
+`27f08c2080353d30bddb4682dfa15ef489a24fd4`.
+[Independent QA](S4_ORDINARY_EVENT_DISPATCH_BINDING_INDEPENDENT_QA_20261120.md)
+and [offline release rehearsal](S4_SCOPED_RELEASE_REHEARSAL_20261120.md).
+
 Binding repair checkpoint. Coordinator and release owner, same active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 75%, project about
 50%. Reproduced premature dispatcher settlement with replaced frozen
