@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import stat
 import sys
 import time
 import uuid
@@ -83,7 +84,16 @@ Commands:
                create a cycle, change Sheets, or replace another pending request.
   retained-exception-preview
                Read and print the exact claims that an external signer must
-               authorize for one retained historical cycle. Read-only.
+               authorize for one retained historical cycle. `--output DIR`
+               writes the full manifest plus claims to a private mode-0700
+               content-addressed signer-input directory.
+               The signer returns `{manifest,envelope}` for activation. Read-only.
+  activate-retained-exception
+               Verify a separately signed approval envelope and activate one
+               exact retained exception; private keys are never accepted.
+  run-retained-company-event
+               Run one signer-authorized, bridge-owned Company event through
+               the isolated retained storage, publication, and FIRST PASS path.
   recover-interrupted-cycle
                Explicitly pause one exact inactive cycle for recovery. Requires
                --cycle-id, --reason, and --apply; preserves its checkpoint.
@@ -303,7 +313,65 @@ def show_company_only_queue_status(*, database=None, repo=None, local_only=False
     return 0
 
 
-def retained_exception_preview(cycle_id, expires_at, *, database=None, jobs_path=None):
+def _write_retained_signer_input(path, value):
+    """Publish one private, content-addressed signer artifact without overwrite."""
+    root = Path(path).expanduser()
+    if root.is_symlink():
+        raise ValueError('retained_exception_signer_directory_symlink')
+    created = not root.exists()
+    if created:
+        root.mkdir(parents=True, mode=0o700)
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError('retained_exception_signer_directory_invalid')
+    root = root.resolve()
+    directory_stat = root.stat()
+    if directory_stat.st_uid != os.geteuid() or stat.S_IMODE(directory_stat.st_mode) != 0o700:
+        raise ValueError('retained_exception_signer_directory_private_required')
+    encoded = json.dumps(value, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    identifier = hashlib.sha256(encoded).hexdigest()
+    destination = root / (identifier + '.json')
+
+    def existing():
+        if destination.is_symlink():
+            raise ValueError('retained_exception_signer_artifact_symlink')
+        details = destination.stat()
+        if (not stat.S_ISREG(details.st_mode) or details.st_uid != os.geteuid()
+                or stat.S_IMODE(details.st_mode) != 0o600):
+            raise ValueError('retained_exception_signer_artifact_private_required')
+        try:
+            actual = json.loads(destination.read_text(encoding='utf-8'))
+        except (OSError, ValueError) as exc:
+            raise ValueError('retained_exception_signer_input_unreadable') from exc
+        if actual != value:
+            raise ValueError('retained_exception_signer_artifact_collision')
+        return destination
+
+    if os.path.lexists(destination):
+        return existing()
+    temporary = root / ('.' + identifier + '.' + uuid.uuid4().hex + '.tmp')
+    try:
+        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, 'wb') as stream:
+            stream.write(encoded)
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            os.link(temporary, destination)
+        except FileExistsError:
+            return existing()
+        directory = os.open(root, os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+        return existing()
+    finally:
+        if os.path.lexists(temporary):
+            os.unlink(temporary)
+
+
+def retained_exception_preview(cycle_id, expires_at, *, database=None, jobs_path=None,
+                               output=None):
     """Build one read-only authorization preview for an exceptional pilot."""
     if not isinstance(cycle_id, str) or not cycle_id.strip():
         raise ValueError('Retained exception preview requires an exact cycle ID.')
@@ -332,8 +400,11 @@ def retained_exception_preview(cycle_id, expires_at, *, database=None, jobs_path
         cycle, database.parent / 'inventories.sqlite3', local_jobs,
         reason='operator-provenanced company-only containment',
         created_at=now())
-    return {'manifest': manifest,
-            'required_claims': required_claims(manifest, expires_at=expires_at)}
+    result = {'manifest': manifest,
+              'required_claims': required_claims(manifest, expires_at=expires_at)}
+    if output is not None:
+        result['output'] = str(_write_retained_signer_input(output, result))
+    return result
 
 
 def active_inbox_cycles(inbox, state, include_blocked=True):
@@ -1083,21 +1154,82 @@ def scrape_main(argv=None):
             prog='./job-search-scraper retained-exception-preview')
         parser.add_argument('--cycle-id', required=True)
         parser.add_argument('--expires-at', required=True)
+        parser.add_argument('--output', metavar='DIR')
         try:
             preview_args = parser.parse_args(argv[1:])
         except SystemExit:
             return 2
         try:
             report = retained_exception_preview(
-                preview_args.cycle_id, preview_args.expires_at)
+                preview_args.cycle_id, preview_args.expires_at,
+                output=preview_args.output)
             # The manifest includes retained historical membership and evidence
             # summaries.  The operator only needs the exact signed claims and
             # its digest; do not spill the entire local manifest to a console.
             print(json.dumps({
                 'manifest_digest': report['manifest']['manifest_digest'],
                 'required_claims': report['required_claims'],
+                **({'signer_input': report['output']} if 'output' in report else {}),
             }, sort_keys=True))
             return 0
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+            print(f'ERROR: {exc}', file=sys.stderr)
+            return 1
+    if argv[0] == 'activate-retained-exception':
+        parser = argparse.ArgumentParser(prog='./job-search-scraper activate-retained-exception')
+        parser.add_argument('--cycle-id', required=True)
+        parser.add_argument('--approval-file', required=True)
+        parser.add_argument('--key-id', required=True)
+        parser.add_argument('--ed25519-public-key-base64', required=True)
+        try:
+            activation = parser.parse_args(argv[1:])
+            approval = json.loads(Path(activation.approval_file).read_text(encoding='utf-8'))
+            from .retained_company_event import _verifier, activate_signed_exception
+            result = activate_signed_exception(state_directory=state_path().parent,
+                cycle_id=activation.cycle_id, approval=approval,
+                verifier=_verifier(activation.key_id, activation.ed25519_public_key_base64))
+            # The frozen store retains the complete evidence.  Console output is
+            # deliberately a receipt only: do not echo the manifest or signed
+            # envelope into terminal scrollback or a service journal.
+            print('Retained exception activated: ' + json.dumps({
+                'state': result['state'],
+                'cycle_id': activation.cycle_id,
+                'manifest_digest': result['manifest_digest'],
+                'authorization_digest': result['authorization_digest'],
+                'key_id': result['key_id'],
+                'authorization_expires_at': result['authorization_expires_at'],
+            }, sort_keys=True))
+            return 0
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError, json.JSONDecodeError) as exc:
+            print(f'ERROR: {exc}', file=sys.stderr)
+            return 1
+    if argv[0] == 'run-retained-company-event':
+        try:
+            _load_environment()
+            parser = argparse.ArgumentParser(prog='./job-search-scraper run-retained-company-event')
+            parser.add_argument('--key-id',
+                                default=os.environ.get('COMPANY_RETAINED_KEY_ID'))
+            parser.add_argument('--ed25519-public-key-base64',
+                                default=os.environ.get('COMPANY_RETAINED_ED25519_PUBLIC_KEY_BASE64'))
+            parser.add_argument('--sheet-request-interval', type=float)
+            parser.add_argument('--max-operations', type=int, default=100)
+            retained_args = parser.parse_args(argv[1:])
+            if not retained_args.key_id or not retained_args.ed25519_public_key_base64:
+                raise ValueError('Retained Company event public-key configuration is missing')
+            request_interval = retained_args.sheet_request_interval
+            if request_interval is None:
+                request_interval = float(os.environ.get(
+                    'COMPANY_RETAINED_SHEET_REQUEST_INTERVAL', '1.1'))
+            if not 0.5 <= request_interval <= 5.0:
+                raise ValueError('Sheet request interval must be between 0.5 and 5.0 seconds')
+            from .retained_company_event import production_command
+            result = production_command(
+                state_directory=state_path().parent, key_id=retained_args.key_id,
+                public_key_base64=retained_args.ed25519_public_key_base64,
+                request_interval=request_interval,
+                max_operations=retained_args.max_operations)
+            print('Retained Company event: ' + json.dumps(result, sort_keys=True))
+            return 0 if result.get('state') == 'FIRST_PASS_RELEASED' and result.get('consumption') else 1
         except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
             print(f'ERROR: {exc}', file=sys.stderr)
             return 1

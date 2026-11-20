@@ -1,10 +1,10 @@
 # Integration automation coordinator status
 
-## PAUSED_NOT_COMPLETE — 2026-11-20 independent QA and research checkpoint
+## Active coordinator checkpoint — 2026-11-20 private manifest-handoff hardening
 
-- Coordinator work is paused at the user's request. The persistent roadmap
-  goal remains active; this is not a completion claim and no worker or live
-  process is intentionally running.
+- Coordinator work has resumed. The persistent roadmap goal remains active;
+  this is not a completion claim and no live scraper, release, or pilot is
+  running.
 - The durable Samtec request `operator-samtec-m1-20261119` remains held at
   `WAITING_SAFE_BOUNDARY` behind historical cycle `CYC-B639C6D864EC`. Its
   Saronic source-provenance conflict has not been resumed, reconciled,
@@ -15,21 +15,25 @@
   15.09 seconds. The preview has no durable filesystem side effects, does not
   construct Google/remote handles, and its public CLI emits only signer claims
   and a manifest digest. This does not authorize a live pilot.
-- The independent research checkpoint is saved in
-  `PRE_PAUSE_RESEARCH_CHECKPOINT_20261120.md`. It found a necessary remaining
-  implementation gate: the preview builds a timestamped full manifest but the
-  compact CLI discards it. Rebuilding it later changes the digest, while
-  activation requires the exact manifest. A private exact-manifest handoff,
-  paired with the compact claims, must be implemented and independently tested
-  after resume.
+- The research checkpoint's exact-manifest-handoff gap is implemented and has
+  independent **source-boundary acceptance**, recorded in
+  `MANIFEST_HANDOFF_QA_20261120.md`. Explicit preview output writes a private
+  0700 content-addressed
+  directory with a 0600 artifact, exact readback and same-content idempotence;
+  it refuses symlinked output roots/artifacts and never overwrites another
+  artifact. Activation validates a signed bundle before taking the scraper
+  lock, then revalidates evidence and authorization while locked.
+- Local evidence: 93 retained/operator/handoff checks and 146 ordinary
+  intake/exact/runner/sync isolation checks passed. Independent QA independently
+  accepted 91 handoff checks and 74 normal-isolation checks. Do not treat any
+  of this source-only evidence as deployment approval.
 - Remaining Milestone 1 gates also include the fresh full Samtec
   scrape/filter/storage/confirmed-sync proof, duplicate-safe repeat and
   lost-ack recovery without refetch, F7 idle/busy timing evidence, and an
   installed-code/release binding in retained receipt state. The existing
   roadmap's F1–F8 remain open unless version-bound evidence closes each one.
-- The updated scoped GitHub backup will include this pause/research record.
-  Resume in this order: reread card/roadmap/research report; implement and QA
-  private manifest handoff; generate fresh paired manifest/claims; obtain a
+- Next action: back up the scoped handoff change. After that generate fresh
+  paired manifest/claims; obtain a
   configured public key plus valid external Ed25519 envelope; recheck request,
   locks, historical evidence, and disjointness; then run exactly one private
   Samtec preflight. Do not use a test signer, normal resume, global sync, or
