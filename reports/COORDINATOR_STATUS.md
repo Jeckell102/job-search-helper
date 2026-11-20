@@ -1,10 +1,217 @@
 # Integration automation coordinator status
 
+## Reset rule for repeated blockers
+
+After every reset and during execution, escalate unresolved architecture or
+release-safety decisions and investigations that are repeating without new
+evidence. Follow up with the assigned higher-reasoning ChatGPT reviewer, or
+send a direct review assignment if the question has no owner. Include the
+decision needed, smallest reproducer, prior attempts, affected version, and
+protected requirements. Save the assignment, evidence, and next action here.
+Continue independent work, verify the advice, and keep independent QA as the
+release gate. See [sprint_roadmap.md](sprint_roadmap.md).
+
+Escalation checkpoint. GPT-6.2 Astra High returned the terminal disposition
+design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
+[the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
+coordinator owns implementation. Independent QA owns acceptance.
+
 ## Sprint 4 active after Samtec acceptance
+
+Latest checkpoint. Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 remains about 75% and
+project about 50% while the dispatcher acceptance gate is held. The combined
+dispatcher, exact intake, F1 and watcher group passed 131 disposable tests.
+Independent QA held the dispatcher after reproducing settlement against a
+different, internally valid frozen observation than the one bound to the
+published receipt. The coordinator owns the bounded binding repair. The
+read-only QA lane `01a1f97d-2e8c-7821-b5e1-d2019215036b` owns the recheck.
+The GPT-6.2 Sol medium lane `01a1f979-8619-75d2-9973-047f3a5efb0c` owns the
+offline release rehearsal only. Next bind the reopened observation to its
+settlement before terminal transition and exercise the tampering reproducer
+and original-observation control. An older broad disposable regression was
+stopped after its output stalled. Production and Jetson were unchanged.
+[Combined evidence](S4_ORDINARY_EVENT_DISPATCH_COMBINED_20261120.md) and
+[independent QA hold](S4_ORDINARY_EVENT_DISPATCH_INDEPENDENT_QA_20261120.md).
+
+15:00 Eastern. Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 75%, project about
+50%. Merged worker's guarded ordinary launcher and command. Independent QA
+accepted the contradiction fixes and CLI identity, read-only ambiguous
+empty hold, and direct sync/watch behavior. The final command, bridge,
+watcher, pre-import and runner group passed 79 tests. Its direct real
+disposable command cases exercised zero, denial and temporary failure with
+read-only workbook access only. An older Controller fixture failure was
+reproduced on the prior source, outside this scoped gate. The larger
+regression is still running at handle `8226`. [Command checkpoint](S4_NORMAL_IDLE_EVENT_COMMAND_COMBINED_20261120.md)
+and [independent CLI QA](S4_NORMAL_IDLE_EVENT_CLI_READ_ONLY_INDEPENDENT_QA_20261120.md).
+The coordinator owns controlled release, combined review and source
+reconciliation. GPT-6.2 Sol medium chat
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns only dispatcher source/tests in
+`/tmp/jsh-s4-ordinary-dispatch.EbGqsxme`. Next reconcile the exact dispatcher
+handoff, run independent full-chain QA, then finish the guarded bundle and
+real event preflight. The observed 44-path change set is a dry inventory,
+not an executable capsule. Production still has intake, retained intake
+and temporary retry flags disabled, zero eligible events, no queued
+request, and no installed ordinary settlement. No production or Jetson
+changes. The source and QA backup is verified at
+`a3c262bed255c913a9fa6a1589d01da18ac52ef7`.
+
+14:46 Eastern. Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 70%, overall about
+47%. The prior independent recheck accepted the three publication repairs
+and identified two sender gaps. Both were repaired. Ordinary delivery now
+uses the publisher's full read-only surviving proof, and stale suppression
+waits for terminal State. The ordinary source can also settle verified
+zero, typed access denial and definitive temporary failure through the
+same State-last transaction without a Sheets writer or fabricated receipt.
+Final disposable regression passed 312. Five focused no-publication probes
+passed, including refusal of an orphan claimed publication chunk. Independent
+QA owns `/tmp/jsh-s4-ordinary-no-publication-qa.ylGpCIUM` in chat
+`01a1f97d-2e8c-7821-b5e1-d2019215036b`. The CLI worker in
+`01a1f979-8619-75d2-9973-047f3a5efb0c` has exercised exact one-time
+admission and replay, with its final handoff pending. Next integrate the
+guarded CLI and independent findings, then verify a genuine outbox event
+and the release bundle for staged activation. Latest production read-only
+preflight found zero eligible events, no queue slot, zero dirty cells,
+only the unchanged historical blocker, and no installed ordinary
+settlement schema. Production and Jetson unchanged.
+Evidence [local-only checkpoint](S4_NORMAL_IDLE_EVENT_NO_PUBLICATION_STAGED_20261120.md)
+and [earlier QA findings](S4_NORMAL_IDLE_EVENT_SETTLEMENT_INDEPENDENT_QA_20261120.md).
+Scoped GitHub backup verified at `0e10db69298ea2b46861a60ed6a70840dd41638b`.
+
+14:38 Eastern. Coordinator and release owner for active six-milestone goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 65%, whole
+project about 45%. Independent QA held the ordinary archive on three findings:
+legacy parallel receipt aliases, split workbook guard and insufficient
+archive digest provenance. The coordinator implemented all three repairs
+and closed ordinary published-outcome settlement. Combined 304 tests passed.
+The exact closure records immutable outcome and mirror together, saves State
+last and holds receipt-v1 delivery until State is terminal. Interruption,
+stale same-hash source revision, forged alias, substituted archive digests
+and orphan Inbox work were exercised in disposable fixtures. Independent QA
+owns the recheck of `/tmp/jsh-s4-ordinary-settlement-qa.q26bH57T` in chat
+`01a1f97d-2e8c-7821-b5e1-d2019215036b`. Lower-reasoning chat
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns the explicit CLI in isolated
+`/tmp/jsh-s4-ordinary-cli.bj6uhual`. The coordinator owns ordinary
+no-publication settlement, combined integration and release. Next implement
+the typed failure and verified zero path without claiming Sheets confirmation.
+Evidence [settlement checkpoint](S4_NORMAL_IDLE_EVENT_SETTLEMENT_STAGED_20261120.md)
+and [original QA findings](S4_NORMAL_IDLE_EVENT_PUBLICATION_INDEPENDENT_QA_20261120.md).
+Scoped GitHub backup verified at `7a2cdc4dace5faf64b8530d918b204b530f1a4f1`.
+Production and the Jetson were unchanged.
+
+14:29 Eastern. Coordinator and release owner for active six-milestone goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 60%, project about
+43%. Independent QA accepted the selected retry terminal source after its
+Lever replay repair. The ordinary plan worker's three artifacts were merged
+after matching its hashes. The coordinator's combined ordinary exact-v2
+publication proof passed 298 regressions. The composed fixture recovered a
+lost Sheets response without resending, atomically archived the exact
+receipt during Inbox cleanup, rejected a changed local acknowledgement and
+held a stripped legacy supplied binding before remote intent. Scoped GitHub
+backup verified at `0326e33616d3759276806fc7ca7ec84cbc858134`.
+Evidence [staged publication](S4_NORMAL_IDLE_EVENT_PUBLICATION_STAGED_20261120.md)
+and [selected retry QA acceptance](S4_SELECTED_RETRY_LEVER_REPLAY_INDEPENDENT_QA_20261120.md).
+Independent QA chat `01a1f97d-2e8c-7821-b5e1-d2019215036b` owns review of
+`/tmp/jsh-s4-ordinary-archive-qa.gH152KVx`. The coordinator owns closed
+ordinary outcome creation, final State/mirror settlement and runner wiring.
+The plan implementation lane is done. Next bind archive evidence to an
+immutable outcome and close the exact ordinary cycle with restart proof.
+Production and the Jetson were unchanged.
+
+14:17 Eastern. Senior coordinator and release owner, active six-milestone goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 55%, overall about
+42%. The prior independent terminal recheck accepted the four original fixes
+and held Lever scope. The coordinator pinned Lever regional API root and
+location and commissioned another independent snapshot. Ordinary Company-event
+admission can now reach a single durable provider observation under exact
+ownership, current source and compact workbook guards, with no alternate
+provider call after interruption. The broad disposable suite passed 212 and
+the final focused probes passed 9. Evidence
+[ordinary provider observation](S4_NORMAL_IDLE_EVENT_FETCH_STAGED_20261120.md)
+and [independent terminal recheck](S4_SELECTED_RETRY_TERMINAL_INDEPENDENT_RECHECK_20261120.md).
+Scoped GitHub backup verified at `99d87b998f3fc0c73ace76fdf07fd6c50f28e328`.
+QA chat `01a1f97d-2e8c-7821-b5e1-d2019215036b` owns the Lever recheck of
+`/tmp/jsh-s4-lever-observation-qa.TRWmEY0T`. The implementation lane
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns only the exact planner and receipt
+binding plus tests in `/tmp/jsh-s4-ordinary-plan.Zn9E6xCO`. The coordinator
+owns Inbox cleanup/archive and syncing, runner/settlement and combined QA.
+No production or Jetson change. Next build the event-specific durable
+publication archive at Inbox cleanup and reconcile the planner handoff.
+
+14:09 Eastern. Same active six-milestone goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 50%, project about
+40%. Independent QA held the first terminal candidate with four reproducible
+defects. The coordinator repaired malformed failure handling, provider host
+identity, post-workbook durable revalidation, and conflicting cycle aliases.
+The new regressions and broader disposable suite passed 203. QA owns the
+recheck of `/tmp/jsh-s4-terminal-recheck.6zqm1rTp` in the same review chat.
+The intake lane completed its normal idle event dependency audit. The
+coordinator added verified ordinary archive readback and the receipt-v1
+sender's current acknowledged event guard. See the saved
+[independent findings](S4_SELECTED_RETRY_TERMINAL_INDEPENDENT_QA_20261120.md),
+[repair evidence](S4_SELECTED_RETRY_TERMINAL_QA_REPAIRS_20261120.md) and
+[normal intake design](S4_NORMAL_IDLE_EVENT_OUTCOME_DESIGN_20261120.md).
+Scoped GitHub backup verified at `cfbdde47bc0680e1de484f7e5bca36e0bc543917`.
+No production or Jetson change. In parallel with QA, the coordinator owns the
+normal event's early runner guard and the next checkpoint for a one-shot
+provider observation. Exact plan/publication proof and terminal outcome
+binding remain subsequent gates.
+
+14:02 Eastern. Senior coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 50%, overall about 40%.
+The signed retry command now stages a separate, local terminal receipt for
+definitive failure, access denial, or verified zero. The 198-test disposable
+regression passed, including a typed signed-command run with one read-only
+workbook open and no remote write. Jobs rollback, State-last restart, exact
+source holds, and no refetch on replay were verified. Independent QA owns
+the frozen snapshot at `/tmp/jsh-s4-terminal-qa.RB31bCop` in chat
+`01a1f97d-2e8c-7821-b5e1-d2019215036b`. The coordinator owns any repairs
+and integration. Evidence [terminal settlement checkpoint](S4_SELECTED_RETRY_TERMINAL_STAGED_20261120.md).
+Scoped GitHub backup verified at `6ccebef0ca6708bfcdba8719af238607e0d8f961`.
+Production and Jetson unchanged. Next reconcile independent QA and prepare
+the guarded live event preflight. The normal idle/busy proof and live
+event-to-outcome gate are still open.
+
+Fresh read-only MuleLab preflight found an empty Company outbox and request
+slot, zero dirty cells, compact-v1, no active selected retry, and the same
+single effective historical blocker `CYC-B639C6D864EC`. The new receipt
+schema was absent in production. The intake design lane in chat
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns the normal idle event-to-outcome
+dependency audit. It works independently of terminal settlement QA and
+cannot edit the coordinator candidate.
+
+Terminal settlement checkpoint. Sprint 4 about 45%, overall about 40%. In the
+disposable candidate, the outcome classifier and retry sink now reject
+successor-shaped records that omit or mismatch the parent outcome. The Jobs
+outcome writer can now join an existing transaction. The combined suite
+passed 143. The scoped GitHub backup was verified at
+`f12dd294deabc030d5cc25538029f7e8053edb96`. Production was unchanged. Next implement the private selected
+terminal receipt, local ownership and cycle mirror update in a single Jobs
+transaction, then checkpoint State last and exercise crash recovery. A
+read-only workbook check is required before the first commit. Leave uncertain
+fetches and writes held.
+
+13:51 Eastern. Senior engineering coordinator and release owner, same active six-milestone goal 01a1f11f-e014-7493-8441-2f66502e23a9. Sprint 4 about 45%, overall 40%. Independent QA accepted the admission repairs and successful signed successor scope on its frozen snapshot. It reproduced the remaining definitive failure terminalization gap. Targeted disposable suite passed 101, and independent suite passed 146. The exact composed path fetched the successor once, recovered an applied Sheets write with a lost response, and replayed the exact acknowledgement without reopening the workbook. General successor operation remains held because a proved failed retry leaves its exact cycle active. Escalated that design question directly to GPT-6.2 Astra High and preserved its reviewer assignment in the reset rule. Coordinator owns the combined tree, release pin and backup. Independent QA owns the acceptance decision. The original new-window handoff, sprint reset protocol and restart card now carry the escalation rule. The scoped private GitHub branch was verified at d7050e709776da23f1b0bd1743f89a5d28aa81fa, including the revised handoff and sprint protocol. Production was unchanged. Next evaluate the higher-reasoning design and verify the terminal path for the original spent cap without clearing genuine uncertain state.
+
+13:34 Eastern. Senior engineering coordinator and release owner, active six-milestone goal 01a1f11f-e014-7493-8441-2f66502e23a9. Sprint 4 approximately 45%, overall approximately 40%. The broad disposable suite passed 384 after the ownership and host fixes. Independent QA accepted that precise source gate, 109 focused checks plus an independent composed probe, and verified exact positive receipt-v1 delivery and rejection of all raw ingress actions. The independent expired settlement verdict remains accepted on its precise scope. Neither proof is a deployed acceptance. The guarded schedule-retry and new admit-retry commands now pass a composed smoke test: real historical hold does not spend the budget or open a workbook, an idle disposable successor is the only cycle admitted after cooldown, runtime/source/failed-outcome lineage pins are preserved, and replay returns the same local cycle without another remote factory or provider call. No successor provider invocation or final publication is wired. Ordinary intake has a content-addressed archive that survives replacing last-scan-request.json; its focused test passed. Worker admission handoff and fresh QA reports saved in the coordinator folder. QA owns the current retry/admission archive audit. Coordinator owns pending actual successor execution and exact receipt reuse; worker had delivered the standalone boundary. No production changes. The scoped private GitHub branch was verified at cf514b4fb643710cc29f4868fe3032ead105e340, including the integrated admission-only source, fixtures, and independent ownership report. The selected-admission suite passed 54 focused tests. Outcome development owns a disposable exact successor execution module and will preserve immutable retry source across assignment; no live execution is authorized by these fixture results. Next reconcile integrated retry QA. Establish exact selected successor execution/status without entering generic startup, then guard installation and a real eligible event. The local production event queue was empty at the read-only check.
+
+13:28 Eastern. Same goal 01a1f11f-e014-7493-8441-2f66502e23a9, senior engineering coordinator and release owner. Sprint 4 about 45%, overall about 40%. The latest broad disposable regression passed 381 before the final writer-alias/HTTP hardening. Independent QA accepted expired final full settlement at three fault boundaries, no renewed remote dispatch, exact acknowledgement and preserved unclaimed suffix. Its immutable snapshot found an opaque request alias could claim a real event. Saved S4_RETAINED_EVENT_EXPIRY_INDEPENDENT_QA_20261120.md. Coordinator repaired both request/event ID channels inside the owned SQLite transaction, added canonical writer/receiver event grammar, and closed authenticated development-host passthrough for raw intake. Focused 7 writer/recovery and 2 HTTP/receipt checks passed before the latest grammar-only tightening. Latest combined handle 16064 verifies the new grammar. Independent QA chat is checking the new immutable source. Combined selected scheduler now uses the signed exact archive, detects replay, waits five minutes, and makes one held scheduling record without starting any scrape. The signed-command fixture passed and the dedicated retry lane owns the separate ordinary-cycle admission seam. Read-only live check found zero eligible outbox events or pending retained publications and zero dirty cells. No Sprint 4 deployment or live run. Prior scoped backup 88037a30854497ad74e60a1e0e456cd41029c8be verified by exact private GitHub branch lookup; this newer source is pending checkpoint backup. Next complete independent alias/HTTP recheck and selected successor admission, then prepare guarded installation and a real qualifying Company event. See S4_GUARDED_LIVE_PREFLIGHT_20261120.md.
+
+13:19 Eastern. Same engineering-coordinator role and six-milestone goal 01a1f11f-e014-7493-8441-2f66502e23a9. Sprint 4 about 40%, overall about 40%. In the disposable combined candidate, the exact retained success, verified zero, typed failure and stale decisions now produce one sealed outcome before consuming the original queue request. Real disposable coordinator receipt-v1 matched exact sender and receiver storage after separating the retained reservation field from repaired release lineage. Broader combined run passed 299 before the subsequent recovery changes, and three targeted checks passed for the generic writer guard and expiry boundaries. Latest independent focused run passed 81 and holds live use. Reproduction saved as S4_RETAINED_EVENT_INDEPENDENT_RECHECK_20261120.md. Generic outcome substitution repaired in the combined SQLite transaction. The outer runner only short-circuits confirmed sessions with terminal publication provenance. Expired original authorization rechecks the exact stored claim read-only and holds unclaimed suffix; final confirmation-to-local-ack continuation is pending. Intake/recovery chat 01a1f979-8619-75d2-9973-047f3a5efb0c owns terminal-only publisher continuation in its disposable tree. Outcome chat 01a1f97d-cebd-7910-8d31-a5f3e0dcd264 owns the exact bounded retry sink in another tree. Independent QA 01a1f97d-2e8c-7821-b5e1-d2019215036b owns verdicts and is awaiting the next coherent candidate. Coordinator owns combined source, release boundaries, scope and GitHub. No Sprint 4 production change or live execution. Next integrate the full terminal continuation, then prove exact retry cooldown/ownership and rerun independent QA.
+
+13:04 Eastern. Coordinator role and restart instructions reread after the user's prompt. Same six-milestone goal is active (01a1f11f-e014-7493-8441-2f66502e23a9). Sprint 4 remains about 30% and overall about 40%. Live MuleLab readback shows historical CYC-B639C6D864EC still In Progress, no pending next-scan or active operator journal, coordinator holds its scheduler and supervision locks, and queue/campaign/autopilot all false. Verified private backup 661d7ebd509db8d996400f919171dbb7aaeedcb2. Independent source QA rejected live use for early ordinary lifecycle setup, a legacy local-only regression, expired claimed remote recovery, newer-source terminal recovery and unproved zero. Archived the verdict as S4_RETAINED_EVENT_SOURCE_QA_HOLD_20261120.md. In the disposable combined tree, local checks now pass for the early ordinary start, named sync, sync once/watch hold without factories; the legacy regressions; and recovery of an already confirmed session after a newer source without provider/Google reopen. Focused 45 tests passed. Typed failed response freezes once without remote/local writer or claim replay. Its outcome and safe consume path remain open. Success outcome worker staged and verified a separate producer (nine tests); coordinator owns integration, exact archived lookup and stored outcome proof. Intake worker now owns only a distinct disposable readback-only expiry helper and its tests. Outcome worker owns only its distinct typed-failure classification module and tests. Independent QA owns the verdict and will recheck after repair. Next wire the sealed success outcome, finish exact expiry and typed terminal paths and verified zero, then rerun independent QA. No Sprint 4 production change or live run.
+
+12:58 Eastern. Sprint 4 about 30% and overall about 40%. The coordinator combined manual retained-event staging, verification of the SQLite outbox and exact bridge receipt, separate signed event action, all-unfinished-cycle membership exclusion, and the exact local/Sheets publisher in /tmp/jsh-s4-receipt-candidate.i8gYgB0N. The focused suite passed 60 tests, including composed compact Sheets fixture confirmation, exact replay with no provider or remote reopen, operator/event signature separation and local-only staging. The broader focused suite passed 171 tests. Private GitHub exact branch lookup matched 661d7ebd509db8d996400f919171dbb7aaeedcb2. See S4_SIGNED_EVENT_COMPOSED_20261120.md. The independent QA chat (01a1f97d-2e8c-7821-b5e1-d2019215036b) owns the audit of this immutable checkpoint. The outcome chat (01a1f97d-cebd-7910-8d31-a5f3e0dcd264) owns the retained terminal outcome adapter in a separate tree. The intake chat (01a1f979-8619-75d2-9973-047f3a5efb0c) owns its original manual bridge source and tests. Coordinator owns runner/release integration, typed fetch failure/crash handling and selected receipt transport. Current unknown fetch crash correctly retains its claim. Returned provider partial/failed results still need typed durable settlement and classification. Existing historical conflict, broad processing and automatic releases remain held. All Sprint 4 work remains disposable. Next compose typed fetch settlement with the outcome owner using S4_RETAINED_FETCH_SETTLEMENT_PLAN_20261120.md, address independent QA findings, and verify exact delivery and retry. Goal 01a1f11f-e014-7493-8441-2f66502e23a9 remains active.
+
+12:49 Eastern. Sprint 4 about 20%, overall about 40%. Combined intake work in /tmp/jsh-s4-receipt-candidate.i8gYgB0N passed 133 tests after merging the intake lane and wiring the exact reviewed resume path. Its legacy-event fixture preserves the existing pending bytes, rejects unscoped or wrong-cycle resume, completes only the exact prior pinned cycle, then admits one disjoint Company. The two stale named-sync fixtures now use a pinned test runtime without weakening checks. Independent storage report S4_F6_EXACT_OUTCOME_STORAGE_REVIEW_20261120.md holds live Company-event acceptance pending reuse of the trusted retained publisher with exact event provenance. The coordinator began isolated event-disjoint scope and signed-action helpers in retained_operator_scope.py and retained_operator_authorization.py. They are not wired to journaling, preflight or the command yet. Intake worker owns a separate manually selected event-staging fixture, outcome worker owns the producer, and coordinator owns the v2 publisher admission. Keep the exact deployed Samtec operator behavior and terminal record compatible. No S4 live changes. Read-only Jetson check verified active Ollama 0.40.13 and local AI orchestrator, Wrapper Coder qwen-wrapper:4b using Qwen3.5 4.2B Q4_K_M base weights, runtime context 12,288/output allowance 3,072, and zero loaded models at observation. No Jetson changes or inference.
+
+12:41 Eastern. Reproduced a Sprint 4 storage-authority gap with disposable real SQLite and InventoryInbox stores. The ordinary LocalPipeline can produce a legacy SYNC_CONFIRMED from SQLite rows with no Google client. This cannot serve as exact remote proof for a Company-event outcome. Saved S4_F6_LEGACY_LOCAL_RECEIPT_FINDING_20261120.md. Outcome worker informed. Independent QA is mapping trusted current per-company storage authorities and their smallest reusable path. The intake worker and outcome worker continue in their separate disposable changes. Coordinator plans runner integration and owns the staged selected receipt bridge. No Sprint 4 production change or request dispatch.
 
 12:37 Eastern. Sprint 3 and Milestone 1 are complete. Independent live QA verified all 63 exact Sheet rows, 60 preserved guards, all three chunk digests and the original full acknowledgement. Local evidence verified 63 complete descriptions and zero dirty cells. Replay had zero network syscalls, byte-identical output and identical protected database/control file hashes. Private durable evidence /home/chris/.local/state/job-search-helper-maintenance/s3-samtec-pilot-evidence-20261120. Sanitized reports F6_F7_SAMTEC_LIVE_PILOT_20261120.md and F6_F7_SAMTEC_LIVE_INDEPENDENT_QA_20261120.md. All 140,468 nonselected local records, historical State and inventories stayed unchanged. Broad queues, automatic intake and unqualified automatic releases remain off. Jetson unchanged. Overall project estimate about 40%. Full six-milestone goal remains active (01a1f11f-e014-7493-8441-2f66502e23a9).
 
-Sprint 4 starts from S4_F1_F2_PREFLIGHT_20261120.md. The intake worker (01a1f979-8619-75d2-9973-047f3a5efb0c) owns Company event admission/dispatcher, timing and scope under /tmp/jsh-s4-intake. Its isolated replay found the queued-event versus resume conflict and a mislabeled busy intake clock. The outcome worker (01a1f97d-cebd-7910-8d31-a5f3e0dcd264) owns the producer and classification files in /tmp/jsh-s4-outcome-candidate. Coordinator owns runner integration, SQLite and host receipt transport in /tmp/jsh-s4-receipt-candidate.i8gYgB0N. Its scoped one-outcome sender/receiver/host tests passed 46. Independent QA chat 01a1f97d-2e8c-7821-b5e1-d2019215036b accepted Samtec and remains separate from implementation. Next reconcile event provenances, outcome storage authority, resume timing, and the exact receipt chain in one disposable build before any S4 production change.
+Sprint 4 starts from S4_F1_F2_PREFLIGHT_20261120.md. The intake worker (01a1f979-8619-75d2-9973-047f3a5efb0c) owns Company event admission/dispatcher, timing and scope under /tmp/jsh-s4-intake. Its isolated replay found the queued-event versus resume conflict and a mislabeled busy intake clock. The outcome worker (01a1f97d-cebd-7910-8d31-a5f3e0dcd264) owns the producer and classification files in /tmp/jsh-s4-outcome-candidate. Coordinator owns runner integration, SQLite and host receipt transport in /tmp/jsh-s4-receipt-candidate.i8gYgB0N. Its scoped one-outcome sender/receiver/host tests passed 46. Independent QA chat 01a1f97d-2e8c-7821-b5e1-d2019215036b accepted Samtec and remains separate from implementation. Next reconcile event provenances, outcome storage authority, resume timing, and the exact receipt chain in one disposable build before any S4 production change. Next combined test checkpoint estimated in 60–90 minutes. Private GitHub checkpoint edd6deba6f25ac7ccc2ee37653ed0cb38e3a088a verified by exact remote ref lookup.
 
 ## Sprint 3 handoff on November 20
 

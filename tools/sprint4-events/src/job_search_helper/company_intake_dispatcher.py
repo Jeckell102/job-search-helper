@@ -1,12 +1,13 @@
 """One-tick supervised dispatcher for durable Company-event intake."""
 from __future__ import annotations
 
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 import fcntl
 import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import shutil
 import sqlite3
@@ -14,7 +15,8 @@ import subprocess
 import tempfile
 
 from .company_events import (
-    CompanyEventBridge, MANUAL_RETAINED_HOLD, _json_digest, is_manual_retained_event_request,
+    CompanyEventBridge, MANUAL_RETAINED_HOLD, _json_digest, _read_ordinary_event_file,
+    is_manual_retained_event_request, read_verified_queued_event,
 )
 from .cli import PROJECT_ROOT
 
@@ -73,7 +75,7 @@ class CompanyIntakeDispatcher:
         if not self.journal_path.exists():
             return {"enabled": False, "retained_enabled": False, "temporary_retry_enabled": False,
                     "retained_configured": self._retained_config() is not None,
-                    "dispatches": {}, "ownership": {}, "last_error": ""}
+                    "dispatches": {}, "ownership": {}, "ordinary_handoff": None, "last_error": ""}
         with self._journal() as db:
             enabled = db.execute("SELECT value FROM settings WHERE key='intake_enabled'").fetchone()
             error = db.execute("SELECT value FROM settings WHERE key='last_intake_error'").fetchone()
@@ -81,12 +83,15 @@ class CompanyIntakeDispatcher:
             temporary = db.execute("SELECT value FROM settings WHERE key='temporary_retry_enabled'").fetchone()
             rows = db.execute("SELECT state,count(*) FROM dispatches GROUP BY state").fetchall()
             routes = db.execute("SELECT route,state,count(*) FROM request_ownership GROUP BY route,state").fetchall()
+            ordinary = self._ordinary_pending(db)
+        handoff = self._ordinary_identity(ordinary)
         return {"enabled": bool(enabled and enabled[0] == "true"),
                 "retained_enabled": bool(retained and retained[0] == "true"),
                 "temporary_retry_enabled": bool(temporary and temporary[0] == "true"),
                 "retained_configured": self._retained_config() is not None,
                 "dispatches": {state: count for state, count in rows},
                 "ownership": {route + ":" + state: count for route, state, count in routes},
+                "ordinary_handoff": handoff,
                 "last_error": error[0] if error else ""}
 
     def record_error(self, error):
@@ -96,17 +101,42 @@ class CompanyIntakeDispatcher:
             db.execute("INSERT INTO settings(key,value) VALUES('last_intake_error',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (value,))
         return value
 
+    def reconcile_ordinary(self):
+        """Reconcile an existing ordinary claim without bridging or launching work."""
+        if not self.ordinary_reconciliation_enabled():
+            return {"state": "DISABLED"}
+        return self._reconcile_ordinary()
+
+    def ordinary_reconciliation_enabled(self):
+        """Check the persisted gate without initializing a dispatcher journal."""
+        path = self.journal_path
+        if path.is_symlink():
+            raise ValueError("Company intake journal may not be a symlink.")
+        if not path.is_file():
+            return False
+        with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)) as db:
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='settings' AND type='table'").fetchone() is None:
+                return False
+            row = db.execute("SELECT value FROM settings WHERE key='intake_enabled'").fetchone()
+        return row == ("true",)
+
     def run_once(self):
         """Perform one supervised catch-up tick; never wait or start a loop."""
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
         if not self.enabled():
             return {"state": "DISABLED"}
+        request_path = self.root / "next-scan.json"
+        if request_path.is_symlink() or (request_path.exists() and not request_path.is_file()):
+            return {"state": "HELD_REQUEST_UNREADABLE"}
         bridge = CompanyEventBridge(self.repository, self.root)
         try:
             if bridge.manually_held_request():
                 return {"state": MANUAL_RETAINED_HOLD}
         except (OSError, ValueError, RuntimeError):
             return {"state": "HELD_REQUEST_UNREADABLE"}
+        ordinary = self._reconcile_ordinary()
+        if ordinary is not None:
+            return ordinary
         workflow_state, workflow = self._workflow_state()
         if workflow_state == "UNREADABLE":
             return {"state": "HELD_WORKFLOW_UNREADABLE"}
@@ -115,6 +145,8 @@ class CompanyIntakeDispatcher:
             if binding is None:
                 return {"state": "HELD_UNMATCHED_WORKFLOW"}
             request_id, digest = binding
+            if not request_id.startswith("temporary-retry:"):
+                return {"state": "HELD_LEGACY_INTAKE_WORKFLOW", "request_id": request_id}
             if workflow_state == "COMPLETE":
                 self._mark_workflow_complete(request_id, digest)
             else:
@@ -129,7 +161,6 @@ class CompanyIntakeDispatcher:
         retained_recovery = self._reconcile_retained_ownership()
         if retained_recovery is not None:
             return retained_recovery
-        request_path = self.root / "next-scan.json"
         # A durable M3 retry owns the single request slot.  Do not invoke the
         # Company-event bridge while that slot is occupied by this unrelated
         # lineage.
@@ -140,7 +171,9 @@ class CompanyIntakeDispatcher:
                 from .temporary_retry import is_temporary_retry_request
                 temporary_request = is_temporary_retry_request(probe)
             except (OSError, ValueError):
-                pass
+                return {"state": "HELD_REQUEST_UNREADABLE"}
+            if not temporary_request and not is_event_bound_company_request(probe):
+                return {"state": "HELD_FOREIGN_REQUEST"}
         if temporary_request:
             bridge_results = []
             if not self.temporary_retry_enabled():
@@ -165,8 +198,11 @@ class CompanyIntakeDispatcher:
         if not is_event_bound_company_request(request) and not temporary_request:
             return {"state": "HELD_FOREIGN_REQUEST", "bridge": bridge_results}
         digest = _json_digest(request)
-        status = self.queue_status()
-        retained = self._retained_tick(request, digest, status, bridge_results)
+        try:
+            status = self.queue_status()
+        except (OSError, ValueError, RuntimeError, sqlite3.Error):
+            return {"state": "HELD_REQUEST_UNREADABLE", "bridge": bridge_results}
+        retained = None if temporary_request else self._retained_tick(request, digest, status, bridge_results)
         if retained is not None:
             return retained
         if status.get("state") != "READY_FOR_START":
@@ -179,11 +215,201 @@ class CompanyIntakeDispatcher:
         request_id = request.get("request_id")
         if not isinstance(request_id, str) or not request_id:
             return {"state": "HELD_REQUEST_ID", "bridge": bridge_results}
+        if not temporary_request:
+            return self._launch_ordinary(request_id, digest, bridge_results)
         reservation = self._reserve(request_id, digest)
         if reservation != "RESERVED":
             return {"state": reservation, "bridge": bridge_results, "request_id": request_id}
         self._write_handoff(request_id, digest)
         return self._spawn(request_id, self.command, bridge_results, resume=False)
+
+    def _ordinary_command(self, action, digest, cycle_id=None):
+        command = (str(PROJECT_ROOT / "job-search-scraper"), "ordinary-company-event", action,
+                   "--request-sha256", digest)
+        return command if cycle_id is None else command + ("--cycle-id", cycle_id)
+
+    @staticmethod
+    def _ordinary_pending(db):
+        return db.execute(
+            "WITH pending AS (SELECT request_id FROM dispatches WHERE state IN ('ORDINARY_CLAIMED','ORDINARY_ADMITTED') "
+            "UNION SELECT request_id FROM request_ownership WHERE state IN ('ORDINARY_CLAIMED','ORDINARY_ADMITTED')) "
+            "SELECT p.request_id,d.request_digest,d.cycle_id,d.state,o.request_digest,o.route,o.state "
+            "FROM pending p LEFT JOIN dispatches d USING(request_id) "
+            "LEFT JOIN request_ownership o USING(request_id)",
+        ).fetchall()
+
+    @staticmethod
+    def _ordinary_identity(pending):
+        if len(pending) != 1:
+            return None
+        request_id, digest, cycle, state, owner_digest, route, owner_state = pending[0]
+        if (digest != owner_digest or route != "NORMAL" or state not in {"ORDINARY_CLAIMED", "ORDINARY_ADMITTED"}
+                or owner_state != state or not isinstance(request_id, str)
+                or not request_id.startswith("company-event:") or not isinstance(digest, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", digest)
+                or (cycle is not None and (not isinstance(cycle, str) or not re.fullmatch(r"CYC-[0-9A-F]{12}", cycle)))):
+            return None
+        result = {"request_id": request_id, "request_sha256": digest}
+        if cycle is not None:
+            result["cycle_id"] = cycle
+        return result
+
+    def _launch_ordinary(self, request_id, digest, bridge_results):
+        try:
+            _, request = read_verified_queued_event(self.repository, self.root)
+            if request["request_id"] != request_id or _json_digest(request) != digest:
+                raise ValueError("ordinary dispatch request changed before claim")
+        except (OSError, ValueError, RuntimeError, sqlite3.Error):
+            return {"state": "HELD_ORDINARY_QUEUE_EVIDENCE", "request_id": request_id}
+        with self._journal() as db:
+            gate = db.execute("SELECT value FROM settings WHERE key='intake_enabled'").fetchone()
+            if gate != ("true",):
+                return {"state": "DISABLED"}
+            if (self._ordinary_pending(db) or db.execute(
+                    "SELECT 1 FROM request_ownership WHERE route='RETAINED' AND state!='RETAINED_CONSUMED'",
+            ).fetchone()):
+                return {"state": "HELD_INTAKE_OWNERSHIP", "request_id": request_id}
+            if (db.execute("SELECT 1 FROM request_ownership WHERE request_id=?", (request_id,)).fetchone()
+                    or db.execute("SELECT 1 FROM dispatches WHERE request_id=?", (request_id,)).fetchone()):
+                return {"state": "HELD_ORDINARY_PRIOR_OWNERSHIP", "request_id": request_id}
+            db.execute("INSERT INTO request_ownership(request_id,request_digest,route,state) "
+                       "VALUES (?,?,'NORMAL','ORDINARY_CLAIMED')", (request_id, digest))
+            db.execute("INSERT INTO dispatches(request_id,request_digest,state,detail) "
+                       "VALUES (?,?,'ORDINARY_CLAIMED','exact launch reserved before process creation')",
+                       (request_id, digest))
+        result = {"bridge": bridge_results, "request_id": request_id, "request_sha256": digest}
+        try:
+            child = self.child_runner(self._ordinary_command("admit-fetch", digest))
+        except Exception:
+            return {"state": "HELD_ORDINARY_LAUNCH_UNCONFIRMED", **result}
+        if isinstance(child, int):
+            return {"state": "ORDINARY_CHILD_RETURNED", "returncode": child, **result}
+        if not hasattr(child, "poll"):
+            return {"state": "HELD_ORDINARY_LAUNCH_UNCONFIRMED", **result}
+        return {"state": "ORDINARY_CHILD_LAUNCHED", **result}
+
+    def _reconcile_ordinary(self):
+        """Advance the handoff only on exact archive, observation and settlement evidence."""
+        from .cli import scraper_lock_name
+        from .engine import State
+        from .integration_release import assert_release_settled
+        from .ordinary_company_event_command import _publish_preflight, _queue_admission
+        from .ordinary_company_event_fetch import _admission, _require_frozen_provider, DIRECTORY
+        from .ordinary_event_settlement import _outcome_rows, _read_settlement, ordinary_event_outcome_settled
+        from .retained_work_runner import assert_normal_lifecycle_not_held
+        from .scan_request import _cycle_views, _unfinished_from_views
+        from .scoped_provider_observation import read_observation
+        from .sqlite_repository import SQLiteRepository
+
+        with self._journal() as db:
+            pending = self._ordinary_pending(db)
+        if not pending:
+            return None
+        result = self._ordinary_identity(pending)
+        if result is None:
+            return {"state": "HELD_ORDINARY_OWNERSHIP"}
+        request_id, digest, saved_cycle = result['request_id'], result['request_sha256'], result.get('cycle_id')
+        _, _, _, dispatch_state, *_ = pending[0]
+        if not _lock_available(self.root / scraper_lock_name()):
+            return {"state": "HELD_SCRAPER_LOCK", **result}
+        try:
+            archive = self.root / "company-event-bridge" / "ordinary-admissions" / (digest + ".json")
+            state_path, jobs = self.root / "state.db", self.root / "jobs.sqlite3"
+            if not archive.exists() and not archive.is_symlink():
+                if dispatch_state == "ORDINARY_ADMITTED":
+                    raise ValueError("ordinary dispatch lost its admitted request archive")
+                if not (self.root / "next-scan.json").is_file():
+                    raise ValueError("ordinary dispatch has no exact queued or admitted request")
+                _, queued = read_verified_queued_event(self.repository, self.root)
+                if _json_digest(queued) != digest or queued["request_id"] != request_id:
+                    raise ValueError("ordinary dispatch queue changed without a consumed admission")
+                if state_path.is_symlink() or (state_path.exists() and not state_path.is_file()):
+                    raise ValueError("ordinary dispatch State is unsafe")
+                if state_path.is_file():
+                    with closing(State(str(state_path), readonly=True)) as state:
+                        cycles, mirrors = _cycle_views(self.repository, state)
+                        matches = [cycle for cycle in cycles if cycle.get("start_request_id") == request_id]
+                        if matches or saved_cycle is not None:
+                            [cycle] = matches
+                            _, _, cycle_id = _queue_admission(
+                                self.repository, cycle["runtime_binding"], self.root, digest, saved_cycle, cycles, mirrors,
+                            )
+                            result["cycle_id"] = cycle_id
+                if saved_cycle is not None and not state_path.is_file():
+                    raise ValueError("ordinary dispatch lost its exact cycle")
+                cycle_id = result.get("cycle_id")
+                held = self._guard_hold()
+                if held is not None:
+                    return {"state": held, **result}
+                if cycle_id is not None and not self._record_ordinary_cycle(pending, request_id, cycle_id, admitted=False):
+                    return {"state": "HELD_ORDINARY_OWNERSHIP", **result}
+                return {"state": "HELD_ORDINARY_ADMIT_FETCH", **result,
+                        "continuation": self._ordinary_command("admit-fetch", digest, cycle_id)}
+            request = _read_ordinary_event_file(archive)
+            if request["request_id"] != request_id or _json_digest(request) != digest:
+                raise ValueError("ordinary dispatch archive has a different request")
+            if any(path.is_symlink() or not path.is_file() for path in (state_path, jobs)):
+                raise ValueError("ordinary dispatch dependencies changed")
+            with (closing(State(str(state_path), readonly=True)) as state,
+                  closing(SQLiteRepository(jobs, self.repository.spreadsheet_id, readonly=True)) as local):
+                [cycle] = [row for row in state.cycles() if row.get("start_request_id") == request_id]
+                cycle_id = cycle["id"]
+                if saved_cycle is not None and cycle_id != saved_cycle:
+                    raise ValueError("ordinary dispatch cycle changed")
+                root, _, admission, binding = _admission(local, state, cycle["runtime_binding"], cycle_id, digest)
+                observation = read_observation(root / DIRECTORY / (cycle_id + ".json"), binding)
+                result["cycle_id"] = cycle_id
+                settlement = _read_settlement(local, cycle_id, request_id)
+                terminal = cycle.get("status") in {"Complete", "Complete with exceptions"}
+                if terminal:
+                    if not settlement or observation is None or observation["state"] != "FROZEN":
+                        raise ValueError("ordinary dispatch terminal cycle lacks exact settlement evidence")
+                    _require_frozen_provider(observation["inventory"], binding)
+                    outcome = settlement["outcome"]
+                    rows = _outcome_rows(local, settlement["binding"])
+                    identity = outcome["identity"]
+                    if (settlement["binding"]["request_sha256"] != digest or len(rows) != 1
+                            or rows[0][:6] != (outcome["outcome_id"], request_id, identity["company_id"],
+                                               identity["source_revision"], outcome["outcome"], outcome["action"])
+                            or rows[0][-1] != settlement["recorded_at"] or json.loads(rows[0][-2]) != outcome
+                            or not ordinary_event_outcome_settled(local, outcome)):
+                        raise ValueError("ordinary dispatch terminal outcome proof changed")
+                else:
+                    if _unfinished_from_views(*_cycle_views(local, state)) - {cycle_id}:
+                        return {"state": "HELD_ORDINARY_COMPETING_CYCLE", **result}
+                    assert_release_settled(self.root)
+                    assert_normal_lifecycle_not_held(self.root, jobs, ordinary_event_cycle_id=cycle_id)
+                    if observation is not None and observation["state"] == "FROZEN":
+                        _require_frozen_provider(observation["inventory"], binding)
+                        scope = _publish_preflight(
+                            local, state, cycle["runtime_binding"], cycle, admission, root / "inventories.sqlite3",
+                        )
+                        if scope == "held":
+                            return {"state": "HELD_ORDINARY_NO_PUBLICATION_SCOPE", **result}
+        except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError, AttributeError):
+            return {"state": "HELD_ORDINARY_EVIDENCE", **result}
+
+        if not self._record_ordinary_cycle(pending, request_id, cycle_id, terminal=terminal):
+            return {"state": "HELD_ORDINARY_OWNERSHIP", **result}
+        if terminal:
+            return {"state": "ORDINARY_SETTLED", **result}
+        if observation is None:
+            return {"state": "HELD_ORDINARY_ADMIT_FETCH", **result,
+                    "continuation": self._ordinary_command("admit-fetch", digest, cycle_id)}
+        if observation["state"] != "FROZEN":
+            return {"state": "HELD_ORDINARY_FETCH_UNCERTAIN", **result}
+        return {"state": "HELD_ORDINARY_PUBLICATION", **result,
+                "continuation": self._ordinary_command("publish", digest, cycle_id)}
+
+    def _record_ordinary_cycle(self, pending, request_id, cycle_id, *, terminal=False, admitted=True):
+        with self._journal() as db:
+            gate = db.execute("SELECT value FROM settings WHERE key='intake_enabled'").fetchone()
+            if gate != ("true",) or self._ordinary_pending(db) != pending:
+                return False
+            state = "ORDINARY_SETTLED" if terminal else "ORDINARY_ADMITTED" if admitted else "ORDINARY_CLAIMED"
+            db.execute("UPDATE dispatches SET cycle_id=?,state=? WHERE request_id=?", (cycle_id, state, request_id))
+            db.execute("UPDATE request_ownership SET state=? WHERE request_id=?", (state, request_id))
+        return True
 
     def _temporary_request_current(self, request):
         from .company_events import current_company_source_revision
@@ -363,6 +589,8 @@ class CompanyIntakeDispatcher:
 
     def _claim_retained(self, request_id, request_digest, eligibility, config):
         with self._journal() as db:
+            if self._ordinary_pending(db):
+                return "HELD_ORDINARY_OWNERSHIP"
             row = db.execute("SELECT request_digest,route,state,key_fingerprint,manifest_digest FROM request_ownership WHERE request_id=?", (request_id,)).fetchone()
             if row:
                 if row[0] != request_digest:
@@ -500,6 +728,8 @@ class CompanyIntakeDispatcher:
 
     def _reserve(self, request_id, request_digest):
         with self._journal() as db:
+            if self._ordinary_pending(db):
+                return "HELD_ORDINARY_OWNERSHIP"
             owner = db.execute("SELECT request_digest,route FROM request_ownership WHERE request_id=?", (request_id,)).fetchone()
             if owner and owner[0] != request_digest:
                 return "HELD_REQUEST_ID_REUSED"
@@ -535,6 +765,8 @@ class CompanyIntakeDispatcher:
 
     def _resume_reservation(self, request_id, request_digest):
         with self._journal() as db:
+            if self._ordinary_pending(db):
+                return "HELD"
             changed = db.execute("UPDATE dispatches SET state='STARTING',detail='reconciling durable paused workflow' WHERE request_id=? AND request_digest=? AND state='CHILD_LAUNCHED'", (request_id, request_digest)).rowcount
             return "RESERVED" if changed == 1 else "HELD"
 
@@ -566,6 +798,8 @@ class CompanyIntakeDispatcher:
             if "owner_token" not in columns:
                 db.execute("ALTER TABLE request_ownership ADD COLUMN owner_token TEXT")
             db.execute("BEGIN IMMEDIATE")
+            if "cycle_id" not in {row[1] for row in db.execute("PRAGMA table_info(dispatches)")}:
+                db.execute("ALTER TABLE dispatches ADD COLUMN cycle_id TEXT")
             yield db
             db.commit()
         except BaseException:

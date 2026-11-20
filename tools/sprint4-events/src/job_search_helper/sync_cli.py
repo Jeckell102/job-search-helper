@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import ExitStack
+from contextlib import ExitStack, closing
 import json
 from pathlib import Path
 import sqlite3
@@ -18,6 +18,18 @@ from .sqlite_repository import SQLiteRepository, timestamp
 
 def print_status(value):
     print(json.dumps(value, ensure_ascii=False, default=str), flush=True)
+
+
+def _watch_ordinary_handoff(lock_path, spreadsheet_id):
+    """Report an existing exact continuation without opening broad sync."""
+    from .company_intake_dispatcher import CompanyIntakeDispatcher
+
+    state_root = lock_path.parent
+    with writer_lock(lock_path):
+        if not CompanyIntakeDispatcher(None, state_root).ordinary_reconciliation_enabled():
+            return None
+        with closing(SQLiteRepository(job_database_path(), spreadsheet_id, readonly=True)) as reader:
+            return CompanyIntakeDispatcher(reader, state_root).reconcile_ordinary()
 
 
 def cycle(sync, *, max_batches=20, max_seconds=60):
@@ -173,6 +185,16 @@ def main(argv=None):
                 print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_ORDINARY_EVENT', 'detail': str(exc)})
                 if args.command == 'once':
                     return 1
+                try:
+                    handoff = _watch_ordinary_handoff(lock_path, spreadsheet_id)
+                except WriterLockBusy:
+                    busy = True
+                except (OSError, ValueError, RuntimeError, sqlite3.Error) as handoff_error:
+                    print_status({'at': timestamp(), 'state': 'ORDINARY_HANDOFF_HELD',
+                                  'detail': str(handoff_error)})
+                else:
+                    if handoff is not None:
+                        print_status({'at': timestamp(), 'company_intake': handoff})
             except ManualRetainedEventHold as exc:
                 print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_RETAINED_EVENT', 'detail': str(exc)})
                 if args.command == 'once':

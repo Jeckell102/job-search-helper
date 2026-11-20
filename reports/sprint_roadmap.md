@@ -59,16 +59,19 @@ Restore alignment in this order:
 8. Classify the previous turn as progress, verified wait or no progress. A
    status-only turn is not progress; a lock or note alone is not a live process.
    Take the next safe action whenever useful work remains.
-9. If a blocker repeats and the next attempt has no materially new evidence or
-   approach, stop retrying that path. Check the restart card for an active
-   higher-reasoning review and follow up with its owner if one exists.
-   Otherwise, send the blocker to a ChatGPT reviewer explicitly configured
-   for higher reasoning. Include the smallest reproducible failure, what has
-   already been tried, the affected versions and paths, and the safety and
-   acceptance requirements that still apply. Record the review owner, handoff,
-   evidence, and next action in the restart card. Continue independent work
-   while the review runs. Verify the recommendation before resuming the
-   blocked path. This escalation does not change the Jetson inference lane.
+9. Escalate when a decision is blocked on an unresolved architectural or
+   release-safety question, or when an investigation repeats without a
+   materially different test, hypothesis, or new evidence. Apply this rule
+   during the sprint and immediately after a reset. Check the restart card and
+   follow up with the existing higher-reasoning reviewer if one owns the
+   question. Otherwise, directly send a review assignment to a ChatGPT reviewer
+   explicitly configured for higher reasoning. Include the decision needed,
+   the smallest reproducible failure, prior attempts, affected versions and
+   paths, and the safety and acceptance requirements. Save the reviewer
+   assignment, evidence, requested decision, and next action in the restart
+   card before returning to independent work. Verify the recommendation and
+   route any repair through independent QA before releasing. Keep one Jetson
+   inference lane.
 10. Record the active sprint, overall gate percentage, current-sprint percentage,
    latest evidence, blockers and next action in `COORDINATOR_STATUS.md` at the
    next meaningful checkpoint.

@@ -1,4 +1,5 @@
 """Composed Sprint 4 F1 contract with real isolated stores and kernel locks."""
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
@@ -7,17 +8,22 @@ import sqlite3
 
 import pytest
 
-from job_search_helper import company_events as event_module, engine as engine_module, runner, sqlite_repository
+from job_search_helper import ats, cli, company_events as event_module, engine as engine_module, runner, sqlite_repository
 from job_search_helper.cli import PROJECT_ROOT, scraper_lock_name, writer_lock
-from job_search_helper.company_events import CompanyEventBridge, _json_digest
+from job_search_helper.company_events import CompanyEventBridge, _json_digest, current_company_source_revision
 from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
 from job_search_helper.engine import State
-from job_search_helper.repository import MemoryRepository, SCHEMAS
+from job_search_helper.inbox import InventoryInbox
+from job_search_helper.ordinary_company_event_command import execute_ordinary_event
+from job_search_helper.repository import GoogleRepository, MemoryRepository, SCHEMAS
+from job_search_helper.sheet_profile import COMPACT_PROFILE, COMPACT_SCHEMAS
 from job_search_helper.scan_request import (
     company_event_timing, company_only_intake_start_measurement, verify_queued_event_for_normal_resume,
 )
 from job_search_helper.sheets_sync import SheetsSynchronizer
 from job_search_helper.sqlite_repository import SQLiteRepository
+from sheets_fixture import RangeSheets
+from test_ordinary_company_event_fetch import RUNTIME
 
 
 class SheetFixture(MemoryRepository):
@@ -60,9 +66,11 @@ def stores(tmp_path, monkeypatch):
     monkeypatch.setattr(socket.socket, 'connect_ex', unexpected_network)
     root = tmp_path / 'state'
     root.mkdir()
-    jobs = tmp_path / 'jobs.sqlite3'
+    jobs = root / 'jobs.sqlite3'
     database = root / 'state.db'
     monkeypatch.setenv('JOB_DB_FILE', str(jobs))
+    monkeypatch.setenv('SPREADSHEET_ID', SheetFixture.spreadsheet_id)
+    monkeypatch.setattr('release_admission_bootstrap._validate_runtime', lambda *_: RUNTIME)
     monkeypatch.setenv('JOB_STORAGE_BACKEND', 'sqlite')
     monkeypatch.setattr(runner, '_load_environment', lambda: None)
     monkeypatch.setattr(runner, 'load_title_blacklist', lambda: None)
@@ -78,6 +86,9 @@ def stores(tmp_path, monkeypatch):
     for tab in SCHEMAS:
         repo.import_rows(tab, [])
     repo.set_meta('ready', 'yes')
+    repo.ensure_columns('Opportunities', ['Opportunity ID'])
+    with closing(InventoryInbox(root / 'inventories.sqlite3', SheetFixture.spreadsheet_id)):
+        pass
     state = State(database)
     state.close()
     try:
@@ -100,6 +111,29 @@ def event_receipt(bridge, request):
     return json.loads(path.read_bytes())
 
 
+def one_exact_ordinary_event(repo, root, database, monkeypatch, digest, *, publish=False, cycle_id=None):
+    owner = (database, repo.path, RUNTIME)
+    repo.set_meta('sheets_profile', COMPACT_PROFILE)
+    sheets = RangeSheets({'Companies': repo.read('Companies')}, schemas=COMPACT_SCHEMAS)
+    remote = GoogleRepository(sheets, SheetFixture.spreadsheet_id, schemas=COMPACT_SCHEMAS, min_request_interval=0)
+
+    def observed(_ats, url, _company_id, _name):
+        slug = url.rsplit('/', 1)[-1]
+        return ats.Inventory(
+            'complete', source_url=f'https://boards-api.greenhouse.io/v1/boards/{slug}/jobs',
+            ats='Greenhouse', verified_zero='greenhouse_explicit_total_zero',
+        )
+
+    with monkeypatch.context() as scoped:
+        scoped.setattr(ats, 'fetch_inventory', observed)
+        scoped.setattr(cli, 'get_remote_repository', lambda *, write, **options: remote if not write else
+                       pytest.fail('verified-zero fixture opened a workbook writer'))
+        with writer_lock(root / 'scraper.lock'):
+            return execute_ordinary_event(
+                'publish' if publish else 'admit-fetch', owner, request_sha256=digest, cycle_id=cycle_id,
+            )
+
+
 def test_authoritative_first_read_catchup_to_one_idle_scoped_normal_start(stores, monkeypatch):
     repo, root, database = stores
     historical = company('HISTORICAL')
@@ -120,24 +154,27 @@ def test_authoritative_first_read_catchup_to_one_idle_scoped_normal_start(stores
     admitted = []
 
     def child(command):
-        assert command == (str(PROJECT_ROOT / 'job-search-scraper'), 'start')
         request = json.loads(bridge.request_path.read_bytes())
-        handoff = json.loads((root / 'scrape-first-pass/company-intake-handoff.json').read_bytes())
-        assert handoff['request_id'] == request['request_id']
-        assert handoff['request_digest'] == _json_digest(request)
+        digest = _json_digest(request)
+        assert command == (str(PROJECT_ROOT / 'job-search-scraper'), 'ordinary-company-event',
+                           'admit-fetch', '--request-sha256', digest)
         requested.append(request)
-        return runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=True)
+        result = one_exact_ordinary_event(repo, root, database, monkeypatch, digest)
+        assert result['state'] == 'INVENTORY_FROZEN'
+        with closing(State(str(database), readonly=True)) as state:
+            admitted.append(state.cycle(result['cycle_id']))
+        return 0
 
-    def synthetic_scan(engine, cycle_id, **kwargs):
-        admitted.append(engine.state.cycle(cycle_id))
-        return closed_cycle_only(engine, cycle_id)
-
-    monkeypatch.setattr(runner, '_run_scan_with_retries', synthetic_scan)
     dispatcher = CompanyIntakeDispatcher(repo, root, child_runner=child)
     assert dispatcher.run_once()['state'] == 'DISABLED'
     dispatcher.set_enabled(True)
     result = dispatcher.run_once()
-    assert result['state'] == 'CHILD_LAUNCHED', (result, dispatcher.status())
+    assert result['state'] == 'ORDINARY_CHILD_RETURNED', (result, dispatcher.status())
+    pending = dispatcher.run_once()
+    assert pending['state'] == 'HELD_ORDINARY_PUBLICATION'
+    assert one_exact_ordinary_event(repo, root, database, monkeypatch, pending['request_sha256'],
+                                   publish=True, cycle_id=pending['cycle_id'])['state'] == 'VERIFIED_ZERO'
+    assert dispatcher.run_once()['state'] == 'ORDINARY_SETTLED'
     assert dispatcher.run_once()['state'] == 'NO_READY_REQUEST'
     assert len(admitted) == len(requested) == 1
     request, cycle, event = requested[0], admitted[0], events[0]
@@ -166,11 +203,12 @@ def test_busy_source_change_under_real_admission(stores, monkeypatch, finish_cur
     synchronizer.pull()
     bridge = CompanyEventBridge(repo, root)
     assert repo.pending_company_events(bridge.consumer) == []
-    edit = repo.mutate_company_with_event({
-        'tab': 'Companies', 'identity': {'Company ID': 'CURRENT'},
-        'values': {'Official Careers URL': 'https://boards.greenhouse.io/current-changed'},
-    })['company_event']
-    assert edit['company_id'] == 'CURRENT'
+    # The already running scrape owns a manual, unrelated one-company request.
+    (root / 'next-scan.json').write_text(json.dumps({
+        'mode': 'company-only', 'request_id': 'manual-current', 'company_ids': ['CURRENT'],
+        'source_revision': current_company_source_revision(repo, 'CURRENT'),
+        'enqueued_at': clock.isoformat(), 'start_last': [],
+    }))
     lock = root / scraper_lock_name()
     assert lock.name == 'scraper.lock'
     launched = []
@@ -180,7 +218,11 @@ def test_busy_source_change_under_real_admission(stores, monkeypatch, finish_cur
 
     def child(command):
         launched.append(command)
-        return runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=True)
+        result = one_exact_ordinary_event(repo, root, database, monkeypatch, command[-1])
+        assert result['state'] == 'INVENTORY_FROZEN'
+        with closing(State(str(database), readonly=True)) as state:
+            in_scan.append(state.cycle(result['cycle_id']))
+        return 0
 
     dispatcher = CompanyIntakeDispatcher(repo, root, child_runner=child)
     dispatcher.set_enabled(True)
@@ -244,7 +286,7 @@ def test_busy_source_change_under_real_admission(stores, monkeypatch, finish_cur
         assert len(deferral) == 1
         assert json.loads(deferral[0].read_bytes())['blocking_cycle_ids'] == [in_scan[0]['id']]
         assert dispatcher.run_once()['state'] == 'HELD_UNFINISHED_CYCLE'
-        with pytest.raises(ValueError, match='held in the outbox behind unfinished work'):
+        with pytest.raises(ValueError, match='waiting for a bridged request'):
             runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=True)
         assert len(in_scan) == 1
         assert runner.run_start(resume=True, fetch_workers=1, browser_fallback=False) == 0
@@ -264,7 +306,12 @@ def test_busy_source_change_under_real_admission(stores, monkeypatch, finish_cur
     assert repo.pending_company_events(bridge.consumer) == []
     clock += timedelta(seconds=4)
     result = dispatcher.run_once()
-    assert result['state'] == 'CHILD_LAUNCHED', (result, dispatcher.status())
+    assert result['state'] == 'ORDINARY_CHILD_RETURNED', (result, dispatcher.status())
+    pending = dispatcher.run_once()
+    assert pending['state'] == 'HELD_ORDINARY_PUBLICATION'
+    assert one_exact_ordinary_event(repo, root, database, monkeypatch, pending['request_sha256'],
+                                   publish=True, cycle_id=pending['cycle_id'])['state'] == 'VERIFIED_ZERO'
+    assert dispatcher.run_once()['state'] == 'ORDINARY_SETTLED'
     assert dispatcher.run_once()['state'] == 'NO_READY_REQUEST'
     assert len(launched) == 1
     assert [list(cycle['companies']) for cycle in in_scan] == (
@@ -327,7 +374,7 @@ def test_explicit_reviewed_runner_resume_preserves_queued_legacy_event(stores, m
 
     monkeypatch.setattr(runner, '_run_scan_with_retries', scan)
     monkeypatch.setattr('job_search_helper.run_sync.run_scoped_sync', lambda *a, **k: FinalSync())
-    with pytest.raises(ValueError, match='fresh next-scan.json request is pending'):
+    with pytest.raises(ValueError, match='ordinary-company-event'):
         runner.run_start(fetch_workers=1, browser_fallback=False, resume=True)
     with pytest.raises(ValueError, match='exact resume ID'):
         runner.run_start(fetch_workers=1, browser_fallback=False, resume=True, resume_cycle_id='CYC-OTHER')
@@ -341,14 +388,19 @@ def test_explicit_reviewed_runner_resume_preserves_queued_legacy_event(stores, m
     assert scans == [(cycle_id, ['CURRENT'])]
     assert bridge.request_path.read_bytes() == raw
 
-    dispatcher = CompanyIntakeDispatcher(
-        repo, root, child_runner=lambda _: runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=True),
-    )
+    def child(command):
+        observed = one_exact_ordinary_event(repo, root, database, monkeypatch, command[-1])
+        with closing(State(str(database), readonly=True)) as state:
+            selected = state.cycle(observed['cycle_id'])
+        scans.append((selected['id'], list(selected['companies'])))
+        return 0
+
+    dispatcher = CompanyIntakeDispatcher(repo, root, child_runner=child)
     dispatcher.set_enabled(True)
-    assert dispatcher.run_once()['state'] == 'CHILD_LAUNCHED'
+    assert dispatcher.run_once()['state'] == 'ORDINARY_CHILD_RETURNED'
     assert scans[-1][1] == ['NEXT']
     assert scans[-1][0] != cycle_id
-    assert dispatcher.run_once()['state'] == 'NO_READY_REQUEST'
+    assert dispatcher.run_once()['state'] == 'HELD_ORDINARY_PUBLICATION'
     request = json.loads((root / 'last-scan-request.json').read_bytes())
     assert request['company_event']['event_id'] == event['event_id']
 
@@ -497,14 +549,10 @@ def test_legacy_event_admission_reads_observation_and_preserves_exact_receipt(st
     raw = bridge.request_path.read_bytes()
     receipt = bridge.evidence_directory / 'receipts' / (event['event_id'] + '.json')
     receipt_bytes = receipt.read_bytes()
-    admitted = []
-
-    def synthetic_scan(engine, cycle_id, **kwargs):
-        admitted.append(engine.state.cycle(cycle_id))
-        return closed_cycle_only(engine, cycle_id)
-
-    monkeypatch.setattr(runner, '_run_scan_with_retries', synthetic_scan)
-    assert runner.run_start(fetch_workers=1, browser_fallback=False, defer_sync=True) == 0
+    observed = one_exact_ordinary_event(repo, root, root / 'state.db', monkeypatch, _json_digest(json.loads(raw)))
+    assert observed['state'] == 'INVENTORY_FROZEN'
     assert (root / 'last-scan-request.json').read_bytes() == raw
     assert receipt.read_bytes() == receipt_bytes
-    assert admitted[0]['intake_start_measurement']['target_anchor'] == 'company_event_observed_at'
+    with closing(State(str(root / 'state.db'), readonly=True)) as state:
+        admitted = state.cycle(observed['cycle_id'])
+    assert admitted['intake_start_measurement']['target_anchor'] == 'company_event_observed_at'

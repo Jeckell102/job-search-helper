@@ -31,12 +31,18 @@ class CompanyIntakeDispatcherTests(unittest.TestCase):
     def dispatcher(self, status=None, child=None):
         result = CompanyIntakeDispatcher(Repo(), self.root, child_runner=child or self.child, queue_status=lambda: status or {"state": "READY_FOR_START"})
         result._guard_hold = lambda: None
+        def verified(*args):
+            raw = (self.root / 'next-scan.json').read_bytes()
+            return raw, json.loads(raw)
+        verifier = patch('job_search_helper.company_intake_dispatcher.read_verified_queued_event', verified)
+        verifier.start()
+        self.addCleanup(verifier.stop)
         result.set_enabled(True)
         return result
 
-    def test_idle_ready_request_launches_only_public_start(self):
-        self.assertEqual(self.dispatcher().run_once()["state"], "CHILD_LAUNCHED")
-        self.assertEqual(self.calls[0][-1], "start")
+    def test_idle_ready_request_launches_only_exact_public_admission(self):
+        self.assertEqual(self.dispatcher().run_once()["state"], "ORDINARY_CHILD_RETURNED")
+        self.assertEqual(self.calls[0][1:], ('ordinary-company-event', 'admit-fetch', '--request-sha256', _json_digest(request())))
         self.assertTrue(self.calls[0][0].endswith("job-search-scraper"))
 
     def test_new_control_store_is_disabled_until_explicitly_enabled(self):
@@ -50,27 +56,30 @@ class CompanyIntakeDispatcherTests(unittest.TestCase):
         self.assertEqual(self.calls, [])
 
     def test_restart_does_not_launch_a_reserved_request_twice(self):
-        self.assertEqual(self.dispatcher().run_once()["state"], "CHILD_LAUNCHED")
-        self.assertEqual(self.dispatcher().run_once()["state"], "ALREADY_CHILD_LAUNCHED")
+        self.assertEqual(self.dispatcher().run_once()["state"], "ORDINARY_CHILD_RETURNED")
+        self.assertEqual(self.dispatcher().run_once()["state"], "HELD_ORDINARY_ADMIT_FETCH")
         self.assertEqual(len(self.calls), 1)
 
     def test_child_failure_is_durable_and_not_relaunched(self):
         def failed(command): self.calls.append(tuple(command)); return 17
-        self.assertEqual(self.dispatcher(child=failed).run_once()["state"], "CHILD_FAILED")
-        self.assertEqual(self.dispatcher().run_once()["state"], "ALREADY_CHILD_FAILED")
+        self.assertEqual(self.dispatcher(child=failed).run_once()["returncode"], 17)
+        self.assertEqual(self.dispatcher().run_once()["state"], "HELD_ORDINARY_ADMIT_FETCH")
         self.assertEqual(len(self.calls), 1)
 
-    def test_restart_resumes_exact_paused_workflow_without_request(self):
-        self.dispatcher().run_once()
+    def test_restart_holds_legacy_ordinary_workflow_without_generic_resume(self):
+        dispatcher = self.dispatcher()
+        digest = _json_digest(request())
+        self.assertEqual(dispatcher._reserve('company-event:CEV-1', digest), 'RESERVED')
+        dispatcher._finish('company-event:CEV-1', 'CHILD_LAUNCHED')
         workflow = self.root / "scrape-first-pass" / "run-1" / "workflow.json"; workflow.parent.mkdir(parents=True)
         workflow.write_text(json.dumps({"stage": "SCRAPING", "company_intake": {"request_id": "company-event:CEV-1", "request_digest": _json_digest(request())}}))
         (workflow.parent.parent / "latest.json").write_text(json.dumps({"workflow": str(workflow)})); (self.root / "next-scan.json").unlink()
-        self.assertEqual(self.dispatcher().run_once()["state"], "CHILD_LAUNCHED")
-        self.assertEqual(self.calls[-1][-1], "--resume")
+        self.assertEqual(dispatcher.run_once()["state"], "HELD_LEGACY_INTAKE_WORKFLOW")
+        self.assertEqual(self.calls, [])
 
     def test_matching_paused_workflow_holds_an_already_queued_request_for_review(self):
         dispatcher = self.dispatcher()
-        self.assertEqual(dispatcher.run_once()["state"], "CHILD_LAUNCHED")
+        self.assertEqual(dispatcher.run_once()["state"], "ORDINARY_CHILD_RETURNED")
         path = self.root / "next-scan.json"
         raw = path.read_bytes()
         workflow = self.root / "scrape-first-pass" / "run-1" / "workflow.json"
@@ -80,13 +89,16 @@ class CompanyIntakeDispatcherTests(unittest.TestCase):
             "company_intake": {"request_id": "company-event:CEV-1", "request_digest": _json_digest(request())},
         }))
         (workflow.parent.parent / "latest.json").write_text(json.dumps({"workflow": str(workflow)}))
-        self.assertEqual(dispatcher.run_once()["state"], "HELD_QUEUED_REQUEST_REVIEW")
+        self.assertEqual(dispatcher.run_once()["state"], "HELD_ORDINARY_ADMIT_FETCH")
         self.assertEqual(len(self.calls), 1)
         self.assertEqual(path.read_bytes(), raw)
 
-    def test_crash_before_spawn_reserves_then_recovers_once(self):
-        dispatcher = self.dispatcher(); self.assertEqual(dispatcher._reserve("company-event:CEV-1", _json_digest(request())), "RESERVED")
-        self.assertEqual(self.dispatcher().run_once()["state"], "CHILD_LAUNCHED"); self.assertEqual(len(self.calls), 1)
+    def test_crash_after_claim_never_automatically_relaunches(self):
+        dispatcher = self.dispatcher(child=lambda command: (_ for _ in ()).throw(KeyboardInterrupt()))
+        with self.assertRaises(KeyboardInterrupt):
+            dispatcher.run_once()
+        self.assertEqual(self.dispatcher().run_once()["state"], "HELD_ORDINARY_ADMIT_FETCH")
+        self.assertEqual(self.calls, [])
 
     def test_controller_lock_is_checked_at_real_path(self):
         from job_search_helper.company_intake_dispatcher import _lock_available

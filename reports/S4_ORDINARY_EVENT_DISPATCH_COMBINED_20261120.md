@@ -1,0 +1,11 @@
+# Scoped ordinary event dispatch integrated in source
+
+November 20, 2026. The verified worker files have been merged. The dispatcher uses the exact public admit-fetch verb behind its existing default-off intake control. It verifies an ordinary bridge request and commits the exact claim before dispatch. Child exit is observational. A moved pointer, ambiguous provider claim, mismatched archive, active owner, or old generic workflow remains held. Exact State, mirror, outcome, frozen observation and applicable publication proof are required before the dispatcher records settlement.
+
+The ordinary watcher now surfaces the exact continuation while the owned event blocks broad synchronization. A separate writer-lease check protects the brief read-only Jobs observation and dispatcher journal transition. The watcher does not launch publication, construct a broad workbook writer, or start unrelated work on that branch. This scoped source stage leaves publish as an explicit reviewed continuation.
+
+The combined disposable suite passed 131 tests. The F1 tests now exercise the existing SQLite/reconciliation bridge, current public command and proof instead of the retired generic start fallback. The idle and busy scenarios each produce exactly one Company-scoped request, with duplicate and restart behavior and preserved deferred work. The focused watcher test additionally verifies no broad workbook or provider call while surfacing the handoff. No production or Jetson changes were made.
+
+Independent review uses `/tmp/jsh-s4-dispatch-combined-qa.a83j7ZYG`. The worker report is `S4_ORDINARY_EVENT_DISPATCH_HANDOFF_20261120.md`. Release package preparation is an offline rehearsal only. A real eligible live event, guarded source installation and deployed QA remain open.
+
+Independent QA reviewed the final snapshot at `/tmp/jsh-s4-dispatch-ready-qa.FfIhmMec` and placed the source gate on hold. A replacement frozen observation with internally consistent digests could still settle a published claim after the exact publication path rejected it. The next repair must match the observation reopened by the dispatcher to the settlement binding before writing terminal state. The older broad disposable regression was stopped after progress stalled. See [independent QA](S4_ORDINARY_EVENT_DISPATCH_INDEPENDENT_QA_20261120.md).
