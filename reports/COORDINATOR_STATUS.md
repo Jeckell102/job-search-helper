@@ -1,6 +1,6 @@
 # Integration automation coordinator status
 
-## PAUSED_NOT_COMPLETE — 2026-11-20 operator-pilot authorization gate
+## PAUSED_NOT_COMPLETE — 2026-11-20 independent QA and research checkpoint
 
 - Coordinator work is paused at the user's request. The persistent roadmap
   goal remains active; this is not a completion claim and no worker or live
@@ -10,20 +10,30 @@
   Saronic source-provenance conflict has not been resumed, reconciled,
   deleted, or changed. Broad backlog processing and unqualified automatic
   releases remain disabled.
-- The authorization-preview repair is locally verified: 69 retained/operator
-  checks and 139 normal lifecycle/isolation checks passed, with clean diff
-  whitespace. The read-only command now emits only signable claims/digest and
-  leaves no SQLite WAL/SHM sidecars. The updated scoped GitHub backup is
-  commit `f34c786` on branch
-  `backup/integration-automation-m1-operator-20261120`.
-- Independent QA's prior verdict was a REJECT only for the now-repaired
-  preview crash. A fresh independent post-repair verdict has not yet been
-  recorded, so it remains an explicit acceptance gate after resume.
-- Resume order: reread this card and roadmap; independently retest the
-  preview; generate a fresh compact claim package; obtain a configured public
-  key and valid time-bounded external Ed25519 envelope; then run exactly one
-  Samtec private preflight. Do not use a test signer, normal resume, global
-  sync, or broad scan.
+- The authorization-preview repair has fresh independent **source-boundary
+  acceptance**: 134 retained/operator/normal-isolation checks passed in
+  15.09 seconds. The preview has no durable filesystem side effects, does not
+  construct Google/remote handles, and its public CLI emits only signer claims
+  and a manifest digest. This does not authorize a live pilot.
+- The independent research checkpoint is saved in
+  `PRE_PAUSE_RESEARCH_CHECKPOINT_20261120.md`. It found a necessary remaining
+  implementation gate: the preview builds a timestamped full manifest but the
+  compact CLI discards it. Rebuilding it later changes the digest, while
+  activation requires the exact manifest. A private exact-manifest handoff,
+  paired with the compact claims, must be implemented and independently tested
+  after resume.
+- Remaining Milestone 1 gates also include the fresh full Samtec
+  scrape/filter/storage/confirmed-sync proof, duplicate-safe repeat and
+  lost-ack recovery without refetch, F7 idle/busy timing evidence, and an
+  installed-code/release binding in retained receipt state. The existing
+  roadmap's F1–F8 remain open unless version-bound evidence closes each one.
+- The updated scoped GitHub backup will include this pause/research record.
+  Resume in this order: reread card/roadmap/research report; implement and QA
+  private manifest handoff; generate fresh paired manifest/claims; obtain a
+  configured public key plus valid external Ed25519 envelope; recheck request,
+  locks, historical evidence, and disjointness; then run exactly one private
+  Samtec preflight. Do not use a test signer, normal resume, global sync, or
+  broad scan.
 
 Reread this section first after every context reset or before a live action.
 
