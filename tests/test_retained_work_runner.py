@@ -294,6 +294,20 @@ class RetainedWorkRunnerTests(unittest.TestCase):
             self.assertEqual(1, runner.main(["run-retained-company-event"]))
             production.assert_not_called()
 
+        # A malformed optional environment value cannot poison a fully
+        # explicit operator invocation.
+        with patch.dict(os.environ, {
+                "COMPANY_RETAINED_SHEET_REQUEST_INTERVAL": "not-a-number"}, clear=False), \
+                patch("job_search_helper.runner._load_environment"), \
+                patch("job_search_helper.runner.state_path", return_value=self.state_path), \
+                patch("job_search_helper.retained_company_event.production_command",
+                      return_value=released) as production:
+            self.assertEqual(0, runner.main([
+                "run-retained-company-event", "--key-id", "manual-review",
+                "--ed25519-public-key-base64", "manual-public-material",
+                "--sheet-request-interval", "1.2"]))
+        self.assertEqual(1.2, production.call_args.kwargs["request_interval"])
+
     def test_journal_only_freeze_leaves_ordinary_state_and_inbox_unchanged(self):
         prepared = self.prepare()
         self.assertEqual(1, self.fetch_count)

@@ -217,6 +217,33 @@ excluding both sensitive structures. The production-wrapper focused command
 `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src:tests /home/chris/job-search-helper_old/.venv/bin/python -W error -m unittest tests.test_retained_work_runner tests.test_retained_company_event`
 passed **40 tests**. The prior final ACCEPT remains in force.
 
+## Environment-interface follow-up — REJECT
+
+The committed environment route correctly loads the named variables after
+environment loading, omits key material from normal output, and fails closed
+for absent or malformed configuration. However, it does **not** preserve an
+intentional explicit manual override when
+`COMPANY_RETAINED_SHEET_REQUEST_INTERVAL` is malformed: the parser eagerly
+evaluates `float(os.environ[...])` while constructing its default, before it
+parses `--sheet-request-interval 1.2`. With valid manual key/public-key/interval
+arguments and environment interval `not-a-number`, the command returned 1 and
+never called the production route. Defer environment interval conversion until
+after parsing (using the environment value only when the option was omitted),
+then add this override regression. Focused production-wrapper tests otherwise
+passed **41 tests**. This finding supersedes acceptance for the tiny env
+interface only; it does not reopen the retained-route acceptance above.
+
+## Environment-interface repair re-review — ACCEPT
+
+The interval is now parsed from the command line first and consults/converts
+`COMPANY_RETAINED_SHEET_REQUEST_INTERVAL` only when that option is omitted.
+The new regression proves a malformed environment interval cannot block a
+fully explicit manual key, public-key, and `--sheet-request-interval 1.2`
+invocation; the production call receives 1.2. Missing configuration and
+environment-only validation remain fail-closed. The production-wrapper narrow
+command `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src:tests /home/chris/job-search-helper_old/.venv/bin/python -W error -m unittest tests.test_retained_work_runner`
+passed **23 tests**. This supersedes the environment-interface rejection.
+
 ## Remediation update — 2026-11-19
 
 The dedicated route now keeps `commit_exceptional_start()` and

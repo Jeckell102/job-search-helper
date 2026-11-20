@@ -1181,19 +1181,22 @@ def scrape_main(argv=None):
                                 default=os.environ.get('COMPANY_RETAINED_KEY_ID'))
             parser.add_argument('--ed25519-public-key-base64',
                                 default=os.environ.get('COMPANY_RETAINED_ED25519_PUBLIC_KEY_BASE64'))
-            parser.add_argument('--sheet-request-interval', type=float, default=float(
-                os.environ.get('COMPANY_RETAINED_SHEET_REQUEST_INTERVAL', '1.1')))
+            parser.add_argument('--sheet-request-interval', type=float)
             parser.add_argument('--max-operations', type=int, default=100)
             retained_args = parser.parse_args(argv[1:])
             if not retained_args.key_id or not retained_args.ed25519_public_key_base64:
                 raise ValueError('Retained Company event public-key configuration is missing')
-            if not 0.5 <= retained_args.sheet_request_interval <= 5.0:
+            request_interval = retained_args.sheet_request_interval
+            if request_interval is None:
+                request_interval = float(os.environ.get(
+                    'COMPANY_RETAINED_SHEET_REQUEST_INTERVAL', '1.1'))
+            if not 0.5 <= request_interval <= 5.0:
                 raise ValueError('Sheet request interval must be between 0.5 and 5.0 seconds')
             from .retained_company_event import production_command
             result = production_command(
                 state_directory=state_path().parent, key_id=retained_args.key_id,
                 public_key_base64=retained_args.ed25519_public_key_base64,
-                request_interval=retained_args.sheet_request_interval,
+                request_interval=request_interval,
                 max_operations=retained_args.max_operations)
             print('Retained Company event: ' + json.dumps(result, sort_keys=True))
             return 0 if result.get('state') == 'FIRST_PASS_RELEASED' and result.get('consumption') else 1
