@@ -83,6 +83,13 @@
   staged file before receipt creation or mutation. Independent offline QA
   **ACCEPTED** the correction; details are in
   `SERVICE_RELEASE_NAMING_QA_20261120.md`. No host/live state changed.
+- The corrected package has now produced a real, non-installed temporary stage
+  containing exactly the watcher drop-in, `expiry.conf`, and owner-only public
+  verifier environment. Independent QA **ACCEPTED** the generated stage, fresh
+  stopped/disabled read-only host evidence, and a complete install/rollback
+  rehearsal inside a disposable sandbox. The real host create targets remain
+  absent, the old expiry target is unchanged, and both intake controls remain
+  false. See `SERVICE_GENERATED_STAGE_QA_20261120.md`.
 - The accepted F1 source/test checkpoint `720c84e` is installed narrowly in the
   protected MuleLab checkout. All four starting hashes matched `a940524`,
   rollback copies are at
