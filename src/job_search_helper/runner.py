@@ -668,6 +668,12 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
     with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
         # Activation uses this same lock. A durable nonterminal release journal
         # therefore blocks the real scraper boundary after an interrupted install.
+        # A retained company-only preflight is not represented in ordinary
+        # State/inbox data.  Check its journal before constructing the remote
+        # repository or starting any global lifecycle side effect.
+        from .retained_work_runner import assert_normal_lifecycle_not_held
+        from .cli import job_database_path
+        assert_normal_lifecycle_not_held(database.parent, job_database_path())
         from .integration_release import assert_release_settled
         assert_release_settled(database.parent)
         if exact_sync:
@@ -874,6 +880,9 @@ def pause_interrupted_cycle(cycle_id, reason, *, database=None):
     database = database or state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with writer_lock(database.parent / scraper_lock_name()):
+        from .retained_work_runner import assert_normal_lifecycle_not_held
+        from .cli import job_database_path
+        assert_normal_lifecycle_not_held(database.parent, job_database_path())
         from .integration_release import assert_release_settled
         assert_release_settled(database.parent)
         repo = get_repository(write=True, interactive=True, renew_both=True)

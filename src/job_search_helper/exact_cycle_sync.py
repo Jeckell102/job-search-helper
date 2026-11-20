@@ -601,6 +601,9 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
     cycle = state.cycle(cycle_id)
     if cycle is None:
         raise ValueError('Exact State cycle is missing; frozen plans remain held.')
+    if isinstance(cycle.get('retained_work_exception'), Mapping):
+        raise ValueError(
+            'Retained-work cycles require the dedicated reservation-bound publisher.')
     report = {'cycle_id': cycle_id, 'confirmed': [], 'held': [], 'skipped': []}
     for company_id in selected:
         cycle = state.cycle(cycle_id)

@@ -252,6 +252,55 @@ class ExactScopeSheetsTests(unittest.TestCase):
             self.sync.plan_exact_scope(scope, [changed])
         self.assertEqual(len(self.service.batches), 0)
 
+    def test_multi_row_scope_joins_by_identity_but_preserves_frozen_order(self):
+        """Canonical scope order must never pair a Job with a Company write."""
+        company_local = {
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+            'values': {'Last Checked': '2026-11-19',
+                       'Next Action': 'Inventory saved'},
+        }
+        job_local = {
+            'tab': 'Job History', 'identity': {'Job Key': 'job-1'},
+            'values': {'Last Checked': '2026-11-19'},
+        }
+        self.local.commit([company_local, job_local])
+        # ``_normalize_exact_scope`` sorts Job History before Companies.  Keep
+        # the frozen remote commit in the opposite order to prove matching is
+        # by final identity, not by list position.
+        company_remote = {
+            'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},
+            'values': {'Last Checked': '2026-11-19',
+                       'Next Action': 'Inventory saved'},
+            'append_if_missing': False, 'on_insert': {},
+            'expected': {'Last Checked': '', 'Next Action': ''},
+            'append_notes': {},
+        }
+        job_remote = {
+            'tab': 'Job History', 'identity': {'Job Key': 'job-1'},
+            'values': {'Last Checked': '2026-11-19'},
+            'append_if_missing': False, 'on_insert': {},
+            'expected': {'Last Checked': '', 'Added to Opportunities?': 'Manual Review'},
+            'append_notes': {},
+        }
+        scope = [
+            {'tab': 'Companies', 'row_id': 1,
+             'identity': {'Company ID': 'COMP-1'},
+             'fields': ['Last Checked', 'Next Action'],
+             'append_if_missing': False,
+             'expected': company_remote['expected']},
+            {'tab': 'Job History', 'row_id': 1,
+             'identity': {'Job Key': 'job-1'},
+             'fields': ['Last Checked'], 'append_if_missing': False,
+             'guards': {'Added to Opportunities?': 'Manual Review',
+                        'Source Hash': 'source-local'},
+             'expected': job_remote['expected']},
+        ]
+        exact = self.sync.plan_exact_scope(
+            scope, [company_remote, job_remote])
+        self.assertEqual([company_remote, job_remote], exact['operations'])
+        self.assertEqual(['Companies', 'Job History'], [
+            row['tab'] for row in exact['rows']])
+
     def test_durable_claim_allows_one_commit_and_duplicate_is_readback_only(self):
         plan, scope, remote_operation = self.company_plan()
         exact = self.sync.plan_exact_scope(scope, [remote_operation])

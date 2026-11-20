@@ -143,6 +143,10 @@ def recover_exact_cycle(engine, remote, cycle_id, company_ids):
     cycle_id, selected = _normalize_request(cycle_id, company_ids)
     state_path = _canonical_file_backed_state_path(getattr(engine.state, 'path', None))
     with _normal_scraper_lock(state_path):
+        from .retained_work_runner import assert_normal_lifecycle_not_held
+        assert_normal_lifecycle_not_held(
+            state_path.parent,
+            getattr(engine.repo, 'path', state_path.parent / 'jobs.sqlite3'))
         _require_engine_state_path(engine, state_path)
         return _recover_exact_cycle_locked(engine, remote, cycle_id, selected)
 
@@ -156,6 +160,11 @@ def recover_exact_cycle_with_factory(state_db_path, dependency_context_factory,
         raise ValueError('exact_recovery_dependency_context_factory_required')
     state_path = _canonical_file_backed_state_path(state_db_path)
     with _normal_scraper_lock(state_path):
+        # Check before the factory can construct a writable local repository,
+        # State/inbox, or Google client.
+        from .cli import job_database_path
+        from .retained_work_runner import assert_normal_lifecycle_not_held
+        assert_normal_lifecycle_not_held(state_path.parent, job_database_path())
         dependency_context = dependency_context_factory()
         with dependency_context as dependencies:
             if not isinstance(dependencies, tuple) or len(dependencies) != 2:

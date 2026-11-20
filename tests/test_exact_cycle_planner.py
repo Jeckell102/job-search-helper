@@ -12,7 +12,7 @@ from job_search_helper.ats import Inventory
 from job_search_helper.engine import Engine, State, inventory_payload
 from job_search_helper.exact_cycle_planner import (
     _digest, _project_operations, _publication_schema,
-    freeze_exact_cycle_plans,
+    freeze_exact_cycle_plans, freeze_retained_exact_plan,
 )
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.repository import MemoryRepository, SCHEMAS
@@ -94,6 +94,48 @@ class ExactCyclePlannerTests(unittest.TestCase):
         self.assertEqual(plan['control_evidence']['requested_url'], self.saved_payload['requested_url'])
         # A later publisher can compare this digest to a fresh bounded guard.
         self.assertTrue(plan['control_evidence_digest'])
+
+    def test_retained_plan_is_v2_and_never_writes_state_or_inbox(self):
+        self.repo.get_meta = lambda key: COMPACT_PROFILE if key == 'sheets_profile' else None
+        state_before = self.state.cycle(self.cycle)
+        inbox_before = self.inbox.get(self.cycle, 'COMP-1')
+        retained = freeze_retained_exact_plan(
+            self.engine, 'CYC-RETAINED-1', 'COMP-1', self.saved_payload,
+            self.guard('COMP-1', self.saved_payload['requested_url']),
+            started_at='2026-11-19T01:00:00Z')
+        self.assertEqual(2, retained['exact_plan_version'])
+        self.assertEqual('CYC-RETAINED-1', retained['cycle_id'])
+        self.assertTrue(retained['local_operations'])
+        self.assertTrue(retained['remote_projection'])
+        company_op = next(op for op in retained['local_operations']
+                          if op['tab'] == 'Companies')
+        self.assertNotIn('Active Cycle ID', company_op.get('values', {}))
+        self.assertEqual(state_before, self.state.cycle(self.cycle))
+        self.assertEqual(inbox_before, self.inbox.get(self.cycle, 'COMP-1'))
+
+    def test_retained_plan_preserves_all_job_history_guards(self):
+        self.repo.get_meta = lambda key: COMPACT_PROFILE if key == 'sheets_profile' else None
+        posting = self.saved_payload['jobs'][0]
+        self.repo.commit([{
+            'tab': 'Job History', 'identity': {'Job Key': 'legacy-board-key'},
+            'append_if_missing': True,
+            'values': {'Company': 'Fixture Co', 'Job Title': posting['title'],
+                       'Job Key': 'legacy-board-key', 'Official Job URL': posting['url'],
+                       'Added to Opportunities?': 'No', 'Review Status': 'Reviewed',
+                       'Decision': 'Reject', 'Reconsideration Count': 1,
+                       'Description Hash': 'reviewed-hash', 'Source Hash': 'old-source',
+                       'Rejection Reason': 'Prior reason', 'Review Notes': 'Prior note'},
+        }])
+        retained = freeze_retained_exact_plan(
+            self.engine, 'CYC-RETAINED-2', 'COMP-1', self.saved_payload,
+            self.guard('COMP-1', self.saved_payload['requested_url']))
+        history = next(op for op in retained['local_operations']
+                       if op['tab'] == 'Job History')
+        self.assertTrue({
+            'Added to Opportunities?', 'Review Status', 'Decision',
+            'Reconsideration Count', 'Description Hash', 'Source Hash',
+            'Rejection Reason', 'Review Notes', 'Job Key',
+        }.issubset(history['expected']))
 
     def test_manual_review_and_legacy_job_identity_guards_are_frozen(self):
         posting = self.saved_payload['jobs'][0]

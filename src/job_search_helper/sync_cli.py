@@ -105,6 +105,10 @@ def main(argv=None):
                 # Serialize initialization and one bounded cycle. A watcher
                 # must not prevent reviewers from publishing while it sleeps.
                 with writer_lock(lock_path):
+                    # Check before remote construction; SheetsSynchronizer
+                    # repeats the retained embargo at each discovery/write.
+                    from .retained_work_runner import assert_normal_lifecycle_not_held
+                    assert_normal_lifecycle_not_held(state_path().parent, local.path)
                     if sync is None:
                         remote = get_remote_repository(write=True, interactive=args.authenticate,
                                                        schemas=schemas, evidence_archives=schemas is None)
