@@ -41,6 +41,18 @@ try:
     else: raise AssertionError("drift was deleted")
 finally: temporary.cleanup()
 
+# An unmanaged staged file is rejected by the installer itself before receipt
+# creation or any target mutation, matching generated-artifact verification.
+temporary, root, stage, preflight, receipt, expiry = fixture()
+try:
+    (stage / "unmanaged.conf").write_text("unexpected")
+    try: install(root, stage, preflight, receipt, now=NOW)
+    except ValueError as error: assert str(error) == "stage_files_invalid"
+    else: raise AssertionError("unmanaged stage file was accepted")
+    assert not receipt.exists() and expiry.read_bytes() == b"old-expiry"
+    assert not mapped(root, LOGICAL["unit"]).exists() and not mapped(root, LOGICAL["env"]).exists()
+finally: temporary.cleanup()
+
 # A captured preimage owned by somebody else is refused before a receipt or
 # target mutation; this harness intentionally does not attempt fchown.
 temporary, root, stage, preflight, receipt, expiry = fixture()

@@ -12,7 +12,8 @@ explicit host change is approved.
 - `retained-watch.env.template` names the public-key configuration and bounded
   request interval. It deliberately does not enable retained intake: that is a
   durable local dispatcher control and defaults off.
-- `30-release-expiry.conf.template` is a separate, bounded replacement plan
+- `expiry.conf.template` is the single staged artifact for the managed
+  `expiry.conf` replacement. It is a separate, bounded replacement plan
   for a stale expiry `ExecCondition`. Its first blank assignment clears the old
   condition; the replacement must receive a reviewed future RFC3339 deadline.
 

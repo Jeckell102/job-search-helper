@@ -4,7 +4,7 @@ from pathlib import Path
 root = Path(__file__).parent
 unit = (root / "job-search-sync-watch-retained.conf.template").read_text()
 env = (root / "retained-watch.env.template").read_text()
-expiry = (root / "30-release-expiry.conf.template").read_text()
+expiry = (root / "expiry.conf.template").read_text()
 
 assert unit.count("ExecStart=") == 2  # reset plus exactly one watcher command
 assert "job-search-sync.service.d" in unit and "sync_cli watch --interval 60 --max-batches 20" in unit

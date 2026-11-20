@@ -12,8 +12,9 @@ import base64
 from datetime import datetime, timezone
 
 stage, receipt_path = map(Path, sys.argv[1:3])
+assert {path.name for path in stage.iterdir()} == {"20-retained.conf", "expiry.conf", "retained-watch.env"}
 unit = (stage / "20-retained.conf").read_text()
-expiry = (stage / "30-release-expiry.conf").read_text()
+expiry = (stage / "expiry.conf").read_text()
 env = stage / "retained-watch.env"
 receipt = json.loads(receipt_path.read_text())
 joined = "\n".join((unit, expiry, env.read_text(), json.dumps(receipt, sort_keys=True)))

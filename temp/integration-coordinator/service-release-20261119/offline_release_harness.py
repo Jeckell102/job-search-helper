@@ -55,7 +55,10 @@ def _read_receipt(root, receipt_path):
     return path, receipt
 def install(root, stage, preflight_path, receipt_path, *, now, fail_at=None):
     root = Path(root).resolve(); stage = _inside(root, stage); preflight_path = _inside(root, preflight_path); receipt_path = _receipt_path(root, receipt_path)
-    verify_preflight(root, json.loads(preflight_path.read_text()), now); targets = {name: mapped(root, logical) for name, logical in LOGICAL.items()}
+    verify_preflight(root, json.loads(preflight_path.read_text()), now)
+    if {path.name for path in stage.iterdir()} != {source for _, source, _ in STEPS}:
+        raise ValueError("stage_files_invalid")
+    targets = {name: mapped(root, logical) for name, logical in LOGICAL.items()}
     if targets["unit"].exists() or targets["env"].exists(): raise ValueError("create_target_exists")
     old = _metadata(targets["expiry"])
     receipt = {"version": 2, "state": "PREPARED", "sandbox_root": str(root), "targets": LOGICAL, "managed": {}, "expiry_preimage": {**old, "bytes_hex": targets["expiry"].read_bytes().hex()}}

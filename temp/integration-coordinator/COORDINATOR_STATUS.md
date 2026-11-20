@@ -76,6 +76,13 @@
   is byte-for-byte verified on GitHub branch
   `backup/integration-automation-current-20261119` at
   `a940524d1104aa4bd73537154491dfbb5c039df0`.
+- A later staging audit found that the package template/verifier still named a
+  generated `30-release-expiry.conf` although the accepted installer replaces
+  `expiry.conf`. The package now uses exactly one `expiry.conf` artifact from
+  template through rollback, and both verifier and installer reject any extra
+  staged file before receipt creation or mutation. Independent offline QA
+  **ACCEPTED** the correction; details are in
+  `SERVICE_RELEASE_NAMING_QA_20261120.md`. No host/live state changed.
 - The accepted F1 source/test checkpoint `720c84e` is installed narrowly in the
   protected MuleLab checkout. All four starting hashes matched `a940524`,
   rollback copies are at
