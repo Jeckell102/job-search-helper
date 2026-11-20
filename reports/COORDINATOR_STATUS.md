@@ -27,6 +27,18 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Guarded restoration command checkpoint. Coordinator and release owner,
+goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Staged the exact observe/restore
+entry at `/tmp/jsh-s4-restoration-command.UmldUtdW`. Initial independent QA
+rejected three source bindings. After verified-source imports, exact
+virtualenv and stable configured SQLite layout were repaired, independent
+recheck accepted staged source. Eighteen disposable tests passed and a real
+isolated entrypoint held on missing pilot evidence with a disposable
+installed controller and checkout closure unchanged. Existing live receiver
+file confirmed by metadata. Coordinator owns the remaining rollback
+restoration and actual enrollment under host custody. No real release
+policy, closure or pilot has run. [Command and evidence](S4_RESTORATION_COMMAND_20261120.md).
+
 Selected pilot restoration checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. `/root/s4_pilot_receipt_map`
 delivered the read-only selected application verifier under
@@ -37,6 +49,8 @@ Application 64 passed (one existing continuously running watch case
 excluded), receiver 9 passed, 20 exchange/restoration and one combined
 application/receiver/exchange case passed. Independent QA accepted
 fixture composition. All 15 exact joint-controller cases passed.
+The scoped code, tests and reports were verified on the private GitHub
+branch at `e3761ebd3dba32d166a060ebd07a6fb736c57a9d`.
 The 47 live manifest before images matched as sampled. Live process check
 still sees checkout references from the wrapper, the Jetson assistant
 bridge and several Chromium/Codex helpers, with two standard same-owner

@@ -1,0 +1,11 @@
+# Independent recheck of the restoration command
+
+2026-11-20 17:07 EST
+
+**ACCEPT for staged source.** The three source repairs are present. The actual isolated-launch rehearsal and production authorization are separate gates.
+
+- **Approved code execution.** The command retains the bytes from each approved tool read and executes those exact bytes for the gate, installer, exchange, restoration helper and joint controller in dependency order. It also executes the pinned bootstrap, application pilot verifier and receiver from checked bytes. The retained loader overwrites prior same-name module bindings, and the revised fixture deliberately provides a substitute controller binding before loading the approved source. `pilot_restore_command.py:72-83,92-119,136-146`, `test_pilot_restore_command.py:34-74`.
+- **Measured interpreter.** Initialization requires the approved selection and live executable both to match the project's `.venv/bin/python`, with the live prefix equal to that project's `.venv`. The bootstrap's dependency measurement therefore refers to the selected interpreter's project environment. The actual initial application launch still belongs to a trusted launcher. `pilot_restore_command.py:98-108,169-178`, `release_admission_bootstrap.py:100-118`.
+- **Effective database identities.** The command resolves the configured state file using the same bootstrap logic that normal admission uses, checks its root against the controller's, validates the canonical co-located SQLite layout, and compares both file identities again after verifying application evidence. Observation and restoration both run the callback within the existing joint release leases. The pilot evidence still incorporates the exact canonical selection SHA-256. `pilot_restore_command.py:120-156`, `release_admission_bootstrap.py:201-230,233-265`, `pilot_restoration.py:20-42`.
+
+The coordinator reported 18 passing in-process fixture tests. I performed source review only. The actual isolated launcher must still be rehearsed with the concrete components. Production use still requires the actual approved exchange policy, independently held approval digest, approved authoritative database and continuous route custody.
