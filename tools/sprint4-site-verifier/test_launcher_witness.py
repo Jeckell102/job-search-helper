@@ -102,3 +102,28 @@ def test_unrelated_help_output_does_not_pass(checkout):
     (package / 'runner.py').write_text('def scrape_main(args):\n    print("unrelated output")\n    return 0\n')
     with pytest.raises(subprocess.CalledProcessError):
         probe_launchers(root, launcher, 'restored', 'INSTALLED')
+
+
+@pytest.mark.parametrize('phase', ['published', 'admitted'])
+def test_import_output_cannot_satisfy_a_silent_help(checkout, phase):
+    root, package, launcher = checkout
+    (package / '__init__.py').write_text(
+        'print("Usage: ./job-search-scraper <command>\\n  start Run scan\\n  status Show state")\n'
+    )
+    (package / 'runner.py').write_text('def scrape_main(args):\n    return 0\n')
+    if phase == 'published':
+        (package / '__init__.so').touch()
+    with pytest.raises(subprocess.CalledProcessError):
+        probe_launchers(root, launcher, phase, 'INSTALLED')
+
+
+def test_command_descriptions_cannot_borrow_later_lines(checkout):
+    root, package, launcher = checkout
+    (package / '__init__.py').write_text('')
+    (package / 'runner.py').write_text(
+        'def scrape_main(args):\n'
+        '    print("Usage: ./job-search-scraper <command>\\n  start\\nExplanation\\n  status\\nOther")\n'
+        '    return 0\n'
+    )
+    with pytest.raises(subprocess.CalledProcessError):
+        probe_launchers(root, launcher, 'admitted', 'INSTALLED')

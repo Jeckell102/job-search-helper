@@ -35,6 +35,7 @@ def build_fixture_archive(policy, protected_pin, digest, launcher):
         '__main__.py': (source / 'host_check_main.py').read_bytes(),
         **{name: (source / name).read_bytes() for name in (
             'host_checkpoint.py', 'alternate_writer_witness.py', 'protected_state.py', 'site_policy.py', 'launcher_witness.py',
+            'physical_protected_witness.py', 'protected_continuity.py',
         )},
         'approved_site_policy.json': json.dumps({
             'schema': 'sprint-4-site-policy-v1', 'site': asdict(policy),
@@ -90,14 +91,17 @@ def test_composed_checker_requires_owned_real_fixture_lease_and_unchanged_sqlite
         authenticate = lambda *args: {os.getpid(): ('stable', 'controller.py')}
         monkeypatch.setattr(checker, 'authenticated_maintenance', authenticate)
         monkeypatch.setattr(host_check_main, 'authenticated_maintenance', authenticate)
-        monkeypatch.setattr(sys, 'argv', ['/fixture/host-check'])
+        executable = policy.maintenance_bundle / 'host-check'
+        executable.parent.mkdir()
+        executable.write_bytes(b'pinned fixture verifier bytes')
+        monkeypatch.setattr(sys, 'argv', [str(executable)])
 
         def supplied_request():
             monkeypatch.setattr(sys, 'stdin', io.TextIOWrapper(io.BytesIO(json.dumps(request).encode())))
 
         with lock.open('wb') as lease:
             supplied_request()
-            with pytest.raises(WitnessHold, match='closure unverified'):
+            with pytest.raises(WitnessHold, match='release lease not owned'):
                 host_check_main.main()
             assert not capsys.readouterr().out
             fcntl.flock(lease, fcntl.LOCK_EX)

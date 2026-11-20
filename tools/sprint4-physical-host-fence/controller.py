@@ -45,6 +45,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import signal
 import stat
 import subprocess
 import sys
@@ -508,9 +509,23 @@ class Controller:
                    "pycache_prefixes": list(map(str, self.prefixes)),
                    "source_manifest_sha256": self.manifest.sha256}
         environment = {**os.environ, "JSH_F3_HOST_PHASE": checkpoint.split(":", 1)[0]}
-        reply = subprocess.run([str(self.checker)], cwd="/", input=installer.encode(request), env=environment,
-                               stdout=subprocess.PIPE, check=True, timeout=5)
-        value = json.loads(reply.stdout)
+        short_checkpoint = checkpoint.startswith("held:") and checkpoint != "held:controller"
+        timeout = 5 if short_checkpoint else 180
+        require(ref(self.checker) == self.binding["files"][str(self.checker)],
+                "Pinned host checker changed")
+        with subprocess.Popen([str(self.checker)], cwd="/", env=environment, start_new_session=True,
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE) as child:
+            try:
+                output, _ = child.communicate(installer.encode(request), timeout=timeout)
+            except subprocess.TimeoutExpired as error:
+                try:
+                    os.killpg(child.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                child.communicate()
+                raise ValueError("Host checker exceeded its checkpoint deadline") from error
+            require(child.returncode == 0, f"Host checker refused {checkpoint}")
+        value = json.loads(output)
         require(value == {**request, "verified": True} and value.get("verified") is True,
                 f"Host check did not confirm {checkpoint}")
 

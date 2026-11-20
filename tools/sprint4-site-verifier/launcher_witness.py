@@ -63,12 +63,17 @@ with redirect_stdout(output):
     if mode not in {"open", "isolated"}:
         raise RuntimeError("Expected canonical import refusal.")
     from job_search_helper import runner
-    if pathlib.Path(runner.__file__).parent != package or runner.scrape_main(["--help"]) != 0:
-        raise RuntimeError("Normal runner help refused.")
-usage = output.getvalue()
+if output.getvalue() or pathlib.Path(runner.__file__).parent != package:
+    raise RuntimeError("Unexpected package or runner import evidence.")
+help_output = io.StringIO()
+with redirect_stdout(help_output):
+    outcome = runner.scrape_main(["--help"])
+if outcome != 0:
+    raise RuntimeError("Normal runner help refused.")
+usage = help_output.getvalue()
 if (not usage.startswith("Usage: ./job-search-scraper <command>\n")
-        or not re.search(r"(?m)^  start\s+\S", usage)
-        or not re.search(r"(?m)^  status\s+\S", usage)):
+        or not re.search(r"(?m)^  start[ \t]+[^ \t\r\n]", usage)
+        or not re.search(r"(?m)^  status[ \t]+[^ \t\r\n]", usage)):
     raise RuntimeError("Normal runner did not emit the required usage.")
 print("admitted-help")
 """

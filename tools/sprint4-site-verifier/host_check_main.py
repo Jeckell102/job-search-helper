@@ -6,6 +6,8 @@ import sys
 
 from host_checkpoint import attest, authenticated_maintenance
 from launcher_witness import probe_launchers
+from hashlib import sha256
+from protected_continuity import ProtectedContinuity
 from protected_state import WitnessHold, bind_host_witness, verify_release_lease
 from site_policy import load_policy
 
@@ -17,19 +19,29 @@ def main():
         raise ValueError("Site request size is invalid")
     request = json.loads(request_data)
 
-    def verify_hold(stage, target):
+    def exclusion_owner(stage):
         owners = authenticated_maintenance(policy, request, stage, Path("/proc"), os.getppid())
         [controller] = [pid for pid, (_, role) in owners.items() if role == "controller.py"]
-        return verify_release_lease(policy.project, controller)
+        if verify_release_lease(policy.project, controller) is not True:
+            return None
+        boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+        return boot, controller, owners[controller][0]
 
     protected = bind_host_witness(policy.project, protected_pin, pin_digest,
                                   maintenance_id=policy.maintenance_id,
-                                  verify_release_hold=verify_hold)
+                                  verify_release_hold=lambda stage, target: exclusion_owner(stage) is not None)
+    executable = Path(sys.argv[0])
+    with executable.open("rb") as source:
+        executable_digest = sha256(source.read()).hexdigest()
+    continuity = ProtectedContinuity(policy=policy, protected_pin=protected_pin, pin_digest=pin_digest,
+                                     executable_digest=executable_digest, request=request,
+                                     owner=exclusion_owner, full_check=protected)
     def verify_launcher(stage, target):
         probe_launchers(policy.project, launchers, stage, target)
 
-    print(json.dumps(attest(request, policy, protected, verify_launcher=verify_launcher),
-                     separators=(",", ":")))
+    result = attest(request, policy, continuity, verify_launcher=verify_launcher)
+    continuity.finalize()
+    print(json.dumps(result, separators=(",", ":")))
 
 
 if __name__ == "__main__":

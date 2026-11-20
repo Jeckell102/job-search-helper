@@ -18,6 +18,25 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Protected continuity integrated checkpoint. Coordinator and release
+owner, goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%,
+project about 52% while live closure remains open. Integrated verifier
+`/tmp/jsh-s4-site-continuity.OYkaX1Dy` passed 50 disposable tests.
+Controller `/tmp/jsh-s4-continuity-controller.Agp06zzf` has bounded 5s
+nested/180s full site checks; full joint fixture session 30963 is active.
+Short proof requires current controller/boot and unchanged physical
+protected evidence after a finalized full held check. The remaining
+launcher import-output weakness is repaired. Independent QA
+`01a1f97d-2e8c-7821-b5e1-d2019215036b` owns both reviews. The higher
+reasoning alternate exchange lane delivered 13 passing disposable cases
+and a same-parent constraint. Coordinator owns the transition to a
+host-authorized version, end-to-end test and actual route proof.
+Sol High `01a1f979-8619-75d2-9973-047f3a5efb0c` still owns Sprint 5
+runtime fact fixes. No production mutation or deployment. Latest
+verified pre-checkpoint private backup `f845c9e95d8bcadd0a799c032c031809337a875b`.
+[Continuity composition](S4_PROTECTED_CONTINUITY_INTEGRATED_20261120.md)
+and [exchange fixture](S4_ALTERNATE_EXCHANGE_FIXTURE_HANDOFF_20261120.md).
+
 Launcher repair and release deadline checkpoint. Coordinator and release
 owner, goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%,
 project about 52%. Launcher fixture now has 39 passing cases at
