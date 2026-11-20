@@ -1,28 +1,34 @@
 # Current protected-source reconciliation coordinator status
 
-## Active checkpoint — 2026-11-19 accepted port and retained-route repair
+## Active checkpoint — 2026-11-19 retained route accepted; supervision next
 
 - Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains active.
 - The default-disabled Company intake dispatcher, exact controller handoff,
   and sync-watch wiring were ported onto the current protected-source snapshot
   in commit `2b95dd7`. Independent QA accepted that port after 37 strict
   adjacent checks; the implementation lane passed 65 strict checks.
-- The dedicated signed retained Company-event route is still **rejected and
-  uncommitted**. Independent QA found four activation blockers: nested
-  nonreentrant scraper locking, no operational signed-envelope activation,
-  replay risk from an unconsumed `next-scan.json`, and success reporting before
-  terminal FIRST PASS settlement.
-- Repair work has removed the outer nested lock, added an exact external
-  `{manifest,envelope}` activation bundle, and is building crash-safe exact
-  request consumption. That last recovery boundary must bind the archived
-  request to the retained admission and durable `FIRST_PASS_RELEASED` evidence,
-  preserve a newer request, and complete without refetch or remote replay.
+- The dedicated signed retained Company-event route is independently
+  **ACCEPTED** in the production wrapper runtime. The four prior activation
+  blockers are closed: no nested nonreentrant lock, an operational external
+  Ed25519 signing/activation flow, crash-safe exact request consumption that
+  preserves a newer request, and nonzero exit until durable FIRST PASS
+  settlement plus consumption are proved.
+- The public preview writes a mode-0600 signer artifact; activation accepts only
+  an external `{manifest,envelope}` bundle and public key. Successful activation
+  prints a minimal six-field receipt rather than the manifest/envelope. The
+  focused wrapper-runtime suite passed 149 strict adjacent tests after this
+  cleanup; independent QA separately passed 93 retained tests and 40 privacy
+  follow-up tests.
+- Next work is the default-disabled automatic supervision branch described in
+  `AUTO_RETAINED_EVENT_SUPERVISION_DESIGN_20261119.md`. It must share durable
+  ownership with normal intake, supervise the public retained child across
+  restarts, and accept only exact consumption-receipt completion.
 - Nothing is deployed or activated. The historical cycle and its 45 retained
   inventories, six plans, and two confirmed receipts remain untouched.
 - Roadmap accounting remains 0 of 6 milestone gates closed and final
-  independent acceptance 0%. The current retained-route work item is about
-  70% after QA rejection; automatic watcher supervision of that route, service
-  deployment, live proof, and final acceptance still follow.
+  independent acceptance 0%. The retained-route work item is 100% source/QA
+  complete; automatic watcher supervision, protected installation, service
+  deployment, live proof, and final milestone acceptance still follow.
 
 Reread this section after every context reset and before a major/live action or
 user update. It supersedes older current-status claims below.

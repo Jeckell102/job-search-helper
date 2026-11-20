@@ -1,4 +1,8 @@
+import base64
+from contextlib import redirect_stdout
+import io
 import json
+import os
 from pathlib import Path
 import sqlite3
 from types import SimpleNamespace
@@ -210,6 +214,60 @@ class RetainedWorkRunnerTests(unittest.TestCase):
         # create, alter, or reopen it for writing.
         self.assertEqual(store_before, self.store_path.read_bytes())
         self.assertEqual(before, set(self.root.iterdir()))
+
+    def test_preview_output_real_ed25519_activation_and_rejections(self):
+        """The signer artifact is sufficient, exact, private, and CLI-usable."""
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        from unittest.mock import patch
+        from job_search_helper.selected_recovery_authorization import canonical
+        from job_search_helper import runner
+        self.state.close()
+        self.store_path.unlink()
+        output = self.root / "signer-input.json"
+        with patch("job_search_helper.runner.state_path", return_value=self.state_path), \
+                patch("job_search_helper.runner.helper_cli.job_database_path", return_value=self.jobs_path):
+            self.assertEqual(0, runner.main([
+                "retained-exception-preview", "--cycle-id", CYCLE,
+                "--expires-at", "2027-01-01T00:00:00+00:00", "--output", str(output)]))
+        preview = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual({"manifest", "required_claims"},
+                         set(json.loads(output.read_text(encoding="utf-8"))))
+        self.assertEqual(preview["manifest"], json.loads(output.read_text())["manifest"])
+        self.assertEqual(0o600, os.stat(output).st_mode & 0o777)
+        private = Ed25519PrivateKey.generate()
+        public = private.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+        claims = preview["required_claims"]
+        envelope = {"key_id": "external-review", "payload": claims,
+                    "signature": base64.b64encode(private.sign(canonical(claims))).decode("ascii")}
+        approval = self.root / "approval.json"
+        approval.write_text(json.dumps({"manifest": preview["manifest"], "envelope": envelope}), encoding="utf-8")
+        command = ["activate-retained-exception", "--cycle-id", CYCLE,
+                   "--approval-file", str(approval), "--key-id", "external-review",
+                   "--ed25519-public-key-base64", base64.b64encode(public).decode("ascii")]
+        with patch("job_search_helper.runner.state_path", return_value=self.state_path):
+            activation_output = io.StringIO()
+            with redirect_stdout(activation_output):
+                self.assertEqual(0, runner.main(command))
+            receipt = json.loads(activation_output.getvalue().split(": ", 1)[1])
+            self.assertEqual({"state", "cycle_id", "manifest_digest",
+                              "authorization_digest", "key_id",
+                              "authorization_expires_at"}, set(receipt))
+            self.assertNotIn('"manifest":', activation_output.getvalue())
+            self.assertNotIn('"envelope":', activation_output.getvalue())
+            # A signed but altered claim and a wrong public key are rejected.
+            altered = dict(envelope, payload={**claims, "cycle_id": "CYC-OTHER"})
+            approval.write_text(json.dumps({"manifest": preview["manifest"], "envelope": altered}), encoding="utf-8")
+            self.assertEqual(1, runner.main(command))
+            approval.write_text(json.dumps({"manifest": preview["manifest"], "envelope": envelope}), encoding="utf-8")
+            wrong = Ed25519PrivateKey.generate().public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+            wrong_command = command[:-1] + [base64.b64encode(wrong).decode("ascii")]
+            self.assertEqual(1, runner.main(wrong_command))
+            expired = dict(claims, expires_at="2020-01-01T00:00:00+00:00")
+            expired_envelope = {"key_id": "external-review", "payload": expired,
+                                "signature": base64.b64encode(private.sign(canonical(expired))).decode("ascii")}
+            approval.write_text(json.dumps({"manifest": preview["manifest"], "envelope": expired_envelope}), encoding="utf-8")
+            self.assertEqual(1, runner.main(command))
 
     def test_journal_only_freeze_leaves_ordinary_state_and_inbox_unchanged(self):
         prepared = self.prepare()
