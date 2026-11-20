@@ -106,6 +106,13 @@
   protection, company-only production, richer failure facts, coordinator
   behavior, and live proof remain open. See
   `M3_NORMAL_CYCLE_SOURCE_QA_20261120.md`.
+- That accepted M3 slice is now installed narrowly in the protected MuleLab
+  checkout from checkpoint `c8a4cb0`. All nine starting blobs matched parent
+  `0bf2d4a`; exact rollback copies are at
+  `/tmp/job-search-helper-protected-backup-m3-c8a4cb0`; installed blobs match
+  `c8a4cb0`; and 266 protected-runtime checks passed. The service remained
+  stopped/disabled, both intake controls remained off, and preserved lock
+  bytes were unchanged. See `M3_PROTECTED_INSTALL_20261120.md`.
 - The accepted F1 source/test checkpoint `720c84e` is installed narrowly in the
   protected MuleLab checkout. All four starting hashes matched `a940524`,
   rollback copies are at
