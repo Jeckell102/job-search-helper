@@ -27,6 +27,24 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Prepared live enrollment checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
+from about 17:47 Eastern and authorized routine in-scope work without
+asking. Native system observer started and verified both system helpers.
+Three separately approved stale Codex tool workers reset and verified gone.
+The 61-field held protected-state verification passed with the wrapper
+running. Real launcher and process-route rehearsals passed, and the briefly
+stopped bridge returned to active. Private capsule assembled at
+`/home/chris/.local/state/job-search-helper-maintenance/s4-atomic-machines-20261120-01`.
+69 payload members verified, three empty placeholders created, original
+checkout inodes unchanged, exchange progress zero. Site checker is
+quarantined as `host-check.pending`. No controller invocation or pilot.
+Root owns live enrollment. `/root/s4_abort_repair` owns prepared-only and
+preflight-refusal recovery proof. `/root/site_journal_qa` owns independent
+enrollment and recovery QA. Do not close the exchange until these recovery
+gates pass, and verify the short native observer still serves fresh proof.
+[Live evidence](S4_LIVE_ENROLLMENT_PREPARED_20261120.md).
+
 Native administrator observation checkpoint. The two inaccessible
 system helper processes can now be checked through a bounded foreground
 observer in a native MuleLab administrator terminal. The approved
@@ -40,6 +58,7 @@ at `/tmp/jsh-s4-enrollment-release.EHxLVsCF` verified. Next pin the actual
 host routes and observation scope, obtain native administrator availability,
 and safely clear exactly the old checkout-attached tool workers in a fresh
 owner window. No native observer has started and no live changes took place.
+Verified source, tests and independent QA backup `66e516d2f6a367dcec9dacf7d9e709b30997fca1`.
 [Native observer and evidence](S4_NATIVE_ADMIN_PROCESS_OBSERVER_20261120.md).
 
 MuleLab owner-window checkpoint. The operator provided a one-hour window.
@@ -221,6 +240,13 @@ on the private GitHub branch at `cbebbf387524aabce382e0d98119aaa46f19200f`.
 Keep the second chat available as requested. A third chat is reserved for
 a clearly independent assignment, such as deployed QA once its evidence
 is ready. No third chat was opened.
+The second chat also completed current public evidence for its exact
+frozen candidate. Two stable reads returned 65 Forterra and 33 PDW roles;
+independent provider-only replay matched the 98 full descriptions. The
+integrated employer check held both public authority formats. The same
+chat now owns the narrowly scoped authority parser work in a new isolated
+tree. The release owner still owns generated-repair qualification and
+release/retry. [Public capture summary](S5_CURRENT_PUBLIC_VALIDATION_HANDOFF_20261120.md).
 
 Host route and exchange witness checkpoint. Coordinator and release
 owner, active goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Read-only
