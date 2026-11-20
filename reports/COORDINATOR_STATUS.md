@@ -153,7 +153,32 @@ refused before reservation. Thirty focused cases independently reproduced.
 The native observer remained absent at 18:35. Next implement the measured
 normal worker handoff and capture exact publication proof before cleanup.
 [Final composed QA](S5_HANDOFF_VERIFIER_COMPOSITION_FINAL_QA_20261120.md).
+GitHub readback matched `d6d25c99c98ede29afee5b619114aef301b9798e`.
+`/root/s4_abort_repair` now owns the isolated publication-evidence seam
+before Inbox cleanup. Root owns the normal queue handoff and measured
+launcher/terminal integration. Keep these edits in separate overlays
+pending integration and independent QA.
 
+
+
+18:54 Eastern. The named Sprint 5 capture stage in
+`/tmp/jsh-s5-ordinary-worker.akf3gPsM` passed final independent QA,
+12 focused cases, and 119 combined. The actual bootstrap refused the
+unqualified fixture. The positive capture used synthetic provider and
+qualification under the real measured runner and named locks. Claim and
+lock checks run before capture and replay; an exact saved inventory does
+not refetch. Sprint 4 native observer remained absent at 18:53.
+Publication author passed 125 scoped cases. Independent fixtures identified
+three generic writer or cleanup routes that still need a fence. Their
+review turn ended with a display flag before the separate report. Root
+recorded the hold and assigned the source repairs to `/root/s4_abort_repair`.
+Root staged composition glue in
+`/tmp/jsh-s5-ordinary-continuation.0wnbkEVB`, pending accepted publication
+source and composition. Existing second chat owns the exact authenticated
+raw-response capture design. No production actions.
+[Measured capture handoff](S5_ORDINARY_WORKER_CAPTURE_STAGED_20261120.md) ·
+[Final measured capture QA](S5_ORDINARY_WORKER_FINAL_QA_20261120.md) ·
+[Publication review hold](S5_ORDINARY_PUBLICATION_INITIAL_HOLD_20261120.md).
 
 Prepared live enrollment checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
