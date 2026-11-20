@@ -15,12 +15,15 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+from pathlib import Path
 from typing import Callable, Iterable, Mapping
 
 from .batching import PendingState, PlanningRepository
 from .core import job_key, material_hash
 from .engine import now
-from .exact_cycle_receipt import derive_receipt
+from .exact_cycle_receipt import (
+    ORDINARY_EVENT_PLAN_BINDING, derive_receipt, has_ordinary_event_scope, ordinary_event_receipt_binding,
+)
 
 
 ALLOWED_INVENTORY_STATUSES = frozenset({'complete', 'partial'})
@@ -574,7 +577,53 @@ def _check_membership_posting_operation(operation, planner, company, posting):
     return existing
 
 
-def _freeze(engine, planner, cycle, company_id, payload, *, drop_noops=False, membership_only=False):
+_ORDINARY_COMPANY_SOURCE_FIELDS = frozenset({
+    'Company ID', 'Company', 'Company Status', 'Official Careers URL', 'ATS / Source',
+})
+
+
+def _ordinary_company_operation(operation, company):
+    """Omit equivalent source values and reject changes to the admitted Company."""
+    from .repository import _equivalent
+
+    if (operation.get('identity') != {'Company ID': company['Company ID']}
+            or operation.get('append_if_missing')
+            or _ORDINARY_COMPANY_SOURCE_FIELDS.intersection(operation.get('append_notes', {}))):
+        raise ValueError('Ordinary Company-event finisher changed protected Company scope.')
+    operation = copy.deepcopy(operation)
+    for stream in ('values', 'on_insert'):
+        values = operation.get(stream, {})
+        for field in _ORDINARY_COMPANY_SOURCE_FIELDS.intersection(values):
+            prior, proposed = company.get(field, ''), values[field]
+            if field in {'Company Status', 'ATS / Source'}:
+                same = str(prior).strip().casefold() == str(proposed).strip().casefold()
+            elif field == 'Official Careers URL':
+                same = _equivalent(field, prior, proposed)
+            else:
+                same = prior == proposed
+            if not same:
+                raise ValueError('Ordinary Company-event finisher changed protected Company source field: ' + field)
+            del values[field]
+    return operation
+
+
+def _require_ordinary_event_source_unchanged(plan, company_id):
+    """Check the already-sealed streams without reinterpreting stored values."""
+    for stream in ('local_operations', 'remote_projection'):
+        operations = plan.get(stream)
+        if not isinstance(operations, list) or not operations:
+            raise ValueError('Ordinary Company-event receipt requires both sealed operation streams.')
+        for operation in operations:
+            if operation.get('tab') == 'Companies' and (
+                    operation.get('identity') != {'Company ID': company_id}
+                    or operation.get('append_if_missing')
+                    or any(_ORDINARY_COMPANY_SOURCE_FIELDS.intersection(operation.get(field, {}))
+                           for field in ('values', 'on_insert', 'append_notes'))):
+                raise ValueError('Ordinary Company-event sealed plan changes protected Company scope or source.')
+
+
+def _freeze(engine, planner, cycle, company_id, payload, *, drop_noops=False, membership_only=False,
+            protect_ordinary_source=False):
     """Compute a frozen plan entirely in memory, with no repository commit."""
     company = _company_from(planner, company_id)
     engine._verify_same_board({'Official Careers URL': payload['requested_url']}, company)
@@ -597,6 +646,11 @@ def _freeze(engine, planner, cycle, company_id, payload, *, drop_noops=False, me
                     or not isinstance(operations[0]['values'], Mapping)):
                 raise ValueError('retained_membership_only_company_finalization_invalid')
             return {'staged': 0}
+        if protect_ordinary_source:
+            operations = [
+                _ordinary_company_operation(operation, company) if operation.get('tab') == 'Companies' else operation
+                for operation in operations
+            ]
         for operation in operations:
             existing = (_check_membership_posting_operation(operation, planner, company, current_posting)
                         if membership_only else None)
@@ -695,14 +749,51 @@ def freeze_retained_exact_plan(engine, cycle_id, company_id, payload,
         plan, payload, engine.repo, cycle_id, company_id)
 
 
+def _require_current_ordinary_event(engine, cycle, company_id, binding):
+    from .company_events import read_verified_ordinary_event_admission, source_revision
+
+    engine.assert_runtime_binding(cycle['id'], sync_only=True)
+    admission = read_verified_ordinary_event_admission(engine.repo, engine.state, cycle['id'])
+    matches = engine.repo.matches('Companies', {'Company ID': company_id})
+    company = matches[0][1] if len(matches) == 1 else {}
+    if (admission['request_sha256'] != binding['request_sha256']
+            or _digest(admission['receipt']) != binding['bridge_receipt_sha256']
+            or not admission['source_current']
+            or company.get('Active Cycle ID') != cycle['id']
+            or company.get('Company') != cycle['companies'][company_id].get('company')
+            or company.get('Claimed By') or company.get('Claim Token')
+            or (str(company.get('Automatic Retry?', '')).strip().casefold() == 'no'
+                and company.get('Scan State') == 'Blocked / Manual Review')
+            or source_revision(company) != binding['source_revision']):
+        raise ValueError('Ordinary Company-event local source or owner changed before planning.')
+
+
+def _ordinary_event_plan_binding(engine, cycle, company_id, payload, context):
+    from .sheet_profile import COMPACT_PROFILE
+
+    binding = ordinary_event_receipt_binding(cycle, company_id, payload, context)
+    root = context.state_directory
+    if (Path(engine.state.path).resolve() != root / 'state.db'
+            or Path(engine.repo.path).resolve() != root / 'jobs.sqlite3'
+            or Path(engine.inbox.path).resolve() != root / 'inventories.sqlite3'
+            or _publication_schema(engine.repo)[0] != COMPACT_PROFILE
+            or engine.repo.spreadsheet_id != context.spreadsheet_id
+            or engine.inbox.destination_id(engine.inbox.path) != context.spreadsheet_id):
+        raise ValueError('Ordinary Company-event exact planning requires its verified compact workbook.')
+    _require_current_ordinary_event(engine, cycle, company_id, binding)
+    return binding
+
+
 def freeze_exact_cycle_plans(engine, cycle_id: str, company_ids: Iterable[str], *,
                              company_guard: Callable[[str, str], None], max_companies: int = 5,
-                             stamp: str | None = None, bind_selected_retry=False):
+                             stamp: str | None = None, bind_selected_retry=False,
+                             ordinary_event_context=None):
     """Freeze plans for explicit saved inventories, never fetching or publishing.
 
     ``company_guard`` must perform the narrow *current remote* Company control
     check for its exact ``(company_id, requested_url)`` pair, raising to hold
     the item.  The function intentionally has no remote repository argument.
+    An ordinary event additionally requires its verified observation context.
 
     ``InventoryInbox.save_plan`` atomically saves the immutable plan and its
     ``LOCAL_COMMITTED`` receipt.  The State checkpoint is a separate SQLite
@@ -724,6 +815,11 @@ def freeze_exact_cycle_plans(engine, cycle_id: str, company_ids: Iterable[str], 
     if len(requested) > max_companies:
         raise ValueError('exact_plan_request_exceeds_bound')
     cycle_id, cycle = _validate_cycle(engine, cycle_id)
+    ordinary_event = has_ordinary_event_scope(cycle)
+    if ordinary_event_context is not None and not ordinary_event:
+        raise ValueError('Ordinary Company-event plan context requires an admitted event cycle.')
+    if ordinary_event and (len(requested) != 1 or bind_selected_retry):
+        raise ValueError('Ordinary Company-event exact planning requires its sole Company and no alternate lineage.')
     planner = PlanningRepository(engine.repo)
     stamp = stamp or now()
     report = {'cycle_id': cycle_id, 'planned': [], 'recovered': [], 'held': []}
@@ -745,21 +841,35 @@ def freeze_exact_cycle_plans(engine, cycle_id: str, company_ids: Iterable[str], 
             # Reject local holds before spending a narrow remote-control read.
             local_company = _company_from(planner, company_id)
             engine._verify_same_board({'Official Careers URL': payload['requested_url']}, local_company)
+            event_binding = None
+            existing = engine.inbox.plan(cycle_id, company_id)
+            if ordinary_event:
+                event_binding = _ordinary_event_plan_binding(
+                    engine, cycle, company_id, payload, ordinary_event_context,
+                )
+                if existing is not None and (
+                        not isinstance(existing[0], Mapping) or existing[0].get('exact_plan_version') != 2
+                        or existing[0].get(ORDINARY_EVENT_PLAN_BINDING) != event_binding
+                        or 'selected_retry_receipt_binding' in existing[0] or 'retained_membership_only' in existing[0]):
+                    raise ValueError('Ordinary Company-event existing plan is outside its exact receipt authority.')
+            elif existing is not None and isinstance(existing[0], Mapping) and ORDINARY_EVENT_PLAN_BINDING in existing[0]:
+                raise ValueError('Ordinary Company-event frozen plan has no matching admitted cycle.')
             # This injected guard is deliberately before plan persistence.
             evidence, evidence_digest = _control_evidence(
                 company_guard(company_id, payload['requested_url']), company_id, payload['requested_url'])
+            if event_binding is not None:
+                _require_current_ordinary_event(engine, cycle, company_id, event_binding)
             binding = None
             if bind_selected_retry:
                 from .exact_cycle_receipt import selected_retry_receipt_binding
                 binding = selected_retry_receipt_binding(cycle, company_id)
-            existing = engine.inbox.plan(cycle_id, company_id)
             if existing is None:
                 profile, _publication = _publication_schema(engine.repo)
                 if binding is not None and profile == 'full':
                     raise ValueError('selected_retry_publication_requires_compact_profile')
                 plan = _freeze(
                     engine, planner, cycle, company_id, payload,
-                    drop_noops=profile != 'full')
+                    drop_noops=profile != 'full', protect_ordinary_source=event_binding is not None)
                 plan['control_evidence'] = evidence
                 plan['control_evidence_version'] = CONTROL_EVIDENCE_VERSION
                 plan['control_evidence_digest'] = evidence_digest
@@ -773,6 +883,11 @@ def freeze_exact_cycle_plans(engine, cycle_id: str, company_ids: Iterable[str], 
                     if binding is not None:
                         plan['selected_retry_receipt_binding'] = binding
                         plan['plan_digest'] = _exact_plan_digest(plan)
+                    if event_binding is not None:
+                        plan[ORDINARY_EVENT_PLAN_BINDING] = event_binding
+                        plan['plan_digest'] = _exact_plan_digest(plan)
+                        derive_receipt(cycle, company_id, payload, plan, stamp,
+                                       ordinary_event_context=ordinary_event_context)
                     engine.inbox.save_exact_plan(
                         cycle_id, company_id, plan, timestamp=stamp)
                 action = 'planned'
@@ -791,6 +906,9 @@ def freeze_exact_cycle_plans(engine, cycle_id: str, company_ids: Iterable[str], 
                             or local_state['local_operations_digest'] != plan['local_operations_digest']
                             or local_state['remote_projection_digest'] != plan['remote_projection_digest']):
                         raise ValueError('existing_exact_plan_v2_local_state_mismatch')
+                    if event_binding is not None:
+                        derive_receipt(cycle, company_id, payload, plan, stamp,
+                                       ordinary_event_context=ordinary_event_context)
                 else:
                     _validate_existing_plan(engine.inbox, cycle, company_id, payload, plan,
                                             evidence_digest, stamp, engine.repo, cursor)

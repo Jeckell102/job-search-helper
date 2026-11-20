@@ -53,7 +53,7 @@ def _normalize_request(cycle_id, company_ids):
     return cycle_id, selected
 
 
-def _prepare_exact_v2_local(engine, cycle_id, company_id, plan, payload):
+def _prepare_exact_v2_local(engine, cycle_id, company_id, plan, payload, ordinary_event_context=None):
     """Apply and prove one frozen v2 local stream before any remote write."""
     from .exact_cycle_planner import _checkpoint_item
     from .exact_cycle_receipt import derive_receipt
@@ -127,7 +127,9 @@ def _prepare_exact_v2_local(engine, cycle_id, company_id, plan, payload):
 
     receipt_cycle = engine.state.cycle(cycle_id)
     receipt = derive_receipt(
-        receipt_cycle, company_id, payload, plan, timestamp())
+        receipt_cycle, company_id, payload, plan, timestamp(),
+        **({'ordinary_event_context': ordinary_event_context} if ordinary_event_context is not None else {}),
+    )
     engine.inbox.ensure_receipt(receipt)
     return applied
 
@@ -203,7 +205,8 @@ def _recover_exact_cycle_with_factory_locked(state_path,
 
 
 def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
-                                require_frozen_plans=False, bind_selected_retry=False):
+                                require_frozen_plans=False, bind_selected_retry=False,
+                                ordinary_event_context=None, ordinary_event_guard=None):
     cycle = engine.state.cycle(cycle_id)
     if not isinstance(cycle, dict) or cycle.get('id') != cycle_id:
         raise ValueError('exact_recovery_cycle_missing')
@@ -213,6 +216,11 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
         raise ValueError('exact_recovery_cycle_finished')
     if bind_selected_retry and len(selected) != 1:
         raise ValueError('selected_retry_publication_requires_one_company')
+    if ordinary_event_context is not None and (
+            bind_selected_retry or len(selected) != 1 or not callable(ordinary_event_guard)):
+        raise ValueError('ordinary_event_publication_requires_one_exact_company')
+    event_options = ({'ordinary_event_context': ordinary_event_context}
+                     if ordinary_event_context is not None else {})
     from .scan_request import superseded_cycle_ids
     if cycle_id in superseded_cycle_ids(engine.state.cycles()):
         raise ValueError('exact_recovery_cycle_superseded')
@@ -232,6 +240,8 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
         has_plan = existing is not None
         if has_plan and 'selected_retry_receipt_binding' in existing[0] and not bind_selected_retry:
             raise ValueError('selected_retry_needs_dedicated_publisher')
+        if has_plan and 'ordinary_company_event' in existing[0] and ordinary_event_context is None:
+            raise ValueError('ordinary_event_needs_dedicated_publisher')
         if bind_selected_retry:
             _validate_selected_retry_source(engine, cycle, company_id, existing[0] if has_plan else None)
         if require_frozen_plans and not has_plan:
@@ -255,6 +265,8 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
         # Claims/manual holds are local-only under compact-v1.  This fresh
         # composite read occurs under the normal scraper lock and compares the
         # three shared controls to Google's compact projection.
+        if ordinary_event_context is not None:
+            return ordinary_event_guard(company_id, requested_url)
         if bind_selected_retry:
             from .exact_cycle_sync import _unique_company
             from .repository import _equivalent
@@ -283,6 +295,7 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
             planned = freeze_exact_cycle_plans(
                 engine, cycle_id, [company_id], company_guard=guard,
                 max_companies=1,
+                **event_options,
                 **({'bind_selected_retry': True} if bind_selected_retry else {}),
             )
             report['planned'].extend(planned['planned'])
@@ -291,6 +304,16 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
             if planned['held']:
                 continue
         plan_state = engine.inbox.plan(cycle_id, company_id)
+        if ordinary_event_context is not None:
+            if plan_state is None or 'ordinary_company_event' not in plan_state[0]:
+                raise ValueError('ordinary_event_frozen_plan_required')
+            from .exact_cycle_receipt import ordinary_event_receipt_binding
+            from .exact_cycle_sync import _validate_controls
+            payload = engine.inbox.get(cycle_id, company_id)[0]
+            if plan_state[0]['ordinary_company_event'] != ordinary_event_receipt_binding(
+                    engine.state.cycle(cycle_id), company_id, payload, ordinary_event_context):
+                raise ValueError('ordinary_event_frozen_plan_binding_changed')
+            _validate_controls(plan_state[0], guard(company_id, plan_state[0]['requested_url']))
         if bind_selected_retry:
             if plan_state is None:
                 raise ValueError('selected_retry_frozen_plan_required')
@@ -303,7 +326,7 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
             try:
                 _prepare_exact_v2_local(
                     engine, cycle_id, company_id, plan_state[0],
-                    engine.inbox.get(cycle_id, company_id)[0])
+                    engine.inbox.get(cycle_id, company_id)[0], **event_options)
             except Exception as exc:
                 report['held'].append({
                     'company_id': company_id,
@@ -314,6 +337,7 @@ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
             engine.inbox, cycle_id, remote, company_ids=[company_id],
             retry_blocked=False, state=engine.state, company_guard=guard,
             local=getattr(engine, 'repo', None),
+            **event_options,
             **({'bind_selected_retry': True} if bind_selected_retry else {}),
         )
         report['confirmed'].extend(delivered['confirmed'])

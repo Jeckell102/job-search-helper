@@ -39,6 +39,7 @@ def ordinary_cycle(tmp_path):
         with local.transaction():
             local.set_meta('ready', 'yes')
             local.set_meta('sheets_profile', COMPACT_PROFILE)
+        local.ensure_columns('Opportunities', ['Opportunity ID'])
         local.import_rows('Companies', [(2, COMPANY), (3, {**COMPANY, 'Company ID': 'COMP-2', 'Company': 'Other'})])
         event = local.mutate_company_with_event({
             'tab': 'Companies', 'identity': {'Company ID': 'COMP-1'},

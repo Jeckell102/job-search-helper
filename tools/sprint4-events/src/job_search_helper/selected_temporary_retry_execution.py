@@ -103,6 +103,7 @@ def freeze_selected_temporary_retry_locked(sink, state, runtime_binding, *, cycl
     if company is None:
         return {'state': 'HELD_SOURCE_CHANGED', **evidence}
     if saved is not None:
+        _require_frozen_provider(saved, cycle)
         return {'state': 'INVENTORY_FROZEN', **evidence, 'recovered': True}
 
     name, url = company['Company'], company['Official Careers URL']
@@ -146,6 +147,12 @@ def load_selected_retry_inventory(sink, state, runtime, *, cycle_id):
     record = _read_record(sink.root / 'selected-retry-inventory' / (cycle_id + '.json'), binding)
     if record is None or record['state'] != 'FROZEN':
         raise ValueError('Selected retry has no verified frozen inventory.')
+    _require_frozen_provider(record, cycle)
+    return record
+
+
+def _require_frozen_provider(record, cycle):
+    binding = record['binding']
     item = cycle['companies'][binding['company_id']]
     fact = item['outcome_source_fact']
     inventory = record['inventory']
@@ -156,7 +163,6 @@ def load_selected_retry_inventory(sink, state, runtime, *, cycle_id):
     if (_url(inventory['requested_url']) != fact['official_careers_url']
             or not provider or provider_identity(inventory['ats'], inventory['source_url']) != provider):
         raise ValueError('Selected retry frozen provider source differs from admission.')
-    return record
 
 
 def _fetch_binding(sink, cycle, request, runtime, key):

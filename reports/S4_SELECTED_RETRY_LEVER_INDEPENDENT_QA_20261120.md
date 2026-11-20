@@ -1,0 +1,17 @@
+# Sprint 4 selected retry Lever independent QA
+
+**ACCEPT the Lever comparison in fresh fetch, publication load and terminal settlement. HOLD the full terminal source gate on one stale success result from fetch replay.**
+
+## Verified Lever behavior
+
+A signed retained-event fixture admitted a Lever successor pinned to the EU board and Berlin. A public-board URL and the EU API URL with lowercase berlin resolved to the same scope. The equivalent result froze successfully, loaded from disk, settled once using the read-only workbook fixture, and replayed the identical terminal receipt without another provider call or workbook write.
+
+The US API with Berlin, the EU API with Boston, and the EU API without a location were independently refused by the fresh fetch return check. Each rejection left only the spent fetch claim, and a repeat did not call the provider. In separate fixtures I froze a good observation and replaced the return URL on disk with each mismatch while recomputing both unkeyed digests. The explicit durable load, direct terminal decision, and signed-path publication all refused the mismatch. No successor outcome, terminal receipt, or workbook operation followed these rejections. [Shared scoped identity](/tmp/jsh-s4-lever-observation-qa.TRWmEY0T/src/job_search_helper/scoped_provider_observation.py:14) · [Fetch return check](/tmp/jsh-s4-lever-observation-qa.TRWmEY0T/src/job_search_helper/selected_temporary_retry_execution.py:108) · [Explicit durable load](/tmp/jsh-s4-lever-observation-qa.TRWmEY0T/src/job_search_helper/selected_temporary_retry_execution.py:134) · [Terminal decision](/tmp/jsh-s4-lever-observation-qa.TRWmEY0T/src/job_search_helper/selected_retry_terminal.py:119)
+
+## Remaining replay gap
+
+For each same digest-consistent wrong-source record, running the fetch operation again returned INVENTORY_FROZEN with recovered=true. The saved branch validates byte integrity and current Company ownership, then returns before comparing the frozen requested and returned source. This can report a usable frozen observation that the next command immediately refuses. Publication remains fenced. Reuse the selected durable source validation before returning a FROZEN replay result, and keep the provider call count and durable files unchanged. [Fetch replay return](/tmp/jsh-s4-lever-observation-qa.TRWmEY0T/src/job_search_helper/selected_temporary_retry_execution.py:73) · [Replay reproduction](/tmp/test_jsh_s4_lever_independent_oKg3dfvx.py)
+
+## Regression evidence
+
+The 769-file path, mode and content inventory of the disposable copy matched the supplied frozen source. Inventory SHA-256 was 7946ba4ed831dbbc9daff3b7eaf6098674abe32cb11d1c1eb0a4cf8f94617bb7. The 156-test regression passed in 51.84 seconds, covering the original terminal fixes, rollback, both State restart boundaries, and signed nonempty exact publication. Seven independent composed Lever cases passed in 18.66 seconds, including reproductions of the replay gap. The seven earlier independent terminal acceptance probes also passed when rerun against this snapshot. All execution used local disposable stores, a fixture signer, fixture workbook and stub provider. The independent probe blocked socket connect, bind and lookup. No production, live network, service, Jetson, Google or GitHub operations took place. [Prior terminal recheck](/tmp/jsh-s4-terminal-settlement-independent-recheck.md)

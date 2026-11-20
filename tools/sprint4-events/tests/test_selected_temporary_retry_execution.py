@@ -228,3 +228,23 @@ def test_provider_entry_requires_a_callable(admitted):
             sink, state, fixture.runtime, cycle_id=cycle_id,
             fetcher=Mock(return_value=inventory()))
     assert result['state'] == 'INVENTORY_FROZEN'
+
+
+def test_digest_consistent_wrong_provider_is_not_a_recovered_fetch(admitted):
+    from job_search_helper.retained_operator_journal import provider_inventory_digest
+    from job_search_helper.temporary_retry import _canonical
+
+    fixture, _outcome, sink, cycle_id = admitted
+    provider = Mock(return_value=inventory())
+    assert freeze(fixture, sink, cycle_id, provider)['state'] == 'INVENTORY_FROZEN'
+    path = journal(fixture, cycle_id)
+    altered = json.loads(path.read_bytes())
+    altered['inventory']['source_url'] = 'https://jobs.jobvite.com/another/search'
+    altered['inventory_sha256'] = provider_inventory_digest(altered['inventory'], event_scope=True)
+    altered['sha256'] = _selected_sha({key: value for key, value in altered.items() if key != 'sha256'})
+    path.write_text(_canonical(altered) + '\n')
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match='frozen provider source differs from admission'):
+        freeze(fixture, sink, cycle_id, provider)
+    assert path.read_bytes() == before
+    provider.assert_called_once()

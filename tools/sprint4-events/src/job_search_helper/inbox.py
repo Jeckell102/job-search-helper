@@ -418,11 +418,12 @@ class InventoryInbox:
                     'Exact v2 cleanup requires a registered, terminal remote plan.')
             if exact is not None:
                 receipt = self.connection.execute(
-                    'SELECT acknowledgement_id,state FROM publication_receipts '
+                    'SELECT acknowledgement_id,state,binding FROM publication_receipts '
                     'WHERE receipt_id=?', (exact[1],)).fetchone()
                 if (exact[3] != 'LOCAL_ACKNOWLEDGED'
                         or not exact[2]
-                        or receipt != (exact[2], publication_receipts.SYNC_CONFIRMED)):
+                        or receipt is None
+                        or receipt[:2] != (exact[2], publication_receipts.SYNC_CONFIRMED)):
                     raise ValueError(
                         'Exact v2 cleanup requires a locally acknowledged, '
                         'durably confirmed receipt.')
@@ -430,6 +431,7 @@ class InventoryInbox:
                     local, cycle, company, exact[0], exact[1], exact[2],
                     expected_apply_id=local_exact[1] if local_exact else None)
                 self._archive_selected_retry_publication(cycle, company, exact)
+                self._archive_ordinary_event_publication(cycle, company, local, json.loads(receipt[2]))
             self.connection.execute("DELETE FROM inventories WHERE cycle=? AND company=?", (cycle, company))
             self.connection.execute("DELETE FROM exact_sync_chunks WHERE cycle=? AND company=?", (cycle, company))
             self.connection.execute("DELETE FROM exact_remote_plans WHERE cycle=? AND company=?", (cycle, company))
@@ -544,6 +546,20 @@ class InventoryInbox:
         self.connection.execute(
             'INSERT OR IGNORE INTO selected_retry_publication_archive VALUES (?,?,?)', (cycle, company, encoded),
         )
+
+    def _archive_ordinary_event_publication(self, cycle, company, local, receipt_binding):
+        saved = self.plan(cycle, company)
+        plan = saved[0] if saved else None
+        binding = plan.get('ordinary_company_event') if isinstance(plan, dict) else None
+        event_receipt = receipt_binding.get('authority') == 'ordinary-company-event-exact-v2'
+        if binding is None and not event_receipt:
+            return
+        if not event_receipt or binding != receipt_binding:
+            raise ValueError('Ordinary event cleanup has a mismatched plan or Sheets receipt.')
+        from .ordinary_event_publication_archive import archive_before_cleanup
+        if not self.connection.in_transaction:
+            self.connection.execute('BEGIN IMMEDIATE')
+        archive_before_cleanup(self, local, cycle, company, plan, binding=binding)
 
     def block(self, cycle, company):
         with self.lock, self.connection:
@@ -1885,7 +1901,16 @@ class InventoryInbox:
             receipt_binding = json.loads(receipt[0])
             plan = json.loads(local[3])
             retry_binding = plan.get('selected_retry_receipt_binding')
-            if retry_binding is None:
+            event_binding = plan.get('ordinary_company_event')
+            if event_binding is not None:
+                from .exact_cycle_planner import _exact_plan_digest
+                if (retry_binding is not None or _exact_plan_digest(plan) != values[0]
+                        or receipt_binding != event_binding or event_binding.get('cycle_id') != cycle
+                        or event_binding.get('company_id') != company
+                        or event_binding.get('authority') != 'ordinary-company-event-exact-v2'
+                        or delivery_mode != 'write_once'):
+                    raise ValueError('Exact remote receipt does not match the ordinary event plan.')
+            elif retry_binding is None:
                 if (receipt_binding.get('request_id') != cycle
                         or receipt_binding.get('company_id') != company):
                     raise ValueError('Exact remote receipt names another request or company.')

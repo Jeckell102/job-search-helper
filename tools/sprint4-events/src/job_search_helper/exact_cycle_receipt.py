@@ -1,9 +1,11 @@
 """One immutable receipt derivation shared by exact-cycle boundaries."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import hashlib
 import json
 import re
+from pathlib import Path
 
 from .publication_receipts import record_fingerprints
 
@@ -14,6 +16,137 @@ def _canonical(value):
 
 def _digest(value):
     return hashlib.sha256(_canonical(value).encode('utf-8')).hexdigest()
+
+
+
+ORDINARY_EVENT_PLAN_BINDING = 'ordinary_company_event'
+ORDINARY_EVENT_AUTHORITY = 'ordinary-company-event-exact-v2'
+
+
+@dataclass(frozen=True)
+class _OrdinaryEventPlanContext:
+    """Detached observation from the read-only durable verifier."""
+
+    _observation: str
+    spreadsheet_id: str
+    state_directory: Path
+
+
+def load_ordinary_event_plan_context(reader, state, runtime, *, cycle_id, request_sha256):
+    """Bind an existing read-only admission/archive and frozen observation."""
+    from .ordinary_company_event_fetch import load_ordinary_event_observation
+
+    record = load_ordinary_event_observation(
+        reader, state, runtime, cycle_id=cycle_id, request_sha256=request_sha256,
+    )
+    return _OrdinaryEventPlanContext(
+        _canonical(record), reader.spreadsheet_id, Path(state.path).resolve().parent,
+    )
+
+
+def _ordinary_observation(context):
+    if not isinstance(context, _OrdinaryEventPlanContext):
+        raise ValueError('Ordinary Company-event publication requires a verified plan context.')
+    return json.loads(context._observation)
+
+
+def ordinary_event_plan_payload(context):
+    """Project the exact frozen observation to the existing Inbox payload."""
+    inventory = _ordinary_observation(context)['inventory']
+    if (inventory['status'] not in {'complete', 'partial'} or not inventory['jobs']
+            or inventory.get('verified_zero') is not None):
+        raise ValueError('Ordinary Company-event exact planning requires a nonempty plannable inventory.')
+    if inventory['status'] == 'complete' and (
+            inventory['browser_pending_urls'] or inventory['browser_discovery_incomplete']):
+        raise ValueError('Ordinary Company-event complete inventory has unresolved browser work.')
+    return {
+        **{key: value for key, value in inventory.items()
+           if key not in {'status', 'outcome_failure', 'verified_zero'}},
+        'inventory_status': inventory['status'],
+    }
+
+
+def has_ordinary_event_scope(cycle, request_id=None):
+    """Recognize either event provenance channel, including inconsistent input."""
+    return cycle.get('company_event') is not None or any(
+        isinstance(value, str) and value.startswith('company-event:')
+        for value in (cycle.get('start_request_id'), request_id)
+    )
+
+
+def ordinary_event_receipt_binding(cycle, company_id, payload, context):
+    """Re-derive the exact publication authority from the admitted scope."""
+    from .runner import _canonical_runtime_binding
+
+    record = _ordinary_observation(context)
+    admitted = record['binding']
+    request = admitted['request']
+    event = request['company_event']
+    companies = cycle.get('companies')
+    if (cycle.get('id') != admitted['cycle_id'] or cycle.get('all') is not False
+            or not isinstance(companies, dict) or set(companies) != {company_id}
+            or company_id != admitted['company_id'] or request['company_ids'] != [company_id]
+            or cycle.get('start_request_id') != request['request_id']
+            or cycle.get('request_fingerprint') != admitted['request_fingerprint']
+            or cycle.get('company_event') != event
+            or any(cycle.get(key) is not None for key in (
+                'operator_request', 'repair_retry', 'temporary_retry', 'selected_retry_reservation_sha256',
+                'retained_work_exception', 'recovery_pause',
+            ))):
+        raise ValueError('Ordinary Company-event plan context disagrees with the admitted cycle.')
+    item = companies[company_id]
+    runtime = _canonical_runtime_binding(cycle.get('runtime_binding'))
+    if (not isinstance(item, dict) or item.get('company') != admitted['company_name']
+            or item.get('outcome_source_fact') != admitted['source_fact']
+            or item.get('outcome_source_revision') != event['source_revision']
+            or runtime != admitted['runtime']):
+        raise ValueError('Ordinary Company-event plan context disagrees with the admitted source or runtime.')
+    if _canonical(payload) != _canonical(ordinary_event_plan_payload(context)):
+        raise ValueError('Ordinary Company-event Inbox payload disagrees with the frozen observation.')
+    return {
+        'authority': ORDINARY_EVENT_AUTHORITY, 'cycle_id': cycle['id'],
+        'request_id': request['request_id'], 'request_sha256': admitted['request_sha256'],
+        'request_fingerprint': admitted['request_fingerprint'],
+        'company_event_id': event['event_id'], 'company_id': company_id,
+        'source_revision': event['source_revision'],
+        'bridge_receipt_sha256': admitted['bridge_receipt_sha256'],
+        'observation_sha256': record['sha256'], 'provider_inventory_sha256': record['inventory_sha256'],
+        'workbook_id_sha256': _digest(context.spreadsheet_id),
+        'release_id': runtime.get('release_id', 'NO_RELEASE'),
+        'release_binding_sha256': _digest(runtime),
+    }
+
+
+def _ordinary_event_receipt(cycle, company_id, payload, plan, timestamp, request_id, context):
+    from .exact_cycle_planner import _exact_plan_digest, _require_ordinary_event_source_unchanged
+    from .sheet_profile import COMPACT_PROFILE
+
+    binding = ordinary_event_receipt_binding(cycle, company_id, payload, context)
+    operations = plan.get('remote_projection')
+    version = plan.get('record_fingerprint_version', 1)
+    if (plan.get('exact_plan_version') != 2 or plan.get('publication_profile') != COMPACT_PROFILE
+            or plan.get('cycle_id') != cycle['id'] or plan.get('company_id') != company_id
+            or plan.get('requested_url') != payload['requested_url']
+            or plan.get('inventory_payload_digest') != _digest(payload)
+            or plan.get(ORDINARY_EVENT_PLAN_BINDING) != binding
+            or plan.get('plan_digest') != _exact_plan_digest(plan)
+            or not isinstance(operations, list) or not operations
+            or plan.get('remote_projection_digest') != _digest(operations)
+            or version not in {1, 2} or 'selected_retry_receipt_binding' in plan
+            or 'retained_membership_only' in plan
+            or (request_id is not None and request_id != binding['request_id'])):
+        raise ValueError('Ordinary Company-event receipt binding disagrees with the sealed exact plan.')
+    _require_ordinary_event_source_unchanged(plan, company_id)
+    records = record_fingerprints(operations, include_guard_only=version == 2)
+    if plan.get('remote_records') != records or plan.get('remote_records_digest') != _digest(records):
+        raise ValueError('Ordinary Company-event receipt disagrees with frozen record fingerprints.')
+    request = _ordinary_observation(context)['binding']['request']
+    return {
+        'binding': binding,
+        'records': records,
+        'schedule': {'boundary': 'idle', 'enqueued_at': request['enqueued_at']},
+        'timestamp': timestamp,
+    }
 
 
 def selected_retry_receipt_binding(cycle, company_id):
@@ -46,13 +179,19 @@ def selected_retry_receipt_binding(cycle, company_id):
     }
 
 
-def derive_receipt(cycle, company_id, payload, plan, timestamp, *, request_id=None):
+def derive_receipt(cycle, company_id, payload, plan, timestamp, *, request_id=None,
+                   ordinary_event_context=None):
     """Return the sole full binding/schedule contract for frozen plans.
 
     ``timestamp`` records local receipt creation only.  It must never change
     the immutable schedule, so interrupted plans with incomplete date fields
     remain recoverable under every exact-cycle consumer.
     """
+    if (has_ordinary_event_scope(cycle, request_id) or ORDINARY_EVENT_PLAN_BINDING in plan
+            or ordinary_event_context is not None):
+        return _ordinary_event_receipt(
+            cycle, company_id, payload, plan, timestamp, request_id, ordinary_event_context,
+        )
     if request_id is not None and not str(request_id).strip():
         raise ValueError('Exact receipt request ID override is invalid.')
     operations = (plan.get('remote_projection')

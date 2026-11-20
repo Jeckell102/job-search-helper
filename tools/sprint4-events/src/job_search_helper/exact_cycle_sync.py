@@ -30,14 +30,17 @@ def _canonical(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def _fallback_receipt(cycle, company_id, plan, payload):
+def _fallback_receipt(cycle, company_id, plan, payload, ordinary_event_context=None):
     """Compatibility name for the shared exact receipt contract."""
     request_id = cycle['id'] if (
         isinstance(plan, Mapping) and plan.get('exact_plan_version') == 2
         and 'selected_retry_receipt_binding' not in plan
+        and 'ordinary_company_event' not in plan
     ) else None
     return derive_receipt(
-        cycle, company_id, payload, plan, timestamp(), request_id=request_id)
+        cycle, company_id, payload, plan, timestamp(), request_id=request_id,
+        **({'ordinary_event_context': ordinary_event_context} if ordinary_event_context is not None else {}),
+    )
 
 
 def _readback(remote, operations):
@@ -454,7 +457,7 @@ def _finalize_exact_company(inbox, state, cycle_id, company_id, plan, local):
 
 
 def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote,
-                      state, company_guard, local, synchronizer):
+                      state, company_guard, local, synchronizer, ordinary_event_context=None):
     """Publish one v2 plan through only accepted exact-scope primitives."""
     from .exact_local_plan import VERIFIED, exact_local_plan
     from .sheets_sync import SheetsSynchronizer
@@ -492,7 +495,7 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
     controls = company_guard(company_id, plan.get('requested_url'))
     _validate_controls(plan, controls)
     cycle = state.cycle(cycle_id)
-    receipt = _fallback_receipt(cycle, company_id, plan, payload)
+    receipt = _fallback_receipt(cycle, company_id, plan, payload, ordinary_event_context)
     receipt_id = inbox.ensure_receipt(receipt)
     current = inbox.receipt(receipt)
     if current is None:
@@ -526,7 +529,10 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
         _validate_controls(plan, refreshed_controls)
 
     post_observation_read_guard = refreshed_company_guard if delivery_mode == 'observation_only' else None
-    pre_commit_guard = refreshed_company_guard if 'selected_retry_receipt_binding' in plan else None
+    pre_commit_guard = (
+        refreshed_company_guard if ('selected_retry_receipt_binding' in plan or 'ordinary_company_event' in plan)
+        else None
+    )
     exact_plan = sync.plan_exact_scope(
         authoritative['row_scope'], remote_projection,
         delivery_mode=delivery_mode)
@@ -580,7 +586,8 @@ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote
 
 
 def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=False, state,
-                        company_guard=None, local=None, synchronizer=None, bind_selected_retry=False):
+                        company_guard=None, local=None, synchronizer=None, bind_selected_retry=False,
+                        ordinary_event_context=None):
     """Deliver only the frozen plans for ``cycle_id``.
 
     Failures are intentionally contained per company.  No failure clears a
@@ -630,14 +637,18 @@ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=F
             continue
         plan, cursor = plan_state
         selected_retry = isinstance(plan, Mapping) and 'selected_retry_receipt_binding' in plan
+        ordinary_event = isinstance(plan, Mapping) and 'ordinary_company_event' in plan
         if selected_retry != bind_selected_retry:
             report['held'].append({'company_id': company_id, 'reason': 'selected_retry_publication_scope_required'})
+            continue
+        if ordinary_event != (ordinary_event_context is not None):
+            report['held'].append({'company_id': company_id, 'reason': 'ordinary_event_publication_scope_required'})
             continue
         if isinstance(plan, Mapping) and plan.get('exact_plan_version') == 2:
             try:
                 result = _publish_exact_v2(
                     inbox, cycle_id, company_id, plan, cursor, payload, remote,
-                    state, company_guard, local, synchronizer)
+                    state, company_guard, local, synchronizer, ordinary_event_context)
                 if result['confirmed']:
                     report['confirmed'].append(company_id)
             except UncertainWriteError:
