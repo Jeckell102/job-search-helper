@@ -269,6 +269,31 @@ class RetainedWorkRunnerTests(unittest.TestCase):
             approval.write_text(json.dumps({"manifest": preview["manifest"], "envelope": expired_envelope}), encoding="utf-8")
             self.assertEqual(1, runner.main(command))
 
+    def test_retained_run_uses_environment_key_without_command_line_secret(self):
+        from unittest.mock import patch
+        from job_search_helper import runner
+        released = {"state": "FIRST_PASS_RELEASED", "consumption": {"state": "FIRST_PASS_RELEASED_CONSUMED"}}
+        with patch.dict(os.environ, {
+                "COMPANY_RETAINED_KEY_ID": "external-review",
+                "COMPANY_RETAINED_ED25519_PUBLIC_KEY_BASE64": "public-material",
+                "COMPANY_RETAINED_SHEET_REQUEST_INTERVAL": "1.25"}, clear=False), \
+                patch("job_search_helper.runner._load_environment"), \
+                patch("job_search_helper.runner.state_path", return_value=self.state_path), \
+                patch("job_search_helper.retained_company_event.production_command",
+                      return_value=released) as production:
+            self.assertEqual(0, runner.main(["run-retained-company-event"]))
+        self.assertEqual("external-review", production.call_args.kwargs["key_id"])
+        self.assertEqual("public-material", production.call_args.kwargs["public_key_base64"])
+        self.assertEqual(1.25, production.call_args.kwargs["request_interval"])
+
+        with patch.dict(os.environ, {
+                "COMPANY_RETAINED_KEY_ID": "",
+                "COMPANY_RETAINED_ED25519_PUBLIC_KEY_BASE64": ""}, clear=False), \
+                patch("job_search_helper.runner._load_environment"), \
+                patch("job_search_helper.retained_company_event.production_command") as production:
+            self.assertEqual(1, runner.main(["run-retained-company-event"]))
+            production.assert_not_called()
+
     def test_journal_only_freeze_leaves_ordinary_state_and_inbox_unchanged(self):
         prepared = self.prepare()
         self.assertEqual(1, self.fetch_count)
