@@ -18,6 +18,20 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Controller preflight rerun completed. All 14 joint release fixtures passed
+on the new controller pin that temporarily acquires full app leases for
+the preflight attestation. No real site operations were used. Tool pin
+`a46b58601d574c843573ca1e1e2e443466a1742fa9fbad04eed9392800111b35`.
+Transcript `/tmp/jsh-s4-lease-preflight-controller-rehearsal.log`.
+Independent composed site QA is still separate.
+Sprint 5 isolated ordinary-worker fixture now reproduces the exact
+qualified source-to-evidence gap. Default-off stayed held and passed.
+The reviewed qualification fetched once through normal Rippling dispatch
+but had no sealed claim. Sol High lane now owns runtime mapping-fact
+persistence and its source-only tests. No protected or live source
+changes. [Sprint 5 red evidence](S5_ORDINARY_SEALED_EVIDENCE_RED_20261120.md).
+Verified composed site checkpoint backup `864cb21422fe86a064d530f2e608bde646fe41b2`.
+
 Composed site checker checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project about
 52% while real site closure remains open. The protected-state lane

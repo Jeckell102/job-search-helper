@@ -1,0 +1,22 @@
+{
+  "expected": {
+    "current_board": "https://ats.rippling.com/forterra/jobs",
+    "employer_source": "https://www.forterra.com/careers",
+    "foreign_board_slug": "unrelated-tenant-fixture",
+    "forterra_posting_id": "82183cfa-9a46-4159-8a76-669a969350d7",
+    "forterra_role": "Design verification plans for autonomous vehicle interfaces and document each hardware integration check.",
+    "pdw_board": "https://ats.rippling.com/pdwcareers/jobs",
+    "pdw_posting_id": "aa718870-e9f2-4cf2-b7eb-cf09ef5c3ae4",
+    "pdw_role": "Trace flight control regressions in the simulator and produce repeatable engineering test reports.",
+    "stale_board": "https://ats.rippling.com/forterra-retired-fixture/jobs"
+  },
+  "kind": "independent-synthetic-public-evidence-v1",
+  "responses": {
+    "https://ats.rippling.com/forterra-retired-fixture/jobs": "<script id=\"__NEXT_DATA__\" type=\"application/json\">{\"props\": {\"pageProps\": {\"apiData\": {\"jobBoard\": {\"slug\": \"unrelated-tenant-fixture\"}, \"jobBoardSlug\": \"unrelated-tenant-fixture\"}, \"dehydratedState\": {\"queries\": [{\"queryKey\": [\"board\", \"unrelated-tenant-fixture\", \"job-posts\", true, {\"city\": \"\", \"country\": \"\", \"departments\": [], \"page\": 0, \"pageSize\": 20, \"searchQuery\": \"\", \"state\": \"\", \"workplaceType\": null}, \"en-US\"], \"state\": {\"data\": {\"items\": [{\"id\": \"1835a673-ba0a-4935-95ac-12af5750009f\", \"name\": \"Unrelated employer position\"}], \"page\": 0, \"pageSize\": 20, \"totalItems\": 1, \"totalPages\": 1}}}]}}}}</script>",
+    "https://ats.rippling.com/forterra/jobs": "<script id=\"__NEXT_DATA__\" type=\"application/json\">{\"props\": {\"pageProps\": {\"apiData\": {\"jobBoard\": {\"slug\": \"forterra\"}, \"jobBoardSlug\": \"forterra\"}, \"dehydratedState\": {\"queries\": [{\"queryKey\": [\"board\", \"forterra\", \"job-posts\", true, {\"city\": \"\", \"country\": \"\", \"departments\": [], \"page\": 0, \"pageSize\": 20, \"searchQuery\": \"\", \"state\": \"\", \"workplaceType\": null}, \"en-US\"], \"state\": {\"data\": {\"items\": [{\"id\": \"82183cfa-9a46-4159-8a76-669a969350d7\", \"name\": \"Autonomy Integration Engineer\"}], \"page\": 0, \"pageSize\": 20, \"totalItems\": 1, \"totalPages\": 1}}}]}}}}</script>",
+    "https://ats.rippling.com/forterra/jobs/82183cfa-9a46-4159-8a76-669a969350d7": "<script id=\"__NEXT_DATA__\" type=\"application/json\">{\"props\": {\"pageProps\": {\"apiData\": {\"jobBoard\": {\"slug\": \"forterra\"}, \"jobPost\": {\"description\": {\"company\": \"Fixture-only employer description.\", \"role\": \"Design verification plans for autonomous vehicle interfaces and document each hardware integration check.\"}, \"name\": \"Autonomy Integration Engineer\", \"unlistedFromSearch\": false, \"url\": \"https://ats.rippling.com/forterra/jobs/82183cfa-9a46-4159-8a76-669a969350d7\", \"uuid\": \"82183cfa-9a46-4159-8a76-669a969350d7\"}, \"workLocations\": [\"San Jose, CA\"]}}}}</script>",
+    "https://ats.rippling.com/pdwcareers/jobs": "<script id=\"__NEXT_DATA__\" type=\"application/json\">{\"props\": {\"pageProps\": {\"apiData\": {\"jobBoard\": {\"slug\": \"pdwcareers\"}, \"jobBoardSlug\": \"pdwcareers\"}, \"dehydratedState\": {\"queries\": [{\"queryKey\": [\"board\", \"pdwcareers\", \"job-posts\", true, {\"city\": \"\", \"country\": \"\", \"departments\": [], \"page\": 0, \"pageSize\": 20, \"searchQuery\": \"\", \"state\": \"\", \"workplaceType\": null}, \"en-US\"], \"state\": {\"data\": {\"items\": [{\"id\": \"aa718870-e9f2-4cf2-b7eb-cf09ef5c3ae4\", \"name\": \"Robotics Test Engineer\"}], \"page\": 0, \"pageSize\": 20, \"totalItems\": 1, \"totalPages\": 1}}}]}}}}</script>",
+    "https://ats.rippling.com/pdwcareers/jobs/aa718870-e9f2-4cf2-b7eb-cf09ef5c3ae4": "<script id=\"__NEXT_DATA__\" type=\"application/json\">{\"props\": {\"pageProps\": {\"apiData\": {\"jobBoard\": {\"slug\": \"pdwcareers\"}, \"jobPost\": {\"description\": {\"company\": \"Fixture-only employer description.\", \"role\": \"Trace flight control regressions in the simulator and produce repeatable engineering test reports.\"}, \"name\": \"Robotics Test Engineer\", \"unlistedFromSearch\": false, \"url\": \"https://ats.rippling.com/pdwcareers/jobs/aa718870-e9f2-4cf2-b7eb-cf09ef5c3ae4\", \"uuid\": \"aa718870-e9f2-4cf2-b7eb-cf09ef5c3ae4\"}, \"workLocations\": [\"San Jose, CA\"]}}}}</script>",
+    "https://www.forterra.com/careers": "<html><body><h1>Forterra Careers</h1><a href=\"https://ats.rippling.com/forterra/jobs\">View all Forterra openings</a></body></html>"
+  }
+}
