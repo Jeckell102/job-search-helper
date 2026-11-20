@@ -252,8 +252,11 @@ class RetainedSessionStore:
 
     @staticmethod
     def _sealed_scope(current, exact_scope):
+        allowed = {"operations", "rows", "projection_digest", "delivery_mode"}
         if (not isinstance(exact_scope, Mapping)
-                or set(exact_scope) != {"operations", "rows", "projection_digest"}
+                or not {"operations", "rows", "projection_digest"} <= set(exact_scope)
+                or set(exact_scope) - allowed
+                or exact_scope.get("delivery_mode", "write_once") != "write_once"
                 or exact_scope.get("operations") != current["projection"]
                 or exact_scope.get("projection_digest") != current["projection_digest"]
                 or not isinstance(exact_scope.get("rows"), list)
