@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from job_search_helper import sync_cli
 from job_search_helper.cli import writer_lock, WriterLockBusy
-from job_search_helper.sqlite_repository import SQLiteRepository
+from job_search_helper.sqlite_repository import SQLiteRepository, SQLiteRepository as RealSQLiteRepository
 
 
 class SyncCliLifecycleTests(unittest.TestCase):
@@ -18,6 +18,8 @@ class SyncCliLifecycleTests(unittest.TestCase):
         self.directory = Path(self.temp.name)
         self.lock = self.directory / 'writer.lock'
         self.local = SQLiteRepository(self.directory / 'jobs.sqlite3', 'fixture', initialize=True)
+        with self.local.transaction():
+            self.local.set_meta('ready', 'yes')
         self.addCleanup(self.local.close)
         self.messages = []
         self.stack = ExitStack()
@@ -148,3 +150,89 @@ class SyncCliLifecycleTests(unittest.TestCase):
         self.assertEqual(sync_cli.main(['watch', '--interval', '5']), 130)
         with writer_lock(self.lock): pass
         self.assert_closed()
+
+    def test_cli_intake_enable_status_disable_persists_across_fresh_commands(self):
+        # Use the real repository constructor for this command-level control
+        # test; each CLI invocation opens and closes a fresh instance.
+        with patch.object(sync_cli, 'SQLiteRepository', RealSQLiteRepository):
+            self.assertEqual(sync_cli.main(['intake-status']), 0)
+            self.assertFalse(self.messages[-1]['enabled'])
+            self.assertEqual(sync_cli.main(['intake-enable']), 0)
+            self.assertTrue(self.messages[-1]['enabled'])
+            self.assertEqual(sync_cli.main(['intake-status']), 0)
+            self.assertTrue(self.messages[-1]['enabled'])
+            self.assertEqual(sync_cli.main(['intake-disable']), 0)
+            self.assertFalse(self.messages[-1]['enabled'])
+
+    def test_watch_dispatches_only_after_writer_lock_releases(self):
+        from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
+        observed = []
+        def tick(_self):
+            with writer_lock(self.lock):
+                pass
+            observed.append(True)
+            return {'state': 'DISABLED'}
+        def sleep(_delay):
+            raise KeyboardInterrupt
+        with patch.object(CompanyIntakeDispatcher, 'run_once', tick), \
+             patch.object(sync_cli.time, 'sleep', side_effect=sleep):
+            self.assertEqual(sync_cli.main(['watch', '--interval', '5']), 130)
+        self.assertEqual(observed, [True])
+        self.assertTrue(any(item.get('company_intake', {}).get('state') == 'DISABLED'
+                            for item in self.messages))
+
+    def test_once_never_constructs_intake_dispatcher(self):
+        from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
+        with patch.object(CompanyIntakeDispatcher, 'run_once') as tick:
+            self.assertEqual(sync_cli.main(['once']), 0)
+        tick.assert_not_called()
+
+    def test_watch_reports_held_intake_without_launching(self):
+        from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
+        def sleep(_delay):
+            raise KeyboardInterrupt
+        with patch.object(CompanyIntakeDispatcher, 'run_once', return_value={'state': 'HELD_SCRAPER_LOCK'}) as tick, \
+             patch.object(sync_cli.time, 'sleep', side_effect=sleep):
+            self.assertEqual(sync_cli.main(['watch', '--interval', '5']), 130)
+        tick.assert_called_once()
+        self.assertTrue(any(item.get('company_intake', {}).get('state') == 'HELD_SCRAPER_LOCK'
+                            for item in self.messages))
+
+    def test_intake_exception_is_retained_not_recorded_as_sync_error_or_backoff(self):
+        from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
+        sleeps = []
+        def sleep(delay):
+            sleeps.append(delay)
+            raise KeyboardInterrupt
+        with patch.object(CompanyIntakeDispatcher, 'run_once', side_effect=RuntimeError('intake fixture')), \
+             patch.object(sync_cli.time, 'sleep', side_effect=sleep):
+            self.assertEqual(sync_cli.main(['watch', '--interval', '5']), 130)
+        self.assertEqual(len(sleeps), 1)
+        self.assertGreaterEqual(sleeps[0], 1)
+        self.assertLessEqual(sleeps[0], 5)
+        self.assertTrue(any(item.get('state') == 'COMPANY_INTAKE_ERROR_RETAINED'
+                            for item in self.messages))
+        reopened = RealSQLiteRepository(self.directory / 'jobs.sqlite3', 'fixture', readonly=True)
+        try:
+            self.assertIn(reopened.get_meta('last_error'), (None, ''))
+        finally:
+            reopened.close()
+
+    def test_intake_error_journal_failure_never_becomes_a_sync_error(self):
+        from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
+        sleeps = []
+        def sleep(delay):
+            sleeps.append(delay)
+            raise KeyboardInterrupt
+        with patch.object(CompanyIntakeDispatcher, 'run_once', side_effect=RuntimeError('intake fixture')), \
+             patch.object(CompanyIntakeDispatcher, 'record_error', side_effect=OSError('journal fixture')), \
+             patch.object(sync_cli.time, 'sleep', side_effect=sleep):
+            self.assertEqual(sync_cli.main(['watch', '--interval', '5']), 130)
+        self.assertEqual(len(sleeps), 1)
+        self.assertGreaterEqual(sleeps[0], 1)
+        self.assertTrue(any(item.get('state') == 'COMPANY_INTAKE_ERROR_UNRECORDED'
+                            and 'intake fixture' in item.get('error', '')
+                            and 'journal fixture' in item.get('journal_error', '')
+                            for item in self.messages))
+        self.assertFalse(any(item.get('state') == 'SYNC_ERROR_LOCAL_WORK_RETAINED'
+                             for item in self.messages))

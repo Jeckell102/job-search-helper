@@ -1,5 +1,45 @@
 # Integration automation coordinator status
 
+## Active coordinator checkpoint — 2026-11-19 sync-watch intake accepted
+
+- Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains **active**.
+  This is a source-only wiring checkpoint, not activation, live proof, or
+  milestone completion.
+- The accepted Company intake dispatcher is now connected to the existing
+  `sync watch` loop only after a successful bounded Sheets cycle releases
+  `writer.lock`. `sync once`, writer-busy, and sync-error paths do not invoke
+  intake. There is no second scheduler.
+- New local controls expose `intake-status`, `intake-enable`, and
+  `intake-disable`. The durable control is disabled by default and is not being
+  activated at this checkpoint.
+- Intake exceptions, including a second failure while recording the intake
+  error, are contained outside Sheets sync health. They cannot set the primary
+  sync `last_error`, emit a false sync failure, or trigger sync backoff.
+- Independent QA **accepted** the final watcher wiring and reproduced the
+  dual-failure case. Its strict suite passed **28/28** checks; the coordinator's
+  adjacent strict suite passed **101/101** checks. `git diff --check` passes.
+- A refreshed read-only historical-cycle audit confirms
+  `CYC-B639C6D864EC` remains `In Progress` with 45 retained inventories and six
+  legacy plans. Two separate cycle-bound receipts are already confirmed and
+  must not replay. Broad start/resume/sync, lock deletion, and premature cycle
+  pause remain prohibited.
+- A first retained-exception preview failed because `now` was undefined; a
+  fresh run later succeeded after the protected dirty `runner.py` had changed
+  to import it. That protected-source drift must be pinned and reconciled with
+  the overlay before any historical apply or source installation.
+- Roadmap accounting remains **0 of 6 milestone gates closed** and final
+  independent acceptance remains **0%**. The current intake source work item is
+  approximately **95%**: accepted source and tests are complete; protected
+  installation, disabled service deployment, safe historical unblocking, and
+  live idle/busy demonstrations remain.
+- Next action: commit and back up this accepted source checkpoint, choose and
+  independently review the smallest historical-cycle unblocking contract, then
+  reconcile current protected source bytes before any exact installation.
+
+Reread this section after every context reset and before a major/live action or
+user update. It supersedes older current-status claims; older sections remain
+historical evidence.
+
 ## Active coordinator checkpoint — 2026-11-19 Company intake source accepted
 
 - Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains **active**.

@@ -51,6 +51,25 @@ class CompanyIntakeDispatcher:
             db.execute("INSERT INTO settings(key,value) VALUES('intake_enabled',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                        ("true" if enabled else "false",))
 
+    def status(self):
+        if not self.journal_path.exists():
+            return {"enabled": False, "dispatches": {}, "last_error": ""}
+        with self._journal() as db:
+            enabled = db.execute("SELECT value FROM settings WHERE key='intake_enabled'").fetchone()
+            error = db.execute("SELECT value FROM settings WHERE key='last_intake_error'").fetchone()
+            rows = db.execute("SELECT state,count(*) FROM dispatches GROUP BY state").fetchall()
+        return {"enabled": bool(enabled and enabled[0] == "true"),
+                "dispatches": {state: count for state, count in rows},
+                "last_error": error[0] if error else ""}
+
+    def record_error(self, error):
+        """Persist an intake-only failure without changing sync/local work."""
+        value = (type(error).__name__ + ": " + str(error))[:500]
+        with self._journal() as db:
+            db.execute("INSERT INTO settings(key,value) VALUES('last_intake_error',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                       (value,))
+        return value
+
     def run_once(self):
         """Perform one supervised catch-up tick; never wait or start a loop."""
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
