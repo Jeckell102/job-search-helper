@@ -1,4 +1,5 @@
 from dataclasses import replace
+import errno
 import os
 from pathlib import Path
 
@@ -6,6 +7,7 @@ import pytest
 
 from alternate_exchange_witness import ExchangeFence, verify_exchange
 import host_checkpoint as checkpoint
+import host_exchange as exchange
 from launcher_witness import LAUNCH_FILES, LauncherPolicy
 from site_policy import load_policy
 from test_host_check_main import build_fixture_archive
@@ -72,6 +74,51 @@ def test_interrupted_closure_requires_completed_replay(fixture, monkeypatch):
         verify_exchange(approved)
     assert disk_journal(controller) == before
     controller.close()
+    verify_exchange(approved)
+
+
+@pytest.mark.parametrize("phase", ["closed", exchange.CLOSED_ACKNOWLEDGED])
+def test_closure_witness_requires_first_directory_sync(fixture, monkeypatch, phase):
+    controller, _ = fixture
+    generation = controller.prepare()
+    approved = approve(controller, generation)
+    control_inode = loaded(controller).control_pin.inode
+    real_sync = exchange.os.fsync
+    terminal_syncs = []
+
+    def fail_after_visible_terminal_replace(fd):
+        current = disk_journal(controller)["phase"] if os.fstat(fd).st_ino == control_inode else None
+        if current == phase:
+            raise OSError(errno.EIO, "fixture directory sync interruption")
+        real_sync(fd)
+        if current == "closed":
+            terminal_syncs.append(current)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(exchange.os, "fsync", fail_after_visible_terminal_replace)
+        with pytest.raises(exchange.Hold, match="errno 5"):
+            controller.close()
+    assert disk_journal(controller)["phase"] == phase
+    assert states(controller) == [False, False, False]
+
+    if phase == "closed":
+        with pytest.raises(ValueError, match="phase is not durable"):
+            verify_exchange(approved)
+        with pytest.raises(exchange.Hold, match="closure is incomplete"):
+            controller.restore(b"synthetic terminal receipt", verify_terminal=lambda *_: True)
+        assert terminal_syncs == []
+    else:
+        assert terminal_syncs == ["closed"]
+        verify_exchange(approved)
+
+    def unexpected_swap(*_):
+        pytest.fail("A terminal closure replay must preserve the completed placements")
+
+    monkeypatch.setattr(exchange, "_exchange", unexpected_swap)
+    replay = exchange.HostExchange(controller.policy_path, controller.approved_sha256)
+    replay.close()
+    assert disk_journal(replay)["phase"] == exchange.CLOSED_ACKNOWLEDGED
+    assert states(replay) == [False, False, False]
     verify_exchange(approved)
 
 

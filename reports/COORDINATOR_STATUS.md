@@ -27,13 +27,30 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Durable closure acknowledgment checkpoint. Coordinator and release owner,
+goal `01a1f11f-e014-7493-8441-2f66502e23a9`. The new staged controller at
+`/tmp/jsh-s4-acknowledged-site.QzgJ0Rvm` makes the site witness and initial
+restoration require acknowledgment after the completed closure directory
+sync. Explicit close replay acknowledges a legacy or interrupted complete
+record without moving the checkouts again. All 84 disposable tests passed.
+`/root/site_journal_qa` independently accepted both interruption cases.
+`/root/s4_release_boundary_review` independently held live acceptance.
+Coordinator owns the live enrollment and terminal verifier. Next, bind
+exclusive custody of the real approved checkout routes, policy and writable
+parents, account for wrapper and other launch contexts and the effective
+write destinations, and prove drain before any live maintenance action.
+The wrapper host and tunnel are active, and job-search sync is inactive
+and disabled in a fresh read. No live policy or hold exists yet.
+[Acknowledgment evidence](S4_CLOSURE_ACKNOWLEDGMENT_20261120.md) ·
+[Host readiness](S4_MULELAB_RELEASE_BOUNDARY_REVIEW_20261120.md).
+
 Site verifier composition checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Replaced the fixture-only journal
 reader with the approved controller's read-only API in
 `/tmp/jsh-s4-journal-site.uL3AMus0`. All 82 disposable tests passed.
 `/root/site_journal_qa` independently accepted source composition with
-11/11 focused tests. First scoped composition backup verified at
-`5ad3427d274a5f03dcdb445473f0559a315e3596`.
+11/11 focused tests. Scoped source, tests, and both QA records verified
+on the remote backup branch at `883f59dca2bf691ea05ff1f6dc920502759a33cb`.
 Main coordinator owns host enrollment and writer coverage. Next, prove
 acknowledged close or replay before live policy compilation and arrange
 continuous control of the approved policy and checkout routes, backed by
@@ -63,6 +80,12 @@ reports to main release chat `01a1f11f-e014-7493-8441-2f66502e23a9` at
 `/tmp/jsh-m5-pre-release-validation-handoff.md`. Sprint 4 rollout, Sprint 5
 custody and Engine, and release/retry plumbing all retain their current
 owners. Production read-only; no live or release actions assigned.
+Latest verified progress from the validation chat and its handoff: 17
+fixture validator checks passed, including normal company-only Engine
+dispatch for Forterra and PDW. Independent review of its frozen version
+found three false accepts involving employer labels, hidden zero-opening
+markup and a changed source between measurement and import. That chat owns
+the fixes and independent rerun. Live candidate qualification remains open.
 
 Host route and exchange witness checkpoint. Coordinator and release
 owner, active goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Read-only

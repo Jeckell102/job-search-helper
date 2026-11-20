@@ -18,6 +18,7 @@ JOURNAL_SCHEMA = 'alternate-checkout-exchange-journal-v1'
 LOCK = 'exchange.lock'
 JOURNAL = 'exchange.json'
 POLICY = 'policy.json'
+CLOSED_ACKNOWLEDGED = 'closed-acknowledged'
 PARK_PREFIX = '.exchange-park-'
 DIRECTORY = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
 FILE = os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK
@@ -350,9 +351,9 @@ class HostExchange:
                 'journal is outside the approved generation')
         phase, count, proof = (journal[key] for key in ('phase', 'completed', 'terminal_proof_sha256'))
         require(type(count) is int and 0 <= count <= len(policy.pairs)
-                and (phase not in ('closed', 'restored') or count == len(policy.pairs)),
+                and (phase not in ('closed', CLOSED_ACKNOWLEDGED, 'restored') or count == len(policy.pairs)),
                 'invalid exchange progress')
-        require((phase in ('closing', 'closed') and proof is None)
+        require((phase in ('closing', 'closed', CLOSED_ACKNOWLEDGED) and proof is None)
                 or (phase in ('restoring', 'restored') and HEX.fullmatch(proof)), 'invalid phase or terminal proof')
         return journal
 
@@ -419,17 +420,21 @@ class HostExchange:
             require(self._placements(policy, parents) == prefix(count), 'placement changed after swap')
             journal['completed'] = count
             self._persist(control, journal)
-        phase = 'closed' if close else 'restored'
-        if journal['phase'] != phase:
-            journal['phase'] = phase
-            self._persist(control, journal)
-        return self._witness(policy, journal, phase)
 
     def close(self):
         with self._open(write=True) as (policy, control, parents):
             journal = self._journal(policy, control)
-            require(journal['phase'] in ('closing', 'closed'), 'exchange is past closure')
-            return self._advance(policy, control, parents, journal, close=True)
+            require(journal['phase'] in ('closing', 'closed', CLOSED_ACKNOWLEDGED), 'exchange is past closure')
+            self._advance(policy, control, parents, journal, close=True)
+            if journal['phase'] == 'closing':
+                journal['phase'] = 'closed'
+                self._persist(control, journal)
+            if journal['phase'] == 'closed':
+                # The closure synced above, or was synced at the start of replay.
+                # Only now may a read-only caller rely on an observed acknowledgment.
+                journal['phase'] = CLOSED_ACKNOWLEDGED
+                self._persist(control, journal)
+            return self._witness(policy, journal, 'closed')
 
     def restore(self, evidence, *, verify_terminal):
         require(type(evidence) is bytes and bool(evidence), 'terminal proof required')
@@ -437,23 +442,28 @@ class HostExchange:
         with self._open(write=True) as (policy, control, parents):
             journal = self._journal(policy, control)
             phase = journal['phase']
-            require(phase in ('closed', 'restoring', 'restored'), 'closure is incomplete')
-            if phase == 'closed':
+            require(phase in (CLOSED_ACKNOWLEDGED, 'restoring', 'restored'), 'closure is incomplete')
+            if phase == CLOSED_ACKNOWLEDGED:
                 require(all(self._placements(policy, parents)), 'closure is incomplete')
             else:
                 require(journal['terminal_proof_sha256'] == digest, 'terminal proof changed')
             closed = self._witness(policy, {**journal, 'terminal_proof_sha256': None}, 'closed')
             require(verify_terminal(closed, evidence) is True, 'terminal proof refused')
-            if phase == 'closed':
+            if phase == CLOSED_ACKNOWLEDGED:
                 journal.update(phase='restoring', completed=0, terminal_proof_sha256=digest)
                 self._persist(control, journal)
-            return self._advance(policy, control, parents, journal, close=False)
+            self._advance(policy, control, parents, journal, close=False)
+            if journal['phase'] != 'restored':
+                journal['phase'] = 'restored'
+                self._persist(control, journal)
+            return self._witness(policy, journal, 'restored')
 
     def witness(self, phase='closed'):
         require(phase in ('closed', 'restored'), 'invalid witness phase')
         with self._open(write=False) as (policy, control, parents):
             journal = self._journal(policy, control)
-            require(journal['phase'] == phase, 'requested witness phase is not durable')
+            expected = CLOSED_ACKNOWLEDGED if phase == 'closed' else phase
+            require(journal['phase'] == expected, 'requested witness phase is not durable')
             require(self._placements(policy, parents) == [phase == 'closed'] * len(policy.pairs),
                     'witness placement mismatch')
             return self._witness(policy, journal, phase)
