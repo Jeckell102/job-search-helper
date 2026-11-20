@@ -18,6 +18,17 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+MuleLab read-only route checkpoint. Wrapper service is running and enabled;
+sync is inactive and disabled. Two additional configured launcher paths
+share the production workbook while resolving distinct local State
+paths. A third local launcher has unresolved configured workbook identity.
+A production-only lock witness cannot establish workbook exclusivity.
+Coordinator owns callable/effective route evidence and authorized
+same-workbook hold design. No intervention required while disposable
+fence tests and QA continue. See
+[MuleLab writer preflight](S4_MULELAB_WRITER_ROUTE_PREFLIGHT_20261120.md).
+Latest verified source backup `04ad0f952d113a00d587a3023557f1a6b7ab92f4`.
+
 Physical host fence candidate checkpoint. Coordinator and release owner,
 goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project
 about 52%, with no new live gate. Repaired both refusal recovery gaps
