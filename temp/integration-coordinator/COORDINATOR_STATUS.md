@@ -113,6 +113,12 @@
   `c8a4cb0`; and 266 protected-runtime checks passed. The service remained
   stopped/disabled, both intake controls remained off, and preserved lock
   bytes were unchanged. See `M3_PROTECTED_INSTALL_20261120.md`.
+- The next M2/M3 pre-persistence boundary now has an independently **ACCEPTED
+  design audit** in `M3_M2_PREPERSISTENCE_STALE_WRITE_AUDIT_20261120.md`.
+  It requires an ephemeral Company guard on every staged-job, absence/closure,
+  and completion write without changing F6 frozen bytes, plus a separately
+  named company-event start-admission sub-slice. This is design acceptance
+  only; implementation, strict tests, and guarded operational proof remain.
 - The accepted F1 source/test checkpoint `720c84e` is installed narrowly in the
   protected MuleLab checkout. All four starting hashes matched `a940524`,
   rollback copies are at
