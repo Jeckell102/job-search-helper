@@ -32,6 +32,13 @@
   `sync_only` recovery completes the same suffix without refetching. Independent
   QA accepted 73 targeted and 43 regression checks; no broader F2 outcome or
   automatic-release claim follows from this source-only evidence.
+- F2 retry outcomes: release-bound retry attempts now record only with their
+  exact successor request ID and one-Company admission scope. Missing,
+  unrelated, predecessor, multi-company, changed-source, or altered-release
+  lineage is skipped. Source drift becomes a durable stale audit record that
+  the repair consumer cannot receive. Independent QA accepted the repair;
+  `F2_RETRY_OUTCOME_QA_20261120.md` has the evidence. This still does not
+  dispatch a repair or close F2.
 - Worker assignments: coordinator owns the next F2 recovery/outcome scope;
   independent QA completed adversarial review of the admission repair. Jetson retains exactly one inference lane and
   has no work in this checkpoint.
@@ -41,15 +48,18 @@
   It contains only the named F1/F2 source/test files plus this card and
   `F1_F2_ADMISSION_QA_20261120.md`; no databases, locks, credentials, raw job
   data, or Sheets content were included.
+- Follow-up commit `6c8188a` (`backup F2 partial publication recovery`) is
+  also pushed to that branch, adding only `local_pipeline.py`, its durable
+  inbox regression, and the updated QA/card evidence.
 - Safety/current state: Samtec request `operator-samtec-m1-20261119` remains
   `WAITING_SAFE_BOUNDARY` behind `CYC-B639C6D864EC`; the Saronic provenance
   conflict has not been touched. No live scraper, Sheets client, remote write,
   global sync, automatic release, broad scan, or historical-cycle mutation
   has run. The trusted retained signer key remains absent, so the bounded live
   pilot remains closed.
-- Next action: preserve the F2 recovery source, test, card and QA evidence in
-  the scoped GitHub backup, then continue the outcome-precedence F2 gate work.
-  Do not use a
+- Next action: preserve the F2 retry outcome source, tests, card and QA
+  evidence in the scoped GitHub backup, then map the remaining F2 acceptance
+  evidence against the full release-to-retry chain. Do not use a
   test signer or weaken the external authorization gate.
 
 Reread this section first after every context reset and before a backup or
