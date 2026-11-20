@@ -83,6 +83,8 @@ def _compact_evaluation_history(snapshot: dict) -> None:
 
 
 def inventory_payload(inventory, company):
+    # This payload is part of the F6 durable inbox/receipt contract.  M3
+    # provenance belongs in the saved cycle item, never in these bytes.
     return {"jobs": inventory.jobs, "inventory_status": inventory.status,
             "reason": inventory.reason, "source_url": inventory.source_url, "ats": inventory.ats,
             "browser_pending_urls": inventory.browser_pending_urls,
@@ -1180,9 +1182,13 @@ class Engine:
                 self._commit(self._company_op(company, {"Active Cycle ID": cycle_id, "Scan State": "In Progress", "Record Updated": now()}))
                 with fetch_work.bind_worker(company["Company"]):
                     inventory = self.fetcher(str(company.get("ATS / Source", "")), str(company.get("Official Careers URL", "")), cid, company["Company"])
+                from .company_events import source_revision as company_source_revision
                 item.update(jobs=inventory.jobs, inventory_status=inventory.status, reason=inventory.reason,
                             source_url=inventory.source_url, ats=inventory.ats, fetched_at=now(), stage="inventory",
-                            staging_complete=False, next_job_index=0)
+                            browser_pending_urls=inventory.browser_pending_urls,
+                            browser_discovery_incomplete=inventory.browser_discovery_incomplete,
+                            staging_complete=False, next_job_index=0,
+                            outcome_source_revision=company_source_revision(company))
                 self.state.save_cycle(cycle)
                 if inventory.status in {"blocked", "failed", "unsupported"}:
                     item["stage"] = inventory.status
@@ -1301,10 +1307,11 @@ class Engine:
                         inventory = Inventory("failed", reason=f"Fetch worker failed: {type(exc).__name__}")
                     # Durability failures must surface, never replace a fetched
                     # inventory with an error payload or a success checkpoint.
+                    payload = inventory_payload(inventory, snapshot)
                     if self.inbox is not None:
-                        self.inbox.save(cycle_id, cid, inventory_payload(inventory, snapshot))
+                        self.inbox.save(cycle_id, cid, payload)
                     dashboard.worker_handoff(slot, snapshot["Company"], len(inventory.jobs))
-                    return cid, inventory
+                    return cid, inventory, payload
             finally:
                 shared_work.company_done()
 
@@ -1352,16 +1359,18 @@ class Engine:
                         continue
                     cid = in_flight.pop(future)
                     item = cycle["companies"][cid]
+                    fetched_payload = None
                     try:
-                        result_cid, inventory = future.result()
+                        result_cid, inventory, fetched_payload = future.result()
                         if result_cid != cid or not isinstance(inventory, Inventory):
                             inventory = Inventory("failed", reason="Fetch worker returned an invalid inventory result")
+                            fetched_payload = None
                     except (sqlite3.Error, OSError):
                         raise  # Local durability failed; keep the previous checkpoint.
                     except Exception as exc:
                         inventory = Inventory("failed", reason=f"Fetch worker failed: {type(exc).__name__}")
                     saved = self.inbox.get(cycle_id, cid) if self.inbox is not None else None
-                    payload = saved[0] if saved else inventory_payload(inventory, item)
+                    payload = saved[0] if saved else (fetched_payload or inventory_payload(inventory, item))
                     item.update(payload, stage="inventory", staging_complete=False, next_job_index=0)
                     self.state.save_cycle(cycle)
                     if self.inbox is not None:
@@ -1412,6 +1421,11 @@ class Engine:
                     else:
                         operations.append(self._company_op(company, {"Active Cycle ID": cycle_id, "Scan State": "Queued", "Record Updated": now()}))
                         item["requested_url"] = company["Official Careers URL"]
+                        # Keep M3's source fence in durable cycle state.  The
+                        # inbox payload is F6-bound and must remain byte-for-
+                        # byte compatible with existing receipt semantics.
+                        from .company_events import source_revision as company_source_revision
+                        item["outcome_source_revision"] = company_source_revision(company)
                         assignments.append((cid, copy.deepcopy(company)))
                         capacity -= 1
                         continue

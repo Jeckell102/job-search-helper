@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from job_search_helper.core import job_key
+from job_search_helper.company_events import source_revision
 from job_search_helper.engine import Engine, State, inventory_payload
 from job_search_helper.inbox import InventoryInbox
 from job_search_helper.local_pipeline import LocalPipeline
@@ -73,6 +74,15 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(self.engine._dashboard.local_queue_count, 0)
         self.assertEqual(self.engine._dashboard.sync_plan_count, 0)
         self.assertEqual(self.state.cycle(self.cycle)['status'], 'Complete')
+
+    def test_assignment_provenance_is_durable_cycle_state_not_f6_inbox_payload(self):
+        self.defer()
+        cycle = self.state.cycle(self.cycle)
+        company_row = next(row for row in self.repo.read('Companies') if row['Company ID'] == 'C-0')
+        self.assertEqual(cycle['companies']['C-0']['outcome_source_revision'],
+                         source_revision(company_row))
+        payload, _blocked = self.inbox.get(self.cycle, 'C-0')
+        self.assertNotIn('outcome_source_revision', payload)
 
     def test_browser_pending_details_finish_with_exceptions_and_explicit_retry_skips_successes(self):
         from job_search_helper.ats import Inventory

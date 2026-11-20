@@ -873,6 +873,8 @@ class SQLiteRepository:
         # intake format.  The classifier, not a caller, supplies this field.
         if 'repair_category' in outcome:
             payload['repair_category'] = outcome['repair_category']
+        if 'comparison' in outcome:
+            payload['comparison'] = outcome['comparison']
         encoded = encode(payload)
         with self.transaction():
             existing = self.db.execute('SELECT payload FROM scrape_outcomes WHERE outcome_id=?',
@@ -893,7 +895,7 @@ class SQLiteRepository:
 
     def scrape_outcomes(self, *, company_id=None, limit=100):
         """Read durable outcomes for review; this method never dispatches repairs."""
-        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1 or limit > 1000:
             raise RepositoryError('Scrape outcome limit must be between 1 and 1000.')
         if company_id is not None and (not isinstance(company_id, str) or not company_id.strip()):
             raise RepositoryError('Company ID filter must be non-empty text.')
@@ -920,12 +922,18 @@ class SQLiteRepository:
         """
         if not isinstance(consumer, str) or not consumer.strip():
             raise RepositoryError('Scrape outcome consumer is required.')
-        if not isinstance(limit, int) or not 1 <= limit <= 1000:
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 1000:
             raise RepositoryError('Scrape outcome limit must be between 1 and 1000.')
+        # This is the only reserved repair handoff consumer. Stale evidence is
+        # retained in the immutable ledger for audit, but may never be handed
+        # to a repair coordinator or silently acknowledged/deleted.
+        stale_filter = ''
+        if consumer.strip() == 'repair-coordinator':
+            stale_filter = " AND o.outcome != 'STALE_OR_PAUSED'"
         rows = self.db.execute(
             'SELECT o.payload FROM scrape_outcomes o LEFT JOIN scrape_outcome_deliveries d '
             'ON d.outcome_id=o.outcome_id AND d.consumer=? WHERE d.outcome_id IS NULL '
-            'ORDER BY o.recorded_at,o.outcome_id LIMIT ?', (consumer.strip(), limit),
+            + stale_filter + ' ORDER BY o.recorded_at,o.outcome_id LIMIT ?', (consumer.strip(), limit),
         ).fetchall()
         return [json.loads(row[0]) for row in rows]
 
@@ -938,9 +946,12 @@ class SQLiteRepository:
         if not isinstance(consumer, str) or not consumer.strip():
             raise RepositoryError('Scrape outcome consumer is required.')
         with self.transaction():
-            if not self.db.execute('SELECT 1 FROM scrape_outcomes WHERE outcome_id=?',
-                                   (outcome_id.strip(),)).fetchone():
+            row = self.db.execute('SELECT outcome FROM scrape_outcomes WHERE outcome_id=?',
+                                  (outcome_id.strip(),)).fetchone()
+            if not row:
                 raise RepositoryError('Unknown scrape outcome.')
+            if consumer.strip() == 'repair-coordinator' and row[0] == 'STALE_OR_PAUSED':
+                raise RepositoryError('Repair coordinator may not acknowledge stale scrape outcomes.')
             self.db.execute('INSERT OR IGNORE INTO scrape_outcome_deliveries(outcome_id,consumer,acknowledged_at) '
                             'VALUES (?,?,?)', (outcome_id.strip(), consumer.strip(), timestamp()))
         return {'outcome_id': outcome_id.strip(), 'consumer': consumer.strip(), 'acknowledged': True}

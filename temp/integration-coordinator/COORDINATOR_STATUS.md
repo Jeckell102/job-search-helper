@@ -97,6 +97,15 @@
   may suppress stale repair/retry/coordinator delivery, while no-stale job
   writes remain owned and tested at pre-persistence admission. Company-only
   producer integration is deliberately deferred to its explicit call site.
+- The first M3 implementation slice is now independently **ACCEPTED at
+  source/test level**. Ordinary normal cycles retain bounded source provenance
+  outside F6 inbox bytes, classify incomplete/storage/stale results
+  conservatively, and durably retain stale evidence while keeping it away from
+  the repair coordinator. Root's wider changed-boundary matrix passed 266
+  checks. This does not close M3: exact F6 receipt binding, pre-write stale
+  protection, company-only production, richer failure facts, coordinator
+  behavior, and live proof remain open. See
+  `M3_NORMAL_CYCLE_SOURCE_QA_20261120.md`.
 - The accepted F1 source/test checkpoint `720c84e` is installed narrowly in the
   protected MuleLab checkout. All four starting hashes matched `a940524`,
   rollback copies are at

@@ -39,6 +39,12 @@ class OutcomeClassificationTests(unittest.TestCase):
         self.assertEqual(result["outcome"], STALE_OR_PAUSED)
         self.assertEqual(result["action"], "stop_stale_work")
 
+    def test_all_paused_or_removed_status_spellings_are_stale(self):
+        for status in ('pause', 'paused', 'remove', 'removed', 'withdrawn'):
+            with self.subTest(status=status):
+                self.assertEqual(STALE_OR_PAUSED,
+                                 classify_outcome(facts(company_status=status))['outcome'])
+
     def test_storage_failure_precedes_complete_or_repair(self):
         result = classify_outcome(facts(
             storage_status="sync_failed", inventory_status="complete",
@@ -142,6 +148,35 @@ class DurableOutcomeTests(unittest.TestCase):
         self.assertFalse(self.repo.record_scrape_outcome(source_facts)["recorded"])
         self.assertEqual(self.repo.scrape_outcomes(company_id="COMP-1"), [first["outcome"]])
         self.assertEqual(self.repo.pending_company_events("intake"), [])
+
+    def test_stale_outcome_is_durable_but_reserved_repair_consumer_never_receives_it(self):
+        stale = facts(source_current=False, source_revision='rev-frozen',
+                      current_source_revision='rev-now',
+                      failure={'category': 'adapter_regression'})
+        saved = self.repo.record_scrape_outcome(stale)['outcome']
+        self.assertEqual(saved['outcome'], STALE_OR_PAUSED)
+        self.assertEqual(saved['identity']['source_revision'], 'rev-frozen')
+        self.assertEqual(saved['comparison']['current_source_revision'], 'rev-now')
+        self.assertEqual(self.repo.scrape_outcomes(company_id='COMP-1'), [saved])
+        self.assertEqual(self.repo.pending_scrape_outcomes('repair-coordinator'), [])
+        self.assertEqual(self.repo.pending_scrape_outcomes('audit'), [saved])
+        with self.assertRaisesRegex(RepositoryError, 'may not acknowledge'):
+            self.repo.acknowledge_scrape_outcome(saved['outcome_id'], 'repair-coordinator')
+        # Reopen proves that withholding is a durable consumer policy, not an
+        # in-memory suppression that could replay after a restart.
+        path = self.repo.path
+        self.repo.close()
+        self.repo = SQLiteRepository(path, 'test-sheet', initialize=True)
+        self.addCleanup(self.repo.close)
+        self.assertEqual(self.repo.pending_scrape_outcomes('repair-coordinator'), [])
+        self.assertEqual(self.repo.pending_scrape_outcomes('audit'), [saved])
+
+    def test_outcome_limit_rejects_boolean_values(self):
+        for reader in (self.repo.scrape_outcomes,
+                       lambda **kwargs: self.repo.pending_scrape_outcomes('audit', **kwargs)):
+            with self.subTest(reader=reader):
+                with self.assertRaisesRegex(RepositoryError, 'limit'):
+                    reader(limit=True)
 
     def test_qualified_outcome_retains_its_immutable_repair_category(self):
         saved = self.repo.record_scrape_outcome(facts(failure={"category": "adapter_regression"}))['outcome']

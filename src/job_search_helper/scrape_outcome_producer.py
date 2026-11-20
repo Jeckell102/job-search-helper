@@ -1,4 +1,4 @@
-"""Turn completed normal-scraper cycle facts into bounded M3 outcomes.
+"""Turn completed ordinary normal-cycle facts into bounded M3 outcomes.
 
 This is deliberately a recorder, not a repair dispatcher.  It accepts only
 the ordinary cycle checkpoint and current Company row, so it cannot invent
@@ -9,11 +9,19 @@ from .repository import RepositoryError
 
 
 def record_cycle_outcomes(repository, cycle, companies, *, storage_confirmed):
-    """Persist one idempotent outcome per completed Company in a cycle."""
+    """Persist bounded outcomes for the ordinary normal-cycle path only.
+
+    This is deliberately post-storage.  A fresh Company read can suppress a
+    stale repair/retry/coordinator handoff, but cannot claim to have prevented
+    an earlier job write.  Pre-persistence source fencing remains Engine and
+    admission work, outside this M3 adapter.
+    """
     if not isinstance(cycle, dict) or not isinstance(companies, list):
         raise ValueError('Cycle outcome recording requires saved cycle and Company facts.')
     if not isinstance(storage_confirmed, bool):
         raise ValueError('Storage confirmation must be explicit.')
+    if not _ordinary_normal_cycle(cycle):
+        return []
     by_id = {str(row.get('Company ID') or '').strip(): row for row in companies}
     results = []
     for company_id, item in (cycle.get('companies') or {}).items():
@@ -25,55 +33,81 @@ def record_cycle_outcomes(repository, cycle, companies, *, storage_confirmed):
         if not company:
             continue
         try:
-            facts = _facts(cycle, company, item, storage_confirmed=storage_confirmed)
+            facts = normal_cycle_outcome_facts(
+                cycle, company, item, storage_confirmed=storage_confirmed)
         except (RepositoryError, TypeError, ValueError):
             # Follow-up evidence must never destabilize a completed scrape.
             # Leave malformed or overlong checkpoint values out for operator
             # inspection rather than coercing them into a false repair signal.
             continue
+        # Stale/paused evidence is durable audit evidence too.  The repository
+        # withholds it from the reserved repair-coordinator consumer while
+        # retaining it for audit and restart-safe review.
         results.append(repository.record_scrape_outcome(facts))
     return results
 
 
-def _facts(cycle, company, item, *, storage_confirmed):
-    event = cycle.get('company_event') or {}
-    if not isinstance(event, dict):
-        raise ValueError('Company event must be structured when present.')
+def normal_cycle_outcome_facts(cycle, company, item, *, storage_confirmed):
+    """Build conservative M3 facts from one saved ordinary-cycle item.
+
+    Only values already saved in the cycle item or authoritative Company row
+    are used.  Missing completion evidence becomes a partial/unknown hold;
+    the adapter never infers a qualified integration defect.
+    """
     company_id = _required_text(company.get('Company ID'), 'company ID')
-    revision = source_revision(company)
-    requested_revision = _optional_text(event.get('source_revision'))
-    current = not requested_revision or requested_revision == revision
+    current_revision = source_revision(company)
+    frozen_revision = _optional_text(item.get('outcome_source_revision'))
+    # A post-run reread only proves freshness when the saved item recorded the
+    # source fact it began from.  Missing provenance is an unclassified hold,
+    # not permission to call the current row "fresh."
+    current = frozen_revision == current_revision if frozen_revision else None
     stage = item['stage']
-    # Scraper stages do not carry a trustworthy adapter fault category.  Hold
+    inventory_status = _inventory_status(item, stage)
+    # Scraper stages do not carry a trustworthy adapter fault category. Hold
     # non-complete work for evidence rather than guessing it merits a repair.
-    category = 'none' if stage == 'complete' else 'unknown'
+    category = 'none' if inventory_status == 'complete' else 'unknown'
     facts = {
         'request_id': _required_text(cycle.get('start_request_id') or cycle.get('id'), 'request ID'),
         'company_id': company_id,
-        'source_revision': revision,
-        'company_event_id': _optional_text(event.get('event_id')),
+        # The frozen assignment fact, not a post-run reread, is immutable
+        # outcome identity. The reread remains bounded comparison evidence.
+        # Legacy checkpoints cannot assert freshness, but still need a bounded
+        # durable hold identity rather than an unrecordable empty fact.
+        'source_revision': frozen_revision or current_revision,
+        'current_source_revision': current_revision,
         'cycle_id': _required_text(cycle.get('id'), 'cycle ID'),
         'provider': _optional_text(item.get('ats')) or _optional_text(company.get('ATS / Source')) or 'unknown',
         'adapter_version': 'normal-scraper-v1',
         'source_current': current,
         'company_status': _optional_text(company.get('Company Status')) or 'Active',
         'storage_status': 'confirmed' if storage_confirmed else 'sync_pending',
-        'inventory_status': 'complete' if stage == 'complete' else 'partial',
+        'inventory_status': inventory_status,
         'capability': 'unknown',
         'failure': {'category': category},
     }
-    retry = cycle.get('repair_retry')
-    if isinstance(retry, dict):
-        # A retry outcome must never be attributed merely to a friendly
-        # release ID.  Canonicalizing here keeps a malformed recovered cycle
-        # from producing an apparently authoritative repair outcome.
-        from .repair_retry import canonical_retry_binding, release_binding_sha256
-        retry = canonical_retry_binding(retry)
-        facts['attempt_id'] = retry['attempt_id']
-        facts['failed_request_id'] = retry['failed_request_id']
-        facts['release_version'] = retry['release']['release_id']
-        facts['release_binding_sha256'] = release_binding_sha256(retry['release'])
+    if item.get('zero_openings_verified') is True:
+        facts['zero_openings_verified'] = True
     return facts
+
+
+def _ordinary_normal_cycle(cycle):
+    """Exclude event/retry/operator/recovery admission from this first slice."""
+    return not any(cycle.get(key) is not None for key in (
+        'company_event', 'repair_retry', 'operator_request', 'recovery_pause'))
+
+
+def _inventory_status(item, stage):
+    """Require saved completion proof and downgrade unknown facts to a hold."""
+    status = _optional_text(item.get('inventory_status')).casefold()
+    if status not in {'complete', 'partial', 'blocked', 'failed', 'unsupported', 'zero'}:
+        status = 'partial'
+    if item.get('browser_pending_urls') or item.get('browser_discovery_incomplete'):
+        return 'partial'
+    # A stage alone is not completion evidence: normal Engine output preserves
+    # the fetched inventory status, and anything else must remain incomplete.
+    if stage == 'complete' and status not in {'complete', 'zero'}:
+        return 'partial'
+    return status
 
 
 def _required_text(value, field):

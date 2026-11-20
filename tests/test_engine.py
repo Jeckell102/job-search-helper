@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from job_search_helper.ats import Inventory
+from job_search_helper.company_events import source_revision
 from job_search_helper.core import POLICY_VERSION, job_key, material_hash, pack_snapshot, unpack_snapshot
 from job_search_helper.engine import Engine, State
 from job_search_helper.batching import PlanningRepository
@@ -136,6 +137,23 @@ class EngineAcceptanceTests(unittest.TestCase):
         self.assertEqual(row["Official Job URL"], "https://boards.greenhouse.io/acme/jobs/123")
         self.assertEqual(row["Job Title"], "Field Solutions Engineer")
         self.assertEqual(self.fetch_count, 1)
+
+    def test_serial_and_parallel_keep_browser_completion_evidence_in_cycle_state(self):
+        self.inventory.browser_pending_urls = ['https://boards.greenhouse.io/acme/jobs/123']
+        self.inventory.browser_discovery_incomplete = True
+        serial = self.engine.start_cycle(['C-1'])
+        self.engine.resume(serial)
+        serial_item = self.state.cycle(serial)['companies']['C-1']
+        self.assertEqual(serial_item['browser_pending_urls'], self.inventory.browser_pending_urls)
+        self.assertTrue(serial_item['browser_discovery_incomplete'])
+        self.assertEqual(serial_item['outcome_source_revision'], source_revision(company()))
+
+        parallel = self.engine.start_cycle(['C-1'])
+        self.engine.resume_parallel(parallel, fetch_workers=2, assignment_window=25)
+        parallel_item = self.state.cycle(parallel)['companies']['C-1']
+        self.assertEqual(parallel_item['browser_pending_urls'], self.inventory.browser_pending_urls)
+        self.assertTrue(parallel_item['browser_discovery_incomplete'])
+        self.assertEqual(parallel_item['outcome_source_revision'], source_revision(company()))
 
     def test_accept_creates_not_reviewed_and_blank_applied_date(self):
         cycle = self.accept_initial()

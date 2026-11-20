@@ -37,6 +37,7 @@ def classify_outcome(facts):
     if not isinstance(facts, dict):
         raise OutcomeFactsError("outcome facts must be an object")
     identity = _identity(facts)
+    comparison = _comparison(facts)
     failure = _failure(facts)
     inventory = _text(facts.get("inventory_status")).casefold()
 
@@ -44,8 +45,9 @@ def classify_outcome(facts):
     if not isinstance(source_current, bool):
         return _result(identity, failure, UNCLASSIFIED_HOLD, "hold_for_source_freshness")
     if (not source_current
-            or _text(facts.get("company_status"), "company_status").casefold() in {"paused", "removed", "withdrawn"}):
-        return _result(identity, failure, STALE_OR_PAUSED, "stop_stale_work")
+            or _text(facts.get("company_status"), "company_status").casefold()
+            in {"pause", "paused", "remove", "removed", "withdrawn"}):
+        return _result(identity, failure, STALE_OR_PAUSED, "stop_stale_work", comparison=comparison)
 
     if _text(facts.get("storage_status"), "storage_status").casefold() in {
         "failed", "local_failed", "sync_failed", "sync_pending", "reconciliation_required",
@@ -113,10 +115,18 @@ def _failure(facts):
     return result
 
 
-def _result(identity, failure, outcome, action, *, repair_category=None):
+def _comparison(facts):
+    """Bounded post-run evidence, deliberately separate from identity."""
+    current = _text(facts.get("current_source_revision"), "current_source_revision")
+    return {"current_source_revision": current} if current else {}
+
+
+def _result(identity, failure, outcome, action, *, repair_category=None, comparison=None):
     immutable = {"identity": identity, "failure_fingerprint": failure["fingerprint"], "outcome": outcome}
     if repair_category is not None:
         immutable["repair_category"] = repair_category
+    if comparison:
+        immutable["comparison"] = comparison
     result = {
         "outcome_id": "OUT-" + _digest(immutable)[:24],
         "outcome": outcome,
@@ -126,6 +136,8 @@ def _result(identity, failure, outcome, action, *, repair_category=None):
     }
     if repair_category is not None:
         result["repair_category"] = repair_category
+    if comparison:
+        result["comparison"] = comparison
     return result
 
 

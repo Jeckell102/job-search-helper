@@ -18,6 +18,7 @@ from .ats import Inventory
 from .browser_progress import BrowserProgress
 from .batching import PlanningRepository, PendingState
 from .cooperative_fetch import CooperativeFetchWork
+from .company_events import source_revision as company_source_revision
 from .dashboard import TerminalDashboard
 from .engine import MAX_FETCH_WORKERS, inventory_payload, now
 from .repository import RepositoryError, ReviewFieldsChangedError, UncertainWriteError
@@ -586,6 +587,9 @@ class LocalPipeline:
                 item.update(stage='blocked', reason='Manual-review hold; explicit retry required')
                 continue
             item['stage'] = 'queued'
+            # This lives beside the cycle checkpoint rather than the F6 inbox
+            # payload, whose canonical bytes feed publication receipts.
+            item['outcome_source_revision'] = company_source_revision(company)
             snapshots.append(copy.deepcopy(company))
         self.cycle.pop('completed_at', None)
         self.cycle['status'] = 'In Progress'
