@@ -64,15 +64,17 @@ def load_policy(archive_path):
     ) for cover in values["covers"])
     exchange = values["exchange_fence"]
     if exchange is not None:
-        exchange["parent"] = absolute(exchange["parent"])
-        exchange["control"] = absolute(exchange["control"])
-        exchange["namespace"] = identity_pair(exchange["namespace"])
+        exchange["policy_file"] = absolute(exchange["policy_file"])
+        exchange["policy_sha256"] = digest_text(exchange["policy_sha256"])
         exchange["intent_sha256"] = digest_text(exchange["intent_sha256"])
-        for key in ("parent_identity", "control_identity", "lock_identity"):
-            if len(exchange[key]) != 6 or any(type(item) is not int or item < 0 for item in exchange[key]):
-                raise ValueError("Approved exchange identity is malformed")
-            exchange[key] = tuple(exchange[key])
-        exchange["pairs"] = tuple(tuple(pair) for pair in exchange["pairs"])
+        if (not isinstance(exchange["generation"], str)
+                or not re.fullmatch(r"[0-9a-f]{32}", exchange["generation"])
+                or type(exchange["launch_uid"]) is not int or exchange["launch_uid"] <= 0
+                or not exchange["pairs"]
+                or any(not isinstance(pair, list) or len(pair) != 2 for pair in exchange["pairs"])):
+            raise ValueError("Approved exchange fence is malformed")
+        exchange["pairs"] = tuple((absolute(canonical), absolute(parked))
+                                  for canonical, parked in exchange["pairs"])
         values["exchange_fence"] = ExchangeFence(**exchange)
     policy = SitePolicy(**values)
     if (policy.maintenance_bundle / "host-check" != executable

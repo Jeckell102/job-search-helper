@@ -11,12 +11,43 @@ protected requirements. Save the assignment, evidence, and next action here.
 Continue independent work, verify the advice, and keep independent QA as the
 release gate. See [sprint_roadmap.md](sprint_roadmap.md).
 
+Worker reporting rule for all lanes. If Codex flags a turn or cannot display
+the response, stop the affected check and alert the coordinator promptly.
+Save a short blocker in the assigned handoff with the time, visible error,
+and acceptance evidence still outstanding. If the turn ends before the
+worker can report, record the blocker as the first step on resume. The
+coordinator must also check chat status for silent failures, record any
+missing QA as pending, and include this rule in future worker assignments.
+Use a narrower in-scope follow-up only when appropriate. Avoid repeat retries.
+
 Escalation checkpoint. GPT-6.2 Astra High returned the terminal disposition
 design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
+
+Site verifier composition checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Replaced the fixture-only journal
+reader with the approved controller's read-only API in
+`/tmp/jsh-s4-journal-site.uL3AMus0`. All 82 disposable tests passed.
+Independent source composition is assigned to `/root/site_journal_qa`.
+Main coordinator owns host enrollment and writer coverage. Next, prove
+acknowledged close or replay before live policy compilation and arrange
+continuous control of the approved policy and checkout routes, backed by
+fresh writer/launcher observations. No live writer hold has been activated.
+[Source composition evidence](S4_HOST_EXCHANGE_SITE_COMPOSITION_20261120.md).
+
+QA messaging checkpoint. The chat titled Sprint 1 gate fixture QA
+(`01a1f97d-2e8c-7821-b5e1-d2019215036b`) is currently assigned a Sprint 4
+review. Its prior turn stopped with an automated safety flag and returned
+no QA disposition. At the operator's request, the coordinator resent only
+the existing disposable regression and high-level evidence review and
+included the worker reporting rule above. The follow-up completed and
+delivered a final report. All 15 existing fixture tests passed. Independent
+host acceptance remains on hold until the site can prove continuous control
+of the approved policy and checkout paths during a transition. See
+[the independent report](/tmp/jsh-s4-host-exchange-independent-qa.md).
 
 Parallel Milestone 5 validation assignment. User asked for a separate chat.
 Created **Job Search Helper — Milestone 5 Candidate Validation**, thread

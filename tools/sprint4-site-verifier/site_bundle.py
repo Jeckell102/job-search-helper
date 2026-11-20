@@ -11,7 +11,7 @@ BUNDLE_ENTRIES = frozenset({
     '__main__.py', 'host_checkpoint.py', 'alternate_writer_witness.py',
     'protected_state.py', 'launcher_witness.py', 'site_policy.py', 'approved_site_policy.json',
     'physical_protected_witness.py', 'protected_continuity.py',
-    'alternate_exchange_witness.py',
+    'alternate_exchange_witness.py', 'host_exchange.py',
 })
 
 
