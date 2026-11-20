@@ -1,5 +1,48 @@
 # Integration automation coordinator status
 
+## Active coordinator checkpoint — 2026-11-20 F1 and F2 admission serialization accepted
+
+- Role: senior engineering coordinator and release owner. The persistent goal
+  covers all six roadmap milestones and final acceptance; it is active and is
+  not a completion claim.
+- Milestone status: F1's offline outbox/bridge/dispatcher boundary and F2's
+  admission serialization are independently accepted after narrow repairs.
+  F3–F8, the live
+  Samtec proof, and final acceptance remain open. This does not enable broad
+  backlog processing or an unqualified automatic release.
+- F1 evidence: the bridge-specific suite passed 11/11 and the
+  dispatcher/handoff/bootstrap group passed 22/22. Independent QA verified
+  an older withdrawal cannot remove a newer request or create cancellation
+  evidence; normal newest-revision watermarking, lost-ack and retry coverage
+  remain intact. The source change is limited to `company_events.py` and its
+  bridge test. A stale result is deliberately left for watermark supersession,
+  rather than being acknowledged as a current cancellation.
+- F2 accepted work: `RepairRetryBridge.deliver` now holds the same normal
+  scraper admission lock as activation/startup across source-revision and
+  active-release revalidation, durable intent, and request read/decision/write.
+  It rejects an inactive/replaced exact release before creating any retry
+  state. Local focused F2 evidence is 107 passed in 7.43 seconds. Independent
+  QA accepted its focused retry/release/controller group (46/46) and normal
+  request/runner regressions (31/31), with no nested-lock path. Evidence is
+  recorded in `F1_F2_ADMISSION_QA_20261120.md`.
+- Worker assignments: coordinator owns the next F2 recovery/outcome scope;
+  independent QA completed adversarial review of the admission repair. Jetson retains exactly one inference lane and
+  has no work in this checkpoint.
+- Safety/current state: Samtec request `operator-samtec-m1-20261119` remains
+  `WAITING_SAFE_BOUNDARY` behind `CYC-B639C6D864EC`; the Saronic provenance
+  conflict has not been touched. No live scraper, Sheets client, remote write,
+  global sync, automatic release, broad scan, or historical-cycle mutation
+  has run. The trusted retained signer key remains absent, so the bounded live
+  pilot remains closed.
+- Next action: preserve the F1/F2 source, tests, card and QA evidence in the
+  scoped GitHub backup, then continue the
+  retry-publication/recovery and outcome-precedence F2 gate work. Do not use a
+  test signer or weaken the external authorization gate.
+
+Reread this section first after every context reset and before a backup or
+live action. It supersedes earlier current-focus statements; later sections
+remain historical evidence.
+
 ## Active coordinator checkpoint — 2026-11-20 private manifest-handoff hardening
 
 - Coordinator work has resumed. The persistent roadmap goal remains active;
