@@ -51,6 +51,9 @@
 - Follow-up commit `6c8188a` (`backup F2 partial publication recovery`) is
   also pushed to that branch, adding only `local_pipeline.py`, its durable
   inbox regression, and the updated QA/card evidence.
+- Commit `fff4128` (`backup F2 retry outcome provenance`) is also pushed to
+  that branch with only the bounded outcome adapter, its tests, and the
+  related source-level QA/card evidence.
 - Safety/current state: Samtec request `operator-samtec-m1-20261119` remains
   `WAITING_SAFE_BOUNDARY` behind `CYC-B639C6D864EC`; the Saronic provenance
   conflict has not been touched. No live scraper, Sheets client, remote write,
