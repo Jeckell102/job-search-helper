@@ -96,8 +96,8 @@ def _identity(facts):
     if not valid_retained_outcome_identity(identity):
         raise OutcomeFactsError("retained outcome identity must bind the selected event and reservation")
     temporary = identity.get("temporary_retry_outcome_id")
-    if temporary is not None:
-        if (not re.fullmatch(r"OUT-[0-9a-f]{24}", temporary)
+    if temporary is not None or identity["request_id"].startswith("temporary-retry:"):
+        if (temporary is None or not re.fullmatch(r"OUT-[0-9a-f]{24}", temporary)
                 or identity["request_id"] != "temporary-retry:" + temporary
                 or any(key in identity for key in ("attempt_id", "failed_request_id",
                                                     "release_version", "release_binding_sha256"))):

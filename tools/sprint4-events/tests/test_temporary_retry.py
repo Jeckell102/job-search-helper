@@ -69,6 +69,8 @@ class TemporaryRetryTests(unittest.TestCase):
     def test_classifier_rejects_forged_or_mixed_temporary_retry_lineage(self):
         outcome_id = 'OUT-' + 'a' * 24
         with self.assertRaisesRegex(ValueError, 'temporary retry outcome identity'):
+            record(request_id='temporary-retry:' + outcome_id)
+        with self.assertRaisesRegex(ValueError, 'temporary retry outcome identity'):
             record(temporary_retry_outcome_id=outcome_id)
         with self.assertRaisesRegex(ValueError, 'temporary retry outcome identity'):
             record(request_id='temporary-retry:' + outcome_id,
@@ -129,6 +131,19 @@ class TemporaryRetryTests(unittest.TestCase):
         receipt = TemporaryRetrySink(Repo(self.company), self.root).ingest_immutable(value)
         self.assertEqual(receipt['sink_status'], 'HELD_TEMPORARY_RETRY_CAP')
         self.assertFalse((self.root/'next-scan.json').exists())
+
+    def test_sink_rejects_successor_with_stripped_or_mismatched_parent_lineage(self):
+        parent = 'OUT-' + 'a' * 24
+        value = record(request_id='temporary-retry:' + parent, source_revision=self.revision,
+                       temporary_retry_outcome_id=parent)
+        identity = value['identity']
+        altered = dict(identity)
+        altered.pop('temporary_retry_outcome_id')
+        sink = TemporaryRetrySink(Repo(self.company), self.root)
+        for invalid in (altered, dict(identity, temporary_retry_outcome_id='OUT-' + 'b' * 24)):
+            with self.assertRaisesRegex(ValueError, 'exact parent lineage'):
+                sink.ingest_immutable(dict(value, identity=invalid))
+            self.assertFalse((self.root/'next-scan.json').exists())
 
     def test_non_temporary_never_creates_work(self):
         value = record(source_revision=self.revision, failure={'category':'unknown'})

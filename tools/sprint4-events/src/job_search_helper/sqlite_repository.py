@@ -964,6 +964,13 @@ class SQLiteRepository:
         """
         if self.readonly:
             raise RepositoryError('This repository was opened read-only.')
+        with self.transaction():
+            return self._record_scrape_outcome_in_transaction(facts, owned_company_event=owned_company_event)
+
+    def _record_scrape_outcome_in_transaction(self, facts, *, owned_company_event=False):
+        """Write the classified outcome as part of its owner's Jobs transaction."""
+        if not self.db.in_transaction:
+            raise RepositoryError('Scrape outcome storage requires an active transaction.')
         from .outcomes import OutcomeFactsError, classify_outcome
         try:
             outcome = classify_outcome(facts)
@@ -999,42 +1006,41 @@ class SQLiteRepository:
             payload['comparison'] = outcome['comparison']
         from .outcomes import validate_public_outcome_record
         encoded = encode(payload)
-        with self.transaction():
-            request_id = identity['request_id']
-            request_event = request_id.removeprefix('company-event:') if request_id.startswith('company-event:') else None
-            declared_event = identity.get('company_event_id')
-            event = None
-            if request_event is not None or declared_event is not None:
-                event = self.db.execute(
-                    'SELECT company_id,source_revision,kind FROM company_event_outbox WHERE event_id IN (?,?)',
-                    (request_event, declared_event),
-                ).fetchone()
-            if event is not None and not owned_company_event:
-                raise RepositoryError('Company-event outcomes require a sealed event writer.')
-            if owned_company_event:
-                if (event != (identity['company_id'], identity['source_revision'], 'company.eligible')
-                        or declared_event != request_event
-                        or self.db.execute(
-                            'SELECT 1 FROM scrape_outcomes WHERE request_id=? AND outcome_id<>?',
-                            (identity['request_id'], outcome['outcome_id']),
-                        ).fetchone()):
-                    raise RepositoryError('Company-event outcome conflicts with its durable ownership.')
-            if validate_public_outcome_record(payload) is None:
-                raise RepositoryError('Scrape outcome public record is malformed.')
-            existing = self.db.execute('SELECT payload FROM scrape_outcomes WHERE outcome_id=?',
-                                       (outcome['outcome_id'],)).fetchone()
-            if existing:
-                if existing[0] != encoded:
-                    raise RepositoryError('Scrape outcome ID conflicts with immutable stored evidence.')
-                return {'outcome_id': outcome['outcome_id'], 'recorded': False, 'outcome': payload}
-            self.db.execute(
-                'INSERT INTO scrape_outcomes(outcome_id,request_id,company_id,source_revision,outcome,action,payload,recorded_at) '
-                'VALUES (?,?,?,?,?,?,?,?)',
-                (outcome['outcome_id'], identity['request_id'], identity['company_id'],
-                 identity['source_revision'], outcome['outcome'], outcome['action'], encoded, timestamp()))
-            self.event('scrape_outcome_recorded', '', 0,
-                       {'outcome_id': outcome['outcome_id'], 'company_id': identity['company_id'],
-                        'source_revision': identity['source_revision'], 'outcome': outcome['outcome']})
+        request_id = identity['request_id']
+        request_event = request_id.removeprefix('company-event:') if request_id.startswith('company-event:') else None
+        declared_event = identity.get('company_event_id')
+        event = None
+        if request_event is not None or declared_event is not None:
+            event = self.db.execute(
+                'SELECT company_id,source_revision,kind FROM company_event_outbox WHERE event_id IN (?,?)',
+                (request_event, declared_event),
+            ).fetchone()
+        if event is not None and not owned_company_event:
+            raise RepositoryError('Company-event outcomes require a sealed event writer.')
+        if owned_company_event:
+            if (event != (identity['company_id'], identity['source_revision'], 'company.eligible')
+                    or declared_event != request_event
+                    or self.db.execute(
+                        'SELECT 1 FROM scrape_outcomes WHERE request_id=? AND outcome_id<>?',
+                        (identity['request_id'], outcome['outcome_id']),
+                    ).fetchone()):
+                raise RepositoryError('Company-event outcome conflicts with its durable ownership.')
+        if validate_public_outcome_record(payload) is None:
+            raise RepositoryError('Scrape outcome public record is malformed.')
+        existing = self.db.execute('SELECT payload FROM scrape_outcomes WHERE outcome_id=?',
+                                   (outcome['outcome_id'],)).fetchone()
+        if existing:
+            if existing[0] != encoded:
+                raise RepositoryError('Scrape outcome ID conflicts with immutable stored evidence.')
+            return {'outcome_id': outcome['outcome_id'], 'recorded': False, 'outcome': payload}
+        self.db.execute(
+            'INSERT INTO scrape_outcomes(outcome_id,request_id,company_id,source_revision,outcome,action,payload,recorded_at) '
+            'VALUES (?,?,?,?,?,?,?,?)',
+            (outcome['outcome_id'], identity['request_id'], identity['company_id'],
+             identity['source_revision'], outcome['outcome'], outcome['action'], encoded, timestamp()))
+        self.event('scrape_outcome_recorded', '', 0,
+                   {'outcome_id': outcome['outcome_id'], 'company_id': identity['company_id'],
+                    'source_revision': identity['source_revision'], 'outcome': outcome['outcome']})
         return {'outcome_id': outcome['outcome_id'], 'recorded': True, 'outcome': payload}
 
     def scrape_outcomes(self, *, company_id=None, limit=100):

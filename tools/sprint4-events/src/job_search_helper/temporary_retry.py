@@ -83,7 +83,13 @@ class TemporaryRetrySink:
             raise ValueError('Retained temporary outcomes require explicit selected scheduling.')
         # A TEMPORARY result from the one allowed retry is a terminal hold,
         # not a second request and never a repair escalation.
-        if "temporary_retry_outcome_id" in identity:
+        parent = identity.get("temporary_retry_outcome_id")
+        request_id = identity.get("request_id")
+        if "temporary_retry_outcome_id" in identity or (
+                isinstance(request_id, str) and request_id.startswith("temporary-retry:")):
+            if (not isinstance(parent, str) or re.fullmatch(r"OUT-[0-9a-f]{24}", parent) is None
+                    or request_id != "temporary-retry:" + parent):
+                raise ValueError("Temporary retry outcome requires exact parent lineage.")
             return self._receipt(record, "HELD_TEMPORARY_RETRY_CAP")
         cid, revision = identity.get("company_id"), identity.get("source_revision")
         if not isinstance(cid, str) or not isinstance(revision, str):
