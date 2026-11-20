@@ -1,5 +1,47 @@
 # Integration automation coordinator status
 
+## Active coordinator checkpoint — 2026-11-19 protected install and completion re-audit
+
+- Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains **active**.
+  The user approved the previously paused protected-tree installation. This is
+  an installation checkpoint, not project completion.
+- The exact reviewed patch with SHA-256
+  `18e49304bc02b21c1f0009a2786c160f5816923b255fd95d33efe45c8c552832`
+  was applied to `/home/chris/job-search-helper_old`. Immediately before the
+  apply, all ten pre-existing target files matched their saved rollback copies
+  byte-for-byte and `git apply --check` passed. Rollback material remains at
+  `/tmp/job-search-helper-protected-backup-20261119-2135`.
+- Protected focused verification passed **127/127** retained-work, exact-plan,
+  exact-Sheets, publication, runner, and orchestration checks. The only warning
+  was an optional pytest cache write refused by the restricted filesystem; no
+  test failed. No scrape, Google read/write, FIRST PASS, service restart,
+  lock change, or Jetson change occurred.
+- A fresh completion audit found that `run_retained_reservation` and the
+  exceptional prepare/commit/recovery functions are referenced only by tests,
+  not by a production command or runner. This may be acceptable as a narrow
+  retained historical-cycle exception, but it is not evidence that the normal
+  add-Company path is fully connected. Treat that connection as open until the
+  ordinary Company-event path and deployed call graph are separately proven.
+- The roadmap and current readiness records also keep live gates open: idle and
+  busy Company-event intake, normal company-only storage and confirmed Sheets
+  publication, managed FIRST PASS start, and the final sequential demonstration
+  with three unfinished Companies plus shared-adapter regression. The automatic
+  repair profile registry was empty at the last protected snapshot.
+- Corrected user-facing estimate: overall release readiness is approximately
+  **75–80%**, not the earlier 96% estimate. Milestones 1–5 have substantial
+  installed/tested implementation but are not all live-accepted; Milestone 6
+  remains materially open at its three-company and restart/failure demonstration
+  gates. Rough ETA is hours for remaining source/audit closure and **1–3 days**
+  for genuine completion if guarded live access and selected Companies cooperate.
+- Next action: incorporate the independent completion audit, distinguish the
+  ordinary add-Company call path from the retained historical exception, and
+  close any missing production wiring in a safe copy before scheduling a guarded
+  live proof. Do not claim milestone completion from source tests alone.
+
+Reread this section after every context reset and before a major/live action or
+user update. It supersedes the 94–96% estimates below; older entries remain
+historical evidence.
+
 ## Active coordinator checkpoint — 2026-11-19 retained orchestration accepted
 
 - Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains **active**.
