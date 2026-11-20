@@ -544,6 +544,14 @@ class Controller:
         record["phase"] = phase
         write(self.journal, installer.encode(record), replace=present(self.journal))
 
+    def probe_preflight(self, target):
+        with ExitStack() as stack:
+            for path in self.locks[1:]:
+                stack.enter_context(lock(path))
+            require({str(path): inode(path) for path in self.locks} == self.binding["locks"],
+                    "Application lock identity changed before preflight")
+            self.hook("preflight", package=self.canonical, target=target)
+
     def new(self):
         require(not present(self.parked) and not present(self.marker)
                 and not present(self.units.sentinel) and not present(self.bundle / STAGED_EXTENSION),
@@ -565,7 +573,7 @@ class Controller:
                 os.fsync(fd)
         gate.syncdir(self.bundle)
         gate.syncdir(self.bundle.parent)
-        self.hook("preflight", package=self.canonical, target="INSTALLED")
+        self.probe_preflight("INSTALLED")
         self.seal_wrapper_images()
         record = {"binding": self.binding, "install_gate": inode(self.install_gate),
                   "controller_gate": inode(self.controller_gate), "state": inode(self.state),
@@ -975,7 +983,7 @@ class Controller:
                     if record["target"] == target:
                         return self.result(record)
                     require(action == "rollback", "This maintenance transaction has rolled back")
-                    self.hook("preflight", package=self.canonical, target=target)
+                    self.probe_preflight(target)
                     record["prior"] = self.units.snapshot()
                     record["admission_guard"] = None
                     record["host_exposed_before_hold"] = "after"

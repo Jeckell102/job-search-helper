@@ -64,7 +64,7 @@ def test_held_checkpoint_requires_evidence_and_echoes_exact_request(site, monkey
     policy, request, _, _ = site
     covers, protected, processes, sockets = Mock(), Mock(), Mock(), Mock()
     monkeypatch.setattr(checker, 'verify_cover', covers)
-    monkeypatch.setattr(checker, 'authenticated_maintenance', lambda *args: {999: 'start'})
+    monkeypatch.setattr(checker, 'authenticated_maintenance', lambda *args: {999: ('start', 'controller.py')})
     monkeypatch.setattr(checker, 'verify_route_drain', processes)
     monkeypatch.setattr(checker, 'verify_listener', sockets)
     monkeypatch.setattr(checker, 'unit_status', lambda executable, name: fake_service(policy, name))
@@ -73,7 +73,7 @@ def test_held_checkpoint_requires_evidence_and_echoes_exact_request(site, monkey
     protected.assert_called_once_with('host-fenced', 'INSTALLED')
     assert sockets.call_count == 2 and processes.call_count == 2
     sockets.assert_called_with(policy, 0, Path('/proc'))
-    processes.assert_called_with(policy, 0, Path('/proc'), {999: 'start'})
+    processes.assert_called_with(policy, 0, Path('/proc'), {999: ('start', 'controller.py')})
     with pytest.raises(ValueError, match='lacks a separate cover'):
         checker.attest(request, replace(policy, covers=()), protected)
 
@@ -166,14 +166,17 @@ def test_exact_maintenance_ancestry_excludes_only_proven_checkout_lock_reference
     bundle, python = policy.maintenance_bundle, policy.maintenance_exe
     control = fake_process(proc, 101, 1, [python, '-I', bundle / 'controller.py', 'rollback'],
                            python, tmp_path)
+    policy.lock_paths[0].touch()
     (control / 'fd/3').symlink_to(policy.lock_paths[0])
+    for fd, relative in enumerate(('.', 'dev', 'dev/wrapper-coder', 'dev/wrapper-coder/tools'), start=4):
+        (control / f'fd/{fd}').symlink_to(policy.project / relative)
     locks = Mock()
     monkeypatch.setattr(checker, 'verify_flocks', locks)
     request['checkpoint'] = 'preflight'
     pinned = checker.authenticated_maintenance(policy, request, 'preflight', proc, 101)
-    assert pinned == {101: '106'}
+    assert pinned == {101: ('106', 'controller.py')}
     checker.verify_route_drain(policy, 0, proc, pinned)
-    locks.assert_called_once_with(proc, 101, (policy.lock_paths[0], bundle / 'controller.lock'))
+    locks.assert_called_once_with(proc, 101, (*policy.lock_paths, bundle / 'controller.lock'))
 
     options = [
         '--project', policy.project, '--marker', policy.marker, '--gate', bundle / 'installer.lock',
@@ -181,13 +184,26 @@ def test_exact_maintenance_ancestry_excludes_only_proven_checkout_lock_reference
         '--manifest', bundle / 'manifest.json', '--manifest-sha256', policy.manifest_sha256,
         '--hold-id', policy.maintenance_id, '--fenced-host', '--parked-package',
     ]
-    fake_process(proc, 102, 101, [python, '-I', '-B', bundle / 'installer.py', 'rollback', *options],
-                 python, tmp_path)
+    install = fake_process(proc, 102, 101,
+                           [python, '-I', '-B', bundle / 'installer.py', 'rollback', *options], python, tmp_path)
+    (policy.project / 'src/.s4-maintenance-package').mkdir(parents=True)
+    (policy.project / 'src/job_search_helper').mkdir()
+    for fd, relative in enumerate(('.', 'src', 'src/job_search_helper', 'src/.s4-maintenance-package',
+                                   'dev', 'dev/wrapper-coder', 'dev/wrapper-coder/tools'), start=7):
+        (install / f'fd/{fd}').symlink_to(policy.project / relative)
     fake_process(proc, 103, 102, [python, '-I', bundle / 'verify_hold'], python, tmp_path)
     request['checkpoint'] = 'held:entry'
     pinned = checker.authenticated_maintenance(policy, request, 'held', proc, 103)
-    assert pinned == {103: '108', 102: '107', 101: '106'}
+    assert pinned == {
+        103: ('108', 'verify_hold'), 102: ('107', 'installer.py'), 101: ('106', 'controller.py'),
+    }
     checker.verify_route_drain(policy, 0, proc, pinned)
+    unapproved = policy.project / 'private-writer.py'
+    unapproved.touch()
+    (install / 'fd/15').symlink_to(unapproved)
+    with pytest.raises(ValueError, match='descriptor remains open'):
+        checker.verify_route_drain(policy, 0, proc, pinned)
+    (install / 'fd/15').unlink()
     fake_process(proc, 104, 1, [python, '-I', '-B', bundle / 'installer.py', 'rollback', *options],
                  python, tmp_path)
     with pytest.raises(ValueError, match='Checkout process remains live'):
@@ -197,7 +213,7 @@ def test_exact_maintenance_ancestry_excludes_only_proven_checkout_lock_reference
 def test_late_listener_or_process_replacement_refuses_ack(site, monkeypatch):
     policy, request, _, _ = site
     monkeypatch.setattr(checker, 'verify_cover', Mock())
-    monkeypatch.setattr(checker, 'authenticated_maintenance', lambda *args: {999: 'start'})
+    monkeypatch.setattr(checker, 'authenticated_maintenance', lambda *args: {999: ('start', 'controller.py')})
     monkeypatch.setattr(checker, 'unit_status', lambda executable, name: fake_service(policy, name))
     monkeypatch.setattr(checker, 'verify_route_drain', Mock())
     listener = Mock(side_effect=[set(), ValueError('late listener')])
@@ -219,3 +235,40 @@ def test_noncanonical_request_or_undefined_hold_checkpoint_refuses(site):
     with pytest.raises(ValueError, match='Unknown site release checkpoint'):
         checker.stage_of({**held, 'checkpoint': 'held:INSTALLING:unapproved.py'}, policy)
     assert checker.stage_of({**held, 'checkpoint': 'held:INSTALLING:src/job_search_helper/runner.py'}, policy) == 'held'
+
+
+def test_closed_expected_descriptor_does_not_hide_next_open_file(site, tmp_path, monkeypatch):
+    policy, _, _, _ = site
+    proc = tmp_path / 'proc'
+    init = proc / '1'
+    init.mkdir(parents=True)
+    (init / 'comm').write_text('systemd\n')
+    (init / 'cmdline').write_bytes(b'')
+    process = fake_process(proc, 202, 1, ['/python', '/bundle/controller.py'], '/python', tmp_path)
+    disappearing = process / 'fd/4'
+    disappearing.symlink_to(policy.wrapper_cwd)
+    unapproved = policy.project / 'unapproved-open-script'
+    unapproved.touch()
+    (process / 'fd/5').symlink_to(unapproved)
+    filesystem_stat = Path.stat
+
+    def stat_with_closed_fd(path, *args, **kwargs):
+        if path == disappearing:
+            raise FileNotFoundError
+        return filesystem_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, 'stat', stat_with_closed_fd)
+    with pytest.raises(ValueError, match='Checkout descriptor remains open'):
+        checker.verify_route_drain(policy, 0, proc, {202: ('207', 'controller.py')})
+
+    filesystem_lstat = Path.lstat
+    monkeypatch.setattr(Path, 'stat', filesystem_stat)
+
+    def lstat_with_displaced_name(path):
+        if path == policy.wrapper_cwd:
+            raise FileNotFoundError
+        return filesystem_lstat(path)
+
+    monkeypatch.setattr(Path, 'lstat', lstat_with_displaced_name)
+    with pytest.raises(ValueError, match='lost its named endpoint'):
+        checker.maintenance_descriptor(policy, disappearing, str(policy.wrapper_cwd), 'controller.py')

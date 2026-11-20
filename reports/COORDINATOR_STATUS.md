@@ -18,6 +18,26 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Composed site checker checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project about
+52% while real site closure remains open. The protected-state lane
+delivered the read-only SQLite witness. Coordinator repaired both
+remaining descriptor issues, integrated the witness and typed policy
+into the controller-pinned executable, and added app lease ownership
+to preflight on a separate new controller pin. Thirty-three disposable
+tests passed. The full joint controller rehearsal on the updated lock
+preflight pin is running via shell session 88053 and
+`/tmp/jsh-s4-lease-preflight-controller-rehearsal.log`. Independent QA
+`01a1f97d-2e8c-7821-b5e1-d2019215036b` owns recheck of the frozen composed
+verifier and preflight controller. Sol High
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns separate Sprint 5 red fixture.
+Coordinator owns phase-specific launcher probes, host permission and route
+closure, live pin and release. No live writes or deployment. Previous
+verified private backup `170a8e40617d902865ef178ba9b3d85e64d29117`.
+[Composed evidence](S4_COMPOSED_SITE_CHECKER_STAGED_20261120.md),
+[descriptor QA](S4_SITE_DESCRIPTOR_RECHECK_20261120.md), and
+[protected witness](S4_PROTECTED_SITE_WITNESS_HANDOFF_20261120.md).
+
 Site source QA repair checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, full project
 about 52%. Coordinator repaired site self-rejection, final listener and

@@ -256,22 +256,44 @@ def authenticated_maintenance(policy, request, stage, proc_root, caller_pid):
     require(policy.lock_paths, "Maintenance lock policy is empty")
     pids = {}
     if stage == "held" and request["checkpoint"] != "held:controller":
-        installer_pid, pids[caller_pid] = maintenance_process(policy, proc_root, caller_pid, "verify_hold")
-        controller_pid, pids[installer_pid] = maintenance_process(policy, proc_root, installer_pid, "installer.py")
+        installer_pid, verifier_start = maintenance_process(policy, proc_root, caller_pid, "verify_hold")
+        controller_pid, installer_start = maintenance_process(policy, proc_root, installer_pid, "installer.py")
+        pids[caller_pid] = (verifier_start, "verify_hold")
+        pids[installer_pid] = (installer_start, "installer.py")
         verify_flocks(proc_root, installer_pid, (policy.maintenance_bundle / "installer.lock",))
     else:
         controller_pid = caller_pid
-    _, pids[controller_pid] = maintenance_process(policy, proc_root, controller_pid, "controller.py")
-    held = policy.lock_paths[:1] if stage == "preflight" else policy.lock_paths
-    verify_flocks(proc_root, controller_pid, (*held, policy.maintenance_bundle / "controller.lock"))
+    _, controller_start = maintenance_process(policy, proc_root, controller_pid, "controller.py")
+    pids[controller_pid] = (controller_start, "controller.py")
+    verify_flocks(proc_root, controller_pid, (*policy.lock_paths, policy.maintenance_bundle / "controller.lock"))
     return pids
+
+
+def maintenance_descriptor(policy, descriptor, destination, role):
+    path = Path(destination)
+    if destination in set(map(str, policy.lock_paths)):
+        expected_kind = stat.S_ISREG
+    else:
+        directories = {
+            "installer.py": (".", "src", "src/job_search_helper", "src/.s4-maintenance-package",
+                             "dev", "dev/wrapper-coder", "dev/wrapper-coder/tools"),
+            "controller.py": (".", "dev", "dev/wrapper-coder", "dev/wrapper-coder/tools"),
+        }
+        if destination not in {str(policy.project / part) for part in directories.get(role, ())}:
+            return False
+        expected_kind = stat.S_ISDIR
+    attrs = descriptor.stat()
+    try:
+        named = path.lstat()
+    except FileNotFoundError:
+        raise ValueError("Authenticated maintenance descriptor has lost its named endpoint") from None
+    return expected_kind(attrs.st_mode) and os.path.samestat(attrs, named)
 
 
 def verify_route_drain(policy, current_wrapper_pid, proc_root, maintenance=None):
     require((proc_root / "1/comm").read_text().strip() == "systemd", "Full MuleLab process view is required")
     roots = (policy.project, *policy.alternate_roots)
     maintenance = {} if maintenance is None else maintenance
-    approved_refs = {str(policy.project), str(policy.marker), *map(str, policy.lock_paths)}
     for proc in proc_root.iterdir():
         if not proc.name.isdecimal() or int(proc.name) in {os.getpid(), current_wrapper_pid}:
             continue
@@ -282,20 +304,23 @@ def verify_route_drain(policy, current_wrapper_pid, proc_root, maintenance=None)
             if not args[0]:
                 continue
             authorized = maintenance.get(int(proc.name))
+            role = None
             if authorized is not None:
-                require(process_start(proc) == authorized, "Maintenance process changed before drain check")
-            permitted = approved_refs if authorized is not None else set()
+                start, role = authorized
+                require(process_start(proc) == start, "Maintenance process changed before drain check")
+            permitted_args = {str(policy.project), str(policy.marker)} if role == "installer.py" else set()
             cwd = os.readlink(proc / "cwd")
             require(not in_route(cwd, roots)
-                    and not any(in_route(arg, roots) and arg not in permitted for arg in args if arg),
+                    and not any(in_route(arg, roots) and arg not in permitted_args for arg in args if arg),
                     f"Checkout process remains live (PID {proc.name})")
             for fd in (proc / "fd").iterdir():
                 try:
                     destination = os.readlink(fd)
+                    require(not in_route(destination, roots)
+                            or (role is not None and maintenance_descriptor(policy, fd, destination, role)),
+                            f"Checkout descriptor remains open (PID {proc.name})")
                 except FileNotFoundError:
                     continue
-                require(not in_route(destination, roots) or destination in permitted,
-                        f"Checkout descriptor remains open (PID {proc.name})")
         except (FileNotFoundError, ProcessLookupError):
             continue
 
