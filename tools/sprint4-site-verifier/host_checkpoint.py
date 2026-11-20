@@ -41,6 +41,8 @@ class SitePolicy:
     maintenance_id: str
     manifest_sha256: str
     systemctl: Path
+    maintenance_bundle: Path
+    maintenance_exe: Path
     launch_uid: int
     wrapper_active: bool
     wrapper_enabled: str
@@ -51,10 +53,12 @@ class SitePolicy:
     wrapper_exe: Path
     wrapper_port: int
     wrapper_cgroup: Path
+    network_namespace: tuple[int, int]
     before_host: SourceFile
     after_host: SourceFile
     alternate_roots: tuple[Path, ...]
     covers: tuple[CoverPin, ...]
+    source_paths: frozenset[str]
 
 
 def require(value, message):
@@ -75,20 +79,25 @@ def stage_of(request, policy):
             and bool(re.fullmatch(r"[0-9a-f]{32}", request["nonce"])),
             "Site request identity differs from the approved policy")
     stage, separator, remainder = request["checkpoint"].partition(":")
-    require(stage in STAGES and ((stage == "held" and separator and 1 <= len(remainder) <= 300)
-                                or (stage != "held" and not separator)), "Unknown site release checkpoint")
+    held_checkpoints = {"controller", "entry", "before-journal", "before-INSTALLED",
+                        "before-ROLLED_BACK", "verified-INSTALLED", "verified-ROLLED_BACK"}
+    operation, _, source = remainder.partition(":")
+    known_held = remainder in held_checkpoints or (
+        operation in {"INSTALLING", "ROLLING_BACK"} and source in policy.source_paths)
+    require(stage in STAGES and (known_held if stage == "held" else not separator),
+            "Unknown site release checkpoint")
     canonical = policy.project / "src/job_search_helper"
     parked = policy.project / "src/.s4-maintenance-package"
     allowed = ((canonical, parked) if stage == "host-fenced" else
                (parked,) if stage in {"held", "pre-publish"} else (canonical,))
-    require(Path(request["package"]) in allowed, "Unexpected package route at site checkpoint")
+    require(request["package"] in {str(path) for path in allowed}, "Unexpected package route at site checkpoint")
     return stage
 
 
 def unit_status(executable, unit):
     output = subprocess.check_output(
-        [str(executable), "--user", "show", *(f"--property={field}" for field in UNIT_FIELDS), unit],
-        text=True, timeout=5,
+        [str(executable), "--user", "show", "--all", *(f"--property={field}" for field in UNIT_FIELDS), unit],
+        text=True, stderr=subprocess.PIPE, timeout=5,
     )
     items = [line.split("=", 1) for line in output.splitlines()]
     values = dict(items)
@@ -121,10 +130,19 @@ def process_start(proc):
     return (proc / "stat").read_text().rsplit(")", 1)[1].split()[19]
 
 
+def proc_args(process):
+    return tuple(os.fsdecode(arg) for arg in (process / "cmdline").read_bytes().rstrip(b"\0").split(b"\0"))
+
+
+def namespace_pin(path):
+    info = path.stat()
+    return info.st_dev, info.st_ino
+
+
 def verify_wrapper_process(policy, pid, proc_root):
     process = proc_root / str(pid)
     first = process_start(process)
-    args = tuple(os.fsdecode(arg) for arg in (process / "cmdline").read_bytes().rstrip(b"\0").split(b"\0"))
+    args = proc_args(process)
     require(process.stat().st_uid == policy.launch_uid and args == policy.wrapper_args
             and Path(os.readlink(process / "cwd")) == policy.wrapper_cwd
             and Path(os.readlink(process / "exe")) == policy.wrapper_exe
@@ -132,6 +150,8 @@ def verify_wrapper_process(policy, pid, proc_root):
             "Running wrapper is not the approved launcher, interpreter and checkout")
     require(f"0::{policy.wrapper_cgroup}" in (process / "cgroup").read_text().splitlines(),
             "Wrapper process is outside its approved cgroup")
+    require(namespace_pin(process / "ns/net") == policy.network_namespace,
+            "Wrapper process is outside the approved network namespace")
     return first
 
 
@@ -161,12 +181,24 @@ def listening_inodes(proc_root, port):
 
 
 def verify_listener(policy, pid, proc_root):
+    require(namespace_pin(proc_root / "self/ns/net") == policy.network_namespace,
+            "Checker is outside the approved network namespace")
     listening = listening_inodes(proc_root, policy.wrapper_port)
     if pid:
         require(bool(listening) and listening <= socket_inodes(proc_root / str(pid)),
                 "Wrapper listener is missing or is owned by another process")
+        for process in proc_root.iterdir():
+            if not process.name.isdecimal() or int(process.name) == pid:
+                continue
+            try:
+                if process.stat().st_uid == policy.launch_uid:
+                    require(not (socket_inodes(process) & listening),
+                            "Wrapper listener is shared with another launch-account process")
+            except (FileNotFoundError, ProcessLookupError):
+                continue
     else:
         require(not listening, "Wrapper listener survived the hold")
+    return listening
 
 
 def in_route(text, checkout_roots):
@@ -174,28 +206,95 @@ def in_route(text, checkout_roots):
     return candidate.is_absolute() and any(candidate.is_relative_to(root) for root in checkout_roots)
 
 
-def verify_route_drain(policy, current_wrapper_pid, proc_root):
+def maintenance_process(policy, proc_root, pid, role):
+    process = proc_root / str(pid)
+    state = (process / "stat").read_text().rsplit(")", 1)[1].split()
+    require(state[0] not in {"X", "Z"} and process.stat().st_uid == policy.launch_uid
+            and Path(os.readlink(process / "exe")) == policy.maintenance_exe,
+            "Unrecognized maintenance process identity")
+    args = proc_args(process)
+    script = str(policy.maintenance_bundle / role)
+    require(args.count(script) == 1, "Unrecognized maintenance script")
+    before = args[1:args.index(script)]
+    require("-I" in before and set(before) <= {"-I", "-B"}, "Maintenance interpreter is not isolated")
+    options = args[args.index(script) + 1:]
+    if role == "controller.py":
+        require(options in {("install",), ("rollback",)}, "Unrecognized controller operation")
+    elif role == "verify_hold":
+        require(not options, "Unrecognized verifier operation")
+    else:
+        require(options[:1] in {("install",), ("rollback",), ("verify",)}
+                and "--parked-package" in options and "--fenced-host" in options,
+                "Unrecognized installer operation")
+        pinned = {"--project": str(policy.project), "--marker": str(policy.marker),
+                  "--gate": str(policy.maintenance_bundle / "installer.lock"),
+                  "--state": str(policy.maintenance_bundle / "transaction"),
+                  "--verifier": str(policy.maintenance_bundle / "verify_hold"),
+                  "--manifest": str(policy.maintenance_bundle / "manifest.json"),
+                  "--manifest-sha256": policy.manifest_sha256, "--hold-id": policy.maintenance_id}
+        for flag, argument in pinned.items():
+            require(options.count(flag) == 1 and options[options.index(flag) + 1:options.index(flag) + 2] == (argument,),
+                    "Installer argument differs from the approved transaction")
+    require(process_start(process) == state[19], "Maintenance process changed during attestation")
+    return int(state[1]), state[19]
+
+
+def verify_flocks(proc_root, pid, paths):
+    owners = set()
+    for line in (proc_root / "locks").read_text().splitlines():
+        fields = line.split()
+        if len(fields) >= 8 and fields[1:4] == ["FLOCK", "ADVISORY", "WRITE"]:
+            major, minor, inode = fields[5].split(":")
+            owners.add((int(fields[4]), int(major, 16), int(minor, 16), int(inode)))
+    for path in paths:
+        info = path.lstat()
+        require((pid, os.major(info.st_dev), os.minor(info.st_dev), info.st_ino) in owners,
+                "Maintenance process does not own its expected lock")
+
+
+def authenticated_maintenance(policy, request, stage, proc_root, caller_pid):
+    require(policy.lock_paths, "Maintenance lock policy is empty")
+    pids = {}
+    if stage == "held" and request["checkpoint"] != "held:controller":
+        installer_pid, pids[caller_pid] = maintenance_process(policy, proc_root, caller_pid, "verify_hold")
+        controller_pid, pids[installer_pid] = maintenance_process(policy, proc_root, installer_pid, "installer.py")
+        verify_flocks(proc_root, installer_pid, (policy.maintenance_bundle / "installer.lock",))
+    else:
+        controller_pid = caller_pid
+    _, pids[controller_pid] = maintenance_process(policy, proc_root, controller_pid, "controller.py")
+    held = policy.lock_paths[:1] if stage == "preflight" else policy.lock_paths
+    verify_flocks(proc_root, controller_pid, (*held, policy.maintenance_bundle / "controller.lock"))
+    return pids
+
+
+def verify_route_drain(policy, current_wrapper_pid, proc_root, maintenance=None):
     require((proc_root / "1/comm").read_text().strip() == "systemd", "Full MuleLab process view is required")
     roots = (policy.project, *policy.alternate_roots)
+    maintenance = {} if maintenance is None else maintenance
+    approved_refs = {str(policy.project), str(policy.marker), *map(str, policy.lock_paths)}
     for proc in proc_root.iterdir():
         if not proc.name.isdecimal() or int(proc.name) in {os.getpid(), current_wrapper_pid}:
             continue
         try:
             if proc.stat().st_uid != policy.launch_uid:
                 continue
-            args = (proc / "cmdline").read_bytes().split(b"\0")
+            args = proc_args(proc)
             if not args[0]:
                 continue
+            authorized = maintenance.get(int(proc.name))
+            if authorized is not None:
+                require(process_start(proc) == authorized, "Maintenance process changed before drain check")
+            permitted = approved_refs if authorized is not None else set()
             cwd = os.readlink(proc / "cwd")
             require(not in_route(cwd, roots)
-                    and not any(in_route(os.fsdecode(arg), roots) for arg in args if arg),
+                    and not any(in_route(arg, roots) and arg not in permitted for arg in args if arg),
                     f"Checkout process remains live (PID {proc.name})")
             for fd in (proc / "fd").iterdir():
                 try:
                     destination = os.readlink(fd)
                 except FileNotFoundError:
                     continue
-                require(not in_route(destination, roots),
+                require(not in_route(destination, roots) or destination in permitted,
                         f"Checkout descriptor remains open (PID {proc.name})")
         except (FileNotFoundError, ProcessLookupError):
             continue
@@ -257,9 +356,13 @@ def attest(request, policy, verify_protected_state, *, proc_root=Path("/proc")):
     wrapper = unit_status(policy.systemctl, WRAPPER_UNIT)
     sync = unit_status(policy.systemctl, SYNC_UNIT)
     pid = active_wrapper_pid(policy, stage, wrapper, sync)
+    if stage == "restoring" and pid:
+        require(not os.path.lexists(policy.marker), "A restored wrapper is running behind a maintenance marker")
     started = verify_wrapper_process(policy, pid, proc_root) if pid else None
-    verify_listener(policy, pid, proc_root)
-    verify_route_drain(policy, pid, proc_root)
+    caller = os.getppid()
+    maintenance = authenticated_maintenance(policy, request, stage, proc_root, caller)
+    listening = verify_listener(policy, pid, proc_root)
+    verify_route_drain(policy, pid, proc_root, maintenance)
     verify_protected_state(stage, request["target"])
     require(wrapper == unit_status(policy.systemctl, WRAPPER_UNIT)
             and sync == unit_status(policy.systemctl, SYNC_UNIT)
@@ -269,4 +372,10 @@ def attest(request, policy, verify_protected_state, *, proc_root=Path("/proc")):
         verify_cover(pin)
     verify_host_path(policy, stage, request["target"])
     verify_marker(policy, stage)
+    if stage == "restoring" and pid:
+        require(not os.path.lexists(policy.marker), "A restored wrapper is running behind a maintenance marker")
+    require(authenticated_maintenance(policy, request, stage, proc_root, caller) == maintenance,
+            "Maintenance process ownership changed during site attestation")
+    require(verify_listener(policy, pid, proc_root) == listening, "Wrapper listener changed during site attestation")
+    verify_route_drain(policy, pid, proc_root, maintenance)
     return {**request, "verified": True}

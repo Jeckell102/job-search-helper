@@ -18,6 +18,26 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Site source QA repair checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, full project
+about 52%. Coordinator repaired site self-rejection, final listener and
+process rechecks, empty unit output, and restoring request/state pins in
+`/tmp/jsh-s4-site-verifier-repair.PoeeKDWI`. Staged a deterministic
+controller-pinned verifier/policy executable format. Fifteen disposable
+tests passed. Independent QA `01a1f97d-2e8c-7821-b5e1-d2019215036b` owns
+the exact source recheck. Higher-reasoning chat
+`01a1f97d-cebd-7910-8d31-a5f3e0dcd264` owns the protected witness helper
+handoff. Sol High chat `01a1f979-8619-75d2-9973-047f3a5efb0c` completed
+Sprint 5 preflight and owns the separate ordinary-entry red fixture.
+Coordinator owns approved policy configuration and actual host-side
+checks. Next merge the protected helper, verify runtime deadline and
+approved closure, reconcile QA, and build the exact bundled checker.
+No production or Jetson changes. Last verified checkpoint backup
+`85f032f0a1db8577ae576116746a1599549d8331`.
+[Prior site QA](S4_SITE_CHECKPOINT_INDEPENDENT_QA_20261120.md),
+[site repair](S4_SITE_CHECKPOINT_QA_REPAIRS_20261120.md), and
+[Sprint 5 preflight](S5_REPAIR_CHAIN_PREFLIGHT_20261120.md).
+
 Site verifier checkpoint. Coordinator and release owner, active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project
 about 52% pending live installation and company event. All 14 full

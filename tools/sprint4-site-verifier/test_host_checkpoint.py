@@ -23,14 +23,16 @@ def site(tmp_path):
         project=root, marker=root / '.state/release.json',
         lock_paths=(root / 'scraper.lock', root / 'writer.lock'),
         cache_prefixes=(), maintenance_id='fixture-held', manifest_sha256='a' * 64,
-        systemctl=Path('/usr/bin/systemctl'), launch_uid=uid, wrapper_active=True,
+        systemctl=Path('/usr/bin/systemctl'), maintenance_bundle=tmp_path / 'bundle',
+        maintenance_exe=Path('/usr/bin/python3'), launch_uid=uid, wrapper_active=True,
         wrapper_enabled='enabled', wrapper_unit_file=tmp_path / 'wrapper.service',
         sync_unit_file=tmp_path / 'sync.service', wrapper_args=('/python', str(wrapper / 'host_server.py')),
         wrapper_cwd=wrapper, wrapper_exe=Path('/python'), wrapper_port=18789,
-        wrapper_cgroup=Path('/fixture/users/wrapper.service'),
+        wrapper_cgroup=Path('/fixture/users/wrapper.service'), network_namespace=(1, 20),
         before_host=checker.SourceFile(sha256(old).hexdigest(), 0o600, uid),
         after_host=checker.SourceFile(sha256(new).hexdigest(), 0o600, uid),
         alternate_roots=(alt,), covers=(CoverPin(alt, (1, 20), 42, (1, 40), uid, ('job-search-scraper',)),),
+        source_paths=frozenset({'src/job_search_helper/runner.py'}),
     )
     request = {
         'schema': 'sprint-4-host-check-v1', 'nonce': 'f' * 32,
@@ -62,14 +64,16 @@ def test_held_checkpoint_requires_evidence_and_echoes_exact_request(site, monkey
     policy, request, _, _ = site
     covers, protected, processes, sockets = Mock(), Mock(), Mock(), Mock()
     monkeypatch.setattr(checker, 'verify_cover', covers)
+    monkeypatch.setattr(checker, 'authenticated_maintenance', lambda *args: {999: 'start'})
     monkeypatch.setattr(checker, 'verify_route_drain', processes)
     monkeypatch.setattr(checker, 'verify_listener', sockets)
     monkeypatch.setattr(checker, 'unit_status', lambda executable, name: fake_service(policy, name))
     assert checker.attest(request, policy, protected) == {**request, 'verified': True}
     assert covers.call_count == 2
     protected.assert_called_once_with('host-fenced', 'INSTALLED')
-    sockets.assert_called_once_with(policy, 0, Path('/proc'))
-    processes.assert_called_once_with(policy, 0, Path('/proc'))
+    assert sockets.call_count == 2 and processes.call_count == 2
+    sockets.assert_called_with(policy, 0, Path('/proc'))
+    processes.assert_called_with(policy, 0, Path('/proc'), {999: 'start'})
     with pytest.raises(ValueError, match='lacks a separate cover'):
         checker.attest(request, replace(policy, covers=()), protected)
 
@@ -102,6 +106,7 @@ def test_restored_checkpoint_checks_target_and_running_process_twice(site, monke
         checker.attest(request, policy, Mock())
     host.write_bytes(new)
     monkeypatch.setattr(checker, 'verify_route_drain', Mock())
+    monkeypatch.setattr(checker, 'authenticated_maintenance', lambda *args: {})
     monkeypatch.setattr(checker, 'verify_listener', Mock())
     monkeypatch.setattr(checker, 'unit_status',
                         lambda exe, name: fake_service(policy, name, active=name == checker.WRAPPER_UNIT))
@@ -112,13 +117,14 @@ def test_restored_checkpoint_checks_target_and_running_process_twice(site, monke
     assert process.call_count == 2
 
 
-def test_refuses_unrelated_live_listener_for_held_site(site, tmp_path):
+def test_refuses_unrelated_live_listener_for_held_site(site, tmp_path, monkeypatch):
     policy, _, _, _ = site
     proc = tmp_path / 'proc'
     socktable = proc / 'net'
     socktable.mkdir(parents=True)
     (socktable / 'tcp6').write_text('header\n')
     (socktable / 'tcp').write_text('header\n0: 0100007F:4965 00000000:0000 0A 0 0 0 0 0 83\n')
+    monkeypatch.setattr(checker, 'namespace_pin', lambda path: policy.network_namespace)
     with pytest.raises(ValueError, match='survived the hold'):
         checker.verify_listener(policy, 0, proc)
 
@@ -137,3 +143,79 @@ def test_rejects_checkout_process_with_open_old_host_source(site, tmp_path):
     (worker / 'fd/5').symlink_to(str(policy.wrapper_cwd / 'host_server.py') + ' (deleted)')
     with pytest.raises(ValueError, match='descriptor remains open'):
         checker.verify_route_drain(policy, 0, proc)
+
+
+def fake_process(proc, pid, parent, args, exe, directory):
+    process = proc / str(pid)
+    (process / 'fd').mkdir(parents=True)
+    info = ['S', str(parent), *(['0'] * 17), str(pid + 5)]
+    (process / 'stat').write_text(f'{pid} (fixture) ' + ' '.join(info))
+    (process / 'cmdline').write_bytes(b'\0'.join(str(arg).encode() for arg in args) + b'\0')
+    (process / 'cwd').symlink_to(directory)
+    (process / 'exe').symlink_to(exe)
+    return process
+
+
+def test_exact_maintenance_ancestry_excludes_only_proven_checkout_lock_references(site, tmp_path, monkeypatch):
+    policy, request, _, _ = site
+    proc = tmp_path / 'proc'
+    init = proc / '1'
+    init.mkdir(parents=True)
+    (init / 'comm').write_text('systemd\n')
+    (init / 'cmdline').write_bytes(b'')
+    bundle, python = policy.maintenance_bundle, policy.maintenance_exe
+    control = fake_process(proc, 101, 1, [python, '-I', bundle / 'controller.py', 'rollback'],
+                           python, tmp_path)
+    (control / 'fd/3').symlink_to(policy.lock_paths[0])
+    locks = Mock()
+    monkeypatch.setattr(checker, 'verify_flocks', locks)
+    request['checkpoint'] = 'preflight'
+    pinned = checker.authenticated_maintenance(policy, request, 'preflight', proc, 101)
+    assert pinned == {101: '106'}
+    checker.verify_route_drain(policy, 0, proc, pinned)
+    locks.assert_called_once_with(proc, 101, (policy.lock_paths[0], bundle / 'controller.lock'))
+
+    options = [
+        '--project', policy.project, '--marker', policy.marker, '--gate', bundle / 'installer.lock',
+        '--state', bundle / 'transaction', '--verifier', bundle / 'verify_hold',
+        '--manifest', bundle / 'manifest.json', '--manifest-sha256', policy.manifest_sha256,
+        '--hold-id', policy.maintenance_id, '--fenced-host', '--parked-package',
+    ]
+    fake_process(proc, 102, 101, [python, '-I', '-B', bundle / 'installer.py', 'rollback', *options],
+                 python, tmp_path)
+    fake_process(proc, 103, 102, [python, '-I', bundle / 'verify_hold'], python, tmp_path)
+    request['checkpoint'] = 'held:entry'
+    pinned = checker.authenticated_maintenance(policy, request, 'held', proc, 103)
+    assert pinned == {103: '108', 102: '107', 101: '106'}
+    checker.verify_route_drain(policy, 0, proc, pinned)
+    fake_process(proc, 104, 1, [python, '-I', '-B', bundle / 'installer.py', 'rollback', *options],
+                 python, tmp_path)
+    with pytest.raises(ValueError, match='Checkout process remains live'):
+        checker.verify_route_drain(policy, 0, proc, pinned)
+
+
+def test_late_listener_or_process_replacement_refuses_ack(site, monkeypatch):
+    policy, request, _, _ = site
+    monkeypatch.setattr(checker, 'verify_cover', Mock())
+    monkeypatch.setattr(checker, 'authenticated_maintenance', lambda *args: {999: 'start'})
+    monkeypatch.setattr(checker, 'unit_status', lambda executable, name: fake_service(policy, name))
+    monkeypatch.setattr(checker, 'verify_route_drain', Mock())
+    listener = Mock(side_effect=[set(), ValueError('late listener')])
+    monkeypatch.setattr(checker, 'verify_listener', listener)
+    with pytest.raises(ValueError, match='late listener'):
+        checker.attest(request, policy, Mock())
+    assert listener.call_count == 2
+    monkeypatch.setattr(checker, 'verify_listener', Mock(return_value=set()))
+    monkeypatch.setattr(checker, 'verify_route_drain', Mock(side_effect=[None, ValueError('late process')]))
+    with pytest.raises(ValueError, match='late process'):
+        checker.attest(request, policy, Mock())
+
+
+def test_noncanonical_request_or_undefined_hold_checkpoint_refuses(site):
+    policy, request, _, _ = site
+    with pytest.raises(ValueError, match='Unexpected package route'):
+        checker.stage_of({**request, 'package': request['package'] + '/'}, policy)
+    held = {**request, 'package': str(policy.project / 'src/.s4-maintenance-package')}
+    with pytest.raises(ValueError, match='Unknown site release checkpoint'):
+        checker.stage_of({**held, 'checkpoint': 'held:INSTALLING:unapproved.py'}, policy)
+    assert checker.stage_of({**held, 'checkpoint': 'held:INSTALLING:src/job_search_helper/runner.py'}, policy) == 'held'
