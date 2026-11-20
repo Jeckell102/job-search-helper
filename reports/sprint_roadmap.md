@@ -129,12 +129,13 @@ Exit gate: independent QA accepts the real startup/import/activation/rollback
 tests and exact attempt-version evidence. Until then automatic release remains
 disabled.
 
-Current status: in progress. The isolated candidate has subprocess evidence
-for the public controller lock handoff, selected sync admission, concurrent
-activation/startup, and crash recovery. Independent source QA is reviewing
-the candidate. The contract and limitations are in
-`F3_ADMISSION_LOCK_CONTRACT_20261120.md`, with current results and the other
-task's overlapping temporary-retry work recorded in `COORDINATOR_STATUS.md`.
+Sprint 1 passed independent installed QA on MuleLab on November 20. All 13
+deployed files matched their approved hashes and modes. All 898,061 existing
+database rows were preserved. The 16 KiB additive schema change was reproduced
+byte for byte from the exact before image. The installed verdict and the
+171 application and 41 maintenance test results are recorded in
+`F3_DEPLOYED_INDEPENDENT_QA_20261120.md`. Broad processing and unqualified
+automatic releases remain disabled. Sprint 2 awaits operator resume.
 
 ## Sprint 2 — F4 Jetson inference reconciliation
 
