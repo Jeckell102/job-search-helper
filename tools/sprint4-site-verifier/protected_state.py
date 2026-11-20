@@ -43,6 +43,7 @@ TABLES = {
 }
 ARCHIVES = ('retained-operator-admission-archive', 'company-event-bridge/consumed-requests',
             'company-event-bridge/consumption-receipts', 'operator-company-requests/receipts')
+RETAINED_FIRST_PASS = 'retained-first-pass'
 FLAGS = ('autopilot_enabled', 'queue_enabled', 'campaign_enabled')
 
 
@@ -248,6 +249,20 @@ def protected_records(db):
     return fingerprint([pieces])
 
 
+def retained_first_pass_digest(root):
+    archive = root / RETAINED_FIRST_PASS
+    if absent(archive):
+        return None
+    archive = physical(archive)
+    rows = []
+    for child in sorted(archive.iterdir()):
+        need(physical(child).is_dir(), 'retained FIRST PASS bucket is not a directory')
+        rows.append((child.name, None))
+        rows.extend((member.relative_to(archive).as_posix(), file_digest(member))
+                    for member in sorted(child.iterdir()))
+    return fingerprint(rows)
+
+
 def _measure(project, maintenance_id):
     project = physical(Path(project))
     root = physical(project / '.state')
@@ -260,7 +275,7 @@ def _measure(project, maintenance_id):
              'state':'FOUNDATION_MAINTENANCE','maintenance_id':maintenance_id}, 'wrong release hold')
     for name in ('next-scan.json', 'retained-operator-admission.json'):
         need(absent(root / name), 'active request or operator journal')
-    result = {}
+    result = {RETAINED_FIRST_PASS: retained_first_pass_digest(root)}
     profile = project / 'dev/wrapper-coder/tools/coordinator_repair_profiles.py'
     result['repair_profile'] = file_digest(profile)  # Pin the independently reviewed empty-registry implementation.
     assignments = [n.value for n in ast.parse(profile.read_bytes()).body if isinstance(n, ast.Assign)

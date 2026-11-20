@@ -24,6 +24,18 @@ def test_stable_files_have_same_fingerprint_and_archive_membership_drift_changes
     assert physical_snapshot(checkout) != original
 
 
+def test_retained_first_pass_bucket_and_nested_file_change_break_continuity(checkout):
+    original = physical_snapshot(checkout)
+    bucket = checkout / '.state/retained-first-pass/example'
+    bucket.mkdir(parents=True)
+    evidence = bucket / 'release.json'
+    evidence.write_text('first fixture version')
+    added = physical_snapshot(checkout)
+    assert added != original
+    evidence.write_text('other fixture version')
+    assert physical_snapshot(checkout) != added
+
+
 def test_sidecar_presence_is_pinned_and_requires_owning_database(checkout):
     own = checkout / '.state/jobs.sqlite3-wal'
     start = physical_snapshot(checkout)

@@ -3,6 +3,7 @@
 import argparse
 from contextlib import closing
 from hashlib import sha256
+import io
 import json
 import os
 from pathlib import Path
@@ -10,9 +11,11 @@ import re
 import stat
 import sys
 from types import ModuleType
+from zipfile import ZipFile
 
 
 SCHEMA = "sprint-4-pilot-selection-v1"
+ROLLBACK_SELECTION_SCHEMA = "sprint-4-pre-pilot-rollback-selection-v1"
 TOOLS = frozenset({
     "pilot_restore_command.py", "host_exchange.py", "pilot_restoration.py",
     "retained_pilot_receiver.py", "retained_pilot_terminal.py", "controller.py",
@@ -56,14 +59,18 @@ def read_selection(path, approved_sha256):
     require(isinstance(selection, dict) and set(selection) == {
         "schema", "tools", "project", "interpreter", "bootstrap_sha256", "exchange_policy", "exchange_policy_sha256",
         "receiver_database", "workbook_id_sha256", "pilot",
-    } and selection["schema"] == SCHEMA and data == canonical(selection),
+    } and selection["schema"] in (SCHEMA, ROLLBACK_SELECTION_SCHEMA) and data == canonical(selection),
             "Selection fields or encoding differ from the approved contract")
-    require(isinstance(selection["tools"], dict) and set(selection["tools"]) == TOOLS
-            and isinstance(selection["pilot"], dict) and set(selection["pilot"]) == PILOT_FIELDS,
-            "Selection does not bind the full tool and pilot scope")
+    pilot = selection["pilot"]
+    require(isinstance(selection["tools"], dict) and set(selection["tools"]) == TOOLS,
+            "Selection does not bind all maintenance tools")
     digests = [selection[key] for key in ("bootstrap_sha256", "exchange_policy_sha256", "workbook_id_sha256")]
     digests.extend(selection["tools"].values())
-    digests.extend(selection["pilot"][key] for key in ("request_sha256", "reservation_digest", "source_revision"))
+    if selection["schema"] == SCHEMA:
+        require(isinstance(pilot, dict) and set(pilot) == PILOT_FIELDS, "Selection does not bind the pilot scope")
+        digests.extend(pilot[key] for key in ("request_sha256", "reservation_digest", "source_revision"))
+    else:
+        require(pilot is None, "Pre-pilot rollback selection cannot name an admitted pilot")
     require(all(isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) for value in digests),
             "Selection contains an invalid digest")
     return selection
@@ -81,6 +88,35 @@ def load_source(name, path, source):
         del sys.modules[name]
         raise
     return module
+
+
+def read_protected_rollback(controller, checker_path, checker_source, selection, selection_sha256):
+    """Verify the same pre-install protected-state pin used by the controller."""
+    require(checker_path == controller.checker
+            and sha256(checker_source).hexdigest() == controller.binding["files"][str(controller.checker)][-1],
+            "Rollback checker differs from the original controller binding")
+    with ZipFile(io.BytesIO(checker_source)) as archive:
+        policy = json.loads(archive.read("approved_site_policy.json"))
+        protected_source = archive.read("protected_state.py")
+    site = policy["site"]
+    fence = site["exchange_fence"]
+    require(policy["schema"] == "sprint-4-site-policy-v1"
+            and site["project"] == str(controller.project) and site["maintenance_id"] == controller.hold_id
+            and fence["policy_file"] == selection["exchange_policy"]
+            and fence["policy_sha256"] == selection["exchange_policy_sha256"],
+            "Rollback does not match the release's approved site and exchange")
+    protected = load_source("protected_state", checker_path / "protected_state.py", protected_source)
+    require(getattr(protected, "RETAINED_FIRST_PASS", None) == "retained-first-pass",
+            "Original protected baseline has no retained FIRST PASS coverage")
+    require(controller.marker.parent == controller.project / ".state"
+            and selection["receiver_database"] == str(controller.project / protected.DATABASES["coordinator"]),
+            "Rollback cannot verify protection for these storage paths")
+    pin_digest = policy["protected_pin_sha256"]
+    require(protected.verify_protected_state(
+        controller.project, policy["protected_pin_file"], pin_digest,
+        verify_release_hold=lambda: protected.verify_release_lease(controller.project, os.getpid()),
+    ) is True, "Original protected state could not be confirmed after rollback")
+    return {"selection_sha256": selection_sha256, "protected_pin_sha256": pin_digest}
 
 
 def approved_command(selection, bundle, approval=None, approved_sha256=None):
@@ -119,20 +155,18 @@ def approved_command(selection, bundle, approval=None, approved_sha256=None):
     )
     state_root = controller.marker.parent
     selection_sha256 = sha256(canonical(selection)).hexdigest()
+    workbook = os.environ.get("SPREADSHEET_ID", "").strip()
+    require(bool(workbook) and sha256(workbook.encode()).hexdigest() == selection["workbook_id_sha256"],
+            "The observed workbook differs from the selected destination")
+    effective_state = bootstrap._project_path(project, os.environ.get("STATE_DB_FILE", ".state/state.db"))
+    require(effective_state.parent == state_root, "The runtime state root differs from the release")
 
     def read_settled_pilot():
         runtime = bootstrap._validate_runtime(project, state_root)
-        effective_state = bootstrap._project_path(project, os.environ.get("STATE_DB_FILE", ".state/state.db"))
-        require(effective_state.parent == state_root, "The runtime state root differs from the release")
         layout = bootstrap._retained_operator_sqlite_layout(project, effective_state, controller.backend)
         observed_path = Path(layout["jobs"]["path"])
         from job_search_helper.sqlite_repository import SQLiteRepository
 
-        # Observe the configured destination locally. The operator's accepted
-        # storage binding must match the approved destination digest.
-        workbook = os.environ.get("SPREADSHEET_ID", "").strip()
-        require(bool(workbook) and sha256(workbook.encode()).hexdigest() == selection["workbook_id_sha256"],
-                "The observed workbook differs from the selected destination")
         verifier_name = "retained_pilot_terminal.py"
         verifier = load_source("job_search_helper.retained_pilot_terminal", paths[verifier_name],
                                sources[verifier_name])
@@ -145,15 +179,33 @@ def approved_command(selection, bundle, approval=None, approved_sha256=None):
         return {"selection_sha256": selection_sha256,
                 **receiver.verify_pilot_delivery(application, selection["receiver_database"])}
 
-    if approval is None:
+    def observe(source, schema, proof_key, read_proof):
         with controller.restoration_terminal() as release:
-            require(release["source"] == "INSTALLED", "The approved pilot release is not installed")
+            require(release["source"] == source, "The approved release has a different terminal state")
             closed = exchange.witness("closed")
-            return {"schema": restore.SCHEMA, "release": release, "exchange": restore.exchange_identity(closed),
-                    "pilot": read_settled_pilot()}
-    restored = restore.restore_after_pilot(
-        controller, exchange, approval, approved_sha256=approved_sha256, read_settled_pilot=read_settled_pilot,
-    )
+            return {"schema": schema, "release": release, "exchange": restore.exchange_identity(closed),
+                    proof_key: read_proof()}
+
+    if selection["schema"] == ROLLBACK_SELECTION_SCHEMA:
+        def read_rollback():
+            layout = bootstrap._retained_operator_sqlite_layout(project, effective_state, controller.backend)
+            proof = read_protected_rollback(controller, paths["host-check"], sources["host-check"],
+                                            selection, selection_sha256)
+            require(layout == bootstrap._retained_operator_sqlite_layout(project, effective_state, controller.backend),
+                    "Rollback database identities changed during verification")
+            return proof
+
+        if approval is None:
+            return observe("ROLLED_BACK", restore.ROLLBACK_SCHEMA, "rollback", read_rollback)
+        restored = restore.restore_after_rollback(
+            controller, exchange, approval, approved_sha256=approved_sha256, read_protected_rollback=read_rollback,
+        )
+    else:
+        if approval is None:
+            return observe("INSTALLED", restore.SCHEMA, "pilot", read_settled_pilot)
+        restored = restore.restore_after_pilot(
+            controller, exchange, approval, approved_sha256=approved_sha256, read_settled_pilot=read_settled_pilot,
+        )
     return {"phase": restored.phase, "generation": restored.generation,
             "terminal_proof_sha256": restored.terminal_proof_sha256}
 

@@ -28,6 +28,7 @@ def main():
     print("Disposable isolated command evidence:", harness.ARTIFACTS, flush=True)
     fixture = harness.Fixture("release-command", HERE)
     project, bundle = fixture.project, fixture.bundle
+    fixture.environment["SPREADSHEET_ID"] = "fixture-sheet"
     runner = load("pilot_restore_command", HERE / "pilot_restore_command.py")
     for name in runner.TOOLS - set(harness.TOOLS) - {"host-check", "plan.json", "manifest.json"}:
         shutil.copy2(HERE / name, bundle / name)
@@ -79,7 +80,7 @@ def main():
         "bootstrap_sha256": digest(project / "release_admission_bootstrap.py"),
         "exchange_policy": str(policy_file), "exchange_policy_sha256": policy_sha256,
         "receiver_database": str(project / "not-created/tasks.sqlite3"),
-        "workbook_id_sha256": "f" * 64,
+        "workbook_id_sha256": hashlib.sha256(b"fixture-sheet").hexdigest(),
         "pilot": {"request_sha256": "a" * 64, "reservation_digest": "b" * 64,
                   "source_revision": "c" * 64, "company_event_id": "CEV-" + "d" * 32,
                   "company_id": "COMP-0001", "blocking_cycle_id": "CYC-ABCDEF123456"},

@@ -6,7 +6,7 @@ from pathlib import Path
 import stat
 
 from alternate_writer_witness import file_mount_id
-from protected_state import ARCHIVES, DATABASES, DISPATCH, WitnessHold, encoded
+from protected_state import ARCHIVES, DATABASES, DISPATCH, RETAINED_FIRST_PASS, WitnessHold, encoded
 
 
 OPTIONAL_DATABASES = (DISPATCH, 'retained-work-starts.sqlite3', 'retained-work-exceptions.sqlite3')
@@ -118,6 +118,14 @@ def physical_snapshot(project):
                 if directory is not None:
                     for member in sorted(os.listdir(directory)):
                         scan.file(f'{relative}/{member}')
+            relative = f'.state/{RETAINED_FIRST_PASS}'
+            directory = scan.directory(relative, optional=True)
+            if directory is not None:
+                for bucket in sorted(os.listdir(directory)):
+                    child = f'{relative}/{bucket}'
+                    bucket_fd = scan.directory(child)
+                    for member in sorted(os.listdir(bucket_fd)):
+                        scan.file(f'{child}/{member}')
             return sha256(encoded(sorted(scan.records.items()))).hexdigest()
     except WitnessHold:
         raise

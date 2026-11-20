@@ -27,6 +27,22 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Pre-pilot rollback checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Staged a separate pre-pilot rollback
+selection and approval in `/tmp/jsh-s4-rollback-restoration.lGqG60sR`.
+Only the original terminal rollback and independently pinned pre-install
+protected state can reopen the exact exchange generation. Initial QA
+rejected checker provenance and missing FIRST PASS tree coverage.
+Both repaired and independently accepted. Twenty-three rollback and
+85 site verifier cases passed, along with the isolated no-evidence hold.
+Use `/tmp/jsh-s4-protected-first-pass.6wStPI2k` for the approved site
+archive. Next prepare the verified live owner window and remeasure
+baseline under holds before approval. No live writes or rollout. Updated
+high-level acceptance-weighted planning estimate is about 55% overall,
+with approximate milestone ETAs recorded separately.
+[Rollback evidence](S4_PRE_PILOT_ROLLBACK_RESTORATION_20261120.md) ·
+[Roadmap planning estimate](ROADMAP_PROGRESS_ESTIMATE_20261120.md).
+
 Guarded restoration command checkpoint. Coordinator and release owner,
 goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Staged the exact observe/restore
 entry at `/tmp/jsh-s4-restoration-command.UmldUtdW`. Initial independent QA
@@ -35,7 +51,8 @@ virtualenv and stable configured SQLite layout were repaired, independent
 recheck accepted staged source. Eighteen disposable tests passed and a real
 isolated entrypoint held on missing pilot evidence with a disposable
 installed controller and checkout closure unchanged. Existing live receiver
-file confirmed by metadata. Coordinator owns the remaining rollback
+file confirmed by metadata. Verified scoped private GitHub backup
+`d3ef226e9e6679818e3b3c0df55950da9e3fcef5`. Coordinator owns the remaining rollback
 restoration and actual enrollment under host custody. No real release
 policy, closure or pilot has run. [Command and evidence](S4_RESTORATION_COMMAND_20261120.md).
 
