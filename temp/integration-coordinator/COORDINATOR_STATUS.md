@@ -90,6 +90,13 @@
   rehearsal inside a disposable sandbox. The real host create targets remain
   absent, the old expiry target is unchanged, and both intake controls remain
   false. See `SERVICE_GENERATED_STAGE_QA_20261120.md`.
+- Milestone 3 now has an independently **ACCEPTED boundary audit** in
+  `M3_BOUNDARY_AUDIT_20261120.md`. It confirms the existing conservative
+  outcome/held-repair skeleton but does not claim M3 closure. The smallest
+  safe next slice is an ordinary normal-cycle facts adapter; post-storage M3
+  may suppress stale repair/retry/coordinator delivery, while no-stale job
+  writes remain owned and tested at pre-persistence admission. Company-only
+  producer integration is deliberately deferred to its explicit call site.
 - The accepted F1 source/test checkpoint `720c84e` is installed narrowly in the
   protected MuleLab checkout. All four starting hashes matched `a940524`,
   rollback copies are at
