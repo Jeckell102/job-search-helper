@@ -338,3 +338,29 @@ def test_competing_outcome_with_alias_to_same_cycle_blocks_settlement(admitted):
     writer.assert_not_called()
     with pytest.raises(ValueError, match='Selected retry owns this cycle'):
         assert_normal_lifecycle_not_held(fixture.root, fixture.jobs_path)
+
+
+@pytest.mark.parametrize('returned', [
+    'https://api.lever.co/v0/postings/acme?location=Berlin',
+    'https://api.eu.lever.co/v0/postings/acme?location=Boston',
+    'https://api.eu.lever.co/v0/postings/acme',
+])
+def test_lever_terminal_decision_rejects_other_region_and_location(returned):
+    from job_search_helper.company_events import canonical_company_fact
+    from job_search_helper.selected_retry_terminal import _decision
+
+    official = 'https://jobs.eu.lever.co/acme?location=Berlin'
+    expected = 'https://api.eu.lever.co/v0/postings/acme?location=berlin'
+    fact = canonical_company_fact({
+        'Company ID': 'COMP-FIXTURE', 'Company Status': 'Active',
+        'Official Careers URL': official, 'ATS / Source': 'Lever',
+    })
+    saved = {'fetch_started_at': '2026-11-20T12:00:00+00:00', 'inventory': {
+        'status': 'failed', 'jobs': [], 'ats': 'Lever', 'source_url': expected,
+        'outcome_failure': ats.outcome_failure('temporary_transport', 'retryable_http_status'),
+        'requested_url': official, 'browser_pending_urls': [], 'browser_discovery_incomplete': False,
+        'fetched_at': '2026-11-20T12:00:01+00:00',
+    }}
+    assert _decision(saved, fact, 'COMP-FIXTURE', 'Fixture')[0] == 'HELD_TEMPORARY_RETRY_CAP'
+    saved['inventory']['source_url'] = returned
+    assert _decision(saved, fact, 'COMP-FIXTURE', 'Fixture') is None

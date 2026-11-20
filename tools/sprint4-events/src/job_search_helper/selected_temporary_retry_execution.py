@@ -1,38 +1,27 @@
 """Freeze one selected ordinary successor outside the normal inbox."""
 from contextlib import closing
-import json
 import os
 from pathlib import Path
 import sqlite3
 import stat
-import tempfile
 
-from .ats import Inventory, resolve_board
+from .ats import Inventory
 from .company_events import canonical_company_fact, source_revision
 from .company_sources import repair_source
 from .engine import State
 from .integration_release import assert_release_settled
+from .repository import _url
 from .retained_event_outcome import retained_outcome_source_is_current
 from .retained_operator_journal import RetainedOperatorJournal, _inventory_digest
-from .retained_work_exception import _provider_identity
 from .retained_work_runner import _inventory_snapshot, assert_normal_lifecycle_not_held
 from .runner import _canonical_runtime_binding
 from .scan_request import _cycle_views, _timestamp, _unfinished_from_views, cycle_metadata
 from .selected_temporary_retry_admission import _bound_request, _require_saved_retry_identity, _saved_admission
 from .sqlite_repository import SQLiteRepository
-from .temporary_retry import SelectedTemporaryRetrySink, _canonical, _selected_sha, _sync_directory
-
-
-def _selected_provider_identity(ats, url):
-    identity = _provider_identity(ats, url)
-    provider = identity.partition(':')[0]
-    if provider not in {'greenhouse', 'lever', 'ashby'}:
-        return identity
-    try:
-        adapter, board, _ = resolve_board(ats, url)
-    except ValueError:
-        return ''
-    return provider + ':' + board.casefold() if adapter.casefold() == provider else ''
+from .temporary_retry import SelectedTemporaryRetrySink, _sync_directory
+from .scoped_provider_observation import (
+    provider_identity, read_observation as _read_record, write_observation as _write_record,
+)
 
 
 def freeze_selected_temporary_retry_locked(sink, state, runtime_binding, *, cycle_id, fetcher,
@@ -84,7 +73,7 @@ def freeze_selected_temporary_retry_locked(sink, state, runtime_binding, *, cycl
     binding = _fetch_binding(sink, cycle, request, runtime, key)
     directory = root / 'selected-retry-inventory'
     path = directory / (cycle_id + '.json')
-    saved = _read_record(path, binding, signed_binding)
+    saved = _read_record(path, binding)
     evidence = {'cycle_id': cycle_id, 'company_id': cid, 'outcome_id': outcome['outcome_id']}
     if saved is not None and saved['state'] == 'CLAIMED':
         return {'state': 'HELD_FETCH_UNCERTAIN', **evidence}
@@ -119,7 +108,7 @@ def freeze_selected_temporary_retry_locked(sink, state, runtime_binding, *, cycl
     name, url = company['Company'], company['Official Careers URL']
     ats = company.get('ATS / Source', '')
     expected_ats, expected_url, _ = repair_source(ats, url, cid, name)
-    provider = _selected_provider_identity(expected_ats, expected_url)
+    provider = provider_identity(expected_ats, expected_url)
     if not provider:
         raise ValueError('Selected retry provider source is unverified.')
     if workbook_guard is not None:
@@ -130,7 +119,7 @@ def freeze_selected_temporary_retry_locked(sink, state, runtime_binding, *, cycl
     if not isinstance(fetched, Inventory):
         raise ValueError('Selected retry returned an invalid inventory.')
     inventory = _inventory_snapshot(fetched, company, fetched_at=sink._now().isoformat(), event_scope=True)
-    if _selected_provider_identity(inventory['ats'], inventory['source_url']) != provider:
+    if provider_identity(inventory['ats'], inventory['source_url']) != provider:
         raise ValueError('Selected retry inventory belongs to a different source.')
     inventory_sha256 = _inventory_digest(inventory, signed_binding)
     _write_record(path, {**claim, 'state': 'FROZEN', 'inventory': inventory,
@@ -154,9 +143,19 @@ def load_selected_retry_inventory(sink, state, runtime, *, cycle_id):
     request = _bound_request(outcome, claim['scheduled_at'])
     cycle = state.cycle(cycle_id)
     binding = _fetch_binding(sink, cycle, request, runtime, key)
-    record = _read_record(sink.root / 'selected-retry-inventory' / (cycle_id + '.json'), binding, archived['binding'])
+    record = _read_record(sink.root / 'selected-retry-inventory' / (cycle_id + '.json'), binding)
     if record is None or record['state'] != 'FROZEN':
         raise ValueError('Selected retry has no verified frozen inventory.')
+    item = cycle['companies'][binding['company_id']]
+    fact = item['outcome_source_fact']
+    inventory = record['inventory']
+    expected_ats, expected_url, _ = repair_source(
+        fact['ats_source'], inventory['requested_url'], binding['company_id'], item['company'],
+    )
+    provider = provider_identity(expected_ats, expected_url)
+    if (_url(inventory['requested_url']) != fact['official_careers_url']
+            or not provider or provider_identity(inventory['ats'], inventory['source_url']) != provider):
+        raise ValueError('Selected retry frozen provider source differs from admission.')
     return record
 
 
@@ -181,58 +180,3 @@ def _has_ordinary_work(reader, inbox, cycle_id):
                          "AND name='exact_local_applications'").fetchone()
     return bool(present and db.execute('SELECT 1 FROM exact_local_applications WHERE cycle=? LIMIT 1',
                                        (cycle_id,)).fetchone())
-
-
-def _read_record(path, binding, signed_binding):
-    try:
-        attrs = path.parent.lstat()
-    except FileNotFoundError:
-        return None
-    if not stat.S_ISDIR(attrs.st_mode) or stat.S_IMODE(attrs.st_mode) != 0o700 or attrs.st_uid != os.geteuid():
-        raise ValueError('Selected retry inventory directory is unsafe.')
-    try:
-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-    except FileNotFoundError:
-        return None
-    with os.fdopen(fd, 'r', encoding='utf-8') as stream:
-        attrs = os.fstat(stream.fileno())
-        if (not stat.S_ISREG(attrs.st_mode) or stat.S_IMODE(attrs.st_mode) != 0o600
-                or attrs.st_uid != os.geteuid() or attrs.st_nlink != 1):
-            raise ValueError('Selected retry inventory record is unsafe.')
-        raw = stream.read()
-    record = json.loads(raw)
-    if not isinstance(record, dict) or _canonical(record) + '\n' != raw:
-        raise ValueError('Selected retry inventory record is malformed.')
-    expected = {'state', 'binding', 'fetch_started_at', 'sha256'}
-    if record.get('state') == 'FROZEN':
-        expected.update(('inventory', 'inventory_sha256'))
-    if (set(record) != expected or record['binding'] != binding or record['state'] not in ('CLAIMED', 'FROZEN')
-            or record['sha256'] != _selected_sha({key: value for key, value in record.items() if key != 'sha256'})):
-        raise ValueError('Selected retry inventory record conflicts with its exact admission.')
-    _timestamp(record['fetch_started_at'], 'Selected retry fetch claim time')
-    if record['state'] == 'FROZEN':
-        inventory = record['inventory']
-        _timestamp(inventory.get('fetched_at'), 'Selected retry fetch completion time')
-        if _inventory_digest(inventory, signed_binding) != record['inventory_sha256']:
-            raise ValueError('Selected retry frozen inventory is inconsistent.')
-    return record
-
-
-def _write_record(path, record, *, initial):
-    path.parent.mkdir(mode=0o700, exist_ok=True)
-    _sync_directory(path.parent.parent)
-    fd, temporary = tempfile.mkstemp(dir=path.parent, prefix='.retry-')
-    try:
-        with os.fdopen(fd, 'w', encoding='utf-8') as stream:
-            stream.write(_canonical({**record, 'sha256': _selected_sha(record)}) + '\n')
-            stream.flush()
-            os.fsync(stream.fileno())
-        if initial:
-            os.link(temporary, path, follow_symlinks=False)
-            os.unlink(temporary)
-        else:
-            os.replace(temporary, path)
-        _sync_directory(path.parent)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)

@@ -323,7 +323,7 @@ def assert_no_manually_staged_event(state_directory):
 
 
 def assert_normal_lifecycle_not_held(state_directory, jobs_path=None, *, allow_staged_event=False,
-                                     selected_retry_cycle_id=None):
+                                     selected_retry_cycle_id=None, ordinary_event_cycle_id=None):
     """Fail closed before the normal runner can discover or sync work.
 
     A retained preflight is intentionally outside State and the normal inbox.
@@ -338,6 +338,8 @@ def assert_normal_lifecycle_not_held(state_directory, jobs_path=None, *, allow_s
         assert_no_manually_staged_event(state_directory)
     from .selected_retry_lifecycle import assert_no_selected_retry_cycle
     assert_no_selected_retry_cycle(state_directory, permitted_cycle_id=selected_retry_cycle_id)
+    from .ordinary_company_event_fetch import assert_no_active_ordinary_event_observation
+    assert_no_active_ordinary_event_observation(state_directory, permitted_cycle_id=ordinary_event_cycle_id)
     assert_no_unfinished_operator_journal(state_directory)
     path = Path(state_directory).resolve() / "retained-work-starts.sqlite3"
     record = _read_existing_journal(path)

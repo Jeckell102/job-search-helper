@@ -16,7 +16,8 @@ from .retained_event_outcome import retained_outcome_source_is_current
 from .retained_work_runner import assert_normal_lifecycle_not_held
 from .scan_request import _cycle_views, _timestamp, _unfinished_from_views, cycle_metadata
 from .sheet_profile import COMPACT_PROFILE
-from .selected_temporary_retry_execution import _selected_provider_identity, load_selected_retry_inventory
+from .scoped_provider_observation import provider_identity
+from .selected_temporary_retry_execution import load_selected_retry_inventory
 from .temporary_retry import _canonical, _selected_sha
 
 
@@ -118,10 +119,10 @@ def _settle_selected_retry_locked(sink, engine, cycle_id, frozen, workbook_guard
 def _decision(frozen, fact, cid, company_name):
     inventory = frozen['inventory']
     expected_ats, board, _ = repair_source(fact['ats_source'], inventory['requested_url'], cid, company_name)
-    provider = _selected_provider_identity(expected_ats, board)
+    provider = provider_identity(expected_ats, board)
     if (inventory['jobs'] != [] or inventory['browser_pending_urls'] != []
             or inventory['browser_discovery_incomplete'] is not False
-            or not provider or _selected_provider_identity(inventory['ats'], inventory['source_url']) != provider
+            or not provider or provider_identity(inventory['ats'], inventory['source_url']) != provider
             or _url(inventory['requested_url']) != fact['official_careers_url']
             or _timestamp(frozen['fetch_started_at'], 'Selected retry fetch start')
             > _timestamp(inventory['fetched_at'], 'Selected retry fetch end')):

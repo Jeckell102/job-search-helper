@@ -10,7 +10,7 @@ from job_search_helper import ats, selected_temporary_retry_execution as executi
 from job_search_helper.cli import writer_lock
 from job_search_helper.engine import Engine, State
 from job_search_helper.inbox import InventoryInbox
-from job_search_helper.temporary_retry import SelectedTemporaryRetrySink
+from job_search_helper.temporary_retry import SelectedTemporaryRetrySink, _selected_sha
 from test_retained_operator_run import BOARD
 from test_selected_temporary_retry_admission import admit, scheduled, view  # noqa: F401, shared fixture
 from test_temporary_retry import close_fixture_blocker, selected  # noqa: F401, nested fixture
@@ -72,7 +72,7 @@ def test_exact_frozen_inventory_replays_without_ordinary_writes(admitted, status
     assert evidence['inventory']['jobs'] == [{'posting_id': 'fixture-job', 'title': 'Fixture job'}]
     assert evidence['binding']['runtime'] == fixture.runtime
     assert evidence['binding']['request']['temporary_retry']['outcome_id'] == outcome['outcome_id']
-    assert evidence['binding']['original_outcome']['outcome_sha256'] == execution._selected_sha(outcome)
+    assert evidence['binding']['original_outcome']['outcome_sha256'] == _selected_sha(outcome)
     assert freeze(fixture, sink, cycle_id, provider) == {**first, 'recovered': True}
     provider.assert_called_once()
     assert frozen.read_bytes() == original

@@ -117,8 +117,12 @@ def _check_binding(binding):
 
 
 def _inventory_digest(inventory, binding):
+    return provider_inventory_digest(inventory, event_scope=binding["claims"]["action"] == EVENT_ACTION)
+
+
+def provider_inventory_digest(inventory, *, event_scope):
     statuses = {"complete", "partial"}
-    if binding["claims"]["action"] == EVENT_ACTION:
+    if event_scope:
         from .ats import validate_outcome_failure
         statuses.update(("blocked", "failed", "unsupported"))
         failure = inventory.get("outcome_failure") if isinstance(inventory, dict) else None
