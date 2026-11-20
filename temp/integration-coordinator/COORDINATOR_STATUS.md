@@ -1,5 +1,30 @@
 # Integration automation coordinator status
 
+## Recovery checkpoint — 2026-11-19 retained-work runner overlay
+
+- The active goal remains all six milestones plus final independent acceptance;
+  this checkpoint is not completion or live authorization.
+- Temporary storage was cleared after the retained-work runner and containment
+  candidates passed independent review.  The feature checkout was rebuilt from
+  saved branch commit `10b8a59`.  The accepted four candidate files were then
+  recovered exactly by replaying their original add/update records from the
+  append-only Codex session log, not rewritten from memory.
+- Recovered candidate evidence reproduces **10/10 runner tests and 21/21
+  containment tests warning-strict**.  The files are overlaid in this isolated
+  feature checkout with package-qualified imports.  The required authorization
+  helper is byte-identical to protected source at SHA-256
+  `e7580d8fac94f451343de6d3722a33796af182b22571cf38f02a5e7384c14051`.
+- Independent review before the reset accepted both the repaired candidate and
+  feature overlay for isolated integration only.  It did not authorize live
+  use, protected deployment, broad synchronization, the unfinished scoped
+  publisher, or FIRST PASS.
+- Historical blocker remains `CYC-B639C6D864EC`; preserve it and all live
+  data/locks.  No live, Google, protected-source, lock, or Jetson mutation was
+  made during recovery.
+- Next: reproduce the in-feature 31-test and surrounding compatibility evidence,
+  create a narrow local commit, then implement and independently review the
+  reservation-bound dirty-provenance ledger and exact new-cycle publisher.
+
 Updated: 2026-11-19. This is the current working card for the isolated,
 source-only coordinator copy. It contains no production records, credentials,
 locks, or runtime histories.
