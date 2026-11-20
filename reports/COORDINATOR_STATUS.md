@@ -116,6 +116,21 @@ owned outcome/launcher continuation. No live deployment or scrape.
 [Final pending QA](S5_ORDINARY_PENDING_CORE_FINAL_QA_20261120.md) ·
 [Offline verifier handoff](S5_ORDINARY_VERIFIER_HANDOFF_20261120.md) ·
 [Offline verifier QA](S5_ORDINARY_VERIFIER_INDEPENDENT_QA_20261120.md).
+At 18:32 Eastern the native observer was still absent. Private GitHub
+readback matched `476d4bc76bb1b9885f6c28da1e008dadefd589b7`. The new
+independent QA assignment joins a disposable State-produced pending record
+to the separate offline verifier. Root owns later measured worker wiring.
+Independent QA accepted the exact final typed response patch after 157
+offline tests and 33 independent hostile probes. Raw browser and rendered
+tenant identity agree before an observation can accompany ordinary output.
+The independent pending-to-verifier composition check identified a
+potential Company-source digest contract mismatch and is reproducing it
+in a private fixture. Do not join the two accepted source components by
+weakening either reviewed identity. Reconcile to the existing exact
+Company input and rerun both pins as appropriate.
+[Typed provider final QA](S5_TYPED_RIPPLING_MISMATCH_FINAL_QA_20261120.md).
+
+
 
 Prepared live enrollment checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
