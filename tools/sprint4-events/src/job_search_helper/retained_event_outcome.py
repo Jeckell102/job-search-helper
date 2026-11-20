@@ -157,7 +157,9 @@ def verified_zero_evidence(local, binding, record, frozen_fact):
     inventory = record['inventory']
     code = inventory.get('verified_zero')
     facts_url = frozen_fact['official_careers_url']
-    provider = _provider_identity(frozen_fact['ats_source'], facts_url)
+    ats, board, _ = repair_source(frozen_fact['ats_source'], inventory['requested_url'],
+                                  claims['company_id'], frozen_fact['company_name'])
+    provider = _provider_identity(ats, board)
     observed_provider = _provider_identity(inventory['ats'], inventory['source_url'])
     valid_greenhouse = code == 'greenhouse_explicit_total_zero' and provider.startswith('greenhouse:')
     valid_samtec = (code == 'samtec_jobvite_explicit_zero' and claims['company_id'] == 'COMP-0739'
@@ -188,7 +190,12 @@ def returned_failure_evidence(local, binding, record, event_id, frozen_fact, *, 
     reservation = binding['reservation_digest']
     cycle_id = _cycle_id(reservation)
     status = inventory['status']
-    if (status not in {'partial', 'failed', 'blocked', 'unsupported'}
+    if source_current is None:
+        source_current = record['settlement_evidence'].get('source_current')
+    if type(source_current) is not bool:
+        raise ValueError('Retained event failure source decision is invalid.')
+    stale_complete = source_current is False and status == 'complete' and bool(inventory['jobs'])
+    if ((not stale_complete and status not in {'partial', 'failed', 'blocked', 'unsupported'})
             or 'outcome_failure' not in inventory or inventory.get('verified_zero') is not None
             or _inventory_digest(inventory, binding) != record['inventory_sha256']
             or _timestamp(inventory['fetch_started_at'], 'Retained failure fetch start')
@@ -216,10 +223,6 @@ def returned_failure_evidence(local, binding, record, event_id, frozen_fact, *, 
         'failure': failure,
     }
     stale = dict(fresh, source_current=False)
-    if source_current is None:
-        source_current = record['settlement_evidence'].get('source_current')
-    if type(source_current) is not bool:
-        raise ValueError('Retained event failure source decision is invalid.')
     outcome = classify_outcome(fresh if source_current else stale)
     evidence = {
         'state': FETCH_OUTCOME, 'request_id': claims['request_id'], 'company_id': claims['company_id'],
@@ -234,6 +237,12 @@ def _verify_no_publication(local, reservation, cycle_id):
     if (_stored_session(Path(local.path).parent, reservation) is not None
             or local.db.execute('SELECT 1 FROM exact_local_applications WHERE cycle=? LIMIT 1', (cycle_id,)).fetchone()):
         raise ValueError('Retained no-write outcome conflicts with publication.')
+    for table in ('retained_intake_holds', 'retained_publications'):
+        if (local.db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone()
+                and local.db.execute(
+                    f'SELECT 1 FROM {table} WHERE reservation_digest=?', (reservation,),
+                ).fetchone()):
+            raise ValueError('Retained no-write outcome conflicts with publication.')
 
 
 def _read_archived_json(path):

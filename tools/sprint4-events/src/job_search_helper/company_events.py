@@ -160,6 +160,8 @@ def _outbox_observation(repository, event):
 
 def read_verified_queued_event(repository, root):
     """Read exact bytes and durable ordinary event provenance without writing."""
+    if getattr(repository, "is_local", False) is not True:
+        raise ValueError("Company-event admission requires the local SQLite event authority.")
     root = Path(root)
     path = root / "next-scan.json"
     if path.is_symlink():
@@ -250,6 +252,32 @@ class CompanyEventBridge:
     @property
     def evidence_directory(self):
         return self.root / "company-event-bridge"
+
+    def archive_ordinary_admission(self, request, cycle):
+        """Save the exact verified event request before its mutable slot is replaced."""
+        from .scan_request import request_fingerprint
+
+        _raw, verified = read_verified_queued_event(self.repository, self.root)
+        event = verified["company_event"]
+        if (verified != request or cycle.get("start_request_id") != request["request_id"]
+                or cycle.get("request_fingerprint") != request_fingerprint(request, [event["company_id"]])
+                or cycle.get("company_event") != event or set(cycle.get("companies", {})) != {event["company_id"]}):
+            raise ValueError("Company-event checkpoint does not own the exact queued admission.")
+        path = self.root.resolve() / "company-event-bridge" / "ordinary-admissions" / (_json_digest(request) + ".json")
+        if path.resolve() != path:
+            raise ValueError("Company-event admission archive must be a regular file.")
+        prior = self._read_json(path)
+        if prior is None:
+            try:
+                self._write_atomic_json(path, request, exclusive=True)
+            except FileExistsError:
+                pass
+            prior = self._read_json(path)
+        if prior != request:
+            raise ValueError("Company-event admission archive does not match the exact request.")
+        self._fsync_directory(path.parent)
+        self._fsync_directory(path.parent.parent)
+
 
     def manually_held_request(self):
         """Read whether the slot is reserved for manually staged retained intake."""

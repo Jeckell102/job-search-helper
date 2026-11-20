@@ -1067,13 +1067,14 @@ def test_expired_event_reopens_only_exact_claim_and_never_dispatches_suffix(tmp_
     fixture.fetch.assert_called_once()
 
 
-def test_public_outcome_cannot_claim_staged_event_with_a_fabricated_ordinary_cycle(tmp_path, monkeypatch):
+@pytest.mark.parametrize("alias", [False, True])
+def test_public_outcome_cannot_claim_staged_event_with_a_fabricated_ordinary_cycle(tmp_path, monkeypatch, alias):
     fixture = OperatorFixture(tmp_path, monkeypatch, company_event=True)
     fixture.sign()
     with closing(fixture.local(write=True)) as local:
         with pytest.raises(RepositoryError, match="Company-event outcomes require a sealed event writer"):
             local.record_scrape_outcome({
-                "request_id": fixture.request_id, "company_id": COMPANY_ID,
+                "request_id": "opaque-alias" if alias else fixture.request_id, "company_id": COMPANY_ID,
                 "company_event_id": fixture.request["company_event"]["event_id"],
                 "source_revision": fixture.request["source_revision"], "cycle_id": "CYC-FABRICATED",
                 "inventory_status": "complete", "source_current": True,
@@ -1167,3 +1168,114 @@ def test_failure_outcome_is_sealed_before_outbox_retry_and_source_change(tmp_pat
         sink.ingest_immutable.assert_not_called()
     fixture.open_remote.assert_not_called()
     fixture.fetch.assert_called_once()
+
+
+@pytest.mark.parametrize(("interruption", "expired"), [
+    ("lost-final-response", True),
+    ("_acknowledge_selected_dirty", True),
+    ("confirm_remote_from_session", True),
+    ("release_retained_first_pass", False),
+])
+def test_signed_event_settles_a_final_claim_without_another_remote_writer(
+        tmp_path, monkeypatch, interruption, expired):
+    from job_search_helper import (
+        retained_operator_authorization, retained_work_publication, selected_recovery_authorization,
+    )
+
+    fixture = OperatorFixture(tmp_path, monkeypatch, company_event=True)
+    fixture.sign()
+    if interruption == "lost-final-response":
+        fixture.service.lose_response = True
+        with pytest.raises(UncertainWriteError):
+            fixture.command("execute")
+    else:
+        with monkeypatch.context() as stop:
+            stop.setattr(retained_work_publication, interruption,
+                         Mock(side_effect=InterruptedError("stop during exact settlement")))
+            with pytest.raises(InterruptedError, match="stop during exact settlement"):
+                fixture.command("execute")
+    with closing(fixture.local()) as local:
+        assert local.scrape_outcomes() == []
+    fixture.open_remote.reset_mock()
+
+    if expired:
+        expiry = selected_recovery_authorization._expiry
+
+        def late(value, _now):
+            return expiry(value, fixture.now + timedelta(hours=2))
+
+        monkeypatch.setattr(selected_recovery_authorization, "_expiry", late)
+        monkeypatch.setattr(retained_operator_authorization, "_expiry", late)
+    result = fixture.command("execute")
+    assert result["state"] == "SYNC_CONFIRMED"
+    assert all(not call.kwargs["write"] for call in fixture.open_remote.call_args_list)
+    assert len(fixture.service.batches) == 1
+    fixture.fetch.assert_called_once()
+    assert not fixture.queue_path.exists()
+    with closing(fixture.local()) as local:
+        outcome, = local.scrape_outcomes()
+        assert outcome["outcome_id"] == result["outcome_id"]
+        assert local.db.execute("SELECT COUNT(*) FROM exact_local_acknowledgements").fetchone()[0] == 1
+    fixture.open_remote.reset_mock()
+    assert fixture.command("execute") == result
+    fixture.open_remote.assert_not_called()
+
+
+def test_signed_failed_event_schedules_exact_retry_without_opening_google(tmp_path, monkeypatch):
+    fixture = OperatorFixture(tmp_path, monkeypatch, company_event=True)
+    fixture.sign()
+    fixture.fetch.return_value = ats.Inventory(
+        "failed", source_url=BOARD, ats="Jobvite", browser_fallback_allowed=False,
+        outcome_failure=ats.outcome_failure("temporary_transport", "retryable_http_status"),
+    )
+    result = fixture.command("execute")
+    args = [
+        "schedule-retry", "--company-event", "--cycle-id", CYCLE_ID, "--company-id", COMPANY_ID,
+        "--request-id", fixture.request_id, "--manifest-file", str(fixture.manifest_path),
+        "--approval-file", str(fixture.approval_path), "--outcome-id", result["outcome_id"],
+    ]
+    fixture.open_remote.reset_mock()
+    receipts = []
+    for _ in range(2):
+        output = io.StringIO()
+        with cli.writer_lock(tmp_path / "scraper.lock"), redirect_stdout(output):
+            assert operator_command(args, (fixture.state_path, fixture.jobs_path, fixture.runtime)) == 0
+        receipts.append(json.loads(output.getvalue()))
+    assert receipts == [
+        {"outcome_id": result["outcome_id"], "delivery": [
+            {"outcome_id": result["outcome_id"], "disposition": "ACCEPTED"},
+        ]},
+        {"outcome_id": result["outcome_id"], "delivery": []},
+    ]
+    event_id = fixture.request["company_event"]["event_id"]
+    record = json.loads((tmp_path / "selected-temporary-retries" / (event_id + ".json")).read_bytes())
+    assert record["state"] == "SCHEDULED"
+    assert not fixture.queue_path.exists()
+    fixture.open_remote.assert_not_called()
+    fixture.fetch.assert_called_once()
+
+
+def test_source_change_during_complete_fetch_cancels_before_any_publication(tmp_path, monkeypatch):
+    fixture = OperatorFixture(tmp_path, monkeypatch, company_event=True)
+    fixture.sign()
+    result = fixture.fetch.return_value
+
+    def change_source(*_args):
+        with closing(fixture.local(write=True)) as local:
+            row = local.matches("Companies", {"Company ID": COMPANY_ID})[0][1]
+            row["Official Careers URL"] = "https://jobs.jobvite.com/samtec/new"
+            local.import_companies_with_events([(2, row)], origin="sheets-reconciliation")
+        return result
+
+    fixture.fetch.side_effect = change_source
+    cancelled = fixture.command("execute")
+    assert cancelled["state"] == "FETCH_OUTCOME"
+    assert cancelled["outcome"]["outcome"] == "STALE_OR_PAUSED"
+    assert not fixture.queue_path.exists()
+    assert not (tmp_path / "retained-sessions.sqlite3").exists()
+    assert not fixture.service.batches
+    assert fixture.command("execute") == cancelled
+    fixture.fetch.assert_called_once()
+    with closing(fixture.local()) as local:
+        assert local.read("Job History") == fixture.local_before["Job History"]
+        assert local.read("Job Evidence") == fixture.local_before["Job Evidence"]

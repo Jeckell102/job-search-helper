@@ -998,27 +998,29 @@ class SQLiteRepository:
         if 'comparison' in outcome:
             payload['comparison'] = outcome['comparison']
         from .outcomes import validate_public_outcome_record
-        if validate_public_outcome_record(payload) is None:
-            raise RepositoryError('Scrape outcome public record is malformed.')
         encoded = encode(payload)
         with self.transaction():
-            event_id = identity['request_id'].removeprefix('company-event:')
+            request_id = identity['request_id']
+            request_event = request_id.removeprefix('company-event:') if request_id.startswith('company-event:') else None
+            declared_event = identity.get('company_event_id')
             event = None
-            if event_id != identity['request_id']:
+            if request_event is not None or declared_event is not None:
                 event = self.db.execute(
-                    'SELECT company_id,source_revision,kind FROM company_event_outbox WHERE event_id=?',
-                    (event_id,),
+                    'SELECT company_id,source_revision,kind FROM company_event_outbox WHERE event_id IN (?,?)',
+                    (request_event, declared_event),
                 ).fetchone()
             if event is not None and not owned_company_event:
                 raise RepositoryError('Company-event outcomes require a sealed event writer.')
             if owned_company_event:
                 if (event != (identity['company_id'], identity['source_revision'], 'company.eligible')
-                        or identity.get('company_event_id') != event_id
+                        or declared_event != request_event
                         or self.db.execute(
                             'SELECT 1 FROM scrape_outcomes WHERE request_id=? AND outcome_id<>?',
                             (identity['request_id'], outcome['outcome_id']),
                         ).fetchone()):
                     raise RepositoryError('Company-event outcome conflicts with its durable ownership.')
+            if validate_public_outcome_record(payload) is None:
+                raise RepositoryError('Scrape outcome public record is malformed.')
             existing = self.db.execute('SELECT payload FROM scrape_outcomes WHERE outcome_id=?',
                                        (outcome['outcome_id'],)).fetchone()
             if existing:

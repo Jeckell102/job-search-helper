@@ -5,6 +5,7 @@ or readback arguments.  Those facts are read from ``RetainedSessionStore``.
 """
 from __future__ import annotations
 
+from contextlib import closing
 import hashlib
 from pathlib import Path
 import re
@@ -14,14 +15,14 @@ from .exact_local_plan import VERIFIED, _apply_id, exact_local_plan, verify_exac
 from .exact_cycle_sync import _company_guard, _validate_controls
 from .repository import _equivalent
 from .retained_dirty_provenance import (
-    FIRST_PASS_RELEASED, REMOTE_PENDING, _session_binding, _verify_cells, bind_remote_session,
-    confirm_remote_from_session, retained_publication, verify_dirty_provenance,
+    FIRST_PASS_RELEASED, REMOTE_CONFIRMED, REMOTE_PENDING, _session_binding, _verify_cells,
+    bind_remote_session, confirm_remote_from_session, retained_publication, verify_dirty_provenance,
 )
 from .retained_first_pass import _read_release, release_retained_first_pass
 from .retained_session_store import (
     SYNC_CONFIRMED, SYNC_PENDING, RetainedSessionStore, _IDENTITY_FIELDS, _intent_id, _receipt_id,
 )
-from .retained_work_runner import digest, settle_retained_start
+from .retained_work_runner import _read_existing_journal, digest, settle_retained_start
 from .sheets_sync import SheetsSynchronizer
 from .sqlite_repository import timestamp
 
@@ -149,15 +150,7 @@ def recover_claimed_retained_chunk(reservation_digest, store, local, remote_read
     in its private session store. An unclaimed suffix stays unclaimed.
     """
     from .cli import writer_lock
-    if (not _is_sha256(reservation_digest) or not _is_sha256(claim_id)
-            or runtime_binding is None or not isinstance(store, RetainedSessionStore)
-            or getattr(local, "readonly", None) is not True):
-        raise ValueError("retained_claim_readback_binding_invalid")
-    session_path = Path(store.path).resolve()
-    root = session_path.parent
-    if (session_path.name != "retained-sessions.sqlite3"
-            or Path(local.path).resolve() != root / "jobs.sqlite3"):
-        raise ValueError("retained_claim_readback_store_changed")
+    root = _retained_readback_root(reservation_digest, store, local, claim_id, runtime_binding)
     with writer_lock(root / "retained-publication.lock"):
         session = store.load(reservation_digest)
         _validate_claim_readback_session(reservation_digest, session, local, runtime_binding)
@@ -185,6 +178,131 @@ def recover_claimed_retained_chunk(reservation_digest, store, local, remote_read
         }
 
 
+def finish_confirmed_retained_publication(reservation_digest, store, local, remote_reader,
+                                          jobs_writer, *, claim_id, runtime_binding):
+    """Settle a fully claimed reservation without any remote write capability.
+
+    The caller authenticates the original binding and holds the scraper and
+    writer leases. A read-only jobs connection and an exact final claim are
+    required. The lazy jobs writer opens only for confirmed full readback.
+    """
+    from .cli import writer_lock
+
+    root = _retained_readback_root(reservation_digest, store, local, claim_id, runtime_binding)
+    with writer_lock(root / "retained-publication.lock"):
+        session = store.load(reservation_digest)
+        publication = _validate_terminal_readback_session(reservation_digest, session, local, runtime_binding)
+        claim, _ = _retained_readback_chunk(session, claim_id)
+        if claim["state"] != "CONFIRMED" or session["remote_cursor"] != len(session["projection"]):
+            raise ValueError("retained_terminal_readback_claims_incomplete")
+        _validate_terminal_start(root, reservation_digest, session, publication)
+
+        exact_scope = session["exact_scope"]
+        sync = SheetsSynchronizer(local, remote_reader())
+        full = sync.readback_exact_scope(
+            exact_scope, receipt_id=session["receipt_id"], intent_id=session["intent_id"],
+            intent_projection_digest=session["projection_digest"],
+        )
+        _verify_full_claim_evidence(session, full)
+        session = store.confirm_readback(reservation_digest, readback=full)
+        selected_digest = digest(full["rows"])
+        _validate_terminal_readback_session(
+            reservation_digest, session, local, runtime_binding, selected_digest=selected_digest,
+        )
+        if publication["state"] != FIRST_PASS_RELEASED:
+            with closing(jobs_writer()) as writer:
+                if (getattr(writer, "readonly", None) is not False
+                        or Path(writer.path).resolve() != root / "jobs.sqlite3"
+                        or writer.spreadsheet_id != local.spreadsheet_id):
+                    raise ValueError("retained_terminal_readback_writer_changed")
+                _validate_terminal_readback_session(
+                    reservation_digest, session, writer, runtime_binding, selected_digest=selected_digest,
+                )
+                _acknowledge_selected_dirty(
+                    writer, exact_scope, full, plan_digest=session["plan_digest"],
+                    receipt_id=session["receipt_id"], acknowledgement_id=session["acknowledgement_id"],
+                )
+                confirm_remote_from_session(writer, reservation_digest, session["plan"], session_store=store)
+                release_retained_first_pass(writer, reservation_digest, session["plan"], root / "retained-first-pass")
+        first_pass = _verify_operator_terminal_receipt(
+            reservation_digest, session, local, runtime_binding=runtime_binding,
+        )
+        settlement = settle_retained_start(root, local.path, reservation_digest)
+        return {
+            "state": FIRST_PASS_RELEASED, "session_state": session["state"],
+            "reservation_digest": reservation_digest, "claim_id": claim_id,
+            "receipt_id": session["receipt_id"], "intent_id": session["intent_id"],
+            "acknowledgement_id": session["acknowledgement_id"],
+            "first_pass": first_pass, "settlement": settlement,
+        }
+
+
+def _retained_readback_root(reservation_digest, store, local, claim_id, runtime_binding):
+    if (not _is_sha256(reservation_digest) or not _is_sha256(claim_id)
+            or runtime_binding is None or not isinstance(store, RetainedSessionStore)
+            or getattr(local, "readonly", None) is not True):
+        raise ValueError("retained_claim_readback_binding_invalid")
+    session_path = Path(store.path).resolve()
+    root = session_path.parent
+    if (session_path.name != "retained-sessions.sqlite3"
+            or Path(local.path).resolve() != root / "jobs.sqlite3"):
+        raise ValueError("retained_claim_readback_store_changed")
+    return root
+
+
+def _validate_terminal_start(root, reservation_digest, session, publication):
+    start = _read_existing_journal(root / "retained-work-starts.sqlite3")
+    if start is None:
+        if publication["state"] != FIRST_PASS_RELEASED:
+            raise ValueError("retained_terminal_readback_start_missing")
+        return
+    expected = {"request_id": session["request_id"], "event_id": session["event_id"],
+                "company_id": session["company_id"], "manifest_digest": session["manifest_digest"],
+                "reservation_digest": reservation_digest}
+    if (start["state"] != "FROZEN" or start["binding_digest"] != session["start_binding_digest"]
+            or any(start["binding"].get(key) != value for key, value in expected.items())):
+        raise ValueError("retained_terminal_readback_start_binding_changed")
+
+
+def _verify_full_claim_evidence(session, full):
+    for claim in session["chunks"]:
+        start = claim["start_cursor"]
+        stop = start + claim["operation_count"]
+        expected = digest({
+            "receipt_id": session["receipt_id"], "intent_id": session["intent_id"],
+            "projection_digest": claim["operation_digest"], "observed": full["rows"][start:stop],
+        })
+        if claim["readback_digest"] != expected:
+            raise ValueError("retained_terminal_readback_claim_evidence_changed")
+
+
+def _validate_terminal_readback_session(reservation_digest, session, local, runtime_binding, *,
+                                        selected_digest=None):
+    acknowledgement = session["acknowledgement_id"]
+    if not ((session["state"] == SYNC_PENDING and acknowledgement is None)
+            or (session["state"] == SYNC_CONFIRMED and _is_sha256(acknowledgement))):
+        raise ValueError("retained_terminal_readback_session_changed")
+    apply_id = _apply_id(session["cycle_id"], session["company_id"], session["plan_digest"])
+    accepted = local.db.execute(
+        "SELECT acknowledgement_id,selected_fields_digest FROM exact_local_acknowledgements "
+        "WHERE apply_id=? AND receipt_id=?", (apply_id, session["receipt_id"]),
+    ).fetchone()
+    if accepted is not None and (
+            acknowledgement is None or accepted[0] != acknowledgement or not _is_sha256(accepted[1])
+            or (selected_digest is not None and accepted[1] != selected_digest)):
+        raise ValueError("retained_terminal_readback_local_acknowledgement_changed")
+    publication = _validate_retained_readback_binding(
+        reservation_digest, session, local, runtime_binding, cleared=accepted is not None,
+    )
+    if publication["state"] == REMOTE_PENDING:
+        if publication["acknowledgement_id"] is not None:
+            raise ValueError("retained_terminal_readback_local_acknowledgement_changed")
+    elif (publication["state"] not in {REMOTE_CONFIRMED, FIRST_PASS_RELEASED}
+          or accepted is None or publication["acknowledgement_id"] != acknowledgement):
+        raise ValueError("retained_terminal_readback_local_acknowledgement_changed")
+    return publication
+
+
 def _is_sha256(value):
     return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
@@ -192,9 +310,15 @@ def _is_sha256(value):
 def _validate_claim_readback_session(reservation_digest, session, local, runtime_binding):
     if session["state"] != SYNC_PENDING or session["acknowledgement_id"] is not None:
         raise ValueError("retained_claim_readback_requires_pending_session")
+    publication = _validate_retained_readback_binding(reservation_digest, session, local, runtime_binding)
+    if publication["state"] != REMOTE_PENDING:
+        raise ValueError("retained_claim_readback_durable_binding_changed")
+
+
+def _validate_retained_readback_binding(reservation_digest, session, local, runtime_binding, *, cleared=False):
     plan = session["plan"]
     _verify_retained_plan_runtime(plan, runtime_binding)
-    publication, cells_digest = _verify_cells(local, reservation_digest, plan)
+    publication, cells_digest = _verify_cells(local, reservation_digest, plan, cleared=cleared)
     _session_binding(publication, session, plan)
     RetainedSessionStore._sealed_scope(session, session["exact_scope"])
     identity = {name: session[name] for name in _IDENTITY_FIELDS}
@@ -207,7 +331,7 @@ def _validate_claim_readback_session(reservation_digest, session, local, runtime
         "FROM exact_local_applications WHERE apply_id=? AND cycle=? AND company=?",
         (apply_id, session["cycle_id"], session["company_id"]),
     ).fetchone()
-    if (publication["state"] != REMOTE_PENDING or publication["local_apply_id"] != apply_id
+    if (publication["local_apply_id"] != apply_id
             or publication["cells_digest"] != cells_digest
             or (session["receipt_id"], session["intent_id"]) != (receipt, intent)
             or (publication["receipt_id"], publication["intent_id"],
@@ -215,6 +339,7 @@ def _validate_claim_readback_session(reservation_digest, session, local, runtime
             or application != (session["plan_digest"], session["inventory_digest"],
                                session["projection_digest"], VERIFIED)):
         raise ValueError("retained_claim_readback_durable_binding_changed")
+    return publication
 
 
 def _retained_readback_chunk(session, claim_id):

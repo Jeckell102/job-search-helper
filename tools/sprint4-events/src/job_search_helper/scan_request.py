@@ -51,11 +51,13 @@ def requested_scan(engine, state, database):
             raise ValueError("Company event is held in the outbox behind unfinished work; resume only the exact prior cycle.")
         return None
     request, company_ids = _read_request(path)
-    if _company_event_timing(request) is not None:
+    queued_event = None
+    if request.get("company_event") is not None:
         from .company_events import read_verified_queued_event
         _, verified = read_verified_queued_event(engine.repo, path.parent)
         if verified != request:
             raise ValueError("Queued Company-event request changed during admission.")
+        queued_event = verified
     request = dict(request, request_fingerprint=request_fingerprint(request, company_ids))
     mode = request['mode']
     if request.get('repair_retry') is not None:
@@ -92,6 +94,9 @@ def requested_scan(engine, state, database):
         )
         state.save_cycle(cycle)
         engine._sync_cycle(cycle)
+        if queued_event is not None:
+            from .company_events import CompanyEventBridge
+            CompanyEventBridge(engine.repo, path.parent).archive_ordinary_admission(queued_event, cycle)
     path.replace(path.with_name('last-scan-request.json'))
     if mode == COMPANY_ONLY_MODE:
         print(f'Company-only scan: {cycle_id}. Only {len(company_ids)} declared company ID(s) are queued.', flush=True)

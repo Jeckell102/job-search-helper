@@ -216,6 +216,9 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == '/coordinator':
                 if not isinstance(body, dict):
                     raise ValueError('Invalid coordinator request.')
+                if body.get('action') in {
+                        'ingest-scrape-outcome', 'ingest-scrape-outcome-record', 'ingest-scrape-outcome-delivery-v1'}:
+                    return self.reply(403, {'ok': False, 'error': 'Scrape outcome intake requires the local receipt bridge.'})
                 if body.get('action') == 'drain-scrape-outcomes':
                     if set(body) - {'action', 'limit'}:
                         raise ValueError('Scrape outcome drain has unsupported fields.')

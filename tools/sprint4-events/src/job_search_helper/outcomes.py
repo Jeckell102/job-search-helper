@@ -117,6 +117,16 @@ def _identity(facts):
     return identity
 
 
+def valid_company_event_outcome_identity(identity):
+    """Require request-ID agreement for canonical outbox events."""
+    request_id = identity['request_id']
+    declared = identity.get('company_event_id', '')
+    request_event = request_id.removeprefix('company-event:') if request_id.startswith('company-event:') else ''
+    if any(re.fullmatch(r'CEV-[0-9a-f]{32}', value) for value in (declared, request_event)):
+        return declared == request_event
+    return True
+
+
 def valid_retained_outcome_identity(identity):
     """Bind the synthetic retained publication cycle without asserting repair lineage."""
     reservation = identity.get("retained_reservation_sha256")
@@ -287,7 +297,8 @@ def validate_public_outcome_record(value):
     if any(not isinstance(item, str) or not item or item != item.strip() or len(item) > 256
            for item in value['identity'].values()):
         return None
-    if not valid_retained_outcome_identity(value['identity']):
+    if (not valid_retained_outcome_identity(value['identity'])
+            or not valid_company_event_outcome_identity(value['identity'])):
         return None
     retry = {'attempt_id', 'failed_request_id', 'release_version', 'release_binding_sha256'}
     if ({'failed_request_id', 'release_version', 'release_binding_sha256'} & set(value['identity'])

@@ -20,11 +20,13 @@ from .retained_operator_preflight import collect_operator_membership, verify_ope
 from .retained_session_store import SYNC_CONFIRMED, SYNC_PENDING, RetainedSessionStore
 from .retained_work_exception import digest
 from .retained_work_orchestrator import _run_retained_reservation_locked
-from .retained_work_publication import _verify_operator_terminal_receipt, recover_claimed_retained_chunk
+from .retained_work_publication import (
+    _verify_operator_terminal_receipt, finish_confirmed_retained_publication, recover_claimed_retained_chunk,
+)
 from .retained_work_runner import (
     PreparedExceptionalStart, _TOKEN, _StartJournal, _freeze_intake_hold, _inventory_snapshot,
     _read_existing_journal, _start_binding,
-    assert_normal_lifecycle_not_held,
+    assert_normal_lifecycle_not_held, settle_retained_start,
 )
 
 
@@ -105,8 +107,8 @@ def _consume_settled(root, local, journal, binding, record, *, local_writer):
     return {**result, "consumption": consumption}
 
 
-def _settle_returned_failure(root, local, journal, binding, record, local_writer):
-    from .retained_event_outcome import returned_failure_evidence, sealed_event_source
+def _settle_event_without_publication(root, local, journal, binding, record, local_writer):
+    from .retained_event_outcome import returned_failure_evidence, sealed_event_source, verified_zero_evidence
 
     with writer_lock(root / "writer.lock"):
         path = root / "next-scan.json"
@@ -114,8 +116,35 @@ def _settle_returned_failure(root, local, journal, binding, record, local_writer
             raise ValueError("retained_operator_terminal_request_changed")
         request = json.loads(path.read_text(encoding="utf-8"))
         event_id, fact, current = sealed_event_source(root, local, binding["claims"], request)
+        if record["inventory"]["status"] == "complete":
+            evidence = verified_zero_evidence(local, binding, record, fact)
+        else:
+            evidence, _fresh, _stale = returned_failure_evidence(
+                local, binding, record, event_id, fact, source_current=current,
+            )
+        record = journal.record_settlement(
+            binding, inventory_sha256=record["inventory_sha256"], evidence=evidence,
+        )
+    return _consume_settled(root, local, journal, binding, record, local_writer=local_writer)
+
+
+def _cancel_stale_frozen_event(root, local, journal, binding, record, local_writer):
+    """Stop a superseded fetch only while its reservation has no publication."""
+    from .retained_event_outcome import returned_failure_evidence, sealed_event_source
+
+    with writer_lock(root / "writer.lock"):
+        if (_stored_session(root, binding["reservation_digest"]) is not None
+                or _read_existing_journal(root / "retained-work-starts.sqlite3") is not None):
+            return None
+        path = root / "next-scan.json"
+        if path.is_symlink():
+            raise ValueError("retained_operator_terminal_request_changed")
+        request = json.loads(path.read_text(encoding="utf-8"))
+        event_id, fact, current = sealed_event_source(root, local, binding["claims"], request)
+        if current:
+            return None
         evidence, _fresh, _stale = returned_failure_evidence(
-            local, binding, record, event_id, fact, source_current=current,
+            local, binding, record, event_id, fact, source_current=False,
         )
         record = journal.record_settlement(
             binding, inventory_sha256=record["inventory_sha256"], evidence=evidence,
@@ -123,12 +152,16 @@ def _settle_returned_failure(root, local, journal, binding, record, local_writer
     return _consume_settled(root, local, journal, binding, record, local_writer=local_writer)
 
 
-def _recover_expired_event(root, local, remote_reader, local_writer, journal, binding, record):
-    """Read only an already authorized durable claim, or replay local settlement."""
+def _recover_event_publication(root, local, remote_reader, local_writer, journal, binding, record):
+    """Read only an already authorized durable claim and settle its exact result."""
     if record is None:
         raise ValueError("retained_event_expired_without_admitted_claim")
     if record["state"] == SETTLED:
         return _consume_settled(root, local, journal, binding, record, local_writer=local_writer)
+    if record["state"] == INVENTORY_FROZEN:
+        inventory = record["inventory"]
+        if inventory["status"] != "complete" or not inventory["jobs"]:
+            return _settle_event_without_publication(root, local, journal, binding, record, local_writer)
     reservation = binding["reservation_digest"]
     with writer_lock(root / "writer.lock"):
         path = root / "retained-sessions.sqlite3"
@@ -137,14 +170,30 @@ def _recover_expired_event(root, local, remote_reader, local_writer, journal, bi
         claims = binding["claims"]
         with closing(RetainedSessionStore(path)) as store:
             session = store.load(reservation)
-            if (session["state"] != SYNC_PENDING
+            if (session["state"] not in {SYNC_PENDING, SYNC_CONFIRMED}
                     or any(session[key] != claims[key] for key in ("request_id", "company_id", "source_revision"))
                     or not session["chunks"]):
                 raise ValueError("retained_event_expired_without_admitted_claim")
-            return recover_claimed_retained_chunk(
-                reservation, store, local, remote_reader, claim_id=session["chunks"][-1]["claim_id"],
-                runtime_binding=binding["runtime"],
+            claim_id = session["chunks"][-1]["claim_id"]
+            if session["state"] == SYNC_PENDING:
+                result = recover_claimed_retained_chunk(
+                    reservation, store, local, remote_reader, claim_id=claim_id, runtime_binding=binding["runtime"],
+                )
+                if result["state"] == "HELD_UNCLAIMED_SUFFIX":
+                    return result
+            if retained_publication(local, reservation)["state"] == FIRST_PASS_RELEASED:
+                _terminal_evidence(root, local, binding, record["inventory_sha256"])
+                settle_retained_start(root, local.path, reservation)
+            else:
+                finish_confirmed_retained_publication(
+                    reservation, store, local, remote_reader, local_writer, claim_id=claim_id,
+                    runtime_binding=binding["runtime"],
+                )
+            evidence = _terminal_evidence(root, local, binding, record["inventory_sha256"])
+            record = journal.record_settlement(
+                binding, inventory_sha256=record["inventory_sha256"], evidence=evidence,
             )
+    return _consume_settled(root, local, journal, binding, record, local_writer=local_writer)
 
 
 def run_operator_membership(local_reader, remote_reader, state, state_directory, manifest, runtime, *,
@@ -171,13 +220,20 @@ def run_operator_membership(local_reader, remote_reader, state, state_directory,
     journal = RetainedOperatorJournal(root)
     record = journal.read(binding)
     if expired:
-        return _recover_expired_event(root, local_reader, remote_reader, local_writer, journal, binding, record)
+        return _recover_event_publication(root, local_reader, remote_reader, local_writer, journal, binding, record)
     if record is not None and record["state"] == SETTLED:
         return _consume_settled(root, local_reader, journal, binding, record, local_writer=local_writer)
     if record is not None and record["state"] == INVENTORY_FROZEN:
-        if action == EVENT_ACTION and record["inventory"]["status"] != "complete":
-            return _settle_returned_failure(root, local_reader, journal, binding, record, local_writer)
+        inventory = record["inventory"]
+        if action == EVENT_ACTION and (inventory["status"] != "complete" or not inventory["jobs"]):
+            return _settle_event_without_publication(root, local_reader, journal, binding, record, local_writer)
         session = _stored_session(root, binding["reservation_digest"])
+        if action == EVENT_ACTION and session is None:
+            cancelled = _cancel_stale_frozen_event(root, local_reader, journal, binding, record, local_writer)
+            if cancelled is not None:
+                return cancelled
+        if action == EVENT_ACTION and session is not None and session["state"] == SYNC_CONFIRMED:
+            return _recover_event_publication(root, local_reader, remote_reader, local_writer, journal, binding, record)
         if (session is not None and session["state"] == SYNC_CONFIRMED
                 and retained_publication(local_reader, binding["reservation_digest"])["state"] == FIRST_PASS_RELEASED):
             with writer_lock(root / "writer.lock"):
@@ -217,8 +273,12 @@ def run_operator_membership(local_reader, remote_reader, state, state_directory,
         verify_operator_source_identity(manifest, {"company_id": company_id}, company, snapshot["company_fact"],
                                         inventory=inventory)
         record = journal.freeze_inventory(binding, claim, inventory)
-        if action == EVENT_ACTION and inventory["status"] != "complete":
-            return _settle_returned_failure(root, local_reader, journal, binding, record, local_writer)
+        if action == EVENT_ACTION and (inventory["status"] != "complete" or not inventory["jobs"]):
+            return _settle_event_without_publication(root, local_reader, journal, binding, record, local_writer)
+        if action == EVENT_ACTION:
+            cancelled = _cancel_stale_frozen_event(root, local_reader, journal, binding, record, local_writer)
+            if cancelled is not None:
+                return cancelled
         reread, current_snapshot, current_company, current_cycle = collect_operator_membership(
             local_reader, remote_reader(), state, root, manifest, runtime, expires_at=claims["expires_at"],
             request_id=request_id, company_id=company_id, action=action,
@@ -230,14 +290,6 @@ def run_operator_membership(local_reader, remote_reader, state, state_directory,
                                     inventory=inventory)
     if inventory["status"] != "complete":
         raise ValueError("retained_operator_complete_inventory_required")
-    if action == EVENT_ACTION and not inventory["jobs"]:
-        from .retained_event_outcome import verified_zero_evidence
-        with writer_lock(root / "writer.lock"):
-            evidence = verified_zero_evidence(local_reader, binding, record, snapshot["company_fact"])
-            record = journal.record_settlement(
-                binding, inventory_sha256=record["inventory_sha256"], evidence=evidence,
-            )
-        return _consume_settled(root, local_reader, journal, binding, record, local_writer=local_writer)
     reservation = binding["reservation_digest"]
     prepared = PreparedExceptionalStart(
         _TOKEN, snapshot, company, cycle, inventory,

@@ -15,8 +15,13 @@ from job_search_helper.retained_dirty_provenance import (
     REMOTE_PENDING, bind_remote_session, reserve_dirty_provenance, retained_publication,
 )
 from job_search_helper.retained_session_store import RetainedSessionStore
-from job_search_helper.retained_work_publication import recover_claimed_retained_chunk
-from job_search_helper.retained_work_runner import digest
+from job_search_helper import retained_work_publication as publication_module
+from job_search_helper.retained_work_publication import (
+    finish_confirmed_retained_publication, recover_claimed_retained_chunk,
+)
+from job_search_helper.retained_work_runner import (
+    PreparedExceptionalStart, _StartJournal, _TOKEN, _read_existing_journal, _start_binding, digest,
+)
 from job_search_helper.sheet_profile import COMPACT_PROFILE, COMPACT_SCHEMAS
 from job_search_helper.sheets_sync import SheetsSynchronizer
 from job_search_helper.sqlite_repository import SQLiteRepository
@@ -31,10 +36,24 @@ RUNTIME = {
 ADMISSION = {
     "request_id": "REQ-EXACT", "event_id": "CEV-EXACT", "exception_cycle_id": "CYC-HISTORICAL",
     "cycle_id": "CYC-SELECTED", "company_id": "COMP-SELECTED", "source_revision": "SOURCE-EXACT",
-    "manifest_digest": digest("historical manifest"), "start_binding_digest": digest("original start"),
+    "manifest_digest": digest("historical manifest"),
 }
 RESERVATION = digest({"signed": "original fixture reservation"})
 INVENTORY = {"jobs": ["fixture-1", "fixture-2"]}
+START = PreparedExceptionalStart(
+    _TOKEN,
+    {
+        "request": {"request_id": ADMISSION["request_id"], "company_ids": [ADMISSION["company_id"]],
+                    "company_event": {"event_id": ADMISSION["event_id"]}},
+        "snapshot_digest": digest("frozen snapshot"),
+    },
+    {"Company ID": ADMISSION["company_id"]},
+    {"id": ADMISSION["exception_cycle_id"]},
+    INVENTORY,
+    {"reservation_digest": RESERVATION, "manifest_digest": ADMISSION["manifest_digest"]},
+    "2026-11-20T00:00:00+00:00",
+)
+ADMISSION["start_binding_digest"] = digest(_start_binding(START))
 
 
 def fixture_plan():
@@ -49,8 +68,17 @@ def fixture_plan():
             "tab": "Job History", "identity": key, "append_if_missing": True,
             "on_insert": fields, "values": {}, "expected": {}, "append_notes": {},
         }
-        local.append(operation)
-        remote.append(dict(operation))
+        source_hash = f"SOURCE-{index}"
+        local.append(dict(operation, on_insert={**fields, "Source Hash": source_hash}))
+        local.append({
+            "tab": "Job Evidence", "identity": {**key, "Source Hash": source_hash},
+            "append_if_missing": True, "on_insert": {
+                **key, "Source Hash": source_hash, "Company": "Selected",
+                "Job Title": fields["Job Title"], "Official Job URL": fields["Official Job URL"],
+                "Job Description": "Fixture field engineering, integration and support evidence.",
+            },
+        })
+        remote.append(operation)
     control = {
         "company_id": ADMISSION["company_id"], "requested_url": "https://jobs.example.test",
         "official_careers_url": "https://jobs.example.test", "company_status": "Active",
@@ -107,6 +135,8 @@ def prepared(tmp_path, monkeypatch):
             local.db.execute("INSERT INTO retained_intake_holds VALUES (?,?,?,?,?,?,?)",
                 (RESERVATION, ADMISSION["request_id"], ADMISSION["event_id"], ADMISSION["company_id"],
                  ADMISSION["manifest_digest"], ADMISSION["start_binding_digest"], "FROZEN"))
+        with closing(_StartJournal(tmp_path / "retained-work-starts.sqlite3")) as start:
+            start.reserve(START)
         plan = fixture_plan()
         reserve_dirty_provenance(local, reservation_digest=RESERVATION, plan=plan, **ADMISSION)
         commit_exact_local_plan(
@@ -211,3 +241,161 @@ def test_corrupt_operation_digest_fails_before_remote_factory(prepared):
         recover(root, reader, store, factory, claim["claim_id"])
     factory.assert_not_called()
     assert sheet.batches == []
+
+
+def finish(root, reader, store, remote_factory, writer_factory, claim_id):
+    with writer_lock(root / scraper_lock_name()), writer_lock(root / "writer.lock"):
+        return finish_confirmed_retained_publication(
+            RESERVATION, store, reader, remote_factory, writer_factory,
+            claim_id=claim_id, runtime_binding=RUNTIME,
+        )
+
+
+def confirm_fixture_claim(prepared, count):
+    root, reader, store, remote, sheet = prepared
+    claim = store.claim_chunk(RESERVATION, operation_count=count)
+    sheet.lose_response = True
+    with pytest.raises(UncertainWriteError):
+        remote.commit(claim["exact_scope"]["operations"])
+    result = recover(root, reader, store, lambda: ReadOnlyTransport(remote), claim["claim_id"])
+    return result["claim_id"]
+
+
+@pytest.mark.parametrize("interruption", ["before_local_ack", "after_local_ack"])
+def test_terminal_only_restarts_with_original_proof(prepared, monkeypatch, interruption):
+    root, reader, store, remote, sheet = prepared
+    claim_id = confirm_fixture_claim(prepared, 2)
+    batches = list(sheet.batches)
+    pending = store.load(RESERVATION)
+    assert pending["state"] == "SYNC_PENDING"
+    assert _read_existing_journal(root / "retained-work-starts.sqlite3")["state"] == "FROZEN"
+    transport = ReadOnlyTransport(remote)
+    reader_factory = Mock(return_value=transport)
+
+    def writer():
+        assert store.load(RESERVATION)["state"] == "SYNC_CONFIRMED"
+        assert transport.read_row.call_count >= 2
+        return SQLiteRepository(reader.path, reader.spreadsheet_id, initialize=False)
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError("injected terminal interruption")
+
+    with monkeypatch.context() as interrupted:
+        interrupted.setattr(store, "claim_chunk", Mock(side_effect=AssertionError("claimed suffix")))
+        interrupted.setattr(store, "freeze_remote_intent", Mock(side_effect=AssertionError("froze intent")))
+        interrupted.setattr(SheetsSynchronizer, "plan_exact_scope", Mock(side_effect=AssertionError("replanned scope")))
+        writer_factory = Mock(side_effect=writer)
+        if interruption == "before_local_ack":
+            writer_factory.side_effect = fail
+        else:
+            interrupted.setattr(publication_module, "confirm_remote_from_session", fail)
+        with pytest.raises(RuntimeError, match="injected terminal interruption"):
+            finish(root, reader, store, reader_factory, writer_factory, claim_id)
+    stored = store.load(RESERVATION)
+    assert stored["state"] == "SYNC_CONFIRMED"
+    assert stored["chunks"] == pending["chunks"]
+    assert stored["receipt_id"] == pending["receipt_id"]
+    assert stored["intent_id"] == pending["intent_id"]
+    assert stored["acknowledgement_id"]
+    assert retained_publication(reader, RESERVATION)["state"] == REMOTE_PENDING
+    assert _read_existing_journal(root / "retained-work-starts.sqlite3")["state"] == "FROZEN"
+    assert not (root / "retained-first-pass").exists()
+    assert not (root / "next-scan.json").exists()
+    if interruption == "before_local_ack":
+        assert reader.db.execute("SELECT count(*) FROM dirty").fetchone()[0] > 0
+        assert reader.db.execute("SELECT count(*) FROM exact_local_acknowledgements").fetchone() == (0,)
+    else:
+        assert reader.db.execute("SELECT count(*) FROM dirty").fetchone() == (0,)
+        assert reader.db.execute("SELECT acknowledgement_id FROM exact_local_acknowledgements").fetchall() == [
+            (stored["acknowledgement_id"],),
+        ]
+
+    writers = Mock(side_effect=writer)
+    monkeypatch.setattr(store, "claim_chunk", Mock(side_effect=AssertionError("claimed suffix")))
+    monkeypatch.setattr(store, "freeze_remote_intent", Mock(side_effect=AssertionError("froze intent")))
+    monkeypatch.setattr(SheetsSynchronizer, "plan_exact_scope", Mock(side_effect=AssertionError("replanned scope")))
+    result = finish(root, reader, store, reader_factory, writers, claim_id)
+    assert result["state"] == "FIRST_PASS_RELEASED"
+    assert result["settlement"]["settled"] is True
+    writers.assert_called_once()
+    assert result["acknowledgement_id"] == stored["acknowledgement_id"]
+    assert _read_existing_journal(root / "retained-work-starts.sqlite3") is None
+    assert [row["job_key"] for row in result["first_pass"]["selected_jobs"]] == ["JOB-0", "JOB-1"]
+    assert Path(result["first_pass"]["output_dir"], "first-pass.jsonl").is_file()
+    assert reader.db.execute("SELECT count(*) FROM dirty").fetchone() == (0,)
+    assert reader.db.execute("SELECT count(*) FROM exact_local_acknowledgements").fetchone() == (1,)
+    assert store.load(RESERVATION) == stored
+    assert sheet.batches == batches
+    assert not (root / "next-scan.json").exists()
+    replay = finish(root, reader, store, reader_factory, writers, claim_id)
+    assert replay["first_pass"] == result["first_pass"]
+    assert replay["acknowledgement_id"] == result["acknowledgement_id"]
+    writers.assert_called_once()
+    assert sheet.batches == batches
+
+
+def test_terminal_only_does_not_open_either_factory_with_an_unclaimed_suffix(prepared):
+    root, reader, store, remote, sheet = prepared
+    claim_id = confirm_fixture_claim(prepared, 1)
+    remote_factory, writer_factory = Mock(), Mock()
+    with pytest.raises(ValueError, match="retained_terminal_readback_claims_incomplete"):
+        finish(root, reader, store, remote_factory, writer_factory, claim_id)
+    remote_factory.assert_not_called()
+    writer_factory.assert_not_called()
+    assert store.load(RESERVATION)["remote_cursor"] == 1
+    assert len(sheet.batches) == 1
+
+
+def test_terminal_only_holds_changed_remote_values_before_jobs_writer(prepared):
+    root, reader, store, remote, sheet = prepared
+    claim_id = confirm_fixture_claim(prepared, 2)
+    remote.commit([{"tab": "Job History", "identity": {"Job Key": "JOB-1"}, "values": {"Job Title": "Changed"}}])
+    before = store.load(RESERVATION)
+    batches = list(sheet.batches)
+    writer_factory = Mock()
+    with pytest.raises(ValueError, match="differs from the frozen projection"):
+        finish(root, reader, store, lambda: ReadOnlyTransport(remote), writer_factory, claim_id)
+    writer_factory.assert_not_called()
+    assert store.load(RESERVATION) == before
+    assert sheet.batches == batches
+    assert not (root / "retained-first-pass").exists()
+
+
+def test_terminal_only_binds_full_readback_to_previously_confirmed_claim_bytes(prepared):
+    root, reader, store, remote, sheet = prepared
+    claim_id = confirm_fixture_claim(prepared, 2)
+    with store.connection:
+        store.connection.execute(
+            "UPDATE retained_remote_chunks SET readback_digest=? WHERE claim_id=?",
+            (digest("different claim readback"), claim_id),
+        )
+    writer_factory = Mock()
+    with pytest.raises(ValueError, match="retained_terminal_readback_claim_evidence_changed"):
+        finish(root, reader, store, lambda: ReadOnlyTransport(remote), writer_factory, claim_id)
+    writer_factory.assert_not_called()
+    assert store.load(RESERVATION)["state"] == "SYNC_PENDING"
+    assert len(sheet.batches) == 1
+
+
+def test_terminal_only_replays_a_complete_multi_claim_prefix(prepared, monkeypatch):
+    root, reader, store, remote, sheet = prepared
+    first = confirm_fixture_claim(prepared, 1)
+    second = confirm_fixture_claim(prepared, 1)
+    pending = store.load(RESERVATION)
+    assert [(claim["claim_id"], claim["start_cursor"], claim["state"]) for claim in pending["chunks"]] == [
+        (first, 0, "CONFIRMED"), (second, 1, "CONFIRMED"),
+    ]
+    transport = ReadOnlyTransport(remote)
+    factory = Mock(return_value=transport)
+    writer = Mock(side_effect=lambda: SQLiteRepository(reader.path, reader.spreadsheet_id))
+    monkeypatch.setattr(store, "claim_chunk", Mock(side_effect=AssertionError("claimed suffix")))
+    with pytest.raises(ValueError, match="retained_claim_readback_exact_claim_missing"):
+        finish(root, reader, store, factory, writer, first)
+    factory.assert_not_called()
+    writer.assert_not_called()
+    result = finish(root, reader, store, factory, writer, second)
+    assert result["state"] == "FIRST_PASS_RELEASED"
+    assert store.load(RESERVATION)["chunks"] == pending["chunks"]
+    assert transport.read_row.call_count == 2
+    assert len(sheet.batches) == 2
+    writer.assert_called_once()

@@ -192,6 +192,11 @@ class CompanyEventBridgeTests(unittest.TestCase):
         self.assertFalse((database.parent / "next-scan.json").exists())
         receipt = json.loads((database.parent / "last-scan-request.json").read_text())
         self.assertEqual(receipt["company_event"]["event_id"], event["event_id"])
+        stage_root = database.parent / "company-event-bridge"
+        bridge_receipt = json.loads((stage_root / "receipts" / (event["event_id"] + ".json")).read_bytes())
+        admission = stage_root / "ordinary-admissions" / (bridge_receipt["request_sha256"] + ".json")
+        (database.parent / "last-scan-request.json").write_text('{}')
+        self.assertEqual(json.loads(admission.read_bytes()), receipt)
         self.assertEqual(self.repo.pending_company_events(self.bridge.consumer), [])
         state = State(database, readonly=True)
         self.addCleanup(state.close)

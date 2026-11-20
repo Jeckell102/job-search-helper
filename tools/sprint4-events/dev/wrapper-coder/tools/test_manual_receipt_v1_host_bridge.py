@@ -252,3 +252,30 @@ def test_signed_company_event_to_exact_coordinator_receipt(tmp_path, monkeypatch
     assert receiver[:2] == row
     assert receiver[2] == 'RECORDED_NO_REPAIR'
     assert tasks == 0
+
+
+def test_host_rejects_direct_outcome_ingest_even_with_development_token(monkeypatch):
+    from io import BytesIO
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+
+    entry = Path(__file__).with_name('host_server.py')
+    spec = importlib.util.spec_from_file_location('isolated_outcome_intake_host', entry)
+    host = importlib.util.module_from_spec(spec)
+    with patch.object(Path, 'read_text', return_value='disposable-token'):
+        spec.loader.exec_module(host)
+    coordinator = Mock()
+    monkeypatch.setattr(host, 'COORDINATOR', coordinator)
+    for action in ('ingest-scrape-outcome', 'ingest-scrape-outcome-record', 'ingest-scrape-outcome-delivery-v1'):
+        raw = json.dumps({'action': action}).encode()
+        handler = object.__new__(host.Handler)
+        handler.connection = SimpleNamespace(settimeout=Mock())
+        handler.path = '/coordinator'
+        handler.headers = {'Authorization': 'Bearer disposable-token', 'Content-Length': str(len(raw))}
+        handler.rfile = BytesIO(raw)
+        handler.reply = Mock()
+        handler.do_POST()
+        handler.reply.assert_called_once_with(
+            403, {'ok': False, 'error': 'Scrape outcome intake requires the local receipt bridge.'},
+        )
+    coordinator.command.assert_not_called()

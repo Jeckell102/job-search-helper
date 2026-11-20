@@ -136,6 +136,10 @@ def canonical_scrape_outcome(value):
         from job_search_helper.outcomes import valid_retained_outcome_identity
         if not valid_retained_outcome_identity(bounded):
             raise ValueError('Scrape outcome retained event or reservation identity is invalid.')
+    if 'company_event_id' in bounded or bounded['request_id'].startswith('company-event:'):
+        from job_search_helper.outcomes import valid_company_event_outcome_identity
+        if not valid_company_event_outcome_identity(bounded):
+            raise ValueError('Scrape outcome Company event does not match its request ID.')
     retry_fields = ('attempt_id', 'failed_request_id', 'release_version',
                     'release_binding_sha256')
     present = [key for key in retry_fields if key in bounded]
