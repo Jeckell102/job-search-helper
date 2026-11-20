@@ -27,6 +27,18 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Terminal release observation checkpoint. Coordinator and release owner,
+goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Staged the joint controller at
+`/tmp/jsh-s4-restoration-controller.3T4Mf222`. Its terminal observation
+holds the existing controller, application, and installer leases while
+checking the released source, installer receipt, and restored units.
+One disposable end-to-end interruption and restored readback case passed.
+The full 15-case clean rehearsal is running, session `40739`, and
+`/root/site_journal_qa` owns independent source review. The ordinary pilot
+evidence map is assigned to `/root/s4_pilot_receipt_map`. Coordinator owns
+the subsequent exchange-generation and actual selected pilot join. No
+actual checkout reopening has been authorized by this staged method.
+
 Durable closure acknowledgment checkpoint. Coordinator and release owner,
 goal `01a1f11f-e014-7493-8441-2f66502e23a9`. The new staged controller at
 `/tmp/jsh-s4-acknowledged-site.QzgJ0Rvm` makes the site witness and initial
@@ -39,6 +51,8 @@ Coordinator owns the live enrollment and terminal verifier. Next, bind
 exclusive custody of the real approved checkout routes, policy and writable
 parents, account for wrapper and other launch contexts and the effective
 write destinations, and prove drain before any live maintenance action.
+The scoped source, tests and reports were verified on the private GitHub
+branch at `5646565b611d9c62e1e757a1d70fa4231a2d078e`.
 The wrapper host and tunnel are active, and job-search sync is inactive
 and disabled in a fresh read. No live policy or hold exists yet.
 [Acknowledgment evidence](S4_CLOSURE_ACKNOWLEDGMENT_20261120.md) ·
@@ -80,12 +94,16 @@ reports to main release chat `01a1f11f-e014-7493-8441-2f66502e23a9` at
 `/tmp/jsh-m5-pre-release-validation-handoff.md`. Sprint 4 rollout, Sprint 5
 custody and Engine, and release/retry plumbing all retain their current
 owners. Production read-only; no live or release actions assigned.
-Latest verified progress from the validation chat and its handoff: 17
-fixture validator checks passed, including normal company-only Engine
-dispatch for Forterra and PDW. Independent review of its frozen version
-found three false accepts involving employer labels, hidden zero-opening
-markup and a changed source between measurement and import. That chat owns
-the fixes and independent rerun. Live candidate qualification remains open.
+Latest verified progress from the validation chat and its handoff:
+independent QA accepted the repaired exact Forterra and PDW fixture
+validator. The scoped producer suite passed 109 tests. Independent QA
+passed a 62-test rerun and closed the earlier defects involving scope,
+inert markup, and unstable source. The fixture receipt was refused by
+release activation as expected. Two broader pre-existing fixture failures
+were reproduced on the unchanged baseline. The owned sources and nine
+synthetic replay sample files matched their recorded SHA-256 hashes.
+Live qualification of the eventual generated repair and release wiring
+remain open. [Validation handoff](S5_PRE_RELEASE_VALIDATION_HANDOFF_20261120.md).
 
 Host route and exchange witness checkpoint. Coordinator and release
 owner, active goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Read-only
