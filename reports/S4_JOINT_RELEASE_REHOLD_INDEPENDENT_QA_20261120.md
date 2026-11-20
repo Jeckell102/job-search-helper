@@ -1,0 +1,9 @@
+# Sprint 4 joint release refusal recovery independent recheck
+
+**ACCEPT both refusal recovery repairs at the source gate.** The reviewed snapshot is /tmp/jsh-s4-combined-release-rehold.hTi1D2rJ. The source delta from the prior snapshot is confined to the release method in controller.py.
+
+- On RELEASING replay with the marker already absent, an initial receipt rejection recreated the exact mode-0600 marker and attempted the unit re-hold before propagating the original refusal. The same held for an initial tree rejection. Neither case started restoration, called the host checker or saved RELEASED.
+- When a foreign marker appeared after service restoration and the restored host attestation refused the release, the controller preserved the foreign marker bytes and inode and independently attempted the service re-hold. With a successful unit closure, the combined error identified the original refusal, marker failure and verified service hold. With a second injected unit closure failure, it reported both closure failures and retained the original host error as the cause. Both cases remained RELEASING.
+- The success control performed fresh restoring and restored checkpoints, verified the exact receipt around restoration and saved RELEASED once without re-holding.
+
+All five targeted independent microfixtures passed against a byte-identical disposable copy. The probes used local fixture files and mocked host/unit controls, with subprocess launches and network lookup, connect and bind blocked. Neither staged tree nor any live systems were changed. Canonical host absence, end-to-end site restoration and deployment are outside this verdict. [Independent fixture](/tmp/test_jsh_s4_release_rehold_independent_yG554rx6.py) · [Release handler](/tmp/jsh-s4-combined-release-rehold.hTi1D2rJ/controller.py:789) · [Prior findings](/tmp/jsh-s4-joint-release-tool-source-recheck.md)

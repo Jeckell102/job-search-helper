@@ -168,7 +168,7 @@ def attest(path):
         str(project / '.state' / name) for name in ('scraper.lock', 'writer.lock', 'review-writeback.lock'))]
     checkpoint, target = request['checkpoint'], request['target']
     assert target in {'INSTALLED', 'ROLLED_BACK'}
-    assert checkpoint in {'preflight', 'pre-publish', 'published', 'admitted'} or checkpoint.startswith('held:')
+    assert checkpoint in {'preflight', 'pre-publish', 'published', 'admitted', 'restoring', 'restored'} or checkpoint.startswith('held:')
     package = Path(request['package'])
     parked_phase = checkpoint.startswith('held:') or checkpoint == 'pre-publish'
     assert package == (parked if parked_phase else canonical), request
@@ -178,23 +178,38 @@ def attest(path):
             sys.exit('direct route cannot be durably closed')
         vector(root, canonical, 'before' if target == 'INSTALLED' else 'after')
         write(fence, encode({'root': str(root), 'hold_id': ident['hold_id']}))
-    else:
+    elif checkpoint not in {'restoring', 'restored'}:
         assert fence.is_file() and marker.is_file()
         assert not any(row['active'] for row in service_state(root).values())
         assert all(condition_held(root, name) for name in UNITS)
+    else:
+        assert fence.is_file() and not (canonical / '__init__.so').exists()
+        record = json.loads((bundle / 'controller.json').read_bytes())
+        assert record['phase'] == 'RELEASING' and record['target'] == target
+        if checkpoint == 'restoring' and marker.exists():
+            # Initial release and recovery from an explicit refusal are held.
+            assert not any(row['active'] for row in service_state(root).values())
+            assert all(condition_held(root, name) for name in UNITS)
+        if checkpoint == 'restored':
+            assert not marker.exists() and not (bundle / 'service-hold').exists()
+            assert service_state(root) == UNITS
+            assert all(not condition_held(root, name) for name in UNITS)
+            assert all(not (root / 'units' / (name + '.d') / DROP_IN).exists() for name in UNITS)
     if parked_phase:
         assert 'raise ImportError' in (canonical / '__init__.py').read_text()
-    if checkpoint in {'pre-publish', 'published', 'admitted'}:
+    if checkpoint in {'pre-publish', 'published', 'admitted', 'restoring', 'restored'}:
         vector(root, package, 'after' if target == 'INSTALLED' else 'before', compile_sources=True)
         safe_wrapper_origins(project / WRAPPER)
-    if checkpoint in {'published', 'admitted'}:
+    if checkpoint in {'published', 'admitted', 'restoring', 'restored'}:
         fresh_import = stock_worker(canonical)
         if checkpoint == 'published':
             assert fresh_import.returncode and '__init__.so: file too short' in fresh_import.stderr
         else:
             assert fresh_import.returncode == 0, fresh_import.stderr
     count = sum(matches(project / name, rows[name]['after']) for name in WRAPPER_PATHS)
-    evidence = {'checkpoint': checkpoint, 'target': target, 'wrapper_after_count': count, 'nonce': request['nonce']}
+    evidence = {'checkpoint': checkpoint, 'target': target, 'wrapper_after_count': count, 'nonce': request['nonce'],
+                'marker_present': marker.is_file(), 'wrapper_active': service_state(root)[
+                    'wrapper-development-host.service']['active']}
     configured_fault = root / 'fixture-fault.json'
     fault = json.loads(configured_fault.read_bytes()) if configured_fault.exists() else {}
     if target == 'INSTALLED' and fault.get('action') == 'install':
@@ -207,6 +222,13 @@ def attest(path):
             append(root, 'attestations.jsonl', {**evidence, 'fault': stage})
             kill_fixture_ancestor(bundle / 'controller.py')
             sys.exit(92)
+        if stage == 'after-restoration-before-commit' and checkpoint == 'restored':
+            append(root, 'attestations.jsonl', {**evidence, 'fault': stage})
+            kill_fixture_ancestor(bundle / 'controller.py')
+            sys.exit(93)
+        if stage == 'refuse-restored-host' and checkpoint == 'restored':
+            append(root, 'attestations.jsonl', {**evidence, 'fault': stage})
+            sys.exit('fixture restored host attestation refused')
     append(root, 'attestations.jsonl', evidence)
     print(json.dumps({**request, 'verified': True}))
 

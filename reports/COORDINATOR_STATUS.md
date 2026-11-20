@@ -18,6 +18,26 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Physical host fence candidate checkpoint. Coordinator and release owner,
+goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project
+about 52%, with no new live gate. Repaired both refusal recovery gaps
+from the source recheck and independent QA accepted five targeted cases.
+The restore/rollback fixture passed 10 at its repaired tool pin. The
+coordinator integrated canonical physical host closure and guarded
+reopening in `/tmp/jsh-s4-combined-host-fence.Csm9gwcg`. Two focused
+reset/closure and installer projection cases passed. Independent QA
+`01a1f97d-2e8c-7821-b5e1-d2019215036b` owns the new source verdict and
+Sol medium `01a1f979-8619-75d2-9973-047f3a5efb0c` owns the disposable
+controller interruption fixture. Assigned separate scope for production
+site witness remains with the coordinator. No production, service or
+Jetson changes. Next verify controller crash and refusal gates with actual
+canonical file disappearance, then prove the real supported host routes
+and publish a scoped site review. Previous verified backup was
+`ae4191f22abbbed4d419a68b046f9a2cac4ca9cf`.
+[Re-hold QA](S4_JOINT_RELEASE_REHOLD_INDEPENDENT_QA_20261120.md),
+[repaired fixture](S4_JOINT_RELEASE_REPAIRED_FIXTURE_20261120.md), and
+[physical fence candidate](S4_PHYSICAL_WRAPPER_HOST_FENCE_STAGED_20261120.md).
+
 Release QA repair checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project about
 52%. Independent QA held the initial joint tools on file mount/physical

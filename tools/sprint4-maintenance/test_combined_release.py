@@ -15,7 +15,9 @@ import unittest
 ROOT = Path(__file__).resolve().parent
 EARLIER = Path('/tmp/jsh-s4-scoped-release-rehearsal.lZ837nim')
 QA = Path('/tmp/jsh-s4-dispatch-binding-qa.i45G33KN')
-WRAPPER_BEFORE = Path('/home/chris/job-search-helper_old')
+WRAPPER_BEFORE = (Path('/tmp/jsh-s4-combined-release-fixture.YsdYntjm/run.npy7t4ue')
+                  / 'test_mixed_wrapper_fault_then_published_fault_reentry_and_payloadless_rollback.gp54lr2_'
+                  / 'project')
 TOOLS = ('controller.py', 'installer.py', 'gate.py', 'verify_hold')
 WRAPPER = 'dev/wrapper-coder/tools'
 WRAPPER_PATHS = tuple(f'{WRAPPER}/{name}' for name in (
@@ -88,8 +90,8 @@ def endpoints():
         expected = earlier['outside_transaction'][name]
         previous = {k: v for k, v in expected['before'].items() if k != 'owner'}
         current = {k: v for k, v in expected['after'].items() if k != 'owner'}
-        # Only the three pinned historical source files are read from the host.
-        # A deviation from the earlier accepted pre-image aborts fixture assembly.
+        # Use the earlier combined fixture's restored before-images and reject
+        # any divergence from their originally accepted pins.
         before[name] = source_bytes(WRAPPER_BEFORE / name, previous)
         after[name] = source_bytes(QA / name, current)
         manifest[name] = {'before': previous, 'after': current, 'owner': [os.getuid(), os.getgid()]}
@@ -209,6 +211,11 @@ class Fixture:
         path = self.root / 'attestations.jsonl'
         return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
 
+    def service_starts(self):
+        path = self.root / 'routes.jsonl'
+        return [row['side'] for line in path.read_text().splitlines()
+                if (row := json.loads(line))['route'] == 'stub-service-start'] if path.exists() else []
+
     def assert_tool_bytes(self):
         witness = json.loads((self.root / 'tool-witness.json').read_bytes())
         assert all(sha256((self.bundle / name).read_bytes()).hexdigest() == digest
@@ -245,8 +252,12 @@ class CombinedReleaseTests(unittest.TestCase):
             self.assertEqual(probe.returncode, 23, (probe.stdout, probe.stderr))
         if package_guard == 'parked':
             self.assertIn('raise ImportError', (fixture.package / '__init__.py').read_text())
-        else:
+        elif package_guard == 'published':
             self.assertEqual(b'', (fixture.package / '__init__.so').read_bytes())
+        else:
+            self.assertEqual(package_guard, 'admitted')
+            self.assertFalse((fixture.package / '__init__.so').exists())
+            self.assertEqual(fixture.package.stat().st_ino, fixture.package_inode)
         force = fixture.invoke([str(fixture.fake_systemctl)], '--user', 'start', 'wrapper-development-host.service')
         self.assertNotEqual(force.returncode, 0)
         self.assertIn('fixture unit condition held', force.stderr)
@@ -365,6 +376,145 @@ class CombinedReleaseTests(unittest.TestCase):
         finally:
             shutil.rmtree(fixture.wrapper)
             moved.rename(fixture.wrapper)
+
+    def test_reopened_wrapper_ancestor_alias_refused_with_original_tools_inode(self):
+        fixture = self.fixture()
+        fixture.arm('after-one-wrapper')
+        self.assertNotEqual(fixture.run('install').returncode, 0)
+        self.assertTrue(any(row.get('fault') == 'after-one-wrapper' for row in fixture.events()))
+        fixture.disarm()
+        dev = fixture.project / 'dev'
+        moved = dev.with_name('original-dev-ancestor')
+        original_tools_inode = fixture.wrapper.stat().st_ino
+        vector = {path.name: path.read_bytes() for path in fixture.wrapper.iterdir()}
+        dev.rename(moved)
+        dev.symlink_to(moved, target_is_directory=True)
+        try:
+            self.assertEqual(fixture.wrapper.stat().st_ino, original_tools_inode)
+            reply = fixture.run('install')
+            self.assertNotEqual(reply.returncode, 0)
+            self.assert_holds(fixture, package_guard='parked')
+            self.assertEqual({path.name: path.read_bytes() for path in fixture.wrapper.iterdir()}, vector)
+            self.assertEqual(fixture.service_starts(), [])
+        finally:
+            dev.unlink()
+            moved.rename(dev)
+
+    def test_endpoint_mount_mismatch_rejected_even_with_matching_file_bytes(self):
+        fixture = self.fixture()
+        script = '''
+from pathlib import Path
+import os
+import sys
+bundle, parent = map(Path, sys.argv[1:])
+assert bundle.parent == parent.parents[3]
+sys.path.insert(0, str(bundle))
+import installer
+with installer.directory(parent) as fd:
+    good, _ = installer.read_file(fd, 'host_server.py')
+    assert good == (parent / 'host_server.py').read_bytes()
+    original_mount_id = installer.mount_id
+    expected = parent / 'host_server.py'
+    seen = []
+    def mismatched_mount_id(opened):
+        path = Path(os.readlink(f'/proc/self/fd/{opened}'))
+        real = original_mount_id(opened)
+        if path == expected:
+            seen.append(path)
+            return real + 1
+        return real
+    installer.mount_id = mismatched_mount_id
+    try:
+        installer.read_file(fd, 'host_server.py')
+    except ValueError as exc:
+        assert 'same-mount file' in str(exc), exc
+    else:
+        raise AssertionError('a physical endpoint mount mismatch was accepted')
+    assert seen == [expected], seen
+'''
+        reply = fixture.invoke([sys.executable, '-I', '-B', '-c', script], str(fixture.bundle), str(fixture.wrapper))
+        self.assertEqual(reply.returncode, 0, reply.stderr)
+        fixture.assert_visible('before')
+
+    def test_absolute_directory_open_refuses_same_inode_through_an_ancestor_alias(self):
+        fixture = self.fixture()
+        alias = fixture.root / 'project-alias'
+        alias.symlink_to(fixture.project, target_is_directory=True)
+        through_alias = alias / WRAPPER
+        self.assertEqual(through_alias.stat().st_ino, fixture.wrapper.stat().st_ino)
+        script = '''
+from pathlib import Path
+import sys
+bundle, physical, alias = map(Path, sys.argv[1:])
+assert bundle.parent == physical.parents[3] == alias.parents[3]
+sys.path.insert(0, str(bundle))
+import installer
+with installer.directory(physical):
+    pass
+try:
+    with installer.directory(alias):
+        raise AssertionError('absolute directory opened through a symlink ancestor')
+except OSError:
+    pass
+'''
+        reply = fixture.invoke([sys.executable, '-I', '-B', '-c', script], str(fixture.bundle),
+                               str(fixture.wrapper), str(through_alias))
+        self.assertEqual(reply.returncode, 0, reply.stderr)
+        fixture.assert_visible('before')
+
+    def test_interrupted_after_restoration_replays_without_duplicate_service_start(self):
+        fixture = self.fixture()
+        fixture.arm('after-restoration-before-commit')
+        interrupted = fixture.run('install')
+        self.assertEqual(interrupted.returncode, -9, (interrupted.stdout, interrupted.stderr))
+        journal = fixture.bundle / 'controller.json'
+        self.assertEqual(json.loads(journal.read_bytes())['phase'], 'RELEASING')
+        self.assertFalse(fixture.marker.exists())
+        self.assertTrue(fixture.hold.is_file())
+        interrupted_callbacks = [row for row in fixture.events() if row['checkpoint'] in {'restoring', 'restored'}]
+        self.assertEqual([(row['checkpoint'], row['marker_present'], row['wrapper_active'])
+                          for row in interrupted_callbacks], [('restoring', True, False), ('restored', False, True)])
+        self.assertEqual(interrupted_callbacks[-1]['fault'], 'after-restoration-before-commit')
+        self.assertEqual(fixture.service_starts(), ['after'])
+        for route in ('worker', 'direct-wrapper', 'supervised-wrapper'):
+            self.assertEqual(fixture.probe(route, 'after').returncode, 23)
+
+        refused_direction = fixture.run('rollback')
+        self.assertNotEqual(refused_direction.returncode, 0)
+        self.assertIn('Finish the recorded release', refused_direction.stderr)
+        self.assertEqual(fixture.service_starts(), ['after'])
+        fixture.disarm()
+        result = self.assert_receipt(fixture, fixture.run('install'), 'after')
+        callbacks = [row for row in fixture.events() if row['checkpoint'] in {'restoring', 'restored'}]
+        self.assertEqual([(row['checkpoint'], row['marker_present'], row['wrapper_active']) for row in callbacks[-2:]],
+                         [('restoring', False, True), ('restored', False, True)])
+        self.assertEqual(len({row['nonce'] for row in callbacks}), 4)
+        self.assertEqual(fixture.service_starts(), ['after'])
+        self.assertEqual(result, self.assert_receipt(fixture, fixture.run('install'), 'after'))
+
+    def test_restored_attestation_refusal_reinstates_marker_and_unit_holds(self):
+        fixture = self.fixture()
+        fixture.arm('refuse-restored-host')
+        refusal = fixture.run('install')
+        self.assertNotEqual(refusal.returncode, 0)
+        self.assertIn('fixture restored host attestation refused', refusal.stderr)
+        self.assertEqual(json.loads((fixture.bundle / 'controller.json').read_bytes())['phase'], 'RELEASING')
+        self.assertEqual(json.loads(fixture.marker.read_bytes()), {
+            'maintenance_id': fixture.hold_id, 'schema': 'integration-release-journal-v1',
+            'state': 'FOUNDATION_MAINTENANCE',
+        })
+        self.assertTrue((fixture.bundle / 'service-hold').is_file())
+        self.assert_holds(fixture, package_guard='admitted')
+        self.assertEqual(fixture.service_starts(), ['after'])
+        self.assertEqual(fixture.events()[-1]['fault'], 'refuse-restored-host')
+        self.assertTrue(fixture.events()[-1]['wrapper_active'])
+
+        fixture.disarm()
+        self.assert_receipt(fixture, fixture.run('install'), 'after')
+        callbacks = [row for row in fixture.events() if row['checkpoint'] in {'restoring', 'restored'}]
+        self.assertEqual([(row['checkpoint'], row['marker_present'], row['wrapper_active']) for row in callbacks[-2:]],
+                         [('restoring', True, False), ('restored', False, True)])
+        self.assertEqual(fixture.service_starts(), ['after', 'after'])
 
     def test_occupied_new_namespace_refused_and_previous_names_preserved(self):
         fixture = self.fixture()

@@ -790,9 +790,9 @@ class Controller:
         if record["phase"] in {"PUBLISHED", "ADMISSION_READY"}:
             self.admit(record, manifest)
         require(record["phase"] == "RELEASING", "Missing verified admission checkpoint")
-        require(self.verify_tree(record, manifest) == self.canonical, "Package not published")
-        self.verify_receipt(record, record["receipt"])
         try:
+            require(self.verify_tree(record, manifest) == self.canonical, "Package not published")
+            self.verify_receipt(record, record["receipt"])
             self.hook("restoring", package=self.canonical, target=record["target"])
             require(self.verify_tree(record, manifest) == self.canonical,
                     "Source changed before host restoration")
@@ -809,9 +809,23 @@ class Controller:
             self.verify_receipt(record, record["receipt"])
             self.units.check_status(record["prior"], held=False, restored=True)
             require(not present(self.marker) and not present(self.units.sentinel), "Release hold remains")
-        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
-            ensure_file(self.marker, self.marker_data)
-            self.units.close(record["prior"])
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            outcomes = []
+            closure_failed = False
+            closures = (
+                ("runtime marker", lambda: ensure_file(self.marker, self.marker_data)),
+                ("service hold", lambda: self.units.close(record["prior"])),
+            )
+            for name, close in closures:
+                try:
+                    close()
+                except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as refusal:
+                    closure_failed = True
+                    outcomes.append(f"{name} failed ({refusal})")
+                else:
+                    outcomes.append(f"{name} verified")
+            if closure_failed:
+                raise ValueError(f"Release verification failed ({error}). " + ". ".join(outcomes)) from error
             raise
         self.save(record, "RELEASED")
 
