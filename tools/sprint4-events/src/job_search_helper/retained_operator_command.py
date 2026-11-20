@@ -98,32 +98,34 @@ def _admit_retry(sink, state, runtime, remote_reader):
         return admit_selected_temporary_retry_locked(sink, state, runtime, workbook_snapshot=snapshot)
 
 
+def _retry_workbook_guard(sink, remote_reader, company):
+    from .exact_cycle_sync import _unique_company
+    from .repository import _equivalent
+
+    remote = remote_reader()
+    local = sink.reader
+    if remote.schemas != profile_schemas(local.get_meta("sheets_profile")) or remote.spreadsheet_id != local.spreadsheet_id:
+        raise ValueError("retained_operator_retry_workbook_changed")
+    remote.validate_schema()
+    fields = ["Company ID", "Company Status", "Official Careers URL", "ATS / Source", "Automatic Retry?"]
+    observed = _unique_company(remote, company["Company ID"], fields)
+    if any(not _equivalent(key, observed.get(key, ""), company.get(key, "")) for key in fields):
+        raise ValueError("retained_operator_retry_workbook_company_changed")
+
+
 def _fetch_retry(sink, state, runtime, remote_reader, *, cycle_id):
     from .ats import fetch_inventory
     from .browser_scraper import with_browser_fallback
-    from .exact_cycle_sync import _unique_company
-    from .repository import _equivalent
     from .selected_temporary_retry_execution import freeze_selected_temporary_retry_locked
-
-    def workbook_guard(company):
-        remote = remote_reader()
-        local = sink.reader
-        if remote.schemas != profile_schemas(local.get_meta("sheets_profile")) or remote.spreadsheet_id != local.spreadsheet_id:
-            raise ValueError("retained_operator_retry_workbook_changed")
-        remote.validate_schema()
-        fields = ["Company ID", "Company Status", "Official Careers URL", "ATS / Source", "Automatic Retry?"]
-        observed = _unique_company(remote, company["Company ID"], fields)
-        if any(not _equivalent(key, observed.get(key, ""), company.get(key, "")) for key in fields):
-            raise ValueError("retained_operator_retry_workbook_company_changed")
 
     with cli.writer_lock(sink.root / "writer.lock"):
         return freeze_selected_temporary_retry_locked(
             sink, state, runtime, cycle_id=cycle_id, fetcher=with_browser_fallback(fetch_inventory),
-            workbook_guard=workbook_guard,
+            workbook_guard=lambda company: _retry_workbook_guard(sink, remote_reader, company),
         )
 
 
-def _publish_retry(sink, state, runtime, remote_writer, *, cycle_id):
+def _publish_retry(sink, state, runtime, remote_reader, remote_writer, *, cycle_id):
     from .engine import Engine
     from .inbox import InventoryInbox
     from .integration_release import assert_release_settled
@@ -142,7 +144,10 @@ def _publish_retry(sink, state, runtime, remote_writer, *, cycle_id):
               closing(State(str(state.path))) as writable_state,
               closing(InventoryInbox(path, sink.reader.spreadsheet_id)) as inbox):
             engine = Engine(writer, writable_state, inbox=inbox, runtime_binding=runtime)
-            return publish_frozen_selected_retry_locked(sink, engine, remote_writer, cycle_id=cycle_id)
+            return publish_frozen_selected_retry_locked(
+                sink, engine, remote_writer, cycle_id=cycle_id,
+                workbook_guard=lambda company: _retry_workbook_guard(sink, remote_reader, company),
+            )
 
 
 def operator_command(arguments, admission):
@@ -232,7 +237,7 @@ def operator_command(arguments, admission):
                 elif args.operation == "fetch-retry":
                     result = _fetch_retry(sink, state, runtime, remote, cycle_id=args.successor_cycle_id)
                 else:
-                    result = _publish_retry(sink, state, runtime, lambda: remote(write=True),
+                    result = _publish_retry(sink, state, runtime, remote, lambda: remote(write=True),
                                             cycle_id=args.successor_cycle_id)
             elif args.operation == "preview":
                 claims = measure_operator_membership(

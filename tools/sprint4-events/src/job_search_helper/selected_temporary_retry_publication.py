@@ -16,7 +16,7 @@ from .sheet_profile import COMPACT_PROFILE
 from .temporary_retry import SelectedTemporaryRetrySink
 
 
-def publish_frozen_selected_retry_locked(sink, engine, remote_factory, *, cycle_id):
+def publish_frozen_selected_retry_locked(sink, engine, remote_factory, *, cycle_id, workbook_guard=None):
     """Project the private frozen provider result into its exact ordinary inbox."""
     from .integration_release import assert_release_settled
     from .retained_work_runner import assert_normal_lifecycle_not_held
@@ -27,8 +27,8 @@ def publish_frozen_selected_retry_locked(sink, engine, remote_factory, *, cycle_
     record = load_selected_retry_inventory(sink, engine.state, engine.runtime_binding, cycle_id=cycle_id)
     inventory = record['inventory']
     if inventory['status'] not in {'complete', 'partial'} or not inventory['jobs']:
-        return {'state': 'HELD_NO_PUBLISHABLE_RETRY_INVENTORY', 'cycle_id': cycle_id,
-                'inventory_status': inventory['status']}
+        from .selected_retry_terminal import _settle_selected_retry_locked
+        return _settle_selected_retry_locked(sink, engine, cycle_id, record, workbook_guard)
     payload = {key: value for key, value in inventory.items()
                if key not in {'status', 'outcome_failure', 'verified_zero'}}
     payload['inventory_status'] = inventory['status']

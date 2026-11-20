@@ -967,7 +967,8 @@ class SQLiteRepository:
         with self.transaction():
             return self._record_scrape_outcome_in_transaction(facts, owned_company_event=owned_company_event)
 
-    def _record_scrape_outcome_in_transaction(self, facts, *, owned_company_event=False):
+    def _record_scrape_outcome_in_transaction(self, facts, *, owned_company_event=False,
+                                              owned_selected_retry=False, recorded_at=None):
         """Write the classified outcome as part of its owner's Jobs transaction."""
         if not self.db.in_transaction:
             raise RepositoryError('Scrape outcome storage requires an active transaction.')
@@ -983,6 +984,9 @@ class SQLiteRepository:
                 or any(not isinstance(identity.get(key), str) or not identity[key].strip()
                        for key in ('request_id', 'company_id', 'source_revision'))):
             raise RepositoryError('Scrape outcome has incomplete immutable identity.')
+        if not owned_selected_retry:
+            from .selected_retry_lifecycle import assert_generic_outcome_not_selected
+            assert_generic_outcome_not_selected(self, identity)
         public_identity = dict(identity)
         payload = {
             'outcome_id': outcome['outcome_id'], 'outcome': outcome['outcome'],
@@ -1037,7 +1041,8 @@ class SQLiteRepository:
             'INSERT INTO scrape_outcomes(outcome_id,request_id,company_id,source_revision,outcome,action,payload,recorded_at) '
             'VALUES (?,?,?,?,?,?,?,?)',
             (outcome['outcome_id'], identity['request_id'], identity['company_id'],
-             identity['source_revision'], outcome['outcome'], outcome['action'], encoded, timestamp()))
+             identity['source_revision'], outcome['outcome'], outcome['action'], encoded,
+             recorded_at or timestamp()))
         self.event('scrape_outcome_recorded', '', 0,
                    {'outcome_id': outcome['outcome_id'], 'company_id': identity['company_id'],
                     'source_revision': identity['source_revision'], 'outcome': outcome['outcome']})

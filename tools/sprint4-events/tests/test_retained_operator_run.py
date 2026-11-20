@@ -1290,7 +1290,8 @@ def test_source_change_during_complete_fetch_cancels_before_any_publication(tmp_
         assert local.read("Job Evidence") == fixture.local_before["Job Evidence"]
 
 
-def test_admit_retry_command_saves_only_pinned_eligible_successor(tmp_path, monkeypatch):
+@pytest.mark.parametrize("publish_jobs", [True, False])
+def test_admit_retry_command_saves_only_pinned_eligible_successor(tmp_path, monkeypatch, publish_jobs):
     from job_search_helper.temporary_retry import SelectedTemporaryRetrySink
 
     fixture = OperatorFixture(tmp_path, monkeypatch, company_event=True)
@@ -1300,6 +1301,7 @@ def test_admit_retry_command_saves_only_pinned_eligible_successor(tmp_path, monk
         "failed", source_url=BOARD, ats="Jobvite", browser_fallback_allowed=False,
         outcome_failure=ats.outcome_failure("temporary_transport", "retryable_http_status"),
     )
+    failed_inventory = fixture.fetch.return_value
     failed = fixture.command("execute")
     args = [
         "schedule-retry", "--company-event", "--cycle-id", CYCLE_ID, "--company-id", COMPANY_ID,
@@ -1352,7 +1354,7 @@ def test_admit_retry_command_saves_only_pinned_eligible_successor(tmp_path, monk
 
     args[0] = "fetch-retry"
     args.extend(["--successor-cycle-id", result["cycle_id"]])
-    fixture.fetch.return_value = success_inventory
+    fixture.fetch.return_value = success_inventory if publish_jobs else failed_inventory
     frozen = command()
     assert frozen["state"] == "INVENTORY_FROZEN"
     assert frozen["recovered"] is False
@@ -1366,10 +1368,17 @@ def test_admit_retry_command_saves_only_pinned_eligible_successor(tmp_path, monk
     fixture.service.before_write = lambda: fixture.assert_held("scraper.lock", "writer.lock")
     args[0] = "publish-retry"
     receipt = command()
-    assert receipt["state"] == "SYNC_CONFIRMED"
-    assert receipt["binding"]["request_id"] == result["request_id"]
-    assert receipt["binding"]["source_revision"] == fixture.request["source_revision"]
-    assert receipt["binding"]["release_binding_sha256"] == digest(fixture.runtime)
+    if publish_jobs:
+        assert receipt["state"] == "SYNC_CONFIRMED"
+        assert receipt["binding"]["request_id"] == result["request_id"]
+        assert receipt["binding"]["source_revision"] == fixture.request["source_revision"]
+        assert receipt["binding"]["release_binding_sha256"] == digest(fixture.runtime)
+    else:
+        assert receipt["state"] == "HELD_TEMPORARY_RETRY_CAP"
+        assert receipt["cycle_id"] == result["cycle_id"]
+        assert fixture.open_remote.call_count == 1
+        assert not fixture.open_remote.call_args.kwargs["write"]
+        assert fixture.service.batches == []
     assert fixture.fetch.call_count == 2
     fixture.open_remote.reset_mock()
     assert command() == receipt
