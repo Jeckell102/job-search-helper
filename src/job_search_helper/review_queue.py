@@ -188,14 +188,23 @@ def score_posting(title: str, description: str):
 
 def _evidence_map(repo):
     exact = {}
+    seen = set()
     for _, row in repo.read_columns(
         "Job Evidence", ["Job Key", "Source Hash", "Job Description"]
     ):
         key = str(row.get("Job Key", "") or "")
         source_hash = str(row.get("Source Hash", "") or "")
         description = str(row.get("Job Description", "") or "")
-        if key and source_hash and description.strip():
-            exact[(key, source_hash)] = description
+        if key and source_hash:
+            identity = (key, source_hash)
+            # Match runtime hydration's exact-identity guard: even a blank
+            # duplicate makes the source ambiguous. Never choose evidence by
+            # spreadsheet row order and send it as a complete description.
+            if identity in seen:
+                exact[identity] = ""
+            else:
+                exact[identity] = description
+                seen.add(identity)
     return exact
 
 
@@ -224,10 +233,12 @@ def _json_line(record):
     return json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
-def build_review_queues(repo, threshold: int = DEFAULT_THRESHOLD, *, inventory_database=None):
+def build_review_queues(repo, threshold: int = DEFAULT_THRESHOLD, *, inventory_database=None, cache=None):
     """Build read-only queues. Scores route work; they never decide fit."""
     if not FIRST_PASS_BORDERLINE_THRESHOLD <= threshold <= HIGH_PRIORITY_THRESHOLD:
         raise ValueError("Second-pass threshold must be between 8 and 30.")
+    from .review_refresh import policy_fingerprint
+    policy = json.dumps(policy_fingerprint(), sort_keys=True) if cache else ""
     evidence = _evidence_map(repo)
     headers = ["Job Title", "Added to Opportunities?", "Job Key", "Review Status",
                "Source Hash", "Reconsideration Status", "Job Status", "Salary / Range",
@@ -251,7 +262,8 @@ def build_review_queues(repo, threshold: int = DEFAULT_THRESHOLD, *, inventory_d
             "job_title": str(row.get("Job Title", "") or ""),
         }, evidence.get((key, source_hash), ""), row.get("Salary / Range", "")))
 
-    local, coverage = load_title_audits(inventory_database, getattr(repo, "spreadsheet_id", None))
+    local, coverage = load_title_audits(inventory_database, getattr(repo, "spreadsheet_id", None),
+                                        cache=cache, policy=policy)
     deduplicated = 0
     for record in local:
         posting = record["posting"]
@@ -269,17 +281,22 @@ def build_review_queues(repo, threshold: int = DEFAULT_THRESHOLD, *, inventory_d
     descriptions_before = 0
     for identity, description, compensation in candidates:
         title = identity["job_title"]
-        scored = score_posting(title, description)
+        def calculate():
+            return {"scored": score_posting(title, description),
+                    "reason": screen_posting({"title": title, "description": description,
+                        "compensation": compensation}, skip_title_filter=True).reason,
+                    "title_action": classify_title(title)}
+        inputs = [policy, title, description, json.dumps(compensation, ensure_ascii=False)]
+        derived = cache.calculate('review', identity['job_key'], inputs, calculate) if cache else calculate()
+        scored = derived['scored']
         common = {**identity, "band": _score_band(scored["score"], threshold), **scored}
         baseline.append({**common, "job_description": description})
         descriptions_before += len(description)
         # Independent hard exclusions cannot be rescued by a title-only review.
-        screen = screen_posting({"title": title, "description": description,
-                                 "compensation": compensation}, skip_title_filter=True)
-        if screen.reason:
-            filtered.append({**identity, "reason": screen.reason, "first_pass_audit": False})
+        if derived['reason']:
+            filtered.append({**identity, "reason": derived['reason'], "first_pass_audit": False})
             continue
-        if classify_title(title) == "reject":
+        if derived["title_action"] == "reject":
             reason = "Title exclusion: matches title-blacklist.txt."
             first_pass.append({**common, "band": "FIRST_PASS_TITLE_FILTER_AUDIT",
                                "python_reason": reason, "evidence_missing": not _complete_description(description)})
@@ -349,7 +366,11 @@ def _export_review_queues_unlocked(repo, output_dir, threshold: int = DEFAULT_TH
     try:
         source = fingerprint(repo, threshold, inventory_database)
         load_title_blacklist.cache_clear(); load_title_review_list.cache_clear()
-        result = build_review_queues(repo, threshold=threshold, inventory_database=inventory_database)
+        from .derived_cache import calculation_cache
+        with calculation_cache(destination / '.derived.sqlite3') as cache:
+            result = build_review_queues(repo, threshold=threshold, inventory_database=inventory_database, cache=cache)
+            calculations = cache.metrics
+            cache.prune()
     finally:
         if local: repo.db.execute('ROLLBACK')
     build_seconds = time.monotonic() - started
@@ -362,7 +383,8 @@ def _export_review_queues_unlocked(repo, output_dir, threshold: int = DEFAULT_TH
             _write_jsonl(path, result[key])
             hashes[names[key]] = hashlib.sha256(path.read_bytes()).hexdigest()
         summary = {**result["summary"], "generated_at": datetime.now(timezone.utc).isoformat(),
-                   "file_sha256": hashes, "source_fingerprint": source}
+                   "file_sha256": hashes, "source_fingerprint": source,
+                   "build_seconds": build_seconds, "calculations": calculations}
         (staging / names["summary"]).write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n")
         (staging / names["summary"]).chmod(0o600)
         with publication_lock(destination, exclusive=True):

@@ -74,7 +74,9 @@ def _preload(body):
 
 
 def _page_url(page):
-    return SOURCE if page == 1 else SOURCE + "&page=" + str(page)
+    if type(page) is not int or not 1 <= page <= MAX_PAGES:
+        raise FetchError("partial", "JR Automation pagination page is invalid.")
+    return SOURCE if page == 1 else f"https://{HOST}/jobs/page/{page}?filter%5Bbrand%5D%5B0%5D=JR%20Automation"
 
 
 def _listing(client, page):
@@ -155,7 +157,7 @@ def fetch_jr_automation(url, company_id, company, transport=None):
     try:
         total, first = _listing(client, 1)
         pages = (total + 9) // 10
-        if total != 64 or pages > MAX_PAGES:
+        if pages > MAX_PAGES:
             raise FetchError("partial", "JR Automation published an invalid filtered inventory size.")
         entries = list(first)
         if len(entries) != min(10, total):

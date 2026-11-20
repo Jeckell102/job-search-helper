@@ -8,13 +8,14 @@ application or alert routes.
 """
 from __future__ import annotations
 
+import logging
 from urllib.parse import parse_qs, urlsplit, urlunsplit
 import json
 import re
 import sys
 import time
 
-from .ats import FetchError, Inventory, _base, text
+from .ats import FetchError, HTTPResponse, Inventory, _base, _challenge, text
 
 
 SOURCE = "https://jobs.saic.com/search/jobs"
@@ -25,6 +26,8 @@ PAGE_SIZE = 25
 MAX_PAGES = 100
 MAX_JOBS = PAGE_SIZE * MAX_PAGES
 DETAIL_INTERVAL = 0.2
+MAX_NAV_ATTEMPTS = 3
+RETRY_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
 _JOB_PATH = re.compile(r"^/jobs/([0-9]+)-[A-Za-z0-9-]+/?$")
 _PAGE_PATH = "/search/jobs/in"
 
@@ -33,7 +36,7 @@ def _supported(url: str, company_id: str, company: str) -> bool:
     return url == SOURCE and company_id == COMPANY_ID and company.strip().casefold() == COMPANY.casefold()
 
 
-def fetch_saic(url: str, company_id: str, company: str, transport=None) -> Inventory:
+def fetch_saic(url: str, company_id: str, company: str, transport=None, progress_factory=None) -> Inventory:
     """Signal the required safe browser path without making a challenge request."""
     if not _supported(url, company_id, company):
         return Inventory("unsupported", reason="SAIC adapter requires its verified unfiltered public board.",
@@ -62,12 +65,42 @@ def _same_page_url(actual: str, expected_number: int) -> bool:
     return parsed.path == _PAGE_PATH and parse_qs(parsed.query) == {"page": [str(expected_number)]}
 
 
-def _status(response) -> None:
+def _status(response) -> int:
     value = getattr(response, "status", None)
     if value in (401, 403, 429):
         raise FetchError("blocked", f"SAIC public careers page returned HTTP {value}.")
     if value != 200:
         raise FetchError("partial", "SAIC public careers page was unavailable.")
+    return value
+
+
+def _guard_page(page, response, expected_number: int | None = None) -> None:
+    """Reject denial/challenge shells before treating their links as inventory."""
+    _status(response)
+    if expected_number is not None and not _same_page_url(page.url, expected_number):
+        raise FetchError("partial", "SAIC listing left its verified public page.")
+    try:
+        body = page.content().encode("utf-8", "replace")
+    except Exception as error:
+        raise FetchError("partial", f"SAIC public page body was unavailable ({type(error).__name__}).") from None
+    if _challenge(HTTPResponse(200, body), expect_html=True):
+        raise FetchError("blocked", "SAIC public careers page requires human verification.")
+
+
+def _goto(page, url: str, expected_number: int | None = None):
+    """Navigate with bounded transient cooldown; never retry human challenges."""
+    last = None
+    for attempt in range(MAX_NAV_ATTEMPTS):
+        response = page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        last = response
+        status = getattr(response, "status", None)
+        if status in RETRY_STATUSES and attempt + 1 < MAX_NAV_ATTEMPTS:
+            time.sleep(min(4.0, 0.5 * (2 ** attempt)))
+            continue
+        _guard_page(page, response, expected_number)
+        return response
+    _guard_page(page, last, expected_number)
+    return last
 
 
 def _links(page, number: int) -> tuple[list[tuple[str, str, str]], int]:
@@ -125,10 +158,7 @@ def _links(page, number: int) -> tuple[list[tuple[str, str, str]], int]:
 
 
 def _listing(page, number: int) -> tuple[list[tuple[str, str, str]], int]:
-    response = page.goto(_listing_url(number), wait_until="domcontentloaded", timeout=30000)
-    _status(response)
-    if not _same_page_url(page.url, number):
-        raise FetchError("partial", "SAIC listing left its verified public page.")
+    _goto(page, _listing_url(number), number)
     return _links(page, number)
 
 
@@ -144,16 +174,15 @@ def _all_listings(page, company_id: str) -> tuple[list[tuple[str, str, str]], in
                 raise FetchError("partial", "SAIC listing repeated a posting identity.")
             seen.add(entry[0])
             entries.append(entry)
-        print(json.dumps({"event": "inventory_page", "provider": "SAIC TalentBrew",
+        logging.getLogger(__name__).debug("%s", json.dumps({"event": "inventory_page", "provider": "SAIC TalentBrew",
                           "company_id": company_id, "page": number, "listed": len(entries),
-                          "pages": pages}), file=sys.stderr)
+                          "pages": pages}))
     return entries, pages
 
 
 def _details(page, entry: tuple[str, str, str], company_id: str, company: str) -> dict:
     ident, listing_title, url = entry
-    response = page.goto(url, wait_until="domcontentloaded", timeout=30000)
-    _status(response)
+    _goto(page, url)
     parsed = urlsplit(page.url)
     if urlunsplit(("https", "jobs.saic.com", parsed.path, "", "")) != url:
         raise FetchError("partial", "SAIC job detail changed its canonical URL.")
@@ -177,7 +206,7 @@ def _details(page, entry: tuple[str, str, str], company_id: str, company: str) -
     return row
 
 
-def scan(context, company_id: str, company: str, *, max_jobs: int = MAX_JOBS) -> Inventory:
+def scan(context, company_id: str, company: str, *, max_jobs: int = MAX_JOBS, progress=None) -> Inventory:
     """Read every public listing page and its corresponding public detail."""
     jobs = []
     listing_page = context.new_page()
@@ -188,18 +217,39 @@ def scan(context, company_id: str, company: str, *, max_jobs: int = MAX_JOBS) ->
             raise FetchError("partial", "SAIC inventory exceeds the configured safe job limit.")
         if not entries or len(entries) > max_jobs:
             raise FetchError("partial", "SAIC public listing was empty or exceeded the safe job limit.")
+        if progress is not None:
+            progress._write("saic_listing_v1", "state", {
+                "source": SOURCE, "entries": entries, "pages": pages, "complete": False
+            })
+        saved = progress._read("saic_detail_v1") if progress is not None else {}
         last_request = 0.0
         for entry in entries:
+            ident = entry[0]
+            cached = saved.get(ident)
+            if (isinstance(cached, dict) and cached.get("source") == SOURCE
+                    and cached.get("entry") == entry and isinstance(cached.get("job"), dict)
+                    and cached["job"].get("posting_id") == ident
+                    and cached["job"].get("description")
+                    and cached["job"].get("company_id") == company_id):
+                jobs.append(cached["job"])
+                continue
             time.sleep(max(0.0, DETAIL_INTERVAL - (time.monotonic() - last_request)))
             last_request = time.monotonic()
-            jobs.append(_details(detail_page, entry, company_id, company))
+            job = _details(detail_page, entry, company_id, company)
+            jobs.append(job)
+            if progress is not None:
+                progress._write("saic_detail_v1", ident, {"source": SOURCE, "entry": entry, "job": job})
             if len(jobs) % 100 == 0 or len(jobs) == len(entries):
-                print(json.dumps({"event": "posting_progress", "provider": "SAIC TalentBrew",
+                logging.getLogger(__name__).debug("%s", json.dumps({"event": "posting_progress", "provider": "SAIC TalentBrew",
                                   "company_id": company_id, "fetched": len(jobs),
-                                  "total": len(entries)}), file=sys.stderr)
+                                  "total": len(entries)}))
         checked, checked_pages = _all_listings(listing_page, company_id)
         if checked_pages != pages or checked != entries or len(jobs) != len(entries):
             raise FetchError("partial", "SAIC public inventory changed during retrieval.")
+        if progress is not None:
+            progress._write("saic_listing_v1", "state", {
+                "source": SOURCE, "entries": entries, "pages": pages, "complete": True
+            })
         return Inventory("complete", jobs,
                          f"SAIC: retrieved {len(jobs)} full public postings and rechecked the inventory.",
                          SOURCE, "SAIC TalentBrew")
@@ -214,7 +264,8 @@ def scan(context, company_id: str, company: str, *, max_jobs: int = MAX_JOBS) ->
         detail_page.close()
 
 
-def fetch_saic_browser(url: str, company_id: str, company: str, *, max_jobs: int = MAX_JOBS) -> Inventory:
+def fetch_saic_browser(url: str, company_id: str, company: str, *, max_jobs: int = MAX_JOBS,
+                       progress=None) -> Inventory:
     if not _supported(url, company_id, company):
         return Inventory("unsupported", reason="SAIC adapter requires its verified unfiltered public board.",
                          source_url=url, ats="SAIC TalentBrew")
@@ -223,7 +274,7 @@ def fetch_saic_browser(url: str, company_id: str, company: str, *, max_jobs: int
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
             try:
-                return scan(browser.new_context(), company_id, company, max_jobs=max_jobs)
+                return scan(browser.new_context(), company_id, company, max_jobs=max_jobs, progress=progress)
             finally:
                 browser.close()
     except Exception as error:

@@ -75,6 +75,8 @@ def plain_text(value: str) -> str:
 def material_hash(posting: dict) -> str:
     fields = {key: plain_text(posting.get(key, "")).casefold()
               for key in ("title", "location", "work_arrangement", "compensation", "description")}
+    if posting.get("location_country_scope"):
+        fields["location_country_scope"] = posting["location_country_scope"]
     return hashlib.sha256(json.dumps(fields, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 

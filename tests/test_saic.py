@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import Mock
+from types import SimpleNamespace
 
 from job_search_helper.ats import fetch_inventory
 from job_search_helper.saic import (
@@ -8,6 +9,8 @@ from job_search_helper.saic import (
     SOURCE,
     _listing_url,
     _same_page_url,
+    _guard_page,
+    _goto,
     fetch_saic,
 )
 
@@ -42,3 +45,18 @@ class SaicRoutingTests(unittest.TestCase):
 
         self.assertEqual(result.status, "blocked")
         transport.request.assert_not_called()
+
+    def test_http_200_human_verification_shell_is_blocked(self):
+        page = Mock()
+        page.content.return_value = "<html><title>Just a moment...</title><p>Verify you are human</p></html>"
+        page.url = SOURCE
+        with self.assertRaisesRegex(Exception, "human verification"):
+            _guard_page(page, SimpleNamespace(status=200), 1)
+
+    def test_transient_navigation_is_retried_with_bounded_attempts(self):
+        page = Mock()
+        page.url = SOURCE
+        page.content.return_value = "<html><div id='jobs'>current openings</div></html>"
+        page.goto.side_effect = [SimpleNamespace(status=503), SimpleNamespace(status=200)]
+        _goto(page, SOURCE, 1)
+        self.assertEqual(page.goto.call_count, 2)

@@ -3,7 +3,7 @@ import builtins
 from unittest.mock import patch
 
 from job_search_helper.ats import Inventory
-from job_search_helper.browser_scraper import _extract_links, _listing_pages, jobs_from_json_payload, with_browser_fallback
+from job_search_helper.browser_scraper import _detail_location, _extract_links, _listing_pages, jobs_from_json_payload, with_browser_fallback
 
 
 class FakeLocator:
@@ -23,6 +23,16 @@ class FakePage:
 
 
 class BrowserFallbackTests(unittest.TestCase):
+    def test_visible_header_location_is_recovered_from_generic_detail_text(self):
+        description = (
+            "Back to all jobs Head of Training and Checking Brisbane, Australia "
+            "Company Overview Metrea delivers effects-as-a-service to national security partners."
+        )
+        self.assertEqual(
+            _detail_location("Head of Training and Checking", description),
+            "Brisbane, Australia",
+        )
+
     def test_successful_direct_fetch_does_not_open_browser(self):
         direct = lambda *args: Inventory("complete", [{"title": "x"}], "ok")
         with patch("job_search_helper.browser_scraper.fetch_browser_inventory") as browser:

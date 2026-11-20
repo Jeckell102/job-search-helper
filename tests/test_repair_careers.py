@@ -2,7 +2,7 @@ import unittest
 
 from job_search_helper.ats import FetchError, Inventory
 from job_search_helper.repair import CANDIDATE_COLUMN, repair_careers_urls
-from job_search_helper.repository import MemoryRepository, SCHEMAS
+from job_search_helper.repository import MemoryRepository, RepositoryError, SCHEMAS
 
 
 def schemas_with_candidate():
@@ -85,6 +85,19 @@ class RepairCareersUrlsTests(unittest.TestCase):
         self.assertEqual(row[CANDIDATE_COLUMN], "https://acme.example/careers")
         self.assertEqual(row["Scan State"], "Blocked / Manual Review")
         self.assertIn("Review candidate careers URL", row["Next Action"])
+
+    def test_source_edit_during_validation_is_not_overwritten(self):
+        repo = self.repo([company(**{'ATS / Source': 'Greenhouse',
+            'Official Careers URL': 'https://boards.greenhouse.io/acme'})])
+        def fetcher(ats, url, company_id, company_name):
+            repo.commit([{'tab': 'Companies', 'identity': {'Company ID': company_id},
+                          'values': {'Official Careers URL': 'https://boards.greenhouse.io/new-scope'}}])
+            return Inventory('complete', jobs=[{'title': 'Systems Engineer'}], source_url=url, ats=ats)
+        with self.assertRaises(RepositoryError):
+            repair_careers_urls(repo, apply=True, fetcher=fetcher)
+        row = repo.read('Companies')[0]
+        self.assertEqual(row['Official Careers URL'], 'https://boards.greenhouse.io/new-scope')
+        self.assertEqual(row['Scan State'], 'Blocked / Manual Review')
 
     def test_writer_conflicts_are_not_treated_as_careers_url_repairs(self):
         repo = self.repo([company(**{"Blocked Reason": "Job History: review fields changed since planning; replan from fresh rows."})])

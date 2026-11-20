@@ -2,7 +2,6 @@
 from __future__ import annotations
 from contextlib import contextmanager,nullcontext
 from datetime import datetime,timezone
-import fcntl
 import json
 from pathlib import Path
 from .core import canonicalize_url,reconsiderations
@@ -10,13 +9,13 @@ from .cli import review_lock_name
 from .review_runtime import digest,encoded
 
 @contextmanager
-def sheet_writer_lock(path):
-    path.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
-    with path.open("a") as handle:
-        try: fcntl.flock(handle,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        except BlockingIOError as exc: raise RuntimeError("Another local Sheet writer is active; assessment remains staged") from exc
-        try: yield
-        finally: fcntl.flock(handle,fcntl.LOCK_UN)
+def sheet_writer_lock(path, *, timeout=0):
+    from .cli import writer_lock, WriterLockBusy
+    try:
+        with writer_lock(Path(path), timeout=timeout):
+            yield
+    except WriterLockBusy as exc:
+        raise RuntimeError(f"{exc} Assessment remains staged for retry.") from exc
 
 def history_row(repo,key):
     found=[(n,r) for n,r in repo.read_columns("Job History",["Job Key"]) if r.get("Job Key")==key]
@@ -121,6 +120,11 @@ def plan(runtime,repo,result,old,stage,opportunity_matches=None,*,authorized_man
     if not str(old.get("Company","")).strip() or not old.get("Official Job URL"): raise ValueError("Missing company/URL needed for write identity")
     matches=opportunity_rows(repo,old) if opportunity_matches is None else opportunity_matches
     if len(matches)>1: raise ValueError("Duplicate Opportunities; reconcile before writeback")
+    if decision in {"Accept", "Needs Info"} and stage==3:
+        from .locations import check_location
+        location_rule=check_location(old.get("Location", ""))
+        if location_rule.rejection_reason:
+            raise ValueError(location_rule.rejection_reason)
     if decision=="Reject": rejection_guard(matches)
     if decision=="Accept":
         location=result.get("location_check",{})
@@ -129,7 +133,7 @@ def plan(runtime,repo,result,old,stage,opportunity_matches=None,*,authorized_man
         from .screening import screen_posting
         evidence=runtime.hydrate(key,source,repo=repo)
         if not evidence.get("job_description"): raise ValueError("Missing exact description; acceptance cannot be written")
-        screening=screen_posting({"title":old.get("Job Title",""),"description":evidence["job_description"],"compensation":old.get("Salary / Range","")})
+        screening=screen_posting({"title":old.get("Job Title",""),"location":old.get("Location",""),"description":evidence["job_description"],"compensation":old.get("Salary / Range","")})
         if screening.reason: raise ValueError("Acceptance conflicts with deterministic rule: "+screening.reason)
     stamp=datetime.now(timezone.utc).isoformat(timespec="seconds"); marker=f"[{ {1:'first',2:'second',3:'third'}[stage]}-pass {digest([key,source])[:16]}]"; reason=("Title-only review: " if stage==1 else "")+result["reason"]; note=(marker+" Unresolved questions moved to Opportunity per user instruction.") if conversion else marker+" "+reason
     values={"Review Started At":"","Last Evaluated":stamp}
@@ -170,8 +174,9 @@ def sync_pending(runtime,stage,run_id,limit=25,*,repo=None,lock_path=None,identi
     """One cooperating writer owns selection, delivery AND status persistence."""
     if stage not in (1,2,3): raise ValueError("Writeback supports pass 1, pass 2, or pass 3")
     if not 1<=limit<=100: raise ValueError("Sync limit must be between 1 and 100")
-    from .runner import _load_environment
-    _load_environment()
+    if repo is None or lock_path is None:
+        from .runner import _load_environment
+        _load_environment()
     with runtime.transaction(): runtime._owned(stage,run_id)
     lock_path=Path(lock_path) if lock_path is not None else runtime.queue.parent/review_lock_name()
     try:

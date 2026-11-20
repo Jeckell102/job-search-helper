@@ -1,8 +1,12 @@
 from pathlib import Path
+from datetime import datetime, timezone
+import json
 import tempfile
 import unittest
+from unittest.mock import MagicMock, patch
 
-from job_search_helper.engine import State
+from job_search_helper.engine import Engine, State
+from job_search_helper.repository import MemoryRepository
 from job_search_helper.runner import active_inbox_cycles
 from job_search_helper.runner import _print_run_status
 from contextlib import redirect_stdout
@@ -12,6 +16,48 @@ from io import StringIO
 class DummyInbox:
     def cycles(self, include_blocked=False):
         return ["CYC-DONE", "CYC-ACTIVE", "CYC-ORPHAN"]
+
+
+class CompanyQueueStatusTests(unittest.TestCase):
+    def test_local_status_reports_waiting_request_without_mutation(self):
+        from job_search_helper import runner
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            database = root / 'state.db'
+            state = State(database)
+            self.addCleanup(state.close)
+            repo = MemoryRepository({'Companies': [
+                {'Company ID': 'C-0', 'Company': 'First', 'Company Status': 'Active'},
+                {'Company ID': 'C-1', 'Company': 'Second', 'Company Status': 'Active'},
+            ]})
+            active = Engine(repo, state).start_cycle(company_ids=['C-0'])
+            request = {
+                'mode': 'company-only', 'request_id': 'waiting-request',
+                'company_ids': ['C-1'], 'source_revision': 'revision-1',
+                'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
+                'company_event': {'schema': 'company-event-scan-request-v1',
+                    'event_id': 'event-1', 'company_id': 'C-1', 'revision': 1,
+                    'source_revision': 'revision-1'},
+            }
+            path = root / 'next-scan.json'
+            path.write_text(json.dumps(request))
+            before = state.cycle(active)
+
+            with patch.object(runner, 'state_path', return_value=database), \
+                    patch.object(runner, 'get_repository') as get_repository:
+                self.assertEqual(runner.main(['company-queue-status', '--local-only']), 0)
+
+            get_repository.assert_not_called()
+            self.assertEqual(state.cycle(active), before)
+            self.assertEqual(json.loads(path.read_text()), request)
+            status = runner.company_only_queue_status(
+                Engine(repo, state), state, database,
+                observed_at=datetime(2026, 11, 18, 0, 1, tzinfo=timezone.utc),
+            )
+            self.assertEqual(status['state'], 'WAITING_SAFE_BOUNDARY')
+            self.assertEqual(status['queue_age_seconds'], 60)
+            self.assertEqual(status['blocking_cycle_ids'], [active])
+            self.assertIn('do not delete locks', status['recovery'])
 
 
 class RunnerCycleSelectionTests(unittest.TestCase):
@@ -43,7 +89,200 @@ class RunnerCycleSelectionTests(unittest.TestCase):
                 ["CYC-ACTIVE", "CYC-ORPHAN"],
             )
 
+class ExactSyncContainmentTests(unittest.TestCase):
+    def test_cli_named_exact_sync_never_enters_normal_lifecycle(self):
+        """The named command dispatches before every global lifecycle hook."""
+        from job_search_helper import runner
 
+        forbidden = (
+            'get_repository', '_review_queue_lifecycle', '_run_scan_with_retries',
+            '_save_performance', '_refresh_review_queue', 'selected_sync_cycles',
+        )
+        with (
+            patch.object(runner, '_run_named_exact_cycle_sync', return_value=0) as exact,
+            patch.multiple(runner, **{
+                name: MagicMock(side_effect=AssertionError(name + ' is global'))
+                for name in forbidden
+            }),
+            patch('job_search_helper.run_sync.run_scoped_sync',
+                  side_effect=AssertionError('global synchronizer')),
+            patch('job_search_helper.closed_jobs.stage_closed_pending',
+                  side_effect=AssertionError('global cleanup')),
+            patch.object(Engine, 'sync_manual_opportunities',
+                         side_effect=AssertionError('manual opportunity sync')),
+            patch('job_search_helper.scrape_outcome_producer.record_cycle_outcomes',
+                  side_effect=AssertionError('outcome delivery')),
+        ):
+            self.assertEqual(runner.scrape_main([
+                'sync', '--cycle-id', 'CYC-EXACT', '--company-id', 'COMP-EXACT',
+            ]), 0)
+        exact.assert_called_once_with(
+            sync_cycle_id='CYC-EXACT', sync_company_ids=['COMP-EXACT'],
+            sheet_request_interval=1.1,
+        )
+
+    def test_named_exact_sync_validates_request_interval_before_dispatch(self):
+        from job_search_helper import runner
+
+        with patch.object(runner, '_run_named_exact_cycle_sync') as exact:
+            with self.assertRaisesRegex(ValueError, 'request interval'):
+                runner.run_start(
+                    sync_only=True, sync_cycle_id='CYC-EXACT',
+                    sync_company_ids=['COMP-EXACT'],
+                    sheet_request_interval=0.49,
+                )
+        exact.assert_not_called()
+
+    def test_named_exact_local_validation_refuses_before_remote_factory(self):
+        """Missing selected durable state cannot even construct a remote client."""
+        from job_search_helper import runner
+
+        with tempfile.TemporaryDirectory() as temporary:
+            database = Path(temporary) / 'state.db'
+            database.touch()
+            local = MagicMock()
+            local.get_meta.return_value = 'full'
+            def invoke_factory(_database, factory, _cycle, _companies, **_kwargs):
+                with factory():
+                    self.fail('missing cycle must fail before yielding dependencies')
+
+            with (
+                patch.object(runner, '_load_environment'),
+                patch.object(runner, 'state_path', return_value=database),
+                patch.object(runner.InventoryInbox, 'destination_id', return_value='fixture'),
+                patch('job_search_helper.sqlite_repository.SQLiteRepository', return_value=local),
+                patch.object(runner, '_readonly_named_exact_preflight',
+                             side_effect=ValueError('missing, finished, or superseded')),
+                patch('job_search_helper.sheet_profile.profile_schemas', return_value={}),
+                patch('job_search_helper.cli.job_database_path', return_value=database),
+                patch('job_search_helper.cli.get_remote_repository') as remote_factory,
+                patch('job_search_helper.exact_cycle_recovery.recover_exact_cycle_with_factory',
+                      side_effect=invoke_factory),
+            ):
+                with self.assertRaisesRegex(ValueError, 'missing, finished, or superseded'):
+                    runner._run_named_exact_cycle_sync(
+                        sync_cycle_id='CYC-EXACT', sync_company_ids=['COMP-EXACT'],
+                        sheet_request_interval=1.1,
+                    )
+            remote_factory.assert_not_called()
+            local.close.assert_not_called()
+
+    def test_named_exact_preflight_is_readonly_for_selected_durable_records(self):
+        from job_search_helper import runner
+        from job_search_helper.inbox import InventoryInbox
+        import sqlite3
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            database = root / 'state.db'
+            inbox_path = root / 'inventories.sqlite3'
+            state = State(database)
+            inbox = InventoryInbox(inbox_path, 'fixture')
+            try:
+                state.save_cycle({
+                    'id': 'CYC-EXACT', 'status': 'In Progress',
+                    'companies': {'COMP-EXACT': {'stage': 'inventory'}},
+                })
+                inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': []})
+                inbox.save_plan('CYC-EXACT', 'COMP-EXACT', {'operations': []})
+            finally:
+                inbox.close()
+                state.close()
+            with sqlite3.connect(inbox_path) as connection:
+                before = connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+                ).fetchall()
+            runner._readonly_named_exact_preflight(
+                database, inbox_path, 'CYC-EXACT', ['COMP-EXACT'])
+            with sqlite3.connect(inbox_path) as connection:
+                after = connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+                ).fetchall()
+            self.assertEqual(after, before)
+
+    def test_supersession_between_local_open_and_remote_factory_never_authenticates(self):
+        """The final exact gate is after writable setup but before Google."""
+        from job_search_helper import runner
+
+        with tempfile.TemporaryDirectory() as temporary:
+            database = Path(temporary) / 'state.db'
+            database.touch()
+            local = MagicMock()
+            local.get_meta.return_value = 'full'
+            state = MagicMock()
+            inbox = MagicMock()
+
+            class FakeInbox:
+                @staticmethod
+                def destination_id(_path):
+                    return 'fixture'
+
+                def __new__(cls, *_args, **_kwargs):
+                    return inbox
+
+            def invoke_factory(_database, factory, _cycle, _companies, **_kwargs):
+                with factory():
+                    self.fail('supersession must reject before yielding remote')
+
+            with (
+                patch.object(runner, '_load_environment'),
+                patch.object(runner, 'state_path', return_value=database),
+                patch.object(runner, 'InventoryInbox', FakeInbox),
+                patch.object(runner, 'State', return_value=state),
+                patch('job_search_helper.sqlite_repository.SQLiteRepository', return_value=local),
+                patch('job_search_helper.sheet_profile.profile_schemas', return_value={}),
+                patch('job_search_helper.cli.job_database_path', return_value=database),
+                patch('job_search_helper.cli.get_remote_repository') as remote_factory,
+                patch('job_search_helper.integration_release.assert_release_settled'),
+                patch.object(runner, '_readonly_named_exact_preflight',
+                             side_effect=[None, ValueError('cycle superseded')]),
+                patch('job_search_helper.exact_cycle_recovery.recover_exact_cycle_with_factory',
+                      side_effect=invoke_factory),
+            ):
+                with self.assertRaisesRegex(ValueError, 'cycle superseded'):
+                    runner._run_named_exact_cycle_sync(
+                        sync_cycle_id='CYC-EXACT', sync_company_ids=['COMP-EXACT'],
+                        sheet_request_interval=1.1,
+                    )
+            remote_factory.assert_not_called()
+            local.close.assert_called_once_with()
+            inbox.close.assert_called_once_with()
+            state.close.assert_called_once_with()
+
+    def test_named_sync_holds_after_local_validation_before_repository_access(self):
+        """A selected cycle may not start the global Sheets synchronizer."""
+        from job_search_helper import runner
+        from job_search_helper.inbox import InventoryInbox
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            database = root / 'state.db'
+            state = State(database)
+            try:
+                state.save_cycle({
+                    'id': 'CYC-EXACT', 'started_at': '2026-11-19T00:00:00+00:00',
+                    'status': 'In Progress', 'all': False, 'companies': {},
+                })
+            finally:
+                state.close()
+            inbox = InventoryInbox(root / 'inventories.sqlite3', 'fixture')
+            try:
+                inbox.save('CYC-EXACT', 'COMP-EXACT', {'jobs': [], 'marker': 'held'})
+            finally:
+                inbox.close()
+            output = StringIO()
+            with patch.object(runner, '_load_environment'), \
+                 patch.object(runner, 'state_path', return_value=database), \
+                 patch.object(runner, 'load_title_blacklist'), \
+                 patch.object(runner, 'load_title_review_list'), \
+                 patch.object(runner, 'get_repository') as get_repository, \
+                 redirect_stdout(output):
+                self.assertEqual(runner.run_start(
+                    sync_only=True, sync_cycle_id='CYC-EXACT', browser_fallback=False,
+                ), 0)
+            get_repository.assert_not_called()
+            self.assertIn('global repository and Sheets sync are disabled', output.getvalue())
+            self.assertIn('No inventory, workbook, review, or coordinator changes were applied.', output.getvalue())
 
 
 class FreshStartLifecycleTests(unittest.TestCase):
@@ -167,13 +406,13 @@ class FreshStartLifecycleTests(unittest.TestCase):
         from contextlib import redirect_stderr
         from job_search_helper import runner
         with patch.object(runner, 'run_start', return_value=0) as run:
-            self.assertEqual(runner.main(['start', '--fetch-workers', '15']), 0)
+            self.assertEqual(runner.scrape_main(['start', '--fetch-workers', '15']), 0)
             self.assertFalse(run.call_args.kwargs['resume'])
-            self.assertEqual(runner.main(['start', '--resume', '--fetch-workers', '15']), 0)
+            self.assertEqual(runner.scrape_main(['start', '--resume', '--fetch-workers', '15']), 0)
             self.assertTrue(run.call_args.kwargs['resume'])
             run.reset_mock()
             with redirect_stderr(StringIO()):
-                self.assertEqual(runner.main(['sync', '--resume']), 2)
+                self.assertEqual(runner.scrape_main(['sync', '--resume']), 2)
             run.assert_not_called()
 
     def test_summary_reports_run_counts_and_leaves_zero_skipped_blank(self):
@@ -201,12 +440,12 @@ class FreshStartLifecycleTests(unittest.TestCase):
              patch.object(runner, 'Engine', side_effect=make_engine), \
              patch.object(runner, '_refresh_review_queue'):
             self.assertEqual(runner.run_start(fetch_workers=1, browser_fallback=False), 0)
-            self.assertTrue(self.output.getvalue().endswith('Companies skipped: \n'))
+            self.assertRegex(self.output.getvalue(), r'Companies skipped: \nTotal run time: [^\n]+\n$')
             self.output.truncate(0); self.output.seek(0)
             self.assertEqual(runner.run_start(fetch_workers=1, browser_fallback=False), 0)
-        self.assertEqual(self.calls, ['C-0', 'C-1', 'C-0', 'C-1'])
+        self.assertEqual(self.calls, ['C-0', 'C-1', 'C-1', 'C-0', 'C-1', 'C-1'])
         self.assertIn('New jobs downloaded (new Job History rows): 0', self.output.getvalue())
-        self.assertTrue(self.output.getvalue().endswith('Companies skipped: \n'))
+        self.assertRegex(self.output.getvalue(), r'Companies skipped: \nTotal run time: [^\n]+\n$')
 
     def test_resume_never_falls_back_to_older_unfinished_scan(self):
         from job_search_helper.runner import resolve_cycle

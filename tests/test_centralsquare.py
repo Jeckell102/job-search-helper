@@ -50,3 +50,43 @@ def test_detects_reread_drift():
         return HTTPResponse(200, body, {})
     pages.get = changing
     assert fetch_inventory("Browser", SOURCE, COMPANY_ID, COMPANY, discovery_transport=pages).status == "partial"
+
+
+def test_follows_advertised_pagination_and_keeps_canonical_ids():
+    page_two = b'''<html><a href="/v3/Jobs/JobDetails.aspx?cid=7724&amp;jid=124&amp;locvalue=1108">Second role</a></html>'''
+    listing = LIST.replace(b'</html>', b'<a href="/v3/Jobs/list.aspx?cid=7724&amp;page=2">Next</a></html>')
+
+    class Paged(Pages):
+        def get(self, url):
+            self.calls[url] += 1
+            if "JobDetails.aspx" in url:
+                detail = self.detail.replace(b"Systems Support Specialist II", b"Second role") if "jid=124" in url else self.detail
+                return HTTPResponse(200, detail, {})
+            return HTTPResponse(200, page_two if "page=2" in url else listing, {})
+
+    result = fetch_inventory("Browser", SOURCE, COMPANY_ID, COMPANY, discovery_transport=Paged())
+    assert result.status == "complete", result.reason
+    assert [job["posting_id"] for job in result.jobs] == ["123", "124"]
+
+
+def test_bounds_retry_after_and_retries_transient_listing():
+    class Retry(Pages):
+        def __init__(self):
+            super().__init__()
+            self.delays = []
+
+        def sleep(self, delay):
+            self.delays.append(delay)
+
+        def get(self, url):
+            self.calls[url] += 1
+            if "JobDetails.aspx" in url:
+                return HTTPResponse(200, self.detail, {})
+            if self.calls[url] == 1:
+                return HTTPResponse(429, b"busy", {"Retry-After": "9999"})
+            return HTTPResponse(200, LIST, {})
+
+    pages = Retry()
+    result = fetch_inventory("Browser", SOURCE, COMPANY_ID, COMPANY, discovery_transport=pages)
+    assert result.status == "complete", result.reason
+    assert pages.delays == [8.0]

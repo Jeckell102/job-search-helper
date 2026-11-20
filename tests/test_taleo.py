@@ -361,6 +361,60 @@ class TaleoTests(unittest.TestCase):
         self.assertFalse(pages.posts)
         self.assertEqual(pages.urls, [url, url + "?page=1", url])
 
+    def test_textron_scoped_pagination_allows_overlap_but_rejects_repeated_page(self):
+        url = "https://www.textronsystems.com/careers/apply-today"
+        pages = Transport([
+            scoped_careers_page([("111", "First"), ("222", "Second")], 3, pages=2),
+            scoped_careers_page([("222", "Second"), ("333", "Third")], 3, page=1, pages=2),
+            scoped_careers_page([("111", "First"), ("222", "Second")], 3, pages=2),
+        ])
+        result = fetch_inventory("Taleo", url, "COMP-0088", "Textron Systems", discovery_transport=pages)
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual([job["posting_id"] for job in result.jobs], ["111", "222", "333"])
+
+        repeated = Transport([
+            scoped_careers_page([("111", "First"), ("222", "Second")], 2, pages=2),
+            scoped_careers_page([("111", "First"), ("222", "Second")], 2, page=1, pages=2),
+        ])
+        result = fetch_inventory("Taleo", url, "COMP-0088", "Textron Systems", discovery_transport=repeated)
+        self.assertEqual(result.status, "partial")
+        self.assertIn("repeated", result.reason.casefold())
+
+    def test_textron_scoped_lifecycle_ignores_closed_cards_but_not_missing_ids(self):
+        url = "https://www.textronsystems.com/careers/apply-today"
+        stale = """
+          <div class="career-reference-wrapper"><div class="career-reference__title">Closed role</div>
+          <div class="accordion__content__inner">This position is closed and no longer available.</div></div>
+        """
+        active = scoped_careers_page([("111", "First")], 1, pages=1)
+        body = active.body.decode().replace("</body>", stale + "</body>")
+        stale_response = HTTPResponse(200, body.encode(), {"Content-Type": "text/html"})
+        result = fetch_inventory("Taleo", url, "COMP-0088", "Textron Systems",
+                                 discovery_transport=Transport([stale_response, stale_response]))
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual([job["posting_id"] for job in result.jobs], ["111"])
+
+        missing = """
+          <h4>1 job(s) match your search criteria</h4>
+          <div class="career-reference-wrapper"><div class="career-reference__title">Missing ID</div>
+          <div class="accordion__content__inner">Current responsibilities and qualifications.</div></div>
+        """
+        result = fetch_inventory("Taleo", url, "COMP-0088", "Textron Systems",
+                                 discovery_transport=Transport([HTTPResponse(200, missing.encode(), {"Content-Type": "text/html"})]))
+        self.assertEqual(result.status, "partial")
+
+    def test_textron_scoped_zero_or_wrong_organization_option_is_incomplete(self):
+        url = "https://www.textronsystems.com/careers/apply-today"
+        page = scoped_careers_page([("111", "First")], 1, pages=1)
+        for selector in ('<select name="organization"></select>',
+                         '<select name="organization"><option value="other">Other Employer</option></select>'):
+            body = page.body.decode().replace("</body>", selector + "</body>")
+            response = HTTPResponse(200, body.encode(), {"Content-Type": "text/html"})
+            result = fetch_inventory("Taleo", url, "COMP-0088", "Textron Systems",
+                                     discovery_transport=Transport([response]))
+            self.assertEqual(result.status, "partial", result.reason)
+            self.assertIn("organization", result.reason.casefold())
+
 
 if __name__ == "__main__":
     unittest.main()

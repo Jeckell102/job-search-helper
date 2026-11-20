@@ -10,10 +10,36 @@ import time
 
 from .sheets_sync import SheetsSynchronizer
 from .sqlite_repository import SQLiteRepository, timestamp
+from .repository import ReviewFieldsChangedError
 
 
 def pending_cells(local):
     return local.db.execute('SELECT count(*) FROM dirty').fetchone()[0]
+
+
+class PublishWindow:
+    """One bounded gathering window at the remote publication boundary."""
+    def __init__(self, max_wait=15, target_rows=100):
+        self.max_wait = max_wait
+        self.target_rows = target_rows
+        self.first_pending = None
+
+    def reset(self):
+        self.first_pending = None
+
+    def ready(self, local):
+        rows = local.db.execute('SELECT count(*) FROM '
+                                '(SELECT DISTINCT tab,row_id FROM dirty)').fetchone()[0]
+        if not rows:
+            self.reset()
+            return False
+        now = time.monotonic()
+        if self.first_pending is None:
+            self.first_pending = now
+        if rows >= self.target_rows or now - self.first_pending >= self.max_wait:
+            self.reset()
+            return True
+        return False
 
 
 TIMING_METRICS = ('read_seconds', 'write_seconds', 'throttle_seconds',
@@ -40,7 +66,7 @@ def _batch_timings(sync, before, started):
 
 
 def publish_pending(sync, *, stop=None, max_seconds=300, max_batches=1000, progress=None,
-                    batch_progress=None):
+                    batch_progress=None, lock_factory=nullcontext, ready=None):
     """Drain acknowledged work, with bounded retries and no whole-workbook pull.
 
     A zero-progress batch is not success when dirty cells remain. Conflicts,
@@ -61,11 +87,15 @@ def publish_pending(sync, *, stop=None, max_seconds=300, max_batches=1000, progr
         if max_seconds is not None and time.monotonic() - started >= max_seconds:
             stop_reason = 'time_budget'
             break
+        if ready is not None and not ready(sync.local):
+            stop_reason = 'gathering'
+            break
         before = _remote_metrics(sync)
         batch_started = time.monotonic()
         result = None
         try:
-            result = sync.publish_batch()
+            with lock_factory():
+                result = sync.publish_batch()
         finally:
             if batch_progress is not None:
                 batch_progress(_batch_timings(sync, before, batch_started), result)
@@ -80,6 +110,10 @@ def publish_pending(sync, *, stop=None, max_seconds=300, max_batches=1000, progr
             stop_reason = 'no_progress'
             break
         remaining = after
+        if remaining and lock_factory is not nullcontext:
+            # Give a waiting review publisher a turn between bounded batches,
+            # including the final drain of a large scraper backlog.
+            time.sleep(0.1)
     return {'published_rows': rows, 'batches': batches, 'pending_cells': remaining,
             'elapsed_seconds': time.monotonic() - started, 'stop_reason': stop_reason}
 
@@ -112,20 +146,27 @@ class RunSheetsSync:
     """One worker; busy Sheets delivery never waits on the local scraper."""
 
     def __init__(self, factory, *, interval=60, log=None, lock_factory=nullcontext,
-                 pending_count=None):
+                 pending_count=None, coalesce_seconds=15, target_rows=100):
         if interval <= 0:
             raise ValueError('Sheets sync interval must be positive.')
         self.factory = factory
         self.lock_factory = lock_factory
         self.pending_count = pending_count
         self.interval = interval
+        self.window = PublishWindow(min(coalesce_seconds, interval), target_rows)
         self.log = log or (lambda message: print(message, flush=True))
         self.stop_requested = threading.Event()
         self.ready = threading.Event()
         self.thread = None
+        self._closed = False
         self.startup_error = None
         self.final_error = None
         self.report = {}
+        # Set only while the worker is delivering immediately after a due
+        # external intake.  Keeping this as internal state preserves the
+        # long-standing _publish(sync, phase, *, final=False) seam used by
+        # lifecycle and stale-control tests.
+        self._due_intake_publish = False
         self.totals = {'sheets_published_row_updates': 0, 'sheets_publish_batches': 0,
                        'sheets_pending_cells': 0, 'sheets_publish_seconds': 0.0,
                        'sheets_pull_seconds': 0.0}
@@ -147,6 +188,16 @@ class RunSheetsSync:
         return self
 
     def __exit__(self, exc_type, exc, traceback):
+        """Stop this run-owned worker exactly once.
+
+        ``run_start`` may need its final intake to complete before it makes a
+        terminal Company-event admission decision while still owning the
+        scraper lock.  Making close idempotent lets that boundary be explicit
+        without asking the surrounding ExitStack to stop the worker twice.
+        """
+        if self._closed:
+            return False
+        self._closed = True
         self.stop_requested.set()
         self.thread.join()
         if self.final_error is not None:
@@ -172,6 +223,9 @@ class RunSheetsSync:
             nonlocal batch_timing_text
             for key, value in timings.items():
                 self.totals['sheets_publish_' + key] += value
+            if result and result.get('held_missing_rows'):
+                self.log(f"Sheets {phase}: held {result['held_missing_rows']} removed company row(s); "
+                         'local history is preserved and other changes can publish on the next update.')
             batch_timing_text = (
                 f"read={timings['read_seconds']:.2f}s, "
                 f"processing={timings['processing_seconds']:.2f}s, "
@@ -199,12 +253,15 @@ class RunSheetsSync:
                 stop=None if final else self.stop_requested,
                 max_seconds=None if final else self.interval,
                 max_batches=None if final else 20,
-                progress=progress, batch_progress=batch_progress)
+                progress=progress, batch_progress=batch_progress,
+                lock_factory=self.lock_factory,
+                ready=(self.window.ready if phase == 'periodic' and not final
+                       and not self._due_intake_publish else None))
         finally:
             self.totals['sheets_publish_seconds'] += time.monotonic() - started
             self.totals['sheets_pending_cells'] = pending_cells(sync.local)
         self.report[phase] = result
-        if result['published_rows'] or result['pending_cells'] or phase == 'startup' or final:
+        if result['published_rows'] or (result['pending_cells'] and result['stop_reason'] != 'gathering') or phase == 'startup' or final:
             self.log(f"Sheets {phase}: published {result['published_rows']} row(s); "
                      f"{result['pending_cells']} pending cell(s) retained locally.")
         reason = STOP_REASONS.get(result['stop_reason'], result['stop_reason'])
@@ -219,31 +276,76 @@ class RunSheetsSync:
         from .cli import WriterLockBusy
 
         started = intake_complete = False
+        # A full Sheets intake is deliberately much less frequent than the
+        # cheap local pending-work poll below.  Keep its own schedule so an
+        # idle run can notice a post-start Company control/source edit without
+        # turning every two-second local check into a Google read.
+        next_intake = None
         sync = None
         busy = False
         try:
             with ExitStack() as resources:
-                def perform(phase, *, final=False):
-                    nonlocal sync, intake_complete
+                def perform(phase, *, final=False, refresh_intake=False):
+                    nonlocal sync, intake_complete, next_intake
                     # Acquire only for active intake/publication, never for the
                     # entire scrape or while idle between publishing intervals.
                     with self.lock_factory():
                         if sync is None:
                             sync = resources.enter_context(self.factory())
-                        if not intake_complete:
-                            self.log('Sheets startup: pulling current company controls and manual edits...')
+                        if not intake_complete or refresh_intake:
+                            message = ('Sheets startup: pulling current company controls and manual edits...'
+                                       if not intake_complete else
+                                       'Sheets periodic: reconciling current company controls and manual edits...')
+                            self.log(message)
                             tick = time.monotonic()
-                            self.report['pull'] = sync.pull()
-                            self.report['pull_seconds'] = time.monotonic() - tick
-                            self.totals['sheets_pull_seconds'] = self.report['pull_seconds']
+                            pull = sync.pull()
+                            pull_seconds = time.monotonic() - tick
+                            if not intake_complete:
+                                self.report['pull'] = pull
+                                self.report['pull_seconds'] = pull_seconds
+                                self.totals['sheets_pull_seconds'] = pull_seconds
+                            else:
+                                self.report['periodic_pull'] = pull
+                                self.report['periodic_pull_seconds'] = pull_seconds
+                                self.totals['sheets_pull_seconds'] += pull_seconds
                             intake_complete = True
-                        if phase == 'startup':
-                            self.log(f'Sheets startup: publishing previously saved changes '
-                                     f'({self.interval:g}s budget, checked between batches)...')
-                        self._publish(sync, phase, final=final)
-                        with sync.local.transaction():
-                            sync.local.set_meta('last_sync', timestamp())
-                            sync.local.set_meta('last_error', '')
+                            # Do not advance the cadence on a failed pull: its
+                            # durable baseline and outbox remain untouched, and
+                            # the normal periodic retry will try again later.
+                            next_intake = time.monotonic() + self.interval
+                    if phase == 'startup':
+                        self.log(f'Sheets startup: publishing previously saved changes '
+                                 f'({self.interval:g}s budget, checked between batches)...')
+                    for replan in range(2):
+                        try:
+                            # A due intake already satisfies the periodic
+                            # coalescing window, so do not let matching
+                            # interval values starve a saved local update.
+                            self._due_intake_publish = refresh_intake
+                            try:
+                                self._publish(sync, phase, final=final)
+                            finally:
+                                self._due_intake_publish = False
+                            break
+                        except ReviewFieldsChangedError:
+                            # Only this typed, pre-write rejection proves
+                            # the batch was not sent. Pull current manual
+                            # choices/notes, then rebuild from local rows.
+                            # Other failures retain exact delivery state.
+                            intake_complete = False
+                            if replan:
+                                raise
+                            self.log('Sheets choices changed since the saved plan; '
+                                     'refreshing current choices and notes before retrying.')
+                            tick = time.monotonic()
+                            with self.lock_factory():
+                                self.report['replan_pull'] = sync.pull()
+                            self.totals['sheets_pull_seconds'] += time.monotonic() - tick
+                            intake_complete = True
+                            next_intake = time.monotonic() + self.interval
+                    with sync.local.transaction():
+                        sync.local.set_meta('last_sync', timestamp())
+                        sync.local.set_meta('last_error', '')
 
                 def defer(phase):
                     nonlocal busy
@@ -266,6 +368,22 @@ class RunSheetsSync:
 
                 try:
                     perform('startup')
+                except ReviewFieldsChangedError as error:
+                    # Both attempts were rejected before submission. Intake
+                    # succeeded, so ongoing review activity should defer Sheets
+                    # delivery rather than prevent local scraping from starting.
+                    # perform() invalidated intake; the next pass pulls again.
+                    remaining = pending_cells(sync.local)
+                    self.totals['sheets_pending_cells'] = remaining
+                    self.report['startup'] = {
+                        'published_rows': self.totals['sheets_published_row_updates'],
+                        'batches': self.totals['sheets_publish_batches'],
+                        'pending_cells': remaining, 'stop_reason': 'review_fields_changed'}
+                    self._remember_error(sync, error)
+                    self.log(f'Sheets startup deferred: review fields changed again during publication; '
+                             f'{remaining} pending cell(s) remain saved locally. '
+                             'Scraping starts now; Sheets will pull fresh choices and retry '
+                             'in the background with reconciliation protections enabled.')
                 except WriterLockBusy:
                     defer('startup')
                 except Exception as error:
@@ -275,12 +393,18 @@ class RunSheetsSync:
                     return
                 started = True
                 if not busy:
-                    self.log('Sheets ready: watching local changes every 2s; pending batches publish continuously during this run only.')
+                    self.log(f'Sheets ready: checking local changes every 2s; publishing at '
+                             f'{self.window.target_rows} pending rows or after '
+                             f'{self.window.max_wait:g}s of gathering. Exit drains immediately.')
                 self.ready.set()
                 def next_delay(phase):
                     if busy:
                         return min(5, self.interval)
                     report = self.report.get(phase, {})
+                    if report.get('stop_reason') == 'gathering':
+                        return min(2, self.interval)
+                    if report.get('stop_reason') == 'review_fields_changed':
+                        return self.interval
                     if report.get('pending_cells'):
                         # Continue immediately after progress; back off held work.
                         return 0 if report.get('published_rows') else self.interval
@@ -289,11 +413,14 @@ class RunSheetsSync:
                 delay = next_delay('startup')
                 while not self.stop_requested.wait(delay):
                     # Cheap local polling needs no Google request while idle.
-                    if not busy and sync is not None and not pending_cells(sync.local):
-                        delay = min(2, self.interval)
+                    intake_due = next_intake is None or time.monotonic() >= next_intake
+                    if (not busy and sync is not None and not pending_cells(sync.local)
+                            and not intake_due):
+                        self.window.reset()
+                        delay = min(2, self.interval, max(0, next_intake - time.monotonic()))
                         continue
                     try:
-                        perform('periodic')
+                        perform('periodic', refresh_intake=intake_due)
                         if busy:
                             self.log('Sheets sync resumed; local scraping continued during the deferral.')
                         busy = False
@@ -305,11 +432,19 @@ class RunSheetsSync:
                         busy = False
                         if sync is not None:
                             self._remember_error(sync, error)
-                        self.log(f'Sheets update deferred ({type(error).__name__}); changes are saved locally and will retry during this run.')
+                        self.log(f'Sheets update deferred ({type(error).__name__}: {error}); changes are saved locally and will retry during this run.')
                         delay = self.interval
-                self.log('Sheets final: publishing remaining saved changes...')
+                    # Keep local polling responsive but wake at the scheduled
+                    # reconciliation boundary even when nothing is dirty.
+                    if next_intake is not None:
+                        delay = min(delay, max(0, next_intake - time.monotonic()))
+                self.log('Sheets final: reconciling current company controls and publishing remaining saved changes...')
                 try:
-                    perform('final', final=True)
+                    # A Company edit can occur after the last periodic intake
+                    # and before scraper completion.  This last pull is the
+                    # run's terminal external-read boundary; the runner will
+                    # consume its durable outbox only after this worker stops.
+                    perform('final', final=True, refresh_intake=True)
                 except WriterLockBusy:
                     defer('final')
                 except Exception as error:

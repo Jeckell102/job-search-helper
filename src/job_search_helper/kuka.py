@@ -1,5 +1,6 @@
 """KUKA's public vacancies feed with an explicit KUKA employer scope."""
 from html.parser import HTMLParser
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin
 from .ats import FetchError, Inventory, _base, _json, text
 from .discovery import CareersTransport
@@ -29,7 +30,7 @@ def _feed(client):
     data=_json(FEED, client)
     if not isinstance(data, dict) or not isinstance(data.get("items"), list): raise FetchError("partial", "KUKA vacancies feed returned an unexpected schema.")
     rows=data["items"]
-    if len(rows) != 115 or any(not isinstance(x, dict) or KUKA_FACET not in (x.get("facets") or []) for x in rows):
+    if not rows or any(not isinstance(x, dict) or KUKA_FACET not in (x.get("facets") or []) for x in rows):
         raise FetchError("partial", "KUKA employer-scoped feed changed or contains non-KUKA postings.")
     urls=[]
     for row in rows:
@@ -41,11 +42,14 @@ def _feed(client):
 def fetch_kuka(careers_url, company_id, company, transport=None):
     client=transport or CareersTransport()
     try:
-        rows, urls=_feed(client); jobs=[]
-        for row,u in zip(rows,urls):
+        rows, urls=_feed(client)
+        def detail(item):
+            row,u=item
             p=_Page(); p.feed(_read(client,u)); body=text(" ".join(p.parts)); title=text(p.head[0] if p.head else row.get("headline"))
             if not title or len(body)<500: raise FetchError("partial", "KUKA detail lacks a full description.")
-            jobs.append(_base({"id":u},"KUKA",company_id,company)|{"title":title,"description":body,"url":u,"location":text(row.get("location"))})
+            return _base({"id":u},"KUKA",company_id,company)|{"title":title,"description":body,"url":u,"location":text(row.get("location"))}
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            jobs=list(pool.map(detail, zip(rows,urls)))
         _, reread=_feed(client)
         if reread != urls: raise FetchError("partial", "KUKA employer-scoped inventory changed during reread.")
         return Inventory("complete",jobs,f"KUKA: retrieved {len(jobs)} employer-scoped postings with full descriptions.",SOURCE,"KUKA")

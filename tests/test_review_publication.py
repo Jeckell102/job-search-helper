@@ -16,6 +16,8 @@ from job_search_helper.review_publication import publish_reviews, publication_co
 import test_review_auto_writeback as delivery_fixtures
 from test_concurrent_review import publish, response
 from sheets_fixture import RangeSheets
+from job_search_helper import cli
+from job_search_helper.review_publication import retry_run_deliveries
 
 
 class ReviewPublicationTests(unittest.TestCase):
@@ -77,6 +79,84 @@ class ReviewPublicationTests(unittest.TestCase):
         self.assertNotEqual(rows['unrelated']['Last Checked'], 'future')
         self.assertEqual(self.local.status()['pending_cells'], 2)
         self.assertEqual(self.runtime.status(2)['passes']['2']['pending_publication'], 0)
+
+    def test_local_reject_saves_during_another_review_upload(self):
+        self.stores(['upload', 'later'])
+        owner, _ = self.save(2, ['upload'], ['CLEAR_REJECT'])
+        later_owner, items = self.claim(2, ['later'])
+        self.runtime.submit(2, later_owner, [response(items[0], 2, 'CLEAR_REJECT')])
+        commit = self.remote.commit
+        saved = []
+        root = Path(self.temp.name)
+        def upload(operations):
+            self.assertFalse(self.local.db.in_transaction)
+            # A reviewer upload must not own the scraper or local review lock.
+            with cli.writer_lock(root / 'scraper.lock'):
+                result = sync_pending(self.runtime, 2, later_owner, repo=self.local,
+                    lock_path=root / 'review-writeback.lock')
+            saved.append(result['counts'])
+            # Only the actual remote writers remain mutually exclusive.
+            with self.assertRaises(cli.WriterLockBusy):
+                with cli.writer_lock(root / 'writer.lock'):
+                    self.fail('Remote publishers overlapped')
+            return commit(operations)
+        with patch.object(self.remote, 'commit', side_effect=upload):
+            self.assertEqual(self.deliver(2, owner)['counts'], {'Written': 1})
+        self.assertEqual(saved[0], {'Written': 1})
+        rows = {row['Job Key']: row for row in self.remote.read('Job History')}
+        self.assertEqual(rows['later']['Added to Opportunities?'], 'Pending')
+        self.assertEqual(self.deliver(2, later_owner)['counts'], {'Written': 1})
+
+    def test_scraper_upload_defers_only_remote_reject_delivery(self):
+        self.stores(['reject'])
+        root = Path(self.temp.name)
+        with cli.writer_lock(root / 'scraper.lock'), cli.writer_lock(root / 'writer.lock'):
+            owner, _ = self.save(2, ['reject'], ['CLEAR_REJECT'])
+            result = self.deliver(2, owner, lock_timeout=0)
+            self.assertEqual(result['state'], 'PUBLICATION_DEFERRED')
+            self.assertEqual(result['pending'], 1)
+            self.assertEqual(self.runtime.finish(2, owner)['state'], 'WRITEBACK_PENDING')
+        self.assertEqual(self.deliver(2, owner)['counts'], {'Written': 1})
+        self.assertEqual(self.remote.read('Job History')[0]['Added to Opportunities?'], 'No')
+
+    def test_next_batch_retry_delivers_only_its_own_saved_run(self):
+        self.stores(['mine', 'other'])
+        mine, _ = self.save(2, ['mine'], ['CLEAR_REJECT'])
+        other, _ = self.save(2, ['other'], ['CLEAR_REJECT'])
+        def local_save(runtime, stage, run_id, limit, **kwargs):
+            return sync_pending(runtime, stage, run_id, limit, repo=self.local,
+                lock_path=Path(self.temp.name) / 'review-writeback.lock', **kwargs)
+        def publish_saved(runtime, stage, run_id, limit, **kwargs):
+            return self.deliver(stage, run_id, limit=limit, **kwargs)
+        before = self.runtime.run_status(2, mine)['saved_assessments']
+        with patch('job_search_helper.review_writeback.sync_pending', side_effect=local_save), \
+             patch('job_search_helper.review_publication.publish_reviews', side_effect=publish_saved):
+            result = retry_run_deliveries(self.runtime, 2, mine)
+            self.assertEqual(result['publication']['counts'], {'Written': 1})
+            self.assertIsNone(retry_run_deliveries(self.runtime, 2, mine))
+        self.assertEqual(self.runtime.run_status(2, mine)['saved_assessments'], before)
+        self.assertEqual(publication_counts(self.runtime, 2, other), {})
+        rows = {row['Job Key']: row for row in self.remote.read('Job History')}
+        self.assertEqual(rows['mine']['Added to Opportunities?'], 'No')
+        self.assertEqual(rows['other']['Added to Opportunities?'], 'Pending')
+
+    def test_cli_heartbeat_retries_saved_reject_and_verifies_sheet(self):
+        self.stores(['reject'])
+        owner, _ = self.save(2, ['reject'], ['CLEAR_REJECT'])
+        def open_local(*, write=False, **kwargs):
+            return SQLiteRepository(self.path, 'fixture', readonly=not write)
+        output = io.StringIO()
+        with patch('job_search_helper.cli.get_repository', side_effect=open_local), \
+             patch('job_search_helper.cli.get_remote_repository', return_value=self.remote), \
+             patch('job_search_helper.cli.state_path', return_value=Path(self.temp.name) / 'state.db'), \
+             patch('job_search_helper.cli.storage_backend', return_value='sqlite'), \
+             redirect_stdout(output):
+            code = main(['heartbeat', '--pass', '2', '--run-id', owner,
+                         '--queue-dir', str(self.queue)])
+        self.assertEqual(code, 0, output.getvalue())
+        result = json.loads(output.getvalue())
+        self.assertEqual(result['delivery_retry']['publication']['counts'], {'Written': 1})
+        self.assertEqual(self.remote.read('Job History')[0]['Added to Opportunities?'], 'No')
 
     def test_maintenance_recovers_prior_written_without_a_new_review_run(self):
         self.stores(['old'])

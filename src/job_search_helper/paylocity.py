@@ -5,6 +5,7 @@ filtering and sorting are client-side. Listing descriptions are only excerpts.
 """
 from __future__ import annotations
 
+import logging
 from html.parser import HTMLParser
 import json
 import re
@@ -220,8 +221,8 @@ def fetch_paylocity(board, root, company_id, company, transport):
         for entry in entries:
             context = f"Paylocity job detail {entry['JobId']}"
             jobs.append(_posting(_html(DETAIL + str(entry["JobId"]), transport), entry, board, company_id, company))
-            print(json.dumps({"event": "inventory_page", "provider": "Paylocity", "company_id": company_id,
-                              "postings_fetched": len(jobs), "total": len(entries)}), file=sys.stderr)
+            logging.getLogger(__name__).debug("%s", json.dumps({"event": "inventory_page", "provider": "Paylocity", "company_id": company_id,
+                              "postings_fetched": len(jobs), "total": len(entries)}))
         context = "Paylocity final listing check"
         if _listing(_html(source, transport), board) != entries:
             raise FetchError("partial", "Paylocity board changed during the scan; retry for a complete inventory.")

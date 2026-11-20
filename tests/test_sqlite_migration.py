@@ -53,6 +53,36 @@ class MigrationTests(unittest.TestCase):
         cell = sheet.cells.setdefault((index, sheet.headers.index(field)), {})
         cell['userEnteredValue'] = cell['effectiveValue'] = _encoded(value)
 
+    def test_formula_rejection_does_not_turn_later_user_choice_into_delivery_echo(self):
+        self.local.commit([operation(**{'Added to Opportunities?': 'No', 'Last Checked': 'today'})])
+        sheet = self.remote._sheets['Job History']
+        col = sheet.headers.index('Last Checked')
+        sheet.cells[(1, col)] = {'userEnteredValue': {'formulaValue': '=""'},
+                                'effectiveValue': {'stringValue': ''}}
+        with self.assertRaisesRegex(RepositoryError, 'formula'):
+            self.sync.publish_batch()
+        self.assertEqual(self.local.db.execute('SELECT count(*) FROM delivery_attempts').fetchone()[0], 0)
+        self.edit('Job History', 'Added to Opportunities?', 'No')
+        self.sync.pull()
+        self.assertEqual(self.local.db.execute('SELECT value FROM manual_choices').fetchone()[0], 'No')
+
+    def test_google_preflight_rejection_clears_receipt_without_writing(self):
+        from job_search_helper.repository import GoogleRepository, PreflightWriteError
+        from sheets_fixture import RangeSheets
+        service = RangeSheets(self.remote.tables)
+        remote = GoogleRepository(service, 'test-sheet', min_request_interval=0)
+        service.set_cell('Job History', 1, 'Last Checked', cell={
+            'userEnteredValue': {'formulaValue': '=""'}, 'effectiveValue': {'stringValue': ''}})
+        self.local.commit([operation(**{'Added to Opportunities?': 'No', 'Last Checked': 'today'})])
+        sync = SheetsSynchronizer(self.local, remote)
+        with self.assertRaises(PreflightWriteError):
+            sync.publish_batch()
+        self.assertEqual(remote.metrics['write_requests'], 0)
+        self.assertEqual(self.local.db.execute('SELECT count(*) FROM delivery_attempts').fetchone()[0], 0)
+        service.set_cell('Job History', 1, 'Added to Opportunities?', 'No')
+        sync.pull()
+        self.assertEqual(self.local.db.execute('SELECT value FROM manual_choices').fetchone()[0], 'No')
+
     def test_bootstrap_has_no_pending_writes(self):
         self.assertEqual(self.local.status()['pending_cells'], 0)
         self.assertEqual(self.local.read('Job History'), self.remote.read('Job History'))
@@ -66,6 +96,30 @@ class MigrationTests(unittest.TestCase):
         self.sync.publish_batch()
         self.assertEqual(self.remote.read('Job History')[0]['Last Checked'], 'two')
         self.assertEqual(self.local.status()['pending_cells'], 0)
+
+    def test_scrape_outcome_delivery_is_durable_and_consumer_scoped(self):
+        facts = {
+            'request_id': 'company-event:CEV-1', 'company_id': 'COMP-1',
+            'source_revision': 'revision-1', 'source_current': True,
+            'company_status': 'Active', 'storage_status': 'confirmed',
+            'inventory_status': 'partial', 'capability': 'qualified',
+            'provider': 'greenhouse', 'adapter_version': 'adapter-1',
+            'failure': {'category': 'adapter_regression'},
+        }
+        recorded = self.local.record_scrape_outcome(facts)
+        outcome = recorded['outcome']
+        self.assertTrue(recorded['recorded'])
+        self.assertEqual(self.local.pending_scrape_outcomes('repair-coordinator'), [outcome])
+        self.assertEqual(self.local.pending_scrape_outcomes('another-consumer'), [outcome])
+
+        acknowledgement = self.local.acknowledge_scrape_outcome(
+            outcome['outcome_id'], 'repair-coordinator')
+
+        self.assertTrue(acknowledgement['acknowledged'])
+        self.assertEqual(self.local.pending_scrape_outcomes('repair-coordinator'), [])
+        self.assertEqual(self.local.pending_scrape_outcomes('another-consumer'), [outcome])
+        self.assertFalse(self.local.record_scrape_outcome(facts)['recorded'])
+        self.assertEqual(self.local.pending_scrape_outcomes('repair-coordinator'), [])
 
     def test_pending_key_upgrade_pulls_manual_edits_and_publishes_same_row(self):
         self.local.commit([upgrade_operation()])
@@ -207,6 +261,64 @@ class MigrationTests(unittest.TestCase):
         self.edit('Opportunities', 'Application Status', 'Interviewing'); self.sync.pull()
         row = self.local.read('Opportunities')[0]
         self.assertEqual(row['Application Status'], 'Interviewing'); self.assertEqual(row['Date Applied'], 46300.25)
+
+    def test_spreadsheet_salary_estimate_fills_only_known_empty_extraction(self):
+        identity = {'Company': 'Acme', 'Job URL': 'https://jobs.example.com/job-1'}
+        self.remote.commit([{'tab': 'Opportunities', 'identity': identity,
+                             'values': {'Salary / Range': ''}, 'append_if_missing': True}])
+        self.sync.pull()
+        rid, row = self.local.matches('Opportunities', identity)[0]
+        empty = ('{"compensationTierSummary": null, "compensationTiers": [], '
+                 '"scrapeableCompensationSalarySummary": null, "summaryComponents": []}')
+        with self.local.transaction():
+            row['Salary / Range'] = empty
+            self.local._put('Opportunities', rid, row)
+        self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
+        self.sync.pull()
+        self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'], '$125,000-$150,000 estimated')
+        self.assertEqual(self.local.status()['conflicts'], 0)
+        self.assertEqual(self.local.status()['pending_cells'], 0)
+
+    def test_spreadsheet_salary_estimate_never_replaces_nonblank_or_dirty_extraction(self):
+        identity = {'Company': 'Acme', 'Job URL': 'https://jobs.example.com/job-1'}
+        self.remote.commit([{'tab': 'Opportunities', 'identity': identity,
+                             'values': {'Salary / Range': ''}, 'append_if_missing': True}])
+        self.sync.pull()
+        self.local.commit([{'tab': 'Opportunities', 'identity': identity,
+                            'values': {'Salary / Range': '$180,000 posting range'}}])
+        self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
+        self.sync.pull()
+        rid, row = self.local.matches('Opportunities', identity)[0]
+        self.assertEqual(row['Salary / Range'], '$180,000 posting range')
+        conflicts = self.local.db.execute(
+            'SELECT detail FROM conflicts WHERE tab=? AND row_id=? AND header=?',
+            ('Opportunities', rid, 'Salary / Range')).fetchall()
+        self.assertEqual(len(conflicts), 1)
+
+    def test_salary_fallback_rejects_malformed_or_partial_source_and_non_salary_text(self):
+        identity = {'Company': 'Acme', 'Job URL': 'https://jobs.example.com/job-1'}
+        self.remote.commit([{'tab': 'Opportunities', 'identity': identity,
+                             'values': {'Salary / Range': ''}, 'append_if_missing': True}])
+        self.sync.pull()
+        rid, row = self.local.matches('Opportunities', identity)[0]
+        with self.local.transaction():
+            row['Salary / Range'] = '{not-valid-json}'
+            self.local._put('Opportunities', rid, row)
+        self.edit('Opportunities', 'Salary / Range', 'see recruiter')
+        self.sync.pull()
+        self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'], '{not-valid-json}')
+        self.assertEqual(self.local.status()['conflicts'], 1)
+        with self.local.transaction():
+            row = self.local.row('Opportunities', rid)
+            row['Salary / Range'] = '{"compensationTierSummary": null}'
+            self.local._put('Opportunities', rid, row)
+            self.local.db.execute('DELETE FROM conflicts WHERE tab=? AND row_id=? AND header=?',
+                                  ('Opportunities', rid, 'Salary / Range'))
+        self.edit('Opportunities', 'Salary / Range', '$125,000-$150,000 estimated')
+        self.sync.pull()
+        self.assertEqual(self.local.row('Opportunities', rid)['Salary / Range'],
+                         '{"compensationTierSummary": null}')
+        self.assertEqual(self.local.status()['conflicts'], 1)
 
     def test_no_keeps_existing_applied_opportunity(self):
         self.remote.commit([{'tab': 'Opportunities', 'identity': {'Company': 'Acme', 'Job URL': 'https://jobs.example.com/job-1'},

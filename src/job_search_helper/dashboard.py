@@ -68,6 +68,14 @@ class TerminalDashboard:
             self.worker_state[slot] = {"task": "Fetching", "company": company, "detail": ""}
             self._render_locked()
 
+    def worker_assisting(self, slot, company):
+        """Show shared fetching without adding an event for every job."""
+        state = {"task": "Helping" if company else "Idle", "company": company, "detail": ""}
+        with self.lock:
+            if self.worker_state[slot] != state:
+                self.worker_state[slot] = state
+                self._render_locked()
+
     def worker_handoff(self, slot, company, job_count, *, status=None,
                        pending_urls=0, discovery_incomplete=False):
         outcome = ''

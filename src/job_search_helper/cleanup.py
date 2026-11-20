@@ -89,6 +89,7 @@ def plan_blacklist_cleanup(repo):
         if review_status:
             identity["Review Status"] = review_status
         operations.append({"tab": "Job History", "row_number": row_number, "identity": identity,
+                           "expected": {"Added to Opportunities?": row.get("Added to Opportunities?", "")},
                            "values": {"Added to Opportunities?": "No"}})
         proposed.append(item)
 

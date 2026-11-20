@@ -29,6 +29,20 @@ class HallamTests(unittest.TestCase):
         self.assertEqual(len(result.jobs), 1)
         self.assertEqual(pages.calls, [BOARD, DETAIL, BOARD])
 
+    def test_pagination_is_bounded_and_rejects_cross_tenant_links(self):
+        page2 = BOARD + "&page=2"
+        detail2 = BOARD + "&jobid=456"
+        root = (ROOT + '<a rel="next" href="' + page2 + '">Next</a>'
+                '<a href="https://secure7.saashr.com/ta/9999999.careers?jobid=999&career_portal_id=4915719&e​​in_id=118982210">bad</a>')
+        pages = Pages(root=root.replace("e​​in", "ein"), detail=BODY)
+        pages.pages[page2] = '<a href="' + detail2 + '">Engineer</a>'
+        pages.pages[detail2] = BODY
+        result = fetch_inventory("SaaShr", SOURCE, "COMP-0397", "Hallam-ICS", discovery_transport=pages)
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual(len(result.jobs), 2)
+        self.assertIn(page2, pages.calls)
+        self.assertNotIn("9999999", " ".join(pages.calls))
+
     def test_empty_or_blocked_public_board_never_closes(self):
         class Blocked:
             def get(self, url):

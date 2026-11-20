@@ -47,7 +47,7 @@ def _verified_source(url: str, company_id: str, company: str) -> bool:
 def fetch_vertex_solutions(url: str, company_id: str, company: str, transport=None) -> Inventory:
     if not _verified_source(url, company_id, company):
         return Inventory("unsupported", reason="Vertex Solutions adapter requires the verified official careers source.",
-                         source_url=SOURCE, ats=ATS)
+                         source_url=SOURCE, ats=ATS, browser_fallback_allowed=False)
     client = transport or CareersTransport()
     try:
         response = client.get(SOURCE)
@@ -68,6 +68,6 @@ def fetch_vertex_solutions(url: str, company_id: str, company: str, transport=No
             "Vertex Solutions links to an Indeed employer-management dashboard, not a public employer-scoped job listing feed; stable inventory cannot be established.",
         )
     except FetchError as exc:
-        return Inventory(exc.status, [], exc.reason, SOURCE, ATS)
+        return Inventory(exc.status, [], exc.reason, SOURCE, ATS, browser_fallback_allowed=False)
     except Exception as exc:
-        return Inventory("failed", [], f"Vertex Solutions live source access failed ({type(exc).__name__}).", SOURCE, ATS)
+        return Inventory("failed", [], f"Vertex Solutions live source access failed ({type(exc).__name__}).", SOURCE, ATS, browser_fallback_allowed=False)

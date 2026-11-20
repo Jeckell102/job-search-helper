@@ -129,6 +129,20 @@ class ClosedDeliveryTests(unittest.TestCase):
         self.assertEqual(report['verified'],0)
         self.assertEqual(self.remote.read('Job History')[0]['Added to Opportunities?'],'Yes')
 
+    def test_reopened_job_during_delivery_is_not_closed_by_stale_cleanup(self):
+        original = self.remote.commit
+        def race(operations):
+            original([{'tab': 'Job History', 'identity': {'Job Key': 'closed'},
+                       'values': {'Job Status': 'Open and verified'}}])
+            return original(operations)
+        with patch.object(self.remote, 'commit', side_effect=race):
+            report = publish_closed_pending(self.local, self.remote)
+        row = self.remote.read('Job History')[0]
+        self.assertEqual(row['Added to Opportunities?'], 'Pending')
+        self.assertEqual(row['Review Status'], 'Needs Review')
+        self.assertEqual(report['verified'], 0)
+        self.assertIsNotNone(report['error'])
+
     def test_lost_write_response_is_verified_without_false_manual_no(self):
         original=self.remote.commit
         def lost(operations):

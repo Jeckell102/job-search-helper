@@ -41,10 +41,13 @@ class BrowserContentTests(unittest.TestCase):
 
     def test_reads_structured_job_description(self):
         self.serve('<script type="application/ld+json">{"@type":"JobPosting","title":"Field Engineer",'
+                   '"jobLocation":{"@type":"Place","address":{"addressLocality":"Brisbane",'
+                   '"addressRegion":"Queensland","addressCountry":"Australia"}},'
                    '"description":"<p>Deploy and support equipment at customer locations, train operators, '
                    'troubleshoot technical issues and coordinate field service schedules for the customer.</p>"}</script>')
         result = _fetch_detail(self.context, self.link, 3000)
         self.assertIn('train operators', result['description'])
+        self.assertEqual(result['location'], 'Brisbane, Queensland, Australia')
         self.assertEqual(self.context.pages, [])
 
     def test_loading_placeholder_is_unresolved_and_page_is_closed(self):

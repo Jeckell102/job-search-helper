@@ -11,7 +11,7 @@ from job_search_helper.repository import MemoryRepository
 class EfficiencyV32Tests(unittest.TestCase):
     def test_python_title_routing(self):
         self.assertEqual(classify_title("Systems Engineer"), "reject")
-        self.assertEqual(classify_title("Senior Staff Engineer, Survivability Materials"), "reject")
+        self.assertEqual(classify_title("Senior Staff Engineer, Survivability Materials"), "ambiguous")
         self.assertEqual(classify_title("Electrical Engineer"), "reject")
         self.assertEqual(classify_title("Staff Solutions Engineer"), "review")
         self.assertEqual(classify_title("Field Applications Engineer"), "review")

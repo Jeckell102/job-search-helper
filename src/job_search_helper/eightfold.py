@@ -16,10 +16,22 @@ class Client:
             if self.sort_by:q['sort_by']=self.sort_by
         elif kind=='position_details' and re.fullmatch('[0-9]{1,16}',str(value)):q={'position_id':value,'domain':self.domain,'hl':'en'}
         else:raise FetchError('unsupported','Unverified public Eightfold route.')
-        time.sleep(max(0,.4-(time.monotonic()-self.last)));self.last=time.monotonic()
-        r=self.context.request.get(self.root+'/api/pcsx/'+kind+'?'+urlencode(q)+('&' if kind=='search' else ''),max_redirects=0,timeout=30000)
-        try:d=json.loads(checked(HTTPResponse(r.status,r.body(),r.headers)))
-        finally:r.dispose()
+        url = self.root+'/api/pcsx/'+kind+'?'+urlencode(q)+('&' if kind=='search' else '')
+        for attempt in range(4):
+            time.sleep(max(0,.45-(time.monotonic()-self.last)));self.last=time.monotonic()
+            r=self.context.request.get(url,max_redirects=0,timeout=30000)
+            try:
+                if r.status in (408, 429, 500, 502, 503, 504):
+                    if attempt == 3:
+                        raise FetchError('blocked', f'Eightfold HTTP {r.status} after bounded retries.')
+                    retry_after = 0.0
+                    try: retry_after = min(8.0, max(0.0, float(r.headers.get('retry-after', '0'))))
+                    except (AttributeError, TypeError, ValueError): pass
+                    time.sleep(max(0.5, retry_after))
+                    continue
+                d=json.loads(checked(HTTPResponse(r.status,r.body(),r.headers)))
+                break
+            finally:r.dispose()
         if d.get('status')!=200 or (d.get('error') or {}).get('message'):raise FetchError('partial','Eightfold public response reports an error.')
         return d['data']
 
@@ -29,32 +41,58 @@ def identity(e):
     return ident
 
 def scan(client,cid,company,max_jobs=MAX_JOBS,listing_first=False):
-    jobs=[];seen=set();snapshots=[];total=None
+    jobs=[];seen=set();snapshots=[];total=None;gaps=[]
     def listing(start):
         d=client.data('search',start);n=d['count'];es=d['positions']
-        if type(n) is not int or not 0<=n<=MAX_JOBS or d.get('appliedFilters')!={} or len(es)!=min(10,max(0,n-start)) or (total is not None and n!=total):raise FetchError('partial','Eightfold pagination, total, or scope changed.')
+        if type(n) is not int or not 0<=n<=MAX_JOBS or d.get('appliedFilters')!={} or len(es)!=min(10,max(0,n-start)):raise FetchError('partial','Eightfold pagination, total, or scope changed.')
         return es,n
     try:
         entries,total=listing(0)
+        initial_total=total
         all_entries=[]
         def download(e):
             if len(jobs)>=max_jobs:raise FetchError('partial',f'Bounded validation stopped at {len(jobs)} of {total} jobs.')
             ident=identity(e);j=client.data('position_details',ident)
             if identity(j)!=ident or j['name']!=e['name'] or j.get('displayJobId')!=e.get('displayJobId') or j.get('publicUrl')!=client.root+e['positionUrl'] or not text(j.get('jobDescription')):raise FetchError('partial','Eightfold full detail identity mismatch.')
             row=_base({'id':ident},'Eightfold',cid,company);row.update(title=text(j['name']),description=text(j['jobDescription']),url=j['publicUrl'],req_id=str(j.get('displayJobId','')),location='; '.join(j.get('standardizedLocations') or j.get('locations') or []),department=text(j.get('department')),work_arrangement=text(j.get('workLocationOption')));jobs.append(row)
-        for start in range(0,max(1,total),10):
-            if start:entries,_=listing(start)
+        def download_available(e):
+            if len(jobs)>=max_jobs:
+                raise FetchError('partial',f'Bounded validation stopped at {len(jobs)} of {total} jobs.')
+            try:
+                download(e)
+            except FetchError as error:
+                if error.status == 'blocked':
+                    raise
+                gaps.append(f"Posting {identity(e)}: {error.reason}")
+            except Exception as error:
+                gaps.append(f"Posting {identity(e)}: {type(error).__name__}")
+        start=0
+        while start < max(1,total):
+            if start:
+                entries,current_total=listing(start)
+                if current_total != initial_total:
+                    gaps.append('Eightfold inventory total changed during pagination.')
+                total=max(total,current_total)
             ids=[identity(e) for e in entries]
-            if len(set(ids))!=len(ids) or seen.intersection(ids):raise FetchError('partial','Eightfold pagination repeated job IDs.')
-            seen.update(ids);snapshots.append(ids)
-            if listing_first: all_entries.extend(entries)
+            fresh=[]
+            for e, ident in zip(entries, ids):
+                if ident in seen:
+                    gaps.append('Eightfold pagination repeated job IDs.')
+                else:
+                    seen.add(ident);fresh.append(e)
+            snapshots.append(ids)
+            if listing_first: all_entries.extend(fresh)
             else:
-                for e in entries: download(e)
+                for e in fresh: download_available(e)
+            start += 10
         if listing_first:
-            if len(all_entries) != total: raise FetchError('partial','Eightfold listing did not yield its published inventory.')
-            for e in all_entries: download(e)
+            for e in all_entries: download_available(e)
+        if gaps:
+            raise FetchError('partial', f'Eightfold saved {len(jobs)} of {total} postings; '
+                             f'{len(gaps)} unresolved gaps. ' + '; '.join(gaps[:3]))
         for page,ids in enumerate(snapshots):
-            if [identity(e) for e in listing(page*10)[0]]!=ids:raise FetchError('partial','Eightfold inventory changed during scan.')
+            checked_entries,checked_total=listing(page*10)
+            if checked_total != initial_total or [identity(e) for e in checked_entries]!=ids:raise FetchError('partial','Eightfold inventory changed during scan.')
         return Inventory('complete',jobs,f'Eightfold: retrieved {len(jobs)} full postings and rechecked every page.',client.root+'/careers','Eightfold')
     except FetchError as e:return Inventory(e.status,jobs,e.reason,client.root+'/careers','Eightfold')
     except Exception as e:return Inventory('partial',jobs,f'Eightfold response failed validation ({type(e).__name__}).',client.root+'/careers','Eightfold')

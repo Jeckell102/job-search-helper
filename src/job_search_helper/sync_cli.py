@@ -10,7 +10,7 @@ import sys
 import time
 
 from .cli import (get_remote_repository, job_database_path, state_path,
-                  storage_backend, writer_lock)
+                  storage_backend, writer_lock, WriterLockBusy)
 from .runner import _load_environment
 from .sheets_sync import SheetsSynchronizer
 from .sqlite_repository import SQLiteRepository, timestamp
@@ -93,32 +93,52 @@ def main(argv=None):
             raise ValueError('Publication is disabled until JOB_STORAGE_BACKEND=sqlite is explicitly activated.')
         if not 5 <= args.interval <= 3600 or not 1 <= args.max_batches <= 100:
             raise ValueError('Sync interval must be 5–3600 seconds and max batches 1–100.')
-        with writer_lock(state_path().parent / 'writer.lock'):
-            from .sheet_profile import profile_schemas
-            schemas = profile_schemas(local.get_meta('sheets_profile'))
-            remote = get_remote_repository(write=True, interactive=args.authenticate,
-                                           schemas=schemas, evidence_archives=schemas is None)
-            sync = SheetsSynchronizer(local, remote)
-            failures = 0
-            while True:
-                started = time.monotonic()
-                try:
-                    print_status(cycle(sync, max_batches=args.max_batches, max_seconds=args.interval))
-                    failures = 0
-                except Exception as exc:
-                    failures += 1
-                    with local.transaction():
-                        local.set_meta('last_error', f'{timestamp()} {type(exc).__name__}: {exc}')
-                    print_status({'at': timestamp(), 'state': 'SYNC_ERROR_LOCAL_WORK_RETAINED',
-                                  'error': str(exc), **local.status()})
-                    if args.command == 'once':
-                        return 1
+        from .sheet_profile import profile_schemas
+        schemas = profile_schemas(local.get_meta('sheets_profile'))
+        lock_path = state_path().parent / 'writer.lock'
+        sync = None
+        failures = 0
+        while True:
+            started = time.monotonic()
+            busy = False
+            try:
+                # Serialize initialization and one bounded cycle. A watcher
+                # must not prevent reviewers from publishing while it sleeps.
+                with writer_lock(lock_path):
+                    # Check before remote construction; SheetsSynchronizer
+                    # repeats the retained embargo at each discovery/write.
+                    from .retained_work_runner import assert_normal_lifecycle_not_held
+                    assert_normal_lifecycle_not_held(state_path().parent, local.path)
+                    if sync is None:
+                        remote = get_remote_repository(write=True, interactive=args.authenticate,
+                                                       schemas=schemas, evidence_archives=schemas is None)
+                        sync = SheetsSynchronizer(local, remote)
+                    result = cycle(sync, max_batches=args.max_batches, max_seconds=args.interval)
+                print_status(result)
+                failures = 0
+            except WriterLockBusy as exc:
                 if args.command == 'once':
-                    return 0
-                delay = max(1, args.interval - (time.monotonic() - started))
-                if failures:
-                    delay = max(delay, min(300, 5 * (2 ** min(failures, 6))))
-                time.sleep(delay)
+                    raise
+                busy = True
+                print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_WRITER_BUSY',
+                              'detail': 'Another publisher is active; queued local changes are retained.',
+                              **local.status()})
+            except Exception as exc:
+                failures += 1
+                with local.transaction():
+                    local.set_meta('last_error', f'{timestamp()} {type(exc).__name__}: {exc}')
+                print_status({'at': timestamp(), 'state': 'SYNC_ERROR_LOCAL_WORK_RETAINED',
+                              'error': str(exc), **local.status()})
+                if args.command == 'once':
+                    return 1
+            if args.command == 'once':
+                return 0
+            delay = max(1, args.interval - (time.monotonic() - started))
+            if busy:
+                delay = min(delay, 30)
+            elif failures:
+                delay = max(delay, min(300, 5 * (2 ** min(failures, 6))))
+            time.sleep(delay)
     except KeyboardInterrupt:
         print_status({'state': 'STOPPED', 'detail': 'Queued local changes are retained.'})
         return 130

@@ -136,13 +136,111 @@ def _posting(data, path, site, host, company_id, company):
     additional = info.get("additionalLocations") or []
     if not isinstance(additional, list) or any(not isinstance(v, str) for v in additional):
         raise ValueError("Workday job detail has malformed additional locations.")
+    primary = text(info.get("location"))
+    country = info.get("country") or {}
+    country = text(country.get("descriptor")) if isinstance(country, dict) else ""
+    if not country:
+        place = info.get("jobRequisitionLocation") or {}
+        country_data = (place.get("country") or {}) if isinstance(place, dict) else {}
+        country = text(country_data.get("descriptor")) if isinstance(country_data, dict) else ""
+    if country and country.casefold() not in primary.casefold():
+        primary = ", ".join(filter(None, [primary, country]))
     row.update(title=text(info.get("title")), description=text(info.get("jobDescription")),
                req_id=text(info.get("jobReqId")), url=f"https://{host}/{site}{path}",
-               location="; ".join(dict.fromkeys(filter(None, [text(info.get("location")), *map(text, additional)]))),
+               location="; ".join(dict.fromkeys(filter(None, [primary, *map(text, additional)]))),
                work_arrangement=text(info.get("remoteType")), created_at=text(info.get("startDate")))
+    row["location_country"] = country
+    row["location_has_alternatives"] = bool(additional)
+    row["location_primary"] = text(info.get("location"))
+    # Preserve provider-supplied employer/legal-entity metadata for shared
+    # parent boards.  Company-specific adapters may require this metadata to
+    # prove attribution instead of trusting a free-text search alone.
+    for field, keys in {
+        "employer": ("employer", "employerName", "company", "companyName"),
+        "legal_entity": ("legalEntity", "legalEntityName", "legal_entity"),
+        "organization": ("organization", "organizationName", "businessUnit"),
+    }.items():
+        value = next((info.get(key) for key in keys if info.get(key) is not None), "")
+        if value:
+            row[field] = text(value)
     if not row["title"] or not row["description"]:
         raise ValueError("Workday job detail is missing its title or full description.")
     return row
+
+
+def resolve_country_scope(jobs, endpoint, payload, transport, facets=None):
+    """Resolve foreign-primary/multiple-location jobs against the full US set.
+
+    Never apply the primary country to unqualified secondary cities. No scope
+    proof is produced on unsupported facets, incomplete pages or transport errors.
+    This leaves the full global inventory intact for absence/closure checks.
+    """
+    from .locations import check_location
+    candidates = [j for j in jobs if check_location(j.get("location")).status == "unknown"
+                  and check_location(j.get("location_country") or str(j.get("location", "")).split(";")[0]).status == "non_us"]
+    if not candidates:
+        return
+    if facets is None:
+        data = _json(endpoint + "/jobs", transport, {**payload, "offset": 0})
+        _page(data)
+        facets = data.get("facets", [])
+    def country_options(items):
+        for facet in items if isinstance(items, list) else []:
+            if not isinstance(facet, dict):
+                continue
+            key = str(facet.get("facetParameter", ""))
+            if "countr" in key.casefold():
+                yield facet
+            yield from country_options(facet.get("values", []))
+    country_facets = list(country_options(facets))
+    if len(country_facets) != 1:
+        if transport.__class__.__name__ == "HTTPTransport":
+            _structured_country_scope(candidates)
+        return
+    us = [v.get("id") for v in country_facets[0].get("values", [])
+          if isinstance(v, dict) and check_location(v.get("descriptor")).status == "us"]
+    if len(us) != 1 or not isinstance(us[0], str):
+        return
+    applied = dict(payload.get("appliedFacets", {}))
+    country_key = country_facets[0]["facetParameter"]
+    if country_key in applied:
+        return  # Do not widen or reinterpret an explicitly configured scope.
+    scoped = {**payload, "offset": 0, "appliedFacets": {**applied, country_key: us}}
+    cohort = _complete_listing_pass(endpoint, scoped, None, transport)
+    advertised = next((v.get("count") for v in country_facets[0].get("values", [])
+                       if isinstance(v, dict) and v.get("id") == us[0]), None)
+    if type(advertised) is int and cohort[0] != advertised:
+        return  # A rejected/ignored filter is not country evidence.
+    # Recheck the country cohort to avoid rejecting a job while listings move.
+    if not _cohort_equal(cohort, _complete_listing_pass(endpoint, scoped, None, transport)):
+        return
+    us_paths = set(cohort[2])
+    for job in candidates:
+        parsed = urlsplit(job["url"])
+        prefix = "/" + endpoint.rsplit("/", 1)[-1]
+        if not parsed.path.startswith(prefix + "/job/"):
+            continue
+        job["location_country_scope"] = {"us_eligible": parsed.path[len(prefix):] in us_paths,
+                                         "source_url": endpoint + "/jobs?" + country_key + "=" + us[0]}
+
+
+def _structured_country_scope(jobs):
+    """Boards without country facets may publish complete schema.org addresses."""
+    from .discovery import CareersTransport
+    from .location_metadata import structured_location
+    def resolve(job):
+        try:
+            response = CareersTransport().get(job["url"])
+            if response.status != 200:
+                return
+            result = structured_location(response.body.decode("utf-8", errors="replace"), job["title"], job["url"])
+            if result.status in ("us", "non_us"):
+                job["location_country_scope"] = {"us_eligible": result.status == "us",
+                                                 "source_url": job["url"], "evidence": result.evidence}
+        except (FetchError, OSError, ValueError, TypeError, AttributeError):
+            return
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(resolve, jobs))
 
 
 def _job_family_groups(data):
@@ -302,8 +400,9 @@ def _validate_exhaustive_facet_maps(data, expected=None):
     return actual
 
 
-def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company, transport, initial, *, _allow_refresh=True, _detail_cache=None):
-    """Fail closed while recovering Leidos's documented 2,000-result cap."""
+def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company, transport, initial, *, _allow_refresh=True, _detail_cache=None, provider="Leidos"):
+    """Fail closed while recovering a verified Workday 2,000-result cap."""
+    label = f"{provider} Workday"
     groups = _job_family_groups(initial)
     if not groups or any(type(count) is not int or count < 0 for count in groups.values()):
         return None
@@ -332,36 +431,36 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
             facet_map = _job_family_groups(data)
             if page_number == 0:
                 if facet_map != groups:
-                    raise FetchError("partial", "Leidos job-family facets changed during partition scan.")
+                    raise FetchError("partial", f"{provider} job-family facets changed during partition scan.")
                 expected = total
                 if ((groups[group] is not None and expected != groups[group])
                         or expected >= LEIDOS_RESULT_CAP):
-                    raise FetchError("partial", "Leidos job-family partition reached the 2,000-result ceiling.")
+                    raise FetchError("partial", f"{provider} job-family partition reached the 2,000-result ceiling.")
             else:
                 if facet_map and facet_map != groups:
-                    raise FetchError("partial", "Leidos job-family facets changed during partition scan.")
+                    raise FetchError("partial", f"{provider} job-family facets changed during partition scan.")
                 if total not in (0, expected):
-                    raise FetchError("partial", "Leidos job-family partition count changed during pagination.")
+                    raise FetchError("partial", f"{provider} job-family partition count changed during pagination.")
             remaining = expected - offset
             if offset + len(entries) > expected or (not entries and offset < expected):
-                raise FetchError("partial", "Leidos job-family partition pages do not match its inventory count.")
+                raise FetchError("partial", f"{provider} job-family partition pages do not match its inventory count.")
             if entries and len(entries) < min(PAGE_SIZE, remaining) and offset + len(entries) != expected:
-                raise FetchError("partial", "Leidos job-family partition ended before its inventory count.")
+                raise FetchError("partial", f"{provider} job-family partition ended before its inventory count.")
             page_paths = []
             for item in entries:
                 try:
                     path = _job_path(item.get("externalPath") if isinstance(item, dict) else None)
                 except ValueError as error:
-                    raise FetchError("partial", "Leidos job-family listing has an invalid posting path.") from error
+                    raise FetchError("partial", f"{provider} job-family listing has an invalid posting path.") from error
                 if path in items:
-                    raise FetchError("partial", "Leidos job-family partition repeated a posting.")
+                    raise FetchError("partial", f"{provider} job-family partition repeated a posting.")
                 items[path] = item
                 page_paths.append(path)
             pages.append(page_paths)
             offset += len(entries)
             if offset == expected:
                 return expected, pages, items
-        raise FetchError("partial", "Leidos job-family partition page cap reached before completion.")
+        raise FetchError("partial", f"{provider} job-family partition page cap reached before completion.")
 
     cohorts = {}
     detail_issues = []
@@ -371,7 +470,7 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
             expected, pages, items = enumerate_partition(group)
             overlap = paths.intersection(items)
             if overlap:
-                raise FetchError("partial", "Leidos job-family partitions overlap or repeat a posting.")
+                raise FetchError("partial", f"{provider} job-family partitions overlap or repeat a posting.")
             paths.update(items)
             cohorts[group] = (expected, pages, items)
             partition_total += expected
@@ -382,7 +481,7 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
         if (global_total != LEIDOS_RESULT_CAP or _job_family_groups(global_recheck) != groups
                 or (len(advertised) == len(groups) and partition_total != sum(advertised))
                 or partition_total < LEIDOS_RESULT_CAP):
-            raise FetchError("partial", "Leidos job-family partitions do not cover the capped global inventory.")
+            raise FetchError("partial", f"{provider} job-family partitions do not cover the capped global inventory.")
         detail_items = sorted((path, item) for cohort in cohorts.values() for path, item in cohort[2].items())
         detail_issues = []
         def fetch_detail(entry):
@@ -419,7 +518,7 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
                     detail_issues.append(f"{path}: {error}")
                     continue
                 if row["posting_id"] in ids:
-                    raise FetchError("partial", "Leidos job-family partitions returned duplicate posting IDs.")
+                    raise FetchError("partial", f"{provider} job-family partitions returned duplicate posting IDs.")
                 ids.add(row["posting_id"]); jobs.append(row)
                 if len(jobs) and len(jobs) % 100 == 0:
                     print(f"{company}: Leidos fetched {len(jobs)}/{len(detail_items)} jobs.", flush=True)
@@ -429,7 +528,7 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
 
         if detail_issues:
             return Inventory("partial", jobs,
-                             "Leidos Workday listing reached its 2,000-result ceiling; "
+                             f"{label} listing reached its 2,000-result ceiling; "
                              + "; ".join(detail_issues[:50]), endpoint)
 
         # Final proof rereads every partition after all details, then checks
@@ -443,9 +542,9 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
                     or set(final[2]) != set(original[2])
                     or any(_listing_fingerprint(original[2][path]) != _listing_fingerprint(final[2][path])
                            for path in original[2])):
-                raise FetchError("partial", "Leidos job-family partitions changed after detail retrieval.")
+                raise FetchError("partial", f"{provider} job-family partitions changed after detail retrieval.")
             if final_paths.intersection(final[2]):
-                raise FetchError("partial", "Leidos job-family partitions overlap during final recheck.")
+                raise FetchError("partial", f"{provider} job-family partitions overlap during final recheck.")
             final_paths.update(final[2])
         global_final = _json(endpoint + "/jobs", transport, payload)
         final_total, _ = _page(global_final)
@@ -453,13 +552,13 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
         if (final_total != global_total or _job_family_groups(global_final) != groups
                 or final_paths != paths):
             raise FetchError("partial", "Leidos global listing changed after detail retrieval.")
-        return Inventory("complete", jobs, f"Leidos Workday: retrieved {len(jobs)} postings across {len(groups)} rechecked job-family partitions (cached details {cache_hits}, refetched details {fresh_details}).", endpoint)
+        return Inventory("complete", jobs, f"{label}: retrieved {len(jobs)} postings across {len(groups)} rechecked job-family partitions (cached details {cache_hits}, refetched details {fresh_details}).", endpoint)
     except FetchError as error:
         # Access denials are terminal for this run; preserve verified jobs and
         # do not spend another request on reconciliation.
         if error.status == "blocked":
             return Inventory("blocked", jobs,
-                             "Leidos Workday listing reached its 2,000-result ceiling; " + error.reason,
+                             f"{label} listing reached its 2,000-result ceiling; " + error.reason,
                              endpoint)
         # A complete initial cohort can be invalidated by a transient/malformed
         # final reread. Reconcile once against a newly enumerated global cohort;
@@ -472,7 +571,7 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
                 # requiring the old counts would prevent normal removals.
                 refreshed = _fetch_leidos_partitions(
                     endpoint, payload, site, host, company_id, company, transport, current,
-                    _allow_refresh=False, _detail_cache=detail_cache)
+                    _allow_refresh=False, _detail_cache=detail_cache, provider=provider)
                 if refreshed is not None and refreshed.status == "blocked":
                     return Inventory("blocked", jobs, refreshed.reason, endpoint)
                 if refreshed is not None and refreshed.status == "complete":
@@ -486,10 +585,10 @@ def _fetch_leidos_partitions(endpoint, payload, site, host, company_id, company,
             except (OSError, ValueError, TypeError, AttributeError, KeyError, StopIteration):
                 pass
         return Inventory("partial", jobs,
-                         "Leidos Workday listing reached its 2,000-result ceiling; " + error.reason,
+                         f"{label} listing reached its 2,000-result ceiling; " + error.reason,
                          endpoint)
     except (OSError, ValueError, TypeError, AttributeError, KeyError):
-        return Inventory("partial", jobs, "Leidos Workday listing reached its 2,000-result ceiling; job-family partition schema changed; inventory not complete.", endpoint)
+        return Inventory("partial", jobs, f"{label} listing reached its 2,000-result ceiling; job-family partition schema changed; inventory not complete.", endpoint)
 
 
 def fetch_workday(board, root, company_id, company, transport):
@@ -528,11 +627,20 @@ def fetch_workday(board, root, company_id, company, transport):
                 total, entries = _page(data)
                 if expected is None:
                     expected = total
-                    if parsed.hostname == LEIDOS_HOST and expected == LEIDOS_RESULT_CAP:
-                        issues.append("Leidos Workday listing reached its 2,000-result ceiling; inventory may be truncated.")
-                        if (company_id == "COMP-0003" and site == "External" and not query and not facets):
+                    if expected == LEIDOS_RESULT_CAP:
+                        groups = _job_family_groups(data)
+                        bah_cap = (company_id == "COMP-0623" and company.casefold() == "booz allen hamilton"
+                                   and site == "BAH_Jobs" and not query and not facets
+                                   and groups and all(type(count) is int and count >= 0 for count in groups.values())
+                                   and sum(groups.values()) > expected)
+                        leidos_cap = (parsed.hostname == LEIDOS_HOST and company_id == "COMP-0003"
+                                      and site == "External" and not query and not facets)
+                        if leidos_cap or bah_cap:
+                            provider = "Booz Allen" if bah_cap else "Leidos"
+                            issues.append(f"{provider} Workday listing reached its 2,000-result ceiling; inventory may be truncated.")
                             partitioned = _fetch_leidos_partitions(endpoint, payload, site, parsed.hostname,
-                                                                   company_id, company, transport, data)
+                                                                   company_id, company, transport, data,
+                                                                   provider=provider)
                             if partitioned is not None:
                                 return partitioned
                 elif total not in (0, expected):
@@ -653,6 +761,12 @@ def fetch_workday(board, root, company_id, company, transport):
                   f"Workday: retrieved {len(jobs)} full postings in {page + 1} listing pages."
         if not issues and 'reconciliation_note' in locals() and reconciliation_note:
             message = reconciliation_note
+        try:
+            resolve_country_scope(jobs, endpoint, payload, transport)
+        except (FetchError, OSError, ValueError, TypeError, AttributeError):
+            # Unknown geography stays reviewable; a failed country lookup is
+            # never evidence for rejecting a posting or closing a job.
+            pass
         return Inventory("partial" if issues else "complete", jobs, message, source)
     except FetchError as error:
         status = "blocked" if error.status == "blocked" else ("partial" if jobs else error.status)

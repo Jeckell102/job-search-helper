@@ -46,7 +46,6 @@ def fetch_aitech(careers_url,company_id,company,transport=None):
  client=CareersTransport() if transport is None or isinstance(transport, HTTPTransport) else transport; jobs=[]
  try:
   first=_links(_read(client,SOURCE))
-  if len(first)!=17: raise FetchError('partial',f'Aitech role inventory changed; found {len(first)} role links.')
   seen=set()
   for url in first:
    p=_Page(); p.feed(_read(client,url)); ident=urlsplit(url).path.split('/')[4]; title=p.value('title'); desc=p.value('description')

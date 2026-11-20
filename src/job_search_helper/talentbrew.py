@@ -140,6 +140,8 @@ def scan(b, context, cid, company, max_jobs=10000, *, progress=None):
         return f'TalentBrew {stage}; page={number}; posting={ident or "-"}; advertised={total}; retained={len(jobs)}: {message}'
 
     def event(kind, **values):
+        if kind in {'inventory_page', 'posting_progress', 'inventory_reconciliation'}:
+            return
         print(json.dumps(dict(event=kind, provider='TalentBrew', company_id=cid,
                               seconds=round(time.monotonic()-started, 2), **values)), file=sys.stderr)
 

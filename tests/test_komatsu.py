@@ -1,64 +1,62 @@
-import unittest
+import json
 from urllib.parse import urlsplit
 
-from job_search_helper.ats import HTTPResponse, fetch_inventory
-from job_search_helper.successfactors import KOMATSU_SOURCE, fetch_successfactors
+from job_search_helper.ats import HTTPResponse
+from job_search_helper.komatsu import SOURCE, SEARCH, fetch_komatsu
 
 
-def _listing(start, total=100):
-    first = start + 1
-    last = min(start + 50, total)
-    links = "".join(
-        f'<a class="jobTitle-link" href="/job/Role-{i}/{i:05d}/">Role {i}</a>'
-        for i in range(first, last + 1)
-    )
-    return f"Results <b>{first} – {last}</b> of <b>{total}</b>{links}"
+def listing(ids, total=None):
+    total = total or len(ids)
+    links = "".join(f'<a class="jobTitle-link" href="/job/Role-{i}/{i}-en_US">Role {i}</a>' for i in ids)
+    return f'Results <b>1 – {total}</b> of <b>{total}</b>{links}'
 
 
-class KomatsuBoard:
-    def __init__(self):
+class Board:
+    def __init__(self, api=None, html_ids=(101, 102)):
+        self.api = api or [101, 102]
+        self.html_ids = tuple(html_ids)
         self.urls = []
 
     def get(self, url):
         self.urls.append(url)
         path = urlsplit(url).path
         if path.startswith("/job/"):
-            ident = int(path.rstrip("/").split("/")[-1].split("-", 1)[0])
-            return HTTPResponse(200, (
-                f'<span itemprop="title">Role {ident}</span>'
-                f'<div itemprop="description">Full description {ident}</div>'
-            ).encode())
-        start = int(path.rstrip("/").split("/")[-1]) if path.rstrip("/").split("/")[-1].isdigit() else 0
-        return HTTPResponse(200, _listing(start).encode())
+            ident = path.rstrip("/").split("/")[-1].split("-", 1)[0]
+            return HTTPResponse(200, (f'<link rel="canonical" href="https://komatsu.jobs{path}" />'
+                                      f'<span itemprop="title">Role {ident}</span>'
+                                      f'<div itemprop="description">Full body {ident}</div>').encode())
+        return HTTPResponse(200, listing(self.html_ids, len(self.html_ids)).encode())
 
     def post(self, url, payload, headers=None):
-        import json
-        page = int(payload["pageNumber"])
-        rows = []
-        for i in range(page * 50 + 1, min(page * 50 + 50, 100) + 1):
-            rows.append({"response": {"id": str(100 + i), "urlTitle": f"Role-{i}", "unifiedStandardTitle": f"Role {i}"}})
-        return HTTPResponse(200, json.dumps({"jobSearchResult": rows, "totalJobs": 100}).encode())
+        rows = [{"response": {"url": f"https://komatsu.jobs/job/Role-{i}/{i}-en_US",
+                               "unifiedStandardTitle": f"Role {i}"}} for i in self.api]
+        return HTTPResponse(200, json.dumps({"jobSearchResult": rows, "totalJobs": len(rows)}).encode())
 
 
-class KomatsuTests(unittest.TestCase):
-    def test_path_pagination_and_two_pass_listing_recheck(self):
-        board = KomatsuBoard()
-        result = fetch_successfactors(KOMATSU_SOURCE, "COMP-0240", "Komatsu", board)
-        self.assertEqual(result.status, "complete", result.reason)
-        self.assertEqual(len(result.jobs), 100)
-        self.assertEqual(len({job["posting_id"] for job in result.jobs}), 100)
-        self.assertIn("https://komatsu.jobs/viewalljobs/50/", board.urls)
-        self.assertGreaterEqual(board.urls.count(KOMATSU_SOURCE), 2)
-
-    def test_company_route_repairs_official_careers_page(self):
-        board = KomatsuBoard()
-        result = fetch_inventory(
-            "Browser", "https://www.komatsu.com/en-us/careers", "COMP-0240", "Komatsu",
-            discovery_transport=board,
-        )
-        self.assertEqual(result.status, "complete", result.reason)
-        self.assertEqual(len(result.jobs), 100)
+def test_idless_api_rows_reconcile_to_html_canonical_urls():
+    result = fetch_komatsu(SOURCE, "COMP-0240", "Komatsu", Board())
+    assert result.status == "complete", result.reason
+    assert [j["posting_id"] for j in result.jobs] == ["101", "102"]
+    assert all(j["url"].startswith("https://komatsu.jobs/job/") and j["description"] for j in result.jobs)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_api_only_record_is_not_accepted():
+    result = fetch_komatsu(SOURCE, "COMP-0240", "Komatsu", Board(api=(101, 102, 103)))
+    assert result.status == "partial"
+    assert "membership diverged" in result.reason
+
+
+def test_html_only_record_is_not_accepted():
+    result = fetch_komatsu(SOURCE, "COMP-0240", "Komatsu", Board(api=(101,), html_ids=(101, 102)))
+    assert result.status == "partial"
+    assert "membership diverged" in result.reason
+
+
+def test_explicit_independent_dealer_taxonomy_is_excluded_only_with_evidence():
+    class DealerBoard(Board):
+        def post(self, url, payload, headers=None):
+            rows = [{"response": {"url": "https://komatsu.jobs/job/Role-101/101-en_US", "company": "Independent Dealer"}}]
+            return HTTPResponse(200, json.dumps({"jobSearchResult": rows, "totalJobs": 1}).encode())
+    result = fetch_komatsu(SOURCE, "COMP-0240", "Komatsu", DealerBoard(api=(101,)))
+    assert result.status == "partial"
+    assert "membership diverged" in result.reason

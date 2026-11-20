@@ -29,8 +29,8 @@ class ExistingReviewReadTests(unittest.TestCase):
         service,repo=self.make(100)
         result=repo.commit([review("1")])
         ranges=[value for call in service.get_calls for value in call.get("ranges",[])]
-        self.assertIn("'Job History'!K2:K1000",ranges)
-        self.assertIn("'Job History'!A3:M3",ranges)
+        self.assertIn("'Job History'!K2:K",ranges)
+        self.assertIn("'Job History'!K3:L3",ranges)
         self.assertNotIn("'Job History'!L2:L1000",ranges)
         self.assertNotIn("'Job History'!N2:N1000",ranges)
         self.assertNotIn("'Job History'!A1:AF1000",ranges)
@@ -91,7 +91,7 @@ class ExistingReviewReadTests(unittest.TestCase):
         service,repo=self.make(100)
         repo.commit([review()]); narrow_bytes=service.response_bytes
         full_service,full_repo=self.make(100)
-        full_repo._load_existing_commit=lambda operations:full_repo._load(["Job History"])
+        full_repo._load_commit=lambda operations:full_repo._load(["Job History"])
         full_repo.commit([review()]); full_bytes=full_service.response_bytes
         self.assertLess(narrow_bytes,full_bytes/10)
 

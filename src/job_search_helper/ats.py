@@ -61,7 +61,7 @@ def is_icims_host(host: str | None) -> bool:
 
 
 def is_oracle_host(host: str | None) -> bool:
-    return bool(re.fullmatch(r"[a-z0-9][a-z0-9-]*\.fa\.(?:us[0-9]+|ocs)\.oraclecloud\.com", host or ""))
+    return bool(re.fullmatch(r"[a-z0-9][a-z0-9-]*\.fa\.(?:us[0-9]+|em[0-9]+|ocs)\.oraclecloud\.com", host or ""))
 
 
 def is_board_host(host: str | None) -> bool:
@@ -89,6 +89,7 @@ class Inventory:
     ats: str = ""
     browser_pending_urls: list[str] = field(default_factory=list)
     browser_discovery_incomplete: bool = False
+    browser_fallback_allowed: bool = True
 
 
 @dataclass
@@ -234,11 +235,24 @@ def _safe_api_url(url: str) -> None:
                        and ericsson_query.get("domain") == ["ericsson.com"]
                        and ericsson_query.get("hl") == ["en"]
                        and re.fullmatch(r"[1-9][0-9]{0,15}", ericsson_query.get("position_id", [""])[0] or ""))
-    gdls_search = (parsed.hostname == "www.gd.com" and parsed.path == "/careers/job-search"
-                   and set(parse_qs(parsed.query)) == {"state"}
-                   and len(parse_qs(parsed.query).get("state", [])) == 1
-                   and parse_qs(parsed.query).get("state", [""])[0])
-    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search and not sick_search and not sick_detail)
+    from .gd_land_systems import safe_public_path as gdls_safe_public_path
+    gdls_search = gdls_safe_public_path(parsed)
+    hughes_query = parse_qs(parsed.query, keep_blank_values=True)
+    hughes_jobs = (parsed.hostname == "jobs.echostar.com"
+                   and parsed.path == "/api/jobs"
+                   and not parsed.fragment
+                   and hughes_query.get("tags4") == ["Hughes"]
+                   and len(hughes_query.get("page", [])) == 1
+                   and hughes_query.get("page", [""])[0].isdigit()
+                   and 1 <= int(hughes_query["page"][0]) <= 1000
+                   and set(hughes_query) == {"tags4", "page"})
+    massvirtual_feed = (parsed.hostname == "recruiting.paylocity.com"
+                        and parsed.path == "/recruiting/v2/api/feed/jobs/2df5ac23-47b5-4c64-b536-e7f04caf6ffe"
+                        and not parsed.query and not parsed.fragment)
+    dover = (parsed.hostname == "app.dover.com" and not parsed.query and not parsed.fragment
+             and (parsed.path == "/jobs/scytherobotics"
+                  or bool(re.fullmatch(r"/Scythe%20Robotics/careers/[0-9a-f-]{36}/[A-Za-z0-9%_-]+", parsed.path))))
+    if (parsed.scheme != "https" or (parsed.hostname not in API_HOSTS and not workday and not icims and not adp and not paylocity and not taleo and not bamboohr and not ukg and not oracle and not wordpress_careers and not xtend_detail and not psi_search and not kratos_search and not panasonic and not trakstar_rss and not breezy and not shopify and not dayforce and not digitalrecruiters and not hibob and not kontron_api and not kuka_api and not hrsmart and not radd and not exyn and not dsi and not csod_search and not csod_detail and not ericsson_search and not ericsson_detail and not gdls_search and not sick_search and not sick_detail and not hughes_jobs and not massvirtual_feed and not dover)
             or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise FetchError("unsupported", "Only pinned official HTTPS API endpoints are allowed.")
     if parsed.hostname in {"l87m8knomj-dsn.algolia.net", "fs-4627.my.salesforce-sites.com"} and not (ublox_algolia or ublox_detail):
@@ -354,7 +368,11 @@ class HTTPTransport:
             raise FetchError('unsupported', 'HiBob permits only the verified anonymous company routing header and public GET endpoints.')
         from .taleo import is_taleo_host
         from .ukg import is_ukg_host, SEARCH as UKG_SEARCH
-        expect_html = ((is_ukg_host(parsed_url.hostname) and not parsed_url.path.endswith(UKG_SEARCH)) or is_icims_host(parsed_url.hostname) or parsed_url.hostname == "recruiting.paylocity.com" or (parsed_url.hostname == "jobs.sick.com" and parsed_url.path.startswith("/usa/job/"))
+        expect_html = ((is_ukg_host(parsed_url.hostname) and not parsed_url.path.endswith(UKG_SEARCH))
+                       or is_icims_host(parsed_url.hostname)
+                       or parsed_url.hostname == "recruiting.paylocity.com"
+                       or (parsed_url.hostname == "jobs.sick.com" and parsed_url.path.startswith("/usa/job/"))
+                       or parsed_url.hostname == "app.dover.com"
                        or (parsed_url.hostname or "").endswith(".breezy.hr")
                        or (is_taleo_host(parsed_url.hostname) and parsed_url.path != "/careersection/rest/jobboard/searchjobs"))
         response_limit = (MAX_GREENHOUSE_BOARD_BYTES if payload is None
@@ -742,15 +760,44 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
             reason="Missing Official Careers URL; add the employer's careers page or ATS board URL.",
         )
 
+    if company_id == 'COMP-0571' and company.casefold() == 'bosch rexroth':
+        from .bosch_rexroth import fetch_bosch_rexroth
+        return fetch_bosch_rexroth(careers_url, company_id, company, transport,
+                                  progress_factory=progress_factory)
+
+    # HPE's current first-party Networking landing page explicitly combines
+    # Aruba and Juniper.  It is useful source-discovery evidence, but it is
+    # not an Aruba-only inventory.  Keep this company fail-closed until HPE
+    # exposes a verified Aruba-only landing/search scope.
+    if (company_id == "COMP-0132" and company.casefold() == "hpe aruba networking"
+            and careers_url.rstrip("/") in {
+                "https://careers.hpe.com/us/en/networking",
+                "https://careers.hpe.com/us/en/HPE-juniper-networking",
+            }):
+        return Inventory(
+            "unsupported",
+            reason=("HPE's current Networking careers page combines Aruba and "
+                    "Juniper; no Aruba-only public inventory or verified filter "
+                    "was established, so parent/division jobs are not assigned."),
+            source_url=careers_url,
+            ats=ats,
+        )
+
     # These first-party HTML adapters precede generic ATS discovery. Keep the
     # caller's HTML transport when supplied, including for fixture replays.
     html_transport = discovery_transport if discovery_transport is not None else transport
     if careers_url.rstrip("/") == "https://www.kuka.com/en-us/company/careers":
         from .kuka import fetch_kuka
         return fetch_kuka(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0281" and company.casefold() == "blues":
+        from .blues import fetch_blues
+        return fetch_blues(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0437" and company.casefold() == "garmin":
         from .garmin import fetch_garmin
         return fetch_garmin(careers_url, company_id, company, transport or html_transport)
+    if company_id == "COMP-0247" and company.casefold() == "omron automation":
+        from .omron import fetch_omron
+        return fetch_omron(careers_url, company_id, company, transport or html_transport)
     if company_id == "COMP-0174" and company.casefold() == "quantum systems usa":
         from .quantum_systems import fetch_quantum_systems
         return fetch_quantum_systems(careers_url, company_id, company, transport or html_transport)
@@ -771,10 +818,13 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
         return fetch_annapolis_micro(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0397" and company.casefold() == "hallam-ics":
         from .saashr import fetch_saashr
-        return fetch_saashr(careers_url, company_id, company, html_transport)
+        return fetch_saashr(careers_url, company_id, company, html_transport, progress_factory=progress_factory)
     if careers_url == "https://www.haivision.com/about/careers/":
         from .haivision import fetch_haivision
         return fetch_haivision(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0487" and company.casefold() == "vislink technologies":
+        from .vislink import fetch_vislink
+        return fetch_vislink(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0166" and company.casefold() == "black river systems company":
         from .black_river import fetch_black_river
         return fetch_black_river(careers_url, company_id, company, html_transport)
@@ -796,6 +846,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0489" and company.casefold() == "glenair":
         from .glenair import fetch_glenair
         return fetch_glenair(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0449" and company.casefold() == "ierus technologies":
+        from .ierus import fetch_ierus
+        return fetch_ierus(careers_url, company_id, company, transport or html_transport)
     if company_id == "COMP-0491" and company.casefold() == "fischer connectors":
         from .fischer_connectors import fetch_fischer_connectors
         return fetch_fischer_connectors(careers_url, company_id, company, html_transport)
@@ -826,15 +879,23 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0302" and company.casefold() == "deployable technologies":
         from .deployable import fetch_deployable
         return fetch_deployable(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0470" and company.casefold() == "rapiddeploy":
+        from .rapiddeploy import fetch_rapiddeploy
+        return fetch_rapiddeploy(careers_url, company_id, company, transport or HTTPTransport())
     if company_id == "COMP-0248" and company.casefold() == "dematic":
         from .dematic import fetch_dematic
         return fetch_dematic(careers_url, company_id, company, transport or HTTPTransport())
+    if company_id == "COMP-0011" and company.casefold() == "general dynamics information technology":
+        from .gdit import fetch_gdit
+        return fetch_gdit(careers_url, company_id, company, transport or HTTPTransport())
     if company_id == "COMP-0278" and company.casefold() == "machinemetrics":
         from .machinemetrics import fetch_machinemetrics
         return fetch_machinemetrics(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0348" and company.casefold() == "videoray":
+        from .discovery import CareersTransport
         from .videoray import fetch_videoray
-        return fetch_videoray(careers_url, company_id, company, transport or HTTPTransport())
+        return fetch_videoray(careers_url, company_id, company, transport or HTTPTransport(),
+                              html_transport or CareersTransport())
     if company_id == "COMP-0240" and company.casefold() == "komatsu":
         from .komatsu import fetch_komatsu
         return fetch_komatsu(careers_url, company_id, company, transport or discovery_transport or HTTPTransport())
@@ -846,7 +907,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
         return fetch_mak(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0136" and company.casefold() == "ericsson":
         from .ericsson import fetch_ericsson
-        return fetch_ericsson(careers_url, company_id, company, html_transport)
+        # Ericsson's verified Eightfold contract is JSON API traffic, not the
+        # HTML careers-page discovery transport.
+        return fetch_ericsson(careers_url, company_id, company, transport or HTTPTransport())
     if company_id == "COMP-0403" and company.casefold() == "south shore controls":
         from .south_shore_controls import fetch_south_shore_controls
         return fetch_south_shore_controls(careers_url, company_id, company, html_transport)
@@ -886,9 +949,6 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0440" and company.casefold() == "ducommun":
         from .ducommun import fetch_ducommun
         return fetch_ducommun(careers_url, company_id, company, html_transport)
-    if company_id == "COMP-0200" and company.casefold() == "symbotic":
-        from .symbotic import fetch_symbotic
-        return fetch_symbotic(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0272" and company.casefold() == "sick":
         from .sick import fetch_sick
         return fetch_sick(careers_url, company_id, company, transport or HTTPTransport())
@@ -901,6 +961,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if company_id == "COMP-0180" and company.casefold() == "ascent aerosystems":
         from .gusto import fetch_gusto
         return fetch_gusto(careers_url, company_id, company, html_transport)
+    if company_id == "COMP-0182" and company.casefold() == "aero systems west":
+        from .aero_systems_west import fetch_aero_systems_west
+        return fetch_aero_systems_west(careers_url, company_id, company, html_transport)
 
     discovery_note = ""
     if company_id == "COMP-0287" and company.casefold() == "one stop systems":
@@ -977,7 +1040,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
         return fetch_dsi_innovations(careers_url, company_id, company, html_transport)
     if company_id == "COMP-0378" and company.casefold() == "redwire":
         from .redwire import fetch_redwire
-        return fetch_redwire(careers_url, company_id, company, html_transport)
+        return fetch_redwire(careers_url, company_id, company, html_transport,
+                             discovery_transport=discovery_transport,
+                             progress_factory=progress_factory)
     if company_id == "COMP-0467" and company.casefold() == "dtc, a codan company":
         from .dtc_codan import fetch_dtc_codan
         return fetch_dtc_codan(careers_url, company_id, company, discovery_transport or transport)
@@ -1027,7 +1092,13 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if careers_url == 'https://www.comrod.com/about/careers/':
         from .comrod import fetch_comrod
         return fetch_comrod(careers_url, company_id, company, discovery_transport)
-    if careers_url in {'https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=', 'https://careers.belden.com/search/?q=', 'https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.leonardodrs.com/go/All-Jobs/8131200/', 'https://careers.thalesdsi.com/search/?q=', 'https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.deere.com/successfactors/search/?q=&locationsearch=', 'https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://komatsu.jobs/viewalljobs/'}:
+    if careers_url == 'https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch=':
+        from .successfactors import fetch_successfactors
+        return fetch_successfactors(careers_url, company_id, company, discovery_transport)
+    if careers_url in {'https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=', 'https://careers.belden.com/search/?q=', 'https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.leonardodrs.com/go/All-Jobs/8131200/', 'https://careers.thalesdsi.com/search/?q=', 'https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.qorvo.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.danfoss.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.festo.com/viewalljobs/', 'https://jobs.deere.com/successfactors/search/?q=&locationsearch=', 'https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://komatsu.jobs/viewalljobs/', 'https://jobs.atsautomation.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_brand=&optionsFacetsDD_country=&optionsFacetsDD_location=&optionsFacetsDD_lang='}:
+        if company_id == 'COMP-0080' and company.casefold() == 'hii mission technologies':
+            from .hii import fetch_hii
+            return fetch_hii(careers_url, company_id, company, discovery_transport)
         from .successfactors import fetch_successfactors
         return fetch_successfactors(careers_url, company_id, company, discovery_transport)
     if careers_url in {'https://sjobs.brassring.com/TGNewUI/Search/Home/Home?partnerid=25539&siteid=5310', 'https://sjobs.brassring.com/TGNewUI/Search/Home/Home?partnerid=25539&siteid=5313'}:
@@ -1038,7 +1109,13 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
         return fetch_avature(careers_url, company_id, company, discovery_transport)
     if careers_url == 'https://jobs.saic.com/search/jobs':
         from .saic import fetch_saic
-        return fetch_saic(careers_url, company_id, company, transport)
+        return fetch_saic(careers_url, company_id, company, transport, progress_factory)
+    if company_id == "COMP-0001" and company.casefold() == "caci international":
+        from .caci import fetch_caci
+        return fetch_caci(careers_url, company_id, company)
+    if company_id == "COMP-0045" and company.casefold() == "par government":
+        from .par_government import fetch_par_government
+        return fetch_par_government(careers_url, company_id, company, transport)
     # Eightfold boards are rendered applications whose tenant and public API
     # scope must be established by the browser adapter.  Keep them out of
     # generic HTML/board discovery; with_browser_fallback will route this
@@ -1053,6 +1130,9 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     if ats.casefold() == 'acquiretm' or careers_url.startswith('https://amphenol-aerospace.acquiretm.com/'):
         from .acquiretm import fetch_acquiretm
         return fetch_acquiretm(careers_url, company_id, company)
+    if company_id == 'COMP-0274' and company.casefold() == 'particle':
+        from .particle import fetch_particle
+        return fetch_particle(ats, careers_url, company_id, company, transport or HTTPTransport())
     from .adp_myjobs import fetch_adp_myjobs, supports_adp_myjobs
     if supports_adp_myjobs(ats, careers_url):
         return fetch_adp_myjobs(ats, careers_url, company_id, company, transport or HTTPTransport())
@@ -1080,7 +1160,8 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
     except ValueError:
         return Inventory("unsupported", reason="Malformed careers URL.", source_url=careers_url)
     if shared_host or ats in FAMILIES:
-        return fetch_shared(ats, careers_url, company_id, company, transport, discovery_transport)
+        return fetch_shared(ats, careers_url, company_id, company, transport, discovery_transport,
+                            progress_factory=progress_factory)
     from .ukg import is_ukg_host, fetch_ukg
     try:
         ukg_host = is_ukg_host(urlsplit(careers_url).hostname)
@@ -1136,7 +1217,8 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
         except (OSError, ValueError, TypeError, AttributeError):
             return Inventory("failed", reason="Careers page transport or parsing failed; discovery did not complete.", source_url=careers_url)
     if name in FAMILIES:
-        return fetch_shared(ats, careers_url, company_id, company, transport, discovery_transport)
+        return fetch_shared(ats, careers_url, company_id, company, transport, discovery_transport,
+                            progress_factory=progress_factory)
     if name == "UKG":
         result = fetch_ukg(ats, root + board, company_id, company, transport)
         result.reason = discovery_note + result.reason
@@ -1173,6 +1255,11 @@ def _fetch_inventory(ats: str, careers_url: str, company_id: str, company: str,
         result.reason = discovery_note + result.reason
         return result
     if name == "Workday":
+        if company_id == "COMP-0016" and company.casefold() == "linquest":
+            from .linquest import fetch_linquest
+            result = fetch_linquest(careers_url, company_id, company, transport)
+            result.reason = discovery_note + result.reason
+            return result
         from .workday import fetch_workday
         result = fetch_workday(board, root, company_id, company, transport)
         result.ats = name

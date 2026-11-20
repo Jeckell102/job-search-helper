@@ -57,6 +57,30 @@ class SitemapBoard:
 
 
 class LeonardoSitemapAcceptanceTests(unittest.TestCase):
+    def test_stale_published_count_does_not_discard_verified_sitemap_jobs(self):
+        class StaleCount(SitemapBoard):
+            def get(self, url):
+                response = super().get(url)
+                if '/job/' not in url and not url.endswith('/sitemap.xml'):
+                    response = HTTPResponse(200, response.body.replace(b'of <b>26</b>', b'of <b>27</b>'))
+                return response
+        result = fetch_successfactors(SOURCE, 'COMP-0081', 'Leonardo DRS', StaleCount(_urls(26)))
+        self.assertEqual(result.status, 'partial')
+        self.assertEqual(len(result.jobs), 26)
+        self.assertIn('count disagrees', result.reason)
+
+    def test_one_bad_description_preserves_all_other_complete_postings(self):
+        class OneBadDetail(SitemapBoard):
+            def get(self, url):
+                if url.endswith('/0002/'):
+                    return HTTPResponse(200, b'<h1>Temporarily unavailable</h1>')
+                return super().get(url)
+        result = fetch_successfactors(SOURCE, 'COMP-0081', 'Leonardo DRS', OneBadDetail(_urls(26)))
+        self.assertEqual(result.status, 'partial')
+        self.assertEqual(len(result.jobs), 25)
+        self.assertIn('0026', {job['posting_id'] for job in result.jobs})
+        self.assertIn('0002', result.reason)
+
     def test_actual_423_sitemap_has_complete_unique_identity_set(self):
         body = FIXTURE.read_bytes()
         self.assertEqual(body.count(b"<url>"), 423)

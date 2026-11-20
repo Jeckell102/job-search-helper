@@ -11,7 +11,7 @@ import re
 from html.parser import HTMLParser
 from urllib.parse import parse_qs, urlencode, urljoin, urlsplit
 
-from .ats import FetchError, Inventory, _base, text
+from .ats import FetchError, Inventory, _base, _challenge, _delay, text
 from .discovery import CareersTransport
 
 
@@ -92,11 +92,28 @@ def _page_url(number):
 
 
 def _get(client, url):
-    response = client.get(url)
-    if response.status != 200:
+    """Read a rendered page with bounded retries and challenge rejection."""
+    for attempt in range(3):
+        try:
+            response = client.get(url)
+        except FetchError as error:
+            if error.status == "failed" and attempt < 2:
+                client.sleep(float(2 ** attempt)) if hasattr(client, "sleep") else None
+                continue
+            raise
+        if response.status == 200:
+            if _challenge(response, expect_html=True):
+                raise FetchError("blocked", "GDMS returned a browser-verification challenge shell.")
+            return response.body.decode("utf-8", "replace")
+        if response.status == 429 or 500 <= response.status < 600:
+            if attempt < 2:
+                delay = _delay(response.headers, attempt)
+                if hasattr(client, "sleep"):
+                    client.sleep(delay)
+                continue
         raise FetchError("blocked" if response.status in {401, 403, 429} else "partial",
-                         "GDMS public careers page was unavailable.")
-    return response.body.decode("utf-8", "replace")
+                         f"GDMS public careers page was unavailable (HTTP {response.status}).")
+    raise FetchError("failed", "GDMS public careers page failed after bounded retries.")
 
 
 def _entries(body):
@@ -124,7 +141,11 @@ def _inventory(client):
     first, page_numbers = _entries(_get(client, SOURCE))
     if any(page < 0 or page >= MAX_PAGES for page in page_numbers):
         raise FetchError("partial", "GDMS listing has an invalid pagination scope.")
-    expected = set(range(max(page_numbers, default=0) + 1))
+    # The rendered site numbers the first page as the unqualified URL and
+    # subsequent pages as ?page=1, ?page=2, ... .  Older fixtures also expose
+    # an explicit ?page=0; accept both representations but never gaps.
+    highest = max(page_numbers, default=0)
+    expected = set(range(highest + 1)) if 0 in page_numbers else set(range(1, highest + 1))
     if page_numbers and page_numbers != expected:
         raise FetchError("partial", "GDMS listing pagination is incomplete or non-contiguous.")
     rows = list(first)

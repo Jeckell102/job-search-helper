@@ -22,15 +22,15 @@ class Pages:
         return HTTPResponse(200, DETAIL.encode(), {})
 
 
-def test_gdls_requires_live_access_and_marks_403_blocked():
-    result = fetch_gd_land_systems(SOURCE, "COMP-0097", "General Dynamics Land Systems", Pages(403))
+def test_gdls_requires_live_access_and_marks_403_blocked(tmp_path):
+    result = fetch_gd_land_systems(SOURCE, "COMP-0097", "General Dynamics Land Systems", Pages(403), tmp_path / "gdls.json")
     assert result.status == "blocked"
     assert "HTTP 403" in result.reason
 
 
-def test_gdls_accepts_only_scoped_inventory_and_rereads_it():
+def test_gdls_accepts_only_scoped_inventory_and_rereads_it(tmp_path):
     pages = Pages()
-    result = fetch_gd_land_systems(SOURCE, "COMP-0097", "General Dynamics Land Systems", pages)
+    result = fetch_gd_land_systems(SOURCE, "COMP-0097", "General Dynamics Land Systems", pages, tmp_path / "gdls.json")
     assert result.status == "complete", result.reason
     assert len(result.jobs) == 1
     assert result.jobs[0]["posting_id"] == "18408973"

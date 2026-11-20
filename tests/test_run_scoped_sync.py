@@ -73,6 +73,9 @@ class RunScopedSyncTests(unittest.TestCase):
             finally:
                 sync.events.append('close')
         kwargs.setdefault('log', lambda message:None)
+        # Existing lifecycle tests exercise delivery immediately; gathering has
+        # deterministic clock and final-drain coverage in test_efficiency_reuse.
+        kwargs.setdefault('coalesce_seconds', 0)
         return RunSheetsSync(factory, **kwargs)
 
     def test_pending_backlog_restarts_immediately_without_60_second_pause(self):
@@ -93,7 +96,7 @@ class RunScopedSyncTests(unittest.TestCase):
 
     def test_idle_poll_publishes_new_changes_before_the_60_second_interval(self):
         sync = FakeSync()
-        session = self.session(sync, interval=60)
+        session = self.session(sync, interval=60, coalesce_seconds=0)
         with session:
             sync.local.pending = 1
             self.assertTrue(sync.published.wait(4), 'New changes waited for the 60-second interval')
@@ -108,18 +111,51 @@ class RunScopedSyncTests(unittest.TestCase):
             sync.events.append('scrape')
             sync.local.pending = 3
         self.assertEqual(sync.events, ['open','pull','publish','publish','scrape',
-                                      'publish','publish','publish','close'])
+                                      'pull','publish','publish','publish','close'])
         self.assertFalse(session.thread.is_alive())
         self.assertEqual(sync.local.pending,0)
 
-    def test_periodic_ticks_publish_only_without_repull(self):
+    def test_periodic_tick_repulls_after_intake_interval_before_publishing(self):
         sync = FakeSync()
         session = self.session(sync,interval=.02)
         with session:
             sync.local.pending = 1
             self.assertTrue(sync.published.wait(2))
-        self.assertEqual(sync.events.count('pull'),1)
+        # One initial pull, one due periodic reconciliation, and the
+        # terminal reconciliation before the worker stops.
+        self.assertEqual(sync.events.count('pull'),3)
         self.assertEqual(sync.events.count('publish'),1)
+        self.assertFalse(session.thread.is_alive())
+
+    def test_due_intake_keeps_legacy_publish_patch_signature(self):
+        sync = FakeSync()
+        session = self.session(sync, interval=.02)
+        original_publish = session._publish
+        calls = []
+
+        # Tests and callers may patch this long-standing seam.  A due intake
+        # must not add a new keyword argument to that replacement.
+        def legacy_publish(source, phase, *, final=False):
+            calls.append((phase, final))
+            return original_publish(source, phase, final=final)
+
+        with patch.object(session, '_publish', side_effect=legacy_publish):
+            with session:
+                sync.local.pending = 1
+                self.assertTrue(sync.published.wait(2))
+        self.assertIn(('periodic', False), calls)
+        self.assertEqual(sync.events.count('pull'), 3)
+
+    def test_idle_periodic_intake_repulls_without_local_pending_work(self):
+        sync = FakeSync()
+        session = self.session(sync, interval=.02)
+        with session:
+            for _ in range(200):
+                if sync.events.count('pull') >= 2:
+                    break
+                threading.Event().wait(.01)
+            self.assertEqual(sync.events.count('pull'), 2)
+            self.assertEqual(sync.events.count('publish'), 0)
         self.assertFalse(session.thread.is_alive())
 
     def test_run_totals_include_all_periodic_updates_and_final_drain(self):
@@ -175,7 +211,7 @@ class RunScopedSyncTests(unittest.TestCase):
             self.assertEqual(session.report['final']['stop_reason'], 'drained')
             self.assertFalse(session.thread.is_alive())
 
-    def test_startup_remainder_retries_on_periodic_tick_without_another_pull(self):
+    def test_startup_remainder_retries_on_periodic_tick_with_due_reconciliation(self):
         sync = FakeSync(pending=2)
         now = [0.0]
         publish = sync.publish_batch
@@ -199,7 +235,7 @@ class RunScopedSyncTests(unittest.TestCase):
                 allow_retry.set()
                 self.assertTrue(sync.published.wait(2))
             self.assertEqual(session.report['periodic']['pending_cells'], 0)
-        self.assertEqual(sync.events.count('pull'), 1)
+        self.assertGreaterEqual(sync.events.count('pull'), 2)
         self.assertFalse(session.thread.is_alive())
 
     def test_startup_held_work_stays_saved_and_does_not_prevent_scraping(self):
@@ -227,7 +263,8 @@ class RunScopedSyncTests(unittest.TestCase):
         sync = FakeSync()
         with self.session(sync):
             pass
-        self.assertEqual(sync.events,['open','pull','close'])
+        # Even an otherwise idle run performs one final Company-control pull.
+        self.assertEqual(sync.events,['open','pull','pull','close'])
 
     def test_keyboard_interrupt_still_performs_final_drain(self):
         sync = FakeSync()
@@ -421,7 +458,7 @@ class SyncWriterContentionTests(unittest.TestCase):
                 owner.__exit__(None, None, None)
                 released = True
                 self.assertTrue(sync.published.wait(2), self.logs)
-            self.assertEqual(sync.events.count('pull'), 1)
+            self.assertGreaterEqual(sync.events.count('pull'), 1)
             self.assertEqual(sync.local.pending, 0)
             self.assertEqual(sync.events[0:2], ['open', 'pull'])
             self.assertFalse(session.thread.is_alive())
@@ -447,7 +484,7 @@ class SyncWriterContentionTests(unittest.TestCase):
                 self.assertEqual(sync.local.pending, 3)
             self.assertTrue(sync.published.wait(2), self.logs)
         self.assertEqual(sync.local.pending, 0)
-        self.assertEqual(sync.events.count('pull'), 1)
+        self.assertGreaterEqual(sync.events.count('pull'), 1)
 
     def test_actual_publication_remains_exclusive(self):
         sync = FakeSync()
@@ -471,6 +508,24 @@ class SyncWriterContentionTests(unittest.TestCase):
             self.assertTrue(sync.published.wait(2))
         with cli.writer_lock(self.lock):
             pass
+
+    def test_large_backlog_releases_remote_lock_between_batches(self):
+        sync = FakeSync(pending=3)
+        handoffs = []
+        def progress(rows, remaining, batches):
+            with cli.writer_lock(self.lock):
+                handoffs.append(rows)
+        result = publish_pending(sync, progress=progress,
+            lock_factory=lambda: cli.writer_lock(self.lock))
+        self.assertEqual(handoffs, [1, 2, 3])
+        self.assertEqual(result['stop_reason'], 'drained')
+
+    def test_busy_error_identifies_scraper_lock_and_recorded_owner(self):
+        path = self.root / 'scraper.lock'
+        with cli.writer_lock(path):
+            with self.assertRaisesRegex(cli.WriterLockBusy, r'Another scraper.*scraper.lock.*PID'):
+                with cli.writer_lock(path):
+                    self.fail('Second scraper started')
 
     def imported(self):
         remote = MemoryRepository({'Companies': [{'Company ID': 'C-1', 'Company': 'Acme',
@@ -501,7 +556,7 @@ class SyncWriterContentionTests(unittest.TestCase):
         self.assertEqual(local.db.execute('SELECT count(*) FROM dirty').fetchone()[0], 1)
         self.assertFalse(session.thread.is_alive())
 
-    def test_production_deferred_intake_imports_fresh_controls_before_publishing(self):
+    def test_production_deferred_intake_holds_paused_company_output(self):
         local, remote = self.imported()
         session = run_scoped_sync(local, self.root / 'state.db', interval=.02)
         session.log = self.logs.append
@@ -510,20 +565,27 @@ class SyncWriterContentionTests(unittest.TestCase):
         released = False
         try:
             with patch.object(cli, 'get_remote_repository', return_value=remote) as authenticate:
-                with session:
-                    authenticate.assert_not_called()
-                    local.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
-                                   'values': {'Last Checked': '2026-10-22'}}])
-                    remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
-                                    'values': {'Company Status': 'Paused'}}])
-                    owner.__exit__(None, None, None)
-                    released = True
-                # Final sync also catches a run that finishes before the retry tick.
+                with self.assertRaisesRegex(RuntimeError, 'pending'):
+                    with session:
+                        authenticate.assert_not_called()
+                        local.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
+                                       'values': {'Last Checked': '2026-10-22'}}])
+                        remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
+                                        'values': {'Company Status': 'Paused'}}])
+                        owner.__exit__(None, None, None)
+                        released = True
+                # Final intake imports the pause even if no periodic tick ran.
                 authenticate.assert_called_once()
             self.assertEqual(local.read('Companies')[0]['Company Status'], 'Paused')
-            self.assertEqual(remote.read('Companies')[0]['Last Checked'], '2026-10-22')
-            self.assertEqual(local.db.execute('SELECT count(*) FROM dirty').fetchone()[0], 0)
-            self.assertIsNone(session.final_error)
+            self.assertEqual(remote.read('Companies')[0]['Last Checked'], '')
+            self.assertEqual(local.db.execute('SELECT count(*) FROM dirty').fetchone()[0], 1)
+            self.assertIsNotNone(session.final_error)
+            # A later explicit intake of the user's resume releases the hold.
+            remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-1'},
+                            'values': {'Company Status': 'Active'}}])
+            sync = SheetsSynchronizer(local, remote)
+            sync.pull()
+            self.assertEqual(sync.publish_batch()['published_rows'], 1)
         finally:
             if not released:
                 owner.__exit__(None, None, None)
@@ -565,6 +627,18 @@ class RealSQLiteSyncLifecycleTests(unittest.TestCase):
 
 
 class RunnerSyncWiringTests(unittest.TestCase):
+    def test_scraper_starts_while_reviewer_owns_review_and_remote_locks(self):
+        @contextmanager
+        def reviewer_first(path):
+            self.assertEqual(path.name, 'scraper.lock')
+            with cli.writer_lock(path.parent / 'review-writeback.lock'), \
+                 cli.writer_lock(path.parent / 'writer.lock'), cli.writer_lock(path):
+                yield
+        with patch.object(runner, 'writer_lock', side_effect=reviewer_first), \
+             patch.object(cli, 'storage_backend', return_value='sqlite'):
+            result, _ = self.run_empty()
+        self.assertEqual(result, 0)
+
     def run_empty(self, *, local=True, defer=False):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)

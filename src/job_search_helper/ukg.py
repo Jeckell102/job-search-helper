@@ -5,6 +5,7 @@ are used. Embedded JSON is parsed, never executed. No candidate/account API.
 """
 from __future__ import annotations
 
+import logging
 import json
 import re
 import sys
@@ -212,8 +213,8 @@ def fetch_ukg(ats,url,company_id,company,transport=None):
         for entry in entries:
             context='UKG detail '+entry['Id']
             jobs.append(_posting(transport,source,entry,company_id,company))
-            print(json.dumps({'event':'inventory_page','provider':'UKG','company_id':company_id,
-                              'postings_fetched':len(jobs),'total':len(entries)}),file=sys.stderr)
+            logging.getLogger(__name__).debug("%s", json.dumps({'event':'inventory_page','provider':'UKG','company_id':company_id,
+                              'postings_fetched':len(jobs),'total':len(entries)}))
         context='UKG final inventory check'
         if _listing(transport,source)!=entries or _board(transport,source)!=scope:
             raise FetchError('partial','UKG inventory or board scope changed during the scan.')

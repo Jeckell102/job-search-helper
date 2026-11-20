@@ -229,6 +229,37 @@ class IcimsTests(unittest.TestCase):
         self.assertEqual(result.status, "partial")
         self.assertEqual(len(t.urls), 1)
 
+    def test_gray_solutions_uses_only_gray_aes_successor_scope_and_host(self):
+        scoped_url = "https://careershub-gray.icims.com/jobs/search?searchPositionType=37044"
+        gray_listing = listing(scope="searchPositionType=37044")
+        gray_listing.body = gray_listing.body.replace(ROOT.encode(), b"https://careershub-gray.icims.com")
+        gray_listing.body = gray_listing.body.replace(
+            b"https://careershub-gray.icims.com/jobs", b"https://grayae-gray.icims.com/jobs"
+        )
+        gray_listing.body = gray_listing.body.replace(
+            b"https://grayae-gray.icims.com/jobs/search?searchPositionType=37044",
+            b"https://careershub-gray.icims.com/jobs/search?searchPositionType=37044",
+        )
+        gray_listing.body = gray_listing.body.replace(
+            b'<form id="searchForm">',
+            b'<form id="searchForm"><select name="searchPositionType"><option value="37044">Gray AES</option></select>',
+        )
+        gray_detail = detail()
+        gray_detail.body = gray_detail.body.replace(ROOT.encode(), b"https://grayae-gray.icims.com")
+        transport = Transport([gray_listing, gray_detail])
+        result = fetch_inventory("iCIMS", scoped_url, "COMP-0398", "Gray Solutions", transport)
+        self.assertEqual(result.status, "complete", result.reason)
+        self.assertEqual(result.source_url, scoped_url)
+        self.assertEqual(result.jobs[0]["url"], "https://grayae-gray.icims.com/jobs/1/solutions-engineer/job")
+        self.assertIn("grayae-gray.icims.com", transport.urls[1])
+
+        transport = Transport([gray_listing, gray_detail])
+        result = fetch_inventory(
+            "iCIMS", "https://careershub-gray.icims.com/jobs/search", "COMP-0398", "Gray Solutions", transport
+        )
+        self.assertEqual(result.status, "unsupported")
+        self.assertFalse(transport.urls)
+
     def test_discovers_portal_links_and_redirects_without_losing_scope(self):
         url = BOARD + "?searchKeyword=Acme"
         for page in (html(f'<iframe src="{url}"></iframe>'), html("", 302, Location=url)):

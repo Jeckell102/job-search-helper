@@ -11,10 +11,11 @@ BOARD = "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment
 
 
 def test_repair_uses_official_federated_adp_board():
-    source = repair_source(COMPANY_ID, COMPANY, "https://www.federatedwireless.com/careers/")
-    assert source["ats"] == "ADP"
-    assert source["url"] == BOARD
-    assert source["expected_url"] == CAREERS
+    ats, url, note = repair_source("Browser", "https://www.federatedwireless.com/careers/", COMPANY_ID, COMPANY)
+    assert ats == "ADP"
+    assert url == BOARD
+    assert REPAIRS[COMPANY_ID]["expected_url"] == CAREERS
+    assert note
 
 
 def test_federated_route_is_employer_scoped():

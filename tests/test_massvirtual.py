@@ -1,6 +1,6 @@
 import unittest,json
 from job_search_helper.massvirtual import fetch_massvirtual,SOURCE
-from job_search_helper.ats import HTTPResponse
+from job_search_helper.ats import FetchError,HTTPResponse,_safe_api_url,fetch_inventory
 class Fake:
  def __init__(self,b): self.body=json.dumps({'jobs':b}).encode(); self.calls=0
  def get(self,url): self.calls+=1; return HTTPResponse(200,self.body,{'content-type':'application/json'})
@@ -11,4 +11,10 @@ class Tests(unittest.TestCase):
  def test_foreign_rejected(self):
   x=dict(ROW,companyName='Other');self.assertEqual(fetch_massvirtual(SOURCE,'COMP-0344','Mass Virtual',Fake([x])).status,'partial')
  def test_wrong_scope(self): self.assertEqual(fetch_massvirtual(SOURCE,'COMP-0344','Other',Fake([ROW])).status,'unsupported')
+ def test_transport_guard_is_exact(self):
+  _safe_api_url(SOURCE)
+  with self.assertRaises(FetchError): _safe_api_url(SOURCE.rsplit('/',1)[0]+'/00000000-0000-0000-0000-000000000000')
+ def test_normal_dispatch_uses_massvirtual_adapter(self):
+  f=Fake([ROW]);r=fetch_inventory('Mass Virtual Paylocity','https://www.massvirtual.com/career','COMP-0344','Mass Virtual',f)
+  self.assertEqual(r.status,'complete');self.assertEqual(r.ats,'Mass Virtual Paylocity');self.assertEqual(r.source_url,SOURCE);self.assertEqual(len(r.jobs),1);self.assertEqual(f.calls,2)
 if __name__=='__main__':unittest.main()

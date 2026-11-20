@@ -1,6 +1,7 @@
 """Read public iCIMS portal listings and JobPosting JSON-LD, without a login."""
 from __future__ import annotations
 
+import logging
 from html.parser import HTMLParser
 import json
 import re
@@ -14,6 +15,10 @@ MAX_PAGES = 200
 MAX_HTML_BYTES = 2 * 1024 * 1024
 PERATON_COMPANY_ID = "COMP-0004"
 PERATON_HOST = "careers-peraton.icims.com"
+GRAY_SOLUTIONS_COMPANY_ID = "COMP-0398"
+GRAY_SHARED_HOST = "careershub-gray.icims.com"
+GRAY_AES_HOST = "grayae-gray.icims.com"
+GRAY_AES_POSITION_TYPE = "37044"
 # Peraton's public board is large and changes while it is being read. Bound
 # this exception so a widespread detail outage cannot be disguised as a few
 # ordinary posting closures.
@@ -185,16 +190,29 @@ def _html(url, transport):
     return parser
 
 
-def _detail_url(link, source):
+def _detail_url(link, source, allowed_hosts=None):
     p = urlsplit(urljoin(source, link))
     host = urlsplit(source).hostname
-    if (p.scheme != "https" or p.hostname != host or p.username or p.password or p.port not in (None, 443)):
+    allowed_hosts = set(allowed_hosts or {host})
+    if (p.scheme != "https" or p.hostname not in allowed_hosts or p.username or p.password or p.port not in (None, 443)):
         raise ValueError("iCIMS posting link leaves its configured public board.")
     ident = _job_id(p.path)
-    return ident, f"https://{host}{p.path.rstrip('/')}"
+    return ident, f"https://{p.hostname}{p.path.rstrip('/')}"
 
 
-def _listing(parser, source, page_number):
+def _gray_aes_scope(source, company_id):
+    return (company_id == GRAY_SOLUTIONS_COMPANY_ID
+            and urlsplit(source).hostname == GRAY_SHARED_HOST
+            and _scope(urlsplit(source).query) == {"searchPositionType": GRAY_AES_POSITION_TYPE})
+
+
+def _detail_hosts(source, company_id):
+    if _gray_aes_scope(source, company_id):
+        return {GRAY_SHARED_HOST, GRAY_AES_HOST}
+    return {urlsplit(source).hostname}
+
+
+def _listing(parser, source, page_number, allowed_hosts=None):
     if not parser.listing or not parser.search_form:
         raise FetchError("partial", "iCIMS page is missing its public listing/search markers.")
     requested = _scope(urlsplit(source).query)
@@ -229,7 +247,7 @@ def _listing(parser, source, page_number):
         for href in card:
             # Ignore unrelated category links, but reject malformed job links.
             if re.search(r"/jobs/[0-9]+/", urlsplit(urljoin(source, href)).path):
-                links.add(_detail_url(href, source))
+                links.add(_detail_url(href, source, allowed_hosts))
         if len(links) != 1:
             raise FetchError("partial", "iCIMS result card does not identify exactly one public posting.")
         entries.append(next(iter(links)))
@@ -293,6 +311,11 @@ def _peraton_retired_detail(company_id, root, error):
 
 def fetch_icims(board, root, company_id, company, transport):
     source = root + board
+    if company_id == GRAY_SOLUTIONS_COMPANY_ID and not _gray_aes_scope(source, company_id):
+        return Inventory("unsupported", [],
+                         "Gray Solutions is represented by the verified Gray AES successor scope only; "
+                         "use searchPositionType=37044 and do not import the shared Gray-family board.", source)
+    allowed_hosts = _detail_hosts(source, company_id)
     query = dict(parse_qsl(urlsplit(source).query))
     endpoint = source.split("?", 1)[0]
     jobs, seen, retired_details = [], set(), []
@@ -302,7 +325,7 @@ def fetch_icims(board, root, company_id, company, transport):
         for page in range(MAX_PAGES):
             context = f"iCIMS listing page {page + 1}"
             url = endpoint + "?" + urlencode({**query, "ss": "1", "in_iframe": "1", "pr": page})
-            total, entries = _listing(_html(url, transport), source, page + 1)
+            total, entries = _listing(_html(url, transport), source, page + 1, allowed_hosts)
             if expected_pages is None:
                 expected_pages, first_entries = total, entries
             elif total != expected_pages:
@@ -323,8 +346,8 @@ def fetch_icims(board, root, company_id, company, transport):
                                           "reason": "public detail returned HTTP 404 during scan"}), file=sys.stderr)
                         continue
                     raise
-            print(json.dumps({"event": "inventory_page", "provider": "iCIMS", "company_id": company_id,
-                              "page": page + 1, "pages": total, "postings_fetched": len(jobs)}), file=sys.stderr)
+            logging.getLogger(__name__).debug("%s", json.dumps({"event": "inventory_page", "provider": "iCIMS", "company_id": company_id,
+                              "page": page + 1, "pages": total, "postings_fetched": len(jobs)}))
             if page + 1 >= total:
                 break
         else:
@@ -332,7 +355,7 @@ def fetch_icims(board, root, company_id, company, transport):
         if expected_pages > 1:
             context = "iCIMS final listing check"
             url = endpoint + "?" + urlencode({**query, "ss": "1", "in_iframe": "1", "pr": 0})
-            total, entries = _listing(_html(url, transport), source, 1)
+            total, entries = _listing(_html(url, transport), source, 1, allowed_hosts)
             if total != expected_pages or entries != first_entries:
                 raise FetchError("partial", "iCIMS board changed during the scan; retry for a complete inventory.")
         reason = f"iCIMS: retrieved {len(jobs)} full postings across {expected_pages} results pages."

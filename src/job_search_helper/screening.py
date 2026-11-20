@@ -5,7 +5,8 @@ import re
 from dataclasses import dataclass
 
 from .core import plain_text
-from .efficiency import classify_title, load_title_review_list, parse_annual_base_max_usd
+from .efficiency import classify_title, load_title_review_list, parse_annual_base_max_usd, parse_hourly_base_max_usd
+from .locations import check_posting_location
 
 
 @dataclass(frozen=True)
@@ -31,15 +32,17 @@ def _sentences(text):
 def _employment_exclusion(title, description):
     temporary = r"(?:temporary|temp|seasonal|internship|fixed[- ]term|contract[- ]to[- ]hire)"
     kind = rf"(?:{temporary}|contract(?:or)?)"
+    duration = r"(?:(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|eighteen|twenty[- ]four)[- ](?:months?|years?|weeks?)\s+)?"
+    role = r"(?:role|position|job|assignment|employment|opportunity|agreement)"
     prefix = re.match(rf"^{kind}\s+(.+)", title, re.I)
     qualified_title = prefix and any(pattern.match(prefix.group(1)) for pattern in load_title_review_list())
     if qualified_title or re.search(rf"[(/,:\-]\s*{kind}\s*[)]?$|\b(?:internship|fixed[- ]term|contract[- ]to[- ]hire)\b", title, re.I):
         return "Employment exclusion: title explicitly identifies a nonpermanent role."
     pattern = (
         rf"\b(?:employment|job|position|contract)\s+type\s*:\s*{kind}\b|"
-        rf"\bthis is (?:a|an) {kind} (?:role|position|job)\b|"
-        rf"\b(?:this|the) (?:role|position|job) is (?:a |an )?(?:\d+[- ]month )?{kind}"
-        r"(?=\s*(?:[.!?;,]|$)|\s+(?:role|position|job|assignment|employment|opportunity)\b)"
+        rf"\bthis is (?:a|an) {duration}{kind} {role}\b|"
+        rf"\b(?:this|the) (?:role|position|job|employment) is (?:a |an )?{duration}{kind}"
+        rf"(?=\s*(?:[.!?;,]|$)|\s+{role}\b)"
     )
     for sentence in _sentences(description):
         if re.search(pattern, sentence, re.I):
@@ -67,6 +70,20 @@ def _travel_exclusion(description):
             travel_after = re.match(r"\s*(?:of (?:the |your )?time\s+)?(?:domestic\s+|international\s+)?travel\b", after, re.I)
             if not (travel_before or travel_after):
                 continue
+            # The percentage must describe time spent travelling, not the
+            # share of roads a vehicle covers or a product's speed. If a
+            # denominator is supplied, only an explicit time unit is evidence
+            # for this hard exclusion. Unclear units stay in human review.
+            if travel_before:
+                denominator = re.match(r"\s+of\s+(.+)", after, re.I)
+                if denominator and not re.match(
+                    r"(?:(?:the|your|working|work|total|scheduled|annual)\s+)*"
+                    r"(?:time|hours?|days?|weeks?|months?|years?)\b",
+                    denominator.group(1), re.I,
+                ):
+                    continue
+                if re.match(r"\s+(?:faster|farther|further|longer|shorter)\b", after, re.I):
+                    continue
             maximum = float(match.group(2) or match.group(3))
             if 50 < maximum <= 100 or (maximum == 50 and re.search(r"\b(?:more than|over|greater than)\s*$", before, re.I)):
                 return f"Travel exclusion: posting specifies travel above 50% ({match.group(0)})."
@@ -99,9 +116,15 @@ def screen_posting(posting, *, skip_title_filter=False):
     note = (
         "Preferred title shortlist match; still requires AI review."
         if title_action == "review" else
-        "Title outside the preferred shortlist; retained for AI review of transferable fit."
+        "Nonstandard or unrecognized title; retained for AI review based on the full job description. "
+        "The title alone is neither a fit signal nor a reason to defer review."
     )
     note += " Prefer hardware or mixed products; verify permanent employment, travel <=50%, and annual base >=$120,000."
+    location = check_posting_location(posting)
+    if location.rejection_reason:
+        return Screening(location.rejection_reason, note)
+    if location.status == "unknown":
+        note += " Verify U.S. location eligibility: " + location.evidence + "."
     reason = _employment_exclusion(title, description) or _travel_exclusion(description) or _saas_exclusion(description)
     if reason:
         return Screening(reason, note)
@@ -110,15 +133,19 @@ def screen_posting(posting, *, skip_title_filter=False):
     # Salary sections often live only in the description. Never parse arbitrary
     # dollar figures such as product prices as salary evidence.
     salary_parts = [sentence for sentence in _sentences(description)
-                    if re.search(r"\b(?:base (?:salary|pay)|annual (?:salary|base)|salary range)\b", sentence, re.I)]
+                    if re.search(r"\b(?:base (?:salary|pay)|annual (?:salary|base)|salary range|hourly (?:base|pay|rate|wage)|(?:pay|salary|wage) (?:range|rate|starts|is))\b", sentence, re.I)]
     sources = [part for part in [compensation, *salary_parts] if part.strip()]
     if any(re.search(r"\bbase\b", part, re.I) for part in sources):
         sources = [part for part in sources if re.search(r"\bbase\b", part, re.I)
                    or not re.search(r"\b(?:OTE|on[- ]target earnings|total compensation|bonus|commission|equity)\b", part, re.I)]
-    salaries = [parse_annual_base_max_usd(part) for part in sources]
+    hourly = [parse_hourly_base_max_usd(part) for part in sources]
+    salaries = [rate * 2080 if rate is not None else parse_annual_base_max_usd(part)
+                for part, rate in zip(sources, hourly)]
     known = [salary for salary in salaries if salary is not None]
     # An unparseable advertised pay component can describe another region or
     # currency. Keep that uncertainty instead of assuming a global pay ceiling.
     if known and len(known) == len(sources) and max(known) < 120_000:
+        if any(rate is not None for rate in hourly):
+            return Screening(f"Compensation exclusion: highest advertised base annualizes to ${max(known):,.0f}, below the $120,000 floor (hourly rates, including starting rates, use 2,080 hours/year).", note)
         return Screening(f"Compensation exclusion: stated maximum annual base is ${max(known):,.0f}, below the $120,000 floor.", note)
     return Screening(None, note)

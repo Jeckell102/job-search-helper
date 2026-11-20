@@ -90,6 +90,53 @@ class FreshScanRequestTests(unittest.TestCase):
         self.assertEqual(len(self.state.cycles()),1)
         self.assertTrue((self.root/'next-scan.json').exists())
 
+    def test_company_event_request_starts_only_its_bound_company(self):
+        old = self.state.cycle(self.old)
+        for item in old['companies'].values():
+            item['stage'] = 'complete'
+        self.engine._sync_cycle(old)
+        request = {
+            'mode': 'company-only', 'request_id': 'company-event-1',
+            'company_ids': ['C-1'], 'source_revision': 'revision-1',
+            'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
+            'company_event': {
+                'schema': 'company-event-scan-request-v1', 'event_id': 'event-1',
+                'company_id': 'C-1', 'source_revision': 'revision-1', 'revision': 1,
+            },
+        }
+        (self.root/'next-scan.json').write_text(json.dumps(request))
+
+        cycle_id = requested_scan(self.engine, self.state, self.database)
+        cycle = self.state.cycle(cycle_id)
+
+        self.assertFalse(cycle['all'])
+        self.assertEqual(set(cycle['companies']), {'C-1'})
+        self.assertEqual(cycle['company_event'], request['company_event'])
+        self.assertTrue((self.root/'last-scan-request.json').exists())
+
+    def test_company_event_request_cannot_widen_or_change_its_bound_event(self):
+        old = self.state.cycle(self.old)
+        for item in old['companies'].values():
+            item['stage'] = 'complete'
+        self.engine._sync_cycle(old)
+        request = {
+            'mode': 'company-only', 'request_id': 'company-event-immutable',
+            'company_ids': ['C-1'], 'source_revision': 'revision-1',
+            'enqueued_at': '2026-11-18T00:00:00Z', 'start_last': [],
+            'company_event': {
+                'schema': 'company-event-scan-request-v1', 'event_id': 'event-1',
+                'company_id': 'C-1', 'source_revision': 'revision-1', 'revision': 1,
+            },
+        }
+        (self.root/'next-scan.json').write_text(json.dumps(request))
+        requested_scan(self.engine, self.state, self.database)
+        request['company_event']['event_id'] = 'substituted-event'
+        (self.root/'next-scan.json').write_text(json.dumps(request))
+
+        with self.assertRaisesRegex(ValueError, 'different immutable request'):
+            requested_scan(self.engine, self.state, self.database)
+        self.assertTrue((self.root/'next-scan.json').exists())
+
     def test_worker_assignment_order_follows_cycle_order_without_skipping_any_company(self):
         cycle_id = requested_scan(self.engine,self.state,self.database)
         fetched = []

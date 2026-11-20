@@ -33,54 +33,96 @@ def remember_title_audit(connection, company, payload):
     )
 
 
-def load_title_audits(path=None, spreadsheet_id=None):
-    """Return raw local evidence and coverage metadata; never create/change DBs.
+def _replay_company(company, snapshots):
+    """Replay one company's evidence, preserving complete/partial semantics."""
+    from .adp_myjobs import repair_saved_urls
+    decoded = [(order, repair_saved_urls(json.loads(payload)), archived)
+               for order, payload, archived in snapshots]
+    decoded.sort(key=lambda item: (item[1].get("fetched_at", ""), item[0]))
+    archived_postings = {
+        (job.get("ats") or payload.get("ats", ""), job.get("posting_id", ""), job.get("url", ""))
+        for _, payload, archived in decoded if archived for job in payload.get("jobs", [])}
+    candidates = {}
+    invalid = 0
+    observed = False
+    for order, payload, archived in decoded:
+        status = payload.get("inventory_status")
+        if status not in {"complete", "partial"}:
+            continue
+        observed = True
+        if status == "complete":
+            candidates.clear()
+        for number, posting in enumerate(payload.get("jobs", [])):
+            if posting.get("is_listed") is False:
+                continue
+            identity = (posting.get("ats") or payload.get("ats", ""),
+                        posting.get("posting_id", ""), posting.get("url", ""))
+            if not (archived or identity in archived_postings
+                    or classify_title(posting.get("title", "")) == "reject"):
+                continue
+            try:
+                key = job_key(company, *identity)
+            except (ValueError, TypeError, AttributeError):
+                invalid += 1
+                continue
+            # Updating an existing sighting preserves its original insertion
+            # order, exactly as the global replay did before grouping by company.
+            position = candidates[key][0] if key in candidates else [payload.get("fetched_at", ""), *order, number]
+            candidates[key] = [position, {
+                "job_key": key, "source_hash": material_hash(posting),
+                "posting": posting, "observed_at": payload.get("fetched_at", ""),
+            }]
+    return {"candidates": list(candidates.values()), "invalid": invalid, "observed": observed}
 
-    Raw postings include practical fields for later hydration, not AI inputs.
-    Callers must select the company-free projection for the FIRST PASS queue.
+
+def load_title_audits(path=None, spreadsheet_id=None, *, cache=None, policy=""):
+    """Read retained evidence without changing the source DB.
+
+    Per-company calculations are disposable and keyed by every source payload
+    plus current policy. History/manual decisions are checked by the caller on
+    every queue build. Partial inventories never erase earlier sightings.
     """
     metadata = {"title_audit_snapshots": 0, "title_audit_invalid_identities": 0,
                 "title_audit_retention_available": False}
     if path is None or not Path(path).is_file():
         return [], metadata
+    if cache is not None and not policy:
+        from .review_refresh import policy_fingerprint
+        policy = json.dumps(policy_fingerprint(), sort_keys=True)
     connection = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True)
+    candidates = []
     try:
+        connection.execute('BEGIN')
         destination = connection.execute("SELECT id FROM destination").fetchone()
         if spreadsheet_id and (not destination or destination[0] != spreadsheet_id):
             raise ValueError("Title audit inbox belongs to a different spreadsheet.")
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-        snapshots = []
-        if "title_filter_audits" in tables:
-            metadata["title_audit_retention_available"] = True
-            snapshots.extend(connection.execute("SELECT company,payload FROM title_filter_audits"))
-        if "inventories" in tables:
-            snapshots.extend(connection.execute("SELECT company,payload FROM inventories"))
+        metadata["title_audit_retention_available"] = "title_filter_audits" in tables
+        companies = {}
+        for index, table in enumerate(('title_filter_audits', 'inventories')):
+            if table in tables:
+                for rowid, company in connection.execute(f'SELECT rowid,company FROM {table} ORDER BY rowid'):
+                    companies.setdefault(company, []).append((index, rowid))
+        for company, rows in companies.items():
+            snapshots = []
+            for index in (0, 1):
+                ids = [rowid for kind, rowid in rows if kind == index]
+                table = ('title_filter_audits', 'inventories')[index]
+                # Bound parameters for older SQLite builds and long histories.
+                for start in range(0, len(ids), 500):
+                    group = ids[start:start + 500]
+                    query = f'SELECT rowid,payload FROM {table} WHERE rowid IN (' + ','.join('?' for _ in group) + ') ORDER BY rowid'
+                    snapshots.extend(((index, rowid), payload, index == 0)
+                                     for rowid, payload in connection.execute(query, group))
+            inputs = [policy, str(Path(path).resolve()), json.dumps(destination), company]
+            for order, payload, archived in snapshots:
+                inputs.extend([json.dumps(order), payload])
+            compute = lambda: _replay_company(company, snapshots)
+            result = cache.calculate('title_audit', company, inputs, compute) if cache else compute()
+            candidates.extend(result['candidates'])
+            metadata['title_audit_snapshots'] += int(result['observed'])
+            metadata['title_audit_invalid_identities'] += result['invalid']
     finally:
         connection.close()
-    from .adp_myjobs import repair_saved_urls
-    decoded = [(company, repair_saved_urls(json.loads(payload))) for company, payload in snapshots]
-    decoded.sort(key=lambda pair: pair[1].get("fetched_at", ""))
-    candidates = {}
-    observed_companies = set()
-    for company, payload in decoded:
-        status = payload.get("inventory_status")
-        if status not in {"complete", "partial"}:
-            continue
-        observed_companies.add(company)
-        if status == "complete":
-            candidates = {key: value for key, value in candidates.items() if key[0] != company}
-        for posting in payload.get("jobs", []):
-            if posting.get("is_listed") is False or classify_title(posting.get("title", "")) != "reject":
-                continue
-            try:
-                key = job_key(company, posting.get("ats") or payload.get("ats", ""),
-                              posting.get("posting_id", ""), posting.get("url", ""))
-            except (ValueError, TypeError, AttributeError):
-                metadata["title_audit_invalid_identities"] += 1
-                continue
-            candidates[(company, key)] = {
-                "job_key": key, "source_hash": material_hash(posting),
-                "posting": posting, "observed_at": payload.get("fetched_at", ""),
-            }
-    metadata["title_audit_snapshots"] = len(observed_companies)
-    return list(candidates.values()), metadata
+    candidates.sort(key=lambda item: item[0])
+    return [record for _, record in candidates], metadata

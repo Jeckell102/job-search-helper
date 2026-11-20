@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
@@ -166,6 +168,46 @@ def test_avature_retries_transient_server_error_and_retains_access_blocks():
         exhausted = Responses([503, 503, 503])
         with pytest.raises(FetchError) as failure: _get(exhausted, SOURCE)
         assert failure.value.status == "partial" and exhausted.calls == 3
-        blocked = Responses([406])
+        blocked = Responses([406, 406, 406])
         with pytest.raises(FetchError) as failure: _get(blocked, SOURCE)
-        assert failure.value.status == "blocked" and blocked.calls == 1
+        assert failure.value.status == "blocked" and blocked.calls == 3
+
+
+def test_mantech_recovers_from_intermitttent_406():
+    from job_search_helper.avature import _get
+    class Responses:
+        def __init__(self): self.statuses = iter([406, 200]); self.calls = 0
+        def get(self, url):
+            self.calls += 1
+            return HTTPResponse(next(self.statuses), b"1 - 0 of 0 results")
+
+    client = Responses()
+    with patch("job_search_helper.avature.time.sleep"):
+        assert _get(client, SOURCE) == "1 - 0 of 0 results"
+    assert client.calls == 2
+
+
+def test_mantech_resumes_durable_per_id_detail_checkpoint(tmp_path):
+    checkpoint = tmp_path / "mantech.json"
+    first = ManTechTransport(
+        {0: listing(2, [("101", "Systems Engineer"), ("102", "Cloud Engineer")])},
+        {"101": detail("Systems Engineer", "R-101"),
+         "102": detail("Cloud Engineer", "")},
+    )
+    with patch("job_search_helper.avature.PAGE_SIZE", 2), patch("job_search_helper.avature.time.sleep"):
+        failed = fetch_avature(SOURCE, "COMP-0010", "ManTech", first, checkpoint)
+    assert failed.status == "partial"
+    saved = json.loads(checkpoint.read_text())
+    assert saved["phase"] == "details"
+    assert list(saved["jobs"]) == ["101"]
+
+    second = ManTechTransport(
+        {0: listing(2, [("101", "Systems Engineer"), ("102", "Cloud Engineer")])},
+        {"101": detail("Systems Engineer", "R-101"),
+         "102": detail("Cloud Engineer", "R-102")},
+    )
+    with patch("job_search_helper.avature.PAGE_SIZE", 2), patch("job_search_helper.avature.time.sleep"):
+        resumed = fetch_avature(SOURCE, "COMP-0010", "ManTech", second, checkpoint)
+    assert resumed.status == "complete"
+    detail_ids = [url.rsplit("/", 1)[-1] for url in second.urls if "/JobDetail/" in url]
+    assert detail_ids == ["102"]

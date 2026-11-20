@@ -30,17 +30,22 @@ def file_identity(path):
     return [stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns]
 
 
+def policy_fingerprint():
+    module = Path(__file__).resolve().parent
+    policy_files = [module / name for name in (
+        'review_queue.py', 'review_refresh.py', 'review_revisions.py',
+        'screening.py', 'efficiency.py', 'core.py', 'title_audit.py', 'adp_myjobs.py',
+        'locations.py', 'derived_cache.py')]
+    from .efficiency import BLACKLIST_PATH, REVIEW_LIST_PATH
+    policy_files += [BLACKLIST_PATH, REVIEW_LIST_PATH]
+    return {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in policy_files}
+
+
 def fingerprint(repo, threshold, inventory_database):
     source = revision(repo, 'queue')
     if source is None:
         return None
-    module = Path(__file__).resolve().parent
-    policy_files = [module / name for name in (
-        'review_queue.py', 'review_refresh.py', 'review_revisions.py',
-        'screening.py', 'efficiency.py', 'core.py', 'title_audit.py', 'adp_myjobs.py')]
-    from .efficiency import BLACKLIST_PATH, REVIEW_LIST_PATH
-    policy_files += [BLACKLIST_PATH, REVIEW_LIST_PATH]
-    policies = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in policy_files}
+    policies = policy_fingerprint()
     inventory = None
     if inventory_database is not None:
         path = Path(inventory_database).resolve()

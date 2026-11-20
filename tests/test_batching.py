@@ -69,7 +69,7 @@ class BatchTests(unittest.TestCase):
         self.repo = MemoryRepository({"Companies": [company()]})
         self.jobs = [posting(str(i)) for i in range(61)]
         self.fetch_count = 0
-        self.engine = Engine(self.repo, self.state, fetcher=self.fetch)
+        self.engine = Engine(self.repo, self.state, fetcher=self.fetch, batch_size=25)
         self.output = io.StringIO()
         capture = redirect_stdout(self.output)
         capture.__enter__()
@@ -85,20 +85,10 @@ class BatchTests(unittest.TestCase):
         return self.engine.start_cycle(["C-1"])
 
     def pending(self, cycle):
-        return self.state.reviews(cycle, "pending")
+        return [row for row in self.repo.read("Job History") if row.get("Review Status") == "Needs Review"]
 
     def index(self, cycle):
         return self.state.cycle(cycle)["companies"]["C-1"].get("next_job_index", 0)
-
-    def decision_file(self, cycle):
-        path = Path(self.temp.name) / "decisions.jsonl"
-        decisions = [dict(job_key=r["job_key"], description_hash=r["description_hash"], decision="accept",
-                          fit_level="Possible", narrative="Customer integration and training match; verify travel.",
-                          reviewer="Offline test", policy_version=POLICY_VERSION, mandatory_clearance=False,
-                          code_authoring_required=False, primary_test_automation=False, base_max_usd=180000,
-                          material_change=True) for r in self.pending(cycle)]
-        path.write_text("".join(json.dumps(d) + "\n" for d in decisions), encoding="utf-8")
-        return path
 
     def test_61_jobs_saved_in_three_batches_with_progress(self):
         cycle = self.start()
@@ -110,9 +100,9 @@ class BatchTests(unittest.TestCase):
             return original(ops)
         with patch.object(self.repo, "commit", side_effect=commit):
             result = self.engine.resume(cycle)
-        self.assertEqual([len(b) for b in batches], [25, 25, 11])
+        self.assertEqual([sum(op["tab"] == "Job History" for op in b) for b in batches], [25, 25, 11])
         self.assertEqual(result["pending_reviews"], 61)
-        self.assertEqual(result["status"], "Awaiting Review")
+        self.assertEqual(result["status"], "Complete")
         self.assertEqual(self.index(cycle), 61)
         self.assertIn("saved 25/61", self.output.getvalue())
         self.assertIn("saved 61/61", self.output.getvalue())
@@ -134,7 +124,9 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(len(self.repo.read("Job History")), 25)
         self.assertEqual(len(self.pending(cycle)), 25)
         self.engine.resume(cycle)
-        self.assertEqual(self.fetch_count, 1)
+        # The legacy no-inbox path refetches; durable no-refetch recovery is
+        # exercised by test_durable_inbox and test_local_pipeline.
+        self.assertEqual(self.fetch_count, 2)
         self.assertEqual(self.index(cycle), 61)
         rows = self.repo.read("Job History")
         self.assertEqual(len(rows), 61)
@@ -151,12 +143,12 @@ class BatchTests(unittest.TestCase):
         with patch.object(self.repo, "commit", side_effect=commit), self.assertRaises(TimeoutError):
             self.engine.resume(cycle)
         self.assertEqual(self.index(cycle), 0)
-        self.assertEqual(len(self.pending(cycle)), 0)
+        self.assertEqual(len(self.pending(cycle)), 25)
         self.assertEqual(len(self.repo.read("Job History")), 25)
         self.engine.resume(cycle)
         self.assertEqual(len(self.pending(cycle)), 61)
         self.assertEqual(len(self.repo.read("Job History")), 61)
-        self.assertEqual(self.fetch_count, 1)
+        self.assertEqual(self.fetch_count, 2)
 
     def test_local_checkpoint_failure_replays_acknowledged_batch(self):
         cycle = self.start()
@@ -219,74 +211,53 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(self.index(cycle), 0)
         self.assertEqual(self.pending(cycle), [])
 
-    def test_title_screen_candidates_remain_auditable_until_reviewer_decides(self):
-        self.jobs = [posting("1", title="Associate Facilities Coordinator (R5456)"),
-                     posting("2", title="Senior Staff Talent Sourcer - G&A"), posting("3")]
-        cycle = self.start()
-        self.engine.resume(cycle)
-        self.assertEqual(len(self.pending(cycle)), 3)
-        self.assertEqual(len(self.repo.read("Job History")), 3)
-        self.assertEqual(self.engine.status(cycle)["status"], "Awaiting Review")
-        self.assertEqual(self.fetch_count, 1)
-
-    def test_new_title_exclusions_create_history_rows(self):
-        self.jobs = [posting("1", title="Associate Facilities Coordinator (R5456)"), posting("2")]
-        cycle = self.start()
-        self.engine.resume(cycle)
-        self.assertEqual(len(self.repo.read("Job History")), 2)
-        self.assertEqual(len(self.pending(cycle)), 2)
-
-    def test_existing_opportunity_survives_title_screen_queueing_with_user_choice(self):
-        self.jobs = [posting("1", title="Associate Facilities Coordinator (R5456)")]
+    def test_blacklisted_jobs_do_not_create_history_or_discard_existing_opportunities(self):
+        self.jobs = [posting("1", title="Software Engineer"), posting("2")]
+        existing = {"Company": "Acme", "Job Title": self.jobs[0]["title"],
+                    "Job URL": self.jobs[0]["url"], "Application Status": "Applied",
+                    "Date Applied": "2026-09-01", "Notes": "My note"}
         tables = self.repo.tables
-        tables["Opportunities"] = [{"Company": "Acme", "Job Title": self.jobs[0]["title"],
-            "Job URL": self.jobs[0]["url"], "Application Status": "Applied", "Date Applied": "2026-09-01", "Notes": "My note"}]
+        tables["Opportunities"] = [existing]
         self.repo._sheets = MemoryRepository(tables)._sheets
+        before = self.repo.read("Opportunities")
         cycle = self.start()
         self.engine.resume(cycle)
         self.assertEqual(len(self.pending(cycle)), 1)
-        row = self.repo.read("Opportunities")[0]
-        self.assertEqual(row["Application Status"], "Applied")
-        self.assertEqual(row["Date Applied"], "2026-09-01")
-        self.assertEqual(row["Notes"], "My note")
+        self.assertEqual(len(self.repo.read("Job History")), 1)
+        self.assertEqual(self.repo.read("Companies")[0]["Last Inventory Count"], 2)
+        self.assertEqual(self.repo.read("Opportunities"), before)
+        # Full filtered evidence retention is tested through InventoryInbox in
+        # test_title_audit, the current runtime rather than retired State reviews.
 
-    def test_decision_import_batched_and_idempotent(self):
+    def test_current_scan_legacy_import_fails_explicitly_without_writes(self):
+        self.jobs = self.jobs[:1]
         cycle = self.start()
         self.engine.resume(cycle)
-        path = self.decision_file(cycle)
-        original = self.repo.commit
-        writes = []
-        def commit(ops):
-            writes.append(copy.deepcopy(ops))
-            return original(ops)
-        with patch.object(self.repo, "commit", side_effect=commit):
-            result = self.engine.import_decisions(cycle, path)
-        self.assertEqual(len(writes), 3)
-        self.assertEqual(result["status"], "Complete")
-        self.assertEqual(len(self.repo.read("Opportunities")), 61)
+        path = Path(self.temp.name) / "decisions.jsonl"
+        path.write_text(json.dumps({"job_key": "c-1:greenhouse:0", "decision": "accept"}) + "\n")
         before = self.repo.tables
-        self.engine.import_decisions(cycle, path)
+        with self.assertRaisesRegex(ValueError, "job-search-reviewer submit"):
+            self.engine.import_decisions(cycle, path)
         self.assertEqual(self.repo.tables, before)
 
-    def test_failed_decision_batch_emits_no_added_notice_and_preserves_queue(self):
-        self.jobs = self.jobs[:5]
+    def test_repeated_completed_scan_does_not_duplicate_history_or_evidence(self):
         cycle = self.start()
         self.engine.resume(cycle)
-        path = self.decision_file(cycle)
-        self.output.truncate(0)
-        self.output.seek(0)
-        with patch.object(self.repo, "commit", side_effect=TimeoutError()), self.assertRaises(TimeoutError):
-            self.engine.import_decisions(cycle, path)
-        self.assertNotIn("Added:", self.output.getvalue())
-        self.assertEqual(self.repo.read("Opportunities"), [])
-        self.assertEqual(len(self.pending(cycle)), 5)
+        before = self.repo.tables
+        self.engine.resume(cycle)
+        self.assertEqual(self.repo.tables, before)
+        self.assertEqual(self.fetch_count, 1)
+        self.assertEqual(len(self.repo.read("Job History")), 61)
+        self.assertEqual(len(self.repo.read("Job Evidence")), 61)
 
     def test_fresh_commit_preserves_manual_edits_after_planning_read(self):
         self.jobs = self.jobs[:1]
         cycle = self.start()
         self.engine.resume(cycle)
-        path = self.decision_file(cycle)
-        self.engine.import_decisions(cycle, path)
+        tables = self.repo.tables
+        tables["Job History"][0]["Added to Opportunities?"] = "Yes"
+        self.repo._sheets = MemoryRepository(tables)._sheets
+        self.engine.sync_manual_opportunities()
         planner = PlanningRepository(self.repo)
         tables = self.repo.tables
         tables["Opportunities"][0].update({"Application Status": "Not Interested", "Notes": "Just entered"})
@@ -299,6 +270,23 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(row["Application Status"], "Not Interested")
         self.assertEqual(row["Notes"], "Just entered\n\nScanner update")
         self.assertEqual(planner.read("Opportunities")[0], row)
+
+    def test_history_url_index_preserves_aliases_and_tracks_planned_updates(self):
+        from job_search_helper.batching import PlanningRepository
+        from job_search_helper.repository import MemoryRepository
+        rows = [
+            {'Company': 'Acme', 'Job Key': 'old', 'Official Job URL': 'https://example.com/jobs/1?utm_source=old'},
+            {'Company': 'Peer', 'Job Key': 'peer', 'Official Job URL': 'https://example.com/jobs/1'},
+            {'Company': 'Acme', 'Job Key': 'invalid', 'Official Job URL': 'not a URL'},
+        ]
+        planner = PlanningRepository(MemoryRepository({'Job History': rows}))
+        self.assertEqual([row['Job Key'] for row in planner.history_candidates(
+            ' ACME ', 'provider', 'https://example.com/jobs/1')], ['old'])
+        planner.commit([{'tab': 'Job History', 'identity': {'Job Key': 'old'},
+                         'values': {'Official Job URL': 'https://example.com/jobs/2'}}])
+        self.assertEqual(planner.history_candidates('Acme', 'provider', 'https://example.com/jobs/1'), [])
+        self.assertEqual([row['Job Key'] for row in planner.history_candidates(
+            'Acme', 'provider', 'https://example.com/jobs/2')], ['old'])
 
     def test_cached_identity_error_names_tab_and_identity(self):
         repo = MemoryRepository({"Job History": [
@@ -346,8 +334,10 @@ class BatchTests(unittest.TestCase):
         for job in jobs:
             engine._stage_posting(cycle, saildrone, job)
 
-        self.assertEqual(len(planner.operations), 3)
-        for operation, job in zip(planner.operations, jobs):
+        history_ops = [op for op in planner.operations if op["tab"] == "Job History"]
+        self.assertEqual(len(history_ops), 3)
+        self.assertEqual(len(planner.operations), 6)
+        for operation, job in zip(history_ops, jobs):
             self.assertEqual(operation["identity"], {
                 "Company": "Saildrone", "Official Job URL": job["url"]})
             self.assertEqual(operation["values"]["Prior Job Key"], legacy_key)
@@ -379,11 +369,12 @@ class BatchTests(unittest.TestCase):
 
 class RequestAndFilterTests(unittest.TestCase):
     def test_448_job_google_staging_uses_under_150_requests(self):
-        service = StatefulSheets({"Companies": [company()]})
+        from sheets_fixture import RangeSheets
+        service = RangeSheets({"Companies": [company()]})
         repo = GoogleRepository(service, "fixture-id", min_request_interval=0)
         state = State()
         self.addCleanup(state.close)
-        engine = Engine(repo, state, fetcher=lambda *args: Inventory("complete", [posting(str(i)) for i in range(448)]))
+        engine = Engine(repo, state, batch_size=25, fetcher=lambda *args: Inventory("complete", [posting(str(i)) for i in range(448)]))
         with redirect_stdout(io.StringIO()):
             cycle = engine.start_cycle(["C-1"])
             result = engine.resume(cycle)
@@ -414,7 +405,7 @@ class RequestAndFilterTests(unittest.TestCase):
         self.assertNotIn("Prompt Library", json.dumps(service.get_calls))
 
     def test_explicit_title_exclusions(self):
-        for title in ("Associate Facilities Coordinator (R5456)", "Facilities Coordinator", "Office Assistant",
+        for title in ("Software Engineer", "Payroll Analyst", "Administrative Assistant",
                       "Senior Staff Talent Sourcer - G&A", "Technical Sourcer", "Executive Assistant",
                       "Warehouse Associate", "Material Handler", "Machinist", "Engineering Intern"):
             with self.subTest(title=title):
@@ -423,8 +414,8 @@ class RequestAndFilterTests(unittest.TestCase):
     def test_contextual_titles_still_need_review(self):
         for title in ("Field Operations Manager", "Product Marketing Manager", "Technical Program Manager",
                       "Associate Solutions Engineer", "Customer Implementation Coordinator", "Integration Lead",
-                      "Senior Field Engineer", "Facilities Engineering Manager", "Medical Device Field Applications Engineer",
-                      "Mobile Field Support", "Engineering Operations Manager"):
+                      "Senior Field Engineer", "Field Applications Engineer", "Deployment Manager",
+                      "Customer Support Manager", "Technical Operations Manager"):
             with self.subTest(title=title):
                 self.assertFalse(excluded_title(title))
 

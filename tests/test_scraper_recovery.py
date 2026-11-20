@@ -58,11 +58,15 @@ class ScraperRecoveryTests(unittest.TestCase):
         self.assertEqual(len(result.jobs), 1)
 
     def test_kbr_dispatch_from_actual_company_configuration_and_old_alias(self):
-        for url in ['https://careers.kbr.com/us/en', 'https://jobs.kbr.com/', 'https://jobs.kbr.com/jobs.html']:
-            result = fetch_inventory('Phenom (career site)', url, 'COMP-0008', 'KBR', Workday(), discovery_transport=Public())
-            self.assertEqual(result.status, 'complete', result.reason)
-            self.assertEqual(len(result.jobs), 1)
-            self.assertEqual(result.ats, 'KBR')
+        import os
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'KBR_CHECKPOINT': str(Path(directory) / 'kbr.json')}):
+            for url in ['https://careers.kbr.com/us/en', 'https://jobs.kbr.com/', 'https://jobs.kbr.com/jobs.html']:
+                result = fetch_inventory('Phenom (career site)', url, 'COMP-0008', 'KBR', Workday(total=1), discovery_transport=Public())
+                self.assertEqual(result.status, 'complete', result.reason)
+                self.assertEqual(len(result.jobs), 1)
+                self.assertEqual(result.ats, 'KBR')
 
     def test_verified_source_aliases_preserve_user_changes(self):
         for cid, company, url, target in [

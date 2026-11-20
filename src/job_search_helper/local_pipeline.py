@@ -7,6 +7,7 @@ slow uploads never bound the number of inventories safely held on disk.
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 import copy
+import hashlib
 import json
 from queue import Empty, Full, Queue, SimpleQueue
 from threading import Event
@@ -16,9 +17,11 @@ from urllib.parse import urlsplit
 from .ats import Inventory
 from .browser_progress import BrowserProgress
 from .batching import PlanningRepository, PendingState
+from .cooperative_fetch import CooperativeFetchWork
 from .dashboard import TerminalDashboard
 from .engine import MAX_FETCH_WORKERS, inventory_payload, now
-from .repository import RepositoryError, UncertainWriteError
+from .repository import RepositoryError, ReviewFieldsChangedError, UncertainWriteError
+from .publication_receipts import SYNC_CONFIRMED, record_fingerprints
 
 
 def _stale_scoped_taleo_payload(company, payload):
@@ -39,16 +42,108 @@ class LocalPipeline:
         self.engine = engine
         self.repo, self.state, self.inbox = engine.repo, engine.state, engine.inbox
         self.cycle = self.state.cycle(cycle_id) or engine._recover(cycle_id)
+        # A retry release can be superseded or rolled back while its durable
+        # cycle remains paused.  Revalidate before this pipeline reads saved
+        # inventories, alters a cursor, or starts a fetch worker.
+        self.engine._assert_repair_retry_release(self.cycle)
         self.cid = cycle_id
         self.interval = sync_interval
         self.planner = PlanningRepository(self.repo)
         self.companies = {r['Company ID']: r for r in self.planner.read('Companies') if r.get('Company ID')}
         self.pending = deque()
+        self.replans = set()
+        self.replan_attempts = {}
         self.ignored = set()
         self.last_sync = time.monotonic()
         self.last_cycle_sync = self.last_sync
         self.synced_stages = None
         self.dashboard = None
+
+    @staticmethod
+    def _digest(value):
+        return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True,
+                                        separators=(',', ':')).encode('utf-8')).hexdigest()
+
+    def _receipt_details(self, cid, payload, plan):
+        """Bind a publication receipt to the exact request, source and release."""
+        records = record_fingerprints(plan['operations'])
+        item = self.cycle.get('companies', {}).get(cid, {})
+        request = self.cycle.get('request', {})
+        candidates = (
+            ('cycle', self.cycle.get('source_revision')),
+            ('request', request.get('source_revision') if isinstance(request, dict) else None),
+            ('company', item.get('source_revision')),
+            ('inventory', payload.get('source_revision')),
+        )
+        origin, source_revision = next(
+            ((name, str(value).strip()) for name, value in candidates if str(value or '').strip()),
+            ('frozen_inventory', 'frozen-inventory:' + self._digest(payload)),
+        )
+        repair_retry = self.cycle.get('repair_retry')
+        if isinstance(repair_retry, dict):
+            from .company_events import source_revision as company_source_revision
+            from .repair_retry import canonical_retry_binding, release_binding_sha256
+            repair_retry = canonical_retry_binding(repair_retry)
+            if repair_retry['company_id'] != str(cid):
+                raise ValueError('Repair retry Company identity does not match the stored inventory.')
+            source_revision = str(repair_retry['source_revision'])
+            matches = [row for row in self.repo.read('Companies')
+                       if str(row.get('Company ID') or '').strip() == str(cid)]
+            if len(matches) != 1 or company_source_revision(matches[0]) != source_revision:
+                raise ValueError('Repair retry source revision changed before storage; preserving the inventory for reconciliation.')
+            origin = 'repair_retry'
+            release_id = str(repair_retry['release']['release_id'])
+            release_binding = release_binding_sha256(repair_retry['release'])
+        else:
+            release_id = self._digest({'records': records, 'final': plan.get('final', {})})
+            release_binding = None
+        binding = {
+            'request_id': str(self.cycle.get('start_request_id') or self.cid),
+            'company_id': str(cid),
+            'source_revision': source_revision,
+            'source_revision_origin': origin,
+            'release_id': release_id,
+        }
+        if release_binding is not None:
+            binding['release_binding_sha256'] = release_binding
+        return {
+            'binding': binding,
+            'records': records,
+            'schedule': {
+                'boundary': 'idle',
+                'enqueued_at': str(payload.get('fetched_at') or self.cycle.get('started_at') or now()),
+            },
+            'timestamp': now(),
+        }
+
+    def _receipt_for_plan(self, cid, plan):
+        saved = self.inbox.get(self.cid, cid)
+        if saved is None:
+            raise ValueError('Durable inventory disappeared before receipt recovery')
+        return self._receipt_details(cid, saved[0], plan)
+
+    def _reconcile_receipt(self, cid, plan):
+        """Confirm a receipt only from fresh exact remote rows, never an ACK."""
+        details = self._receipt_for_plan(cid, plan)
+        current = self.inbox.receipt(details)
+        if current is None:
+            self.inbox.ensure_receipt(details)
+            current = self.inbox.receipt(details)
+        if current['state'] == SYNC_CONFIRMED:
+            return True
+        if current['state'] == 'LOCAL_COMMITTED':
+            self.inbox.mark_receipt_pending(details, timestamp=now())
+        tabs = {operation['tab'] for operation in plan['operations']}
+        try:
+            observed = record_fingerprints(
+                plan['operations'], {tab: self.repo.read(tab) for tab in tabs})
+        except Exception:
+            return False
+        acknowledgement = 'readback:' + self._digest({
+            'receipt': current['receipt_id'], 'records': observed,
+        })
+        return self.inbox.reconcile_receipt(
+            details, observed, acknowledgement, timestamp=now())
 
     def refresh_company_controls(self):
         headers = [
@@ -108,11 +203,20 @@ class LocalPipeline:
         item = self.cycle['companies'][cid]
         plan = self.inbox.plan(self.cid, cid)
         if plan is not None:
-            if plan[1] == len(plan[0]['operations']):
-                self.finish(cid, plan[0])
+            frozen, cursor = plan
+            details = self._receipt_for_plan(cid, frozen)
+            current = self.inbox.receipt(details)
+            if current and current['state'] == SYNC_CONFIRMED:
+                self.inbox.advance(self.cid, {cid: len(frozen['operations'])})
+                self.finish(cid, frozen)
+            elif current and current['state'] == 'SYNC_PENDING' and self._reconcile_receipt(cid, frozen):
+                self.inbox.advance(self.cid, {cid: len(frozen['operations'])})
+                self.finish(cid, frozen)
+            elif cursor == len(frozen['operations']):
+                self.finish(cid, frozen)
             else:
                 try:
-                    self.planner.commit(plan[0]['operations'][plan[1]:])
+                    self.planner.commit(frozen['operations'][cursor:])
                 except RepositoryError as exc:
                     self.fail(cid, exc, 'restoring local plan')
                     return
@@ -170,6 +274,15 @@ class LocalPipeline:
                     expected = op.get('expected', {})
                     for number, row in self.planner.indexes['Job History'].matches(op['identity']):
                         prior = originals.get(('Job History', number), {})
+                        if getattr(self.repo, 'is_local', False):
+                            # Local reads cost no Google request. Keep review
+                            # guards even for absence/source-only operations.
+                            op['expected'] = {
+                                **{h: prior.get(h, '') for h in ('Added to Opportunities?', 'Review Status',
+                                                               'Review Started At', 'Source Hash', 'Review Notes')},
+                                **expected,
+                            }
+                            continue
                         manual = expected.get('Added to Opportunities?', prior.get('Added to Opportunities?', ''))
                         op['expected'] = {'Added to Opportunities?': manual}
                         if str(manual).strip().casefold() == 'manual review':
@@ -183,7 +296,8 @@ class LocalPipeline:
             final = {k: v for k, v in local_item.items() if k != 'jobs'}
             plan = {'operations': self.planner.operations, 'final': final,
                     'requested_url': payload.get('requested_url', '')}
-            self.inbox.save_plan(self.cid, cid, plan)
+            self.inbox.save_plan(self.cid, cid, plan,
+                                 receipt=self._receipt_details(cid, payload, plan))
         except Exception as exc:
             for tab, length in lengths.items():
                 del self.planner.rows[tab][length:]
@@ -202,7 +316,8 @@ class LocalPipeline:
                     durable_inventory=True, locally_processed=True)
         self.state.save_cycle(self.cycle)
         self.dashboard.locally_processed(len(payload.get('jobs', [])))
-        self.engine.performance['locally_processed_jobs'] = self.dashboard.local_job_count
+        self.engine.performance['locally_processed_jobs'] = (
+            self.engine.performance.get('locally_processed_jobs', 0) + len(payload.get('jobs', [])))
         if payload.get('inventory_status') == 'failed':
             # Log source failures, but let their prepared status synchronize.
             self.engine._log_company_error(self.cycle, company, item,
@@ -213,6 +328,11 @@ class LocalPipeline:
         self.refresh_queue_status()
 
     def finish(self, cid, plan):
+        # A completed cursor proves only that the write returned. Keep the
+        # frozen plan until fresh exact readback confirms every record.
+        if not self._reconcile_receipt(cid, plan):
+            self.refresh_queue_status()
+            return False
         self.cycle['companies'][cid].update(plan['final'])
         self.state.save_cycle(self.cycle)
         # Checkpoint first: a crash before deletion leaves a fully acknowledged
@@ -223,6 +343,7 @@ class LocalPipeline:
         else:
             self.inbox.block(self.cid, cid)
         self.refresh_queue_status()
+        return True
 
     def upload(self, entries):
         if not entries:
@@ -230,7 +351,7 @@ class LocalPipeline:
         by_id = self.refresh_company_controls()
         valid = []
         for cid, cursor, ops in entries:
-            if cid in self.ignored:
+            if cid in self.ignored or cid in self.replans:
                 continue
             plan = self.inbox.plan(self.cid, cid)[0]
             try:
@@ -250,6 +371,25 @@ class LocalPipeline:
                 continue
             valid.append((cid, cursor, ops))
         entries = valid
+        if not entries:
+            return
+        recoverable = []
+        for cid, cursor, ops in entries:
+            plan = self.inbox.plan(self.cid, cid)[0]
+            details = self._receipt_for_plan(cid, plan)
+            self.inbox.ensure_receipt(details)
+            current = self.inbox.receipt(details)
+            if current['state'] == SYNC_CONFIRMED:
+                self.inbox.advance(self.cid, {cid: len(plan['operations'])})
+                continue
+            if current['state'] == 'SYNC_PENDING' and self._reconcile_receipt(cid, plan):
+                self.inbox.advance(self.cid, {cid: len(plan['operations'])})
+                continue
+            # Persist the ambiguous-write recovery boundary before the normal
+            # writer sends any part of this frozen plan.
+            self.inbox.mark_receipt_pending(details, timestamp=now())
+            recoverable.append((cid, cursor, ops))
+        entries = recoverable
         if not entries:
             return
         operations = [op for _, _, ops in entries for op in ops]
@@ -277,6 +417,27 @@ class LocalPipeline:
                 if cid not in self.ignored:
                     self.upload([(cid, cursor + middle, ops[middle:])])
                 return
+            if isinstance(exc, ReviewFieldsChangedError) and self.replan_attempts.get(cid, 0) < 2:
+                # This typed rejection proves this batch was not submitted.
+                # Rebuild from the retained inventory and fresh local rows,
+                # including any earlier acknowledged batches for this company.
+                if cursor != 0:
+                    self.fail(
+                        cid,
+                        ValueError('Manual review changed after partial publication; saved results and receipt retained for reconciliation'),
+                        'preserving partially published repair plan',
+                    )
+                    return
+                plan = self.inbox.plan(self.cid, cid)[0]
+                self.inbox.discard_preflight_rejected_receipt(
+                    self._receipt_for_plan(cid, plan), cursor=cursor)
+                self.inbox.discard_plan(self.cid, cid)
+                self.replan_attempts[cid] = self.replan_attempts.get(cid, 0) + 1
+                self.replans.add(cid)
+                self.engine.performance['review_conflict_replans'] = (
+                    self.engine.performance.get('review_conflict_replans', 0) + 1)
+                self.dashboard.writer_message('Refreshing changed reviews', self.companies[cid]['Company'])
+                return
             self.inbox.discard_plan(self.cid, cid)
             self.fail(cid, exc, 'syncing local changes')
             return
@@ -289,6 +450,23 @@ class LocalPipeline:
         self.engine._checkpoint()
 
     def flush(self, full_only=False):
+        while True:
+            self._flush_pending(full_only=full_only)
+            if not self.replans:
+                return
+            retry = sorted(self.replans)
+            self.replans.clear()
+            for cid in retry:
+                try:
+                    self.planner.reload_company(self.companies[cid])
+                except Exception as exc:
+                    self.fail(cid, exc, 'refreshing changed reviews')
+                    continue
+                self.stage(cid)
+            # A replacement plan must not wait for another company to arrive.
+            full_only = False
+
+    def _flush_pending(self, full_only=False):
         if not self.pending:
             return
         active = [(cid, *self.inbox.plan(self.cid, cid)) for cid in self.pending if cid not in self.ignored]
@@ -303,7 +481,7 @@ class LocalPipeline:
                 if entries and (count >= self.engine.batch_size or size + cost > 500_000):
                     self.upload(entries)
                     entries, size, count = [], 0, 0
-                if cid in self.ignored:
+                if cid in self.ignored or cid in self.replans:
                     break
                 if entries and entries[-1][0] == cid:
                     entries[-1][2].append(op)
@@ -317,10 +495,11 @@ class LocalPipeline:
         if not full_only or count >= self.engine.batch_size or size >= 500_000:
             self.upload(entries)
         for cid, plan, _ in active:
-            if cid not in self.ignored:
+            if cid not in self.ignored and cid not in self.replans:
                 saved = self.inbox.plan(self.cid, cid)
                 if saved[1] == len(plan['operations']):
-                    self.finish(cid, plan)
+                    if not self.finish(cid, plan):
+                        self.pending.append(cid)
                 else:
                     self.pending.append(cid)
         # Frequent full batches must not keep postponing the partial-batch
@@ -342,7 +521,7 @@ class LocalPipeline:
         self.last_cycle_sync = time.monotonic()
 
     def run(self, fetch_workers=5, assignment_window=100, sync_only=False, defer_sync=False, retry_blocked=False,
-            retry_partial=False):
+            retry_partial=False, retry_company_ids=None):
         if not 1 <= fetch_workers <= MAX_FETCH_WORKERS or not 1 <= assignment_window <= 100:
             raise ValueError(f'Fetch workers must be 1-{MAX_FETCH_WORKERS} and assignment window 1-100')
         if sync_only and defer_sync:
@@ -358,6 +537,8 @@ class LocalPipeline:
         snapshots = []
         saved_ids = set(self.inbox.pending(self.cid, include_blocked=True))
         for cid, item in self.cycle['companies'].items():
+            if retry_company_ids is not None and cid not in retry_company_ids:
+                continue
             company = self.companies.get(cid)
             sheet_queued = company is not None and str(company.get('Scan State', '')).strip().casefold() == 'queued'
             saved = self.inbox.get(self.cid, cid) if cid in saved_ids else None
@@ -411,6 +592,7 @@ class LocalPipeline:
         self.state.save_cycle(self.cycle)
         assignments = Queue(maxsize=max(fetch_workers, assignment_window))
         stop = Event()
+        detail_work = CooperativeFetchWork(len(snapshots), max_pending=2 * fetch_workers, scope_id=self.cid)
         def feed():
             for snapshot in snapshots:
                 while not stop.is_set():
@@ -428,16 +610,10 @@ class LocalPipeline:
                         break
                     except Full:
                         continue
-        def worker(slot):
-            while not stop.is_set():
-                try:
-                    company = assignments.get(timeout=.1)
-                except Empty:
-                    continue
-                if company is None:
-                    return
-                cid = company['Company ID']
-                self.dashboard.worker_fetching(slot, company['Company'])
+        def fetch_company(company, slot):
+            cid = company['Company ID']
+            self.dashboard.worker_fetching(slot, company['Company'])
+            with detail_work.bind_worker(company['Company']):
                 try:
                     fetch = getattr(self.engine.fetcher, 'fetch_with_progress', None)
                     args = (str(company.get('ATS / Source', '')), company['Official Careers URL'], cid, company['Company'])
@@ -450,13 +626,41 @@ class LocalPipeline:
                         raise ValueError('Invalid inventory')
                 except Exception as exc:
                     result = Inventory('failed', reason=f'Fetch worker failed: {type(exc).__name__}')
-                self.inbox.save(self.cid, cid, inventory_payload(result, company))
-                self.refresh_queue_status()
-                completed.put(cid)
-                self.dashboard.worker_handoff(
-                    slot, company['Company'], len(result.jobs), status=result.status,
-                    pending_urls=len(result.browser_pending_urls),
-                    discovery_incomplete=result.browser_discovery_incomplete)
+            # The owning worker alone publishes the assembled inventory. A
+            # durability failure must propagate rather than replace its result.
+            self.inbox.save(self.cid, cid, inventory_payload(result, company))
+            self.refresh_queue_status()
+            completed.put(cid)
+            self.dashboard.worker_handoff(
+                slot, company['Company'], len(result.jobs), status=result.status,
+                pending_urls=len(result.browser_pending_urls),
+                discovery_incomplete=result.browser_discovery_incomplete)
+
+        def worker(slot):
+            try:
+                while not stop.is_set():
+                    try:
+                        company = assignments.get(timeout=.1)
+                    except Empty:
+                        continue
+                    if company is None:
+                        # Sentinels follow every company assignment: helpers
+                        # cannot take detail work while new companies wait.
+                        try:
+                            detail_work.help_until_finished(
+                                stop, on_help=lambda name: self.dashboard.worker_assisting(slot, name))
+                        finally:
+                            self.dashboard.worker_assisting(slot, '')
+                        return
+                    try:
+                        fetch_company(company, slot)
+                    finally:
+                        detail_work.company_done()
+            except BaseException:
+                # Wake helper/feeder exit paths even if unclaimed assignments
+                # remain after a worker's durable inventory save fails.
+                stop.set()
+                raise
         pool = ThreadPoolExecutor(max_workers=fetch_workers + 1)
         try:
             producer = pool.submit(feed)
@@ -500,6 +704,7 @@ class LocalPipeline:
             pool.shutdown(wait=True, cancel_futures=True)
         result = self.engine.status(self.cid)
         attempted = handled | self.ignored
+        result['attempted_company_ids'] = sorted(attempted)
         stages = [self.cycle['companies'][cid]['stage'] for cid in attempted]
         result['run_counts'] = {
             'new_jobs': self.dashboard.new_job_count,

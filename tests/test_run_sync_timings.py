@@ -18,7 +18,7 @@ class BatchTimingTests(unittest.TestCase):
         self.sync.remote = SimpleNamespace(main=SimpleNamespace(metrics=self.metrics))
         self.original_publish = self.sync.publish_batch
         self.logs = []
-        self.session = RunSheetsSync(lambda: None, log=self.logs.append)
+        self.session = RunSheetsSync(lambda: None, coalesce_seconds=0, log=self.logs.append)
 
     def publish(self):
         self.metrics['read_seconds'] += 2.0

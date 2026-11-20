@@ -69,6 +69,27 @@ class GDMSIntegrationTests(unittest.TestCase):
                                  "General Dynamics Mission Systems", pages)
         self.assertEqual(result.status, "blocked")
 
+    def test_http_200_azure_waf_challenge_is_blocked(self):
+        pages = Pages({SOURCE: '<html><title>Access Denied</title><script>awswafcookiedomainlist</script></html>'})
+        result = fetch_inventory("GDMS Careers", SOURCE, "COMP-0096",
+                                 "General Dynamics Mission Systems", pages)
+        self.assertEqual(result.status, "blocked")
+
+    def test_rendered_page_numbering_without_page_zero_is_supported(self):
+        page0 = listing(self.rows[:1], next_page=True).replace(
+            '<a href="/careers/job-search?page=0">1</a>', '')
+        page1 = listing(self.rows[1:], next_page=False).replace(
+            '<a href="/careers/job-search?page=0">1</a>', '')
+        pages = Pages({
+            SOURCE: page0,
+            SOURCE + "?page=1": page1,
+            "https://gdmissionsystems.com/careers/devops-engineer-intern-2026-75769-opportunity": detail("DevOps Engineer Intern"),
+            "https://gdmissionsystems.com/careers/advanced-billing-associate-2026-76641-opportunity": detail("Advanced Billing Associate"),
+        })
+        result = fetch_inventory("GDMS Careers", SOURCE, "COMP-0096",
+                                 "General Dynamics Mission Systems", pages)
+        self.assertEqual(result.status, "complete", result.reason)
+
     def test_routing_uses_installed_adapter(self):
         result = fetch_inventory("GDMS Careers", SOURCE, "COMP-0096",
                                  "General Dynamics Mission Systems", self.pages)

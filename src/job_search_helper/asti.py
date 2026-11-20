@@ -45,7 +45,7 @@ def _parse(html):
         rid="asti-"+"-".join(x for x in title.casefold().split() if x.isalnum())
         row=_base({"id":rid},"ASTi careers","COMP-0336","Advanced Simulation Technology inc. (ASTi)")
         row.update(title=title,description=body,url=SOURCE); out.append(row)
-    if len(out)!=2: raise FetchError("partial",f"ASTi positions page exposed {len(out)} verifiable roles, expected the two published positions.")
+    if not out: raise FetchError("partial", "ASTi positions page exposed no verifiable roles.")
     return out
 
 def fetch_asti(careers_url,company_id,company,transport=None):

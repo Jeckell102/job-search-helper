@@ -10,6 +10,21 @@ class Fake:
   return HTTPResponse(200,v.encode() if isinstance(v,str) else json.dumps(v).encode())
  def post(self,url,payload):return self.get(url)
 def fixture(n):return (P/n).read_text()
+
+def rippling_state(*, page=0, total=1, items=None, query_key=None, board='pdwcareers', locale=None):
+ state=copy.deepcopy(s.Scripts(fixture('rippling.html')).next())
+ state['apiData']['jobBoardSlug']=board
+ state['apiData']['jobBoard']['slug']=board
+ query=state['dehydratedState']['queries'][0]
+ query['queryKey']=query_key if query_key is not None else [
+  'board',board,'job-posts',True,
+  {'searchQuery':'','departments':[],'workplaceType':None,'country':'','state':'','city':'','page':page,'pageSize':20},
+ ]
+ if locale is not None:query['queryKey'].append(locale)
+ data=query['state']['data']
+ data.update(items=items if items is not None else data['items'],page=page,pageSize=20,totalItems=total,totalPages=(total+19)//20)
+ return '<script id="__NEXT_DATA__" type="application/json">'+json.dumps({'props':{'pageProps':state}})+'</script>'
+
 class SharedTests(unittest.TestCase):
  def test_scope(self):
   for url in ['https://apply.workable.com/matternet/?department=x','https://ats.rippling.com/pdwcareers/jobs?page=1','https://jobs.jobvite.com/kymetacorp/search?c=Sales','https://a.breezy.hr/?location=NY','https://jobs.smartrecruiters.com/my-applications']:
@@ -28,6 +43,38 @@ class SharedTests(unittest.TestCase):
   for url,m in cases:
    with self.subTest(url=url):
     r=s.fetch_shared('',url,'c','C',Fake(m));self.assertEqual(r.status,'complete',r.reason);self.assertEqual(len(r.jobs),1);self.assertGreater(len(r.jobs[0]['description']),100)
+ def test_rippling_trailing_locale_query_key_uses_normal_dispatch(self):
+  url='https://ats.rippling.com/pdwcareers/jobs'
+  state=rippling_state(locale='en-US')
+  r=s.fetch_shared('',url,'c','C',Fake({url:state,url+'/ba5de22d-0c49-4d35-802e-230b4ee62792':fixture('rippling-detail.html')}))
+  self.assertEqual(r.status,'complete',r.reason)
+  self.assertEqual(len(r.jobs),1)
+ def test_rippling_false_public_flag_is_valid_schema(self):
+  b=s.board_link('https://ats.rippling.com/pdwcareers/jobs')
+  key=['board','pdwcareers','job-posts',False,{'searchQuery':'','departments':[],'workplaceType':None,'country':'','state':'','city':'','page':0,'pageSize':20},'en-US']
+  self.assertEqual(len(s.listing(b,Fake({b.url:rippling_state(query_key=key)}))),1)
+ def test_rippling_query_key_rejects_invalid_scope_and_shape(self):
+  b=s.board_link('https://ats.rippling.com/pdwcareers/jobs')
+  valid=['board','pdwcareers','job-posts',True,{'searchQuery':'','departments':[],'workplaceType':None,'country':'','state':'','city':'','page':0,'pageSize':20}]
+  cases={
+   'missing filters':['board','pdwcareers','job-posts',True,'en-US'],
+   'ambiguous filters':valid+[{}],
+   'filtered search':['board','pdwcareers','job-posts',True,{**valid[4],'searchQuery':'engineer'}],
+   'wrong locale':valid+['fr-FR'],
+   'nonboolean flag':['board','pdwcareers','job-posts','public',valid[4]],
+  }
+  for label,key in cases.items():
+   with self.subTest(label=label),self.assertRaises(s.FetchError):
+    s.listing(b,Fake({b.url:rippling_state(query_key=key)}))
+  bad=rippling_state();bad=bad.replace('"jobBoardSlug": "pdwcareers"','"jobBoardSlug": "other"')
+  with self.assertRaises(s.FetchError):s.listing(b,Fake({b.url:bad}))
+ def test_rippling_trailing_locale_query_key_paginates_all_pages(self):
+  b=s.board_link('https://ats.rippling.com/pdwcareers/jobs')
+  jobs=[{'id':f'job-{number}'} for number in range(21)]
+  first=rippling_state(page=0,total=21,items=jobs[:20],locale='en-US')
+  second=rippling_state(page=1,total=21,items=jobs[20:],locale='en-US')
+  rows=s.listing(b,Fake({b.url:first,b.url+'?page=1':second}))
+  self.assertEqual([row['id'] for row in rows],[row['id'] for row in jobs])
  def test_jazz_and_jobvite(self):
   for name,url,ident,title,detail in [('JazzHR','https://g2ops.applytojob.com/apply','AONmJi1N5j','Assistant Customer Technical Representative (ACTR)','https://g2ops.applytojob.com/apply/AONmJi1N5j/Assistant-Customer-Technical-Representative-ACTR'),('Jobvite','https://jobs.jobvite.com/kymetacorp/jobs','oCOKAfwu','Manager,\xa0Engineering Project Leader','https://jobs.jobvite.com/kymetacorp/job/oCOKAfwu')]:
    marker='jobs-list' if name=='JazzHR' else 'jv-job-list';t=Fake({url:f'<div class="{marker}"><a href="{detail}">{title}</a></div>',detail:fixture(name.lower()+'-detail.html')});r=s.fetch_shared(name,url,'c','C',t);self.assertEqual(r.status,'complete',r.reason)
