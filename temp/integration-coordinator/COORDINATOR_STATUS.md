@@ -1,6 +1,6 @@
 # Current protected-source reconciliation coordinator status
 
-## Active checkpoint — 2026-11-19 retained route accepted; supervision next
+## Active checkpoint — 2026-11-19 retained route and supervision accepted
 
 - Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains active.
 - The default-disabled Company intake dispatcher, exact controller handoff,
@@ -19,16 +19,25 @@
   focused wrapper-runtime suite passed 149 strict adjacent tests after this
   cleanup; independent QA separately passed 93 retained tests and 40 privacy
   follow-up tests.
-- Next work is the default-disabled automatic supervision branch described in
-  `AUTO_RETAINED_EVENT_SUPERVISION_DESIGN_20261119.md`. It must share durable
-  ownership with normal intake, supervise the public retained child across
-  restarts, and accept only exact consumption-receipt completion.
+- The default-disabled automatic retained supervision branch is independently
+  **ACCEPTED**. It shares one durable owner with normal intake, invokes only the
+  public retained command with public-key configuration inherited from the
+  environment, and accepts only the exact terminal consumption receipt.
+- Crash recovery persists a pre-spawn owner token and can adopt only the exact
+  same-user live wrapper child using token, argv, interpreter, CWD, PYTHONPATH,
+  PID, and Linux start identity. It rejects look-alike and zombie processes;
+  a missing/dead child starts the idempotent public recovery path exactly once.
+  Root's strict adjacent suite passed 160 tests and independent QA passed 87.
+- Next work is a freshly byte-validated narrow installation into the protected
+  MuleLab checkout with rollback copies and both intake gates still disabled,
+  followed by service configuration and guarded live proof.
 - Nothing is deployed or activated. The historical cycle and its 45 retained
   inventories, six plans, and two confirmed receipts remain untouched.
 - Roadmap accounting remains 0 of 6 milestone gates closed and final
   independent acceptance 0%. The retained-route work item is 100% source/QA
-  complete; automatic watcher supervision, protected installation, service
-  deployment, live proof, and final milestone acceptance still follow.
+  complete, and automatic watcher supervision is 100% source/QA complete;
+  protected installation, service deployment, live proof, and final milestone
+  acceptance still follow.
 
 Reread this section after every context reset and before a major/live action or
 user update. It supersedes older current-status claims below.

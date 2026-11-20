@@ -158,6 +158,12 @@ class SyncCliLifecycleTests(unittest.TestCase):
             self.assertEqual(sync_cli.main(['intake-status']), 0); self.assertTrue(self.messages[-1]['enabled'])
             self.assertEqual(sync_cli.main(['intake-disable']), 0); self.assertFalse(self.messages[-1]['enabled'])
 
+    def test_cli_retained_intake_control_is_separate_and_persistent(self):
+        with patch.object(sync_cli, 'SQLiteRepository', RealSQLiteRepository):
+            self.assertEqual(sync_cli.main(['intake-status']), 0); self.assertFalse(self.messages[-1]['retained_enabled'])
+            self.assertEqual(sync_cli.main(['intake-retained-enable']), 0); self.assertTrue(self.messages[-1]['retained_enabled'])
+            self.assertEqual(sync_cli.main(['intake-retained-disable']), 0); self.assertFalse(self.messages[-1]['retained_enabled'])
+
     def test_watch_dispatches_only_after_writer_lock_releases(self):
         from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
         observed = []

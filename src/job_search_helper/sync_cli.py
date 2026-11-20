@@ -45,6 +45,8 @@ def main(argv=None):
     commands.add_parser('intake-status', help='Show the durable Company-intake control, without Google access.')
     commands.add_parser('intake-enable', help='Durably enable Company intake for future watch cycles only.')
     commands.add_parser('intake-disable', help='Durably disable Company intake; queued requests are retained.')
+    commands.add_parser('intake-retained-enable', help='Durably enable signed retained Company-event intake.')
+    commands.add_parser('intake-retained-disable', help='Durably disable retained intake; queued requests are retained.')
     commands.add_parser('conflicts', help='Show held changes without clearing them.')
     for name in ('once', 'watch'):
         sub = commands.add_parser(name, help='Import manual edits and publish queued local changes.')
@@ -83,13 +85,18 @@ def main(argv=None):
         if args.command == 'status':
             print_status({'configured_backend': storage_backend(), 'database': str(local.path), **local.status()})
             return 0
-        if args.command in {'intake-status', 'intake-enable', 'intake-disable'}:
+        if args.command in {'intake-status', 'intake-enable', 'intake-disable',
+                            'intake-retained-enable', 'intake-retained-disable'}:
             from .company_intake_dispatcher import CompanyIntakeDispatcher
             dispatcher = CompanyIntakeDispatcher(local, state_path().parent)
             if args.command == 'intake-enable':
                 dispatcher.set_enabled(True)
             elif args.command == 'intake-disable':
                 dispatcher.set_enabled(False)
+            elif args.command == 'intake-retained-enable':
+                dispatcher.set_retained_enabled(True)
+            elif args.command == 'intake-retained-disable':
+                dispatcher.set_retained_enabled(False)
             print_status({'state': 'COMPANY_INTAKE_CONTROL', **dispatcher.status()})
             return 0
         if args.command == 'conflicts':

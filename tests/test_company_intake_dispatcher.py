@@ -1,8 +1,13 @@
 import fcntl
+import base64
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from job_search_helper.company_intake_dispatcher import CompanyIntakeDispatcher
 from job_search_helper.company_events import _json_digest
@@ -40,8 +45,8 @@ class CompanyIntakeDispatcherTests(unittest.TestCase):
         self.assertEqual(self.calls, [])
 
     def test_busy_or_paused_status_holds_without_launching(self):
-        for status in ({"state": "WAITING_SAFE_BOUNDARY", "blocking_cycle_ids": ["CYC-1"]}, {"state": "WAITING_SAFE_BOUNDARY", "reason": "paused"}):
-            self.assertEqual(self.dispatcher(status).run_once()["state"], "HELD_WAITING_SAFE_BOUNDARY")
+        self.assertEqual(self.dispatcher({"state": "WAITING_SAFE_BOUNDARY", "blocking_cycle_ids": ["CYC-1"]}).run_once()["state"], "HELD_RETAINED_DISABLED")
+        self.assertEqual(self.dispatcher({"state": "WAITING_SAFE_BOUNDARY", "reason": "paused"}).run_once()["state"], "HELD_WAITING_SAFE_BOUNDARY")
         self.assertEqual(self.calls, [])
 
     def test_restart_does_not_launch_a_reserved_request_twice(self):
@@ -85,3 +90,137 @@ class CompanyIntakeDispatcherTests(unittest.TestCase):
         workflow.write_text(json.dumps({"stage": "SCRAPING", "company_intake": {"request_id": "company-event:OTHER", "request_digest": "other"}}))
         (workflow.parent.parent / "latest.json").write_text(json.dumps({"workflow": str(workflow)}))
         self.assertEqual(self.dispatcher().run_once()["state"], "HELD_UNMATCHED_WORKFLOW"); self.assertEqual(self.calls, [])
+
+    def test_retained_gate_is_separate_and_public_command_has_no_key_arguments(self):
+        retained_calls = []
+        dispatcher = self.dispatcher({"state": "WAITING_SAFE_BOUNDARY", "blocking_cycle_ids": ["CYC-OLD"]})
+        dispatcher.set_retained_enabled(True)
+        dispatcher.retained_child_runner = lambda command: retained_calls.append(tuple(command)) or 0
+        with patch.dict("os.environ", {"COMPANY_RETAINED_KEY_ID": "fixture-key", "COMPANY_RETAINED_ED25519_PUBLIC_KEY_BASE64": "ZmFrZQ=="}), \
+             patch.object(dispatcher, "_retained_eligibility", return_value={"exception_cycle": "CYC-OLD", "manifest_digest": "manifest"}):
+            self.assertEqual(dispatcher.run_once()["state"], "RETAINED_CHILD_LAUNCHED")
+        self.assertEqual(retained_calls, [(retained_calls[0][0], "run-retained-company-event")])
+
+    def test_retained_missing_key_holds_without_normal_launch(self):
+        dispatcher = self.dispatcher({"state": "WAITING_SAFE_BOUNDARY", "blocking_cycle_ids": ["CYC-OLD"]})
+        dispatcher.set_retained_enabled(True)
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(dispatcher.run_once()["state"], "HELD_RETAINED_KEY_CONFIG")
+        self.assertEqual(self.calls, [])
+
+    def test_retained_crash_after_reserve_before_pid_journal_recovers_public_child(self):
+        calls = []
+        dispatcher = self.dispatcher({"state": "WAITING_SAFE_BOUNDARY", "blocking_cycle_ids": ["CYC-OLD"]})
+        dispatcher.set_retained_enabled(True)
+        dispatcher.retained_child_runner = lambda command: calls.append(tuple(command)) or 0
+        with patch.dict("os.environ", {"COMPANY_RETAINED_KEY_ID": "fixture-key", "COMPANY_RETAINED_ED25519_PUBLIC_KEY_BASE64": "ZmFrZQ=="}), \
+             patch.object(dispatcher, "_retained_eligibility", return_value={"exception_cycle": "CYC-OLD", "manifest_digest": "manifest"}):
+            self.assertEqual(dispatcher._claim_retained("company-event:CEV-1", _json_digest(request()), {"exception_cycle": "CYC-OLD", "manifest_digest": "manifest"}, dispatcher._retained_config()), "RESERVED")
+            self.assertEqual(dispatcher.run_once()["state"], "RETAINED_CHILD_LAUNCHED")
+        self.assertEqual(len(calls), 1)
+
+    def test_retained_receipt_is_terminal_and_preserves_newer_request(self):
+        from job_search_helper.retained_work_runner import digest
+        old = request(); newer = request(); newer["request_id"] = "company-event:CEV-2"; newer["company_event"]["event_id"] = "CEV-2"
+        key = digest(old)
+        archive = self.root / "company-event-bridge" / "consumed-requests" / (key + ".json")
+        receipt = self.root / "company-event-bridge" / "consumption-receipts" / (key + ".json")
+        archive.parent.mkdir(parents=True); receipt.parent.mkdir(parents=True)
+        archive.write_text(json.dumps(old)); receipt.write_text(json.dumps({"request_sha256": key, "state": "FIRST_PASS_RELEASED_CONSUMED"}))
+        (self.root / "next-scan.json").write_text(json.dumps(newer))
+        self.assertTrue(self.dispatcher()._retained_consumed(old, _json_digest(old)))
+        self.assertEqual(newer, json.loads((self.root / "next-scan.json").read_text()))
+
+    def test_malformed_retained_receipt_holds_closed(self):
+        dispatcher = self.dispatcher({"state": "WAITING_SAFE_BOUNDARY", "blocking_cycle_ids": ["CYC-OLD"]})
+        dispatcher.set_retained_enabled(True)
+        root = self.root / "company-event-bridge" / "consumption-receipts"; root.mkdir(parents=True)
+        from job_search_helper.retained_work_runner import digest
+        (root / (digest(request()) + ".json")).write_text("not-json")
+        self.assertEqual(dispatcher.run_once()["state"], "HELD_RETAINED_RECEIPT")
+
+    def test_fake_token_runner_with_untrusted_pythonpath_is_rejected(self):
+        dispatcher = self.dispatcher()
+        token = "fixture-owner-token"
+        with dispatcher._journal() as db:
+            db.execute("INSERT INTO request_ownership(request_id,request_digest,route,state,owner_token) VALUES (?,?,?,?,?)", ("company-event:CEV-CRASH", "digest", "RETAINED", "RETAINED_STARTING", token))
+        fake = Path(self.temp.name) / "fake" / "job_search_helper"; fake.mkdir(parents=True)
+        (fake / "__init__.py").write_text("")
+        (fake / "runner.py").write_text("import time; time.sleep(20)\n")
+        environment = dict(os.environ, JOB_SEARCH_RETAINED_OWNER_TOKEN=token,
+                           PYTHONPATH=str(fake.parent) + os.pathsep + str(Path.cwd() / "src"))
+        child = subprocess.Popen([sys.executable, "-m", "job_search_helper.runner", "run-retained-company-event"], cwd=Path.cwd(), env=environment)
+        def stop_child():
+            if child.poll() is None:
+                child.terminate()
+            child.wait(timeout=5)
+        self.addCleanup(stop_child)
+        adopted = None
+        for _ in range(40):
+            adopted = dispatcher._adopt_retained_child(token)
+            __import__("time").sleep(.025)
+        self.assertIsNone(adopted)
+
+    def test_faithful_isolated_wrapper_process_is_adopted_without_second_launch(self):
+        project = self.root / "isolated-project"
+        package = project / "src" / "job_search_helper"
+        package.mkdir(parents=True)
+        (package / "__init__.py").write_text("")
+        (package / "runner.py").write_text("import time; time.sleep(20)\n")
+        venv = project / ".venv" / "bin"; venv.mkdir(parents=True)
+        (venv / "python").symlink_to(sys.executable)
+        token = "faithful-owner-token"
+        environment = dict(os.environ, JOB_SEARCH_RETAINED_OWNER_TOKEN=token,
+                           PYTHONPATH=str(project / "src"))
+        child = subprocess.Popen([
+            str(venv / "python"), "-m", "job_search_helper.runner",
+            "run-retained-company-event"], cwd=project, env=environment)
+        def stop_child():
+            if child.poll() is None:
+                child.terminate()
+            child.wait(timeout=5)
+        self.addCleanup(stop_child)
+        dispatcher = self.dispatcher()
+        with patch("job_search_helper.company_intake_dispatcher.PROJECT_ROOT", project):
+            adopted = None
+            for _ in range(80):
+                adopted = dispatcher._adopt_retained_child(token)
+                if adopted is not None:
+                    break
+                __import__("time").sleep(.025)
+        self.assertEqual((child.pid, dispatcher._process_start_identity(child.pid)), adopted)
+
+    def test_real_zombie_is_not_live(self):
+        child = subprocess.Popen([sys.executable, "-c", "pass"])
+        for _ in range(80):
+            identity = CompanyIntakeDispatcher._process_identity(child.pid)
+            if identity[1] == "Z":
+                break
+            __import__("time").sleep(.01)
+        self.assertEqual(identity[1], "Z")
+        self.assertIsNone(CompanyIntakeDispatcher._process_start_identity(child.pid))
+        child.wait(timeout=5)
+
+    def test_retained_preflight_verifies_real_ed25519_active_record_and_manifest(self):
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        from job_search_helper.engine import State
+        from job_search_helper.retained_work_exception import activate_exception, required_claims
+        from job_search_helper.selected_recovery_authorization import Ed25519AuthorizationVerifier, canonical
+        from tests.test_retained_work_exception import RetainedWorkExceptionTests
+        fixture = RetainedWorkExceptionTests("runTest"); fixture.setUp(); self.addCleanup(fixture.tearDown)
+        state = State(str(fixture.root / "state.db")); state.save_cycle(fixture.cycle); state.close()
+        private = Ed25519PrivateKey.generate()
+        public = private.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+        encoded = base64.b64encode(public).decode("ascii")
+        claims = required_claims(fixture.manifest, expires_at="2027-01-01T00:00:00+00:00")
+        envelope = {"key_id": "fixture-key", "payload": claims,
+                    "signature": base64.b64encode(private.sign(canonical(claims))).decode("ascii")}
+        activate_exception(fixture.manifest, envelope,
+                           Ed25519AuthorizationVerifier({"fixture-key": public}),
+                           fixture.store_path)
+        dispatcher = CompanyIntakeDispatcher(Repo(), fixture.root, queue_status=lambda: {"state": "WAITING_SAFE_BOUNDARY", "blocking_cycle_ids": ["CYC-OLD"]})
+        with patch.dict("os.environ", {"COMPANY_RETAINED_KEY_ID": "fixture-key", "COMPANY_RETAINED_ED25519_PUBLIC_KEY_BASE64": encoded}):
+            eligibility = dispatcher._retained_eligibility(request(), dispatcher.queue_status(), dispatcher._retained_config())
+        self.assertEqual(eligibility["exception_cycle"], "CYC-OLD")
+        self.assertEqual(eligibility["manifest_digest"], fixture.manifest["manifest_digest"])
