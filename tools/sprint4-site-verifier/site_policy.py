@@ -49,6 +49,11 @@ def load_policy(archive_path):
         values[key] = absolute(values[key])
     for key in PATH_LIST_FIELDS:
         values[key] = tuple(absolute(path) for path in values[key])
+    if values["ancillary_process_evidence"] is not None:
+        path = absolute(values["ancillary_process_evidence"])
+        if not path.is_relative_to("/run") or path == Path("/run"):
+            raise ValueError("Administrator process evidence must be under /run")
+        values["ancillary_process_evidence"] = path
     values["network_namespace"] = identity_pair(values["network_namespace"])
     values["wrapper_args"] = tuple(values["wrapper_args"])
     values["source_paths"] = frozenset(values["source_paths"])

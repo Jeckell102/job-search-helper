@@ -36,6 +36,7 @@ def build_fixture_archive(policy, protected_pin, digest, launcher):
         **{name: (source / name).read_bytes() for name in (
             'host_checkpoint.py', 'alternate_writer_witness.py', 'protected_state.py', 'site_policy.py', 'launcher_witness.py',
             'physical_protected_witness.py', 'protected_continuity.py', 'alternate_exchange_witness.py', 'host_exchange.py',
+            'ancillary_process_witness.py',
         )},
         'approved_site_policy.json': json.dumps({
             'schema': 'sprint-4-site-policy-v1', 'site': asdict(policy),

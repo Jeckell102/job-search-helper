@@ -1,0 +1,11 @@
+# Independent recheck of native administrator process observation
+
+2026-11-20 17:34 EST
+
+**ACCEPT WITH REQUIRED FOLLOW-UPS for the staged observer.** The three earlier findings are addressed in the normal request flow. Close the two remaining edge cases before relying on it for maintenance.
+
+- **Live peer and exact executable.** The client connects through a root-owned physical /run directory and checks the socket inode and kernel peer UID. The server checks the client UID, exact boot and maintenance scope, selected PID and fresh challenge, then samples the process before replying. The client verifies the returned challenge and current process identity. Administrator capture compares the live proc executable referent to the approved file before and after reading references. The site checks readable arguments, cwd and every readable descriptor across permission gaps, then checks readable root/executable references before requesting administrator evidence. `ancillary_process_witness.py:59-137,140-185`, `host_checkpoint.py:297-348`.
+- **Require the absolute expiry inside the request handler.** The server checks its deadline only before accepting a connection. Receiving data can involve multiple reads, each with its own inactivity timeout. The handler can start capture or send a successful response after the approved window. Enforce the absolute deadline during message reception and before capture and successful response. `ancillary_process_witness.py:101-107,151-185`.
+- **Require evidence of process exit when metadata disappears.** The broad FileNotFound handler also covers reading an individual process's root or executable in the new fallback. A missing field can skip the entire process without contacting the administrator. Only treat a confirmed process disappearance as ordinary exit. Keep an existing process with incomplete metadata on the privileged verification path or hold it. The narrower disappearing-descriptor case can continue to skip just that descriptor. `host_checkpoint.py:329-350`.
+
+Reviewed source and the existing exact-challenge, readable-descriptor and peer-credential fixture assertions. No probes or live administrator action were performed. `test_ancillary_process_witness.py:41-116`.

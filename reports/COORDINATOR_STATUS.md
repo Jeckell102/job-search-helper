@@ -27,6 +27,21 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Native administrator observation checkpoint. The two inaccessible
+system helper processes can now be checked through a bounded foreground
+observer in a native MuleLab administrator terminal. The approved
+site checker uses a fresh local authenticated query at each checkpoint,
+still checks all readable checkout references, requires matching physical
+executables, and holds on late, missing or changed observations. All 97
+disposable checks passed on the actual host runner and final independent
+source QA accepted after the staged snapshot design was replaced. Root
+owns enrollment and service recovery. Source-only payload with 69 files
+at `/tmp/jsh-s4-enrollment-release.EHxLVsCF` verified. Next pin the actual
+host routes and observation scope, obtain native administrator availability,
+and safely clear exactly the old checkout-attached tool workers in a fresh
+owner window. No native observer has started and no live changes took place.
+[Native observer and evidence](S4_NATIVE_ADMIN_PROCESS_OBSERVER_20261120.md).
+
 MuleLab owner-window checkpoint. The operator provided a one-hour window.
 Coordinator used a brief reversible diagnostic stop of wrapper host and
 Jetson assistant bridge. Under the existing leases, all 61 protected
@@ -45,6 +60,7 @@ system is available again. Next complete independently approved host
 attribution and release stale checkout contexts without closing the two
 project chats, then re-enroll under a fresh quiet window. The same approved
 candidate and held baseline must be reverified before any live change.
+Verified rehearsal backup `33e983661710e8de90cb31d6565d0daa9d2a52bd`.
 [Owner-window evidence](S4_MULELAB_OWNER_WINDOW_REHEARSAL_20261120.md).
 
 Pre-pilot rollback checkpoint. Coordinator and release owner, goal

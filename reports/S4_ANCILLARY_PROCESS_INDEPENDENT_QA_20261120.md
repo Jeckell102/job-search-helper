@@ -1,0 +1,13 @@
+# Independent QA for administrator process evidence
+
+2026-11-20 17:30 EST
+
+**REJECT as a current route-drain authority.** The staged source binds scope and custody, but leaves three checks necessary for the fallback.
+
+1. **Finish all readable reference checks.** The outer permission handler can accept the record immediately after an unreadable cwd, descriptor directory or first descriptor. That skips later descriptors even if they are readable and refer to an approved route. Accumulate permission failures per field, continue checking all readable references, and consult administrator evidence only for the remaining gaps. Keep any directly observed checkout reference terminal. The existing fixture checks an observable argument before the unreadable cwd. `host_checkpoint.py:305-335`, `test_ancillary_process_witness.py:28-42,70-75`.
+2. **Bind privileged observations to the current check or enforce continuity.** The record may be reused for 30 minutes. The live comparison rechecks UID, start, role label, arguments and cgroup, while executable, cwd, root and descriptor state are inherited from the earlier privileged observation. A state change in one of those hidden fields can pass both release checks. Require a privileged observation tied to the current checkpoint and challenge, or independently enforce continuous exclusion for these exact helpers and routes. A shorter expiry alone leaves the same gap. `ancillary_process_witness.py:29-37,65-83,106-123`, `host_checkpoint.py:415-431`.
+3. **Compare the actual executable object.** Administrator capture compares the text of the process executable link to an approved canonical path, then stats that host pathname. The pathname alone does not bind the executable object across mount namespaces. Compare the stat of the process executable referent against the approved host executable, require the expected owner and mode on that object, and repeat the physical comparison at the end of capture. `ancillary_process_witness.py:65-80`.
+
+The approved policy fixes the record path. The reader requires a physical root-owned /run chain, a root-owned ordinary single-link non-writable-by-others file, and stable read identity. The evidence matches boot, UID, maintenance ID and the exact production, alternate and parked roots. A failed privileged observation, missing or malformed record, wrong record scope, or observed checkout argument holds the check. `ancillary_process_witness.py:40-45,86-123`, `host_checkpoint.py:297-335`, `site_policy.py:45-56`.
+
+Source and existing fixture review only. No test probes, live process access or host changes were performed.

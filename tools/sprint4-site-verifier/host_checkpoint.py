@@ -10,6 +10,7 @@ import subprocess
 
 from alternate_writer_witness import CoverPin, verify_cover
 from alternate_exchange_witness import ExchangeFence, verify_exchange
+from ancillary_process_witness import verify_ancillary_process
 
 
 WRAPPER_UNIT = "wrapper-development-host.service"
@@ -61,6 +62,7 @@ class SitePolicy:
     covers: tuple[CoverPin, ...]
     source_paths: frozenset[str]
     exchange_fence: ExchangeFence | None = None
+    ancillary_process_evidence: Path | None = None
 
 
 def require(value, message):
@@ -303,8 +305,18 @@ def verify_route_drain(policy, current_wrapper_pid, proc_root, maintenance=None)
         try:
             if proc.stat().st_uid != policy.launch_uid:
                 continue
-            args = proc_args(proc)
-            if not args[0]:
+            permission_gap = False
+
+            def inspect(reader):
+                nonlocal permission_gap
+                try:
+                    return reader()
+                except PermissionError:
+                    permission_gap = True
+                    return None
+
+            args = inspect(lambda: proc_args(proc))
+            if args is not None and not args[0]:
                 continue
             authorized = maintenance.get(int(proc.name))
             role = None
@@ -312,19 +324,30 @@ def verify_route_drain(policy, current_wrapper_pid, proc_root, maintenance=None)
                 start, role = authorized
                 require(process_start(proc) == start, "Maintenance process changed before drain check")
             permitted_args = {str(policy.project), str(policy.marker)} if role == "installer.py" else set()
-            cwd = os.readlink(proc / "cwd")
-            require(not in_route(cwd, roots)
-                    and not any(in_route(arg, roots) and arg not in permitted_args for arg in args if arg),
+            require(not any(in_route(arg, roots) and arg not in permitted_args for arg in (args or ()) if arg),
                     f"Checkout process remains live (PID {proc.name})")
-            for fd in (proc / "fd").iterdir():
+            cwd = inspect(lambda: os.readlink(proc / "cwd"))
+            require(cwd is None or not in_route(cwd, roots),
+                    f"Checkout process remains live (PID {proc.name})")
+            for fd in inspect(lambda: list((proc / "fd").iterdir())) or ():
                 try:
-                    destination = os.readlink(fd)
-                    require(not in_route(destination, roots)
+                    destination = inspect(lambda: os.readlink(fd))
+                    require(destination is None or not in_route(destination, roots)
                             or (role is not None and maintenance_descriptor(policy, fd, destination, role)),
                             f"Checkout descriptor remains open (PID {proc.name})")
                 except FileNotFoundError:
                     continue
+            if permission_gap:
+                for item in ("root", "exe"):
+                    destination = inspect(lambda: os.readlink(proc / item))
+                    require(destination is None or not in_route(destination, roots),
+                            f"Checkout process remains live (PID {proc.name})")
+                require(policy.ancillary_process_evidence is not None
+                        and verify_ancillary_process(policy.ancillary_process_evidence, proc, policy.launch_uid,
+                                                     policy.maintenance_id, roots) is True,
+                        f"Checkout process metadata is unavailable (PID {proc.name})")
         except (FileNotFoundError, ProcessLookupError):
+            require(not proc.exists(), f"Checkout process metadata is incomplete (PID {proc.name})")
             continue
 
 
