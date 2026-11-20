@@ -601,7 +601,7 @@ class Controller:
             require(installer.read_optional(parent, Path(installer.WRAPPER_HOST).name) is None,
                     "Canonical wrapper host must remain absent")
 
-    def close_wrapper(self, record, side):
+    def close_wrapper(self, side):
         path = installer.WRAPPER_HOST
         expected = (self.manifest.before if side == "before" else self.manifest.after)[path]
         with installer.directory(self.bundle) as private, installer.directory(self.wrapper_tools) as parent:
@@ -609,7 +609,10 @@ class Controller:
             self.prove_wrapper_parent(parent)
             installer.close_host_path(parent, expected, self.manifest.owners[path],
                                       lambda: self.prove_wrapper_parent(parent))
+
+    def attest_fenced_wrapper(self, record):
         package, _ = self.package(record)
+        self.require_fenced_host()
         self.hook("host-fenced", package=package, target=record["target"])
         self.require_fenced_host()
 
@@ -659,7 +662,8 @@ class Controller:
         ensure_file(self.marker, self.marker_data)
         if record["phase"] == "CLOSING":
             self.units.verify(record["prior"])
-            self.close_wrapper(record, record["host_exposed_before_hold"])
+            self.close_wrapper(record["host_exposed_before_hold"])
+            self.attest_fenced_wrapper(record)
         self.require_fenced_host()
         gate.park(self.project, record["original"][1])
         identity = inode(self.canonical)
@@ -859,10 +863,12 @@ class Controller:
         outcomes = []
         closure_failed = False
         closures = (
+            ("refusal journal", lambda: self.save(record, "RELEASE_REFUSED")),
+            ("direct wrapper hold", lambda: self.close_wrapper(
+                "after" if record["target"] == "INSTALLED" else "before")),
             ("runtime marker", lambda: ensure_file(self.marker, self.marker_data)),
             ("service hold", lambda: self.units.close(record["prior"])),
-            ("direct wrapper hold", lambda: self.close_wrapper(
-                record, "after" if record["target"] == "INSTALLED" else "before")),
+            ("direct wrapper drain", lambda: self.attest_fenced_wrapper(record)),
         )
         for name, close in closures:
             try:
@@ -874,18 +880,17 @@ class Controller:
                 outcomes.append(f"{name} verified")
         if closure_failed:
             raise ValueError(". ".join(outcomes))
-        self.save(record, "HOST_REOPEN")
 
     def release(self, record, manifest):
         if record["phase"] == "RELEASE_REFUSED":
             self.reestablish_release_hold(record)
-            raise ValueError("Release hold restored. Recheck readiness before reopening.")
+            self.save(record, "HOST_REOPEN")
         if record["phase"] in {"PUBLISHED", "ADMISSION_READY"}:
             self.admit(record, manifest)
-        if record["phase"] == "HOST_REOPEN":
-            self.reopen_wrapper(record, manifest)
-        require(record["phase"] == "RELEASING", "Missing verified admission checkpoint")
         try:
+            if record["phase"] == "HOST_REOPEN":
+                self.reopen_wrapper(record, manifest)
+            require(record["phase"] == "RELEASING", "Missing verified admission checkpoint")
             require(self.verify_tree(record, manifest) == self.canonical, "Package not published")
             self.verify_receipt(record, record["receipt"])
             self.hook("restoring", package=self.canonical, target=record["target"])
@@ -905,7 +910,6 @@ class Controller:
             self.units.check_status(record["prior"], held=False, restored=True)
             require(not present(self.marker) and not present(self.units.sentinel), "Release hold remains")
         except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
-            self.save(record, "RELEASE_REFUSED")
             try:
                 self.reestablish_release_hold(record)
             except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as refusal:
@@ -923,7 +927,7 @@ class Controller:
                 check_file(self.marker, self.marker_data, 0o600)
                 self.verify_receipt(record, record["receipt"], host_absent=True)
                 self.prepare_extension(record)
-        allow_canonical_without_guard = record["phase"] == "ADMISSION_READY"
+        allow_canonical_without_guard = record["phase"] in {"ADMISSION_READY", "HOST_REOPEN", "RELEASE_REFUSED"}
         with self.package_directory(record, package) as parent:
             guarded = extension_present(parent)
         require(guarded or allow_canonical_without_guard
@@ -978,9 +982,9 @@ class Controller:
                     self.save(record, "CLOSING")
                 elif phase == "REHOLDING":
                     require(action == "rollback", "Resume the recorded rollback")
-                elif phase in {"HOST_REOPEN", "RELEASING", "RELEASE_REFUSED"}:
+                elif phase == "RELEASING":
                     require(record["target"] == target, "Finish the recorded release before switching direction")
-                elif phase in {"PUBLISHING", "PUBLISHED", "ADMISSION_READY"}:
+                elif phase in {"PUBLISHING", "PUBLISHED", "ADMISSION_READY", "HOST_REOPEN", "RELEASE_REFUSED"}:
                     require(record["target"] == target or action == "rollback",
                             "Rollback is already selected")
                 if record["phase"] == "CLOSING":
@@ -997,7 +1001,10 @@ class Controller:
                         "Existing application lock identity changed")
                 with lock(self.install_gate):
                     phase = record["phase"]
-                    if phase in {"PUBLISHING", "PUBLISHED", "ADMISSION_READY"} and record["target"] != target:
+                    if phase in {"HOST_REOPEN", "RELEASE_REFUSED"} and record["target"] != target:
+                        self.reestablish_release_hold(record)
+                        self.begin_rehold(record)
+                    elif phase in {"PUBLISHING", "PUBLISHED", "ADMISSION_READY"} and record["target"] != target:
                         self.begin_rehold(record)
                     if record["phase"] == "REHOLDING":
                         self.rehold(record)

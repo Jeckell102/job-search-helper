@@ -18,6 +18,28 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Physical recovery and alternate route witness checkpoint. Coordinator and
+release owner, goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4
+about 80%, project about 52% with the live gate open. Independent QA
+held the previous direct fence on three recovery defects. Coordinator
+repaired post-open refusal, independent direct closure before slow unit
+closure and rollback direction after re-hold under
+`/tmp/jsh-s4-combined-host-fence-recovery.fOcKhtD5`. Three red/green
+checks and two payload regressions passed. Physical source QA
+`01a1f97d-2e8c-7821-b5e1-d2019215036b` owns the repaired verdict, and
+fixture chat `01a1f979-8619-75d2-9973-047f3a5efb0c` owns the exact
+controller recovery and candidate-free rollback. User changed both chats
+to GPT-6.2 Sol High while they were active. Higher-reasoning site review
+completed alternate route analysis. Coordinator staged a read-only
+mount/launch witness with five offline checks. No non-interactive admin
+authority was established. No live covers, services or production actions.
+Next reconcile both source verdicts and finish the host-backed route
+checker/authorized hold mechanism. If remaining site work genuinely
+needs host-owner action, identify the precise input. Previous verified
+backup `e4771566d6963a7131473c66f41967f999975ea2`.
+[Recovery checkpoint](S4_PHYSICAL_HOST_FENCE_RECOVERY_STAGED_20261120.md)
+and [alternate route review](S4_ALTERNATE_WRITER_RELEASE_REVIEW_20261120.md).
+
 MuleLab read-only route checkpoint. Wrapper service is running and enabled;
 sync is inactive and disabled. Two additional configured launcher paths
 share the production workbook while resolving distinct local State
