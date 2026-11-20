@@ -43,7 +43,23 @@ Root owns live enrollment. `/root/s4_abort_repair` owns prepared-only and
 preflight-refusal recovery proof. `/root/site_journal_qa` owns independent
 enrollment and recovery QA. Do not close the exchange until these recovery
 gates pass, and verify the short native observer still serves fresh proof.
-[Live evidence](S4_LIVE_ENROLLMENT_PREPARED_20261120.md).
+Independent enrollment QA accepted the prepared artifacts. Exact native
+mount and all original/sentinel endpoint pins passed a follow-up check in
+the actual release runner. Verified backup `ea68cce9e830dfb5769cb19c505b5408a26c57c3`.
+Private controller/installer locks and separate empty `-attempt` custody
+directory are reserved. Independent source recheck accepted the original
+capsule-bound abort repair. The canonical checker bytes were staged and the
+original protected before-state and otherwise unused launch boundary bound
+at `preinstall-enrollment.json` SHA-256
+`53db1324ba127b3df7d01a1f75bdbb2e029b68866e0c07bb6b091f10d3e2b391`.
+No launch intent or process has been created. Independent observation of
+these original enrollment pins is in progress.
+The user received the exact safe one-hour native observer restart command
+after the original 15-minute native check. The original observer expired;
+its socket was absent at 17:57 Eastern. Verify actual fresh proof after
+restart; the owner's 15-hour authorization does not extend the observer.
+[Live evidence](S4_LIVE_ENROLLMENT_PREPARED_20261120.md) ·
+[Independent enrollment QA](S4_LIVE_ENROLLMENT_INDEPENDENT_QA_20261120.md).
 
 Native administrator observation checkpoint. The two inaccessible
 system helper processes can now be checked through a bounded foreground
