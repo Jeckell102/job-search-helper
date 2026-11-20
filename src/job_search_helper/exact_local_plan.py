@@ -205,7 +205,7 @@ def _ensure_parent(repository, cycle_id, company_id, plan, stamp):
 
 
 def apply_exact_local_chunk(repository, cycle_id, company_id, plan, cursor,
-                            *, max_operations=100):
+                            *, max_operations=100, reservation_digest=None):
     """Apply one bounded chunk atomically with its APPLIED journal row."""
     cycle_id, company_id = _validate_identity(cycle_id, company_id)
     plan, local, _remote = _validate_plan(plan, cycle_id, company_id)
@@ -248,10 +248,20 @@ def apply_exact_local_chunk(repository, cycle_id, company_id, plan, cursor,
         if cursor != boundary:
             raise ValueError('Exact local cursor is not the next verified boundary.')
         before, dirty = _capture_before(repository, chunk)
+        global_dirty_before = list(repository.db.execute(
+            'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header'))
         repository._commit_in_transaction(chunk)
         observed = record_fingerprints(chunk, _rows_for_operations(repository, chunk))
         if observed != expected:
             raise ValueError('Local mutation readback differs from the frozen plan.')
+        if reservation_digest is not None:
+            from .retained_dirty_provenance import record_dirty_provenance_chunk
+            record_dirty_provenance_chunk(
+                repository, reservation_digest, apply_id=apply_id,
+                start_cursor=cursor, operation_count=count, plan=plan,
+                dirty_before=global_dirty_before,
+                dirty_after=list(repository.db.execute(
+                    'SELECT tab,row_id,header FROM dirty ORDER BY tab,row_id,header')))
         repository.db.execute(
             'INSERT INTO exact_local_apply_chunks VALUES (?,?,?,?,?,?,?,?,?,?,?)',
             (apply_id, cursor, count, operations_digest, _canonical(before),
@@ -336,7 +346,8 @@ def verify_exact_local_plan(repository, cycle_id, company_id, plan):
             'records_digest': _digest(observed), 'recovered': False}
 
 
-def commit_exact_local_plan(repository, cycle_id, company_id, plan, *, max_operations=100):
+def commit_exact_local_plan(repository, cycle_id, company_id, plan, *, max_operations=100,
+                            reservation_digest=None):
     """Apply/read back all chunks; APPLIED chunks are never reapplied."""
     cycle_id, company_id = _validate_identity(cycle_id, company_id)
     plan, local, _remote = _validate_plan(plan, cycle_id, company_id)
@@ -345,12 +356,16 @@ def commit_exact_local_plan(repository, cycle_id, company_id, plan, *, max_opera
     while cursor < len(local):
         result = apply_exact_local_chunk(
             repository, cycle_id, company_id, plan, cursor,
-            max_operations=max_operations)
+            max_operations=max_operations, reservation_digest=reservation_digest)
         recovered = recovered or result['recovered']
         verify_exact_local_chunk(repository, cycle_id, company_id, plan, cursor)
         cursor += result['count']
     result = verify_exact_local_plan(repository, cycle_id, company_id, plan)
     result['recovered'] = recovered or result['recovered']
+    if reservation_digest is not None:
+        from .retained_dirty_provenance import verify_dirty_provenance
+        result['retained_provenance'] = verify_dirty_provenance(
+            repository, reservation_digest, plan)
     return result
 
 

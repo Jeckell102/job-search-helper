@@ -107,6 +107,49 @@ def _provider_identity(ats, source_url):
     return provider + ":" + endpoint
 
 
+def canonical_admitted_company_identity(current_company):
+    """Return the exact normalized identity protected by an admission.
+
+    The caller supplies the Company fields whose source/provider values came
+    from the frozen provider inventory.  Keeping this derivation here makes
+    reservation and later readback use the same canonical form rather than
+    trusting a caller-provided digest.
+    """
+    required = {"company_id", "company_name", "official_careers_url",
+                "source_url", "ats", "source_revision", "company_status",
+                "claimed_by", "claim_token"}
+    if (not isinstance(current_company, Mapping)
+            or set(current_company) != required):
+        raise ValueError("retained_exception_current_company_invalid")
+    if any(not isinstance(current_company[key], str)
+           for key in required):
+        raise ValueError("retained_exception_current_company_invalid")
+    try:
+        official_url = _url(current_company["official_careers_url"])
+        source_url = _url(current_company["source_url"])
+    except ValueError as error:
+        raise ValueError("retained_exception_current_company_invalid") from error
+    company_id = current_company["company_id"].strip()
+    source_revision = current_company["source_revision"].strip()
+    provider = current_company["ats"].strip()
+    if (not company_id or not source_revision or not _name(current_company["company_name"])
+            or not official_url or not source_url or not provider):
+        raise ValueError("retained_exception_current_company_invalid")
+    return {
+        "company_id": company_id,
+        "company_name": _name(current_company["company_name"]),
+        "official_careers_url": official_url,
+        "source_url": source_url,
+        "source_endpoint": _endpoint(source_url),
+        "ats": _name(provider),
+        "provider_identity": _provider_identity(provider, source_url),
+        "source_revision": source_revision,
+        "company_status": current_company["company_status"].strip().casefold(),
+        "claimed_by": current_company["claimed_by"].strip(),
+        "claim_token": current_company["claim_token"].strip(),
+    }
+
+
 def _readonly(path):
     location = Path(path).resolve()
     if not location.is_file():
@@ -650,25 +693,18 @@ def admit_disjoint_company_request(store_path, verifier, cycle, inventory_path,
                 "REQUEST_WRITTEN", "REQUEST_CONFIRMED",
                 "REQUEST_SUPERSEDED_OLDER"}):
         raise ValueError("retained_exception_event_receipt_invalid")
-    required_company = {"company_id", "company_name", "official_careers_url",
-                        "source_url", "ats", "source_revision",
-                        "company_status", "claimed_by", "claim_token"}
-    if (not isinstance(current_company, Mapping)
-            or not required_company <= set(current_company)
-            or current_company.get("company_id") != company_id
-            or current_company.get("source_revision") != request["source_revision"]
-            or str(current_company.get("company_status", "")).strip().casefold() != "active"
-            or str(current_company.get("claimed_by", "")).strip()
-            or str(current_company.get("claim_token", "")).strip()
-            or not _name(current_company.get("company_name"))):
-        raise ValueError("retained_exception_current_company_invalid")
     try:
-        incoming_url = _url(current_company.get("official_careers_url"))
-        incoming_source_url = _url(current_company.get("source_url"))
+        company_identity = canonical_admitted_company_identity(current_company)
     except ValueError as error:
         raise ValueError("retained_exception_current_company_invalid") from error
-    if not incoming_url or not incoming_source_url:
+    if (company_identity["company_id"] != company_id
+            or company_identity["source_revision"] != request["source_revision"]
+            or company_identity["company_status"] != "active"
+            or company_identity["claimed_by"]
+            or company_identity["claim_token"]):
         raise ValueError("retained_exception_current_company_invalid")
+    incoming_url = company_identity["official_careers_url"]
+    incoming_source_url = company_identity["source_url"]
     if company_id in manifest["cycle_membership"]:
         raise ValueError("retained_exception_company_overlap")
     incoming_name = _name(current_company["company_name"])
@@ -692,7 +728,6 @@ def admit_disjoint_company_request(store_path, verifier, cycle, inventory_path,
     blockers = sorted(set(unfinished_cycle_ids))
     if blockers != [manifest["cycle_id"]]:
         raise ValueError("retained_exception_blocker_scope_changed")
-    company_identity = {key: current_company[key] for key in sorted(required_company)}
     reservation = {"request_id": request["request_id"],
                    "event_id": event["event_id"],
                    "exception_cycle": manifest["cycle_id"],

@@ -428,6 +428,12 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
     load_title_review_list()
     database = state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    # Exact selected recovery takes a different lock path below, so reject a
+    # frozen retained session before it can construct local/remote factories.
+    if exact_sync and sync_company_ids is not None:
+        from .retained_work_runner import assert_normal_lifecycle_not_held
+        from .cli import job_database_path
+        assert_normal_lifecycle_not_held(database.parent, job_database_path())
     if exact_sync and sync_company_ids is not None:
         # The accepted recovery API owns the normal lock. Dependencies are
         # deliberately constructed by its factory only after that acquisition.
@@ -477,6 +483,12 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         print('Exact cycle recovery: ' + json.dumps(report, sort_keys=True), flush=True)
         return 0
     with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
+        # A retained company-only preflight is not represented in ordinary
+        # State/inbox data.  Check its journal before constructing the remote
+        # repository or starting any global lifecycle side effect.
+        from .retained_work_runner import assert_normal_lifecycle_not_held
+        from .cli import job_database_path
+        assert_normal_lifecycle_not_held(database.parent, job_database_path())
         from .integration_release import assert_release_settled
         assert_release_settled(database.parent)
         if exact_sync:
@@ -624,6 +636,9 @@ def pause_interrupted_cycle(cycle_id, reason, *, database=None):
     database = database or state_path()
     database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with writer_lock(database.parent / scraper_lock_name()), ExitStack() as resources:
+        from .retained_work_runner import assert_normal_lifecycle_not_held
+        from .cli import job_database_path
+        assert_normal_lifecycle_not_held(database.parent, job_database_path())
         from .integration_release import assert_release_settled
         assert_release_settled(database.parent)
         repo = get_repository(write=True, interactive=True, renew_both=True)

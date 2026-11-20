@@ -94,6 +94,12 @@ def main(argv=None):
         if not 5 <= args.interval <= 3600 or not 1 <= args.max_batches <= 100:
             raise ValueError('Sync interval must be 5–3600 seconds and max batches 1–100.')
         with writer_lock(state_path().parent / 'writer.lock'):
+            # The storage CLI owns a different write lock from the scraper.
+            # Consult the retained durable authorities before it constructs a
+            # Google client; SheetsSynchronizer repeats the same embargo at
+            # every actual discovery/write operation.
+            from .retained_work_runner import assert_normal_lifecycle_not_held
+            assert_normal_lifecycle_not_held(state_path().parent, local.path)
             from .sheet_profile import profile_schemas
             schemas = profile_schemas(local.get_meta('sheets_profile'))
             remote = get_remote_repository(write=True, interactive=args.authenticate,

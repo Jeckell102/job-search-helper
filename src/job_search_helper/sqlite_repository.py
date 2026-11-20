@@ -219,12 +219,13 @@ class SQLiteRepository:
         ''')
 
     def apply_exact_local_plan(self, cycle_id, company_id, plan, cursor,
-                               *, max_operations=100):
+                               *, max_operations=100, reservation_digest=None):
         """Apply one explicit exact chunk; never discover another company."""
         from .exact_local_plan import apply_exact_local_chunk
         return apply_exact_local_chunk(
             self, cycle_id, company_id, plan, cursor,
-            max_operations=max_operations)
+            max_operations=max_operations,
+            reservation_digest=reservation_digest)
 
     def verify_exact_local_plan(self, cycle_id, company_id, plan, cursor=None):
         """Verify one chunk or the complete explicit exact application."""

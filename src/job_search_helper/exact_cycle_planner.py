@@ -447,10 +447,15 @@ def _normalize_history_guards(planner, originals):
         for number, row in planner.indexes['Job History'].matches(operation['identity']):
             prior = originals.get(('Job History', number), {})
             manual = expected.get('Added to Opportunities?', prior.get('Added to Opportunities?', ''))
-            operation['expected'] = {'Added to Opportunities?': manual}
-            if str(manual).strip().casefold() == 'manual review':
-                for field in ('Review Status', 'Source Hash'):
-                    operation['expected'][field] = expected.get(field, prior.get(field, ''))
+            # Keep every source/review/decision guard emitted by Engine.  The
+            # retained planner has no ordinary lifecycle checkpoint to repair
+            # a lost race later, so narrowing this set would silently weaken
+            # the normal manual-choice and managed-review protections.
+            operation['expected'] = {
+                field: prior.get(field, value)
+                for field, value in expected.items()
+            }
+            operation['expected']['Added to Opportunities?'] = manual
             if 'Job Key' in expected:
                 operation['expected']['Job Key'] = expected['Job Key']
 
@@ -546,6 +551,50 @@ def _freeze(engine, planner, cycle, company_id, payload, *, drop_noops=False):
     finally:
         engine.repo, engine.state, engine._notices = original_repo, original_state, original_notices
         planner.commit = commit
+
+
+def freeze_retained_exact_plan(engine, cycle_id, company_id, payload,
+                               control_evidence, *, started_at=None):
+    """Build one v2 plan from a frozen retained inventory, without State/inbox.
+
+    The caller owns the retained reservation and supplies the exact composite
+    Company controls.  This function performs only in-memory business-rule
+    planning against the local repository and never saves an ordinary cycle,
+    inbox plan, receipt, or checkpoint.
+    """
+    cycle_id = str(cycle_id or '').strip()
+    company_id = str(company_id or '').strip()
+    if not cycle_id or not company_id:
+        raise ValueError('retained_exact_plan_identity_required')
+    _validate_payload(payload)
+    evidence, evidence_digest = _control_evidence(
+        control_evidence, company_id, payload['requested_url'])
+    planner = PlanningRepository(engine.repo)
+    company = _company_from(planner, company_id)
+    cycle = {
+        'id': cycle_id, 'status': 'In Progress',
+        'started_at': started_at or now(), 'all': False,
+        'companies': {company_id: {
+            'company': company.get('Company', ''), 'stage': 'queued',
+        }},
+    }
+    profile, _publication = _publication_schema(engine.repo)
+    if profile == 'full':
+        raise ValueError('retained_exact_plan_requires_projected_profile')
+    plan = _freeze(
+        engine, planner, cycle, company_id, copy.deepcopy(payload),
+        drop_noops=True)
+    # A retained session is not an ordinary State cycle. Preserve normal job
+    # semantics and Company results, but do not claim ordinary cycle ownership.
+    for operation in plan['operations']:
+        if operation.get('tab') == 'Companies':
+            for field in ('values', 'on_insert', 'expected'):
+                operation.get(field, {}).pop('Active Cycle ID', None)
+    plan['control_evidence'] = evidence
+    plan['control_evidence_version'] = CONTROL_EVIDENCE_VERSION
+    plan['control_evidence_digest'] = evidence_digest
+    return _seal_exact_plan_v2(
+        plan, payload, engine.repo, cycle_id, company_id)
 
 
 def freeze_exact_cycle_plans(engine, cycle_id: str, company_ids: Iterable[str], *,

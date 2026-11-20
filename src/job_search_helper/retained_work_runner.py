@@ -8,19 +8,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
-import os
 from pathlib import Path
 import re
 import sqlite3
 import uuid
 
 from job_search_helper.retained_work_exception import (
-    admit_disjoint_company_request, canonical, digest, revalidate_manifest,
+    admit_disjoint_company_request, canonical,
+    canonical_admitted_company_identity, digest,
     validate_frozen_admission,
 )
 from job_search_helper.company_events import canonical_company_fact, source_revision
 from job_search_helper.scan_request import (
-    _read_request, _unfinished_cycle_ids, request_fingerprint,
+    _read_request, _unfinished_cycle_ids,
 )
 
 
@@ -79,23 +79,6 @@ def _company_snapshot(repository, company_id):
     return row, fact, source_revision(row)
 
 
-def _read_inventory(path, cycle_id, company_id):
-    location = Path(path).resolve()
-    db = sqlite3.connect(location.as_uri() + "?mode=ro", uri=True)
-    try:
-        row = db.execute(
-            "SELECT payload,blocked FROM inventories WHERE cycle=? AND company=?",
-            (cycle_id, company_id)).fetchone()
-    finally:
-        db.close()
-    if row is None:
-        return None
-    try:
-        return json.loads(row[0]), bool(row[1])
-    except (TypeError, ValueError) as error:
-        raise ValueError("retained_runner_inventory_readback_changed") from error
-
-
 def _admission_company(snapshot, company, inventory):
     request = snapshot["request"]
     return {
@@ -111,7 +94,7 @@ def _admission_company(snapshot, company, inventory):
 
 
 def _trusted_snapshot(repository, state, state_directory, manifest, *,
-                      expected_request=None, discount_cycle_id=None):
+                      expected_request=None):
     root = Path(state_directory).resolve()
     request_path = root / "next-scan.json"
     if not request_path.exists() and expected_request is not None:
@@ -133,8 +116,6 @@ def _trusted_snapshot(repository, state, state_directory, manifest, *,
         raise ValueError("retained_runner_company_revision_changed")
     probe = type("ReadOnlyEngineProbe", (), {"repo": repository})()
     blockers = sorted(_unfinished_cycle_ids(probe, state, include_remote=True))
-    if discount_cycle_id is not None:
-        blockers = [value for value in blockers if value != discount_cycle_id]
     cycle = state.cycle(manifest["cycle_id"])
     if not isinstance(cycle, dict):
         raise ValueError("retained_runner_exception_cycle_missing")
@@ -173,7 +154,7 @@ def _decode_journal_row(row):
     if (digest(binding) != row[3] or digest(prepared) != row[5]
             or binding.get("request_id") != row[0]):
         raise ValueError("retained_runner_recovery_journal_corrupt")
-    return {"request_id": row[0], "cycle_id": row[1],
+    return {"request_id": row[0], "session_id": row[1],
             "binding": binding, "binding_digest": row[3],
             "prepared": prepared, "state": row[6]}
 
@@ -193,9 +174,183 @@ def _read_existing_journal(path):
             "prepared_digest,state FROM retained_work_starts").fetchall()
     finally:
         db.close()
+    # The journal file/table may exist when a process crashed immediately
+    # after opening it but before creating a row.  A jobs-database intake hold
+    # is checked separately by the normal guard and makes that case fail
+    # closed; an empty journal itself is not a session.
+    if not rows:
+        return None
     if len(rows) != 1:
         raise ValueError("retained_runner_recovery_journal_ambiguous")
     return _decode_journal_row(rows[0])
+
+
+def _validate_released_reservation(jobs_path, reservation_digest):
+    """Prove one retained reservation durably reached FIRST PASS release."""
+    location = Path(jobs_path).resolve()
+    if not location.is_file():
+        raise ValueError("retained_runner_settlement_authority_missing")
+    try:
+        db = sqlite3.connect(location.as_uri() + "?mode=ro", uri=True)
+        try:
+            table = db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='retained_publications'").fetchone()
+            if not table:
+                raise ValueError("retained_runner_settlement_authority_missing")
+            row = db.execute(
+                "SELECT state,queue_evidence,queue_evidence_digest "
+                "FROM retained_publications WHERE reservation_digest=?",
+                (reservation_digest,)).fetchone()
+        finally:
+            db.close()
+    except ValueError:
+        raise
+    except (OSError, sqlite3.Error) as error:
+        raise ValueError("retained_runner_settlement_authority_unreadable") from error
+    if row is None or row[0] != "FIRST_PASS_RELEASED" or not row[1] or not row[2]:
+        raise ValueError("retained_runner_first_pass_not_released")
+    try:
+        evidence = json.loads(row[1])
+    except (TypeError, ValueError) as error:
+        raise ValueError("retained_runner_release_evidence_corrupt") from error
+    if (not isinstance(evidence, dict)
+            or evidence.get("reservation_digest") != reservation_digest
+            or digest(evidence) != row[2]):
+        raise ValueError("retained_runner_release_evidence_corrupt")
+    return evidence
+
+
+def settle_retained_start(state_directory, jobs_path, reservation_digest):
+    """Close a frozen start only after durable FIRST PASS release evidence.
+
+    The durable publication and queue evidence remain the audit authority.
+    The short-lived preflight embargo row is removed exactly so a later
+    retained company can acquire the same single-active-session boundary.  A
+    workspace with no start journal is a valid lower-level publication fixture,
+    so this is a no-op in that case; any present journal must match exactly.
+    Callers hold the normal scraper writer lock across this operation.
+    """
+    _validate_released_reservation(jobs_path, reservation_digest)
+    path = Path(state_directory).resolve() / "retained-work-starts.sqlite3"
+    if not path.exists():
+        return {"settled": False, "reason": "journal_missing"}
+    record = _read_existing_journal(path)
+    if record is None:
+        return {"settled": False, "reason": "journal_empty"}
+    if record["binding"].get("reservation_digest") != reservation_digest:
+        raise ValueError("retained_runner_settlement_binding_changed")
+    if record["state"] != "FROZEN":
+        raise ValueError("retained_runner_lifecycle_journal_invalid")
+    db = sqlite3.connect(path)
+    try:
+        db.execute("BEGIN IMMEDIATE")
+        changed = db.execute(
+            "DELETE FROM retained_work_starts "
+            "WHERE request_id=? AND cycle_id=? AND binding_digest=? "
+            "AND state='FROZEN'",
+            (record["request_id"], record["session_id"],
+             record["binding_digest"])).rowcount
+        if changed != 1:
+            raise ValueError("retained_runner_settlement_state_changed")
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+    return {"settled": True, "recovered": False,
+            "session_id": record["session_id"]}
+
+
+def assert_normal_lifecycle_not_held(state_directory, jobs_path=None):
+    """Fail closed before the normal runner can discover or sync work.
+
+    A retained preflight is intentionally outside State and the normal inbox.
+    Its frozen journal is nevertheless an exclusive intake boundary: the
+    normal start/sync runner must not consume its request or begin a global
+    Sheets lifecycle until the dedicated retained path has settled it.
+    Callers hold the normal scraper writer lock while making this check.
+    """
+    path = Path(state_directory).resolve() / "retained-work-starts.sqlite3"
+    record = _read_existing_journal(path)
+    if record is not None:
+        if record["state"] != "FROZEN":
+            raise ValueError("retained_runner_lifecycle_journal_invalid")
+        raise ValueError(
+            "Retained company-only preflight is frozen; normal lifecycle and "
+            "generic sync are held pending its dedicated settlement.")
+    # A crash can occur after the jobs-database hold commits and before the
+    # separate session journal is created.  Inspect that durable first-stage
+    # authority as well; malformed/unreadable hold data fails closed.
+    location = Path(jobs_path or (Path(state_directory).resolve() / "jobs.sqlite3"))
+    if not location.exists():
+        return
+    try:
+        db = sqlite3.connect(location.as_uri() + "?mode=ro", uri=True)
+        try:
+            table = db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='retained_intake_holds'").fetchone()
+            if table:
+                rows = db.execute(
+                    "SELECT reservation_digest FROM retained_intake_holds "
+                    "WHERE state='FROZEN' ORDER BY reservation_digest LIMIT 2").fetchall()
+                if rows:
+                    raise ValueError(
+                        "Retained intake hold is frozen; normal lifecycle and "
+                        "generic sync are held pending its dedicated settlement.")
+        finally:
+            db.close()
+    except ValueError:
+        raise
+    except (OSError, sqlite3.Error) as error:
+        raise ValueError("retained_runner_intake_hold_unreadable") from error
+
+
+def _freeze_intake_hold(jobs_path, prepared, binding, binding_digest):
+    """Record the pre-plan publication embargo in the local jobs database.
+
+    The separate retained-start journal protects normal runner entry points.
+    This minimal ledger is deliberately also visible to SheetsSynchronizer, so
+    an in-process caller cannot bypass that entry point before a v2 plan has
+    been reserved.  A crash after this write is conservative: it leaves an
+    operator-visible hold rather than exposing generic publication.
+    """
+    request = prepared.snapshot["request"]
+    values = (
+        prepared.admission["reservation_digest"], request["request_id"],
+        request["company_event"]["event_id"], request["company_ids"][0],
+        prepared.admission["manifest_digest"], binding_digest, "FROZEN",
+    )
+    location = Path(jobs_path).resolve()
+    db = sqlite3.connect(location)
+    try:
+        db.execute("BEGIN IMMEDIATE")
+        db.execute("""CREATE TABLE IF NOT EXISTS retained_intake_holds (
+            reservation_digest TEXT PRIMARY KEY,
+            request_id TEXT NOT NULL UNIQUE,
+            event_id TEXT NOT NULL UNIQUE,
+            company_id TEXT NOT NULL,
+            manifest_digest TEXT NOT NULL,
+            start_binding_digest TEXT NOT NULL,
+            state TEXT NOT NULL CHECK(state='FROZEN')
+        )""")
+        row = db.execute(
+            "SELECT reservation_digest,request_id,event_id,company_id,"
+            "manifest_digest,start_binding_digest,state "
+            "FROM retained_intake_holds WHERE reservation_digest=?",
+            (values[0],)).fetchone()
+        if row is None:
+            db.execute("INSERT INTO retained_intake_holds VALUES (?,?,?,?,?,?,?)", values)
+        elif tuple(row) != values:
+            raise ValueError("retained_runner_intake_hold_changed")
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 def prepare_exceptional_start(repository, state, state_directory,
@@ -242,14 +397,16 @@ def prepare_exceptional_start(repository, state, state_directory,
     if (third != second or company_final != company_again
             or cycle_final != cycle_again):
         raise ValueError("retained_runner_trusted_snapshot_changed")
+    prepared = PreparedExceptionalStart(
+        _TOKEN, first, company, cycle, inventory, admission,
+        current.astimezone(timezone.utc).isoformat())
+    _validate_immutable_admission_binding(prepared)
     repeated = validate_frozen_admission(
         store_path, verifier, cycle_final, inventory_path, jobs_path,
         admission, now=current, allow_test_verifier=allow_test_verifier)
     if repeated != admission:
         raise ValueError("retained_runner_admission_changed")
-    return PreparedExceptionalStart(
-        _TOKEN, first, company, cycle, inventory, admission,
-        current.astimezone(timezone.utc).isoformat())
+    return prepared
 
 
 class _StartJournal:
@@ -270,15 +427,7 @@ class _StartJournal:
 
     def reserve(self, prepared):
         request_id = prepared.snapshot["request"]["request_id"]
-        binding = {
-            "request_id": request_id,
-            "event_id": prepared.snapshot["request"]["company_event"]["event_id"],
-            "company_id": prepared.snapshot["request"]["company_ids"][0],
-            "snapshot_digest": prepared.snapshot["snapshot_digest"],
-            "manifest_digest": prepared.admission["manifest_digest"],
-            "reservation_digest": prepared.admission["reservation_digest"],
-            "inventory_digest": digest(prepared.inventory),
-        }
+        binding = _start_binding(prepared)
         encoded, binding_digest = canonical(binding), digest(binding)
         prepared_payload = {
             "snapshot": prepared.snapshot, "company": prepared.company,
@@ -294,22 +443,22 @@ class _StartJournal:
                 "SELECT cycle_id,binding,binding_digest,prepared,prepared_digest,state "
                 "FROM retained_work_starts WHERE request_id=?", (request_id,)).fetchone()
             if row is None:
-                cycle_id = "CYC-" + uuid.uuid4().hex[:12].upper()
+                session_id = "RWS-" + uuid.uuid4().hex[:12].upper()
                 self.db.execute(
                     "INSERT INTO retained_work_starts VALUES (?,?,?,?,?,?,?)",
-                    (request_id, cycle_id, encoded, binding_digest,
-                     prepared_encoded, prepared_digest, "RESERVED"))
+                    (request_id, session_id, encoded, binding_digest,
+                     prepared_encoded, prepared_digest, "FROZEN"))
             else:
-                cycle_id = row[0]
+                session_id = row[0]
                 if (row[1] != encoded or row[2] != binding_digest
-                        or row[3] != prepared_encoded
-                        or row[4] != prepared_digest):
+                        or row[3] != prepared_encoded or row[4] != prepared_digest
+                        or row[5] != "FROZEN"):
                     raise ValueError("retained_runner_start_binding_changed")
             self.db.commit()
         except BaseException:
             self.db.rollback()
             raise
-        return cycle_id, binding, binding_digest
+        return session_id, binding, binding_digest
 
     def only(self):
         rows = self.db.execute(
@@ -319,77 +468,77 @@ class _StartJournal:
             raise ValueError("retained_runner_recovery_journal_ambiguous")
         return _decode_journal_row(rows[0])
 
-    def advance(self, request_id, expected, replacement):
-        order = {"RESERVED": 0, "STATE_SAVED": 1,
-                 "INVENTORY_SAVED": 2, "COMMITTED": 3}
-        with self.db:
-            changed = self.db.execute(
-                "UPDATE retained_work_starts SET state=? WHERE request_id=? AND state=?",
-                (replacement, request_id, expected)).rowcount
-            if not changed:
-                row = self.db.execute(
-                    "SELECT state FROM retained_work_starts WHERE request_id=?",
-                    (request_id,)).fetchone()
-                if (row is None or row[0] not in order
-                        or order[row[0]] < order[replacement]):
-                    raise ValueError("retained_runner_start_state_changed")
 
-
-def _cycle_for(prepared, cycle_id, binding_digest):
+def _start_binding(prepared):
     request = prepared.snapshot["request"]
-    company_id = request["company_ids"][0]
     return {
-        "id": cycle_id, "started_at": prepared.started_at,
-        "status": "In Progress", "all": False,
-        "companies": {company_id: {
-            "company": str(prepared.company["Company"]),
-            "stage": "inventory",
-            "inventory_status": prepared.inventory["status"],
-            "reason": prepared.inventory["reason"],
-            "source_url": prepared.inventory["source_url"],
-            "ats": prepared.inventory["ats"],
-            "fetched_at": prepared.inventory["fetched_at"],
-            "requested_url": prepared.inventory["requested_url"],
-            "staging_complete": False, "next_job_index": 0,
-        }},
-        "start_request_id": request["request_id"],
-        "request_fingerprint": request_fingerprint(request, [company_id]),
-        "company_event": dict(request["company_event"]),
-        "supersedes": [],
-        "retained_work_exception": {
-            "manifest_digest": prepared.admission["manifest_digest"],
-            "reservation_digest": prepared.admission["reservation_digest"],
-            "start_binding_digest": binding_digest,
-            "source_identity_digest": digest({
-                "source_url": prepared.inventory["source_url"],
-                "ats": prepared.inventory["ats"],
-            }),
-            "publication_deferred": True,
-        },
+        "request_id": request["request_id"],
+        "event_id": request["company_event"]["event_id"],
+        "company_id": request["company_ids"][0],
+        "snapshot_digest": prepared.snapshot["snapshot_digest"],
+        "manifest_digest": prepared.admission["manifest_digest"],
+        "reservation_digest": prepared.admission["reservation_digest"],
+        "inventory_digest": digest(prepared.inventory),
     }
+
+def _validate_immutable_admission_binding(prepared):
+    """Cross-check mutable journal payloads against the frozen reservation.
+
+    Journal hashes detect accidental torn writes, not an attacker (or a bad
+    repair tool) that rewrites every journal digest.  The admission store is
+    the immutable authority.  Re-derive its protected Company/source/provider
+    identity from the frozen inventory and the preflight snapshot on every
+    fresh and recovered validation.
+    """
+    snapshot = prepared.snapshot
+    admission = prepared.admission
+    if not isinstance(snapshot, dict) or not isinstance(admission, dict):
+        raise ValueError("retained_runner_admission_binding_invalid")
+    request = snapshot.get("request")
+    receipt = snapshot.get("receipt")
+    payload = admission.get("reservation_payload")
+    if (not isinstance(request, dict) or not isinstance(receipt, dict)
+            or not isinstance(payload, dict)
+            or set(payload) != {
+                "request_id", "event_id", "exception_cycle", "company_id",
+                "manifest_digest", "company_identity_digest", "request_digest",
+                "event_receipt_digest", "defer_sync"}
+            or admission.get("reservation_digest") != digest(payload)
+            or admission.get("company_id") != payload["company_id"]
+            or admission.get("manifest_digest") != payload["manifest_digest"]
+            or payload.get("request_id") != request.get("request_id")
+            or payload.get("event_id")
+                != request.get("company_event", {}).get("event_id")
+            or payload.get("company_id")
+                != (request.get("company_ids") or [None])[0]
+            or payload.get("request_digest") != digest(request)
+            or payload.get("event_receipt_digest") != digest(receipt)
+            or payload.get("defer_sync") is not True):
+        raise ValueError("retained_runner_admission_binding_invalid")
+    try:
+        derived = canonical_admitted_company_identity(_admission_company(
+            snapshot, prepared.company, prepared.inventory))
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("retained_runner_admission_binding_invalid") from error
+    if payload["company_identity_digest"] != digest(derived):
+        raise ValueError("retained_runner_admitted_identity_changed")
 
 
 def _validate_prepared(prepared, repository, state, state_directory,
                        inventory_path, jobs_path, store_path, manifest,
-                       verifier, *, cycle_id=None, binding_digest=None,
+                       verifier, *, session_id=None,
                        now=None, allow_test_verifier=False):
     if not isinstance(prepared, PreparedExceptionalStart) or prepared._token is not _TOKEN:
         raise ValueError("retained_runner_internal_admission_required")
-    discount = None
-    if cycle_id is not None:
-        existing = state.cycle(cycle_id)
-        if existing is not None:
-            if binding_digest is None or existing != _cycle_for(
-                    prepared, cycle_id, binding_digest):
-                raise ValueError("retained_runner_existing_cycle_binding_changed")
-            discount = cycle_id
+    if session_id is not None and state.cycle(session_id) is not None:
+        raise ValueError("retained_runner_session_leaked_to_state")
     current, company, cycle = _trusted_snapshot(
         repository, state, state_directory, manifest,
-        expected_request=prepared.snapshot["request"],
-        discount_cycle_id=discount)
+        expected_request=prepared.snapshot["request"])
     if (current != prepared.snapshot or company != prepared.company
             or cycle != prepared.exception_cycle):
         raise ValueError("retained_runner_trusted_snapshot_changed")
+    _validate_immutable_admission_binding(prepared)
     repeated = validate_frozen_admission(
         store_path, verifier, cycle, inventory_path, jobs_path,
         prepared.admission, now=now,
@@ -420,24 +569,13 @@ def recover_prepared_exceptional_start(repository, state,
     _validate_prepared(
         prepared, repository, state, state_directory,
         inventory_path, jobs_path, store_path, manifest, verifier,
-        cycle_id=record["cycle_id"], binding_digest=record["binding_digest"],
+        session_id=record["session_id"],
         now=now, allow_test_verifier=allow_test_verifier)
-    saved = _read_inventory(
-        inventory_path, record["cycle_id"], record["binding"]["company_id"])
-    if saved is not None and saved != (prepared.inventory, False):
-        raise ValueError("retained_runner_inventory_readback_changed")
-    if (record["state"] in {"INVENTORY_SAVED", "COMMITTED"}
-            and saved != (prepared.inventory, False)):
-        raise ValueError("retained_runner_inventory_missing_after_checkpoint")
+    if (record["state"] != "FROZEN"
+            or record["binding"] != _start_binding(prepared)
+            or record["binding_digest"] != digest(record["binding"])):
+        raise ValueError("retained_runner_recovery_journal_corrupt")
     return prepared
-
-
-def _fsync_directory(path):
-    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
-    try:
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
 
 
 def commit_exceptional_start(prepared, repository, state,
@@ -446,7 +584,7 @@ def commit_exceptional_start(prepared, repository, state,
                              *, now=None, allow_test_verifier=False,
                              state_factory=None, inbox_factory=None,
                              crash_after=None):
-    """Converge a reserved start through local State, inbox and request rename."""
+    """Durably freeze one exceptional session without normal lifecycle writes."""
     if not isinstance(prepared, PreparedExceptionalStart) or prepared._token is not _TOKEN:
         raise ValueError("retained_runner_internal_admission_required")
     if getattr(state, "readonly", False) is not True:
@@ -456,91 +594,43 @@ def commit_exceptional_start(prepared, repository, state,
             or Path(inventory_path).resolve() != root / "inventories.sqlite3"
             or Path(jobs_path).resolve() != root / "jobs.sqlite3"):
         raise ValueError("retained_runner_state_layout_invalid")
-    retained = _read_existing_journal(journal_path)
-    _validate_prepared(
-        prepared, repository, state, state_directory,
-        inventory_path, jobs_path, store_path, manifest, verifier,
-        cycle_id=retained["cycle_id"] if retained else None,
-        binding_digest=retained["binding_digest"] if retained else None,
-        now=now, allow_test_verifier=allow_test_verifier)
-    journal = _StartJournal(journal_path)
-    writable_state = writable_inbox = None
-    try:
-        cycle_id, binding, binding_digest = journal.reserve(prepared)
-        request_id = binding["request_id"]
-        if crash_after == "reserve":
-            raise RuntimeError("injected_crash_after_reserve")
-        if state_factory is None:
-            from job_search_helper.engine import State
-            state_factory = lambda: State(str(root / "state.db"))
-        writable_state = state_factory()
-        if (getattr(writable_state, "readonly", True) is not False
-                or Path(getattr(writable_state, "path", "")).resolve()
-                    != root / "state.db"):
-            raise ValueError("retained_runner_writable_state_invalid")
-        cycle = _cycle_for(prepared, cycle_id, binding_digest)
-        bound = [item for item in writable_state.cycles()
-                 if item.get("start_request_id") == request_id]
-        if len(bound) > 1:
-            raise ValueError("retained_runner_duplicate_request_cycles")
-        if bound and (bound[0].get("id") != cycle_id or bound[0] != cycle):
-            raise ValueError("retained_runner_existing_cycle_binding_changed")
-        existing = writable_state.cycle(cycle_id)
-        if existing is None:
-            writable_state.save_cycle(cycle)
-            existing = writable_state.cycle(cycle_id)
-        if existing != cycle:
-            raise ValueError("retained_runner_cycle_readback_changed")
-        if crash_after == "state_write":
-            raise RuntimeError("injected_crash_after_state_write")
-        journal.advance(request_id, "RESERVED", "STATE_SAVED")
-        if crash_after == "state":
-            raise RuntimeError("injected_crash_after_state")
-        if inbox_factory is None:
-            from job_search_helper.inbox import InventoryInbox
-            destination = InventoryInbox.destination_id(inventory_path)
-            inbox_factory = lambda: InventoryInbox(inventory_path, destination)
-        writable_inbox = inbox_factory()
-        if Path(getattr(writable_inbox, "path", "")).resolve() != Path(inventory_path).resolve():
-            raise ValueError("retained_runner_writable_inbox_invalid")
-        company_id = binding["company_id"]
-        saved = writable_inbox.get(cycle_id, company_id)
-        if saved is None:
-            writable_inbox.save(cycle_id, company_id, prepared.inventory)
-            saved = writable_inbox.get(cycle_id, company_id)
-        if saved != (prepared.inventory, False):
-            raise ValueError("retained_runner_inventory_readback_changed")
-        if crash_after == "inventory_write":
-            raise RuntimeError("injected_crash_after_inventory_write")
-        journal.advance(request_id, "STATE_SAVED", "INVENTORY_SAVED")
-        if crash_after == "inventory":
-            raise RuntimeError("injected_crash_after_inventory")
-        revalidate_manifest(
-            manifest, prepared.exception_cycle, inventory_path, jobs_path)
-        request_path = root / "next-scan.json"
-        last_path = root / "last-scan-request.json"
-        if request_path.exists():
-            if digest(_read_json(request_path)) != prepared.snapshot["request_digest"]:
-                raise ValueError("retained_runner_request_changed_before_rename")
-            if last_path.exists() and digest(_read_json(last_path)) != prepared.snapshot["request_digest"]:
-                raise ValueError("retained_runner_last_request_collision")
-            os.replace(request_path, last_path)
-            _fsync_directory(root)
-        elif (not last_path.exists()
-              or digest(_read_json(last_path)) != prepared.snapshot["request_digest"]):
-            raise ValueError("retained_runner_request_missing_after_start")
-        if crash_after == "rename_write":
-            raise RuntimeError("injected_crash_after_rename_write")
-        journal.advance(request_id, "INVENTORY_SAVED", "COMMITTED")
-        if crash_after == "rename":
-            raise RuntimeError("injected_crash_after_rename")
-        return {"cycle_id": cycle_id, "company_id": company_id,
-                "request_id": request_id, "state": "LOCAL_INVENTORY_FROZEN",
-                "publication_deferred": True,
-                "reservation_digest": prepared.admission["reservation_digest"]}
-    finally:
-        if writable_inbox is not None:
-            writable_inbox.close()
-        if writable_state is not None:
-            writable_state.close()
-        journal.close()
+    # These legacy injection points remain accepted for source compatibility,
+    # but a retained-work freeze must never construct either normal writer.
+    del state_factory, inbox_factory
+    if crash_after not in {None, "intake_hold", "reserve"}:
+        raise ValueError("retained_runner_crash_point_invalid")
+    # Share the normal runner's single-writer boundary.  This makes the
+    # journal hold and the normal-runner guard race-free: either a normal run
+    # finishes before the retained reservation exists, or it observes the
+    # frozen reservation before creating a repository, sync, State, or inbox.
+    from .cli import scraper_lock_name, writer_lock
+    with writer_lock(root / scraper_lock_name()):
+        retained = _read_existing_journal(journal_path)
+        _validate_prepared(
+            prepared, repository, state, state_directory,
+            inventory_path, jobs_path, store_path, manifest, verifier,
+            session_id=retained["session_id"] if retained else None,
+            now=now, allow_test_verifier=allow_test_verifier)
+        journal = _StartJournal(journal_path)
+        try:
+            # Establish the synchronizer-visible hold first.  It is safe for
+            # an interrupted start to require dedicated recovery; it is not
+            # safe to leave a window where generic dirty discovery can run.
+            binding = _start_binding(prepared)
+            binding_digest = digest(binding)
+            _freeze_intake_hold(jobs_path, prepared, binding, binding_digest)
+            if crash_after == "intake_hold":
+                raise RuntimeError("injected_crash_after_intake_hold")
+            session_id, binding, _binding_digest = journal.reserve(prepared)
+            if crash_after == "reserve":
+                raise RuntimeError("injected_crash_after_reserve")
+            return {"session_id": session_id,
+                    # Compatibility alias only: this is an RWS journal session,
+                    # never a State cycle or ordinary lifecycle identifier.
+                    "cycle_id": session_id,
+                    "company_id": binding["company_id"],
+                    "request_id": binding["request_id"], "state": "RETAINED_WORK_FROZEN",
+                    "publication_deferred": True,
+                    "reservation_digest": prepared.admission["reservation_digest"]}
+        finally:
+            journal.close()

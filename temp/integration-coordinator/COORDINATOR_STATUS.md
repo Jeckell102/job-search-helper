@@ -1,5 +1,269 @@
 # Integration automation coordinator status
 
+## Active coordinator checkpoint — 2026-11-19 retained orchestration accepted
+
+- Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains **active**.
+  This is an accepted source checkpoint, not deployed-system completion.
+- The one-reservation orchestration boundary is implemented and independently
+  **accepted**. It uses the normal scraper lock, validates the exact committed
+  frozen journal binding, freezes the private SessionStore before shared local
+  effects, reserves dirty provenance before exact local application, and calls
+  only the dedicated retained publisher. It never creates or discovers an
+  ordinary State cycle or InventoryInbox entry.
+- The retained planner now exposes an explicit in-memory v2 interface. It
+  preserves the full Engine source/review/decision guard set and omits only the
+  ordinary `Active Cycle ID` ownership claim from Company finalization.
+- Full offline acceptance with one non-empty inventory passed: the selected job
+  created matching Job History and Job Evidence rows, published only its sealed
+  compact projection, entered the reservation-scoped FIRST PASS queue, removed
+  the exact frozen embargo after durable evidence, left ordinary State empty,
+  retried completion without another remote batch, and admitted a later frozen
+  request into the now-empty journal.
+- Latest strict evidence: 257/257 combined relevant checks passed. Independent
+  orchestration review passed 78/78 and reported no must-fix finding. No live
+  Sheet/provider, MuleLab/Jetson service, protected checkout, lock, or GitHub
+  remote changed.
+- User-facing estimate: Milestone 6 is about 94%. Remaining gates are a narrow
+  local source checkpoint, fresh guarded operational preflight/proof, final
+  independent deployed-system acceptance, and a verified scoped GitHub backup.
+- Next action: record the accepted isolated source checkpoint, then perform a
+  fresh read-only operational preflight before deciding the smallest safe live
+  proof. Do not infer live authorization from the source acceptance alone.
+
+Reread this section after every context reset and before a major/live action or
+user update. It supersedes current-state/test-count claims below; older sections
+remain historical evidence.
+
+## Active coordinator checkpoint — 2026-11-19 lifecycle release accepted
+
+- Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains **active**.
+  The coordinator owns all six milestones, independent acceptance, guarded
+  operational proof, and a scoped GitHub backup. This is not completion.
+- The dedicated retained publisher and private SessionStore boundary remain
+  the sole eligible source route. Ordinary State/InventoryInbox discovery is
+  not used; no live Sheet, provider, MuleLab/Jetson host, protected checkout,
+  lock, service, or GitHub remote changed in this checkpoint.
+- Independent QA's permanent-lifecycle-hold rejection is repaired and now
+  **accepted**. Settlement first validates matching durable
+  `FIRST_PASS_RELEASED` queue evidence, then transactionally deletes only the
+  exact frozen request/session/binding journal row. Forged terminal states stay
+  blocked. Publisher recovery performs the same settlement if it resumes after
+  FIRST PASS release.
+- Latest strict source evidence: 250/250 retained, exact-plan, recovery,
+  review-queue, Sheets and runner checks passed. Independent focused re-review
+  passed 50/50 and accepted the lifecycle repair. `git diff --check` passes.
+- User-facing estimate: Milestone 6 is about 91%. Remaining source gates are
+  one reservation-only orchestration from frozen admission through planner,
+  exact local apply, dedicated publication and FIRST PASS; a realistic offline
+  add-Company acceptance with non-empty Job History/Job Evidence; and the
+  non-blocking repeated-admission integration case. Guarded operational proof,
+  final independent acceptance, and scoped GitHub backup follow.
+- Next action: implement the single reservation-only orchestration boundary and
+  its full offline acceptance without weakening any accepted isolation or
+  replay guard.
+
+Reread this section after every context reset and before a major action or
+user status update. It supersedes older current-state/test-count claims below;
+those sections remain historical evidence only.
+
+## Active coordinator checkpoint — 2026-11-19 post-QA repair in progress
+
+- Role and focus: senior engineering coordinator/release owner. I am closing
+  source-only isolation findings before any protected integration, live
+  scraping, Google access, broad backlog processing, or automatic release.
+- Persistent goal: `01a1f11f-e014-7493-8441-2f66502e23a9` is **active** and
+  covers all six roadmap milestones plus final acceptance. This checkpoint is
+  not completion and does not replace any milestone gate.
+- Milestones: M1 is **in implementation, not accepted**. M2--M6 and final
+  acceptance are open. The retained historic cycle `CYC-B639C6D864EC` and its
+  Saronic provenance conflict remain untouched; Samtec is not admitted through
+  the historical bridge exception.
+- Worker ownership: intake/isolation implementation is complete for this
+  checkpoint; storage/publication source candidate is coordinator-owned; an
+  independent QA lane is performing a fresh read-only review of the pinned
+  SessionStore repair. Jetson has no added work and retains exactly one
+  inference lane.
+- Latest verified evidence: the current isolated checkout passes 66 focused
+  retained publisher/session/provenance/runner/exact-scope tests and `git diff
+  --check`. No production
+  code, job data, Google Sheet, lock, queue, service, Jetson state, or GitHub
+  remote changed. A source-only retained journal now leaves ordinary State and
+  Inbox byte-identical, uses the normal writer lock, and blocks normal
+  start/sync before remote repository construction while frozen.
+- QA repairs completed this checkpoint: generic Sheets paths remain held until
+  `FIRST_PASS_RELEASED` (not merely `REMOTE_CONFIRMED`); ordinary public exact
+  confirmation/acknowledgement APIs reject retained work; FIRST PASS resolves
+  only exact selected Job Evidence identities rather than reading the full
+  shared evidence tab; and cold recovery rejects a full, self-digest-rewritten
+  preflight substitution before any lifecycle/local write.
+- Current QA result: a fresh independent read-only pass accepted the repaired
+  local barriers as covered, but found the hold-to-journal crash gap, exact
+  recovery/pause entry-point bypasses, and inconsistent scraper/writer lock
+  domains. The crash gap and normal/exact/pause guards were repaired and pass
+  focused tests. Exact recovery now checks before its dependency factory and
+  storage sync checks before constructing a Google client; the remaining
+  lock-domain policy still needs a complete
+  entry-point audit. Concurrent unowned work has now begun integrating the
+  `retained_session_store` candidate in the shared provenance module. Its new
+  alternate publisher currently fails its own idempotent-retry test; it is
+  unaccepted, undeployed, and must be reconciled before protected integration.
+  The coordinator decision record is
+  `RETAINED_PUBLICATION_RECONCILIATION_20261119.md`.
+- Independent QA rejected the inbox-backed retained publisher because it
+  violates the no-normal-Inbox design and creates a second receipt/intent
+  authority. SessionStore is the chosen source-only repair direction, but QA
+  reproduced a post-ack crash that strands the shared ledger and found no
+  retained-publication lock. Its 80 focused tests are insufficient acceptance
+  evidence. The reconciliation record has been updated accordingly.
+- Repair checkpoint: the SessionStore publisher now accepts the exact
+  post-ack/crash shape only when the SessionStore is already confirmed and the
+  shared dirty set is empty; retry revalidates acknowledgement authority and
+  advances the shared ledger without a second remote commit. The injected
+  offline regression test and the publication/provenance/session subset pass
+  28 tests. This is source-only repair evidence, not QA acceptance.
+- Lock checkpoint: SessionStore retained publication now acquires the same
+  normal scraper lock around verification, claim, remote delivery/readback,
+  local acknowledgement, and FIRST PASS release. A focused conflict test
+  proves it fails before remote work while that normal lock is held; the
+  current publication/session/provenance/runner subset passes 47 tests.
+- Remaining blockers: complete independent QA of the newly repaired
+  multi-table exact-scope binding, complete the lock-domain audit, add the
+  dedicated operator-request provenance and reservation-only orchestration
+  command for Samtec, and complete the roadmap's guarded operational gates.
+  Broad backlog processing and unqualified automatic release remain disabled.
+  These are release blockers, not reasons to weaken the isolation rules.
+- Next action: pin and independently review the SessionStore publisher diff,
+  including the new Job History/Job Evidence release path, before any protected
+  integration or pilot.
+
+Reread this section after every context reset and before a live action. It
+supersedes conflicting goal state, acceptance, and test-count claims in older
+historical checkpoints below, which are retained only as history.
+
+## Active coordinator checkpoint — 2026-11-19 retained publication boundary
+
+- Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` is **active**. The
+  coordinator owns all six milestones plus final independent acceptance. Do
+  not infer a pause from the older post-review note below and do not create a
+  replacement goal.
+- Isolated commit baseline remains `8f27b85`. Current work is uncommitted and
+  source-only in this feature checkout. No protected source, live database,
+  Google Sheet, scraper process, lock, service, Jetson host, or GitHub remote
+  was changed by this checkpoint.
+- The retained local-write provenance boundary now journals the exact dirty
+  cells in the same transaction as each local exact-plan chunk. A clean global
+  baseline is mandatory. Foreign, missing, extra, changed, or cross-identity
+  dirty cells refuse publication.
+- Independent QA initially rejected the remote/restart boundary. The repair
+  added a durable `REMOTE_PENDING` phase, binds the exact inbox intent, derives
+  receipt/intent/acknowledgement facts from the durable inbox rather than
+  caller IDs, and safely converges after a crash in which an exact Sheets
+  acknowledgement has already cleared the dirty cells. A forged local
+  acknowledgement remains held. QA then accepted this as an isolated safety
+  checkpoint with required integration follow-ups; it is not live or full
+  workflow acceptance.
+- Generic Sheets pull/publication now refuses while a retained hold is active,
+  and the ordinary exact-cycle publisher refuses retained cycles. This is a
+  safe temporary barrier. The final design must preserve unrelated normal work
+  without permitting a cached/global publisher to escape the hold.
+- A reservation-scoped FIRST PASS release candidate now builds queue files
+  only from Job History versions named by the frozen delivered plan. It records
+  source and file hashes and advances only after remote confirmation. It now
+  recomputes the complete queue and release material after writing, so a Job
+  Evidence or other queue-input change during file creation refuses the DB
+  release transition. The focused tests prove an unrelated globally pending
+  job is excluded and an evidence race remains held. Independent re-review
+  accepted this checkpoint: 15/15 focused checks and 51/51 broader retained /
+  review checks passed. This is still source-only acceptance; live Sheets and
+  release authorization remain open.
+- The separate immutable-admission identity repair is present in this
+  checkout and passes fresh/cold tamper tests. The known ordinary State/inbox
+  lifecycle-isolation gap remains an explicit expected failure and is still a
+  release blocker.
+- The retained runner overlap is reconciled to the isolated-session design:
+  it freezes a reservation-named journal session and does not write ordinary
+  State or the ordinary inventory inbox. The admission identity is re-derived
+  from immutable authority on fresh and cold recovery. Its focused tests pass.
+- Current strict evidence: 194 retained-provenance, retained admission/runner,
+  exact-local, exact-Sheets, exact-cycle, recovery and review-queue checks
+  passed with ResourceWarnings treated as errors. An initial combined command
+  had one import-path-only test-loader error; rerunning that 13-test file with
+  its required tests helper path passed all 13. This is source-only evidence,
+  not activation acceptance.
+- The private retained-session and dedicated publisher boundary is now
+  implemented and independently accepted. The session is outside ordinary
+  State and InventoryInbox discovery, seals inventory/plan/exact row scope,
+  records a one-shot chunk claim before any remote call, and makes all retries
+  readback-only. The publisher constructs or strictly binds the trusted Sheets
+  synchronizer, rechecks frozen Company controls, writes only the selected
+  projection, persists the exact local acknowledgement/baseline, advances the
+  retained ledger to remote confirmed, and releases the reservation-scoped
+  FIRST PASS. The old ordinary-inbox retained publisher was removed.
+- Latest broad source evidence is 244/244 strict retained, exact-plan,
+  publication, recovery, review-queue, Sheets and runner checks. Independent
+  publisher review also passed 65/65 focused strict checks. Lost response,
+  no-write, and post-confirmation/pre-local-ack crash cases all remain
+  non-replaying and preserve unrelated rows. No live Sheet/provider/Jetson or
+  protected checkout was touched.
+- Next: connect the already-frozen retained preflight/session to the retained
+  planner/local-apply/publisher command as one reservation-only orchestration,
+  add a full offline add-Company-to-FIRST-PASS acceptance, then perform guarded
+  operational proof and scoped GitHub backup only after those source gates.
+- Next: independently review the scoped FIRST PASS release, bind reservation
+  and inbox identity to immutable admission/State authority, implement the
+  dedicated retained publisher, then close ordinary lifecycle isolation before
+  any protected or live trial.
+
+Reread this section before the next major action or user status update. It
+supersedes the active/paused statement in the older post-review checkpoint,
+but preserves that review's findings and evidence.
+
+## Coordinator restart checkpoint — 2026-11-20 post-review
+
+- Role: senior engineering coordinator and release owner. Current focus: turn
+  the independent architecture review into a source-only, reviewed retained
+  company-intake implementation. No deployment, live scrape, Google access,
+  queue activation, broad backlog processing, or automatic release is
+  authorized by this checkpoint.
+- Goal reference: `01a1f11f-e014-7493-8441-2f66502e23a9`, matching all six
+  roadmap milestones plus final acceptance. The goal is **paused** in the goal
+  service; this coordinator did not create a duplicate or falsely mark it
+  active/complete.
+- Milestone status: M1 has reusable local-planning/exact-apply foundations but
+  its retained-work bridge is **not accepted**. M2-M6 and final acceptance
+  remain open; historical percentage figures below are not a replacement for
+  current evidence gates.
+- Worker assignments: coordinator owns baseline reconciliation and source-only
+  integration; independent QA is required before any protected integration.
+  No active implementation worker is assigned in this checkpoint. Jetson has
+  no new work and retains one inference lane only.
+- Latest verified evidence: no matching scraper/reviewer/sync process was
+  found; no lock was removed. The isolated feature checkout's focused
+  retained-dirty/exact-plan suites passed 57 tests on 2026-11-20. This is
+  source-level evidence only, not a live or publication acceptance.
+- Review findings that remain blocking: frozen provider identity must be
+  compared to immutable admission on fresh and cold readback; admission must
+  be rechecked under the ownership transition; exception inventory must stay
+  outside ordinary State/inbox discovery; and dirty ownership must prevent
+  generic publication without unnecessarily stopping unrelated work.
+- Current candidate state: uncommitted retained-dirty-provenance changes exist
+  only in `/tmp/job-search-helper-integration-automation`. They are unaccepted
+  candidate work, not protected-source changes. The generic publisher currently
+  stops for any held retained record; this is safe as a temporary refusal but
+  does not yet prove the roadmap's required isolation/other-work behavior.
+- Blockers: the originally named paused candidate and two requested design
+  files remain unavailable at their prior `/tmp` paths; the recovered baseline
+  is not interchangeable with them. Samtec is a queued member of
+  `CYC-B639C6D864EC`, so the existing outside-membership bridge exception does
+  not apply. Its separate operator/queued-unstarted policy remains design work.
+- Next action: pin/reconcile the existing candidate, implement and test the
+  narrow admission identity repair and isolated-session boundary before any
+  selected publication work. Reread this card before assigning work, changing
+  a gate, or attempting a live test.
+
+Updated: 2026-11-20. This checkpoint supersedes no historical evidence below;
+it records current coordinator state after independent review.
+
 ## Recovery checkpoint — 2026-11-19 retained-work runner overlay
 
 - The active goal remains all six milestones plus final independent acceptance;

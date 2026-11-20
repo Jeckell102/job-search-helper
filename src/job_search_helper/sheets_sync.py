@@ -95,8 +95,43 @@ class SheetsSynchronizer:
         self.pull_fields = COMPACT_PULL_FIELDS if self.publication is not None else PULL_FIELDS
         self.last_pull = 0.0
 
+    def _refuse_retained_publication_hold(self):
+        """Keep generic pull/publish paths outside exceptional ownership.
+
+        The check is repeated at discovery and immediately before a remote
+        write.  The dedicated retained publisher never calls these generic
+        entry points and must use the frozen exact-scope primitives instead.
+        """
+        table = self.local.db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' "
+            "AND name='retained_publications'").fetchone()
+        intake = self.local.db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' "
+            "AND name='retained_intake_holds'").fetchone()
+        if intake:
+            frozen = self.local.db.execute(
+                "SELECT reservation_digest FROM retained_intake_holds "
+                "WHERE state='FROZEN' ORDER BY reservation_digest LIMIT 1").fetchone()
+            if frozen is not None:
+                raise RepositoryError(
+                    'Retained intake hold requires the dedicated exact publisher.')
+        if not table:
+            return
+        # Only a durably terminal retained publication may coexist with the
+        # ordinary synchronizer.  Fail closed for an unrecognised state too:
+        # treating a future/migrated state as clear would make generic dirty
+        # discovery capable of taking ownership of exceptional cells.
+        held = self.local.db.execute(
+            "SELECT reservation_digest,state FROM retained_publications "
+            "WHERE state != 'FIRST_PASS_RELEASED' "
+            "ORDER BY reservation_digest LIMIT 1").fetchone()
+        if held is not None:
+            raise RepositoryError(
+                'Retained publication hold requires the dedicated exact publisher.')
+
     def merge_remote(self, tab, numbered, *, complete_snapshot=True):
         """Import changed fields, not stale whole-row snapshots."""
+        self._refuse_retained_publication_hold()
         numbered = unique_rows(tab, list(numbered))
         imported = changed = 0
         seen = set()
@@ -253,6 +288,7 @@ class SheetsSynchronizer:
         return {'imported': imported, 'changed_fields': changed}
 
     def pull(self):
+        self._refuse_retained_publication_hold()
         main = getattr(self.remote, 'main', self.remote)
         if hasattr(main, '_metadata_cache'):
             main._metadata_cache = None
@@ -289,6 +325,7 @@ class SheetsSynchronizer:
         return totals
 
     def _operations(self, limit=500, max_bytes=2_000_000, *, row_scope=None):
+        self._refuse_retained_publication_hold()
         if row_scope is None:
             prune_local_only_delivery(self.local)
         candidates = self.local.db.execute('''SELECT DISTINCT d.tab,d.row_id FROM dirty d
@@ -566,13 +603,51 @@ class SheetsSynchronizer:
         normalized = self._normalize_exact_scope(row_scope)
         if len(normalized) != len(frozen_projection):
             raise ValueError('Exact Sheets scope and frozen projection lengths differ.')
-        if any(not isinstance(operation, Mapping)
-               or type(operation.get('append_if_missing')) is not bool
-               or item['append_if_missing'] != operation['append_if_missing']
-               for item, operation in zip(normalized, frozen_projection)):
-            raise ValueError('Exact Sheets sealed insert semantics differ from the frozen projection.')
-        rows = [self._plan_exact_row(item, operation)
-                for item, operation in zip(normalized, frozen_projection)]
+
+        # Durable local scope is canonicalized by tab and row identity, while
+        # the sealed remote projection retains its original delivery order.
+        # Pairing these two independent orderings positionally can associate a
+        # Job History insert with a Companies update.  Match on the final
+        # stable identity instead, then preserve the frozen delivery order.
+        def final_identity(operation):
+            if not isinstance(operation, Mapping):
+                raise ValueError('Exact Sheets frozen projection has an invalid operation.')
+            identity = copy.deepcopy(operation.get('identity', {}))
+            if not isinstance(identity, Mapping) or not identity:
+                raise ValueError('Exact Sheets frozen projection has an invalid identity.')
+            for values in (operation.get('on_insert', {}), operation.get('values', {})):
+                if not isinstance(values, Mapping):
+                    raise ValueError('Exact Sheets frozen projection has invalid values.')
+                for header in tuple(identity):
+                    if header in values:
+                        identity[header] = copy.deepcopy(values[header])
+            return identity
+
+        def label(tab, identity):
+            return (tab, tuple(sorted(
+                (str(header), _identity_key(str(header), value))
+                for header, value in identity.items())))
+
+        scoped = {label(item['tab'], item['identity']): item for item in normalized}
+        if len(scoped) != len(normalized):
+            raise ValueError('Exact Sheets row scope repeats a stable identity.')
+        operations = {}
+        for operation in frozen_projection:
+            if (not isinstance(operation, Mapping)
+                    or type(operation.get('append_if_missing')) is not bool):
+                raise ValueError('Exact Sheets sealed insert semantics differ from the frozen projection.')
+            key = label(operation.get('tab'), final_identity(operation))
+            if key in operations:
+                raise ValueError('Exact Sheets frozen projection repeats a stable identity.')
+            operations[key] = operation
+        if set(scoped) != set(operations):
+            raise ValueError('Exact Sheets scope and frozen projection identities differ.')
+        rows = []
+        for operation in frozen_projection:
+            item = scoped[label(operation['tab'], final_identity(operation))]
+            if item['append_if_missing'] != operation['append_if_missing']:
+                raise ValueError('Exact Sheets sealed insert semantics differ from the frozen projection.')
+            rows.append(self._plan_exact_row(item, operation))
         operations = [row['operation'] for row in rows]
         if encode(operations) != encode(frozen_projection):
             raise ValueError('Exact Sheets scoped plan differs from the frozen projection.')
@@ -992,6 +1067,10 @@ class SheetsSynchronizer:
     def confirm_exact_scope(self, *, inbox, cycle_id, company_id,
                             plan_digest, receipt_id, intent_id):
         """Read back the complete scope and durably confirm it as one operation."""
+        # These are ordinary exact-cycle APIs.  A retained publication needs a
+        # distinct reservation-bound confirmer; otherwise a caller could use
+        # this public path to consume its dirty cells or receipt evidence.
+        self._refuse_retained_publication_hold()
         exact_plan = self._durable_exact_plan(
             inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
@@ -1013,6 +1092,7 @@ class SheetsSynchronizer:
                                             company_id, plan_digest, receipt_id,
                                             intent_id):
         """Fresh-read, durably confirm, then acknowledge only the exact scope."""
+        self._refuse_retained_publication_hold()
         return self._acknowledge_exact_readback(
             inbox=inbox, cycle_id=cycle_id, company_id=company_id,
             plan_digest=plan_digest, receipt_id=receipt_id,
@@ -1109,6 +1189,7 @@ class SheetsSynchronizer:
 
     def publish_batch(self, limit=500, *, row_scope=None, guards=()):
         """Publish queued fields, optionally restricted to explicit local rows/fields."""
+        self._refuse_retained_publication_hold()
         plans = self._operations(limit, row_scope=row_scope)
         if not plans:
             return {'published_rows': 0}
@@ -1136,6 +1217,7 @@ class SheetsSynchronizer:
                 operations.insert(0, {'tab': 'Job History', 'identity': {'Job Key': row['Job Key']},
                                       'values': values, 'expected': values})
         try:
+            self._refuse_retained_publication_hold()
             result = self.remote.commit(operations)
         except Exception:
             # A timeout may follow a successful remote write. Do not clear any
