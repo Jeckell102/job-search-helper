@@ -17,6 +17,7 @@ from job_search_helper.retained_work_runner import (
     assert_normal_lifecycle_not_held, commit_exceptional_start, prepare_exceptional_start,
     recover_prepared_exceptional_start, settle_retained_start,
 )
+from job_search_helper.runner import retained_exception_preview
 
 
 CYCLE = "CYC-OLD"
@@ -195,6 +196,20 @@ class RetainedWorkRunnerTests(unittest.TestCase):
         self.assertEqual("operator:" + request_id,
                          prepared.admission["reservation_payload"]["event_id"])
         self.assertEqual(1, self.fetch_count)
+
+    def test_readonly_exception_preview_generates_signer_claims_without_store(self):
+        before = set(self.root.iterdir())
+        store_before = self.store_path.read_bytes()
+        preview = retained_exception_preview(
+            CYCLE, "2027-01-01T00:00:00+00:00",
+            database=self.state_path, jobs_path=self.jobs_path)
+        self.assertEqual(CYCLE, preview["required_claims"]["cycle_id"])
+        self.assertEqual("activate-retained-work-exception-v1",
+                         preview["required_claims"]["action"])
+        # The fixture already has an active exception store; preview must not
+        # create, alter, or reopen it for writing.
+        self.assertEqual(store_before, self.store_path.read_bytes())
+        self.assertEqual(before, set(self.root.iterdir()))
 
     def test_journal_only_freeze_leaves_ordinary_state_and_inbox_unchanged(self):
         prepared = self.prepare()

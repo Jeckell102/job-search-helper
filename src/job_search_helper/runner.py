@@ -15,7 +15,7 @@ from contextlib import ExitStack, contextmanager
 
 from . import cli as helper_cli
 from .cli import PROJECT_ROOT, get_repository, load_environment, project_path, state_path, writer_lock, scraper_lock_name, storage_backend
-from .engine import MAX_BATCH_SIZE, MAX_FETCH_WORKERS, Engine, State
+from .engine import MAX_BATCH_SIZE, MAX_FETCH_WORKERS, Engine, State, now
 from .inbox import InventoryInbox
 from .efficiency import load_title_blacklist, load_title_review_list
 from .review_queue import export_review_queues
@@ -81,6 +81,9 @@ Commands:
                Persist one explicit Company ID for the next normal start.
                Requires --company-id and a stable --request-id; does not fetch,
                create a cycle, change Sheets, or replace another pending request.
+  retained-exception-preview
+               Read and print the exact claims that an external signer must
+               authorize for one retained historical cycle. Read-only.
   recover-interrupted-cycle
                Explicitly pause one exact inactive cycle for recovery. Requires
                --cycle-id, --reason, and --apply; preserves its checkpoint.
@@ -298,6 +301,39 @@ def show_company_only_queue_status(*, database=None, repo=None, local_only=False
     print(json.dumps(dict(status, visibility='local-only' if local_only else 'local-and-workbook'),
                      indent=2, sort_keys=True))
     return 0
+
+
+def retained_exception_preview(cycle_id, expires_at, *, database=None, jobs_path=None):
+    """Build one read-only authorization preview for an exceptional pilot."""
+    if not isinstance(cycle_id, str) or not cycle_id.strip():
+        raise ValueError('Retained exception preview requires an exact cycle ID.')
+    database = database or state_path()
+    local_jobs = jobs_path or helper_cli.job_database_path()
+    if not database.is_file():
+        raise ValueError('Retained exception preview state database is missing.')
+    # ``State(..., readonly=True)`` is correct for ordinary recovery but may
+    # create SQLite's shared-memory sidecar beside a WAL database.  A signer
+    # preview is expressly read-only, including its directory footprint.
+    uri = database.resolve().as_uri() + '?mode=ro&immutable=1'
+    connection = sqlite3.connect(uri, uri=True)
+    try:
+        row = connection.execute(
+            'SELECT data FROM cycles WHERE id=?', (cycle_id.strip(),)).fetchone()
+    finally:
+        connection.close()
+    try:
+        cycle = json.loads(row[0]) if row else None
+    except (TypeError, ValueError) as exc:
+        raise ValueError('Retained exception preview cycle is unreadable.') from exc
+    if not isinstance(cycle, dict):
+        raise ValueError('Retained exception preview cycle is missing.')
+    from .retained_work_exception import build_manifest, required_claims
+    manifest = build_manifest(
+        cycle, database.parent / 'inventories.sqlite3', local_jobs,
+        reason='operator-provenanced company-only containment',
+        created_at=now())
+    return {'manifest': manifest,
+            'required_claims': required_claims(manifest, expires_at=expires_at)}
 
 
 def active_inbox_cycles(inbox, state, include_blocked=True):
@@ -1042,6 +1078,29 @@ def scrape_main(argv=None):
         finally:
             if repo is not None:
                 repo.close()
+    if argv[0] == 'retained-exception-preview':
+        parser = argparse.ArgumentParser(
+            prog='./job-search-scraper retained-exception-preview')
+        parser.add_argument('--cycle-id', required=True)
+        parser.add_argument('--expires-at', required=True)
+        try:
+            preview_args = parser.parse_args(argv[1:])
+        except SystemExit:
+            return 2
+        try:
+            report = retained_exception_preview(
+                preview_args.cycle_id, preview_args.expires_at)
+            # The manifest includes retained historical membership and evidence
+            # summaries.  The operator only needs the exact signed claims and
+            # its digest; do not spill the entire local manifest to a console.
+            print(json.dumps({
+                'manifest_digest': report['manifest']['manifest_digest'],
+                'required_claims': report['required_claims'],
+            }, sort_keys=True))
+            return 0
+        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+            print(f'ERROR: {exc}', file=sys.stderr)
+            return 1
     if argv[0] == 'recover-interrupted-cycle':
         parser = argparse.ArgumentParser(prog='./job-search-scraper recover-interrupted-cycle')
         parser.add_argument('--cycle-id', required=True)
