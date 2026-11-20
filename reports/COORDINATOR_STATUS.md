@@ -77,7 +77,45 @@ offline verifier prototype. Root owns the State/runner/LocalPipeline code
 until specifically reassigned and coordinates composition. Keep all work
 in disposable source overlays; no production wiring or automatic release.
 [Ordinary path design](S5_ORDINARY_PRE_OUTCOME_WIRING_DESIGN_20261120.md).
+The verified remote branch head for this checkpoint is
+`2725311e1e6e964719670836885769b8376f6b21`. The second chat was confirmed
+active on its scoped verifier assignment. The 18:18 observer check
+remained absent. Release is held while the project goal is active.
 
+
+
+18:29 Eastern. Root staged the Sprint 5 State-first inventory handoff and
+exact Jobs prior-outcome reader. First independent QA rejected the source
+on custody and result binding. Root repaired the exact dispatch binding,
+physical SQLite/store ownership, blocked rows and stable readback. 27
+disposable tests passed. `/root/site_journal_qa` owns revised independent
+recheck. `/root/s4_pilot_receipt_map` independently rejected typed provider
+evidence that accepted idle/ambiguous scripts and malformed page metadata.
+`/root/s4_abort_repair` owns source repair. The second chat's offline verifier
+verified the fixture in 114 reads, and returned distinct holds for a
+113-read limit, expired deadline and changed pending record. Its independent
+recovery checks are underway. Normal worker wiring and publication-to-outcome
+proof remain open. The native observer remained absent at 18:27. No live
+deployment or pilot. Latest verified private backup `2725311e1e6e964719670836885769b8376f6b21`.
+[Pending design](S5_ORDINARY_PENDING_MARKER_DESIGN_20261120.md) ·
+[Pending core source](S5_ORDINARY_PENDING_CORE_STAGED_20261120.md) ·
+[Initial pending QA](S5_ORDINARY_PENDING_CORE_INITIAL_QA_20261120.md) ·
+[Initial typed intake QA](S5_TYPED_RIPPLING_MISMATCH_INITIAL_QA_20261120.md).
+
+18:31 Eastern. Independent QA accepted the final staged handoff and exact
+prior Jobs outcome reader. Root's latest run passed 28 focused cases and
+105 combined with the accepted Engine and custody regressions. The second
+chat's exact offline verifier and private receipt channel also passed
+independent QA. Its scope is saved captures only, with 19 scoped tests,
+139 combined and 27 additional independent checks. The provider/browser
+lane repaired its separate raw-response provenance rejection, reported
+157 offline regression passes, and awaits its exact final independent
+recheck. Next implement the measured LocalPipeline handoff to these
+authorities, then the exact publication checkpoint before cleanup and
+owned outcome/launcher continuation. No live deployment or scrape.
+[Final pending QA](S5_ORDINARY_PENDING_CORE_FINAL_QA_20261120.md) ·
+[Offline verifier handoff](S5_ORDINARY_VERIFIER_HANDOFF_20261120.md) ·
+[Offline verifier QA](S5_ORDINARY_VERIFIER_INDEPENDENT_QA_20261120.md).
 
 Prepared live enrollment checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
