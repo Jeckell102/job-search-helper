@@ -27,17 +27,37 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Live pilot preflight checkpoint. The retained historical cycle is still
+In Progress in both live State and the Jobs mirror. The Company-event
+outbox and delivery table are empty. The coordinator selected Atomic
+Machines provisionally for the signed historical-blocked route. No Company
+row matched its identity or board, and the existing containment check found
+it disjoint from 800 retained members. The official Greenhouse board
+returned 36 distinct described postings in two public samples. No records or
+services changed. Coordinator owns exact admission, release, and selected
+receipt verification. Next bind exact terminal evidence to the approved
+exchange and bring the host maintenance gate to readiness. Ordinary idle
+and actively busy proof remain separate requirements. [Pilot preflight](S4_ATOMIC_MACHINES_PILOT_PREFLIGHT_20261120.md).
+
 Terminal release observation checkpoint. Coordinator and release owner,
 goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Staged the joint controller at
 `/tmp/jsh-s4-restoration-controller.3T4Mf222`. Its terminal observation
 holds the existing controller, application, and installer leases while
 checking the released source, installer receipt, and restored units.
-One disposable end-to-end interruption and restored readback case passed.
-The full 15-case clean rehearsal is running, session `40739`, and
-`/root/site_journal_qa` owns independent source review. The ordinary pilot
-evidence map is assigned to `/root/s4_pilot_receipt_map`. Coordinator owns
-the subsequent exchange-generation and actual selected pilot join. No
-actual checkout reopening has been authorized by this staged method.
+One disposable end-to-end case passed, including independent QA's required
+follow-up to reject a noncanonical journal before issuing its exact digest.
+Independent recheck accepted staged source. The full 15-case pre-follow-up
+run (`40739`) passed. Full exact-source rerun session `29460` is underway.
+Coordinator owns the subsequent
+exchange-generation and actual selected pilot join. The ordinary evidence
+map identifies a global admission hold while the protected historical
+cycle is unfinished. Inspect the previously approved retained-work route
+and determine the appropriate live evidence without altering that cycle
+or weakening ordinary admission. No actual checkout reopening has been
+authorized by this staged method.
+[Independent recheck](S4_RESTORATION_TERMINAL_INDEPENDENT_RECHECK_20261120.md) ·
+[Terminal observation](S4_RESTORATION_TERMINAL_OBSERVATION_20261120.md) ·
+[Pilot authority map](S4_PILOT_RECEIPT_AUTHORITY_MAP_20261120.md).
 
 Durable closure acknowledgment checkpoint. Coordinator and release owner,
 goal `01a1f11f-e014-7493-8441-2f66502e23a9`. The new staged controller at
@@ -104,6 +124,11 @@ were reproduced on the unchanged baseline. The owned sources and nine
 synthetic replay sample files matched their recorded SHA-256 hashes.
 Live qualification of the eventual generated repair and release wiring
 remain open. [Validation handoff](S5_PRE_RELEASE_VALIDATION_HANDOFF_20261120.md).
+The scoped validator, tests, synthetic specimens and reports were verified
+on the private GitHub branch at `cbebbf387524aabce382e0d98119aaa46f19200f`.
+Keep the second chat available as requested. A third chat is reserved for
+a clearly independent assignment, such as deployed QA once its evidence
+is ready. No third chat was opened.
 
 Host route and exchange witness checkpoint. Coordinator and release
 owner, active goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Read-only

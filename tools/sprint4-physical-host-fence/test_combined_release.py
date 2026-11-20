@@ -580,6 +580,77 @@ except OSError:
         self.assertEqual(fixture.service_starts(), ['after'])
         self.assertEqual(result, self.assert_receipt(fixture, fixture.run('install'), 'after'))
 
+    def test_restoration_terminal_requires_exact_release_and_holds_all_existing_leases(self):
+        fixture = self.fixture()
+        fixture.arm('after-restoration-before-commit')
+        interrupted = fixture.run('install')
+        self.assertEqual(interrupted.returncode, -9, interrupted.stderr)
+        observe = '''
+from hashlib import sha256
+import json
+from pathlib import Path
+import sys
+
+bundle = Path(sys.argv[1])
+sys.path.insert(0, str(bundle))
+import controller
+
+worker = controller.Controller(bundle)
+journal = bundle / "controller.json"
+data = journal.read_bytes()
+prior = journal.stat()
+if sys.argv[2] == "pending":
+    try:
+        with worker.restoration_terminal():
+            raise AssertionError("interrupted release authorized restoration")
+    except ValueError as exc:
+        assert "no terminal release" in str(exc), exc
+    assert journal.read_bytes() == data
+    sys.exit(0)
+
+with worker.restoration_terminal() as proof:
+    assert proof["source"] == "INSTALLED"
+    assert proof["maintenance_id"] == worker.hold_id
+    assert proof["project"] == str(worker.project)
+    assert proof["source_manifest_sha256"] == worker.manifest.sha256
+    assert proof["controller_journal_sha256"] == sha256(data).hexdigest()
+    assert proof["installer_receipt_sha256"] == sha256(
+        controller.installer.encode(json.loads(data)["receipt"])
+    ).hexdigest()
+    for lock in (worker.controller_gate, *worker.locks, worker.install_gate):
+        try:
+            with controller.lock(lock):
+                raise AssertionError(f"lease not held: {lock.name}")
+        except BlockingIOError:
+            pass
+
+with worker.restoration_terminal() as replay:
+    assert replay == proof
+after = journal.stat()
+assert journal.read_bytes() == data
+assert (after.st_ino, after.st_mtime_ns, after.st_ctime_ns) == (
+    prior.st_ino, prior.st_mtime_ns, prior.st_ctime_ns,
+)
+try:
+    journal.write_bytes(data + b" ")
+    try:
+        with worker.restoration_terminal():
+            raise AssertionError("different journal bytes produced the approved terminal digest")
+    except ValueError as exc:
+        assert "journal bytes are not canonical" in str(exc), exc
+finally:
+    journal.write_bytes(data)
+'''
+        def check(phase):
+            result = fixture.invoke([sys.executable, '-I', '-B', '-c', observe], str(fixture.bundle), phase)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+        check('pending')
+        fixture.disarm()
+        self.assert_receipt(fixture, fixture.run('install'), 'after')
+        check('released')
+        fixture.assert_visible('after')
+
     def test_physical_host_absence_through_persisted_close_and_reopen_interruptions(self):
         fixture = self.fixture()
         host = fixture.project / HOST_PATH

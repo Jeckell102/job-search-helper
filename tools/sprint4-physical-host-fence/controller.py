@@ -529,8 +529,12 @@ class Controller:
         require(value == {**request, "verified": True} and value.get("verified") is True,
                 f"Host check did not confirm {checkpoint}")
 
-    def load(self):
-        record = read_object(self.journal)
+    def load(self, *, canonical=False):
+        raw, _ = read(self.journal)
+        record = json.loads(raw)
+        require(isinstance(record, dict), "Expected a controller journal object")
+        if canonical:
+            require(installer.encode(record) == raw, "Controller journal bytes are not canonical")
         phase = record.get("phase")
         require(record.get("binding") == self.binding and phase in PHASES,
                 "Controller journal does not match this host, bundle or source checkout")
@@ -973,6 +977,35 @@ class Controller:
         record["target"] = "ROLLED_BACK"
         self.hold(record)
 
+    def verify_released_source(self, record):
+        require(record["phase"] == "RELEASED" and record["target"] in {"INSTALLED", "ROLLED_BACK"},
+                "Maintenance controller has no terminal release")
+        manifest = self.manifest.after if record["target"] == "INSTALLED" else self.manifest.before
+        require(self.verify_tree(record, manifest) == self.canonical, "Package not published")
+        self.verify_receipt(record, record["receipt"])
+        require(not present(self.marker) and not present(self.units.sentinel),
+                "Unexpected maintenance or runtime release journal")
+
+    @contextmanager
+    def restoration_terminal(self):
+        """Hold maintenance and writer leases while a caller verifies reopening."""
+        with ExitStack() as stack:
+            for path in (self.controller_gate, *self.locks, self.install_gate):
+                stack.enter_context(lock(path))
+            require({str(path): inode(path) for path in self.locks} == self.binding["locks"],
+                    "Existing application lock identity changed")
+            record = self.load(canonical=True)
+            self.verify_released_source(record)
+            self.units.check_status(record["prior"], held=False, restored=True)
+            yield {
+                "maintenance_id": self.hold_id,
+                "project": str(self.project),
+                "source": record["target"],
+                "source_manifest_sha256": self.manifest.sha256,
+                "controller_journal_sha256": installer.digest(installer.encode(record)),
+                "installer_receipt_sha256": installer.digest(installer.encode(record["receipt"])),
+            }
+
     def run(self, action):
         target = {"install": "INSTALLED", "rollback": "ROLLED_BACK"}[action]
         ensure_file(self.controller_gate, b"")
@@ -990,11 +1023,7 @@ class Controller:
                     record = self.load()
                 phase = record["phase"]
                 if phase == "RELEASED":
-                    current = (self.manifest.after if record["target"] == "INSTALLED" else self.manifest.before)
-                    require(self.verify_tree(record, current) == self.canonical, "Package not published")
-                    self.verify_receipt(record, record["receipt"])
-                    require(not present(self.marker) and not present(self.units.sentinel),
-                            "Unexpected maintenance or runtime release journal")
+                    self.verify_released_source(record)
                     if record["target"] == target:
                         return self.result(record)
                     require(action == "rollback", "This maintenance transaction has rolled back")
