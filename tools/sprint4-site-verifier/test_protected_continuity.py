@@ -83,3 +83,38 @@ def test_protected_state_checkpoint_remains_full_at_publication_and_restoration(
         full_checkpoint.finalize()
     assert full.call_count == 7
     assert not full_checkpoint.receipt.exists()
+
+
+def test_short_ack_requires_same_verified_receipt_at_finalization(evidence):
+    checkpoint, _, _, _ = evidence
+    first = checkpoint('held:controller')
+    first('held', 'INSTALLED')
+    first.finalize()
+    short = checkpoint('held:entry')
+    short('held', 'INSTALLED')
+    interrupted = checkpoint('held:controller')
+    interrupted('held', 'INSTALLED')
+    with pytest.raises(WitnessHold, match='record changed'):
+        short.finalize()
+
+
+def test_full_checkpoint_never_promotes_receipt_after_pin_changes(evidence):
+    checkpoint, _, _, _ = evidence
+    candidate = checkpoint('held:controller')
+    candidate('held', 'INSTALLED')
+    candidate.protected_pin.write_text('changed approval')
+    with pytest.raises(WitnessHold, match='pin changed'):
+        candidate.finalize()
+    assert json.loads(candidate.receipt.read_bytes())['state'] == 'pending'
+
+
+def test_identical_pending_bytes_at_a_replaced_inode_do_not_authorize_close(evidence):
+    checkpoint, _, _, _ = evidence
+    candidate = checkpoint('held:controller')
+    candidate('held', 'INSTALLED')
+    payload = candidate.receipt.read_bytes()
+    candidate.receipt.rename(candidate.receipt.with_suffix('.moved'))
+    candidate.receipt.write_bytes(payload)
+    candidate.receipt.chmod(0o600)
+    with pytest.raises(WitnessHold, match='record changed'):
+        candidate.finalize()

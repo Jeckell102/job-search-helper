@@ -20,14 +20,14 @@ def need(condition, diagnostic):
         raise WitnessHold(diagnostic)
 
 
-def private_bytes(path):
+def private_snapshot(path):
     data, info = read_regular(path)
     need(info.st_uid == os.geteuid() and stat.S_IMODE(info.st_mode) == 0o600,
          "Protected proof record is not private")
-    return data
+    return data, (info.st_dev, info.st_ino, info.st_ctime_ns, info.st_mtime_ns, info.st_size)
 
 
-def replace_receipt(path, content):
+def replace_receipt(path, content, *, expected=None):
     parent = path.parent
     need(parent.resolve(strict=True) == parent, "Continuity record parent is not canonical")
     directory = os.open(parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
@@ -38,7 +38,7 @@ def replace_receipt(path, content):
         need(info.st_uid == os.geteuid() and stat.S_IMODE(info.st_mode) == 0o700,
              "Continuity directory is not private")
         if os.path.lexists(path):
-            private_bytes(path)
+            private_snapshot(path)
         descriptor = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=directory)
         created = True
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
@@ -46,6 +46,8 @@ def replace_receipt(path, content):
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
+        if expected is not None:
+            need(private_snapshot(path) == expected, "Pending continuity record was replaced")
         os.replace(temp, path.name, src_dir_fd=directory, dst_dir_fd=directory)
         created = False
         os.fsync(directory)
@@ -83,32 +85,39 @@ class ProtectedContinuity:
 
     def __call__(self, stage, target):
         need(target == self.request["target"], "Protected proof release direction changed")
-        need(sha256(private_bytes(self.protected_pin)).hexdigest() == self.pin_digest,
+        pin = private_snapshot(self.protected_pin)
+        need(sha256(pin[0]).hexdigest() == self.pin_digest,
              "Approved protected-state pin changed")
         binding = self.binding(stage)
         checkpoint = self.request["checkpoint"]
         enroll = checkpoint == "held:controller"
         short = stage == "held" and not enroll
+        receipt = None
         if enroll:
             # Any failed re-enrollment leaves no usable previous receipt.
             replace_receipt(self.receipt, {**binding, "state": "pending"})
+            receipt = private_snapshot(self.receipt)
         physical = physical_snapshot(self.policy.project)
         if short:
             try:
-                record = json.loads(private_bytes(self.receipt))
+                receipt = private_snapshot(self.receipt)
+                record = json.loads(receipt[0])
             except (OSError, ValueError, TypeError):
                 raise WitnessHold("A fresh held logical checkpoint is required") from None
             need(record == {**binding, "state": "verified", "physical": physical},
                  "Protected continuity evidence changed or belongs to a different hold")
         else:
             need(self.full_check(stage, target) is True, "Full protected-state verification refused")
-        self.pending = (stage, binding, physical, enroll)
+        self.pending = (stage, binding, physical, enroll, pin, receipt)
         return True
 
     def finalize(self):
         need(self.pending is not None, "Protected checkpoint did not run")
-        stage, binding, physical, enroll = self.pending
+        stage, binding, physical, enroll, pin, receipt = self.pending
         need(self.binding(stage) == binding and physical_snapshot(self.policy.project) == physical,
              "Protected files or writer ownership changed during the checkpoint")
+        need(private_snapshot(self.protected_pin) == pin, "Approved protected-state pin changed during the checkpoint")
+        if receipt is not None:
+            need(private_snapshot(self.receipt) == receipt, "Continuity record changed during the checkpoint")
         if enroll:
-            replace_receipt(self.receipt, {**binding, "state": "verified", "physical": physical})
+            replace_receipt(self.receipt, {**binding, "state": "verified", "physical": physical}, expected=receipt)

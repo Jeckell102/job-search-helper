@@ -18,6 +18,19 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Continuity finalization repair checkpoint. The revised full controller
+rehearsal is terminal PASS, 14 cases in 220.235s. Independent QA accepted
+the launcher output repair and held continuity on approval pin and receipt
+drift after the first check. The coordinator repaired both in
+`/tmp/jsh-s4-site-continuity-finalize.jy94Q7Dg`. Finalization now rechecks
+the opened file identity and exact bytes of the approved pin and working
+receipt. Enrollment promotion rechecks its pending receipt immediately
+before replacement. 53 disposable tests passed, including unchanged
+bytes at a replaced pending inode. Exact independent recheck pending
+`01a1f97d-2e8c-7821-b5e1-d2019215036b`. No live checkout, service, job
+data or Jetson action. Prior verified backup `c6d68dc`.
+[Continuity QA](S4_SITE_CONTINUITY_INDEPENDENT_QA_20261120.md).
+
 Supplemental checkpoint. Four disposable controller timeout tests passed,
 including process-group termination and reaping on timeout. The full
 controller rehearsal continues in session 30963. The three owned Sprint 5
