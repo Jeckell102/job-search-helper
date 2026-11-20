@@ -56,6 +56,29 @@ wiring boundary.
 [Sprint 5 authority QA](S5_LIVE_EMPLOYER_AUTHORITY_INDEPENDENT_QA_20261120.md) ·
 [Sprint 5 Engine and custody QA](S5_RUNTIME_MAPPING_CUSTODY_V3_INDEPENDENT_QA_20261120.md).
 
+18:15 Eastern read-only workbook check. The actual working Companies tab
+has one native table with 17 compact columns and had no selected
+name/board or official-domain collision at the check. Completed local
+baseline. Four reads and zero writes. Independently accepted selected
+intake source, its tests, Sprint 5 composed custody source/tests and
+reports reverified on private GitHub at
+`a48a72d62cf969fd2ca091c53f804bd02bc64ef5`.
+[Working workbook preflight](S4_ATOMIC_MACHINES_WORKBOOK_READBACK_20261120.md).
+
+18:17 Eastern Sprint 5 worker split. The pre-outcome wiring review found
+a durable pause is needed before the first immutable outcome. Independent
+public verification runs outside both leases. Resume may use one measured
+scraper admission and one short writer lease. `/root/s4_abort_repair` owns
+only the typed Rippling observation, adapter propagation and browser
+precedence. `/root/site_journal_qa` owns the private pending/terminal marker
+review and crash matrix. The second chat
+`01a1fadd-ef16-7311-a3b5-9fd1740b13e9` owns the separately scoped bounded
+offline verifier prototype. Root owns the State/runner/LocalPipeline code
+until specifically reassigned and coordinates composition. Keep all work
+in disposable source overlays; no production wiring or automatic release.
+[Ordinary path design](S5_ORDINARY_PRE_OUTCOME_WIRING_DESIGN_20261120.md).
+
+
 Prepared live enrollment checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
 from about 17:47 Eastern and authorized routine in-scope work without
