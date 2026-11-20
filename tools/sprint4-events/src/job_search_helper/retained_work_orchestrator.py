@@ -58,7 +58,7 @@ def run_retained_reservation(prepared, engine, local, remote, store, *,
 def _run_retained_reservation_locked(prepared, engine, local, remote, store, *,
                                     state_directory=None, max_operations=100,
                                     membership_only=False, runtime_binding=None,
-                                    writer_already_held=False):
+                                    writer_already_held=False, authorization_now=None):
     """Apply one frozen start with the scraper lock already held.
 
     The verified membership-only path takes writer.lock before the publisher's
@@ -78,6 +78,7 @@ def _run_retained_reservation_locked(prepared, engine, local, remote, store, *,
     request = prepared.snapshot["request"]
     identity = {"reservation_digest": reservation, "cycle_id": cycle_id, "company_id": company_id}
     reservation_payload = prepared.admission.get("reservation_payload", {})
+    authorization_expires_at = None
     if membership_only is True:
         if runtime_binding is None:
             raise ValueError("retained_operator_runtime_binding_required")
@@ -92,6 +93,8 @@ def _run_retained_reservation_locked(prepared, engine, local, remote, store, *,
         claims = reservation_payload["claims"]
         expected = operator_journal_binding(claims, runtime_binding, reservation_payload["authorization"])
         event_mode = claims["action"] == EVENT_ACTION
+        if event_mode:
+            authorization_expires_at = claims["expires_at"]
         expected_provenance = (request["request_id"].removeprefix("company-event:")
                                if event_mode else "operator:" + request["request_id"])
         if (expected["reservation_digest"] != reservation
@@ -142,7 +145,8 @@ def _run_retained_reservation_locked(prepared, engine, local, remote, store, *,
                 raise ValueError("retained_orchestrator_frozen_start_changed")
             publication = _publish_retained_reservation(
                 reservation, store, local, remote,
-                max_operations=max_operations, runtime_binding=runtime_binding)
+                max_operations=max_operations, runtime_binding=runtime_binding,
+                authorization_expires_at=authorization_expires_at, authorization_now=authorization_now)
             return {
                 **identity, "session": session,
                 "provenance": publication_state,
@@ -212,7 +216,8 @@ def _run_retained_reservation_locked(prepared, engine, local, remote, store, *,
                 recover_retained_chunks=membership_only)
         publication = _publish_retained_reservation(
             reservation, store, local, remote,
-            max_operations=max_operations, runtime_binding=runtime_binding)
+            max_operations=max_operations, runtime_binding=runtime_binding,
+            authorization_expires_at=authorization_expires_at, authorization_now=authorization_now)
         if membership_only:
             session = store.load(reservation)
     return {

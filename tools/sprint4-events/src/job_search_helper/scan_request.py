@@ -350,7 +350,8 @@ def _cycle_views(repository, state, *, include_remote=True):
 
 def _unfinished_cycle_ids(engine, state, *, include_remote=True):
     """Return non-superseded local and workbook cycles that still own work."""
-    return _unfinished_from_views(*_cycle_views(engine.repo, state, include_remote=include_remote))
+    repository = engine.repo if include_remote else None
+    return _unfinished_from_views(*_cycle_views(repository, state, include_remote=include_remote))
 
 
 def _unfinished_from_views(local, remote):

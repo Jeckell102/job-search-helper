@@ -857,12 +857,26 @@ class SQLiteRepository:
 
     def record_scrape_outcome(self, facts):
         """Public generic outcome writer; closed mapping evidence is sealed."""
+        if (isinstance(facts, dict) and isinstance(facts.get('cycle_id'), str)
+                and facts['cycle_id'].startswith('CYC-R')):
+            raise RepositoryError('Retained outcomes require the sealed event writer.')
         reserved = {'capability_id', 'capability_digest', 'mapping_digest', 'configuration_digest'}
         if (isinstance(facts, dict) and (reserved & set(facts)
                 or isinstance(facts.get('failure'), dict)
                 and facts['failure'].get('category') == 'same_provider_source_mapping')):
             raise RepositoryError('Source-configuration mapping outcomes require the sealed ordinary writer.')
         return self._record_scrape_outcome(facts)
+
+    def record_retained_event_outcome(self, request_sha256, reservation_digest):
+        """Record a retained event only from its durable archived authorities."""
+        from contextlib import closing
+        from .retained_event_outcome import retained_event_outcome_facts
+
+        with closing(SQLiteRepository(self.path, self.spreadsheet_id, readonly=True)) as reader:
+            facts, existing = retained_event_outcome_facts(reader, request_sha256, reservation_digest)
+        if existing is not None:
+            return existing
+        return self._record_scrape_outcome(facts, owned_company_event=True)['outcome']
 
     def record_sealed_source_configuration_outcome(self, cycle_id, company_id, *, storage_confirmed):
         """Build and persist a sealed ordinary outcome from durable evidence.
@@ -941,7 +955,7 @@ class SQLiteRepository:
             return None
         return cycle, item
 
-    def _record_scrape_outcome(self, facts):
+    def _record_scrape_outcome(self, facts, *, owned_company_event=False):
         """Classify bounded facts and persist the resulting outcome, without dispatch.
 
         Callers cannot supply their own outcome ID, action, or identity.  The
@@ -988,6 +1002,23 @@ class SQLiteRepository:
             raise RepositoryError('Scrape outcome public record is malformed.')
         encoded = encode(payload)
         with self.transaction():
+            event_id = identity['request_id'].removeprefix('company-event:')
+            event = None
+            if event_id != identity['request_id']:
+                event = self.db.execute(
+                    'SELECT company_id,source_revision,kind FROM company_event_outbox WHERE event_id=?',
+                    (event_id,),
+                ).fetchone()
+            if event is not None and not owned_company_event:
+                raise RepositoryError('Company-event outcomes require a sealed event writer.')
+            if owned_company_event:
+                if (event != (identity['company_id'], identity['source_revision'], 'company.eligible')
+                        or identity.get('company_event_id') != event_id
+                        or self.db.execute(
+                            'SELECT 1 FROM scrape_outcomes WHERE request_id=? AND outcome_id<>?',
+                            (identity['request_id'], outcome['outcome_id']),
+                        ).fetchone()):
+                    raise RepositoryError('Company-event outcome conflicts with its durable ownership.')
             existing = self.db.execute('SELECT payload FROM scrape_outcomes WHERE outcome_id=?',
                                        (outcome['outcome_id'],)).fetchone()
             if existing:

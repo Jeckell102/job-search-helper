@@ -14,7 +14,7 @@ Only mark the persistent goal complete when every applicable roadmap exit gate
 and every final acceptance demonstration has current, version-bound evidence.
 Source tests alone are not deployment or live-operation acceptance.
 
-Current overall completion estimate: approximately 25% by acceptance gates.
+Current overall completion estimate: approximately 40% by acceptance gates.
 This estimate changes only when a gate gains or loses verified evidence.
 
 ## Mandatory context-reset and restart protocol
@@ -238,9 +238,11 @@ Exit gate: a supported company change creates one logical scoped request and
 realistic failures create exactly the correct retry, hold or repair task across
 duplicates, restarts and source drift.
 
-Current status: active in disposable source. The live and full-chain evidence
-remain open. See `S4_F1_F2_PREFLIGHT_20261120.md` and the restart card for
-staged ownership and current blockers.
+Current status: active in disposable source. The signed nonempty event route
+passed the combined fixture suite. Independent QA placed live use on hold.
+See `S4_RETAINED_EVENT_SOURCE_QA_HOLD_20261120.md` and the restart card for
+repairs, the outstanding expiry and zero cases, and current lane ownership.
+Live and full-chain evidence remain open.
 
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 

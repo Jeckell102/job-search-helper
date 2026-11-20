@@ -1,7 +1,7 @@
 """Exact signed authorization for one queued historical Company membership."""
 
 from .retained_work_exception import _request_provenance, _timestamp, digest
-from .selected_recovery_authorization import verify_authorization
+from .selected_recovery_authorization import _expiry, _verify_authorization, verify_authorization
 
 
 ACTION = "activate-retained-operator-membership-v2"
@@ -86,3 +86,17 @@ def verify_retained_scope_authorization(envelope, claims, verifier, *, action, n
     if action not in {ACTION, EVENT_ACTION} or claims.get("version") != 2 or claims.get("action") != action:
         raise ValueError("retained_operator_authorization_action_invalid")
     return verify_authorization(envelope, claims, verifier, now=now)
+
+
+def verify_expired_event_authorization(envelope, claims, verifier, *, now=None):
+    """Verify the original expired signature for claim readback only."""
+    if claims.get("version") != 2 or claims.get("action") != EVENT_ACTION:
+        raise ValueError("retained_operator_authorization_action_invalid")
+    try:
+        _expiry(claims["expires_at"], now)
+    except ValueError as error:
+        if str(error) != "selected_recovery_authorization_expired":
+            raise
+    else:
+        raise ValueError("retained_event_authorization_must_be_expired_for_readback")
+    return _verify_authorization(envelope, claims, verifier, now=now, require_unexpired=False)

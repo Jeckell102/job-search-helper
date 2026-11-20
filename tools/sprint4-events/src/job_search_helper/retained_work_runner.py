@@ -38,7 +38,7 @@ def _read_json(path):
     return value
 
 
-def _inventory_snapshot(inventory, company, *, fetched_at):
+def _inventory_snapshot(inventory, company, *, fetched_at, event_scope=False):
     fields = {
         "status": getattr(inventory, "status", None),
         "jobs": getattr(inventory, "jobs", None),
@@ -51,7 +51,17 @@ def _inventory_snapshot(inventory, company, *, fetched_at):
         "fetched_at": fetched_at,
         "requested_url": company["Official Careers URL"],
     }
-    if (fields["status"] not in {"complete", "partial"}
+    statuses = {"complete", "partial"}
+    if event_scope:
+        from .ats import validate_outcome_failure
+        statuses.update(("blocked", "failed", "unsupported"))
+        fields["outcome_failure"] = validate_outcome_failure(getattr(inventory, "outcome_failure", None))
+        verified_zero = getattr(inventory, "verified_zero", None)
+        if verified_zero is not None:
+            fields["verified_zero"] = verified_zero
+        if fields["outcome_failure"] is not None and fields["status"] == "complete":
+            raise ValueError("retained_event_complete_inventory_has_failure")
+    if (fields["status"] not in statuses
             or not isinstance(fields["jobs"], list)
             or not isinstance(fields["source_url"], str)
             or not fields["source_url"].strip()
@@ -290,7 +300,26 @@ def settle_retained_start(state_directory, jobs_path, reservation_digest):
             "session_id": record["session_id"]}
 
 
-def assert_normal_lifecycle_not_held(state_directory, jobs_path=None):
+class ManualRetainedEventHold(ValueError):
+    """A staged event owns the ordinary lifecycle boundary."""
+
+
+def assert_no_manually_staged_event(state_directory):
+    """Hold normal setup before it can construct a writer or start cleanup."""
+    from .company_events import is_manual_retained_event_request
+
+    path = Path(state_directory) / "next-scan.json"
+    if path.is_symlink():
+        raise ValueError("retained_runner_pending_request_symlink")
+    try:
+        raw = path.read_bytes()
+    except FileNotFoundError:
+        return
+    if is_manual_retained_event_request(json.loads(raw)):
+        raise ManualRetainedEventHold("retained_runner_manual_event_holds_normal_lifecycle")
+
+
+def assert_normal_lifecycle_not_held(state_directory, jobs_path=None, *, allow_staged_event=False):
     """Fail closed before the normal runner can discover or sync work.
 
     A retained preflight is intentionally outside State and the normal inbox.
@@ -301,6 +330,8 @@ def assert_normal_lifecycle_not_held(state_directory, jobs_path=None):
     """
     from .retained_operator_journal import assert_no_unfinished_operator_journal
 
+    if not allow_staged_event:
+        assert_no_manually_staged_event(state_directory)
     assert_no_unfinished_operator_journal(state_directory)
     path = Path(state_directory).resolve() / "retained-work-starts.sqlite3"
     record = _read_existing_journal(path)

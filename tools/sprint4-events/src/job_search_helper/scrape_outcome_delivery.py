@@ -133,6 +133,12 @@ class OutcomeDelivery:
                     self.consumer, outcome_id, digest, raw, _digest(raw), self.stamp())
                 results.append({'outcome_id': outcome_id, 'disposition': 'STALE_SUPPRESSED'})
                 continue
+            identity = record['identity']
+            if identity.get('company_event_id') and identity.get('cycle_id', '').startswith('CYC-R'):
+                from .retained_event_outcome import retained_outcome_source_is_current
+                if not retained_outcome_source_is_current(self.repository, identity):
+                    results.append({'outcome_id': outcome_id, 'disposition': 'HELD_STALE_RETAINED_SOURCE'})
+                    continue
             count, state, due = attempt
             if state == 'HELD_RETRY_CAP' or (state == 'WAITING' and due > now) or (state == 'IN_FLIGHT' and due > now):
                 continue

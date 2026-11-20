@@ -267,7 +267,7 @@ class CompanyEventBridge:
         acknowledge the durable event, and publish the existing bridge receipt
         last. The receipt is the readiness boundary for signed admission.
         """
-        with writer_lock(self.root / scraper_lock_name()):
+        with writer_lock(self.root / scraper_lock_name()), writer_lock(self.root / "writer.lock"):
             return self._stage_manual_retained_event_locked(
                 event_id, company_id=company_id, source_revision=source_revision,
                 blocking_cycle_id=blocking_cycle_id,
@@ -280,7 +280,7 @@ class CompanyEventBridge:
             raise ValueError("Manual retained staging requires the ordinary SQLite event authority.")
         from .retained_work_runner import assert_normal_lifecycle_not_held
         from .integration_release import assert_release_settled
-        assert_normal_lifecycle_not_held(self.root, self.repository.path)
+        assert_normal_lifecycle_not_held(self.root, self.repository.path, allow_staged_event=True)
         assert_release_settled(self.root)
         with self.repository.transaction():
             event, acknowledged = self._manual_event(event_id, company_id, source_revision)

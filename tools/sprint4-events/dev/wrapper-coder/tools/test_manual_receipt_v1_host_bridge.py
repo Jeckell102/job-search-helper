@@ -222,3 +222,33 @@ class ManualReceiptV1HostBridgeTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_signed_company_event_to_exact_coordinator_receipt(tmp_path, monkeypatch):
+    from contextlib import closing
+    from test_retained_operator_run import OperatorFixture
+
+    fixture = OperatorFixture(tmp_path, monkeypatch, company_event=True)
+    fixture.sign()
+    result = fixture.command('execute')
+    outcome_id = result['outcome_id']
+    coordinator = Coordinator(base=tmp_path / 'coordinator')
+    with closing(fixture.local(write=True)) as sender:
+        bridge = ManualReceiptV1HostBridge(coordinator, lambda: sender, enabled=True)
+        assert bridge.manual_drain(outcome_id=outcome_id)['results'] == [
+            {'outcome_id': outcome_id, 'disposition': 'ACCEPTED'},
+        ]
+        assert bridge.manual_drain(outcome_id=outcome_id)['results'] == []
+        row = sender.db.execute(
+            'SELECT record_sha256,receipt FROM scrape_outcome_delivery_receipts WHERE outcome_id=?',
+            (outcome_id,),
+        ).fetchone()
+    with coordinator.store.connect() as db:
+        receiver = db.execute(
+            'SELECT record_sha256,receipt,sink_status FROM scrape_outcome_delivery_receipts WHERE outcome_id=?',
+            (outcome_id,),
+        ).fetchone()
+        tasks = db.execute('SELECT COUNT(*) FROM repair_intake WHERE outcome_id=?', (outcome_id,)).fetchone()[0]
+    assert receiver[:2] == row
+    assert receiver[2] == 'RECORDED_NO_REPAIR'
+    assert tasks == 0

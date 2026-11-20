@@ -33,6 +33,8 @@ PREPARED = "PREPARED"
 FETCH_CLAIMED = "FETCH_CLAIMED"
 INVENTORY_FROZEN = "INVENTORY_FROZEN"
 SETTLED = "SETTLED"
+VERIFIED_ZERO = "VERIFIED_ZERO"
+FETCH_OUTCOME = "FETCH_OUTCOME"
 
 _SCHEMA = "retained-operator-admission-journal-v1"
 _SHA256 = re.compile(r"[0-9a-f]{64}")
@@ -114,8 +116,16 @@ def _check_binding(binding):
         raise ValueError("retained_operator_journal_binding_invalid")
 
 
-def _inventory_digest(inventory):
-    if (not isinstance(inventory, dict) or inventory.get("status") not in ("complete", "partial")
+def _inventory_digest(inventory, binding):
+    statuses = {"complete", "partial"}
+    if binding["claims"]["action"] == EVENT_ACTION:
+        from .ats import validate_outcome_failure
+        statuses.update(("blocked", "failed", "unsupported"))
+        failure = inventory.get("outcome_failure") if isinstance(inventory, dict) else None
+        if failure is not None and (validate_outcome_failure(failure) != failure
+                                    or inventory.get("status") == "complete"):
+            raise ValueError("retained_event_journal_failure_invalid")
+    if (not isinstance(inventory, dict) or inventory.get("status") not in statuses
             or not isinstance(inventory.get("jobs"), list)
             or not all(isinstance(job, dict) for job in inventory["jobs"])
             or not all(_is_text(inventory.get(key)) for key in ("ats", "source_url", "requested_url"))):
@@ -139,9 +149,13 @@ def _settlement_digest(evidence, binding, inventory_sha256):
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _expected_consumption(binding):
-    return {"request_sha256": binding["claims"]["request_sha256"],
-            "state": "FIRST_PASS_RELEASED_CONSUMED"}
+def _expected_consumption(binding, evidence):
+    state = "FIRST_PASS_RELEASED_CONSUMED"
+    if binding["claims"]["action"] == EVENT_ACTION:
+        state = {VERIFIED_ZERO: "VERIFIED_ZERO_CONSUMED", FETCH_OUTCOME: "FETCH_OUTCOME_CONSUMED"}.get(
+            evidence.get("state"), state,
+        )
+    return {"request_sha256": binding["claims"]["request_sha256"], "state": state}
 
 
 def _validate_record(record):
@@ -159,7 +173,7 @@ def _validate_record(record):
             or state not in (PREPARED, FETCH_CLAIMED, INVENTORY_FROZEN, SETTLED)):
         raise ValueError("retained_operator_journal_corrupt")
     if frozen:
-        if record["inventory_sha256"] != _inventory_digest(record["inventory"]):
+        if record["inventory_sha256"] != _inventory_digest(record["inventory"], record["binding"]):
             raise ValueError("retained_operator_journal_corrupt")
     elif record["inventory"] is not None or record["inventory_sha256"] is not None:
         raise ValueError("retained_operator_journal_corrupt")
@@ -167,7 +181,7 @@ def _validate_record(record):
         if record["settlement_evidence_sha256"] != _settlement_digest(
                 record["settlement_evidence"], record["binding"], record["inventory_sha256"]):
             raise ValueError("retained_operator_journal_corrupt")
-        if record["consumption"] is not None and record["consumption"] != _expected_consumption(record["binding"]):
+        if record["consumption"] is not None and record["consumption"] != _expected_consumption(record["binding"], record["settlement_evidence"]):
             raise ValueError("retained_operator_journal_corrupt")
     elif any(record[key] is not None for key in (
             "settlement_evidence", "settlement_evidence_sha256", "consumption")):
@@ -271,6 +285,38 @@ class RetainedOperatorJournal:
             raise ValueError("retained_operator_journal_archive_binding_changed")
         return record
 
+    def read_archived_event(self, request_sha256, reservation_digest):
+        """Reopen a consumed event using its exact content-addressed keys."""
+        if not _is_digest(request_sha256) or not _is_digest(reservation_digest):
+            raise ValueError("retained_event_archive_identity_invalid")
+        if not self._archive_directory_exists():
+            return None
+        path = self.archive_directory / (request_sha256 + "-" + reservation_digest + ".json")
+        record = _read_record(path)
+        if record is None:
+            return None
+        binding = record["binding"]
+        claims = binding["claims"]
+        if (claims["action"] != EVENT_ACTION or claims["request_sha256"] != request_sha256
+                or binding["reservation_digest"] != reservation_digest):
+            raise ValueError("retained_event_archive_identity_changed")
+        return self.read_archived(binding)
+
+    def read_settled_event(self, request_sha256, reservation_digest):
+        """Find only the selected settled active slot or its consumed archive."""
+        archived = self.read_archived_event(request_sha256, reservation_digest)
+        if archived is not None:
+            return archived
+        active = self.inspect()
+        if active is None or active["state"] != SETTLED:
+            return None
+        binding = active["binding"]
+        claims = binding["claims"]
+        if (claims["action"], claims["request_sha256"], binding["reservation_digest"]) == (
+                EVENT_ACTION, request_sha256, reservation_digest):
+            return active
+        return None
+
     def read(self, binding):
         """Read exact active or archived evidence, or None for a fresh request."""
         _check_binding(binding)
@@ -318,7 +364,7 @@ class RetainedOperatorJournal:
         if (record is None or record["state"] == PREPARED or not _is_digest(claim)
                 or not hmac.compare_digest(_digest(claim), record["fetch_claim_sha256"])):
             raise ValueError("retained_operator_journal_fetch_claim_invalid")
-        inventory_sha256 = _inventory_digest(inventory)
+        inventory_sha256 = _inventory_digest(inventory, binding)
         if record["state"] in (INVENTORY_FROZEN, SETTLED):
             if record["inventory_sha256"] != inventory_sha256:
                 raise ValueError("retained_operator_journal_inventory_changed")
@@ -366,7 +412,7 @@ class RetainedOperatorJournal:
         record = self.read(binding)
         if (record is None or record["state"] != SETTLED
                 or record["inventory_sha256"] != inventory_sha256
-                or consumption != _expected_consumption(binding)):
+                or consumption != _expected_consumption(binding, record["settlement_evidence"])):
             raise ValueError("retained_operator_journal_consumption_binding_changed")
         if record["consumption"] is None:
             _write_record(self.path, dict(record, consumption=consumption))

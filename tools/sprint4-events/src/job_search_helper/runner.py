@@ -905,6 +905,8 @@ def run_start(fetch_workers=DEFAULT_FETCH_WORKERS, assignment_window=DEFAULT_ASS
         database = state_path()
         database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with _scraper_admission(database) as runtime_binding:
+            from .retained_work_runner import assert_no_manually_staged_event
+            assert_no_manually_staged_event(database.parent)
             return _run_named_exact_cycle_sync(
                 sync_cycle_id=sync_cycle_id, sync_company_ids=sync_company_ids,
                 sheet_request_interval=sheet_request_interval,
