@@ -1,5 +1,6 @@
 from hashlib import sha256
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -21,14 +22,22 @@ exec "$root/.venv/bin/python" -I -S "$root/release_admission_bootstrap.py" "$@"
 ''')
     (root / 'release_admission_bootstrap.py').write_text('raise AssertionError("maintenance probe executed the bootstrap")\n')
     pins = {name: sha256((root / name).read_bytes()).hexdigest() for name in LAUNCH_FILES}
-    launcher = LauncherPolicy(interpreter, interpreter.resolve(), Path('/bin/bash').resolve(), pins, pins)
-    (package / 'runner.py').write_text('def scrape_main(args):\n    assert args == ["--help"]\n    return 0\n')
+    launcher = LauncherPolicy(interpreter, interpreter.resolve(), Path('/bin/bash').resolve(), (), pins, pins)
+    (package / 'runner.py').write_text(
+        'def scrape_main(args):\n    assert args == ["--help"]\n'
+        '    print("Usage: ./job-search-scraper <command>\\n  start   Run scan\\n  status  Show state")\n'
+        '    return 0\n'
+    )
     return root, package, launcher
 
 
 def test_phase_routes_do_not_execute_start_and_require_guard(checkout):
     root, package, launcher = checkout
     init = package / '__init__.py'
+    parked = package.parent / '.s4-maintenance-package'
+    parked.mkdir()
+    (parked / '__init__.py').write_text('')
+    (parked / 'runner.py').write_bytes((package / 'runner.py').read_bytes())
     init.write_text('raise ImportError("Job Search Helper is held for source maintenance")\n')
     probe_launchers(root, launcher, 'pre-publish', 'INSTALLED')
     init.write_text('')
@@ -53,7 +62,43 @@ def test_unrelated_runner_write_is_denied(checkout):
     (package / '__init__.py').write_text('')
     witness = root / 'would-write'
     (package / 'runner.py').write_text(f'def scrape_main(args):\n    open({str(witness)!r}, "w")\n    return 0\n')
-    import subprocess
     with pytest.raises(subprocess.CalledProcessError):
         probe_launchers(root, launcher, 'admitted', 'INSTALLED')
     assert not witness.exists()
+
+
+def test_canonical_guard_cannot_mask_missing_or_invalid_target(checkout):
+    root, package, launcher = checkout
+    initializer = package / '__init__.py'
+    initializer.write_text('raise ImportError("Job Search Helper is held for source maintenance")\n')
+    with pytest.raises(subprocess.CalledProcessError):
+        probe_launchers(root, launcher, 'pre-publish', 'INSTALLED')
+    initializer.write_text('')
+    (package / '__init__.so').touch()
+    (package / 'runner.py').write_text('invalid Python syntax goes here \n')
+    with pytest.raises(subprocess.CalledProcessError):
+        probe_launchers(root, launcher, 'published', 'INSTALLED')
+
+
+def test_site_startup_hook_is_never_executed(checkout):
+    root, package, launcher = checkout
+    (package / '__init__.py').write_text('')
+    venv = root / '.venv'
+    (venv / 'pyvenv.cfg').write_text(f'home = {Path(sys.executable).resolve().parent}\n')
+    version = f'python{sys.version_info.major}.{sys.version_info.minor}'
+    site = venv / 'lib' / version / 'site-packages'
+    site.mkdir(parents=True)
+    marker = root / 'would-run-at-startup'
+    (site / 'arbitrary-fixture-startup.pth').write_text(
+        f'import builtins; builtins.open({str(marker)!r}, "w").close()\n'
+    )
+    probe_launchers(root, launcher, 'admitted', 'INSTALLED')
+    assert not marker.exists()
+
+
+def test_unrelated_help_output_does_not_pass(checkout):
+    root, package, launcher = checkout
+    (package / '__init__.py').write_text('')
+    (package / 'runner.py').write_text('def scrape_main(args):\n    print("unrelated output")\n    return 0\n')
+    with pytest.raises(subprocess.CalledProcessError):
+        probe_launchers(root, launcher, 'restored', 'INSTALLED')

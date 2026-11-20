@@ -53,7 +53,7 @@ def test_archive_loads_private_policy_but_refuses_unobserved_actual_host(site, t
     pin = tmp_path / 'no-production-protected-pin'
     pins = {name: 'a' * 64 for name in LAUNCH_FILES}
     launcher = LauncherPolicy(policy.project / '.venv/bin/python', Path('/usr/bin/python3'),
-                              Path('/usr/bin/bash'), pins, pins)
+                              Path('/usr/bin/bash'), (), pins, pins)
     bundle = build_fixture_archive(policy, pin, 'b' * 64, launcher)
     assert load_policy(bundle) == (policy, pin, 'b' * 64, launcher)
     result = subprocess.run([bundle], input=b'{"unexpected":"fixture-not-real"}',

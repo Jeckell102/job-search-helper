@@ -77,6 +77,7 @@ def load_policy(archive_path):
         raise ValueError("Approved launcher policy is incomplete")
     for key in ("interpreter", "interpreter_target", "shell"):
         launchers[key] = absolute(launchers[key])
+    launchers["dependency_roots"] = tuple(absolute(path) for path in launchers["dependency_roots"])
     for side in ("before", "after"):
         if set(launchers[side]) != LAUNCH_FILES:
             raise ValueError("Approved launcher inventory differs")

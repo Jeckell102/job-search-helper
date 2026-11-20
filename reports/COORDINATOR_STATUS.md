@@ -18,6 +18,25 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Launcher repair and release deadline checkpoint. Coordinator and release
+owner, goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%,
+project about 52%. Launcher fixture now has 39 passing cases at
+`/tmp/jsh-s4-launcher-recheck.9mHd2v0h`; real-source disposable
+park/publish/admit help probes passed. QA chat
+`01a1f97d-2e8c-7821-b5e1-d2019215036b` owns the independent launcher
+recheck. The unheld timing sample took 43.70s and refused database drift.
+No approved pin captured. Protected deadline design and four physical
+continuity cases are saved. Higher-reasoning chat
+`01a1f97d-cebd-7910-8d31-a5f3e0dcd264` owns isolated non-root alternate
+checkout fence implementation. Sol High
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns Sprint 5 runtime fact custody
+repairs after three reproduced ownership defects. Coordinator owns
+phase budget/continuity integration, real site readiness and release
+decisions. No live operations. Last verified backup
+`81bbdf09ecfa2d1ec800c159f5f0aa56d3517e3c`.
+[Current repair and continuity](S4_LAUNCHER_REPAIRS_AND_CONTINUITY_STAGED_20261120.md)
+and [Sprint 5 custody QA](S5_RUNTIME_MAPPING_FACT_INDEPENDENT_QA_20261120.md).
+
 Launcher verifier checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, overall about
 52%. Independent QA accepted the paired descriptor/preflight lease repair.
