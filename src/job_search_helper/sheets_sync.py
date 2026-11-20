@@ -252,8 +252,22 @@ class SheetsSynchronizer:
                     ids = {rid for rid, _ in matches}
                     ids.update(prior_keys.get(_identity_key('Job Key', observed['Job Key']), []))
                     matches = [(rid, self.local.row(tab, rid)) for rid in sorted(ids)]
-                if not matches and tab == 'Companies' and not observed.get('Company ID'):
-                    matches = self.local.matches(tab, {'Company': observed.get('Company', '')})
+                if not matches and tab == 'Companies':
+                    external_id = str(observed.get('Company ID', '') or '').strip()
+                    name_matches = self.local.matches(tab, {'Company': observed.get('Company', '')})
+                    if not external_id:
+                        # Sheets may still be awaiting a generated ID for a
+                        # genuinely new post-baseline Company.  Name matching
+                        # makes that later write converge without replacing a
+                        # differently identified Company.
+                        matches = name_matches
+                    elif len(name_matches) == 1 and not str(name_matches[0][1].get('Company ID', '') or '').strip():
+                        # A held first snapshot can later be repaired by an
+                        # operator assigning its stable external ID.  This is
+                        # the sole safe alias: one name, and an existing local
+                        # row with no identity at all.  Never overwrite a
+                        # nonblank ID or guess among duplicate names.
+                        matches = name_matches
                 if len(matches) > 1:
                     raise RepositoryError(f'{tab}: ambiguous local identity.')
                 if not matches:
@@ -339,7 +353,10 @@ class SheetsSynchronizer:
                         # nonblank or newly-updated extracted value remains
                         # locally managed and therefore conflicts.
                         pass
-                    elif header not in HUMAN_FIELDS.get(tab, set()):
+                    elif (header not in HUMAN_FIELDS.get(tab, set())
+                          and not (tab == 'Companies' and header == 'Company ID'
+                                   and not str(local_value or '').strip()
+                                   and str(value or '').strip())):
                         # Source/version and progress fields belong to local processing.
                         self.local.conflict(tab, rid, header, 'Remote edit to a locally managed field needs reconciliation.')
                         continue
@@ -416,6 +433,12 @@ class SheetsSynchronizer:
             main._metadata_cache = None
             main._header_cache.clear()
         totals = {}
+        # F1's first external Company read is a durable watermark, never an
+        # implied instruction to scrape the workbook's historical inventory.
+        # The repository freezes that snapshot before merge so a crash can
+        # catch up later changes rather than silently absorb them into history.
+        bootstrap_needed = (hasattr(self.local, 'prepare_external_company_event_bootstrap')
+                            and self.local.get_meta('company_event_external_baseline') != 'yes')
         for tab, headers in self.pull_fields.items():
             total = {'imported': 0, 'changed_fields': 0}
             for attempt in range(2):
@@ -425,6 +448,10 @@ class SheetsSynchronizer:
                     numbered = list(enumerate(self.remote.read(tab), 2))
                 else:
                     numbered = self.remote.read_columns(tab, headers)
+                if tab == 'Companies' and bootstrap_needed:
+                    numbered = list(numbered)
+                    totals['company_event_bootstrap_prepare'] = (
+                        self.local.prepare_external_company_event_bootstrap(numbered))
                 merged = self.merge_remote(tab, numbered, expected_baselines=tokens)
                 for key in total:
                     total[key] += merged[key]
@@ -441,13 +468,28 @@ class SheetsSynchronizer:
         for row in self.local.read('Companies'):
             if row.get('Company') and not row.get('Company ID'):
                 engine._assign_company_id(row)
-        # The first full Companies snapshot is a durable watermark only. Later
-        # normal pulls emit a scoped change event rather than watching Sheets.
+        # Finish the frozen first-read watermark only after the normal merge.
+        # A retry after a crash merges a fresh remote snapshot, then compares it
+        # to the first frozen one below.  That is the bounded bootstrap catch-up
+        # boundary for supported Sheets changes.
         if hasattr(self.local, 'bootstrap_company_event_reconciliation'):
-            baseline = self.local.bootstrap_company_event_reconciliation()
+            if bootstrap_needed:
+                baseline = self.local.finish_external_company_event_bootstrap()
+            else:
+                baseline = self.local.bootstrap_company_event_reconciliation()
             totals['company_event_baseline'] = baseline
-            if not baseline['bootstrapped']:
-                totals['company_event_reconciliation'] = self.local.reconcile_external_company_events()
+            if bootstrap_needed:
+                # Re-read the authoritative Company snapshot after the
+                # watermark commits.  An edit that arrived while bootstrap was
+                # in progress is now a normal, durable reconciliation event.
+                headers = self.pull_fields['Companies']
+                catchup_rows = (list(enumerate(self.remote.read('Companies'), 2))
+                                if headers is None else self.remote.read_columns('Companies', headers))
+                catchup = self.merge_remote('Companies', catchup_rows)
+                totals['company_event_bootstrap_catchup'] = catchup
+                for key in ('imported', 'changed_fields'):
+                    totals['Companies'][key] += catchup[key]
+            totals['company_event_reconciliation'] = self.local.reconcile_external_company_events()
         totals['manual_opportunities'] = engine.sync_manual_opportunities()
         self.last_pull = time.monotonic()
         with self.local.transaction():

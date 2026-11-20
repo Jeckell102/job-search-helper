@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -154,6 +155,76 @@ class CompanyEventOutboxTests(unittest.TestCase):
     def test_external_reconciliation_rejects_use_before_safe_baseline(self):
         with self.assertRaisesRegex(RepositoryError, 'requires a completed baseline'):
             self.repo.reconcile_external_company_events()
+
+    def test_external_bootstrap_rejects_duplicate_stable_identity_without_side_effects(self):
+        with self.assertRaisesRegex(RepositoryError, 'duplicate Company IDs'):
+            self.repo.prepare_external_company_event_bootstrap([
+                (2, company()), (3, company()),
+            ])
+        self.assertIsNone(self.repo.get_meta('company_event_external_bootstrap_pending'))
+        self.assertIsNone(self.repo.get_meta('company_event_external_baseline'))
+        self.assertEqual([], self.repo.pending_company_events('intake'))
+
+    def test_external_bootstrap_finish_rejects_malformed_nonhex_and_mismatched_watermarks(self):
+        variants = (
+            ('malformed fact', lambda item: item.update(fact={})),
+            ('nonhex revision', lambda item: item.update(source_revision='z' * 64)),
+            ('mismatched revision', lambda item: item.update(source_revision='0' * 64)),
+        )
+        for label, corrupt in variants:
+            with self.subTest(label=label):
+                self.repo.prepare_external_company_event_bootstrap([(2, company())])
+                snapshot = json.loads(self.repo.get_meta('company_event_external_bootstrap_pending'))
+                corrupt(snapshot[0])
+                with self.repo.transaction():
+                    self.repo.set_meta('company_event_external_bootstrap_pending', json.dumps(snapshot))
+                with self.assertRaisesRegex(RepositoryError, 'watermark is corrupt'):
+                    self.repo.finish_external_company_event_bootstrap()
+                self.assertIsNone(self.repo.get_meta('company_event_external_baseline'))
+                self.assertEqual([], self.repo.pending_company_events('intake'))
+                with self.repo.transaction():
+                    self.repo.db.execute('DELETE FROM meta WHERE key=?',
+                                         ('company_event_external_bootstrap_pending',))
+
+    def test_external_bootstrap_finish_requires_and_validates_excluded_watermark(self):
+        self.repo.prepare_external_company_event_bootstrap([(2, company())])
+        with self.repo.transaction():
+            self.repo.db.execute('DELETE FROM meta WHERE key=?',
+                                 ('company_event_external_bootstrap_excluded',))
+        with self.assertRaisesRegex(RepositoryError, 'watermark is corrupt'):
+            self.repo.finish_external_company_event_bootstrap()
+        self.assertIsNone(self.repo.get_meta('company_event_external_baseline'))
+
+        # Recreate the frozen record, then forge an excluded entry that would
+        # actually be eligible.  Excluded metadata is only valid for history
+        # that cannot be admitted to initial intake.
+        with self.repo.transaction():
+            self.repo.db.execute('DELETE FROM meta WHERE key=?',
+                                 ('company_event_external_bootstrap_pending',))
+        self.repo.prepare_external_company_event_bootstrap([(2, company())])
+        forged = [{
+            'company': 'Acme', 'company_status': 'Active',
+            'official_careers_url': 'https://jobs.example.test/acme',
+            'ats_source': 'greenhouse',
+        }]
+        with self.repo.transaction():
+            self.repo.set_meta('company_event_external_bootstrap_excluded', json.dumps(forged))
+        with self.assertRaisesRegex(RepositoryError, 'watermark is corrupt'):
+            self.repo.finish_external_company_event_bootstrap()
+        self.assertIsNone(self.repo.get_meta('company_event_external_baseline'))
+
+    def test_external_bootstrap_finish_rejects_persisted_duplicate_before_any_seed(self):
+        self.repo.prepare_external_company_event_bootstrap([(2, company())])
+        snapshot = json.loads(self.repo.get_meta('company_event_external_bootstrap_pending'))
+        snapshot.append(dict(snapshot[0]))
+        with self.repo.transaction():
+            self.repo.set_meta('company_event_external_bootstrap_pending', json.dumps(snapshot))
+        with self.assertRaisesRegex(RepositoryError, 'watermark is corrupt'):
+            self.repo.finish_external_company_event_bootstrap()
+        self.assertIsNone(self.repo.get_meta('company_event_external_baseline'))
+        self.assertEqual(0, self.repo.db.execute(
+            'SELECT count(*) FROM company_revisions').fetchone()[0])
+        self.assertEqual([], self.repo.pending_company_events('intake'))
 
     def test_readonly_open_does_not_require_or_modify_event_schema(self):
         self.repo.close()

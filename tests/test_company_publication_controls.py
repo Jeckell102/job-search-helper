@@ -55,6 +55,179 @@ class CompanyPublicationControlTests(unittest.TestCase):
         self.assertEqual(third['company_event_reconciliation']['company_events'], [])
         self.assertEqual(self.local.pending_company_events('intake'), events)
 
+    def test_bootstrap_catchup_turns_mid_bootstrap_source_change_into_one_event(self):
+        original = self.remote.read
+        calls = {'companies': 0}
+        def read(tab):
+            rows = original(tab)
+            if tab == 'Companies':
+                calls['companies'] += 1
+                if calls['companies'] == 1:
+                    # The first snapshot is the historical watermark.  This
+                    # edit arrives before the mandatory catch-up reread.
+                    self.edit_company(**{'ATS / Source': 'Lever'})
+            return rows
+        with patch.object(self.remote, 'read', side_effect=read):
+            result = self.sync.pull()
+        self.assertEqual({'bootstrapped': True, 'seeded': 1}, result['company_event_baseline'])
+        self.assertEqual(1, result['company_event_bootstrap_catchup']['changed_fields'])
+        events = self.local.pending_company_events('intake')
+        self.assertEqual(1, len(events))
+        self.assertEqual('Lever', events[0]['fact']['ats_source'].title())
+
+    def test_crash_after_frozen_watermark_merge_restarts_as_one_catchup_event(self):
+        original_finish = self.local.finish_external_company_event_bootstrap
+        with patch.object(self.local, 'finish_external_company_event_bootstrap',
+                          side_effect=RuntimeError('simulated crash after import')):
+            with self.assertRaisesRegex(RuntimeError, 'simulated crash'):
+                self.sync.pull()
+        self.assertIsNotNone(self.local.get_meta('company_event_external_bootstrap_pending'))
+        self.assertIsNone(self.local.get_meta('company_event_external_baseline'))
+        self.edit_company(**{'Official Careers URL': 'https://example.com/restarted'})
+        with patch.object(self.local, 'finish_external_company_event_bootstrap', original_finish):
+            result = self.sync.pull()
+        self.assertEqual({'bootstrapped': True, 'seeded': 1}, result['company_event_baseline'])
+        events = self.local.pending_company_events('intake')
+        self.assertEqual(1, len(events))
+        self.assertEqual('https://example.com/restarted', events[0]['fact']['official_careers_url'])
+
+    def test_bootstrap_reordered_snapshot_does_not_enqueue_historical_companies(self):
+        self.remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-2'},
+                             'append_if_missing': True,
+                             'values': {'Company': 'Beta', 'Company ID': 'C-2',
+                                        'Company Status': 'Active',
+                                        'Official Careers URL': 'https://example.com/beta',
+                                        'ATS / Source': 'fixture'}}])
+        self.local.import_rows('Companies', enumerate(self.remote.read('Companies'), 2))
+        original = self.remote.read
+        def reversed_companies(tab):
+            rows = original(tab)
+            return list(reversed(rows)) if tab == 'Companies' else rows
+        with patch.object(self.remote, 'read', side_effect=reversed_companies):
+            self.sync.pull()
+        self.assertEqual([], self.local.pending_company_events('intake'))
+        # Repeated/reordered reads remain a no-op; only a later source change
+        # may create the newest per-company outbox fact.
+        with patch.object(self.remote, 'read', side_effect=reversed_companies):
+            self.sync.pull()
+        self.assertEqual([], self.local.pending_company_events('intake'))
+
+    def test_later_eligible_addition_and_withdrawal_are_exactly_once_events(self):
+        self.sync.pull()
+        self.remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-2'},
+                             'append_if_missing': True,
+                             'values': {'Company': 'Beta', 'Company ID': 'C-2',
+                                        'Company Status': 'Active',
+                                        'Official Careers URL': 'https://example.com/beta',
+                                        'ATS / Source': 'fixture'}}])
+        added = self.sync.pull()['company_event_reconciliation']['company_events']
+        self.assertEqual(1, len(added))
+        self.assertEqual(('C-2', 'company.eligible', 1),
+                         (added[0]['company_id'], added[0]['kind'], added[0]['revision']))
+        self.assertEqual([], self.sync.pull()['company_event_reconciliation']['company_events'])
+        self.edit_company(**{'Official Careers URL': ''})
+        withdrawn = self.sync.pull()['company_event_reconciliation']['company_events']
+        self.assertEqual(1, len(withdrawn))
+        self.assertEqual(('C-1', 'company.withdrawn'),
+                         (withdrawn[0]['company_id'], withdrawn[0]['kind']))
+
+    def test_idless_eligible_historical_row_holds_before_merge_then_seeds_when_fixed(self):
+        remote = MemoryRepository({'Companies': [{
+            'Company': 'Legacy No ID', 'Company ID': '', 'Company Status': 'Active',
+            'Official Careers URL': 'https://example.com/legacy', 'ATS / Source': 'fixture'}]})
+        remote.spreadsheet_id = 'fixture-idless'
+        local = SQLiteRepository(Path(self.temp.name) / 'idless.sqlite3', 'fixture-idless', initialize=True)
+        self.addCleanup(local.close)
+        for tab in SCHEMAS:
+            local.import_rows(tab, enumerate(remote.read(tab), 2))
+        with local.transaction():
+            local.set_meta('ready', 'yes')
+        sync = SheetsSynchronizer(local, remote)
+        with self.assertRaisesRegex(Exception, 'stable Company ID'):
+            sync.pull()
+        self.assertIsNone(local.get_meta('company_event_external_baseline'))
+        self.assertIsNone(local.get_meta('company_event_external_bootstrap_pending'))
+        self.assertEqual('', local.read('Companies')[0]['Company ID'])
+        remote.commit([{'tab': 'Companies', 'identity': {'Company': 'Legacy No ID'},
+                        'values': {'Company ID': 'C-LEGACY'}}])
+        original_finish = local.finish_external_company_event_bootstrap
+        with patch.object(local, 'finish_external_company_event_bootstrap',
+                          side_effect=RuntimeError('crash after repaired merge')):
+            with self.assertRaisesRegex(RuntimeError, 'crash after repaired merge'):
+                sync.pull()
+        self.assertIsNotNone(local.get_meta('company_event_external_bootstrap_pending'))
+        self.assertIsNone(local.get_meta('company_event_external_baseline'))
+        # A source change between the repaired merge and restart is catch-up
+        # work, while the original repaired historical fact remains history.
+        remote.commit([{'tab': 'Companies', 'identity': {'Company ID': 'C-LEGACY'},
+                        'values': {'ATS / Source': 'Greenhouse'}}])
+        with patch.object(local, 'finish_external_company_event_bootstrap', original_finish):
+            first = sync.pull()
+        self.assertEqual({'bootstrapped': True, 'seeded': 1}, first['company_event_baseline'])
+        catchup = local.pending_company_events('intake')
+        self.assertEqual(1, len(catchup))
+        self.assertEqual('Greenhouse', catchup[0]['fact']['ats_source'].title())
+        assigned = local.read('Companies')[0]['Company ID']
+        self.assertEqual('C-LEGACY', assigned)
+        # The next actual external source change is the one and only event.
+        remote.commit([{'tab': 'Companies', 'identity': {'Company': 'Legacy No ID'},
+                        'values': {'ATS / Source': 'Lever'}}])
+        later = sync.pull()['company_event_reconciliation']['company_events']
+        self.assertEqual(1, len(later))
+        self.assertEqual((assigned, 'company.eligible'),
+                         (later[0]['company_id'], later[0]['kind']))
+
+    def test_idless_paused_historical_row_is_seeded_without_a_withdrawal_event(self):
+        remote = MemoryRepository({'Companies': [{
+            'Company': 'Paused Legacy', 'Company ID': '', 'Company Status': 'Paused',
+            'Official Careers URL': 'https://example.com/paused', 'ATS / Source': 'fixture'}]})
+        remote.spreadsheet_id = 'fixture-paused-idless'
+        local = SQLiteRepository(Path(self.temp.name) / 'paused-idless.sqlite3',
+                                 'fixture-paused-idless', initialize=True)
+        self.addCleanup(local.close)
+        for tab in SCHEMAS:
+            local.import_rows(tab, enumerate(remote.read(tab), 2))
+        with local.transaction():
+            local.set_meta('ready', 'yes')
+        sync = SheetsSynchronizer(local, remote)
+
+        first = sync.pull()
+        self.assertEqual({'bootstrapped': True, 'seeded': 1}, first['company_event_baseline'])
+        self.assertEqual([], local.pending_company_events('intake'))
+        assigned = local.read('Companies')[0]['Company ID']
+        self.assertTrue(assigned.startswith('COMP-'))
+
+        # A later eligibility change is real work.  The initial seed must not
+        # weaken the existing withdrawal/transition semantics.
+        remote.commit([{'tab': 'Companies', 'identity': {'Company': 'Paused Legacy'},
+                        'values': {'Company Status': 'Active'}}])
+        later = sync.pull()['company_event_reconciliation']['company_events']
+        self.assertEqual(1, len(later))
+        self.assertEqual((assigned, 'company.eligible'),
+                         (later[0]['company_id'], later[0]['kind']))
+
+    def test_idless_removed_or_incomplete_historical_rows_never_enqueue_initial_work(self):
+        cases = (
+            ('Removed Legacy', 'Removed', 'https://example.com/removed'),
+            ('Incomplete Legacy', 'Active', ''),
+        )
+        for number, (name, status, careers_url) in enumerate(cases):
+            with self.subTest(name=name):
+                remote = MemoryRepository({'Companies': [{
+                    'Company': name, 'Company ID': '', 'Company Status': status,
+                    'Official Careers URL': careers_url, 'ATS / Source': 'fixture'}]})
+                remote.spreadsheet_id = f'fixture-idless-{number}'
+                local = SQLiteRepository(Path(self.temp.name) / f'idless-{number}.sqlite3',
+                                         remote.spreadsheet_id, initialize=True)
+                self.addCleanup(local.close)
+                for tab in SCHEMAS:
+                    local.import_rows(tab, enumerate(remote.read(tab), 2))
+                with local.transaction():
+                    local.set_meta('ready', 'yes')
+                result = SheetsSynchronizer(local, remote).pull()
+                self.assertEqual({'bootstrapped': True, 'seeded': 1},
+                                 result['company_event_baseline'])
+                self.assertEqual([], local.pending_company_events('intake'))
     def test_failed_periodic_pull_preserves_event_baseline_and_outbox(self):
         self.sync.pull()
         baseline = self.local.db.execute(

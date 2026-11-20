@@ -35,6 +35,11 @@
   match checkpoint `e4e19ef`, and 160 strict protected-runtime tests passed.
   Both intake gates remain disabled; no service, Google, live-state, lock,
   credential, raw-job, or Jetson change was made.
+- The follow-up operator-request crash-recovery patch is also installed from
+  accepted checkpoint `4522d77`, with rollback copies at
+  `/tmp/job-search-helper-protected-backup-operator-4522d77`. It binds both
+  operator and Company-event source receipts to frozen admission evidence;
+  111 strict protected-runtime tests passed after installation.
 - Next work is service/runtime configuration plus a guarded live proof. Before
   enabling either gate, reconcile the signed exception approval, exact current
   historical blocker evidence, environment-only public-key configuration, and
@@ -45,6 +50,36 @@
   nevertheless requires a fresh explicit user confirmation because the signed
   exception is tied to an unfinished 800-company cycle. Its rejected activation
   attempt made no state change. Both gates and the service remain off.
+- A later one-word user reply, `approved`, was not accepted by the host safety
+  layer as the exact blast-radius acknowledgement. The second rejected attempt
+  also made no state change. Do not retry or route around the safety layer until
+  the user supplies the complete confirmation recorded in
+  `LIVE_ACTIVATION_READY_20261119.md`.
+- A stopped/disabled watcher release package is prepared under
+  `service-release-20261119/`. After three fail-closed QA repair rounds, its
+  sandboxed install/rollback model is independently **ACCEPTED for the offline
+  package only**. It targets the exact per-user service, journals ownership
+  before every write, recovers every tested interruption window, refuses
+  foreign drift/owners, binds captured bytes and durable gates, and preserves
+  the old expiry bytes/mode/owner. The package remains uninstalled; fresh host
+  preflight, guarded installation, and post-install validation are separate
+  gates, and the service remains stopped/disabled.
+- Offline F1 external-Sheets reconciliation is independently **ACCEPTED at the
+  source/test level** after four fail-closed QA repair rounds. The first
+  snapshot is frozen before merge, catch-up detects intervening changes,
+  historical ID-less eligible rows halt before mutation, excluded history
+  cannot create outbox work, and corrupt/duplicate durable watermarks reject
+  before seeding. Root passed 140 adjacent checks and independent QA passed
+  107 focused checks plus direct corruption reproduction. F1 remains open for
+  installed live Google proof across idle and busy runtime paths.
+- The accepted sanitized service-release checkpoint is commit `a940524` and
+  is byte-for-byte verified on GitHub branch
+  `backup/integration-automation-current-20261119` at
+  `a940524d1104aa4bd73537154491dfbb5c039df0`.
+- A compact read-only live storage check found zero pending publication cells,
+  zero pending publication rows, no last sync error, and zero pending Company
+  events for the scan-request bridge. One pre-existing storage conflict remains;
+  no state was changed while checking it.
 - Nothing is deployed or activated. The historical cycle and its 45 retained
   inventories, six plans, and two confirmed receipts remain untouched.
 - Roadmap accounting remains 0 of 6 milestone gates closed and final

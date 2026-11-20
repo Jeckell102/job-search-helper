@@ -482,6 +482,207 @@ class SQLiteRepository:
             self.event('company_event_external_baseline', 'Companies', 0, {'seeded': seeded})
         return {'bootstrapped': True, 'seeded': seeded}
 
+    def prepare_external_company_event_bootstrap(self, numbered_rows):
+        """Durably freeze the first observed Sheets Company watermark.
+
+        The snapshot is written *before* its rows are merged locally.  A crash
+        between import and baseline completion therefore resumes from this
+        original external watermark and reconciles the later pull as a real
+        change, rather than silently treating it as history.
+        """
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        if not self._company_event_tables_present():
+            raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
+        if self.get_meta('company_event_external_baseline') == 'yes':
+            return {'prepared': False, 'companies': 0}
+        from .company_events import INELIGIBLE_STATUSES, canonical_company_fact, source_revision
+        frozen = {}
+        # Ineligible rows do not need an external ID to be safely excluded
+        # from initial intake.  Keep their frozen source fields separately so
+        # the locally assigned helper ID can be seeded at finish, not emitted
+        # as a brand-new withdrawal/ineligible event.
+        excluded = {}
+        for _number, row in numbered_rows:
+            company_id = str(row.get('Company ID', '') or '').strip()
+            status = str(row.get('Company Status', 'Active') or 'Active').strip().casefold()
+            careers_url = str(row.get('Official Careers URL', '') or '').strip()
+            if not company_id and careers_url and status not in INELIGIBLE_STATUSES:
+                # A local helper assignment is not an external identity.  Do
+                # not merge or watermark this eligible historical record: it
+                # could otherwise be promoted as a newly added Company.
+                raise RepositoryError('External Company bootstrap requires a stable Company ID for every eligible row.')
+            if not company_id:
+                name = str(row.get('Company', '') or '').strip()
+                if name:
+                    item = {
+                        'company': name,
+                        'company_status': status,
+                        'official_careers_url': careers_url,
+                        'ats_source': str(row.get('ATS / Source', '') or '').strip().casefold(),
+                    }
+                    identity = 'name:' + _identity_key('Company', name)
+                    if identity in excluded:
+                        raise RepositoryError('External Company bootstrap has duplicate ID-less Company names.')
+                    excluded[identity] = item
+                continue
+            fact = canonical_company_fact(row)
+            item = {'company_id': company_id, 'source_revision': source_revision(row), 'fact': fact}
+            identity = 'id:' + company_id
+            # A repeated external identifier is ambiguous even when the
+            # currently visible fields happen to be identical.  Refuse to
+            # establish a baseline rather than silently choose a row.
+            if identity in frozen:
+                raise RepositoryError('External Company bootstrap has duplicate Company IDs.')
+            frozen[identity] = item
+        key = 'company_event_external_bootstrap_pending'
+        excluded_key = 'company_event_external_bootstrap_excluded'
+        encoded = encode([frozen[identity] for identity in sorted(frozen)])
+        encoded_excluded = encode([excluded[identity] for identity in sorted(excluded)])
+        with self.transaction():
+            if self.get_meta('company_event_external_baseline') == 'yes':
+                return {'prepared': False, 'companies': 0}
+            existing = self.get_meta(key)
+            if existing is None:
+                self.set_meta(key, encoded)
+                self.set_meta(excluded_key, encoded_excluded)
+                self.event('company_event_external_bootstrap_prepared', 'Companies', 0,
+                           {'companies': len(frozen), 'excluded': len(excluded)})
+            elif existing != encoded:
+                # Keep the first observed snapshot.  The caller's newer read
+                # is deliberately merged and later reconciled against it.
+                try:
+                    parsed = json.loads(existing)
+                except (TypeError, ValueError) as error:
+                    raise RepositoryError('External Company bootstrap watermark is corrupt.') from error
+                return {'prepared': False, 'companies': len(parsed), 'resumed': True}
+        return {'prepared': True, 'companies': len(frozen)}
+
+    def finish_external_company_event_bootstrap(self):
+        """Install the frozen watermark; never enqueue its historical rows."""
+        if self.readonly:
+            raise RepositoryError('This repository was opened read-only.')
+        key = 'company_event_external_bootstrap_pending'
+        excluded_key = 'company_event_external_bootstrap_excluded'
+        if self.get_meta('company_event_external_baseline') == 'yes':
+            return {'bootstrapped': False, 'seeded': 0}
+        with self.transaction():
+            raw = self.get_meta(key)
+            if raw is None:
+                raise RepositoryError('External Company bootstrap watermark is missing.')
+            try:
+                snapshot = json.loads(raw)
+            except (TypeError, ValueError) as error:
+                raise RepositoryError('External Company bootstrap watermark is corrupt.') from error
+            if not isinstance(snapshot, list):
+                raise RepositoryError('External Company bootstrap watermark is corrupt.')
+            raw_excluded = self.get_meta(excluded_key)
+            if raw_excluded is None:
+                raise RepositoryError('External Company bootstrap watermark is corrupt.')
+            try:
+                excluded = json.loads(raw_excluded)
+            except (TypeError, ValueError) as error:
+                raise RepositoryError('External Company bootstrap watermark is corrupt.') from error
+            if not isinstance(excluded, list):
+                raise RepositoryError('External Company bootstrap watermark is corrupt.')
+            # Validate duplicate stable identities before inserting even the
+            # first revision.  A tampered pending snapshot must roll back as a
+            # whole, including when the duplicate carries identical facts.
+            pending_ids = set()
+            for item in snapshot:
+                if isinstance(item, dict) and isinstance(item.get('company_id'), str):
+                    company_id = item['company_id']
+                    if company_id in pending_ids:
+                        raise RepositoryError('External Company bootstrap watermark is corrupt.')
+                    pending_ids.add(company_id)
+            seeded = 0
+            from .company_events import canonical_company_fact, source_revision
+            for item in snapshot:
+                if (not isinstance(item, dict) or set(item) != {'company_id', 'source_revision', 'fact'}
+                        or not isinstance(item['company_id'], str) or not item['company_id']
+                        or not isinstance(item['source_revision'], str)
+                        or len(item['source_revision']) != 64
+                        or any(char not in '0123456789abcdef' for char in item['source_revision'])
+                        or not isinstance(item['fact'], dict)):
+                    raise RepositoryError('External Company bootstrap watermark is corrupt.')
+                company_id = item['company_id']
+                fact = item['fact']
+                try:
+                    reconstructed = canonical_company_fact({
+                        'Company ID': company_id,
+                        'Company Status': fact.get('company_status'),
+                        'Official Careers URL': fact.get('official_careers_url'),
+                        'ATS / Source': fact.get('ats_source'),
+                    })
+                except (RepositoryError, TypeError, ValueError) as error:
+                    raise RepositoryError('External Company bootstrap watermark is corrupt.') from error
+                if reconstructed != fact or source_revision({
+                        'Company ID': company_id,
+                        'Company Status': fact.get('company_status'),
+                        'Official Careers URL': fact.get('official_careers_url'),
+                        'ATS / Source': fact.get('ats_source'),
+                }) != item['source_revision']:
+                    raise RepositoryError('External Company bootstrap watermark is corrupt.')
+                exists = self.db.execute(
+                    'SELECT 1 FROM company_revisions WHERE company_id=? LIMIT 1',
+                    (company_id,)).fetchone()
+                if exists:
+                    continue
+                self.db.execute(
+                    'INSERT INTO company_revisions(company_id,revision,source_revision,eligible,fact,created_at) '
+                    'VALUES (?,?,?,?,?,?)',
+                    (company_id, 1, item['source_revision'], int(fact['eligible']), encode(fact), timestamp()),
+                )
+                seeded += 1
+            seen_excluded = set()
+            for item in excluded:
+                if (not isinstance(item, dict)
+                        or set(item) != {'company', 'company_status', 'official_careers_url', 'ats_source'}
+                        or not all(isinstance(item[field], str) for field in item)
+                        or not item['company'].strip()):
+                    raise RepositoryError('External Company bootstrap watermark is corrupt.')
+                identity = _identity_key('Company', item['company'])
+                if identity in seen_excluded:
+                    raise RepositoryError('External Company bootstrap watermark is corrupt.')
+                seen_excluded.add(identity)
+                matches = self.matches('Companies', {'Company': item['company']})
+                if len(matches) != 1:
+                    raise RepositoryError('External Company bootstrap excluded row is ambiguous.')
+                current = matches[0][1]
+                company_id = str(current.get('Company ID', '') or '').strip()
+                if not company_id:
+                    raise RepositoryError('External Company bootstrap excluded row lacks assigned ID.')
+                frozen_company = {
+                    'Company ID': company_id,
+                    'Company Status': item['company_status'],
+                    'Official Careers URL': item['official_careers_url'],
+                    'ATS / Source': item['ats_source'],
+                }
+                try:
+                    fact = canonical_company_fact(frozen_company)
+                    digest = source_revision(frozen_company)
+                except (RepositoryError, TypeError, ValueError) as error:
+                    raise RepositoryError('External Company bootstrap watermark is corrupt.') from error
+                if fact['eligible']:
+                    raise RepositoryError('External Company bootstrap watermark is corrupt.')
+                exists = self.db.execute(
+                    'SELECT 1 FROM company_revisions WHERE company_id=? LIMIT 1',
+                    (company_id,)).fetchone()
+                if exists:
+                    continue
+                self.db.execute(
+                    'INSERT INTO company_revisions(company_id,revision,source_revision,eligible,fact,created_at) '
+                    'VALUES (?,?,?,?,?,?)',
+                    (company_id, 1, digest, int(fact['eligible']), encode(fact), timestamp()),
+                )
+                seeded += 1
+            self.set_meta('company_event_external_baseline', 'yes')
+            self.db.execute('DELETE FROM meta WHERE key=?', (key,))
+            self.db.execute('DELETE FROM meta WHERE key=?', (excluded_key,))
+            self.event('company_event_external_baseline', 'Companies', 0,
+                       {'seeded': seeded, 'watermark': 'frozen-external-snapshot'})
+        return {'bootstrapped': True, 'seeded': seeded}
+
     def reconcile_external_company_events(self, *, origin='sheets-reconciliation'):
         """Emit durable events for authoritative Company rows changed after bootstrap."""
         if self.readonly:
