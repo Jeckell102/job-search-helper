@@ -12,6 +12,7 @@ import pytest
 import host_check_main
 import host_checkpoint as checker
 from protected_state import WitnessHold
+from launcher_witness import LauncherPolicy, LAUNCH_FILES
 from site_bundle import build_host_checker
 from site_policy import load_policy
 from test_host_checkpoint import fake_service, site
@@ -26,18 +27,18 @@ def json_default(value):
     raise TypeError(type(value))
 
 
-def build_fixture_archive(policy, protected_pin, digest):
+def build_fixture_archive(policy, protected_pin, digest, launcher):
     source = Path(host_check_main.__file__).parent
     destination = policy.maintenance_bundle / 'host-check'
     destination.parent.mkdir()
     data = {
         '__main__.py': (source / 'host_check_main.py').read_bytes(),
         **{name: (source / name).read_bytes() for name in (
-            'host_checkpoint.py', 'alternate_writer_witness.py', 'protected_state.py', 'site_policy.py',
+            'host_checkpoint.py', 'alternate_writer_witness.py', 'protected_state.py', 'site_policy.py', 'launcher_witness.py',
         )},
         'approved_site_policy.json': json.dumps({
             'schema': 'sprint-4-site-policy-v1', 'site': asdict(policy),
-            'protected_pin_file': str(protected_pin), 'protected_pin_sha256': digest,
+            'protected_pin_file': str(protected_pin), 'protected_pin_sha256': digest, 'launchers': asdict(launcher),
         }, default=json_default).encode(),
     }
     build_host_checker(destination, data)
@@ -50,8 +51,11 @@ def test_archive_loads_private_policy_but_refuses_unobserved_actual_host(site, t
                      marker=policy.project / '.state/integration-release-journal.json',
                      lock_paths=(policy.project / '.integration-install.lock', policy.project / '.state/scraper.lock'))
     pin = tmp_path / 'no-production-protected-pin'
-    bundle = build_fixture_archive(policy, pin, 'b' * 64)
-    assert load_policy(bundle) == (policy, pin, 'b' * 64)
+    pins = {name: 'a' * 64 for name in LAUNCH_FILES}
+    launcher = LauncherPolicy(policy.project / '.venv/bin/python', Path('/usr/bin/python3'),
+                              Path('/usr/bin/bash'), pins, pins)
+    bundle = build_fixture_archive(policy, pin, 'b' * 64, launcher)
+    assert load_policy(bundle) == (policy, pin, 'b' * 64, launcher)
     result = subprocess.run([bundle], input=b'{"unexpected":"fixture-not-real"}',
                             capture_output=True, timeout=3)
     assert result.returncode != 0 and not result.stdout
@@ -75,7 +79,8 @@ def test_composed_checker_requires_owned_real_fixture_lease_and_unchanged_sqlite
         request.update(checkpoint='preflight', project=str(project), marker=str(marker),
                        locks=[str(lock)], package=str(project / 'src/job_search_helper'))
         monkeypatch.setattr(host_check_main, 'load_policy',
-                            lambda _: (policy, state_fixture.pin, state_fixture.digest))
+                            lambda _: (policy, state_fixture.pin, state_fixture.digest, object()))
+        monkeypatch.setattr(host_check_main, 'probe_launchers', lambda *args: None)
         monkeypatch.setattr(checker, 'verify_cover', lambda _: None)
         monkeypatch.setattr(checker, 'verify_listener', lambda *args: {83})
         monkeypatch.setattr(checker, 'verify_route_drain', lambda *args: None)

@@ -7,6 +7,7 @@ from zipfile import ZipFile
 
 from alternate_writer_witness import CoverPin
 from host_checkpoint import SitePolicy, SourceFile
+from launcher_witness import LauncherPolicy, LAUNCH_FILES
 
 
 PATH_FIELDS = {"project", "marker", "systemctl", "maintenance_bundle", "maintenance_exe",
@@ -37,7 +38,8 @@ def load_policy(archive_path):
     executable = absolute(str(archive_path))
     with ZipFile(executable, "r") as archive:
         raw = json.loads(archive.read("approved_site_policy.json"))
-    if set(raw) != {"schema", "site", "protected_pin_file", "protected_pin_sha256"} or raw["schema"] != "sprint-4-site-policy-v1":
+    expected = {"schema", "site", "protected_pin_file", "protected_pin_sha256", "launchers"}
+    if set(raw) != expected or raw["schema"] != "sprint-4-site-policy-v1":
         raise ValueError("Unrecognized approved site policy")
     values = raw["site"]
     if set(values) != {item.name for item in fields(SitePolicy)}:
@@ -70,4 +72,13 @@ def load_policy(archive_path):
             or not policy.source_paths):
         raise ValueError("Approved policy does not match the controller and release routes")
     protected_pin = absolute(raw["protected_pin_file"])
-    return policy, protected_pin, digest_text(raw["protected_pin_sha256"])
+    launchers = raw["launchers"]
+    if set(launchers) != {item.name for item in fields(LauncherPolicy)}:
+        raise ValueError("Approved launcher policy is incomplete")
+    for key in ("interpreter", "interpreter_target", "shell"):
+        launchers[key] = absolute(launchers[key])
+    for side in ("before", "after"):
+        if set(launchers[side]) != LAUNCH_FILES:
+            raise ValueError("Approved launcher inventory differs")
+        launchers[side] = {name: digest_text(value) for name, value in launchers[side].items()}
+    return policy, protected_pin, digest_text(raw["protected_pin_sha256"]), LauncherPolicy(**launchers)

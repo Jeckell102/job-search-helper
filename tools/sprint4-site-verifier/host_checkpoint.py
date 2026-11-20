@@ -365,7 +365,7 @@ def verify_marker(policy, stage):
             "Maintenance marker does not prove this release hold")
 
 
-def attest(request, policy, verify_protected_state, *, proc_root=Path("/proc")):
+def attest(request, policy, verify_protected_state, *, verify_launcher=None, proc_root=Path("/proc")):
     """Reply only after real, read-only observations and protected-state checks."""
     stage = stage_of(request, policy)
     require(policy.alternate_roots and len(set(policy.alternate_roots)) == len(policy.alternate_roots)
@@ -389,6 +389,8 @@ def attest(request, policy, verify_protected_state, *, proc_root=Path("/proc")):
     listening = verify_listener(policy, pid, proc_root)
     verify_route_drain(policy, pid, proc_root, maintenance)
     verify_protected_state(stage, request["target"])
+    if verify_launcher is not None:
+        verify_launcher(stage, request["target"])
     require(wrapper == unit_status(policy.systemctl, WRAPPER_UNIT)
             and sync == unit_status(policy.systemctl, SYNC_UNIT)
             and (not pid or verify_wrapper_process(policy, pid, proc_root) == started),

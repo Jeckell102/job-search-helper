@@ -18,6 +18,24 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Launcher verifier checkpoint. Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, overall about
+52%. Independent QA accepted the paired descriptor/preflight lease repair.
+Coordinator staged bundled launcher route and guarded/admitted probes at
+`/tmp/jsh-s4-launcher-site-checker.2u1Cs0Ji`. Thirty-six fixture tests
+passed. The reviewed package in a disposable checkout passed three actual
+launcher probes. Read-only production metadata found all required tables
+and no sampled nonempty WAL. No protected baseline or real site hold has
+been enrolled. Independent QA `01a1f97d-2e8c-7821-b5e1-d2019215036b` owns
+the launcher source review. Higher-reasoning chat
+`01a1f97d-cebd-7910-8d31-a5f3e0dcd264` owns a read-only review of whether
+a no-admin writer fence can meet the supported scope. Sol High
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns Sprint 5 fact persistence.
+Coordinator owns host policy and complete rehearsal. No deployment
+or live mutations. Last verified backup `34e1fbae37883589e98157abe18fe440dd3b86e7`.
+[Source acceptance](S4_COMPOSED_SITE_DESCRIPTOR_INDEPENDENT_QA_20261120.md)
+and [launcher evidence](S4_LAUNCHER_SITE_WITNESS_STAGED_20261120.md).
+
 Controller preflight rerun completed. All 14 joint release fixtures passed
 on the new controller pin that temporarily acquires full app leases for
 the preflight attestation. No real site operations were used. Tool pin

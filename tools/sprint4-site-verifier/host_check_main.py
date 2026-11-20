@@ -5,12 +5,13 @@ from pathlib import Path
 import sys
 
 from host_checkpoint import attest, authenticated_maintenance
+from launcher_witness import probe_launchers
 from protected_state import WitnessHold, bind_host_witness, verify_release_lease
 from site_policy import load_policy
 
 
 def main():
-    policy, protected_pin, pin_digest = load_policy(sys.argv[0])
+    policy, protected_pin, pin_digest, launchers = load_policy(sys.argv[0])
     request_data = sys.stdin.buffer.read(16385)
     if not request_data or len(request_data) > 16384:
         raise ValueError("Site request size is invalid")
@@ -24,7 +25,11 @@ def main():
     protected = bind_host_witness(policy.project, protected_pin, pin_digest,
                                   maintenance_id=policy.maintenance_id,
                                   verify_release_hold=verify_hold)
-    print(json.dumps(attest(request, policy, protected), separators=(",", ":")))
+    def verify_launcher(stage, target):
+        probe_launchers(policy.project, launchers, stage, target)
+
+    print(json.dumps(attest(request, policy, protected, verify_launcher=verify_launcher),
+                     separators=(",", ":")))
 
 
 if __name__ == "__main__":
