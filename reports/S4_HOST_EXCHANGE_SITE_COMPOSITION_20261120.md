@@ -24,9 +24,10 @@ different policy, generation, route order or intent, refuses an interrupted
 close, accepts after replay, rejects an old closure after restoration and
 refuses a substituted endpoint. The site-level tests also cover an active
 process at a parked route, an omitted alternate route and exact round-trip
-of archive policy. Independent review of the composition is assigned to
-`/root/site_journal_qa`. The underlying exchange controller's independent
-QA passed 15 fixture checks and held live acceptance.
+of archive policy. `/root/site_journal_qa` independently accepted the
+source composition with 11 focused tests. The underlying exchange
+controller's independent QA passed 15 fixture checks and held live
+acceptance. [Composition QA](S4_HOST_EXCHANGE_SITE_INDEPENDENT_QA_20261120.md)
 
 ## Live release gates
 

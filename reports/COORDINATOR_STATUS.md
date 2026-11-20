@@ -31,12 +31,15 @@ Site verifier composition checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Replaced the fixture-only journal
 reader with the approved controller's read-only API in
 `/tmp/jsh-s4-journal-site.uL3AMus0`. All 82 disposable tests passed.
-Independent source composition is assigned to `/root/site_journal_qa`.
+`/root/site_journal_qa` independently accepted source composition with
+11/11 focused tests. First scoped composition backup verified at
+`5ad3427d274a5f03dcdb445473f0559a315e3596`.
 Main coordinator owns host enrollment and writer coverage. Next, prove
 acknowledged close or replay before live policy compilation and arrange
 continuous control of the approved policy and checkout routes, backed by
 fresh writer/launcher observations. No live writer hold has been activated.
-[Source composition evidence](S4_HOST_EXCHANGE_SITE_COMPOSITION_20261120.md).
+[Source composition evidence](S4_HOST_EXCHANGE_SITE_COMPOSITION_20261120.md) ·
+[Independent QA](S4_HOST_EXCHANGE_SITE_INDEPENDENT_QA_20261120.md).
 
 QA messaging checkpoint. The chat titled Sprint 1 gate fixture QA
 (`01a1f97d-2e8c-7821-b5e1-d2019215036b`) is currently assigned a Sprint 4
