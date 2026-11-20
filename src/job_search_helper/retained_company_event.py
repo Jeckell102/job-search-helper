@@ -111,15 +111,53 @@ def _recover_settled_consumption(root):
     if not pending:
         return None
     for path, request in pending:
-        from .company_intake_dispatcher import is_event_bound_company_request
-        if not is_event_bound_company_request(request):
+        from .scan_request import _read_request
+        from .retained_work_runner import _request_provenance_id
+        try:
+            archived, company_ids = _read_request(path)
+        except (OSError, ValueError) as error:
+            raise ValueError("retained_event_consumption_archive_corrupt") from error
+        if archived != request or len(company_ids) != 1:
             raise ValueError("retained_event_consumption_archive_corrupt")
-        event = request.get("company_event", {})
-        company_ids = request.get("company_ids")
-        if (not isinstance(event, dict) or not isinstance(event.get("event_id"), str)
-                or not isinstance(company_ids, list) or len(company_ids) != 1
-                or not isinstance(company_ids[0], str)):
+        event = request.get("company_event")
+        operator = request.get("operator_request")
+        if request.get("repair_retry") is not None:
             raise ValueError("retained_event_consumption_archive_corrupt")
+        if isinstance(event, dict):
+            from .company_intake_dispatcher import is_event_bound_company_request
+            if not is_event_bound_company_request(request):
+                raise ValueError("retained_event_consumption_archive_corrupt")
+        elif not (isinstance(operator, dict)
+                  and operator.get("schema") == "operator-company-scan-request-v1"
+                  and operator.get("request_id") == request.get("request_id")
+                  and operator.get("company_id") == company_ids[0]
+                  and operator.get("source_revision") == request.get("source_revision")):
+            raise ValueError("retained_event_consumption_archive_corrupt")
+        provenance_id = _request_provenance_id(request)
+        # Re-read the original admission receipt.  The frozen admission must
+        # not become a substitute for the bridge/operator provenance proof.
+        if isinstance(event, dict):
+            receipt_path = root / "company-event-bridge" / "receipts" / (event["event_id"] + ".json")
+            required = {"schema", "event_id", "company_id", "revision", "source_revision", "state", "recorded_at", "request_sha256"}
+            expected = {"schema": "company-event-scan-request-v1", "event_id": event["event_id"],
+                        "company_id": company_ids[0], "revision": event["revision"],
+                        "source_revision": request["source_revision"]}
+            allowed_states = {"REQUEST_WRITTEN", "REQUEST_CONFIRMED", "REQUEST_SUPERSEDED_OLDER"}
+        else:
+            receipt_path = root / "operator-company-requests" / "receipts" / (digest({"request_id": request["request_id"]}) + ".json")
+            required = {"schema", "request_id", "company_id", "source_revision", "state", "request_sha256"}
+            expected = {"schema": "operator-company-scan-request-v1", "request_id": request["request_id"],
+                        "company_id": company_ids[0], "source_revision": request["source_revision"]}
+            allowed_states = {"REQUEST_WRITTEN", "REQUEST_ALREADY_DURABLE"}
+        try:
+            provenance_receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            raise ValueError("retained_event_consumption_provenance_receipt_missing") from error
+        if (not isinstance(provenance_receipt, dict) or set(provenance_receipt) != required
+                or any(provenance_receipt.get(key) != value for key, value in expected.items())
+                or provenance_receipt.get("state") not in allowed_states
+                or provenance_receipt.get("request_sha256") != digest(request)):
+            raise ValueError("retained_event_consumption_provenance_receipt_changed")
         try:
             exception_path = root / "retained-work-exceptions.sqlite3"
             jobs_path = root / "jobs.sqlite3"
@@ -142,11 +180,12 @@ def _recover_settled_consumption(root):
             if (admission[7] != "FROZEN" or not isinstance(payload, dict)
                     or admission[6] != digest(payload)
                     or payload.get("request_digest") != digest(request)
+                    or payload.get("event_receipt_digest") != digest(provenance_receipt)
                     or (admission[0], admission[1], admission[2], admission[3], admission[4])
-                    != (request.get("request_id"), event.get("event_id"),
+                    != (request.get("request_id"), provenance_id,
                         payload.get("exception_cycle"), company_ids[0],
                         payload.get("manifest_digest"))
-                    or payload.get("event_id") != event.get("event_id")
+                    or payload.get("event_id") != provenance_id
                     or payload.get("company_id") != company_ids[0]
                     or exception != (admission[4], "ACTIVE")):
                 raise ValueError("retained_event_consumption_admission_changed")
@@ -169,7 +208,7 @@ def _recover_settled_consumption(root):
                 or released[6] != digest(evidence)
                 or evidence.get("reservation_digest") != admission[6]
                 or tuple(released[:5]) != (request.get("request_id"),
-                    event.get("event_id"), admission[2], company_ids[0], admission[4])):
+                    provenance_id, admission[2], company_ids[0], admission[4])):
             raise ValueError("retained_event_consumption_release_changed")
         # A newer canonical request may already have arrived.  It is not this
         # settled event and must survive while this archived event gets its own

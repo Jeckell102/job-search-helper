@@ -58,14 +58,34 @@ class RetainedCompanyEventTests(unittest.TestCase):
         path.write_text(json.dumps(request, sort_keys=True, separators=(",", ":")), encoding="utf-8")
         return path
 
+    def _operator_request(self, suffix="OP"):
+        return {"mode": "company-only", "request_id": "operator-" + suffix,
+                "company_ids": ["COMP-NEW"], "source_revision": "S",
+                "enqueued_at": "2026-01-01T00:00:00Z", "start_last": [],
+                "operator_request": {"schema": "operator-company-scan-request-v1",
+                "request_id": "operator-" + suffix, "company_id": "COMP-NEW",
+                "source_revision": "S"}}
+
     def _settled_proof(self, request, *, mutate_payload=None, publication=True):
         """Create the minimal exact durable admission/release proof."""
         from job_search_helper.retained_work_runner import digest
-        event, company = request["company_event"], request["company_ids"][0]
-        payload = {"request_id": request["request_id"], "event_id": event["event_id"],
+        from job_search_helper.retained_work_runner import _request_provenance_id
+        provenance, company = _request_provenance_id(request), request["company_ids"][0]
+        if "company_event" in request:
+            event = request["company_event"]
+            receipt = {"schema": "company-event-scan-request-v1", "event_id": event["event_id"], "company_id": company,
+                       "revision": event["revision"], "source_revision": request["source_revision"], "state": "REQUEST_WRITTEN",
+                       "recorded_at": "2026-01-01T00:00:00Z", "request_sha256": digest(request)}
+            receipt_path = self.root / "company-event-bridge" / "receipts" / (event["event_id"] + ".json")
+        else:
+            receipt = {"schema": "operator-company-scan-request-v1", "request_id": request["request_id"], "company_id": company,
+                       "source_revision": request["source_revision"], "state": "REQUEST_WRITTEN", "request_sha256": digest(request)}
+            receipt_path = self.root / "operator-company-requests" / "receipts" / (digest({"request_id": request["request_id"]}) + ".json")
+        receipt_path.parent.mkdir(parents=True, exist_ok=True); receipt_path.write_text(json.dumps(receipt, sort_keys=True, separators=(",", ":")))
+        payload = {"request_id": request["request_id"], "event_id": provenance,
                    "exception_cycle": "CYC-OLD", "company_id": company,
                    "manifest_digest": "M", "company_identity_digest": "I",
-                   "request_digest": digest(request), "event_receipt_digest": "R",
+                   "request_digest": digest(request), "event_receipt_digest": digest(receipt),
                    "defer_sync": True}
         if mutate_payload: mutate_payload(payload)
         reservation = digest(payload)
@@ -75,17 +95,33 @@ class RetainedCompanyEventTests(unittest.TestCase):
             db.execute("INSERT INTO retained_work_exceptions VALUES (?,?,?)", ("CYC-OLD", "M", "ACTIVE"))
             db.execute("CREATE TABLE retained_work_admissions (request_id TEXT,event_id TEXT,exception_cycle TEXT,company_id TEXT,manifest_digest TEXT,company_identity_digest TEXT,payload TEXT,payload_digest TEXT,state TEXT)")
             db.execute("INSERT INTO retained_work_admissions VALUES (?,?,?,?,?,?,?,?,?)",
-                       (request["request_id"], event["event_id"], "CYC-OLD", company, "M", "I",
+                       (request["request_id"], provenance, "CYC-OLD", company, "M", "I",
                         json.dumps(payload, sort_keys=True, separators=(",", ":")), reservation, "FROZEN"))
         with sqlite3.connect(self.root / "jobs.sqlite3") as db:
             db.execute("CREATE TABLE retained_publications (reservation_digest TEXT,request_id TEXT,event_id TEXT,exception_cycle TEXT,company TEXT,manifest_digest TEXT,queue_evidence TEXT,queue_evidence_digest TEXT,state TEXT)")
             if publication:
                 evidence = {"reservation_digest": reservation, "queue": [], "files": {}}
                 db.execute("INSERT INTO retained_publications VALUES (?,?,?,?,?,?,?,?,?)",
-                           (reservation, request["request_id"], event["event_id"], "CYC-OLD", company,
+                           (reservation, request["request_id"], provenance, "CYC-OLD", company,
                             "M", json.dumps(evidence, sort_keys=True, separators=(",", ":")),
                             digest(evidence), "FIRST_PASS_RELEASED"))
         return reservation
+
+    def test_operator_archive_recovery_preserves_newer_request(self):
+        old, newer = self._operator_request(), self._request("NEW")
+        self._archive(old); self._settled_proof(old)
+        (self.root / "next-scan.json").write_text(json.dumps(newer))
+        result = subject._recover_settled_consumption(self.root)
+        self.assertEqual("FIRST_PASS_RELEASED_CONSUMED", result["consumption"]["state"])
+        self.assertEqual(newer, json.loads((self.root / "next-scan.json").read_text()))
+
+    def test_operator_archive_forged_provenance_or_bad_publication_holds(self):
+        request = self._operator_request(); self._archive(request); self._settled_proof(request)
+        import sqlite3
+        with sqlite3.connect(self.root / "retained-work-exceptions.sqlite3") as db:
+            db.execute("UPDATE retained_work_admissions SET event_id='operator:wrong'")
+        with self.assertRaisesRegex(ValueError, "(admission_changed|provenance_receipt_changed)"):
+            subject._recover_settled_consumption(self.root)
 
     def test_happy_path_is_one_retained_reservation_without_normal_lifecycle(self):
         patches = self._patches()
@@ -159,7 +195,7 @@ class RetainedCompanyEventTests(unittest.TestCase):
         request = self._request(); forged = dict(request); forged["source_revision"] = "FORGED"
         forged["company_event"] = dict(request["company_event"], source_revision="FORGED")
         self._archive(forged); self._settled_proof(request)
-        with self.assertRaisesRegex(ValueError, "admission_changed"):
+        with self.assertRaisesRegex(ValueError, "(admission_changed|provenance_receipt_changed)"):
             subject._recover_settled_consumption(self.root)
 
     def test_recovery_requires_valid_archive_digest_admission_and_release(self):
