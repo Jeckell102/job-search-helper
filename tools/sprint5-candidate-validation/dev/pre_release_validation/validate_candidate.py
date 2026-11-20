@@ -23,6 +23,9 @@ from tempfile import TemporaryDirectory
 
 PIN_SCHEMA = 'company-candidate-validation-pin-v1'
 CAPTURE_SCHEMA = 'rippling-fixture-capture-v1'
+PUBLIC_CAPTURE_SCHEMA = 'rippling-public-capture-v1'
+CAPTURE_DISPOSITIONS = {CAPTURE_SCHEMA: ('synthetic_fixture', 'FIXTURE_PASS'),
+                        PUBLIC_CAPTURE_SCHEMA: ('captured_public', 'PUBLIC_EVIDENCE_ACCEPTED')}
 RECEIPT_SCHEMA = 'company-candidate-validation-receipt-v1'
 DIGEST_FIELDS = {'source_manifest_sha256', 'config_sha256', 'dependency_manifest_sha256'}
 ROW_FIELDS = {'Company ID', 'Company', 'Company Status', 'Official Careers URL', 'ATS / Source'}
@@ -197,7 +200,7 @@ class EmployerReplay:
         return self.http_response(200, self.body.encode())
 
 
-def validate_company(case, scope, received, row_revision, oracle, dispatch, http_response):
+def validate_company(case, scope, received, row_revision, oracle, dispatch, http_response, public_authority=None):
     checked_fields(case, {'role', 'company', 'authority', 'board_url', 'responses'})
     company = case['company']
     checked_fields(company, ROW_FIELDS)
@@ -210,12 +213,16 @@ def validate_company(case, scope, received, row_revision, oracle, dispatch, http
     received.update(role=case['role'], company_id=cid, company=name, company_row_sha256=digest(company),
                     source_revision=revision, board_url=board)
     authority = case['authority']
-    checked_fields(authority, {'url', 'body'})
+    fields = {'url', 'body'} if public_authority is None else {'url', 'body', 'headers', 'redirect'}
+    checked_fields(authority, fields)
     observed_scope = {key: received[key] for key in SCOPE_FIELDS - {'authority_url'}}
     observed_scope['authority_url'] = authority['url']
     require(observed_scope == scope and url in (authority['url'], board), 'company_row_outside_reviewed_scope')
-    oracle.check_authority(authority['url'], board, authority['body'])
-    received['authority'] = {'url': authority['url'], 'body_sha256': sha256(authority['body'].encode()).hexdigest()}
+    if public_authority is None:
+        oracle.check_authority(authority['url'], board, authority['body'])
+        received['authority'] = {'url': authority['url'], 'body_sha256': sha256(authority['body'].encode()).hexdigest()}
+    else:
+        received['authority'] = public_authority.check_public_authority(cid, board, authority)
     employer = EmployerReplay(authority['url'], authority['body'], http_response)
     replay = BoardReplay(board, case['responses'], http_response, oracle)
     try:
@@ -357,7 +364,12 @@ def run(candidate_root, pin_path, capture_path, measurement_tool, receipt):
     require(receipt['capture_sha256'] == pin['capture_sha256'], 'capture_digest_mismatch')
     capture = parse_json(capture_raw)
     checked_fields(capture, {'schema', 'cases'})
-    require(capture['schema'] == CAPTURE_SCHEMA, 'fixture_capture_schema_required')
+    schema = capture['schema']
+    require(isinstance(schema, str) and schema in CAPTURE_DISPOSITIONS, 'unsupported_capture_schema')
+    evidence_class, success = CAPTURE_DISPOSITIONS[schema]
+    receipt['evidence_class'] = evidence_class
+    if schema == PUBLIC_CAPTURE_SCHEMA:
+        receipt['release_qualification'] = False
     cases = capture['cases']
     require(isinstance(cases, list) and len(cases) == len(SUPPORTED_SCOPE)
             and all(isinstance(case, dict) and isinstance(case.get('company'), dict) for case in cases)
@@ -383,16 +395,18 @@ def run(candidate_root, pin_path, capture_path, measurement_tool, receipt):
         require(receipt['execution_candidate_before'] == pin['candidate'], 'frozen_candidate_pin_mismatch')
         attempts = []
         with prohibit_io(attempts):
-            run_frozen(frozen_root, tool_root, cases, pin, receipt)
+            run_frozen(frozen_root, tool_root, cases, pin, receipt, success)
             receipt['execution_candidate_after'] = measure_candidate(frozen_root)
         require(not attempts, 'external_io_attempted')
         require(receipt['execution_candidate_after'] == pin['candidate'], 'frozen_candidate_changed_during_dispatch')
     receipt['observed_candidate_after'] = measure_candidate(candidate_root)
     require(receipt['observed_candidate_after'] == pin['candidate'], 'candidate_pin_mismatch_after_dispatch')
-    require(all(case['result'] == 'FIXTURE_PASS' for case in receipt['cases']), 'company_fixture_failed')
+    reason = 'company_fixture_failed' if schema == CAPTURE_SCHEMA else 'company_public_evidence_failed'
+    require(all(case['result'] == success for case in receipt['cases']), reason)
+    return success
 
 
-def run_frozen(frozen_root, tool_root, cases, pin, receipt):
+def run_frozen(frozen_root, tool_root, cases, pin, receipt, success):
     require(VerifiedPackage.NAME not in sys.modules, 'candidate_already_imported')
     loader = VerifiedPackage(fixture_package(frozen_root), pin['candidate']['source_manifest_sha256'])
     sys.meta_path.insert(0, loader)
@@ -403,6 +417,11 @@ def run_frozen(frozen_root, tool_root, cases, pin, receipt):
                 for module in (ats, company_events)), 'candidate_import_origin_mismatch')
     receipt['validator'] = {Path(__file__).name: sha256(Path(__file__).read_bytes()).hexdigest(),
                             'rippling_capture.py': oracle_digest}
+    public_authority = None
+    if success == 'PUBLIC_EVIDENCE_ACCEPTED':
+        public_authority, authority_digest = load_source(
+            'rippling_public_authority', tool_root / 'rippling_public_authority.py')
+        receipt['validator']['rippling_public_authority.py'] = authority_digest
     receipt['python'] = {'version': sys.version.split()[0],
                          'executable_sha256': sha256(Path(sys.executable).read_bytes()).hexdigest()}
     for case, scope in zip(cases, pin['scope'], strict=True):
@@ -410,11 +429,11 @@ def run_frozen(frozen_root, tool_root, cases, pin, receipt):
         receipt['cases'].append(result)
         try:
             validate_company(case, scope, result, company_events.source_revision, oracle, ats.fetch_inventory,
-                             ats.HTTPResponse)
+                             ats.HTTPResponse, public_authority)
         except (ValidationError, oracle.CaptureError) as error:
             result['reason'] = str(error)
         else:
-            result['result'] = 'FIXTURE_PASS'
+            result['result'] = success
     receipt['executed_package_modules_sha256'] = digest(loader.loaded)
 
 
@@ -427,16 +446,15 @@ def main():
     args = parser.parse_args()
     receipt = {'schema': RECEIPT_SCHEMA, 'result': 'HOLD', 'evidence_class': 'synthetic_fixture', 'cases': []}
     try:
-        run(args.candidate_root.resolve(strict=True), args.pin, args.capture, args.measurement_tool, receipt)
+        receipt['result'] = run(args.candidate_root.resolve(strict=True), args.pin, args.capture,
+                                args.measurement_tool, receipt)
     except ValidationError as error:
         receipt['reason'] = str(error)
     except (ValueError, OSError, ImportError, TypeError, KeyError, AttributeError, RuntimeError) as error:
         # Parsing and candidate exceptions can contain captured job or path data.
         receipt['reason'] = f'validation_input_or_runtime_error:{type(error).__name__}'
-    else:
-        receipt['result'] = 'FIXTURE_PASS'
     print(json.dumps(receipt, ensure_ascii=False, sort_keys=True, separators=(',', ':')))
-    return 0 if receipt['result'] == 'FIXTURE_PASS' else 1
+    return 1 if receipt['result'] == 'HOLD' else 0
 
 
 if __name__ == '__main__':
