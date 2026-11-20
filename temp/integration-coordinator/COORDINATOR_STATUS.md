@@ -1,6 +1,6 @@
 # Current protected-source reconciliation coordinator status
 
-## Active checkpoint — 2026-11-19 retained route and supervision accepted
+## Active checkpoint — 2026-11-19 protected source installed and verified
 
 - Persistent goal `01a1f124-9793-7e53-9d37-92f11052c967` remains active.
 - The default-disabled Company intake dispatcher, exact controller handoff,
@@ -28,16 +28,24 @@
   PID, and Linux start identity. It rejects look-alike and zombie processes;
   a missing/dead child starts the idempotent public recovery path exactly once.
   Root's strict adjacent suite passed 160 tests and independent QA passed 87.
-- Next work is a freshly byte-validated narrow installation into the protected
-  MuleLab checkout with rollback copies and both intake gates still disabled,
-  followed by service configuration and guarded live proof.
+- The exact accepted ten-file source/test delta is now installed in the
+  protected MuleLab checkout. All starting bytes matched the sanitized baseline,
+  rollback copies are at
+  `/tmp/job-search-helper-protected-backup-20261119-e4e19ef`, all installed bytes
+  match checkpoint `e4e19ef`, and 160 strict protected-runtime tests passed.
+  Both intake gates remain disabled; no service, Google, live-state, lock,
+  credential, raw-job, or Jetson change was made.
+- Next work is service/runtime configuration plus a guarded live proof. Before
+  enabling either gate, reconcile the signed exception approval, exact current
+  historical blocker evidence, environment-only public-key configuration, and
+  live Google authentication/readback.
 - Nothing is deployed or activated. The historical cycle and its 45 retained
   inventories, six plans, and two confirmed receipts remain untouched.
 - Roadmap accounting remains 0 of 6 milestone gates closed and final
   independent acceptance 0%. The retained-route work item is 100% source/QA
-  complete, and automatic watcher supervision is 100% source/QA complete;
-  protected installation, service deployment, live proof, and final milestone
-  acceptance still follow.
+  complete, automatic watcher supervision is 100% source/QA complete, and the
+  protected source installation is 100% complete. Service deployment, guarded
+  live proof, and final milestone acceptance still follow.
 
 Reread this section after every context reset and before a major/live action or
 user update. It supersedes older current-status claims below.
