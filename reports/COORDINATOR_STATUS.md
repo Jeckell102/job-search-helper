@@ -18,6 +18,25 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Site verifier checkpoint. Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 about 80%, project
+about 52% pending live installation and company event. All 14 full
+47-endpoint joint release fixture cases passed at the independently
+accepted physical fence recovery tool pin. Coordinator staged the
+site checkpoint core at `/tmp/jsh-s4-site-verifier.NvDLJ7BT`. It has 10
+passing scoped tests. Independent QA chat
+`01a1f97d-2e8c-7821-b5e1-d2019215036b` owns site core recheck, higher
+reasoning chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264` owns the read-only
+protected SQLite witness helper, and Sol High chat
+`01a1f979-8619-75d2-9973-047f3a5efb0c` owns Sprint 5 source-only dependency
+preflight while site closure proceeds. The coordinator owns site policy,
+host-backed attestation and gate decisions. No live alternate covers,
+configuration edits, service actions, production changes or Jetson
+actions. Next reconcile site QA and protected data checks before a pin
+can be authorized. Last verified QA backup `faf07af272238cf29c75a74b5a9ed28beb609299`.
+[Site staged evidence](S4_SITE_CHECKPOINT_CORE_STAGED_20261120.md) and
+[14-case rehearsal](S4_PHYSICAL_HOST_FENCE_RECOVERY_FIXTURE_20261120.md).
+
 Physical fence source QA checkpoint. Independent QA accepted all three
 recovery repairs at the exact repaired tool pin with 11 independent and
 five supplied cases. Explicit rollback from HOST_REOPEN or RELEASE_REFUSED
