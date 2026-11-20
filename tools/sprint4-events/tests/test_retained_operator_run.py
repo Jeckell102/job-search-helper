@@ -1248,8 +1248,17 @@ def test_signed_failed_event_schedules_exact_retry_without_opening_google(tmp_pa
         {"outcome_id": result["outcome_id"], "delivery": []},
     ]
     event_id = fixture.request["company_event"]["event_id"]
-    record = json.loads((tmp_path / "selected-temporary-retries" / (event_id + ".json")).read_bytes())
+    ledger = tmp_path / "selected-temporary-retries" / (event_id + ".json")
+    record = json.loads(ledger.read_bytes())
     assert record["state"] == "SCHEDULED"
+    args[0] = "admit-retry"
+    output = io.StringIO()
+    with cli.writer_lock(tmp_path / "scraper.lock"), redirect_stdout(output):
+        assert operator_command(args, (fixture.state_path, fixture.jobs_path, fixture.runtime)) == 0
+    held = json.loads(output.getvalue())
+    assert held["state"] == "HELD_UNFINISHED_CYCLE"
+    assert held["blocking_cycle_ids"] == [CYCLE_ID]
+    assert json.loads(ledger.read_bytes()) == record
     assert not fixture.queue_path.exists()
     fixture.open_remote.assert_not_called()
     fixture.fetch.assert_called_once()
@@ -1279,3 +1288,58 @@ def test_source_change_during_complete_fetch_cancels_before_any_publication(tmp_
     with closing(fixture.local()) as local:
         assert local.read("Job History") == fixture.local_before["Job History"]
         assert local.read("Job Evidence") == fixture.local_before["Job Evidence"]
+
+
+def test_admit_retry_command_saves_only_pinned_eligible_successor(tmp_path, monkeypatch):
+    from job_search_helper.temporary_retry import SelectedTemporaryRetrySink
+
+    fixture = OperatorFixture(tmp_path, monkeypatch, company_event=True)
+    fixture.sign()
+    fixture.fetch.return_value = ats.Inventory(
+        "failed", source_url=BOARD, ats="Jobvite", browser_fallback_allowed=False,
+        outcome_failure=ats.outcome_failure("temporary_transport", "retryable_http_status"),
+    )
+    failed = fixture.command("execute")
+    args = [
+        "schedule-retry", "--company-event", "--cycle-id", CYCLE_ID, "--company-id", COMPANY_ID,
+        "--request-id", fixture.request_id, "--manifest-file", str(fixture.manifest_path),
+        "--approval-file", str(fixture.approval_path), "--outcome-id", failed["outcome_id"],
+    ]
+
+    def command():
+        output = io.StringIO()
+        with cli.writer_lock(tmp_path / "scraper.lock"), redirect_stdout(output):
+            assert operator_command(args, (fixture.state_path, fixture.jobs_path, fixture.runtime)) == 0
+        return json.loads(output.getvalue())
+
+    assert command()["delivery"][0]["disposition"] == "ACCEPTED"
+    # Model an idle boundary in disposable stores. The deployed historical
+    # cycle remains intentionally unfinished.
+    with closing(State(str(fixture.state_path))) as state:
+        historical = state.cycle(CYCLE_ID)
+        historical["status"] = "Complete"
+        state.save_cycle(historical)
+    with closing(fixture.local(write=True)) as local:
+        _row_id, cycle = local.matches("Scan Cycles", {"Cycle ID": CYCLE_ID})[0]
+        cycle["Cycle Status"] = "Complete"
+        local.import_rows("Scan Cycles", [(2, cycle)])
+
+    args[0] = "admit-retry"
+    fixture.open_remote.reset_mock()
+    assert command()["state"] == "HELD_COOLDOWN"
+    fixture.open_remote.assert_not_called()
+    monkeypatch.setattr(SelectedTemporaryRetrySink, "_now", lambda _self: fixture.now + timedelta(minutes=10))
+    result = command()
+    assert result["state"] == "ADMITTED_LOCAL_CYCLE"
+    assert result["request_id"] == "temporary-retry:" + failed["outcome_id"]
+    assert all(not call.kwargs["write"] for call in fixture.open_remote.call_args_list)
+    assert not fixture.queue_path.exists()
+    with closing(State(str(fixture.state_path), readonly=True)) as state:
+        cycle = state.cycle(result["cycle_id"])
+        assert set(cycle["companies"]) == {COMPANY_ID}
+        assert cycle["runtime_binding"] == fixture.runtime
+        assert cycle["temporary_retry"]["outcome_id"] == failed["outcome_id"]
+    fixture.open_remote.reset_mock()
+    assert command() == {**result, "recovered": True}
+    fixture.open_remote.assert_not_called()
+    fixture.fetch.assert_called_once()

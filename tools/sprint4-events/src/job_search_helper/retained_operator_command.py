@@ -26,12 +26,10 @@ def _manifest(path, cycle_id):
     return manifest
 
 
-def _schedule_retry(args, approval, verifier, runtime, manifest, local, jobs):
-    """Schedule only one verified terminal retry without starting any scraper."""
+def _selected_retry_sink(args, approval, verifier, runtime, manifest, local, jobs):
+    """Bind the explicit retry operation to the exact signed event archive."""
     from .retained_operator_journal import operator_journal_binding
-    from .retained_work_runner import assert_normal_lifecycle_not_held
-    from .scrape_outcome_delivery import OutcomeDelivery
-    from .temporary_retry import CONSUMER, SelectedTemporaryRetrySink
+    from .temporary_retry import SelectedTemporaryRetrySink
 
     claims = approval.get("payload") if isinstance(approval, dict) else None
     if (not isinstance(claims, dict)
@@ -46,13 +44,19 @@ def _schedule_retry(args, approval, verifier, runtime, manifest, local, jobs):
             raise
         signature = verify_expired_event_authorization(approval, claims, verifier)
     binding = operator_journal_binding(claims, runtime, signature)
-    root = jobs.parent
-    sink = SelectedTemporaryRetrySink(
-        local, root, outcome_id=args.outcome_id, request_sha256=claims["request_sha256"],
+    return SelectedTemporaryRetrySink(
+        local, jobs.parent, outcome_id=args.outcome_id, request_sha256=claims["request_sha256"],
         reservation_digest=binding["reservation_digest"],
     )
-    with cli.writer_lock(root / "writer.lock"):
-        assert_normal_lifecycle_not_held(root, jobs)
+
+
+def _schedule_retry(sink, local, jobs):
+    from .retained_work_runner import assert_normal_lifecycle_not_held
+    from .scrape_outcome_delivery import OutcomeDelivery
+    from .temporary_retry import CONSUMER
+
+    with cli.writer_lock(jobs.parent / "writer.lock"):
+        assert_normal_lifecycle_not_held(jobs.parent, jobs)
         # Recheck the exact archive before opening the local writer.
         sink._selected()
         with closing(cli.get_repository(write=True, interactive=False)) as writer:
@@ -61,14 +65,42 @@ def _schedule_retry(args, approval, verifier, runtime, manifest, local, jobs):
             delivery = OutcomeDelivery(
                 writer, SimpleNamespace(ingest_immutable=sink._ingest_immutable_locked), consumer=CONSUMER,
             )
-            results = delivery.drain(limit=1, outcome_id=args.outcome_id)
-    return {"outcome_id": args.outcome_id, "delivery": results}
+            results = delivery.drain(limit=1, outcome_id=sink.outcome_id)
+    return {"outcome_id": sink.outcome_id, "delivery": results}
+
+
+def _admit_retry(sink, state, runtime, remote_reader):
+    from .selected_temporary_retry_admission import admit_selected_temporary_retry_locked
+
+    with cli.writer_lock(sink.root / "writer.lock"):
+        result = admit_selected_temporary_retry_locked(sink, state, runtime)
+        if result["state"] != "HELD_WORKBOOK_SNAPSHOT_REQUIRED":
+            return result
+        local = sink.reader
+        profile = local.get_meta("sheets_profile")
+        schemas = profile_schemas(profile)
+        remote = remote_reader()
+        if not schemas or remote.schemas != schemas or remote.spreadsheet_id != local.spreadsheet_id:
+            raise ValueError("retained_operator_retry_workbook_changed")
+        remote.validate_schema()
+        outcome, _path, _key = sink._selected()
+        cid = outcome["identity"]["company_id"]
+        columns = ["Company ID", "Company Status", "Official Careers URL"]
+        matches = [
+            row for _, row in remote.read_columns("Companies", columns)
+            if row.get("Company ID") == cid
+        ]
+        if len(matches) != 1:
+            return {"state": "HELD_WORKBOOK_COMPANY", "request_id": result["request_id"]}
+        snapshot = {"spreadsheet_id": remote.spreadsheet_id, "profile": profile, "cycles": None,
+                    "company": matches[0]}
+        return admit_selected_temporary_retry_locked(sink, state, runtime, workbook_snapshot=snapshot)
 
 
 def operator_command(arguments, admission):
     """Run only the explicitly requested, admitted operator operation."""
     parser = argparse.ArgumentParser(prog="./job-search-scraper run-retained-operator-company")
-    parser.add_argument("operation", choices=("stage-event", "preview", "execute", "schedule-retry"))
+    parser.add_argument("operation", choices=("stage-event", "preview", "execute", "schedule-retry", "admit-retry"))
     parser.add_argument("--cycle-id", required=True)
     parser.add_argument("--company-id", required=True)
     parser.add_argument("--request-id", required=True)
@@ -89,16 +121,16 @@ def operator_command(arguments, admission):
         parser.error("--source-revision is only for stage-event")
     if args.operation == "preview" and (not args.expires_at or args.approval_file):
         parser.error("preview requires --expires-at")
-    if args.operation in {"execute", "schedule-retry"} and (not args.approval_file or args.expires_at):
+    if args.operation in {"execute", "schedule-retry", "admit-retry"} and (not args.approval_file or args.expires_at):
         parser.error("execution or retry scheduling requires --approval-file")
-    if args.operation == "schedule-retry":
+    if args.operation in {"schedule-retry", "admit-retry"}:
         if action != EVENT_ACTION or not args.outcome_id:
-            parser.error("schedule-retry requires --company-event and --outcome-id")
+            parser.error("retry operations require --company-event and --outcome-id")
     elif args.outcome_id:
-        parser.error("--outcome-id is only for schedule-retry")
+        parser.error("--outcome-id is only for retry operations")
     if not 1 <= args.max_operations <= 100:
         parser.error("--max-operations must be between 1 and 100")
-    if args.operation in {"execute", "schedule-retry"}:
+    if args.operation in {"execute", "schedule-retry", "admit-retry"}:
         from .retained_company_event import _verifier
         approval = json.loads(Path(args.approval_file).read_text(encoding="utf-8"))
         verifier = _verifier(os.environ.get("COMPANY_RETAINED_KEY_ID"),
@@ -124,10 +156,6 @@ def operator_command(arguments, admission):
         with closing(cli.get_repository(write=False, interactive=False)) as local:
             if Path(local.path).resolve() != jobs:
                 raise ValueError("retained_operator_repository_identity_changed")
-            if args.operation == "schedule-retry":
-                result = _schedule_retry(args, approval, verifier, runtime, manifest, local, jobs)
-                print(json.dumps(result, sort_keys=True))
-                return 0
             schemas = profile_schemas(local.get_meta("sheets_profile"))
             if schemas is None:
                 raise ValueError("retained_operator_projected_workbook_required")
@@ -138,7 +166,13 @@ def operator_command(arguments, admission):
                 return cli.get_remote_repository(write=write, interactive=False, schemas=schemas,
                                                  evidence_archives=False)
 
-            if args.operation == "preview":
+            if args.operation in {"schedule-retry", "admit-retry"}:
+                sink = _selected_retry_sink(args, approval, verifier, runtime, manifest, local, jobs)
+                if args.operation == "schedule-retry":
+                    result = _schedule_retry(sink, local, jobs)
+                else:
+                    result = _admit_retry(sink, state, runtime, remote)
+            elif args.operation == "preview":
                 claims = measure_operator_membership(
                     local, remote(), state, root, manifest, runtime, expires_at=args.expires_at,
                     request_id=args.request_id, company_id=args.company_id, action=action,
