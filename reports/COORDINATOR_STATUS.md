@@ -27,6 +27,35 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+
+Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
+the original endpoints and unused launch custody. Native ownership and
+fresh observer proof are still required to activate. The 18:12 native read
+showed both wrapper and bridge active and enabled and no scheduled
+job-search timer. The observer socket remains absent. No installation or
+pilot invocation. Coordinator owns native release and selected intake.
+Atomic Machines one-shot native table intake passed 19 tests.
+`/root/s4_pilot_receipt_map` independently accepted the exact candidate and
+its event through the staged retained bridge, with the historical blocker
+untouched. Separately verify enrolled working workbook, current company
+name/ID/board/official-domain absence, and layout custody before launch.
+No live employer intake. Forterra and PDW (65 and 33 matched postings)
+passed the independently reviewed offline Sprint 5 validator. Private
+backup verified at `710175a56a0f25c47187f896f3fd862f24faf74a`. Qualification
+remains open for the actual generated candidate. `/root/site_journal_qa`
+accepted independent Sprint 5 Engine/custody composition (77 cases).
+Python 3.11.18 / SQLite 3.37.2 passed all. The unsupported default Python
+3.10 interpreter had two authorizer cleanup failures in the test fixtures.
+`/root/s4_abort_repair` owns the pre-outcome ordinary verifier wiring design.
+Next verify administrator observation and original custody before release,
+save the reviewed source and tests, and keep closing the independent worker
+wiring boundary.
+[Original enrollment QA](S4_LIVE_ORIGINAL_ENROLLMENT_PIN_QA_20261120.md) ·
+[Selected intake candidate](S4_ATOMIC_MACHINES_INTAKE_STAGED_20261120.md) ·
+[Selected intake QA](S4_ATOMIC_MACHINES_INTAKE_INDEPENDENT_QA_20261120.md) ·
+[Sprint 5 authority QA](S5_LIVE_EMPLOYER_AUTHORITY_INDEPENDENT_QA_20261120.md) ·
+[Sprint 5 Engine and custody QA](S5_RUNTIME_MAPPING_CUSTODY_V3_INDEPENDENT_QA_20261120.md).
+
 Prepared live enrollment checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
 from about 17:47 Eastern and authorized routine in-scope work without
@@ -54,6 +83,9 @@ at `preinstall-enrollment.json` SHA-256
 `53db1324ba127b3df7d01a1f75bdbb2e029b68866e0c07bb6b091f10d3e2b391`.
 No launch intent or process has been created. Independent observation of
 these original enrollment pins is in progress.
+The final 48-case pre-install recovery suite passed. The scoped source,
+tests and reviews were verified on the private backup branch at
+`842e290492934094ab2438ccbbcc0df775526d74`.
 The user received the exact safe one-hour native observer restart command
 after the original 15-minute native check. The original observer expired;
 its socket was absent at 17:57 Eastern. Verify actual fresh proof after
