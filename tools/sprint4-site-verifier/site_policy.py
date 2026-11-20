@@ -6,6 +6,7 @@ import re
 from zipfile import ZipFile
 
 from alternate_writer_witness import CoverPin
+from alternate_exchange_witness import ExchangeFence
 from host_checkpoint import SitePolicy, SourceFile
 from launcher_witness import LauncherPolicy, LAUNCH_FILES
 
@@ -61,6 +62,18 @@ def load_policy(archive_path):
         mount_id=cover["mount_id"], namespace=identity_pair(cover["namespace"]),
         launch_uid=cover["launch_uid"], probe_paths=tuple(cover["probe_paths"]),
     ) for cover in values["covers"])
+    exchange = values["exchange_fence"]
+    if exchange is not None:
+        exchange["parent"] = absolute(exchange["parent"])
+        exchange["control"] = absolute(exchange["control"])
+        exchange["namespace"] = identity_pair(exchange["namespace"])
+        exchange["intent_sha256"] = digest_text(exchange["intent_sha256"])
+        for key in ("parent_identity", "control_identity", "lock_identity"):
+            if len(exchange[key]) != 6 or any(type(item) is not int or item < 0 for item in exchange[key]):
+                raise ValueError("Approved exchange identity is malformed")
+            exchange[key] = tuple(exchange[key])
+        exchange["pairs"] = tuple(tuple(pair) for pair in exchange["pairs"])
+        values["exchange_fence"] = ExchangeFence(**exchange)
     policy = SitePolicy(**values)
     if (policy.maintenance_bundle / "host-check" != executable
             or executable.resolve(strict=True) != executable

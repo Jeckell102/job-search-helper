@@ -118,3 +118,42 @@ def test_identical_pending_bytes_at_a_replaced_inode_do_not_authorize_close(evid
     candidate.receipt.chmod(0o600)
     with pytest.raises(WitnessHold, match='record changed'):
         candidate.finalize()
+
+
+@pytest.mark.parametrize("new_content", [None, b"different approved contents"])
+def test_pin_replacement_during_promotion_sync_refuses(evidence, monkeypatch, new_content):
+    checkpoint, _, _, _ = evidence
+    enrollment = checkpoint("held:controller")
+    enrollment("held", "INSTALLED")
+    original_sync = continuity.os.fsync
+    replaced = False
+
+    def sync_then_replace(descriptor):
+        nonlocal replaced
+        original_sync(descriptor)
+        if replaced:
+            return
+        replaced = True
+        prior = enrollment.protected_pin.read_bytes()
+        replacement = enrollment.protected_pin.with_suffix(".replacement")
+        replacement.write_bytes(prior if new_content is None else new_content)
+        replacement.chmod(0o600)
+        replacement.replace(enrollment.protected_pin)
+
+    monkeypatch.setattr(continuity.os, "fsync", sync_then_replace)
+    with pytest.raises(WitnessHold, match="changed before promotion"):
+        enrollment.finalize()
+    assert json.loads(enrollment.receipt.read_bytes())["state"] == "pending"
+
+
+def test_short_check_refuses_pin_on_new_inode_even_if_approved_bytes_match(evidence):
+    checkpoint, _, _, _ = evidence
+    enrollment = checkpoint("held:controller")
+    enrollment("held", "INSTALLED")
+    enrollment.finalize()
+    replacement = enrollment.protected_pin.with_suffix(".replacement")
+    replacement.write_bytes(enrollment.protected_pin.read_bytes())
+    replacement.chmod(0o600)
+    replacement.replace(enrollment.protected_pin)
+    with pytest.raises(WitnessHold, match="different hold"):
+        checkpoint("held:entry")("held", "INSTALLED")

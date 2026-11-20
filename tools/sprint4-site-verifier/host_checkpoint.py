@@ -9,6 +9,7 @@ import stat
 import subprocess
 
 from alternate_writer_witness import CoverPin, verify_cover
+from alternate_exchange_witness import ExchangeFence, verify_exchange
 
 
 WRAPPER_UNIT = "wrapper-development-host.service"
@@ -59,6 +60,7 @@ class SitePolicy:
     alternate_roots: tuple[Path, ...]
     covers: tuple[CoverPin, ...]
     source_paths: frozenset[str]
+    exchange_fence: ExchangeFence | None = None
 
 
 def require(value, message):
@@ -292,7 +294,8 @@ def maintenance_descriptor(policy, descriptor, destination, role):
 
 def verify_route_drain(policy, current_wrapper_pid, proc_root, maintenance=None):
     require((proc_root / "1/comm").read_text().strip() == "systemd", "Full MuleLab process view is required")
-    roots = (policy.project, *policy.alternate_roots)
+    parked = () if policy.exchange_fence is None else policy.exchange_fence.parked_roots()
+    roots = (policy.project, *policy.alternate_roots, *parked)
     maintenance = {} if maintenance is None else maintenance
     for proc in proc_root.iterdir():
         if not proc.name.isdecimal() or int(proc.name) in {os.getpid(), current_wrapper_pid}:
@@ -365,17 +368,32 @@ def verify_marker(policy, stage):
             "Maintenance marker does not prove this release hold")
 
 
+def verify_alternate_writers(policy):
+    expected = set(policy.alternate_roots)
+    require(expected and len(expected) == len(policy.alternate_roots), "Approved alternate writer list is incomplete")
+    fence = policy.exchange_fence
+    if fence is not None:
+        require(not policy.covers and fence.active_roots() == expected and fence.launch_uid == policy.launch_uid,
+                "Alternate checkout routes differ from the approved exchange")
+        paths = expected | fence.parked_roots() | {fence.control}
+    else:
+        require({pin.path for pin in policy.covers} == expected and len(policy.covers) == len(expected),
+                "An approved alternate writer route lacks a separate cover")
+        paths = expected
+    for path in paths:
+        require(not (policy.project.is_relative_to(path) or path.is_relative_to(policy.project)),
+                "An alternate writer cover overlaps production")
+    if fence is not None:
+        verify_exchange(fence)
+    else:
+        for pin in policy.covers:
+            verify_cover(pin)
+
+
 def attest(request, policy, verify_protected_state, *, verify_launcher=None, proc_root=Path("/proc")):
     """Reply only after real, read-only observations and protected-state checks."""
     stage = stage_of(request, policy)
-    require(policy.alternate_roots and len(set(policy.alternate_roots)) == len(policy.alternate_roots)
-            and {pin.path for pin in policy.covers} == set(policy.alternate_roots)
-            and len(policy.covers) == len(policy.alternate_roots),
-            "An approved alternate writer route lacks a separate cover")
-    for pin in policy.covers:
-        require(not (policy.project.is_relative_to(pin.path) or pin.path.is_relative_to(policy.project)),
-                "An alternate writer cover overlaps production")
-        verify_cover(pin)
+    verify_alternate_writers(policy)
     verify_host_path(policy, stage, request["target"])
     verify_marker(policy, stage)
     wrapper = unit_status(policy.systemctl, WRAPPER_UNIT)
@@ -395,8 +413,7 @@ def attest(request, policy, verify_protected_state, *, verify_launcher=None, pro
             and sync == unit_status(policy.systemctl, SYNC_UNIT)
             and (not pid or verify_wrapper_process(policy, pid, proc_root) == started),
             "Launch runtime changed during site attestation")
-    for pin in policy.covers:
-        verify_cover(pin)
+    verify_alternate_writers(policy)
     verify_host_path(policy, stage, request["target"])
     verify_marker(policy, stage)
     if stage == "restoring" and pid:

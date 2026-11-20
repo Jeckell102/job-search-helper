@@ -18,6 +18,23 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+Host route and exchange witness checkpoint. Coordinator and release
+owner, active goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Read-only
+MuleLab process census found no exact alternate process reference but
+confirmed production-related wrapper, bridge and Codex working directories.
+There is no durable live writer hold yet. Site checkout exchange
+witness and late-pin-defense source are at
+`/tmp/jsh-s4-exchange-site.naFMiHjj`, with 60 disposable checks passed.
+No production route or process changed. Higher reasoning
+`01a1f97d-cebd-7910-8d31-a5f3e0dcd264` owns the host-capable approved
+exchange controller; coordinator owns site policy, route clearance and
+preflight. Existing Sol High lane owns Sprint 5 fact custody/Engine
+scope, with both still staged. User asked about a separate chat. Only
+Milestone 5 pre-release candidate validation was proposed as a
+non-overlapping lane. Independent continuity and exchange review still
+required. Previous verified backup `8d97a0dc3aac632ab5adb8bce6e3f23a7e91ee00`.
+[Host inventory and witness](S4_HOST_ROUTE_AND_EXCHANGE_WITNESS_20261120.md).
+
 Continuity finalization repair checkpoint. The revised full controller
 rehearsal is terminal PASS, 14 cases in 220.235s. Independent QA accepted
 the launcher output repair and held continuity on approval pin and receipt

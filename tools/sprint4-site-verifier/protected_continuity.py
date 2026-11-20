@@ -27,7 +27,7 @@ def private_snapshot(path):
     return data, (info.st_dev, info.st_ino, info.st_ctime_ns, info.st_mtime_ns, info.st_size)
 
 
-def replace_receipt(path, content, *, expected=None):
+def replace_receipt(path, content, *, expected=None, approved_pin=None):
     parent = path.parent
     need(parent.resolve(strict=True) == parent, "Continuity record parent is not canonical")
     directory = os.open(parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
@@ -48,6 +48,10 @@ def replace_receipt(path, content, *, expected=None):
             os.fsync(stream.fileno())
         if expected is not None:
             need(private_snapshot(path) == expected, "Pending continuity record was replaced")
+        if approved_pin is not None:
+            pin_path, pin_snapshot = approved_pin
+            need(private_snapshot(pin_path) == pin_snapshot,
+                 "Approved protected-state pin changed before promotion")
         os.replace(temp, path.name, src_dir_fd=directory, dst_dir_fd=directory)
         created = False
         os.fsync(directory)
@@ -77,18 +81,19 @@ class ProtectedContinuity:
         }
         self.pending = None
 
-    def binding(self, stage):
+    def binding(self, stage, pin):
         current = self.owner(stage)
         need(current is not None, "Protected writer exclusion is unverified")
         boot, pid, started = current
-        return {**self.base, "boot": boot, "controller_pid": pid, "controller_started": started}
+        return {**self.base, "boot": boot, "controller_pid": pid, "controller_started": started,
+                "protected_pin_identity": list(pin[1])}
 
     def __call__(self, stage, target):
         need(target == self.request["target"], "Protected proof release direction changed")
         pin = private_snapshot(self.protected_pin)
         need(sha256(pin[0]).hexdigest() == self.pin_digest,
              "Approved protected-state pin changed")
-        binding = self.binding(stage)
+        binding = self.binding(stage, pin)
         checkpoint = self.request["checkpoint"]
         enroll = checkpoint == "held:controller"
         short = stage == "held" and not enroll
@@ -114,10 +119,13 @@ class ProtectedContinuity:
     def finalize(self):
         need(self.pending is not None, "Protected checkpoint did not run")
         stage, binding, physical, enroll, pin, receipt = self.pending
-        need(self.binding(stage) == binding and physical_snapshot(self.policy.project) == physical,
+        need(self.binding(stage, pin) == binding and physical_snapshot(self.policy.project) == physical,
              "Protected files or writer ownership changed during the checkpoint")
         need(private_snapshot(self.protected_pin) == pin, "Approved protected-state pin changed during the checkpoint")
         if receipt is not None:
             need(private_snapshot(self.receipt) == receipt, "Continuity record changed during the checkpoint")
         if enroll:
-            replace_receipt(self.receipt, {**binding, "state": "verified", "physical": physical}, expected=receipt)
+            replace_receipt(self.receipt, {**binding, "state": "verified", "physical": physical},
+                            expected=receipt, approved_pin=(self.protected_pin, pin))
+            need(private_snapshot(self.protected_pin) == pin,
+                 "Approved protected-state pin changed during promotion")
