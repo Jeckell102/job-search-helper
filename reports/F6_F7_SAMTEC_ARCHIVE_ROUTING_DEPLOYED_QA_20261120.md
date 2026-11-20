@@ -1,0 +1,7 @@
+# Sprint 3 independent archive-routing amendment verification
+
+**ACCEPT the deployed amendment for a separately authorized Samtec preview/pilot.** The private controller is RELEASED / INSTALLED and agrees with the installer receipt for manifest `d70ce1c69a4a6798c3e40b2528c79a3b59c1e53daeffca7df1c0a82433c6d280`. The sole amended runtime file is `src/job_search_helper/retained_operator_command.py`. Its deployed bytes, mode and owner match the manifest, and its prior and new durable payloads match both endpoints. The deployed content SHA-256 is `52f44da4ab019f427b142848ee524bb70fe8205bbc9b75e49142d3272582571e`.
+
+The 234-file runtime inventory shows only that one change against the previously accepted source. The controller's pre-amendment fingerprint still matches all 233 non-scope package entries. The canonical package and original Sprint 1 and Sprint 3 sentinels retain their original inodes. The amendment sentinel matches its new receipt. The runtime marker and canonical import guard are absent.
+
+Fresh hashes agreed with all 11 before and after witnesses, including 5,715,653,505 bytes of present files and the expected absences. The Samtec-only request and its receipt are byte-identical to the pre-amendment witness. On a disposable copy of the exact deployed source, the real-factory archive regression passed with stubbed authorization, compact header validation, and one fake publication to the main workbook. This QA did not launch production, sign, access the network, or mutate production.

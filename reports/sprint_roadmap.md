@@ -201,8 +201,13 @@ Exit gate: only Samtec is fetched; applicable filtered records and full evidence
 are durably saved; exact synchronization is confirmed; rerun and lost-ack
 recovery are safe; local versus remote state is explicit.
 
-Current status: partial source-boundary work accepted, live gate open. The
-Samtec request remains held pending exact safe admission/authorization.
+Current status: deployed and independently accepted. The Nov. 20 Samtec pilot
+collected 160 complete postings, saved 63 Job History and 63 full local Job
+Evidence records, and independently verified all 63 writes and the original
+Sheets acknowledgement. Terminal replay produced the same receipt with no
+network activity. The historic cycle remains held. See
+`F6_F7_SAMTEC_LIVE_PILOT_20261120.md` and
+`F6_F7_SAMTEC_LIVE_INDEPENDENT_QA_20261120.md`.
 
 ## Sprint 4 — F1/F2 live event-to-retry chain and Milestones 2–3
 
@@ -233,8 +238,9 @@ Exit gate: a supported company change creates one logical scoped request and
 realistic failures create exactly the correct retry, hold or repair task across
 duplicates, restarts and source drift.
 
-Current status: important F1/F2 source boundaries are independently accepted;
-the live and full-chain evidence remains open.
+Current status: active in disposable source. The live and full-chain evidence
+remain open. See `S4_F1_F2_PREFLIGHT_20261120.md` and the restart card for
+staged ownership and current blockers.
 
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 
