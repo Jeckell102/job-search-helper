@@ -42,6 +42,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='SQLite job storage and Google Sheets synchronization; no model calls.')
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('status', help='Show local counts and delivery health, without Google access.')
+    commands.add_parser('intake-status', help='Show the durable Company-intake control, without Google access.')
+    commands.add_parser('intake-enable', help='Durably enable Company intake for future watch cycles only.')
+    commands.add_parser('intake-disable', help='Durably disable Company intake; queued requests are retained.')
     commands.add_parser('conflicts', help='Show held changes without clearing them.')
     for name in ('once', 'watch'):
         sub = commands.add_parser(name, help='Import manual edits and publish queued local changes.')
@@ -76,9 +79,18 @@ def main(argv=None):
                 print_status(result)
             return 0
         local = SQLiteRepository(job_database_path(), spreadsheet_id,
-                                 readonly=args.command in {'status', 'conflicts', 'backup'})
+                                 readonly=args.command in {'status', 'conflicts', 'backup', 'intake-status'})
         if args.command == 'status':
             print_status({'configured_backend': storage_backend(), 'database': str(local.path), **local.status()})
+            return 0
+        if args.command in {'intake-status', 'intake-enable', 'intake-disable'}:
+            from .company_intake_dispatcher import CompanyIntakeDispatcher
+            dispatcher = CompanyIntakeDispatcher(local, state_path().parent)
+            if args.command == 'intake-enable':
+                dispatcher.set_enabled(True)
+            elif args.command == 'intake-disable':
+                dispatcher.set_enabled(False)
+            print_status({'state': 'COMPANY_INTAKE_CONTROL', **dispatcher.status()})
             return 0
         if args.command == 'conflicts':
             for tab, rid, field, detail, at in local.db.execute('SELECT tab,row_id,header,detail,at FROM conflicts ORDER BY tab,row_id,header'):
@@ -115,6 +127,28 @@ def main(argv=None):
                         sync = SheetsSynchronizer(local, remote)
                     result = cycle(sync, max_batches=args.max_batches, max_seconds=args.interval)
                 print_status(result)
+                if args.command == 'watch':
+                    # Run only after the bounded sync writer has released its
+                    # lock.  The durable control defaults to disabled.
+                    from .company_intake_dispatcher import CompanyIntakeDispatcher
+                    dispatcher = CompanyIntakeDispatcher(local, state_path().parent)
+                    try:
+                        intake = dispatcher.run_once()
+                        print_status({'at': timestamp(), 'company_intake': intake})
+                    except Exception as intake_error:
+                        # Post-sync intake failures must never become Sheets
+                        # errors or alter the watcher's retry/backoff state.
+                        try:
+                            detail = dispatcher.record_error(intake_error)
+                        except Exception as journal_error:
+                            print_status({'at': timestamp(),
+                                          'state': 'COMPANY_INTAKE_ERROR_UNRECORDED',
+                                          'error': f'{type(intake_error).__name__}: {intake_error}',
+                                          'journal_error': f'{type(journal_error).__name__}: {journal_error}'})
+                        else:
+                            print_status({'at': timestamp(),
+                                          'state': 'COMPANY_INTAKE_ERROR_RETAINED',
+                                          'error': detail})
                 failures = 0
             except WriterLockBusy as exc:
                 if args.command == 'once':
