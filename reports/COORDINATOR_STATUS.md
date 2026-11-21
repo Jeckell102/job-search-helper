@@ -43,6 +43,38 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Retirement launch recovery and executable retry
+
+### November 21 at 10:57 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 stays at native
+rollout. The first observer was verified, the first native launch
+closed the three alternate routes, and the kernel refused the
+controller before starting it because its mode was 0664. Preserve the
+original failed attempt. End-to-end guarded recovery proved the
+original production source and data and restored all three alternate
+paths. Assistant bridge is healthy. The retirement marker is absent.
+
+Independent QA accepted the private 0700 retry, exact 44 source
+paths, native executable help, and untouched fresh -02 attempt. Root
+owns live host control, backup and execution. The -02 observer command
+is `/tmp/jsh-retirement-launch-recovery/start-observer-retry.sh`. The
+user has been told to close the first observer and start the fresh
+one. No deployment or retirement yet. Wait for authentic new socket
+and readiness. Challenge both approved processes, use
+`run_retry_release.py` in the exact -02 private bundle, observe its
+single session, then independently verify installed receipt before
+the one authorized retirement. Restore alternate routes using the
+verified retirement terminal, without waiting for any Amphenol pilot.
+
+`/root/architecture_publication_review` designed and independently
+reviewed no-child recovery, and authored the successful post-retirement
+restore adapter. `/root/adapter_dependency_reconcile` fixed the mode
+in fresh preparation. `/root/listener_ownership_qa` independently
+accepted retry source and artifacts and the separate restore adapter.
+[Exact failure and recovery](S5_RETIREMENT_EXEC_REFUSAL_RECOVERY_20261121.md).
+
 ## Retirement native private bundle prepared
 
 ### November 21 at 10:40 Eastern
@@ -83,6 +115,15 @@ confirmation, then verify both privileged listener challenges before
 the existing captured native install. No manual phase bypass. No
 application, workbook or old scrape effects yet.
 [Native preparation and pins](S5_RETIREMENT_NATIVE_PREPARATION_20261121.md).
+Private GitHub backup `8b5ac31c2534be98d2febe0429dbf4776acb0bb6` was fetched and matched all
+18 scoped files. [Backup verification](S5_RETIREMENT_NATIVE_PREPARATION_BACKUP_VERIFIED_20261121.json).
+The exact post-install source verifier is prepared and passed three
+disposable checks (missing controller, exact 44-file terminal, changed
+source). Run it only after the captured controller settles. Preserve
+alternate route access through explicit retirement proof; the
+restoration worker has a separate non-pilot continuation assignment.
+The operator's observer command has been delivered. No socket was
+present at the 10:46 check.
 
 ## Owner retirement passed staged integration QA
 
