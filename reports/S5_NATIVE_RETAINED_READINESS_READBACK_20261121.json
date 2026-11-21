@@ -1,0 +1,80 @@
+{
+  "cycle": "CYC-B639C6D864EC",
+  "effective_unfinished_ids": [
+    "CYC-B639C6D864EC"
+  ],
+  "legacy": {
+    "nonzero_cursors": 6,
+    "partially_applied_plans": 1,
+    "plans": 6,
+    "saronic_inventory": [
+      [
+        276,
+        0
+      ]
+    ],
+    "saronic_plan": [
+      [
+        67,
+        208,
+        null
+      ]
+    ],
+    "saved_inventories": 45,
+    "unblocked_inventories": 40
+  },
+  "local_mirror_statuses": [
+    "In Progress"
+  ],
+  "membership": {
+    "COMP-0054": {
+      "raw_unfinished_memberships": 19,
+      "retained_stage": "inventory"
+    },
+    "COMP-0164": {
+      "raw_unfinished_memberships": 19,
+      "retained_stage": "queued"
+    },
+    "COMP-0490": {
+      "raw_unfinished_memberships": 19,
+      "retained_stage": "queued"
+    }
+  },
+  "native_mtime_unchanged": true,
+  "saronic_exact": {
+    "exact_control_before_prefix_recoveries": [],
+    "exact_plan_local_state": [],
+    "exact_remote_plans": [],
+    "exact_selected_legacy_recoveries": [],
+    "exact_selected_legacy_recovery_archive": [
+      0
+    ],
+    "jobs_applications": [],
+    "publication_receipts": []
+  },
+  "scope": 800,
+  "state_status": "In Progress",
+  "support": {
+    "eligible_unacknowledged_outbox": 0,
+    "events": [
+      [
+        "COMP-2522FE051E36",
+        "company.eligible",
+        1
+      ]
+    ],
+    "outbox_delivery_consumers": [
+      "company-scan-request-bridge"
+    ],
+    "queued_request_present": false,
+    "release_journal_present": false,
+    "terminal_outcomes": [
+      [
+        "COMP-2522FE051E36",
+        "COMPLETE",
+        1
+      ]
+    ]
+  },
+  "wal_lengths_zero": true
+}

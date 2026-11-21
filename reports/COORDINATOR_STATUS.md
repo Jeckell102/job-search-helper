@@ -43,6 +43,52 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 5 enrolled retry receipt and native readiness
+
+### Latest checkpoint, November 21 at 04:05 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The previous turn advanced
+the measured release and exact retry to independently verified staging
+and a verified private GitHub backup. Sprints 1–3 and the Sprint 4 Freeform
+pilot remain accepted. Sprint 5 native acceptance and Sprints 6–7 remain open.
+
+Root owns the staged host receipt join in
+`/tmp/jsh-s5-enrolled-retry-receipt.20261121`.
+`/root/listener_ownership_qa` reproduced a duplicate State owner on the
+initial helper and independently accepted the corrected sole-owner check.
+The same lane lost the first reply after durable receiver commit and then
+recovered one matching receipt and one lifecycle event without another
+model run. A 63-case composed offline sweep passed. The default-off path
+and the original no-approval enrollment remain intact.
+[Host result and QA](S5_ENROLLED_RETRY_COORDINATOR_RECEIPT_20261121.md).
+
+`/root/architecture_publication_review` owns the archived-host positive
+regression and accepted the actual supervision callback on an archived
+disposable retry. It preserved 18 jobs, the original receipt and an
+unrelated outcome, with one exact receiver event and no new worker.
+`/root/s5_live_authority_plan` independently confirmed there is no
+eligible pending native event and Saronic has no signed untouched
+successor that the existing cancellation path can archive. No production
+changes. The same worker owns one bounded real public Amphenol dispatch
+through the measured approved adapter projection, disposable Jobs/State,
+and workbook fixture. It finished one official dispatcher invocation with
+39 full postings. Normal filtering saved 18 matching jobs and one batch;
+an independent durable read matched the exact Inbox/Jobs receipt. Replay
+made no further provider or workbook calls. The public rehearsal and the
+host archived replay have different attempt identities.
+[Native readiness](S5_NATIVE_RETAINED_READINESS_20261121.md).
+[Fresh combined public-source test](S5_AMPHENOL_PUBLIC_COMPOSED_PASS_20261121.md).
+[Host supervision proof](S5_ENROLLED_RETRY_SUPERVISOR_PROOF_20261121.md).
+
+Next review the smallest guarded native or explicitly isolated deployment
+path against the historical scope and finalize the pending qualification
+prerequisites. Native execution still requires legitimate owned scope
+and installed release gates with the historical cycle protected. Keep broad backlog and
+unqualified automatic release disabled. Maintain one Jetson inference lane.
+No user action needed for the current checks. Last verified backup before
+this checkpoint is `1ba3587be48729a5fcbfa98ae6b1ecc3130d7434`.
+
 ## Sprint 5 measured release owner and exact retry
 
 ### Latest checkpoint, November 21 at 03:50 Eastern
@@ -81,8 +127,10 @@ receipt pair and one canonical sender row, deliver only that outcome, and
 read back both delivery receipts and the receiver's exact lifecycle.
 The 03:51 read-only native check still found the same protected active
 cycle, no pending scan request and Saronic cursor 67.
-No user action is currently needed. Last verified private GitHub backup
-before this checkpoint is `54ed9abc985ab0630dc7ceadbb00c86ed207df16`.
+No user action is currently needed. Latest private GitHub backup
+`1ba3587be48729a5fcbfa98ae6b1ecc3130d7434` was fetched back and all
+21 scoped files matched.
+[Backup verification](S5_MEASURED_RELEASE_BACKUP_VERIFIED_20261121.json).
 [Joined release evidence](S5_MEASURED_RELEASE_OWNER_JOIN_20261121.md).
 [Native readback](S5_NATIVE_READ_ONLY_RECHECK_0351_20261121.json).
 

@@ -1,0 +1,19 @@
+{
+  "disposition": "PUBLIC_DISPATCH_DISPOSABLE_COMPOSED_PASS",
+  "public_inventory_jobs": 39,
+  "adapter_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "source_manifest_sha256": "e7056b5dffda28c316cf322a1de14290d753865dcd4fd393a29eba7ad68870d1",
+  "filtered_local_jobs": 18,
+  "fixture_published_jobs": 18,
+  "fixture_remote_batches": 1,
+  "public_dispatches": 1,
+  "browser_closed": true,
+  "remote_factory_calls": 1,
+  "terminal_outcomes": 1,
+  "prior_cycle_job_company_preserved": true,
+  "replay_logically_unchanged": true,
+  "cycle_id": "CYC-22C588C96084",
+  "attempt_id": "RTRY-c52da3e56503a8178036e08d",
+  "outcome_id": "OUT-285825755a89e4e88c607b49",
+  "native_or_live_qualification": false
+}

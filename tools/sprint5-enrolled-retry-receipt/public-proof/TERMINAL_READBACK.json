@@ -1,0 +1,32 @@
+{
+  "adapter_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "attempt_id": "RTRY-c52da3e56503a8178036e08d",
+  "browser_closed": true,
+  "cycle_id": "CYC-22C588C96084",
+  "disposition": "PUBLIC_DISPATCH_DISPOSABLE_COMPOSED_PASS",
+  "filtered_job_key_set_sha256": "5cc5c992e15c6bd7c55bf9a32fa59103c7af9035f3bac95e7e3dd523e7877c35",
+  "filtered_local_jobs": 18,
+  "fixture_published_jobs": 18,
+  "fixture_remote_batches": 1,
+  "frozen_plan_sha256": "a2dbd38b779e585004a4eb865c8cb844a49be6816dfe72f573174a90a7906826",
+  "local_acknowledgment_id": "fadf66706609c70a224a4277a0d24fbe639eb1434ba5df558f79171018fc49cd",
+  "local_application_id": "ELA-bd5116f299a0af5248c6664e3435bc5c",
+  "native_or_live_qualification": false,
+  "outcome_id": "OUT-285825755a89e4e88c607b49",
+  "prior_cycle_job_company_preserved": true,
+  "public_dispatches": 1,
+  "public_inventory_jobs": 39,
+  "publication_binding": {
+    "company_id": "COMP-0490",
+    "release_binding_sha256": "eec0d2fafaf3be15637a3e9d25d1b23a49d1b3733386f7f192b046c046d50231",
+    "release_id": "REL-4d1345af923cb3261d6a1ed0",
+    "request_id": "company-retry:RTRY-c52da3e56503a8178036e08d",
+    "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501"
+  },
+  "publication_receipt_id": "16d39b5d2a1403ee49654a3222b220af423f3d6e0fc2341831429dc3b721570d",
+  "remote_factory_calls": 1,
+  "replay_logically_unchanged": true,
+  "source_manifest_sha256": "e7056b5dffda28c316cf322a1de14290d753865dcd4fd393a29eba7ad68870d1",
+  "source_remeasured_after_dispatch": true,
+  "terminal_outcomes": 1
+}

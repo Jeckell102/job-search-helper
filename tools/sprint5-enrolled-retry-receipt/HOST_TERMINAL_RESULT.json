@@ -1,0 +1,16 @@
+{
+  "actual_supervision_catchup": true,
+  "attempt_id": "RTRY-94818009148713cd8859150f",
+  "identical_two_sided_receipt": true,
+  "job_count_preserved": 18,
+  "native_or_live_qualification": false,
+  "original_failure_ack_preserved": true,
+  "outcome_id": "OUT-695d688d306c3e76b3cc861b",
+  "overlapping_workspace_hold": true,
+  "receipt_sha256": "552bd9eef5c6feef6988d1b71a6ff190d252c2969322f080864d83420a07cb57",
+  "receiver_event_count": 1,
+  "restart_no_redelivery": true,
+  "state": "RECIPE_RETRY_CONFIRMED",
+  "unrelated_outcome_untouched": true,
+  "worker_launches": 0
+}

@@ -1,0 +1,17 @@
+{
+  "tunnels": 40,
+  "foreign_tunnels_rejected": 0,
+  "detail_requests": 39,
+  "browser_closed": true,
+  "advertised_totals": [
+    39,
+    39,
+    39,
+    39
+  ],
+  "status": "complete",
+  "reason": "Verified company source repair: https://amphenol-aerospace.acquiretm.com/home.aspx. AcquireTM: verified all 39 full postings and rechecked the complete scoped listing.",
+  "jobs": 39,
+  "source_url": "https://amphenol-aerospace.acquiretm.com/home.aspx",
+  "source_manifest_sha256": "e7056b5dffda28c316cf322a1de14290d753865dcd4fd393a29eba7ad68870d1"
+}
