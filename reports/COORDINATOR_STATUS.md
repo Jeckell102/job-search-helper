@@ -27,7 +27,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
-19:29 Eastern. Coordinator and release owner for goal
+19:28 Eastern. Coordinator and release owner for goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 native release and selected
 Atomic Machines intake remain held. The 19:26 read found no administrator
 observer socket. The user's 15-hour MuleLab authorization remains in
@@ -56,6 +56,38 @@ disabled. No production, Sheets, or Jetson change in this checkpoint.
 [Enrolled staging](S5_ORDINARY_ENROLLED_STAGED_20261120.md) ·
 [Initial independent QA](S5_ORDINARY_ENROLLED_INITIAL_QA_20261120.md) ·
 [Independent recheck](S5_ORDINARY_ENROLLED_INDEPENDENT_RECHECK_20261120.md).
+
+19:34 Eastern. Private GitHub branch readback for the independently accepted
+enrollment/custody/publication snapshot matches
+`9f52e991b1e897c961243aead61f8fd1e486095f`. New source-only controller slice
+in `/tmp/jsh-s5-ordinary-review-gate.O8PbCh9o`. Its first independent review
+found two defects. A confirmed exact dispatch leaves the generic cycle
+summary In Progress, and the first readback opened State and Inbox through
+writable constructors. Root repaired the controller to use verified exact
+terminal evidence for that single dispatch and opened all three stores
+read-only. Six focused cases passed on the repaired source. The original
+HOLD is preserved at `/tmp/jsh-s5-ordinary-review-gate-independent.md`.
+`/root/site_journal_qa` owns the fresh pinned independent recheck. Root
+owns continuation edits and verified GitHub backups. The positive finisher
+plan establishes the next owner-bound verifier handoff. The current
+offline verifier receipts have fixture authority only. The observer
+remained absent at 19:31 and no production action was taken.
+[Positive finisher plan](S5_ORDINARY_POSITIVE_FINISHER_PLAN_20261120.md).
+
+19:36 Eastern. `/root/site_journal_qa` independently accepted the repaired
+terminal-to-FIRST PASS controller source. The local regression passed 440
+and the separate pinned QA passed 32. A real stored fixture cycle with
+generic In Progress status entered the exact review route, with AI and
+review entry stubbed. A separate Python process ran the proof CLI and
+returned the same terminal receipt. All proof handles open SQLite read-only.
+The accepted code applies on exact staged controller paths, without general
+storage sync or a cycle-summary mutation. A typed pending outcome stays
+held. No live FIRST PASS, production installation, or positive typed
+repair outcome. Root's next source assignment is the smallest owner-bound
+verifier request/result prototype in the positive finisher plan. The
+19:35 MuleLab check still found no native owner observer socket.
+[Controller evidence](S5_ORDINARY_REVIEW_GATE_STAGED_20261120.md) ·
+[Independent recheck](S5_ORDINARY_REVIEW_GATE_INDEPENDENT_RECHECK_20261120.md).
 
 
 Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
