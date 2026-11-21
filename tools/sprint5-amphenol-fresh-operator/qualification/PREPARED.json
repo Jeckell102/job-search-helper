@@ -1,0 +1,20 @@
+{
+  "build_artifacts": {
+    "build-receipt.json": "aa12f5a86dbd13094f1473c79b1ca14840e1821bb3bbb2194dd9fee1e01578a5",
+    "reviewed.patch": "ce042dffa0addfdbb04e14e450d6e5ae3979d2c881bd1ff9bf9c8173ce749abc",
+    "src/job_search_helper/acquiretm.py": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d"
+  },
+  "candidate_root": "/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT/candidate",
+  "candidate_vector_count": 256,
+  "candidate_vector_sha256": "7e371be5094a3d23de58af47e8e8607c7f64d6d35a4a7e58bfb365baa132bdea",
+  "dispatcher_sha256": "111ccb9067402832ad96b798100dfca293668cf24830409874c1ab4d6eaac07e",
+  "failed_request_id": "operator-amphenol-20261121-05",
+  "inference_request_id": "d73599ddd718448bb9fa1297af268a08",
+  "manifest_sha256": "9b02e2bb924666d240ec666d5ad6292def584e8f7155f89bfa3c465999fc323e",
+  "outcome_id": "OUT-1dc536eeadea2d283052b05d",
+  "qualification": "pending",
+  "release_id": "REL-53592bb86b62492840c58267",
+  "request_sha256": "f8c53183ae54bb8b66f79f92edc68d1e0a9d136ed8d2e21a07d7ff497fde7feb",
+  "state": "HELD_PROPOSED_MANIFEST",
+  "task_id": "WRAP-11dc97a3dd"
+}

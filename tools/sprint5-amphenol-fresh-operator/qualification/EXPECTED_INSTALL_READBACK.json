@@ -1,0 +1,12 @@
+{
+  "config_sha256": "fdb4049997bddf85ec7f421283951ca2121cba2fab3be2e21082d32bc5eaaa03",
+  "dependency_manifest_sha256": "98079522053bb0643717e2afc5a2cf7890566729bd951a96e4d1a18487e3c7fb",
+  "result": "PASS",
+  "schema": "amphenol-installed-recipe-verification-v1",
+  "source_manifest_sha256": "7269a0b5f2cb593f5a5b44b70d62b58646d7a902a7e2b81969d7031e57fc98f4",
+  "wrapper": {
+    "mode": 436,
+    "sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+    "size": 13644
+  }
+}

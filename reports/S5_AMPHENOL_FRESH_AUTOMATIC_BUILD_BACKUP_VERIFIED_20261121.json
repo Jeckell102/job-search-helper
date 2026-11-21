@@ -1,0 +1,29 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "9d8e5d5bc3c29c7d9c341d6464917aed7cb0a866",
+  "exact_file_count": 19,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "778a947361b45a6e22e5623ee809e550bd929f7f1df21124b279a6c421e267d4",
+    "reports/INTEGRATION_AUTOMATION_OPERATOR_RUNBOOK.md": "d42865bd2640f24015d19e32b64e6c4f02ea043f733d8338f067448c0649d1a4",
+    "reports/S4_NEXT_MANUAL_START_RECOVERY_BACKUP_VERIFIED_20261121.json": "ddccb863495eeb10a7d508b43007ba2015103c0ebdd35434da18fa6a09ec144f",
+    "reports/S5_AMPHENOL_ARMER_BRIDGE_QA_20261121.md": "a334776c43863e1d3ff58a34f2f1379dcdb072414772e05d5d9b0d039eaaa665",
+    "reports/S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md": "cdf3d8d35a462d8402d551e378014290bd2d2a2cb06bc84dd4a6ce3a9f0f7a35",
+    "reports/S5_AMPHENOL_FRESH_OUTCOME_BUILD_QA_20261121.md": "f6a51026d784081aa0b50bfe77da5286808b2aa5ea53b1cd51b4bcaee2578bb4",
+    "reports/S5_AMPHENOL_FRESH_TRIGGER_WINDOW_20261121.md": "cd9257162855b6e3fecf1324e8cc6a99c56c18fb27ded4b1b5a84f76bdea4405",
+    "reports/S5_AMPHENOL_SYSTEMD_ENROLLMENT_FAILURE_20261121.md": "ff9e399e309e6b37a9b587a8892afb17b9027b027b974d1fd4744008447e4ba9",
+    "reports/S5_AMPHENOL_SYSTEMD_ENROLLMENT_QA_20261121.md": "8c76a5900d72a53cb569045e37019df8ea3a947bd4c7dee235fa40770d16c2f5",
+    "reports/S5_AMPHENOL_TWO_TOOL_BRIDGE_SCOPE_QA_20261121.md": "d1941e3e6cb21ab36328ffc2571320965caca0edd639ecbdebd3e7aa6b692f84",
+    "reports/S5_AMPHENOL_TWO_TOOL_DEPLOYED_INDEPENDENT_QA_20261121.json": "f43ca37e03a77aed2ccebdaefe4ce7b9c5ccfd953712a5432362bc917e598719",
+    "reports/S5_AMPHENOL_TWO_TOOL_NATIVE_PREFLIGHT_FAILURE_20261121.md": "7bc51a373cda75b8558eb22d386328121d7fafb66fa2af0970f6fc26088f749b",
+    "reports/sprint_roadmap.md": "1f9f2b71e5f8a78b2b17a6d60a35609d30b28583373e1aad2db5a025b3ad7829",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/arm_native_fresh_operator.py": "3a69fa39e9b4e5948c2ef18a29462bb3cff129e7650337d1826219c943422d83",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/fresh_pilot_environment.py": "8255eb149845ea66fcc1a850693e703ae64bd34996dd267e9ad7bb36c1d45ae4",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/tests/test_fresh_pilot_environment.py": "e62a1c302247e4a3681b4d01ae0c88cbb7f14ed2f97181d340d2410bce9223c3",
+    "tools/sprint5-amphenol-fresh-operator/live_generated/acquiretm.py": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/run_native_two_tool_forward.py": "d2c902d3daaafa6bf631e388b3400897444731999d2d5de6ca1ac1c1055547f5",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/two_tool_route_drain.py": "aac2a747a6389f3e98e7e38dad9ce562e9f80c6ed1a039d0d2b5e6ac3d539b25"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T16:41:55-05:00"
+}

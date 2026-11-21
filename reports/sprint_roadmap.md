@@ -312,6 +312,11 @@ The temporary enrollment was withdrawn. Current public qualification,
 guarded release, fresh local save and live workbook confirmation remain
 open. [Live build evidence](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md).
 
+At 16:51 Eastern the exact current candidate and one-file proposal were
+assembled. The independent public run stopped on its first 429 after 32
+of 39 details. No contact before 17:48:55 Eastern and no public acceptance
+credit. [Provider hold](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,

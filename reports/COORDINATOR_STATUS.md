@@ -45,6 +45,29 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## ACTIVE — Sprint 5 fresh build accepted, public qualification next
 
+### November 21 at 16:51 Eastern — exact candidate prepared, provider hold
+
+Root remains coordinator and release owner for the active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Root assembled and verified the
+fresh complete candidate and one-file proposal `REL-53592bb86b62492840c58267`.
+The public vector matches all 256 files in the prior complete observation.
+The independent public worker completed one actual bounded run. It saw the
+initial 39 listings and 32 successful descriptions before stopping on the
+first detail HTTP 429. Retry-After requires no contact before 17:48:55
+Eastern. Time alone does not authorize another run. Qualification, release,
+retry and workbook acceptance remain held. No candidate was installed.
+[Fresh preparation and provider evidence](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md).
+
+Root owns the private release entry and existing qualification-owner
+handoff. The corrected default inspection verified the seven staged tool
+origins without opening the coordinator database. `/root/architecture_publication_review`
+owns only the private native window adapter, reusing existing authorized
+process/bridge/alternate-route controls without holding the worker locks.
+`/root/listener_ownership_qa` owns the independent package and entry check.
+`/root/adapter_dependency_reconcile` finished the public capture and will
+make no further contact. Bridge, scheduled sync, queue, campaign and broad
+release remain in their prior state. Overall acceptance about 40%.
+
 ### November 21 at 16:39 Eastern — current coordinator checkpoint
 
 Root remains coordinator and release owner for the active persistent goal
@@ -83,9 +106,9 @@ only the row affected by a new verified checkpoint.
 | Item | Current reference |
 | --- | --- |
 | Production and canonical build input | `/home/chris/job-search-helper_old`; `src/job_search_helper/acquiretm.py` SHA `a95953af…`. The isolated task checkout is a historical snapshot. |
-| Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production; adapter SHA `895ec36e…`. Its build receipt and approval requirements are in the [independent build QA](S5_AMPHENOL_FRESH_OUTCOME_BUILD_QA_20261121.md). |
+| Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production, adapter SHA `895ec36e…`. Private full candidate and proposal `REL-53592bb86b62492840c58267` are in `/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT`. [Qualification status](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md). |
 | Current request and tool receipt | `operator-amphenol-20261121-05` / `f8c53183…`; local -05 maintenance receipt SHA `60b29ffc…`. See [exact identifiers and hashes](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md). |
-| GitHub checkpoint | Existing private backup branch `backup/integration-automation-m1-operator-20261120`. Back up scoped source, tests, plans and reports on this branch and fetch to verify. |
+| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `9d8e5d5bc3c29c7d9c341d6464917aed7cb0a866`. All 19 scoped files matched the fetched copy. [Verification](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_BACKUP_VERIFIED_20261121.json). |
 
 ## Prior Sprint 5 preparation checkpoints
 
