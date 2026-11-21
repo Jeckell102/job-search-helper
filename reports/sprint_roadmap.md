@@ -334,12 +334,18 @@ then queued one fresh company-only retry. The pre-captured 39-posting
 inventory passed normal filtering and exact recovery, with 18 matching
 stored and workbook rows and one terminal receipt bound to the actual
 fixture release. Independent QA accepted the exact combined publication.
-Genuine production ownership, release, retry, publication and installed QA
-remain open. Read-only native verification found no eligible owned origin
-while the protected historical cycle retains Amphenol.
+The staged recipe pilot also retained the accepted choice across a restart
+and produced the identical live-tested wrapper with no second inference.
+Independent host QA accepted one enrolled source-only trigger, and the
+composed disposable run produced the expected wrapper automatically.
+Genuine production ownership, deployment, release, retry, publication
+and installed QA remain open. Read-only native verification found no
+eligible owned origin while the protected historical cycle retains Amphenol.
 [Public witness](S5_AMPHENOL_PUBLIC_PAGINATION_WITNESS_20261121.md) ·
 [Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md) ·
-[Test-workbook result](S5_AMPHENOL_FIXTURE_WORKBOOK_PASS_20261121.md).
+[Test-workbook result](S5_AMPHENOL_FIXTURE_WORKBOOK_PASS_20261121.md) ·
+[Existing coordinator restart and wrapper result](S5_AMPHENOL_CHOICE_SCHEDULER_REHEARSAL_20261121.md) ·
+[Host-trigger rehearsal](S5_AMPHENOL_HOST_TRIGGER_REHEARSAL_20261121.md).
 
 The next bounded case is `COMP-0490` Amphenol Aerospace, exact AcquireTM
 board and independently observed delayed page-two membership. The approved
@@ -380,9 +386,10 @@ Exit gate: the frozen cases complete sequentially with fresh context and no
 manual prompting, while holds/exhaustion remain visible and later work
 continues safely.
 
-Current status: open. A maintained 103-test offline coordinator baseline
-passed on the reviewed promotion and retry source. The composed final
-version and the sequential deployed pilot remain open.
+Current status: open. The maintained 103-test offline baseline and a
+follow-up 114-test composed run passed on the staged coordinator and
+exact owner reader. The final installed version and the sequential
+deployed pilot remain open.
 [Reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
 
 ## Sprint 7 — Final acceptance, deployed independent QA and backup

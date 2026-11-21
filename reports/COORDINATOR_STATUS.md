@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 02:27 Eastern
+### Latest outcome, November 21 at 02:39 Eastern
 
 Root is the coordinator and release owner. Active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
@@ -153,18 +153,36 @@ disposable run `WRAP-15dea8f364` saved
 `DISPOSABLE_OWNED_PILOT_RESTART_AND_CANDIDATE_PASS`. Real model, provider,
 Google and systemd service operation were outside this test. Root owns
 whole replay, writer, backup and native release. `/root/listener_ownership_qa`
-now owns only the default-off host adapter for one preselected legitimate
-request, in a separate source-only lane.
+completed the default-off host adapter for one preselected legitimate
+request in a separate source-only lane. Its 22 offline tests passed.
+Root's full composed offline host catch-up automatically selected the
+original acknowledged fixture outcome, launched one existing reviewed
+pilot, passed its baseline and recorded one simulated choice. After the
+fixture interrupted, the same choice built the exact validated wrapper.
+No refetch, repeat inference, release or native effect. Exact fixture
+task `WRAP-4e42f50414`. `/root/architecture_publication_review`
+independently accepted the staged host. All six enrollment cases and
+three existing host checks passed. One pre-existing consumer expectation
+failed on both untouched baseline and staged host and remains recorded.
+Root owns backup and the release decision. Native checkouts still carry
+the older AcquireTM adapter, and the protected cycle owns Amphenol's
+queued scope. The next live action is a read-only native recheck when a
+legitimate eligible owner exists, then separately qualified installation,
+single real pilot, and installed independent QA. No qualifying live
+input is currently available. Keep broad controls off.
 [Composed coordinator rehearsal](S5_AMPHENOL_CHOICE_SCHEDULER_REHEARSAL_20261121.md).
+[Host-trigger result](S5_AMPHENOL_HOST_TRIGGER_REHEARSAL_20261121.md).
 
 A maintained subset of the offline Sprint 6 coordinator checks
-passed all 103 tests on the reviewed source. Reuse these results in the
+passed all 103 tests on the baseline. On the new reviewed coordinator
+and promoted owner reader, the composed offline suite passed 114
+tests, zero skips. Reuse these results in the
 composed successive-work, restart, and native acceptance gates already in
 the roadmap. Do not enable automatic release early. The current verified
-private backup is `e1747572e9648368ba221ebba84d611c3b6b5189` on
+private backup is `10c8df9d1ef036f91406471a9c8ab0a66320e71f` on
 `backup/integration-automation-m1-operator-20261120`. Refetched the
-remote commit and compared the rejected and passed recipe QA reports and
-the exact corrected recipe byte for byte. No user action needed at this
+remote commit and compared the independent scheduler QA, corrected reader
+recheck and exact reviewed coordinator source byte for byte. No user action needed at this
 checkpoint. Keep the 10-minute plain-text update cadence.
 [Native hold and actual unblock conditions](S5_AMPHENOL_NATIVE_ORIGIN_READBACK_20261121.md).
 [Coordinator reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
