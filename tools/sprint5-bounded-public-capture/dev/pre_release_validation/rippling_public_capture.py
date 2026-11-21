@@ -75,6 +75,13 @@ def _canonical(value, limit):
     return bytes(encoded)
 
 
+def _capture_inputs(binding, window, companies, policy):
+    return json.dumps(
+        {'binding': binding, 'window': asdict(window), 'companies': companies, 'policy': policy},
+        ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False,
+    ).encode('utf-8')
+
+
 def _response_freshness(headers, completed_ms, max_age_seconds, future_skew_seconds):
     fields = headers[:-4].split('\r\n\r\n')[-1].split('\r\n')[1:]
     dates, ages = [], []
@@ -100,26 +107,28 @@ def _response_freshness(headers, completed_ms, max_age_seconds, future_skew_seco
 
 
 class _Acquisition:
-    def __init__(self, binding, window, read_clock, transport, ledger, entity_limit, max_age, future_skew):
+    def __init__(self, binding, window, policy, read_clock, transport, ledger, verify_inputs):
         self.window = window
         self.wall_deadline = binding['deadline_unix_ms']
         self.read_clock = read_clock
         self.transport = transport
         self.ledger = ledger
+        self.verify_inputs = verify_inputs
         self.request_limit = binding['live_request_limit']
         self.remaining = binding['capsule_bytes_limit']
-        self.entity_limit = entity_limit
-        self.max_age = max_age
-        self.future_skew = future_skew
-        self.previous_clock = (window.started_unix_ms, window.started_elapsed_ns)
+        self.entity_limit = policy['entity_bytes_limit']
+        self.max_age = policy['max_age_seconds']
+        self.future_skew = policy['future_skew_seconds']
+        self.previous_clock = (window['started_unix_ms'], window['started_elapsed_ns'])
         self.exchanges = []
 
     def now(self):
         boot, wall, elapsed = self.read_clock()
+        self.verify_inputs()
         last_wall, last_elapsed = self.previous_clock
-        _require(type(wall) is int and type(elapsed) is int and boot == self.window.boot_id
+        _require(type(wall) is int and type(elapsed) is int and boot == self.window['boot_id']
                  and last_wall <= wall < self.wall_deadline
-                 and last_elapsed <= elapsed < self.window.deadline_elapsed_ns,
+                 and last_elapsed <= elapsed < self.window['deadline_elapsed_ns'],
                  'Public acquisition clock changed or its deadline expired')
         self.previous_clock = wall, elapsed
         return wall, elapsed
@@ -132,7 +141,7 @@ class _Acquisition:
         self.now()
         expected_status = 308 if alias else 200
         complete = False
-        with self.transport.open_get(url, deadline_elapsed_ns=self.window.deadline_elapsed_ns,
+        with self.transport.open_get(url, deadline_elapsed_ns=self.window['deadline_elapsed_ns'],
                                      max_response_bytes=self.remaining,
                                      max_header_bytes=min(_HEADER_LIMIT, self.remaining),
                                      max_entity_bytes=min(self.entity_limit, self.remaining)) as response:
@@ -164,6 +173,7 @@ class _Acquisition:
                           sha256(raw_entity).hexdigest(), len(raw_entity), date, age)
         _require(self.ledger.finish_attempt(attempt, receipt) == receipt,
                  'Public response receipt did not durably read back')
+        self.verify_inputs()
         self.remaining -= len(raw_headers) + len(raw_entity)
         self.exchanges.append(Exchange(attempt, receipt, raw_headers, raw_entity))
         return headers, raw_entity.decode('utf-8') if not alias else None
@@ -215,6 +225,8 @@ def collect_public_capture(binding, window, companies, *, ledger, transport, rea
     """Collect once under the caller's existing spent reservation and approved response policy.
 
     The owner supplies the slot binding/window and the read-only Company projections.
+    Capture provenance and limits always come from their initial canonical snapshot.
+    A change observed in the caller's inputs after a callback holds the capture.
     Its ledger is exclusive to that reservation. begin_attempt must durably append
     a previously unseen sequence, without idempotent reuse. finish_attempt must
     durably complete that exact record once. read_attempts returns ordered
@@ -229,53 +241,67 @@ def collect_public_capture(binding, window, companies, *, ledger, transport, rea
     The return value is evidence for replay, with no verdict or release authority.
     """
     try:
-        policy = dict(response_policy)
+        _require(type(binding) is dict and type(response_policy) is dict,
+                 'Public capture requires an exact slot binding and response policy')
+        _require(type(companies) is tuple and len(companies) == len(SUPPORTED_SCOPE)
+                 and all(type(company) is dict for company in companies),
+                 'Public capture requires the exact Forterra and PDW scope')
+        original_inputs = _capture_inputs(binding, window, companies, response_policy)
+        snapshot = json.loads(original_inputs)
+        frozen_binding, frozen_window = snapshot['binding'], snapshot['window']
+        frozen_companies, policy = snapshot['companies'], snapshot['policy']
+
+        def verify_inputs():
+            try:
+                unchanged = _capture_inputs(binding, window, companies, response_policy) == original_inputs
+            except (TypeError, ValueError, RecursionError, RuntimeError):
+                unchanged = False
+            _require(unchanged, 'The enrolled public capture inputs changed during acquisition')
+
         _require(set(policy) == {'entity_bytes_limit', 'max_age_seconds', 'future_skew_seconds',
                                  'transport_policy_sha256'}
-                 and digest(policy) == binding['collector_policy_sha256']
+                 and digest(policy) == frozen_binding['collector_policy_sha256']
                  and _DIGEST.fullmatch(policy['transport_policy_sha256']),
                  'Public response policy differs from the enrolled policy')
         entity_bytes_limit = policy['entity_bytes_limit']
         max_age_seconds = policy['max_age_seconds']
         future_skew_seconds = policy['future_skew_seconds']
-        deadline = binding['deadline_unix_ms']
-        duration = deadline - window.started_unix_ms
+        deadline = frozen_binding['deadline_unix_ms']
+        duration = deadline - frozen_window['started_unix_ms']
         _require(type(deadline) is int and 0 < duration <= _WINDOW_LIMIT_MS
-                 and type(window.started_unix_ms) is int and window.started_unix_ms > 0
-                 and type(window.started_elapsed_ns) is int and window.started_elapsed_ns >= 0
-                 and type(window.deadline_elapsed_ns) is int
-                 and type(window.boot_id) is str and bool(window.boot_id)
-                 and window.deadline_elapsed_ns == window.started_elapsed_ns + duration * 1_000_000
-                 and _positive(binding['live_request_limit'], _REQUEST_LIMIT)
-                 and _positive(binding['capsule_bytes_limit'], MAX_CAPTURE_BYTES)
+                 and type(frozen_window['started_unix_ms']) is int and frozen_window['started_unix_ms'] > 0
+                 and type(frozen_window['started_elapsed_ns']) is int and frozen_window['started_elapsed_ns'] >= 0
+                 and type(frozen_window['deadline_elapsed_ns']) is int
+                 and type(frozen_window['boot_id']) is str and bool(frozen_window['boot_id'])
+                 and frozen_window['deadline_elapsed_ns'] == frozen_window['started_elapsed_ns'] + duration * 1_000_000
+                 and _positive(frozen_binding['live_request_limit'], _REQUEST_LIMIT)
+                 and _positive(frozen_binding['capsule_bytes_limit'], MAX_CAPTURE_BYTES)
                  and _positive(entity_bytes_limit, _ENTITY_LIMIT)
                  and _positive(max_age_seconds, (1 << 31) - 1)
                  and type(future_skew_seconds) is int and 0 <= future_skew_seconds <= max_age_seconds
-                 and all(_DIGEST.fullmatch(binding[key]) for key in ('dispatch_sha256', 'collector_policy_sha256')),
+                 and all(_DIGEST.fullmatch(frozen_binding[key]) for key in ('dispatch_sha256', 'collector_policy_sha256')),
                  'Public acquisition window, policy or budget differs from the allowed shape')
-        _require(type(companies) is tuple and len(companies) == len(SUPPORTED_SCOPE),
-                 'Public capture requires the exact Forterra and PDW scope')
         scope_keys = ('company_projection_sha256', 'control_projection_sha256')
         employer_urls = (authority.FORTERRA_CAREERS, authority.PDW_CAREERS)
-        companies = tuple(dict(company) for company in companies)
-        for (_, company_id, names, _), company, employer, pin in zip(SUPPORTED_SCOPE, companies, employer_urls,
+        for (_, company_id, names, _), company, employer, pin in zip(SUPPORTED_SCOPE, frozen_companies, employer_urls,
                                                                      scope_keys, strict=True):
             _require(set(company) == ROW_FIELDS and company['Company ID'] == company_id
                      and company['Company'] in names and company['Official Careers URL'] == employer
                      and company['Company Status'] == 'Active' and company['ATS / Source'] == 'Rippling'
-                     and digest(company) == binding[pin], 'Public capture Company differs from its enrolled projection')
+                     and digest(company) == frozen_binding[pin],
+                     'Public capture Company differs from its enrolled projection')
 
-        acquisition = _Acquisition(binding, window, read_clock, transport, ledger, entity_bytes_limit,
-                                   max_age_seconds, future_skew_seconds)
+        acquisition = _Acquisition(frozen_binding, frozen_window, policy, read_clock, transport, ledger, verify_inputs)
         acquisition.now()
         _require(tuple(ledger.read_attempts()) == (), 'Public acquisition was already attempted')
+        verify_inputs()
         cases = [acquisition.case(scope, company)
-                 for scope, company in zip(SUPPORTED_SCOPE, companies, strict=True)]
+                 for scope, company in zip(SUPPORTED_SCOPE, frozen_companies, strict=True)]
         capture = _canonical({'schema': PUBLIC_CAPTURE_SCHEMA, 'cases': cases}, acquisition.remaining)
         receipts = tuple((exchange.attempt, exchange.receipt) for exchange in acquisition.exchanges)
         manifest = _canonical({
-            'schema': 'rippling-bounded-public-evidence-v1', 'binding_sha256': digest(binding),
-            'dispatch_sha256': binding['dispatch_sha256'], 'window': asdict(window),
+            'schema': 'rippling-bounded-public-evidence-v1', 'binding_sha256': digest(frozen_binding),
+            'dispatch_sha256': frozen_binding['dispatch_sha256'], 'window': frozen_window,
             'response_policy': policy,
             'candidate_capture_sha256': sha256(capture).hexdigest(),
             'candidate_capture_bytes': len(capture),

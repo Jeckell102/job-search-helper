@@ -1,6 +1,7 @@
 """Synthetic reviewed transport and a disposable committed-attempt ledger."""
 
 from contextlib import contextmanager
+from copy import deepcopy
 from dataclasses import asdict, replace
 from email.utils import formatdate
 from hashlib import sha256
@@ -139,7 +140,9 @@ def owned(monkeypatch, tmp_path):
                'replay_request_limit': 32, 'capsule_bytes_limit': 1024 * 1024,
                'collector_policy_sha256': module.digest(policy),
                'company_projection_sha256': module.digest(companies[0]),
-               'control_projection_sha256': module.digest(companies[1])}
+               'control_projection_sha256': module.digest(companies[1]),
+               'candidate': {'source_manifest_sha256': '3' * 64, 'config_sha256': '4' * 64,
+                             'dependency_manifest_sha256': '5' * 64}}
 
     routes = []
 
@@ -328,6 +331,63 @@ def test_durable_append_refusal_prevents_transport(owned, monkeypatch):
     with pytest.raises(owned.module.oracle.CaptureError, match='attempt did not durably read back'):
         collect(owned)
     assert not owned.transport.called
+
+
+@pytest.mark.parametrize('changed', ['dispatch', 'nested_candidate'])
+def test_binding_change_after_durable_completion_holds_without_more_reads(owned, monkeypatch, changed):
+    initial = deepcopy(owned.binding)
+    finish = owned.ledger.finish_attempt
+
+    def complete_then_change(attempt, receipt):
+        confirmed = finish(attempt, receipt)
+        if changed == 'dispatch':
+            owned.binding['dispatch_sha256'] = 'a' * 64
+        else:
+            owned.binding['candidate']['config_sha256'] = 'b' * 64
+        return confirmed
+
+    monkeypatch.setattr(owned.ledger, 'finish_attempt', complete_then_change)
+    with pytest.raises(owned.module.oracle.CaptureError, match='enrolled public capture inputs changed'):
+        collect(owned)
+    assert len(owned.transport.called) == 1
+    attempts = owned.ledger.read_attempts()
+    assert len(attempts) == 1 and attempts[0][1] is not None
+    owned.binding.update(initial)
+    with pytest.raises(owned.module.oracle.CaptureError, match='already attempted'):
+        collect(owned)
+    assert owned.ledger.read_attempts() == attempts
+    assert len(owned.transport.called) == 1
+
+
+def test_limits_changed_during_durable_append_prevent_transport(owned, monkeypatch):
+    begin = owned.ledger.begin_attempt
+
+    def append_then_change(attempt):
+        confirmed = begin(attempt)
+        owned.binding['live_request_limit'] += 1
+        return confirmed
+
+    monkeypatch.setattr(owned.ledger, 'begin_attempt', append_then_change)
+    with pytest.raises(owned.module.oracle.CaptureError, match='enrolled public capture inputs changed'):
+        collect(owned)
+    assert not owned.transport.called
+    assert [receipt for _, receipt in owned.ledger.read_attempts()] == [None]
+
+
+def test_input_drift_during_final_ledger_read_prevents_handoff(owned, monkeypatch):
+    read = owned.ledger.read_attempts
+
+    def read_then_change():
+        records = read()
+        if len(records) == 31 and all(receipt for _, receipt in records):
+            owned.companies[1]['Company'] = 'PDW'
+        return records
+
+    monkeypatch.setattr(owned.ledger, 'read_attempts', read_then_change)
+    with pytest.raises(owned.module.oracle.CaptureError, match='enrolled public capture inputs changed'):
+        collect(owned)
+    assert len(owned.transport.called) == 31
+    assert all(receipt is not None for _, receipt in read())
 
 
 def test_ledger_drift_holds_before_replay_handoff(owned, monkeypatch):
