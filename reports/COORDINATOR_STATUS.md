@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 02:09 Eastern
+### Latest outcome, November 21 at 02:27 Eastern
 
 Root is the coordinator and release owner. Active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
@@ -93,9 +93,11 @@ zero bytes across seven owned files. Author suite passed 108 tests.
 `/root/architecture_publication_review` independently accepted four
 focused tests including actual sender receipt corruption, destination
 drift, default-off and read-only guards.
+[Independent owner-reader report](S5_AMPHENOL_OWNED_READER_INDEPENDENT_20261121.md).
 
-`/root/architecture_reuse_review` owns the short integration seam
-decision. `/root/candidate_independent_qa` staged the fresh typed
+`/root/architecture_reuse_review` was timeboxed on the launch seam.
+The source-only lane returned no decision before it was stopped.
+`/root/candidate_independent_qa` staged the fresh typed
 recipe. Independent QA and the actual disposable receipt both rejected
 its initial envelope interface. Root changed only that join to pass the
 exact W1 evidence through the existing ATS typed constructor. The original
@@ -103,22 +105,66 @@ archive and prior candidate are preserved. `/root/s5_live_authority_plan`
 independently accepted the corrected recipe and the offline original
 receipt-to-wrapper composition. With the recorded single Jetson choice,
 the fresh entry generated the same live-validated wrapper without a new
-model call. Next, save these QA records and decide the single automatic
-launch seam. Existing native workflow rewrites generic checkpoint next
+model call. Existing native workflow rewrites generic checkpoint next
 action and persists only the response digest, so existing checkpoint
-replay cannot reconstruct the selected recipe. Reuse the existing
-inference reservation and preserve the accepted choice durably or hold
-without repeating inference. Root owns the caller and backup.
+replay cannot reconstruct the selected recipe. The next source slice is
+the existing supervisor's one-case catch-up, beginning after an exact
+sender acknowledgement and reusing the held-task/pilot scheduler. It
+must retain the accepted choice with its inference accounting or hold
+without repeating inference. Native source review proved the ordinary
+host currently exposes only a selected manual drain, while unattended
+catch-up stays disabled. Keep that default. Root owns the caller and
+backup. Before live acceptance, a legitimate current production origin
+and an independently accepted qualification and retry route are still
+required. Saronic's provenance conflict stays protected.
 [Exact composition evidence](S5_AMPHENOL_OWNED_RECIPE_COMPOSITION_20261121.md).
+
+The bounded recipe coordinator source is now staged under
+`/tmp/jsh-s5-single-choice-coordinator.20261121`. Root owns
+`coordinator.py`, the scheduler fixture and candidate materialization.
+The existing dispatch/receipt code is shared by the normal
+model loop and the opt-in Amphenol pilot. The existing pilot must have
+the approved matching work order, a passing baseline, installed
+read/build callbacks and exact owner provenance. The isolated
+restart test proved a crash before candidate build resumes using the
+same durable choice with zero repeated inference. Disabled hooks held
+before inference. The focused composed suite passed 49 tests.
+
+`/root/s5_live_authority_plan` supplied the default-off atomic
+`coordinator_inference.py` change. It saves only the exact chosen W1
+checkpoint in the already-accounted COMPLETED receipt, after current
+control and scope validation. It passed 31 maintained offline tests.
+Three broader host/transport fixture errors reproduced on the unchanged
+baseline. `/root/listener_ownership_qa` independently accepted the
+coordinator and receipt at 80 tests after root fixed a deadline crossing
+before candidate write. An abrupt-exit test reopened the saved choice
+without dispatching inference again. The promoted reader initially failed
+independent QA for treating absent canonical integration as legacy.
+`/root/architecture_publication_review` supplied the narrow repair and
+`/root/s5_live_authority_plan` independently accepted the exact recheck.
+
+Root composed the corrected reader with the existing isolated pilot and
+one copied receiver SQLite store using the exact prior owned outcome.
+It ran the real offline baseline launcher, saved one simulated model
+choice with normal accounting, then interrupted before writing the
+candidate. Upon restart the same request and receipt built the exact
+validated Amphenol wrapper, with zero repeated inference. The corrected
+disposable run `WRAP-15dea8f364` saved
+`DISPOSABLE_OWNED_PILOT_RESTART_AND_CANDIDATE_PASS`. Real model, provider,
+Google and systemd service operation were outside this test. Root owns
+whole replay, writer, backup and native release. `/root/listener_ownership_qa`
+now owns only the default-off host adapter for one preselected legitimate
+request, in a separate source-only lane.
+[Composed coordinator rehearsal](S5_AMPHENOL_CHOICE_SCHEDULER_REHEARSAL_20261121.md).
 
 A maintained subset of the offline Sprint 6 coordinator checks
 passed all 103 tests on the reviewed source. Reuse these results in the
 composed successive-work, restart, and native acceptance gates already in
 the roadmap. Do not enable automatic release early. The current verified
-private backup is `f1b4a388167d63c21dce7a7acd0b7c0f2c05dbc0` on
+private backup is `e1747572e9648368ba221ebba84d611c3b6b5189` on
 `backup/integration-automation-m1-operator-20261120`. Refetched the
-remote commit and compared the workbook QA report, native-origin report
-and exact recovery source byte for byte. No user action needed at this
+remote commit and compared the rejected and passed recipe QA reports and
+the exact corrected recipe byte for byte. No user action needed at this
 checkpoint. Keep the 10-minute plain-text update cadence.
 [Native hold and actual unblock conditions](S5_AMPHENOL_NATIVE_ORIGIN_READBACK_20261121.md).
 [Coordinator reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).

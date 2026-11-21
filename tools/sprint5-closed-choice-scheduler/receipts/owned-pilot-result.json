@@ -1,0 +1,11 @@
+{
+  "baseline_passed": true,
+  "disposition": "DISPOSABLE_OWNED_PILOT_RESTART_AND_CANDIDATE_PASS",
+  "outcome_id": "OUT-cffecec610203a71e5c23b82",
+  "real_model_calls": 0,
+  "receipt_preserved": true,
+  "release_installed": false,
+  "simulated_model_calls": 1,
+  "source_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "task_id": "WRAP-15dea8f364"
+}
