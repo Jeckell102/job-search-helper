@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 01:47 Eastern
+### Latest outcome, November 21 at 01:55 Eastern
 
 Root is the coordinator and release owner. Active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
@@ -60,24 +60,39 @@ a provider fetch. The ordinary exact recovery filtered, saved, and published
 18 identical job keys through one in-memory workbook batch and issued one
 durable `SYNC_CONFIRMED` receipt for the actual request and release. The
 settled predecessor stayed identical. No production or Google write.
+Exact publication completed the Company stage. The cycle itself remained
+In Progress in that evidence. In a separate disposable copy, normal local
+sync-only resume completed the cycle and local mirror with zero fetches,
+zero job changes and the identical receipt. It cleared the fixture's
+blocking-cycle selector without workbook access.
 [Coordinator pass and private evidence pins](S5_AMPHENOL_FIXTURE_WORKBOOK_PASS_20261121.md).
 
 `/root/s5_live_authority_plan` completed the deferred-checkpoint source
 patch and 180 composed offline tests. `/root/architecture_publication_review`
-owns its independent verdict. `/root/listener_ownership_qa` completed the
-receipt binding changes and 71 offline tests. `/root/architecture_reuse_review`
-owns independent receipt QA. Root owns the combined fixture check, backup
-and native release decision. Keep the prior failed fixture available.
+accepted its narrow source slice at 31 tests and accepted the separate
+completed workbook evidence. `/root/listener_ownership_qa` completed the
+receipt binding source. `/root/architecture_reuse_review` accepted its
+four exact files, 126 tests including five independent checks. Root
+owns backup, deployment, and the release decision. Keep the prior failed
+fixture available.
+[Independent workbook readback](S5_AMPHENOL_FIXTURE_WORKBOOK_INDEPENDENT_20261121.md) ·
+[Independent receipt binding](S5_AMPHENOL_RECEIPT_BINDING_INDEPENDENT_20261121.md).
 
-Next, independently reconcile the combined exact result and save its scoped
-GitHub backup. Determine the shortest supported route to genuine production
-failure ownership without manufacturing a Company edit, consuming old-cycle
-scope, or running the broad scraper. If none is available for Amphenol, use
-the first independently qualified real case with an existing application
-owner. Do not enable automatic release early. Current verified private
-backup is `e767683bd94b8acbb6bcd51a46c49d13c7719604` on
+Native origin readback independently found no genuine currently eligible
+event or owned repair. The lone unfinished admission blocker is the
+protected cycle holding Saronic and with Amphenol queued. A disjoint real
+event or safe separate settlement of the old cycle can supply a route once
+the necessary production-qualification pieces are installed. Preserve
+historic work and do not stage a fabricated edit or queue an unusable
+request. A maintained subset of the offline Sprint 6 coordinator checks
+passed all 103 tests on the reviewed source. Reuse these results in the
+composed successive-work, restart, and native acceptance gates already in
+the roadmap. Do not enable automatic release early. Current verified private backup is
+`ee214470ddb3f5e985f4881aab6158a2abe0b113` on
 `backup/integration-automation-m1-operator-20261120`. No user action needed
 at this checkpoint. Keep the 10-minute plain-text update cadence.
+[Native hold and actual unblock conditions](S5_AMPHENOL_NATIVE_ORIGIN_READBACK_20261121.md).
+[Coordinator reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
 
 ### Earlier outcome, November 21 at 01:36 Eastern
 

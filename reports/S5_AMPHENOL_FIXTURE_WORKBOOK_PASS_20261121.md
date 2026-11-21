@@ -1,7 +1,8 @@
 # Sprint 5 Amphenol scoped retry and test workbook
 
-November 21, 2026, 01:47 Eastern. Coordinator result. Independent review is
-pending. The release, job database, and workbook in this replay are fixtures.
+November 21, 2026, 01:47 Eastern. Independent QA accepted the exact
+publication evidence. The release, job database, and workbook in this
+replay are fixtures.
 
 The prior genuine public retry returned all 39 advertised postings in one
 fetch and froze the exact complete inventory. The prior test run saved 18
@@ -35,6 +36,28 @@ occurred. Production needs a genuine initial failure with current owned
 provenance, qualified install, and independent verification of the resulting
 retry and published rows. Keep broad processing and automatic release off.
 
+## Local cycle closeout on a separate disposable copy
+
+The workbook rehearsal finished exact company publication. The Company
+stage was complete, and the overall cycle status was still In Progress
+because exact recovery does not run the normal cycle closeout. On a separate
+SQLite backup of the same completed fixture, the normal local sync-only
+resume advanced only that cycle and its local mirror to Complete. The
+admission blocker for the fixture's next cycle cleared. The exact receipt,
+Company, Job History, Job Evidence, Opportunities and predecessor remained
+identical. The test had a rejecting fetcher and network audit guard. It
+made no workbook write, and changed no application source. The first copy
+correctly held on the missing release journal. The confirmed rerun carried
+the original exact journal and archived request.
+
+Sanitized closeout result
+`/tmp/jsh-s5-closeout-check.yynrvfx6/closeout-result.json`,
+SHA-256 `e8f5d42f3c7667f468e951bdb58160655361908680389ee0a5b0f72afe54b25f`.
+
 Earlier evidence is in [the live wrapper validation](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md),
 [the owned failure and Jetson choice rehearsal](S5_AMPHENOL_OWNED_REPLAY_20261121.md),
 and [the preserved publication hold](S5_AMPHENOL_DEFERRED_PUBLICATION_HOLD_20261121.md).
+
+[Independent workbook readback](S5_AMPHENOL_FIXTURE_WORKBOOK_INDEPENDENT_20261121.md) ·
+[Independent receipt binding source review](S5_AMPHENOL_RECEIPT_BINDING_INDEPENDENT_20261121.md) ·
+[Native failure-origin hold](S5_AMPHENOL_NATIVE_ORIGIN_READBACK_20261121.md).

@@ -1,0 +1,13 @@
+{
+  "dev/wrapper-coder/tools/coordinator.py": "b9fe2de378bcf942e1a7123e3d3e727ec97c41c803703ef6a2bae982a6a74175",
+  "dev/wrapper-coder/tools/coordinator_campaign.py": "ce2db9aa56517bd516607c03c2f9f5ac1eaafd6c10f3f895bc5497e53cc14062",
+  "dev/wrapper-coder/tools/coordinator_store.py": "4b1f8d14a7cfb4dbd558a59b4b476567737a4983b785e244a9acdc64552989e9",
+  "dev/wrapper-coder/tools/coordinator_supervision.py": "8826696a83c1b510a8baeb0b4793e72d3e858e8f117faab06e45b7b096abe162",
+  "dev/wrapper-coder/tools/test_campaign_completion_qa.py": "79f23255a234af8b620a420f5b0e8ac8faeff3734db2b2d2938635854e19706b",
+  "dev/wrapper-coder/tools/test_campaign_isolation_qa.py": "9d8893775d769cd40d8ebb5d7462d38fd7fd53a95303510c01b92604d019aa67",
+  "dev/wrapper-coder/tools/test_coordinator_repair_profiles.py": "97244a6c522cf429fd46f6869799310da1fdd33312959381e2f3b88d147cc64c",
+  "dev/wrapper-coder/tools/test_coordinator_resilience.py": "00ce484bcfbe5baa5e4a9646db0d381975ae58a2f3abeb922ceb270a729cccd2",
+  "dev/wrapper-coder/tools/test_coordinator_supervision.py": "d74691a674bba0d162cee0c56885611040677ff6a775ecc16cf7e7934aa09a7f",
+  "dev/wrapper-coder/tools/test_inference_reservation_qa.py": "3e989b458ea8cfb6fe34a152f9887ef3b9034077cfaa89ae9516f54e438a87e8",
+  "dev/wrapper-coder/tools/test_retry_lifecycle_ledger.py": "d49b4be8d5695b588aab2b58dc8b70cfcdf3ecb1fd9623109db7d3e2eab8e00d"
+}

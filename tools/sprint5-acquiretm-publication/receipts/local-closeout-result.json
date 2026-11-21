@@ -1,0 +1,9 @@
+{
+  "confirmed_receipts_preserved": 1,
+  "cycle_id": "CYC-8F35E1D030EF",
+  "matched_local_mirror": true,
+  "provider_refetched": false,
+  "sequential_admission_blocker_cleared": true,
+  "state": "Complete",
+  "unrelated_cycles_preserved": true
+}

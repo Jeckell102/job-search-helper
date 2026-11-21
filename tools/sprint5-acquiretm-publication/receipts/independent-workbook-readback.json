@@ -1,0 +1,35 @@
+{
+  "company_checkpoint_stage": "complete",
+  "company_id": "COMP-0490",
+  "cycle_id": "CYC-8F35E1D030EF",
+  "evidence_sha256": {
+    "fixture-sync-result.json": "802a4d905c415cf5c8f61f38122d5b1e89e242e841d53b875d2b01a0be46389f",
+    "fixture-workbook-readback.json": "3296275b166ce0735edd9a3046b92795f663a428676603d0ad2edc8d3c4b890e",
+    "publication-source-pins.json": "b4cd14e0efad776d5aa0a33fae26780352f470b93eaef127223766192f0a66c3",
+    "rehearsal-result.json": "9e66ed37ed7aab642cfa98334f18e4f6f6b5855a9ca46acdb84c784fe2b27ce9",
+    "scoped-retry-result.json": "443a9eeac6297a5416be5a88fc862a602ee3aa719ac9f0b4300c9c1310e902f9"
+  },
+  "exact_local_acknowledgement_matches": true,
+  "fixture_batches": 1,
+  "identical_shared_row_values": true,
+  "inventory_count": 39,
+  "local_and_fixture_jobs": 18,
+  "local_application_state": "VERIFIED",
+  "owned_evidence_files_unchanged": 535,
+  "predecessor_cycle_and_inventory_and_outcomes_preserved": true,
+  "provider_or_google_calls_by_reviewer": 0,
+  "receipt_count": 1,
+  "receipt_state": "SYNC_CONFIRMED",
+  "rehearsal_commands_reexecuted": 0,
+  "release_id": "REL-76cc6f8179568b839386f429",
+  "request_id": "company-retry:RTRY-94818009148713cd8859150f",
+  "source_files_rehashed": 245,
+  "state_cycle_status": "In Progress",
+  "terminal_inbox_transient_plans_cleared": true,
+  "three_script_sha256": {
+    "rehearse.py": "ba79213d0c29acb741a65ebd975a7e841758d6232158e1dbfb098c658671fd63",
+    "replay_inventory.py": "c1a1bc50dfb5b2be153546b60ca10f7358c63fd14ef287a2332a73eed800053c",
+    "sync_fixture_retry.py": "468553d85c3b51770c43e9dae6538e3d1d9ce28ca385e25c54d682d0d12c7bce"
+  },
+  "verdict": "ACCEPT_DISPOSABLE_EXACT_PUBLICATION_EVIDENCE"
+}
