@@ -1,0 +1,17 @@
+{
+  "after_aggregate": "b4868a0fc853e716fb8cb86e9bd5db3dcaf6c4b7b01ce92d7ce11bf8f4fc6cc9",
+  "archived_tool_invocations": 4,
+  "before_aggregate": "8903b00d74c182ca705fe0f07de659fc55c08bc0e3db5d3e103f749a126708a4",
+  "corrected_trace": "/tmp/jsh-s6-controller-composition.dmfenead/run.nu_vp78a/exact_38.cnkcqw8y",
+  "initial_fixture_classification": "INSTALL_RELEASED; INSTALLER_ROLLED_BACK; CONTROLLER_PUBLISHING",
+  "result": "ACCEPT_DISPOSABLE_RELEASED_BOTH_DIRECTIONS",
+  "scratch_pins": {
+    "attestations.jsonl": "324ebbf6e563ee084ef5a72beb08c8521d77b2c3a54a7fd38c6a627bb62fdb08",
+    "capsule/controller.json": "edcda46493d249aab5569dbed10cd7ff1d4c5fa5a7c577f4509f4cbe4775efe8",
+    "capsule/manifest.json": "8ea29b5ae423c18c0b4b108ea1d337359132433e1ad1b9e0cb39e7179117ea11",
+    "capsule/transaction/transaction.json": "732cb5ee5c005fe711d801865ab8353a8f75c56ac4ec2a1da39a851ff7b74133",
+    "invocations.jsonl": "b9247749771fd65c921a5a5bbce6a9c6effd5696ecb27ca61dcf62ee24afe5e3"
+  },
+  "terminal_replay_receipt_equal": true,
+  "verification_scope": "SAVED_SCRATCH_ARTIFACTS_ONLY"
+}

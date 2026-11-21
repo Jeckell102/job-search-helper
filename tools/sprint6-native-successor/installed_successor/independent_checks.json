@@ -1,0 +1,13 @@
+{
+  "bridge_sha256": "efba3e77d3c4b9a9f85984ba345f58846309b301bc0b96aaad89b096e24c86ca",
+  "captured_invocations_sha256": "e699a20f6f9ebeacad79fb3298c7cd2f3f27b15808f1a04f18630890d5f24b12",
+  "coordinator_result_sha256": "bd6a814f08f477a5efd5f9e0db9f03d4ce972fa3cb0f96af1dc74015558f3b0c",
+  "current_before_paths": 38,
+  "current_installer_journal_sha256": "c4bf16578fcb3afd427105cd736eea13b9e22f6ea46b7bbff17db94827bb2b8f",
+  "current_terminal_sha256": "f2384c65b255069f0c7d851db03cdc237153ab85c4a61a919e5805380e53b7b8",
+  "guard_exact": true,
+  "predecessor_after_paths": 47,
+  "restored_absences": 10,
+  "result": "ACCEPT_DISPOSABLE_LATEST_TERMINAL_ROLLBACK",
+  "untouched_predecessor_reference_pins_match": true
+}

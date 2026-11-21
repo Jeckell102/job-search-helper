@@ -1,0 +1,11 @@
+{
+  "result": "FIXTURE_ROLLBACK_OBSERVER_REFUSED_EXPECTED_ABSENCE",
+  "return_codes": [
+    -9,
+    0,
+    1
+  ],
+  "fixture_failure": "Original stub required every wrapper import origin on both sides.",
+  "expected_behavior": "The reviewed before-manifest lists newly added wrapper paths as absent.",
+  "product_changes_needed": false
+}

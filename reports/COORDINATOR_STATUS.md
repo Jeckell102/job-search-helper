@@ -43,6 +43,61 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Existing installed release and current native origin
+
+### November 21 at 06:01 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the Sprint 4
+Freeform pilot remain accepted. Sprints 5–7 still need native acceptance.
+About 40% by accepted gates. Keep one Jetson lane, scheduled sync idle,
+and broad backlog and unqualified releases disabled.
+
+`/root/s5_live_authority_plan` found zero current owned Company events.
+The same retained historical cycle is In Progress in State and Jobs.
+The native wrapper coordinator has no active task or unsettled inference.
+Its pilot slot still points to the original paused Amphenol attempt,
+`WRAP-9b6f2e2274`, with eight completed inference receipts. An existing
+supported stop clears a paused slot without rewriting its task. Only
+use it under exact current ownership when a valid successor is ready.
+[Fresh native origin recheck](S5_NATIVE_ORIGIN_RECHECK_20261121.md).
+
+Root ran the actual scoped controller against exact bytes for the 28
+existing targets and 38 reviewed after-images. A process interruption
+left the package held in CLOSING. Restart finished installation, rollback
+restored all ten original absences with the candidate unavailable, and
+replay returned the same terminal receipt. The receipt bridge stayed
+physically unchanged. `/root/listener_ownership_qa` independently
+accepted that disposable proof. Its service and host attestations were
+fixture inputs.
+[Full controller QA](S5_S6_FULL_CONTROLLER_INDEPENDENT_QA_20261121.md).
+
+Root passively verified that the current Freeform release still matches
+all 47 installed paths, its exact receipts and the restored exchange.
+The older rolled-back controller differs at all 47 source endpoints.
+Current successor admission accepts rollback only. Independent architecture
+confirmed the refusal and found that standalone source replacement changes
+the runtime that old work imports. Root owns the narrow consolidated-only
+installed predecessor repair. Six focused tests passed, and independent
+source review confirmed the existing guard, exchange, receipt and source
+checks and the added pin for the installed continuity witness. The actual
+disposable controller then installed Freeform's exact 47 paths, admitted
+the exact 38-path successor and rolled back without the candidate. All
+47 old after-images and ten original absences were restored, 143 earlier
+artifacts stayed unchanged, and independent QA verified the latest
+terminal rollback and the restored endpoint bytes. All QA lanes settled.
+Named production pilot remains ineligible.
+[Native handoff readiness](S5_S6_NATIVE_HANDOFF_READINESS_20261121.md).
+[Native predecessor readback](S5_S6_NATIVE_PREDECESSOR_READBACK_20261121.json)
+· [Independent native route limits](S5_NATIVE_ROUTE_AND_SOURCE_MAINTENANCE_RECHECK_20261121.md).
+
+No production source, application data, services, old cycle, GitHub branch
+controls, queue or Jetson configuration changed. The previous verified
+backup is `483f00cd60e4962e5eaa4a0264c17d5b60d8b79f`. Next preserve
+this exact source and QA in the private backup. Native work still needs
+a genuine eligible Company request, the user's retained-run planning
+direction or a legitimate disjoint route, and fresh site authority.
+
 ## Consolidated release preparation
 
 ### Latest checkpoint, November 21 at 05:46 Eastern
@@ -85,10 +140,16 @@ The original user choice is still pending. Root checked the current
 user service states read-only. The wrapper host and assistant bridge are
 running. Scheduled sync was disabled and inactive.
 No hold, restart, configuration, source, queue, Jetson or data change
-was made. No live ETA. The last verified private backup is
-`fcd0f90f2a171a4693a418aa0e2e8ee455ffad70`.
+was made. No live ETA. The latest private backup is
+`483f00cd60e4962e5eaa4a0264c17d5b60d8b79f`. GitHub fetch-back matched all 79 scoped files,
+including the byte-exact 38-path candidate.
 [Service observation](S5_NATIVE_USER_SERVICES_READBACK_20261121.json)
-· [Prior backup verification](S5_NATIVE_DIRECTION_AND_HOLD_BACKUP_VERIFIED_20261121.json).
+· [Backup verification](S5_S6_CONSOLIDATED_MAINTENANCE_BACKUP_VERIFIED_20261121.json).
+
+Next revalidate live eligibility when there is a direction for the
+protected retained run, or a legitimate disjoint candidate. The staged
+source policy can then be bound to a native maintenance capsule and
+independently verified. All current QA lanes finished.
 
 ## Native pilot direction and exact release hold
 

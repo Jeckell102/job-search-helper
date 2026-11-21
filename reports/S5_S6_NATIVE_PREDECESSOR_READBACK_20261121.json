@@ -1,0 +1,33 @@
+{
+  "current": {
+    "maintenance_id": "s4-freeform-20261120-01",
+    "controller_phase": "RELEASED",
+    "target": "INSTALLED",
+    "restored_exchange": true,
+    "terminal_source_paths": 47,
+    "current_source_mismatches": 0,
+    "canonical_package_matches": true,
+    "parked_guard_matches": true,
+    "terminal_hashes": {
+      "controller.json": "2e2c9747f0aa1c21bec1bd1fa1d796175d08ec16d9f304daf2af6a4ca21ca6c9",
+      "transaction/transaction.json": "224651aa85035bda4ecf38d53d425776d7ed7f56fdbfa7bf7e1ef5476ca679e5",
+      "exchange-private/exchange.json": "3d3b5f43d7e1990668ecb960f6bdb3948cac5e86d23290275af767a126c99140"
+    }
+  },
+  "older": {
+    "maintenance_id": "s4-atomic-machines-20261120-02",
+    "controller_phase": "RELEASED",
+    "target": "ROLLED_BACK",
+    "restored_exchange": true,
+    "terminal_source_paths": 47,
+    "current_source_mismatches": 47,
+    "canonical_package_matches": true,
+    "parked_guard_matches": true,
+    "terminal_hashes": {
+      "controller.json": "e7773d0fa755a404c8d59a1ed3f4156c6345aab141ee103c9e542bcb7b571b49",
+      "transaction/transaction.json": "2d8f8975edeb257ed2331820c7ab19fb49f4f75e2c38271ae150fb24fefbcda5",
+      "exchange-private/exchange.json": "b34626982fe987c99e95ae839923afaa2301aae5419ea6f2af8f211c5111bd00"
+    }
+  },
+  "production_maintenance_marker_absent": true
+}

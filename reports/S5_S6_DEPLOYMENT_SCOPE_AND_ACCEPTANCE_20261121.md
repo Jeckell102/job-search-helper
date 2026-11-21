@@ -43,8 +43,12 @@ separate exact policy keeps the unchanged bridge protected by the
 controller's witness. Independent QA passed the actual guarded installer
 with all 38 exact after-images and a candidate-independent rollback with
 synthetic before-images. The native controller and full deployed proof
-require separate QA.
-[Consolidated scope and parser hold](S5_S6_CONSOLIDATED_DEPLOYMENT_PREPARATION_20261121.md)
+require separate QA. The latest installed Freeform predecessor matches
+all 47 exact files and the restored exchange. Its consolidation handoff
+now has an independently accepted staged repair for the installed
+terminal receipt and protected continuity.
+[Native handoff readiness](S5_S6_NATIVE_HANDOFF_READINESS_20261121.md)
+· [Consolidated scope and parser hold](S5_S6_CONSOLIDATED_DEPLOYMENT_PREPARATION_20261121.md)
 · [Independent policy QA](S5_S6_MAINTENANCE_SOURCE_POLICY_INDEPENDENT_QA_20261121.md).
 
 The preview includes normal source routing, provider and scraper changes.

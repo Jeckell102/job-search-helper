@@ -1,0 +1,10 @@
+{
+  "installed_controller_return_codes": [
+    0,
+    0,
+    0
+  ],
+  "latest_terminal": "RELEASED/ROLLED_BACK",
+  "historical_verifier": "Previously unscoped package inode/timestamp evidence rejected after approved replacement and rollback.",
+  "next_authority": "The latest current terminal controller, independently verified, supersedes the historical physical witness."
+}

@@ -1,0 +1,11 @@
+{
+  "backup_branch": "backup/integration-automation-m1-operator-20261120",
+  "repository": "Jeckell102/job-search-helper",
+  "commit": "483f00cd60e4962e5eaa4a0264c17d5b60d8b79f",
+  "verified_at": "2026-11-21T10:49:05+00:00",
+  "fetched_commit_matches": true,
+  "scoped_files_retrieved_and_matched": 79,
+  "reviewed_runtime_after_images_retrieved_and_hash_matched": 38,
+  "tested_scope_manifest_sha256": "09e871ceb0cc91685461294abef1651766cbebcb52b5655a63940fde74db13e3",
+  "verification_result": "VERIFIED_PRIVATE_SCOPED_BACKUP"
+}

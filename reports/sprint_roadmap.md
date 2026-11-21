@@ -398,7 +398,14 @@ wrapper changes to the exact 38-file manifest. The unchanged receipt
 bridge stays in the controller protection witness. Independent QA
 verified all 38 exact staged after-images and rollback in an isolated
 installer transaction with synthetic before-images. Native controller,
-host witness and service acceptance remain pending.
+host witness and service acceptance remain pending. Passive native
+readback matched all 47 paths and restored routes of the installed
+Freeform predecessor. The original successor required a rollback
+receipt. The staged consolidated-only repair independently passed
+source review. Its new handoff requires the existing installed receipt,
+exact approved protected continuity and the same physical guard.
+Native predecessor approval and Company eligibility remain separate.
+[Native handoff readiness](S5_S6_NATIVE_HANDOFF_READINESS_20261121.md).
 [Consolidated deployment preparation](S5_S6_CONSOLIDATED_DEPLOYMENT_PREPARATION_20261121.md)
 · [Independent policy QA](S5_S6_MAINTENANCE_SOURCE_POLICY_INDEPENDENT_QA_20261121.md).
 The staged Python host now has a default-off route from its completed

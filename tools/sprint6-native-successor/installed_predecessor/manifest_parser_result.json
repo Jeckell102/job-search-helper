@@ -1,0 +1,15 @@
+{
+  "readback": [
+    {
+      "accepted_schema": "sprint-4-source-manifest-v1",
+      "manifest_sha256": "a1863753a251058e1cd99266568aef3b6e9b3076e49c52dd0adff11d93f6a163",
+      "path_count": 47
+    },
+    {
+      "accepted_schema": "sprint-6-consolidated-source-manifest-v1",
+      "manifest_sha256": "8ea29b5ae423c18c0b4b108ea1d337359132433e1ad1b9e0cb39e7179117ea11",
+      "path_count": 38
+    }
+  ],
+  "result": "PASS_EXACT_ARCHIVED_AND_CONSOLIDATED_SCHEMAS"
+}
