@@ -1,0 +1,42 @@
+{
+  "company_id": "COMP-0054",
+  "complete_inventory_jobs": 276,
+  "cursor": 67,
+  "cycle_id": "CYC-B639C6D864EC",
+  "evidence_ownership": {
+    "current": {
+      "local_evidence_rows": 1,
+      "matching_legacy_evidence_operations": [],
+      "source_fingerprint": "c21e96b4654cf24fccc967d994b3f180906c5d11a3512ae200680e8d1fd50fe4"
+    },
+    "proposed": {
+      "local_evidence_rows": 0,
+      "matching_legacy_evidence_operations": [
+        {
+          "append_if_missing": true,
+          "company_matches": true,
+          "explicit_identity_matches_pair": true,
+          "in_applied_prefix": false,
+          "operation_number": 195,
+          "operation_sha256": "12548564234890f0225fca881bb365e0dfa0b90c0bb05659af24e99183221845"
+        }
+      ],
+      "source_fingerprint": "5b251e4787ad634a0c65caf8e5668f3ccd608f3e223b0965b331ec083bd98aa9"
+    }
+  },
+  "expected_before_equals_current": true,
+  "explicit_planned_source_differs": true,
+  "history_append_if_missing": true,
+  "history_operation_sha256": "31a8ad84cd118d618b38d9cde0400c3034c99debde888e334956987e09ae222c",
+  "history_operations": 105,
+  "history_row_present": true,
+  "job_history_explicit_ownership_source_mismatch_operations": [
+    194
+  ],
+  "job_key_and_company_match": true,
+  "legacy_evidence_operations_for_same_key_with_other_source": 0,
+  "main_files_and_empty_or_absent_journals_unchanged": true,
+  "observed_at": "2026-11-21T10:16:53.703788+00:00",
+  "operation_count": 208,
+  "planned_source_in_values": true
+}

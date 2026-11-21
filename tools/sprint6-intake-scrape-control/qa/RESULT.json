@@ -1,0 +1,13 @@
+{
+  "continued_existing_readback": "HELD_ORDINARY_PUBLICATION",
+  "disabled": "HELD_SCRAPE_DISABLED",
+  "disabled_claim_count": 0,
+  "enabled_launch_count": 1,
+  "exact_queue_identity_unchanged_disabled": true,
+  "legacy_missing_key_respects_intake": true,
+  "only_dispatch_db_open_allowed": true,
+  "real_shell_calls": 3,
+  "request_digest": "83962a4799f1b1baf1b44f36c6fb1cf09934b6fb5d761c09961610be38b5498c",
+  "result": "PASS",
+  "workbook_factory_calls_during_control": 0
+}

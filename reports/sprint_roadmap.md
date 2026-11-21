@@ -374,6 +374,14 @@ Selected complete-inventory publication and disjoint event origin remain
 distinct supported operations. A non-destructive supported disposition of
 the old cycle is required to clear the fresh-release gate.
 [Existing native route verdict](S5_EXISTING_NATIVE_RELEASE_ROUTE_INDEPENDENT_20261121.md).
+Guarded production-data preflight identified one exact Saronic Job History
+source-version mismatch in retained operation 194. All nine expected-before
+values match locally and the proposed version is independently bound to its
+retained inventory and operation 195. The installed late-control path holds
+on that transition and does not supply terminal recovery. Leave the
+intentional retained cycle protected until a separate reviewed disposition
+can meet the actual recovery and publication gates.
+[Exact retained-work triage](S5_RETAINED_SOURCE_TRANSITION_TRIAGE_20261121.md).
 The staged Python host now has a default-off route from its completed
 owned recipe build and exact independent approval to the guarded installer.
 The focused callback coverage passed. The separately checked installed
@@ -467,6 +475,12 @@ store in place under an immutable guard and reported zero pending events.
 Production installation and observe-only operation remain open.
 [Independent observation QA](S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md)
 · [Native readback](S6_NATIVE_INTAKE_OBSERVATION_20261121.json).
+The staged separate scrape-launch control allows intake to keep a valid
+request queued while new launches are paused. Independent shell QA verified
+the exact ordinary admission once enabled, preserved publication handoff
+and checked the temporary and retained launch reservations. Its commands
+change only the intake dispatcher journal.
+[Separate launch control](S6_INTAKE_SCRAPE_CONTROL_20261121.md).
 The composed two-Company fixture proved that a provider hold is saved
 without a repair, and that the next eligible Company proceeds to exact
 local and workbook-fixture storage. Live sequential acceptance with

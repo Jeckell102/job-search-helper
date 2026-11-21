@@ -1,0 +1,131 @@
+{
+  "observed_at": "2026-11-21T05:17:09-05:00",
+  "cycle_id": "CYC-B639C6D864EC",
+  "exact_plan_previews": [
+    {
+      "company_id": "COMP-0002",
+      "legacy_cursor": 1,
+      "normal_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "selected_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "control_before_prefix_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      }
+    },
+    {
+      "company_id": "COMP-0008",
+      "legacy_cursor": 1,
+      "normal_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "selected_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "control_before_prefix_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      }
+    },
+    {
+      "company_id": "COMP-0016",
+      "legacy_cursor": 1,
+      "normal_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "selected_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "control_before_prefix_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      }
+    },
+    {
+      "company_id": "COMP-0040",
+      "legacy_cursor": 1,
+      "normal_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "selected_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "control_before_prefix_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      }
+    },
+    {
+      "company_id": "COMP-0045",
+      "legacy_cursor": 1,
+      "normal_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "selected_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      },
+      "control_before_prefix_preview": {
+        "state": "HELD",
+        "reason": "Exact retained inventory is missing or blocked."
+      }
+    },
+    {
+      "company_id": "COMP-0054",
+      "legacy_cursor": 67,
+      "normal_preview": {
+        "state": "HELD",
+        "reason": "legacy_plan_local_cursor_not_complete"
+      },
+      "selected_preview": {
+        "state": "HELD",
+        "reason": "selected_legacy_company_must_be_in_verified_prefix"
+      },
+      "control_before_prefix_preview": {
+        "state": "HELD",
+        "reason": "control_before_prefix_job_ownership_mismatch"
+      }
+    }
+  ],
+  "saronic_exact_job_history_ownership_holds": [
+    {
+      "plan_operation_number": 194,
+      "in_verified_prefix": false,
+      "operation_sha256": "31a8ad84cd118d618b38d9cde0400c3034c99debde888e334956987e09ae222c",
+      "local_row_present": true,
+      "status": "EXPLICIT_OWNERSHIP_DIFFERS",
+      "job_key_matches": true,
+      "company_matches": true,
+      "planned_source_present": true,
+      "current_source_present": true,
+      "source_matches": false,
+      "planned_source_fingerprint": "5b251e4787ad634a0c65caf8e5668f3ccd608f3e223b0965b331ec083bd98aa9",
+      "local_source_fingerprint": "c21e96b4654cf24fccc967d994b3f180906c5d11a3512ae200680e8d1fd50fe4",
+      "expected_before_source_present": true,
+      "expected_before_source_matches_local": true,
+      "expected_fields_match_local_count": 9,
+      "expected_fields_total": 9,
+      "retained_matching_posting_count": 1,
+      "retained_posting_hash_matches_planned": true,
+      "append_if_missing": true,
+      "planned_matching_local_evidence_count": 0,
+      "planned_matching_legacy_evidence_operation_count": 1,
+      "current_matching_local_evidence_count": 1,
+      "current_matching_legacy_evidence_operation_count": 0
+    }
+  ],
+  "stores_unchanged": true,
+  "network_and_python_writes_denied": true
+}

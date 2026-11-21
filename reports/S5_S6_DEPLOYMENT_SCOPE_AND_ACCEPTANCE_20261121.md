@@ -58,6 +58,14 @@ new installation while this unfinished cycle remains.
 [Observed legacy runtime](S5_LEGACY_RUNTIME_APPLICABILITY_20261121.json)
 · [Retained cycle readiness](S5_NATIVE_RETAINED_READINESS_20261121.md).
 
+Fresh independently cross-checked triage identified the exact local
+Saronic source-version transition and verified the installed preview
+refusals. None of the six saved legacy plans qualifies for continuation
+now. The recovery decision must preserve the verified prefix and both
+source versions and establish an eligible disposition for saved work
+before any new shared runtime release.
+[Retained source transition](S5_RETAINED_SOURCE_TRANSITION_TRIAGE_20261121.md).
+
 A separate disposable copy deliberately failed the installed verification
 after the qualified installer placed the scoped candidate. The nonterminal
 journal stopped the measured worker from loading it. No fresh retry,

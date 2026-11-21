@@ -43,6 +43,50 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Retained source transition and Sprint 6 launch control
+
+### Latest checkpoint, November 21 at 05:19 Eastern
+
+Root remains coordinator and release owner for goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the Sprint 4
+Freeform pilot remain accepted. The Amphenol automatic loop has independent
+staged QA. Native Sprint 5 and deployed Sprints 6–7 remain open, with about
+40% of the project accepted. Keep one Jetson lane and broad controls off.
+
+`/root/s5_live_authority_plan` independently verified 45 saved inventories,
+40 unblocked, six legacy plans and Saronic's durable 67/208 cursor with 276
+saved postings. Root ran all three maintained previews against immutable
+native stores. Every route held. Only Saronic has a partial cursor. Root
+and the same independent reader isolated Job History operation 194 and
+matching evidence operation 195. The current row matches Company, job and
+all nine expected-before values, and the proposed hash recomputes from the
+one archived inventory posting. The planned source differs from the current
+one; the two versions retain distinct evidence. No native record changed.
+[Full preflight and transition](S5_RETAINED_SOURCE_TRANSITION_TRIAGE_20261121.md).
+
+`/root/architecture_publication_review` verified the installed recovery
+paths do not allow that proposed source transition or support terminal
+disposition while preserving cursor 67 as incomplete. The late-control
+path also stops at a local hold even if its candidate were accepted. Next
+review the smallest owner-reviewed disposition before changes to this
+protected cycle, with the original operation, both versions and the exact
+remaining work preserved. A current owned failure and independent full
+release qualification remain separate native requirements.
+[Recovery prerequisites](S5_RETAINED_RECOVERY_PREREQUISITES_20261121.md).
+
+Root staged a separate Company scrape-launch control in the existing
+dispatcher and storage CLI. `/root/listener_ownership_qa` accepted exact
+shell commands, preserved queued request and publication handoff, and
+verified temporary/retained launch claims obey the same setting. Fifty
+focused and adjacent checks passed. The control remains staged.
+[Scrape launch control](S6_INTAKE_SCRAPE_CONTROL_20261121.md).
+
+All three assigned lanes completed. Root owns scope, reconciliation and
+backup. No production configuration or data, locks, services, Google or
+Jetson changes. No live ETA. Prior verified private backup
+`5b2cf0f7b794c3e05304dcce622fc8a19d003d4a`.
+[Prior verification](S5_OWNED_HOST_RELEASE_BACKUP_VERIFIED_20261121.json).
+
 ## Sprint 5 approved candidate to installer
 
 ### Latest checkpoint, November 21 at 05:06 Eastern
@@ -101,9 +145,9 @@ services, workbook, or Jetson changes.
 Next identify whether a supported non-destructive disposition is available
 for the retained cycle and independent current release qualification.
 Do not treat a new event alone as clearing the native release gate. There
-is no live ETA. Verified prior backup
-`2d0c5dc2413395178ff4dbebbcb13e91c0ef8015`.
-[Backup verification](S6_INTAKE_OBSERVATION_BACKUP_VERIFIED_20261121.json).
+is no live ETA. Private backup `5b2cf0f7b794c3e05304dcce622fc8a19d003d4a`
+was fetched back and all 26 scoped file contents matched.
+[Backup verification](S5_OWNED_HOST_RELEASE_BACKUP_VERIFIED_20261121.json).
 
 ## Sprint 6 case sequence and Sprint 5 native ownership
 

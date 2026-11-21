@@ -1,0 +1,193 @@
+{
+  "companies": 800,
+  "cycle_exact_inbox_counts": {
+    "exact_control_before_prefix_recoveries": 0,
+    "exact_legacy_delivery_evidence": 0,
+    "exact_legacy_delivery_evidence_archive": 2,
+    "exact_legacy_plan_migration_archive": 2,
+    "exact_legacy_plan_migrations": 0,
+    "exact_plan_local_state": 0,
+    "exact_remote_plans": 0,
+    "exact_selected_legacy_recoveries": 0,
+    "exact_selected_legacy_recovery_archive": 1,
+    "exact_sync_chunks": 0
+  },
+  "cycle_id": "CYC-B639C6D864EC",
+  "cycle_publication_receipts": {},
+  "historical_saronic_conflict": {
+    "documented_type": "source-provenance",
+    "original_conflict_row_fingerprint": null,
+    "record_level_provenance": "UNVERIFIED"
+  },
+  "inventory_categories": [
+    {
+      "blocked": true,
+      "count": 3,
+      "stage": "blocked",
+      "status": "blocked"
+    },
+    {
+      "blocked": false,
+      "count": 1,
+      "stage": "inventory",
+      "status": "complete"
+    },
+    {
+      "blocked": false,
+      "count": 2,
+      "stage": "queued",
+      "status": "blocked"
+    },
+    {
+      "blocked": false,
+      "count": 25,
+      "stage": "queued",
+      "status": "complete"
+    },
+    {
+      "blocked": false,
+      "count": 11,
+      "stage": "queued",
+      "status": "partial"
+    },
+    {
+      "blocked": false,
+      "count": 1,
+      "stage": "queued",
+      "status": "unsupported"
+    },
+    {
+      "blocked": true,
+      "count": 2,
+      "stage": "unsupported",
+      "status": "unsupported"
+    }
+  ],
+  "inventory_count": 45,
+  "jobs_cycle_mirror_statuses": [
+    "In Progress"
+  ],
+  "journals": {
+    "inventories.sqlite3-journal": "absent",
+    "inventories.sqlite3-wal": "empty",
+    "jobs.sqlite3-journal": "absent",
+    "jobs.sqlite3-wal": "empty",
+    "state.db-journal": "absent",
+    "state.db-wal": "empty"
+  },
+  "observed_at": "2026-11-21T10:12:56.809632+00:00",
+  "plan_categories": [
+    {
+      "count": 3,
+      "cursor": "at_end",
+      "format": "legacy_unversioned",
+      "stage": "blocked"
+    },
+    {
+      "count": 1,
+      "cursor": "partial",
+      "format": "legacy_unversioned",
+      "stage": "inventory"
+    },
+    {
+      "count": 2,
+      "cursor": "at_end",
+      "format": "legacy_unversioned",
+      "stage": "unsupported"
+    }
+  ],
+  "plan_count": 6,
+  "remaining_exact_inbox_counts": {
+    "exact_control_before_prefix_recoveries": 0,
+    "exact_legacy_delivery_evidence": 0,
+    "exact_legacy_delivery_evidence_archive": 0,
+    "exact_legacy_plan_migration_archive": 0,
+    "exact_legacy_plan_migrations": 0,
+    "exact_plan_local_state": 0,
+    "exact_remote_plans": 0,
+    "exact_selected_legacy_recoveries": 0,
+    "exact_selected_legacy_recovery_archive": 0,
+    "exact_sync_chunks": 0
+  },
+  "remaining_jobs_exact_counts": {
+    "exact_local_applications": 0
+  },
+  "remaining_scope": [
+    {
+      "company_and_cycle_control_membership": {
+        "conflicts": {},
+        "dirty": {}
+      },
+      "company_id": "COMP-0054",
+      "company_source_marker_count": 0,
+      "cursor": 67,
+      "durable_inventory": true,
+      "inventory_blocked": 0,
+      "inventory_jobs": 276,
+      "inventory_status": "complete",
+      "locally_processed": true,
+      "operation_count": 208,
+      "plan_membership": {
+        "cursor_prefix": {
+          "conflicts": {},
+          "dirty": {},
+          "distinct_identities": 67,
+          "identity_resolution": {
+            "unique_local_row": 67
+          },
+          "operations": 67,
+          "operations_by_tab": {
+            "Job Evidence": 31,
+            "Job History": 32,
+            "Opportunities": 4
+          }
+        },
+        "remaining_suffix": {
+          "conflicts": {},
+          "dirty": {},
+          "distinct_identities": 141,
+          "identity_resolution": {
+            "no_local_row": 11,
+            "unique_local_row": 130
+          },
+          "operations": 141,
+          "operations_by_tab": {
+            "Companies": 1,
+            "Job Evidence": 66,
+            "Job History": 73,
+            "Opportunities": 1
+          }
+        },
+        "whole_plan": {
+          "conflicts": {},
+          "dirty": {},
+          "distinct_identities": 208,
+          "identity_resolution": {
+            "no_local_row": 11,
+            "unique_local_row": 197
+          },
+          "operations": 208,
+          "operations_by_tab": {
+            "Companies": 1,
+            "Job Evidence": 97,
+            "Job History": 105,
+            "Opportunities": 5
+          }
+        }
+      },
+      "saved_inventory_payload_sha256": "c6eb96518b91119188133fbb2ee0371acb6c7e9647b6c0082738cd63bc2ac181",
+      "saved_plan_payload_sha256": "7ae4bcf36413f1c96e46f9793ab861a15b30b8b53b1c80650f3f64e89e3f350b",
+      "state_stage": "inventory"
+    }
+  ],
+  "stable_main_and_journal_identity": true,
+  "stage_counts": {
+    "blocked": 3,
+    "complete": 22,
+    "inventory": 1,
+    "partial": 8,
+    "queued": 764,
+    "unsupported": 2
+  },
+  "state_status": "In Progress"
+}

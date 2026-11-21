@@ -1,0 +1,265 @@
+"""Explicit local-storage maintenance and a single controlled Sheets publisher."""
+from __future__ import annotations
+
+import argparse
+from contextlib import ExitStack, closing
+import json
+from pathlib import Path
+import sqlite3
+import sys
+import time
+
+from .cli import (get_remote_repository, job_database_path, state_path,
+                  storage_backend, writer_lock, WriterLockBusy)
+from .runner import _load_environment
+from .sheets_sync import SheetsSynchronizer
+from .sqlite_repository import SQLiteRepository, timestamp
+
+
+def print_status(value):
+    print(json.dumps(value, ensure_ascii=False, default=str), flush=True)
+
+
+def _observe_intake(spreadsheet_id):
+    from .company_events import CompanyEventBridge
+    from .repair_retry_status import _checkpointed_store_snapshot
+
+    path = job_database_path().resolve(strict=True)
+    database = state_path()
+    before = _checkpointed_store_snapshot((path,))
+    if before is not None:
+        try:
+            with closing(SQLiteRepository(path, spreadsheet_id, readonly=True, immutable=True)) as repo:
+                result = CompanyEventBridge(repo, database.parent, state_database=database).observe_pending()
+        except sqlite3.DatabaseError:
+            if _checkpointed_store_snapshot((path,)) == before:
+                raise
+        else:
+            if _checkpointed_store_snapshot((path,)) == before:
+                return result
+    return {'state': 'STATUS_SNAPSHOT_BUSY',
+            'detail': 'The local Jobs journal has pending data or the database changed during observation.'}
+
+
+def _watch_ordinary_handoff(lock_path, spreadsheet_id):
+    """Report an existing exact continuation without opening broad sync."""
+    from .company_intake_dispatcher import CompanyIntakeDispatcher
+
+    state_root = lock_path.parent
+    with writer_lock(lock_path):
+        if not CompanyIntakeDispatcher(None, state_root).ordinary_reconciliation_enabled():
+            return None
+        with closing(SQLiteRepository(job_database_path(), spreadsheet_id, readonly=True)) as reader:
+            return CompanyIntakeDispatcher(reader, state_root).reconcile_ordinary()
+
+
+def cycle(sync, *, max_batches=20, max_seconds=60):
+    started = time.monotonic()
+    pulled = sync.pull()
+    rows = batches = 0
+    for _ in range(max_batches):
+        result = sync.publish_batch()
+        count = result.get('published_rows', 0)
+        rows += count
+        batches += 1
+        if not count or time.monotonic() - started >= max_seconds:
+            break
+    with sync.local.transaction():
+        sync.local.set_meta('last_sync', timestamp())
+        sync.local.set_meta('last_error', '')
+    return {'at': timestamp(), 'pull': pulled, 'published_rows': rows,
+            'batches': batches, **sync.local.status()}
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description='SQLite job storage and Google Sheets synchronization; no model calls.')
+    commands = parser.add_subparsers(dest='command', required=True)
+    commands.add_parser('status', help='Show local counts and delivery health, without Google access.')
+    commands.add_parser('intake-status', help='Show the durable Company-intake control, without Google access.')
+    commands.add_parser('intake-observe', help='Preview one page of local Company intake without queuing work.')
+    commands.add_parser('intake-enable', help='Durably enable Company intake for future watch cycles only.')
+    commands.add_parser('intake-disable', help='Durably disable Company intake; queued requests are retained.')
+    commands.add_parser('intake-scrape-enable', help='Allow future Company scrape launches when intake is enabled.')
+    commands.add_parser('intake-scrape-disable', help='Pause future Company scrape launches while retaining intake and requests.')
+    commands.add_parser('intake-retained-enable', help='Durably enable signed retained Company-event intake.')
+    commands.add_parser('intake-retained-disable', help='Durably disable retained intake; queued requests are retained.')
+    commands.add_parser('conflicts', help='Show held changes without clearing them.')
+    for name in ('once', 'watch'):
+        sub = commands.add_parser(name, help='Import manual edits and publish queued local changes.')
+        sub.add_argument('--interval', type=float, default=60)
+        sub.add_argument('--max-batches', type=int, default=20)
+        sub.add_argument('--authenticate', action='store_true', help='Allow Google sign-in in a foreground terminal.')
+    migration = commands.add_parser('import', help='Read the workbook into a NEW local database. Never writes Google Sheets.')
+    migration.add_argument('--destination', required=True)
+    migration.add_argument('--shadow', action='store_true', help='Produce a non-operational test import while the old scraper continues.')
+    migration.add_argument('--exclusive-writer', action='store_true', help='Confirm all other writers and manual edits are stopped during cutover.')
+    migration.add_argument('--chunk-size', type=int, default=500)
+    migration.add_argument('--authenticate', action='store_true')
+    backup = commands.add_parser('backup', help='Make a consistent new SQLite backup without copying a live WAL file.')
+    backup.add_argument('destination')
+    args = parser.parse_args(argv)
+    _load_environment()
+    import os
+    spreadsheet_id = os.environ.get('SPREADSHEET_ID', '').strip()
+    local = None
+    try:
+        if args.command == 'intake-observe':
+            result = _observe_intake(spreadsheet_id)
+            print_status(result)
+            return int(result['state'] == 'STATUS_SNAPSHOT_BUSY')
+        if args.command in {'intake-scrape-enable', 'intake-scrape-disable'}:
+            from .company_intake_dispatcher import CompanyIntakeDispatcher
+            dispatcher = CompanyIntakeDispatcher(None, state_path().parent)
+            dispatcher.set_scrape_enabled(args.command == 'intake-scrape-enable')
+            print_status({'state': 'COMPANY_INTAKE_CONTROL', **dispatcher.status()})
+            return 0
+        if args.command == 'import':
+            if not args.shadow and not args.exclusive_writer:
+                raise ValueError('An operational import requires --exclusive-writer. Stop the old scraper and other reviewers first.')
+            with ExitStack() as stack:
+                if not args.shadow:
+                    for name in ('scraper.lock', 'writer.lock', 'review-writeback.lock'):
+                        stack.enter_context(writer_lock(state_path().parent / name))
+                from .sqlite_bootstrap import bootstrap
+                remote = get_remote_repository(write=False, interactive=args.authenticate)
+                result = bootstrap(remote, Path(args.destination).expanduser(), shadow=args.shadow,
+                                   chunk_size=args.chunk_size, progress=print_status)
+                print_status(result)
+            return 0
+        from .retained_work_runner import ManualRetainedEventHold, assert_normal_lifecycle_not_held
+        if args.command not in {'once', 'watch'}:
+            local = SQLiteRepository(job_database_path(), spreadsheet_id,
+                                     readonly=args.command in {'status', 'conflicts', 'backup', 'intake-status'})
+        if args.command == 'status':
+            print_status({'configured_backend': storage_backend(), 'database': str(local.path), **local.status()})
+            return 0
+        if args.command in {'intake-status', 'intake-enable', 'intake-disable',
+                            'intake-retained-enable', 'intake-retained-disable'}:
+            from .company_intake_dispatcher import CompanyIntakeDispatcher
+            dispatcher = CompanyIntakeDispatcher(local, state_path().parent)
+            if args.command == 'intake-enable':
+                dispatcher.set_enabled(True)
+            elif args.command == 'intake-disable':
+                dispatcher.set_enabled(False)
+            elif args.command == 'intake-retained-enable':
+                dispatcher.set_retained_enabled(True)
+            elif args.command == 'intake-retained-disable':
+                dispatcher.set_retained_enabled(False)
+            print_status({'state': 'COMPANY_INTAKE_CONTROL', **dispatcher.status()})
+            return 0
+        if args.command == 'conflicts':
+            for tab, rid, field, detail, at in local.db.execute('SELECT tab,row_id,header,detail,at FROM conflicts ORDER BY tab,row_id,header'):
+                row = local.row(tab, rid) or {}
+                print_status({'tab': tab, 'job_key': row.get('Job Key'), 'company': row.get('Company'),
+                              'field': field, 'detail': detail, 'at': at})
+            return 0
+        if args.command == 'backup':
+            print_status({'backup': local.backup(Path(args.destination).expanduser())})
+            return 0
+        if storage_backend() != 'sqlite':
+            raise ValueError('Publication is disabled until JOB_STORAGE_BACKEND=sqlite is explicitly activated.')
+        if not 5 <= args.interval <= 3600 or not 1 <= args.max_batches <= 100:
+            raise ValueError('Sync interval must be 5–3600 seconds and max batches 1–100.')
+        from .ordinary_company_event_command import OrdinaryEventLifecycleHold, guard_generic_ordinary_event
+        from .sheet_profile import profile_schemas
+        lock_path = state_path().parent / 'writer.lock'
+        sync = None
+        failures = 0
+        while True:
+            started = time.monotonic()
+            busy = False
+            try:
+                # Serialize initialization and one bounded cycle. A watcher
+                # must not prevent reviewers from publishing while it sleeps.
+                with writer_lock(lock_path):
+                    # Check before remote construction; SheetsSynchronizer
+                    # repeats the retained embargo at each discovery/write.
+                    guard_generic_ordinary_event(state_path(), allow_queued=True)
+                    assert_normal_lifecycle_not_held(state_path().parent, job_database_path())
+                    if local is None:
+                        local = SQLiteRepository(job_database_path(), spreadsheet_id)
+                    if sync is None:
+                        schemas = profile_schemas(local.get_meta('sheets_profile'))
+                        remote = get_remote_repository(write=True, interactive=args.authenticate,
+                                                       schemas=schemas, evidence_archives=schemas is None)
+                        sync = SheetsSynchronizer(local, remote)
+                    result = cycle(sync, max_batches=args.max_batches, max_seconds=args.interval)
+                print_status(result)
+                if args.command == 'watch':
+                    # Run only after the bounded sync writer has released its
+                    # lock.  The durable control defaults to disabled.
+                    from .company_intake_dispatcher import CompanyIntakeDispatcher
+                    dispatcher = CompanyIntakeDispatcher(local, state_path().parent)
+                    try:
+                        intake = dispatcher.run_once()
+                        print_status({'at': timestamp(), 'company_intake': intake})
+                    except Exception as intake_error:
+                        # Post-sync intake failures must never become Sheets
+                        # errors or alter the watcher's retry/backoff state.
+                        try:
+                            detail = dispatcher.record_error(intake_error)
+                        except Exception as journal_error:
+                            print_status({'at': timestamp(),
+                                          'state': 'COMPANY_INTAKE_ERROR_UNRECORDED',
+                                          'error': f'{type(intake_error).__name__}: {intake_error}',
+                                          'journal_error': f'{type(journal_error).__name__}: {journal_error}'})
+                        else:
+                            print_status({'at': timestamp(),
+                                          'state': 'COMPANY_INTAKE_ERROR_RETAINED',
+                                          'error': detail})
+                failures = 0
+            except WriterLockBusy as exc:
+                if args.command == 'once':
+                    raise
+                busy = True
+                print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_WRITER_BUSY',
+                              'detail': 'Another publisher is active; queued local changes are retained.',
+                              **(local.status() if local is not None else {})})
+            except OrdinaryEventLifecycleHold as exc:
+                print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_ORDINARY_EVENT', 'detail': str(exc)})
+                if args.command == 'once':
+                    return 1
+                try:
+                    handoff = _watch_ordinary_handoff(lock_path, spreadsheet_id)
+                except WriterLockBusy:
+                    busy = True
+                except (OSError, ValueError, RuntimeError, sqlite3.Error) as handoff_error:
+                    print_status({'at': timestamp(), 'state': 'ORDINARY_HANDOFF_HELD',
+                                  'detail': str(handoff_error)})
+                else:
+                    if handoff is not None:
+                        print_status({'at': timestamp(), 'company_intake': handoff})
+            except ManualRetainedEventHold as exc:
+                print_status({'at': timestamp(), 'state': 'SYNC_DEFERRED_RETAINED_EVENT', 'detail': str(exc)})
+                if args.command == 'once':
+                    return 1
+            except Exception as exc:
+                failures += 1
+                if local is not None:
+                    with local.transaction():
+                        local.set_meta('last_error', f'{timestamp()} {type(exc).__name__}: {exc}')
+                print_status({'at': timestamp(), 'state': 'SYNC_ERROR_LOCAL_WORK_RETAINED',
+                              'error': str(exc), **(local.status() if local is not None else {})})
+                if args.command == 'once':
+                    return 1
+            if args.command == 'once':
+                return 0
+            delay = max(1, args.interval - (time.monotonic() - started))
+            if busy:
+                delay = min(delay, 30)
+            elif failures:
+                delay = max(delay, min(300, 5 * (2 ** min(failures, 6))))
+            time.sleep(delay)
+    except KeyboardInterrupt:
+        print_status({'state': 'STOPPED', 'detail': 'Queued local changes are retained.'})
+        return 130
+    except (OSError, ValueError, RuntimeError, sqlite3.Error, ImportError) as exc:
+        print_status({'state': 'BLOCKED_NOT_COMPLETE', 'error': str(exc)})
+        return 1
+    finally:
+        if local:
+            local.close()
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
