@@ -1,0 +1,45 @@
+{
+  "advertised_total": 39,
+  "company_ids": [
+    "COMP-0490"
+  ],
+  "cycle_id": "CYC-9512BF1F13C8",
+  "detail_reads": 39,
+  "disposition": "DISPOSABLE_SCOPED_RETRY_INVENTORY_SAVED",
+  "inventory_jobs": 39,
+  "inventory_sha256": "94250320f27fbf987f417405599f609de6ea965feb41f1b6297cfee57dba5fa8",
+  "inventory_status": "complete",
+  "local_stage": "inventory",
+  "new_job_rows": 0,
+  "new_scrape_outcomes": 0,
+  "observed_advertised_totals": [
+    39
+  ],
+  "predecessor_outcome_id": "OUT-cffecec610203a71e5c23b82",
+  "provenance": "live_public_provider_on_disposable_rehearsal_stores",
+  "provider_calls": 1,
+  "request_id": "company-retry:RTRY-c1e879796b64630e034c7e64",
+  "request_sha256": "ae7c537ac1add18d617583b21cb23ffac238d3b2c737691a31c025d1fb5ef08f",
+  "retry_lineage": {
+    "activated_at": "2026-11-21T06:28:45.701581Z",
+    "attempt_id": "RTRY-c1e879796b64630e034c7e64",
+    "company_id": "COMP-0490",
+    "failed_request_id": "company-event:CEV-660792c2c5724f33adf7822151b666d8",
+    "release": {
+      "config_sha256": "a700bc9bcb904d5d456af70fc8ed7be745f6a21897c546cbb897440efc1cf85d",
+      "dependency_manifest_sha256": "5b47e92c1adf2850d18690f557f0f26ccfd91fb210c36ad967feb4ddb3023aa3",
+      "release_id": "REL-c4bdcec9fadace26ad764349",
+      "schema": "integration-release-binding-v1",
+      "source_manifest_sha256": "f4e259eb8f9af621983e72d315b217308be931035bafa3bd30cfdf4f9c00c831"
+    },
+    "schema": "repair-retry-request-v1",
+    "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501"
+  },
+  "sheets_sync": "DEFERRED",
+  "work_remaining": [
+    "job_filtering",
+    "job_row_planning",
+    "workbook_sync",
+    "publication_receipt"
+  ]
+}

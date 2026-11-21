@@ -1,0 +1,9 @@
+{
+  "candidate_source_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "disposition": "OWNED_REPLAY_CHOICE_ACCEPTED",
+  "generated_source_path": "/tmp/jsh-s5-amphenol-owned-replay/single-owned-choice-run/candidate/src/job_search_helper/acquiretm.py",
+  "model_response_sha256": "cb3d0d49088986620229c220912472405d4e15ac8c164e8f010ef5f3031f58f4",
+  "outcome_id": "OUT-cffecec610203a71e5c23b82",
+  "prepared_sha256": "bb93a85d4d791901ad644c42fa2c1528be76108b5eaffc2e0b2b0132f2862df6",
+  "test_provenance": "owned_disposable_stores_from_captured_public_pages_no_live_provider_or_workbook"
+}

@@ -31,3 +31,23 @@ private workspace. The installed candidate is not claimed by this proof.
 
 [Owned settlement QA](S5_AMPHENOL_OWNED_SETTLEMENT_INDEPENDENT_20261121.md) ·
 [Receipt-to-choice source QA](S5_AMPHENOL_RECEIPT_CHOICE_INPUT_INDEPENDENT_20261121.md)
+
+## One actual choice from the fixture-owned receipt
+
+The accepted promoted-isolation store reopened the fixture outcome and
+prepared one private task `WRAP-e23a1bb46c`. The release owner kept the
+existing normal offline baseline step in the rehearsal caller; the task
+had a passing baseline receipt before entering inspection. The exact
+scope stayed review-only. The already-deployed single Jetson endpoint
+recorded one `COMPLETED` inference receipt, request
+`662f23e0c7844474947832bba0ddcdca`. No inference remained unsettled. The
+validated exact choice selected `listing_membership_change` from `W1`.
+
+The recipe verified that the fixture's typed witness fields exactly matched
+the historic independently captured W1. The two receipt identities were
+preserved. It compiled the exact independently validated candidate source
+SHA `895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d`.
+Proof SHA `65c99d3d5d39d9ef14ed7e180bfa47860961b9caf8d5e03a70364be65024e86a`;
+private source and receipts under
+`/tmp/jsh-s5-amphenol-owned-replay/single-owned-choice-run`. The installed
+provider, production scraper and workbook were not used for this replay.

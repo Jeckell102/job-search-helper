@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 01:13 Eastern
+### Latest outcome, November 21 at 01:36 Eastern
 
 Coordinator and release owner, active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
@@ -122,7 +122,7 @@ native edit or deployment authority.
 [Typed observation source handoff](S5_AMPHENOL_TYPED_PAGINATION_HANDOFF_20261121.md).
 
 Latest verified private GitHub backup
-`6e64efcf0cb850963c9aec9ec7872e45ca0b3cca` on
+`17fe7927d2b28b12b3c003cb54443d3c3168f8c0` on
 `backup/integration-automation-m1-operator-20261120`. No current user action
 or blocker for generation and verification. A later production deployment
 may need a fresh administrator check. The desktop application's scrolling
@@ -158,19 +158,54 @@ prepares input; the actual caller and release are separate gates.
 
 Root replayed the independently captured public pages in a separate
 application-owned fixture route at `/tmp/jsh-s5-amphenol-owned-replay`.
-It durably emitted exact outcome `OUT-cffecec610203a71e5c23b82`, one matched
-sender/receiver receipt, and accepted choice input `bb93a85d…`. No model
-call occurred in that preparation. `/root/s5_live_authority_plan` owns
-only the new private, explicit one-call harness and cannot launch it.
-Root owns the model launch and the staged disposable guarded release/queue
-rehearsal. Native Amphenol has no eligible event and the existing ordinary
-and retained source paths cannot supply a qualified failed request without
-new work. Do not mint production authority from any public or private
-fixture. Actual deployment and post-install verification remain open.
+It saved outcome `OUT-cffecec610203a71e5c23b82`, one matched receipt and
+choice input `bb93a85d…`. The actual held promotion prepared
+`WRAP-e23a1bb46c`, passed the normal offline baseline, then made one
+completed Jetson inspection call. It compiled the exact live-validated
+candidate, proof `65c99d3d…`, without touching native data.
+
+The disposable qualified release rehearsal in
+`/tmp/jsh-s5-amphenol-release-rehearsal` first stopped on a Rippling-specific
+custody import. `/root/candidate_independent_qa` completed the narrow
+provider-neutral extraction with 77 passing author tests.
+`/root/architecture_publication_review` owns its independent source QA.
+Root reran the offline rehearsal in a fresh scratch projection, with the
+first attempt preserved. It installed and tested the exact candidate in
+the fixture, then durably queued `RTRY-12d74c4e207ca0c0aa7d0338`. The
+release `REL-c4bdcec9fadace26ad764349` is `COMPLETE` in the test workspace.
+Replay returned the same request bytes and verified the install once.
+Rehearsal result `2efcada5…`, exact request `927ab558…`.
+The first queued retry held before fetching because the scratch file copy
+omitted SQLite WAL content. Root rebuilt all three fixture databases with
+SQLite backup, verified the preserved settled predecessor, then repeated
+the guard. Corrected attempt `RTRY-c1e879796b64630e034c7e64`, exact request
+digest `ae7c537a…`, source runtime `f4e259eb…`. The fresh admitted
+`CYC-9512BF1F13C8` fetched all 39 current postings in one real public call
+and saved the deferred complete inventory. Root archived its exact payload
+`94250320…` locally for controlled retesting without additional provider
+calls. The exact compact v2 planner then verified 18 unique applicable rows
+in both disposable job tables. It held before any test-workbook write due
+to the normal deferred checkpoint combination. A separate F2 gap leaves
+ordinary-repair exact v2 receipt fallback without real retry/release IDs.
+
+`/root/s5_live_authority_plan` owns only the deferred recovery seam and its
+focused test. `/root/listener_ownership_qa` owns the actual repair request
+and release binding in the exact planner, receipt and publisher only.
+Root has prepared fresh private release, archive replay and test-workbook
+paths under `/tmp/jsh-s5-amphenol-publication-rehearsal`. Use the fixed
+runtime after source review. Do not replace the existing held fixture plan,
+change a measured runtime in place, or refetch. Native Amphenol has no
+eligible event or supported retained partial result.
+Do not mint production authority from public or fixture proof. Deployment
+and exact native post-install verification remain open.
 Give the requested 10-minute plain-text updates.
 [Recipe choice and candidate build](S5_AMPHENOL_RECIPE_CHOICE_20261121.md).
 [Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md).
 [Controlled owned replay](S5_AMPHENOL_OWNED_REPLAY_20261121.md).
+[Release rehearsal import hold](S5_AMPHENOL_RELEASE_REHEARSAL_IMPORT_HOLD_20261121.md).
+[Guarded release rehearsal](S5_AMPHENOL_RELEASE_REHEARSAL_PASS_20261121.md).
+[SQLite snapshot correction](S5_AMPHENOL_RELEASE_SNAPSHOT_REPAIR_20261121.md).
+[Deferred publication hold](S5_AMPHENOL_DEFERRED_PUBLICATION_HOLD_20261121.md).
 
 ## Sprint 4 active after Samtec acceptance
 

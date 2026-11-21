@@ -1,0 +1,12 @@
+{
+  "attempt_id": "RTRY-c1e879796b64630e034c7e64",
+  "candidate_source_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "company_id": "COMP-0490",
+  "disposition": "DISPOSABLE_RELEASE_AND_SCOPED_RETRY_QUEUE_REHEARSAL",
+  "failed_request_id": "company-event:CEV-660792c2c5724f33adf7822151b666d8",
+  "queued_request_sha256": "ae7c537ac1add18d617583b21cb23ffac238d3b2c737691a31c025d1fb5ef08f",
+  "rehearsal_source_digest": "f4e259eb8f9af621983e72d315b217308be931035bafa3bd30cfdf4f9c00c831",
+  "release_id": "REL-c4bdcec9fadace26ad764349",
+  "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501",
+  "state": "REQUEST_WRITTEN"
+}
