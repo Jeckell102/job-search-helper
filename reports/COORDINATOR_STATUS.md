@@ -225,6 +225,24 @@ then connect genuine fresh candidate evidence and the positive finisher.
 [Preinstall independent QA](S5_AUTOMATED_RELEASE_PREFLIGHT_INDEPENDENT_20261120.md) ·
 [Paired mapping source](S5_MAPPING_COMPANION_STAGED_20261120.md).
 
+20:18 Eastern. Verified the private GitHub branch at
+`f980b2fae5e189da4e1f15300e1b566fb6e40a3c` for the independently
+accepted automated preinstall guard, tests and reports. Root's broad
+paired-mapping regression is running. Independent QA matched 85 focus
+passes and is checking the exact companion scope. Its release evidence
+is still fixture-only, and the native observer is still absent.
+
+20:21 Eastern. `/root/architecture_publication_review` independently
+accepted the final paired-source slice in `/tmp/jsh-s5-mapping-companion.4mbNVvkr`
+after 95 cases. Root passed 540 combined on that exact pin. Both missing
+pair directions hold for the automated route. Only the selected literal
+Rippling board may differ, and the measured descriptor must preserve
+other mapping and capability data. Qualified fixture install, exact
+retry replay and paired rollback passed. Root owns the next candidate
+evidence and application-writer integration. Fresh public collection
+still lacks new evidence. No native observer appeared at 20:20.
+[Paired mapping independent QA](S5_MAPPING_COMPANION_INDEPENDENT_20261120.md).
+
 
 Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
 the original endpoints and unused launch custody. Native ownership and
