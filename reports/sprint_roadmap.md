@@ -575,6 +575,11 @@ application release must qualify the exact freshly produced candidate
 and verify its real company-only retry and workbook receipts.
 [Fresh release source stage](S5_AMPHENOL_FRESH_RELEASE_SOURCE_STAGE_20261121.md).
 
+At 15:17 Eastern the fresh operator input and temporary environment
+helpers passed focused independent tests. Native installation still waits
+for the administrator observation. Fresh build output is required to
+restamp candidate and qualification pins. [Enrollment preparation](S5_AMPHENOL_FRESH_ENROLLMENT_PREPARATION_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.

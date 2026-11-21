@@ -1,0 +1,2 @@
+enabled=True; repeat held; manager enrolled=True; PID=0
+enabled=False; repeat held; manager enrolled=False; PID=0

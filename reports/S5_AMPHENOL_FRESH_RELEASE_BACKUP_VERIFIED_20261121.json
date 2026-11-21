@@ -1,0 +1,26 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "ba2caf51ea549a30aa0e8fe1d6a6aa8133ce9998",
+  "exact_file_count": 16,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "c252fb6426ecb89f9e52f4fb620681941e8e0df141f6398729f93daee9dbbfc4",
+    "reports/S5_AMPHENOL_FRESH_ONE_SHOT_QA_20261121.md": "92db83f2659fa08541cccf057909e3feedff75d3c353f119d32947510ea44d2f",
+    "reports/S5_AMPHENOL_FRESH_READER_INITIAL_20261121.md": "d8fec638442bc50bdbf94f0b218da4e1ad0be48c17273e2910f011089608736f",
+    "reports/S5_AMPHENOL_FRESH_READER_QA_20261121.md": "f41a56df7abe04d2f33526a574cb4756bb5d77496ca5a034c8937c032dc1f09d",
+    "reports/S5_AMPHENOL_FRESH_RELEASE_SOURCE_STAGE_20261121.md": "2acb4ba022fe6df1553241ec959aa4ef7f0a1c96e82680d90decb65e50c909cc",
+    "reports/S5_AMPHENOL_NATIVE_LAUNCHER_BACKUP_VERIFIED_20261121.json": "a130609830844c3d4f39626b058a43a47fe5ca3d423a55e705bddb7c15193d3c",
+    "reports/sprint_roadmap.md": "38e2fbd214e10f028491812f99e88cdbe3e3d19183d341a6f695b7f51d7fceee",
+    "tools/sprint5-amphenol-fresh-operator/application_release/INITIAL_READER_FAILURE.txt": "bd1def3160aa4b6422a99f2078a5d8e416a251038286e8bafa20ddbc3f37bcfb",
+    "tools/sprint5-amphenol-fresh-operator/application_release/ONE_SHOT_OFFLINE_RESULT.txt": "1009b3a06cf6a6bc349af480a28ab2688db1da6607409eccdc5f45d8f78efecc",
+    "tools/sprint5-amphenol-fresh-operator/application_release/READER_OFFLINE_RESULT.txt": "b351756b6a93eb80e0199a4ca064f4a46c6716ff3d2a479a6bfd214b8e7601ad",
+    "tools/sprint5-amphenol-fresh-operator/application_release/amphenol_candidate_release.py": "bf9ac48a86ee6e19290423899409f2603031e2ce3977247f05df21a4cd7d7c42",
+    "tools/sprint5-amphenol-fresh-operator/application_release/amphenol_operator_one_shot.py": "e00a40688045377d06a515004360ded7004fb336a99a6e5faa92ccca95a35638",
+    "tools/sprint5-amphenol-fresh-operator/application_release/coordinator_store.py": "48e3f2ccee38b83f5577d2a66398074d58ab16b3f3c9afd5fda69e83af8e3d7b",
+    "tools/sprint5-amphenol-fresh-operator/application_release/tests/baseline.py": "a95953afe2bc10138714f6b11af22572b17ab344bf61d78b834647895025aa61",
+    "tools/sprint5-amphenol-fresh-operator/application_release/tests/test_fresh_operator_one_shot.py": "02aa3164bebf6d98540677c082e3688db1a0a0e1d00fcedfec802348a9854116",
+    "tools/sprint5-amphenol-fresh-operator/application_release/tests/test_fresh_reader_independent.py": "25c22c88e274d195ccd1a271b55b75744e5179a84a243952d391f60a16ffd2f0"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T15:09:41-05:00"
+}

@@ -102,6 +102,36 @@ step. The latest verified staged launcher backup was `68b6addf1c1e3910f394f12669
 with all eleven files compared byte for byte.
 [Launcher backup verification](S5_AMPHENOL_NATIVE_LAUNCHER_BACKUP_VERIFIED_20261121.json).
 
+Latest verified private GitHub checkpoint is
+`ba2caf51ea549a30aa0e8fe1d6a6aa8133ce9998`. All 16 changed files
+matched the fetched copy. Native hosts are awaiting the administrator
+observer. No maintenance transaction has started. Work this turn was
+concrete progress, and the persistent roadmap goal remains active.
+[Fresh release backup](S5_AMPHENOL_FRESH_RELEASE_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 15:17 Eastern
+
+Root remains coordinator and release owner. This continuation added
+independently checked fresh enrollment inputs and single-scope manager
+transition logic. The exact eight-field enrollment binds the real spent
+predecessor readback to one normal operator queue file and receipt. Five
+fixture checks passed, including the actual staged Host parser and
+interrupted owned restart with a still-verifiable wrapper. An inactive
+wrapper after a failed restart remains a separate hold. Both agent lanes
+finished. The qualification lane saved the exact inputs to restamp the
+existing evaluator and manifest when a real automatically built candidate
+exists. [Enrollment and qualification stage](S5_AMPHENOL_FRESH_ENROLLMENT_PREPARATION_20261121.md).
+
+The actual administrator observer socket was still absent at 15:17 and
+the two installed tool hashes still matched the before-images. The owner
+already has the one-shot Terminal command to start it. No Company request,
+provider, service or tool change began here. The next authorized native
+step is the default read-only preflight on actual observer readiness.
+Apply the accepted two-file change only if its exact scope passes and
+verify deployment independently. The earliest Amphenol contact remains
+15:22:24 Eastern, plus the existing credible-window decision. This turn
+is progress on a still-active project, not another no-progress turn.
+
 ## Earlier active checkpoint — fresh operator repair and provider hold
 
 ### November 21 at 14:28 Eastern
