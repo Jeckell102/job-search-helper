@@ -132,6 +132,35 @@ verify deployment independently. The earliest Amphenol contact remains
 15:22:24 Eastern, plus the existing credible-window decision. This turn
 is progress on a still-active project, not another no-progress turn.
 
+Latest private GitHub backup `2f7e3d16e2242fcc3d15d51a290af2db910f5817`
+was fetched and all 14 files compared byte for byte at about 15:18 Eastern.
+The administrator observer was still absent. [Enrollment backup verification](S5_AMPHENOL_ENROLLMENT_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 15:27 Eastern
+
+Root remains coordinator and release owner. This turn made concrete
+progress by wiring the exact native fresh-pilot armer, accepting its
+corrected source after independent startup-readiness QA and assembling
+the seven measured application tool files in the existing private stage.
+The assembled source compiled and passed twelve focused checks. Independent
+QA completed. The no-apply armer held at its required, absent deployed
+two-tool receipt. No launch or production modification occurred.
+[Armer and preparation](S5_AMPHENOL_NATIVE_ARMER_STAGE_20261121.md).
+
+The installed local intake observation ran at 15:20 and returned zero
+pending events. No alternate named request was eligible. The Amphenol
+earliest contact deadline passed at 15:22:24. Keep the provider on hold
+until the actual builder and a credible scoped attempt are available.
+At 15:27, the exact -05 administrator observer socket was still absent,
+and both native tool files still matched the before-images. The user
+already has the one-shot terminal command. The next real action is the
+read-only host preflight after fresh observer readiness, then the exact
+two-file tool installation and independent native readback if it passes.
+All broad controls and all previous company evidence remain protected.
+Overall acceptance is approximately 40%, with actual deployment and
+end-to-end receipts still open. All worker lanes from this checkpoint
+finished. Root retains native release ownership.
+
 ## Earlier active checkpoint — fresh operator repair and provider hold
 
 ### November 21 at 14:28 Eastern

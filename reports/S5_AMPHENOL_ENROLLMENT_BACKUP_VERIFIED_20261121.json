@@ -1,0 +1,24 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "2f7e3d16e2242fcc3d15d51a290af2db910f5817",
+  "exact_file_count": 14,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "f549336ce4b2ab3141644683e3f8f2f3bf4d70aef514e14678607db28ef2f6aa",
+    "reports/S5_AMPHENOL_FRESH_CANDIDATE_PREPARATION_MAP_20261121.md": "875126035a45da6ee2f21f719b1d9142e8d815de2a334ab5a3508935c4ead84a",
+    "reports/S5_AMPHENOL_FRESH_ENROLLMENT_INDEPENDENT_QA_20261121.md": "6b84aa4edee39a731b89be0fb98e7451906656e19c39eace21bbcd6e7a575929",
+    "reports/S5_AMPHENOL_FRESH_ENROLLMENT_PREPARATION_20261121.md": "51c060e6f9062535d3220f911ab4f8e9de36e1fe1eb357caa78b2cd24d61a58c",
+    "reports/S5_AMPHENOL_FRESH_RELEASE_BACKUP_VERIFIED_20261121.json": "67580229e0272a78b64473ea23ebb3cdbeaef2028f1e319f1fa0b8e4efc6aba8",
+    "reports/sprint_roadmap.md": "95a533f8034478cb2455d3b9779e6f2446de03314de9ce049a678aadd37beaba",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/INACTIVE_RESTART_RESULT.txt": "548b72486ebd1508e85fcb422a290461496a665d61d59074260af9e052afc59f",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/OFFLINE_RESULT.txt": "d1978c1eb0cd573d5cf5e8ee23d605b25cb10239a5f893264096c00592fc2bbf",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/fresh_operator_enrollment_input.py": "d8cbe0da4e3439e2b28a92f9eecb26b42f278ad591660d0623798743f888d7f6",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/fresh_pilot_environment.py": "2a00894c617904ee4edae4b0c4fccf0d45e63776550f9ffe569141ad5507307c",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/tests/S5_AMPHENOL_FRESH_SUCCESSOR_NATIVE_READBACK_20261121.json": "96cf0cbc51de8cd6f5972614ec81e711a8aaf6a9f87a58b6b76e661d5c0d5434",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/tests/probe_inactive_restart.py": "5925c11287cf1c29badb7860c590d755058d599ca147b5272c560967a1b8588a",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/tests/test_fresh_operator_enrollment_input.py": "1f6b46c93e99d510251e697b2032416e0c2a6a97754d9341a29d2c157f8c891c",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/tests/test_fresh_pilot_environment.py": "40e8162870f0cb507abe6ef48c8e6641f8ce2abc28d29cdc4d4d8b982099bcb0"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T15:19:18-05:00"
+}

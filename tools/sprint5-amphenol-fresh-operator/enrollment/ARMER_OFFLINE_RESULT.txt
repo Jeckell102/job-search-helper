@@ -1,0 +1,2 @@
+corrected armer retried readback and confirmed the new ready wrapper
+private owner record, exact process scope and the single restart verified

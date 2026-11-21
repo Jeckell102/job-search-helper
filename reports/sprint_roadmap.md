@@ -580,6 +580,13 @@ helpers passed focused independent tests. Native installation still waits
 for the administrator observation. Fresh build output is required to
 restamp candidate and qualification pins. [Enrollment preparation](S5_AMPHENOL_FRESH_ENROLLMENT_PREPARATION_20261121.md).
 
+At 15:27 Eastern, independent QA accepted the exact native fresh-pilot
+armer and its bounded listener-read repair. The seven planned application
+tool images passed the refreshed scope and focused fixtures. Local intake
+returned zero alternate requests. The actual native builder update still
+waits for administrator observation, and the application candidate remains
+pending an authentic fresh build. [Native stage](S5_AMPHENOL_NATIVE_ARMER_STAGE_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.
