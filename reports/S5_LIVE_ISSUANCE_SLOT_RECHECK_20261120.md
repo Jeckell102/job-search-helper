@@ -1,0 +1,19 @@
+# S5 issuance slot independent source recheck
+
+**REJECT.** The repair closes the original late-confirmation, clock rollback, and private-state rollback probes at their tested boundaries. A final filesystem custody check still lets the application begin work or receive evidence after the boot-scoped elapsed deadline. This verdict applies to the two staged source pins and the abstract admission contract exercised with a disposable store.
+
+- Source SHA-256 `007c44af9ea13c6b10fe12425e4f4b42dde6288c0a02177524fe0143d1b3f415`.
+- Bundled tests SHA-256 `ca38b53bffe713c9fcb088aa69ad5956f605ab343397f1c6e7a1192045c4a525`.
+- **71 bundled tests passed.** They exercise commit-boundary expiry in a fresh process, sticky expiry after clock correction, private-root rollback preserving the inode, authority loss, unadmitted bindings, and rejection of custody evidence by the existing verdict consumer. [Expiry and rollback tests](/tmp/jsh-s5-live-issuer-slot.pfmWxjB4/tests/test_s5_live_issuance_slot.py:412) · [Verdict consumer test](/tmp/jsh-s5-live-issuer-slot.pfmWxjB4/tests/test_s5_live_issuance_slot.py:546)
+- **Five independent checks produced three safety failures and two passes.** Eight contending callers with the same retained authority granted exactly one allowance, and a failed admission confirmation left the written evidence on hold with the allowance spent. [Independent checks](/tmp/jsh-s5-slot-recheck.nihR67WN/test_recheck.py)
+- The [original rejection](/tmp/jsh-s5-issuance-slot-independent.md) is retained. Production authority wiring, execution metering, and operational readiness are outside this source recheck.
+
+## Required fix
+
+During reservation, the final retained admission check runs before the last physical slot check. The check performs filesystem I/O and can cross the deadline. Advancing the boot-scoped elapsed clock by 61 seconds during this final check for a 60-second window, with wall time unchanged, still caused `reserve` to yield the work allowance. The state is already spent, so the issue is work beginning outside the authorized window even though a later commit would reject it. [Reservation return path](/tmp/jsh-s5-live-issuer-slot.pfmWxjB4/src/job_search_helper/ordinary_live_issuance_slot.py:343) · [Reservation deadline check](/tmp/jsh-s5-slot-recheck.nihR67WN/test_recheck.py:31)
+
+The shared confirmation path for commit and refreshed readback checks retained admission before its final physical custody check. Advancing elapsed time during that final check caused each public operation to return a populated evidence result after expiry. The bundled clock tests cut at publication and authority confirmation, which precede this final custody check. [Confirmed result return path](/tmp/jsh-s5-live-issuer-slot.pfmWxjB4/src/job_search_helper/ordinary_live_issuance_slot.py:404) · [Commit return path](/tmp/jsh-s5-live-issuer-slot.pfmWxjB4/src/job_search_helper/ordinary_live_issuance_slot.py:464) · [Commit and refresh deadline checks](/tmp/jsh-s5-slot-recheck.nihR67WN/test_recheck.py:55)
+
+Keep the existing post-authority custody validation and check the frozen elapsed and UNIX window immediately after it, before yielding work or returning current evidence. If that check detects expiry, persist terminal expiry through the independent authority and raise a hold. The acceptance tests should advance the clock at each of the three final custody boundaries and verify both refusal and durable expiry. Preserve the contained behavior when the confirmation transaction fails or a worker dies after the local marker and before authority confirmation.
+
+The mandatory admission capability provides an appropriate boundary for exact dispatch enrollment, durable spend, and exact commit confirmation. The bundled SQLite witness demonstrates this contract in a disposable environment. An eventual application entry point needs to supply a trusted implementation tied to live dispatch and evidence validation.

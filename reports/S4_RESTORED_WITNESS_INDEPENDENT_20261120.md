@@ -1,0 +1,23 @@
+# Independent restored-checkpoint recovery review
+
+**ACCEPT for the exact staged source. ACCEPT for the independently read replacement archive and original journal.** This review used disposable tests and private file reads.
+
+| Component | Verified SHA-256 |
+| --- | --- |
+| [Final checker entrypoint](/tmp/jsh-s4-restored-witness.KT8wKPcI/host_check_main.py) | `562c0cd36119f0575f9b87f3ec5a59287ebcb35ff479b8b06df751061a220ab9` |
+| [Final amendment](/tmp/jsh-s4-restored-witness.KT8wKPcI/amend_restored_checker.py) | `02029b3a1e04903e0c27dc201541030bc973afee99f38e56f666d5f7e4c4e562` |
+| [Maintained amendment tests](/tmp/jsh-s4-restored-witness.KT8wKPcI/test_amend_restored_checker.py) | `fe8fb71dd50f31e3a01a6a2e4160fbaf7f3f63697e9747027a33fc926d4bf825` |
+| [Reviewed replacement archive](/tmp/jsh-s4-restored-witness.KT8wKPcI/host-check.rollback-reviewed) | `b96589be7d70647187eb61e41f9cc5beec08e6c4e0c2e982c13862dabe5bda98` |
+| Original diagnostic checker | `2152e99bd8994cc5bd51aa6cb9fea1c6ff36557fd975793456543342bc5101b8` |
+| Private maintenance tool pin | `3dc37084bfd4b7b2898d9fa5bf8d80f35fd842482e0f9b238b5b69f6bb496dd2` |
+| Original controller journal | `ed80792a28eaaf6e1baa2a014621ae8f374472a955ffd4647ae60f9cbc9ee2b2` |
+| Installer transaction journal | `25ed055b256e1c2f2c63c39c102d39aa3ee16fb82cd47c0543f089bfc00cedb9` |
+| Current diagnostic exchange policy | `04aad106dd9cf585d0d02854c4c315c55049f2a0364911af80c5e1fff3006f9a` |
+
+- Only the exact `restored` hook enters the bounded stability wait. A quiet physical interval admits a fresh, full original attestation. The result still needs continuity finalization, unchanged physical evidence, and the same authenticated writer owner after the final scan. A protected baseline mismatch holds immediately. Other checkpoints run the existing full path once. The final source corrects the earlier missed owner check after the last physical scan. [Restored wait and entrypoint](/tmp/jsh-s4-restored-witness.KT8wKPcI/host_check_main.py:32)
+- The amendment loads maintenance helpers only after authenticating all five modules against the separate tool pin and executes their checked byte strings. It requires the exact original journal, trusted old and new checker digests, unchanged policy, the specific `RELEASE_REFUSED/ROLLED_BACK` phase and target, and the actual completed installer rollback receipt. It checks the original held source and exchange and uses rehashed original checker bytes for a sealed protected proof with the exact maintenance marker ID and live writer lease. The final source corrects the earlier absent-marker helper incompatibility and rejects rollback records without a completed installer receipt. [Receipt guard](/tmp/jsh-s4-restored-witness.KT8wKPcI/amend_restored_checker.py:67) · [Held proof and tool pins](/tmp/jsh-s4-restored-witness.KT8wKPcI/amend_restored_checker.py:99) · [Live binding checks](/tmp/jsh-s4-restored-witness.KT8wKPcI/amend_restored_checker.py:177)
+- The amendment saves the original journal and exact intent as private evidence. It exchanges the two checker objects atomically, proves their placement and durability, and writes the amended journal. The journal's sole semantic change is the checker file reference. Replay recognizes the exact old checker with original journal, the exact new checker with original journal, and the exact new checker with the expected amended journal. It holds other combinations and checks the final held source, receipt, and exchange again. [Atomic commit](/tmp/jsh-s4-restored-witness.KT8wKPcI/amend_restored_checker.py:80)
+- The staged archives each contained 12 unique valid members. Only `__main__.py` differed, and the new member matched the reviewed source bytes. The embedded policy, original protected-state pin, and all five tool hashes matched. The original controller journal was canonical and byte-stable across reads. It matched the physical old checker reference and exact non-null, wrapper-fenced `ROLLED_BACK` installer receipt. The exchange journal matched the normalized current policy and held the acknowledged closed phase with all three pairs and no terminal proof.
+- **48 focused tests passed** on the final pins, including 13 independent cases. Independent fixtures covered the final owner change, held-marker mismatch, interruption before and after the checker and journal writes, unknown pair/journal combinations, exact record preservation, and tool verification before execution. Maintained cases included a real sealed marker and lease proof on a disposable fixture. [Independent tests](/tmp/jsh-s4-restored-independent.BJLrEeod/test_restored_review.py)
+
+No production database reads, service calls, or live amendment were performed in this review.
