@@ -43,9 +43,51 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 5 terminal retries and Sprint 6 public qualification
+
+### Latest outcome, November 21 at 03:23 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the Sprint 4
+Freeform pilot were accepted. Sprint 5 has staged component evidence.
+Sprints 5–7 still require independent deployed acceptance.
+
+`/root/listener_ownership_qa` authored the exact consumed-retry fix.
+`/root/s5_live_authority_plan` rejected four initial fixture cases and
+accepted the corrected source after all eight independent probes and
+12 maintained tests passed. Root separately closed the terminal outcome
+writer trust gaps. `/root/listener_ownership_qa` saved the initial
+rejection, first recheck, and final acceptance after cross-application and
+alias handling passed. The archived disposable Amphenol closeout now
+produces one sender COMPLETE and one receiver VALIDATED_COMPLETE, with
+repeat delivery inert. Both fixes are composed at
+`/tmp/jsh-s5-confirmed-retry-outcome.20261121`.
+[Retry evidence and QA](S5_RETRY_ADMISSION_AND_TERMINAL_DELIVERY_20261121.md).
+
+`/root/architecture_publication_review` verified the employer's exact
+Allen Control Systems Ashby tenant using four bounded public reads. Normal
+dispatch returned 19 listed jobs and all descriptions; one final reread
+matched the cohort. Root staged one exact COMP-0164 source registry entry;
+`/root/s5_live_authority_plan` independently accepted it after 17 tests.
+This updates the proposed structure to
+Ashby and leaves production release, storage and retry acceptance open.
+[Allen public evidence](S6_ALLEN_ASHBY_PUBLIC_QUALIFICATION_20261121.md).
+[Allen source QA](S6_ALLEN_ASHBY_SOURCE_INDEPENDENT_20261121.md).
+
+No production database, Sheet, scheduler, checkout or runtime was changed
+by these staged updates. The retained cycle remains the native blocker for
+the named candidates. The current next action is one maintained release
+owner handoff that consumes independent qualification and follows only the
+owned retry through exact admission, publication and the terminal recorder.
+Use the existing release controller and no generic start fallback. Keep
+broad backlog processing and unqualified releases disabled. One Jetson
+inference lane remains the deployment constraint. No user action is needed.
+Latest verified private backup before this checkpoint is
+`9f55f8103f6bdc1ca7255efbb7f68fd9d67914d6`.
+
 ## Sprint 6 reliability while the Sprint 5 production pilot is held
 
-### Latest outcome, November 21 at 03:04 Eastern
+### Latest outcome, November 21 at 03:05 Eastern
 
 Root is coordinator and release owner for active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 are accepted, the
@@ -94,9 +136,10 @@ fixture and initial QA finding remain separate.
 [Disk-pressure pilot fix](S6_DISK_PRESSURE_PILOT_HOLD_20261121.md).
 [Sequential fixture result](S6_SEQUENTIAL_PROVIDER_HOLD_REHEARSAL_20261121.md).
 
-Current verified private backup `b7f2333422b5288fe5894a4f7c71d098d0f6462d`
-includes the disk-pressure fix and independent QA verified by remote
-commit and exact file comparison. Draper's official public careers page
+Current verified private backup `9f55f8103f6bdc1ca7255efbb7f68fd9d67914d6`
+includes the disk-pressure fix, corrected two-event fixture, and both
+independent QA records. Root fetched the remote commit and matched
+selected files exactly. Draper's official public careers page
 still points to the Workday tenant, but the configured board redirected the
 public reader to an outage page. It stays a proposed case with qualification
 on hold. Next, retain the verified staged evidence for the release and

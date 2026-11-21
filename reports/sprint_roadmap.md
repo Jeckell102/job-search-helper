@@ -341,6 +341,11 @@ composed disposable run produced the expected wrapper automatically.
 Genuine production ownership, deployment, release, retry, publication
 and installed QA remain open. Read-only native verification found no
 eligible owned origin while the protected historical cycle retains Amphenol.
+Independent staged QA accepted the exact admission replay guard and terminal
+receipt join. A disposable Amphenol replay produced one sender COMPLETE and
+one receiver VALIDATED_COMPLETE. The maintained release owner still needs to
+call the measured release gate and follow its owned retry to this result.
+[Retry evidence and QA](S5_RETRY_ADMISSION_AND_TERMINAL_DELIVERY_20261121.md).
 [Public witness](S5_AMPHENOL_PUBLIC_PAGINATION_WITNESS_20261121.md) ·
 [Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md) ·
 [Test-workbook result](S5_AMPHENOL_FIXTURE_WORKBOOK_PASS_20261121.md) ·
@@ -397,6 +402,14 @@ The composed two-Company fixture proved that a provider hold is saved
 without a repair, and that the next eligible Company proceeds to exact
 local and workbook-fixture storage. Live sequential acceptance with
 three qualified completion structures remains open.
+For the frozen Allen Control Systems case, current official employer
+evidence identifies Ashby as the successor to the old Greenhouse
+configuration. Normal dispatch returned 19 listed postings with full
+descriptions and a stable reread. Treat the Ashby migration as the reviewed
+candidate structure; production admission and end-to-end acceptance remain
+open. Independent staged QA accepted the one-entry source correction.
+[Allen source qualification](S6_ALLEN_ASHBY_PUBLIC_QUALIFICATION_20261121.md).
+[Allen source QA](S6_ALLEN_ASHBY_SOURCE_INDEPENDENT_20261121.md).
 [Reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
 [Disk pressure and pilot hold](S6_DISK_PRESSURE_PILOT_HOLD_20261121.md).
 [Provider hold and continued progress](S6_SEQUENTIAL_PROVIDER_HOLD_REHEARSAL_20261121.md).
