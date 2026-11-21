@@ -43,6 +43,90 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Exact scoped scraper and terminal settlement accepted in staging
+
+### November 21 at 11:37 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 has independent staging
+acceptance of the exact operator request, normally dispatched partial,
+pre-import launch, and single local terminal outcome. Initial QA
+reproduced a queue acknowledgement cut and a mismatched indexed outcome
+row. The repaired exact pin recovers only its own pending request
+acknowledgement, then verifies the full indexed outcome row. Five
+independent settlement tests and one real copied launcher check passed.
+Root's 23-check focused suite passed after excluding two known bootstrap
+test failures reproduced with the unmodified installed application.
+Both original failure reports are preserved. No new production install,
+provider request or workbook mutation occurred in this lane.
+
+`/root/approval_provenance_design` delivered the staged host and choice
+bridge, four author checks passed. `/root/architecture_publication_review`
+owns independent review of its actual outcome/receipt/choice join before
+inference. `/root/adapter_dependency_reconcile` owns smallest guarded
+deployment-path research. `/root/listener_ownership_qa` accepted the
+observation and application settlement. Root owns composition, backup and
+scope decisions. The owner can continue adding Opportunities. Live
+Amphenol work remains held and percentage is about 40% overall by
+accepted roadmap gates. [Source checkpoint](S5_OPERATOR_SCOPED_APPLICATION_20261121.md).
+
+## Scoped operator observation accepted in staging
+
+### November 21 at 11:30 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 is proceeding in
+`/tmp/jsh-operator-owned-bridge.xu59ooer` only. Operator request ownership
+and the typed normal-provider observation passed independent QA after
+repairing canonical State-path and reopen durability checks. The first
+author terminal fixture passed the forced cut between local mirror and
+State, and generated one qualified outcome after State settled. Existing
+ordinary fetch/publication and request regression passed 48, two new
+observation cases passed, and the expanded focused suite passed 14.
+The new exact pre-import entrypoint and settlement still need independent
+integrated QA. No production collector, model, workbook, or queue work is
+running. The owner can keep adding jobs to Opportunities normally.
+
+Root owns the staged scraper entry, application settlement, and their
+tests. `/root/adapter_dependency_reconcile` completed its exact scoped
+request reader and tests. `/root/listener_ownership_qa` owns the independent
+source gates. `/root/approval_provenance_design` owns only host enrollment,
+choice input and its focused test. Initial host enrollment will start at
+most one isolated review pilot and cannot install a release. Next connect
+the named scope to the host, verify terminal replay and production gates,
+and preserve the ordinary event path. Overall remains about 40% by
+accepted roadmap gates. The verified deployed retirement and backup remain
+`ab25b9b0af45e25d3bda860c3b54e46218f7ce31`.
+
+## Exact operator-origin repair bridge in development
+
+### November 21 at 11:18 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The archive-only retirement is
+complete and independently accepted. The verified private GitHub
+checkpoint is `ab25b9b0af45e25d3bda860c3b54e46218f7ce31`, fetched and
+byte-matched across all 13 scoped files. [Backup verification](S5_RETIREMENT_NATIVE_BACKUP_VERIFIED_20261121.json).
+
+Sprint 5's remaining live wrapper gate has no genuine current event.
+Use the existing one-company authorization and normal fetch, with a
+small explicit bridge to recognize a real measured Amphenol partial
+and feed the existing held-repair receipts. The normal run's setup
+can affect unrelated work and bare `start` can widen on a missing
+request. Use the existing narrow command/lease pattern, with a
+different verified request origin. Do not manufacture a Company edit,
+alter generic settlement, or widen launch/release controls. Treat the
+normal operator request and automatic event path as separate authorities.
+[Operator ownership design](S5_AMPHENOL_OPERATOR_OWNERSHIP_DESIGN_20261121.md).
+
+`/root/adapter_dependency_reconcile` owns only the operator request,
+saved-cycle and receipt readback primitive and its disposable tests
+in `/tmp/jsh-operator-owned-bridge.xu59ooer`. Root owns the measured
+fetch/settlement decision and final integration. The coordinator lane
+can plan the exact enrollment join in parallel and must reuse receipts.
+No deployment, queue, provider, workbook or inference is in scope
+while these source lanes are active. Independent QA follows integration.
+
 ## Archived retirement and route restoration independently accepted
 
 ### November 21 at 11:15 Eastern

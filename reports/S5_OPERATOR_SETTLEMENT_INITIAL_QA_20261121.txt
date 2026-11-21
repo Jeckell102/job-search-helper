@@ -1,0 +1,58 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+____ test_admission_cut_before_archiving_request_recovers_one_exact_request ____
+
+selected = namespace(jobs=PosixPath('/tmp/jsh-operator-settlement-independent.45sBKQMt/original-pytest/test_admission_cut_before_... selected.<locals>.<lambda> at 0x76e132650dc0>, provider=<Mock id='130709585283536'>, read=<Mock id='130709585282864'>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e132885ea0>
+
+    def test_admission_cut_before_archiving_request_recovers_one_exact_request(selected,monkeypatch):
+        rename=Path.replace
+
+        def interrupted(source,target):
+            if source==selected.path:
+                raise OSError("fixture cut before normal request acknowledgement")
+            return rename(source,target)
+
+        with monkeypatch.context() as patch:
+            patch.setattr(Path,"replace",interrupted)
+            assert selected.run()==1
+        assert selected.path.read_bytes()==selected.queued
+        with (closing(State(selected.state,readonly=True)) as state,
+              closing(SQLiteRepository(selected.jobs,"sheet",readonly=True)) as repo):
+            before,=state.cycles()
+            assert before["status"]=="In Progress"
+            assert repo.scrape_outcomes(company_id="COMP-0490")==[]
+        assert selected.run()==0
+>       assert not selected.path.exists()
+E       AssertionError: assert not True
+E        +  where True = <bound method Path.exists of PosixPath('/tmp/jsh-operator-settlement-independent.45sBKQMt/original-pytest/test_admission_cut_before_arch0/next-scan.json')>()
+E        +    where <bound method Path.exists of PosixPath('/tmp/jsh-operator-settlement-independent.45sBKQMt/original-pytest/test_admission_cut_before_arch0/next-scan.json')> = PosixPath('/tmp/jsh-operator-settlement-independent.45sBKQMt/original-pytest/test_admission_cut_before_arch0/next-scan.json').exists
+E        +      where PosixPath('/tmp/jsh-operator-settlement-independent.45sBKQMt/original-pytest/test_admission_cut_before_arch0/next-scan.json') = namespace(jobs=PosixPath('/tmp/jsh-operator-settlement-independent.45sBKQMt/original-pytest/test_admission_cut_before_... selected.<locals>.<lambda> at 0x76e132650dc0>, provider=<Mock id='130709585283536'>, read=<Mock id='130709585282864'>).path
+
+test_independent.py:85: AssertionError
+----------------------------- Captured stdout call -----------------------------
+Operator Amphenol partial: {"cycle_id": "CYC-7B899206E786", "outcome": {"action": "upsert_qualified_repair", "failure_fingerprint": "ea186593aa3998e7846139b1e9fc9c1bef5a1510bc5f6bc5b87ec947fef31bef", "identity": {"adapter_version": "normal-scraper-v1", "company_id": "COMP-0490", "cycle_id": "CYC-7B899206E786", "provider": "AcquireTM", "request_id": "operator-fixture", "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501"}, "outcome": "QUALIFIED_INTEGRATION_REPAIR", "outcome_id": "OUT-70826fe0deef3c0938ab4875", "repair_category": "pagination_regression"}, "settlement_sha256": "0c80d03c81bae08098629aa57c7ce4642f649d9cd1853a99930625ed0a7cc3ba", "state": "FETCH_REPAIR_QUALIFIED"}
+----------------------------- Captured stderr call -----------------------------
+ERROR: fixture cut before normal request acknowledgement
+________ test_indexed_settlement_outcome_drift_is_not_successful_replay ________
+
+selected = namespace(jobs=PosixPath('/tmp/jsh-operator-settlement-independent.45sBKQMt/original-pytest/test_indexed_settlement_ou... selected.<locals>.<lambda> at 0x76e13354ed40>, provider=<Mock id='130709592937984'>, read=<Mock id='130709592946672'>)
+
+    def test_indexed_settlement_outcome_drift_is_not_successful_replay(selected):
+        assert selected.run()==0
+        with closing(SQLiteRepository(selected.jobs,"sheet")) as repo,repo.transaction():
+            repo.db.execute("UPDATE scrape_outcomes SET recorded_at='fixture-other-durable-time'")
+>       assert selected.run()==1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <function selected.<locals>.<lambda> at 0x76e13354ed40>()
+E        +    where <function selected.<locals>.<lambda> at 0x76e13354ed40> = namespace(jobs=PosixPath('/tmp/jsh-operator-settlement-independent.45sBKQMt/original-pytest/test_indexed_settlement_ou... selected.<locals>.<lambda> at 0x76e13354ed40>, provider=<Mock id='130709592937984'>, read=<Mock id='130709592946672'>).run
+
+test_independent.py:102: AssertionError
+----------------------------- Captured stdout call -----------------------------
+Company-only scan: CYC-9D3F180C91C8. Only 1 declared company ID(s) are queued.
+Operator Amphenol partial: {"cycle_id": "CYC-9D3F180C91C8", "outcome": {"action": "upsert_qualified_repair", "failure_fingerprint": "ea186593aa3998e7846139b1e9fc9c1bef5a1510bc5f6bc5b87ec947fef31bef", "identity": {"adapter_version": "normal-scraper-v1", "company_id": "COMP-0490", "cycle_id": "CYC-9D3F180C91C8", "provider": "AcquireTM", "request_id": "operator-fixture", "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501"}, "outcome": "QUALIFIED_INTEGRATION_REPAIR", "outcome_id": "OUT-68392db1ec0b07b098c6f0b1", "repair_category": "pagination_regression"}, "settlement_sha256": "65fc4631067242648ae9aead0e54fc11e15c9cbb4a6203adb8743b1770006864", "state": "FETCH_REPAIR_QUALIFIED"}
+Operator Amphenol partial: {"cycle_id": "CYC-9D3F180C91C8", "outcome": {"action": "upsert_qualified_repair", "failure_fingerprint": "ea186593aa3998e7846139b1e9fc9c1bef5a1510bc5f6bc5b87ec947fef31bef", "identity": {"adapter_version": "normal-scraper-v1", "company_id": "COMP-0490", "cycle_id": "CYC-9D3F180C91C8", "provider": "AcquireTM", "request_id": "operator-fixture", "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501"}, "outcome": "QUALIFIED_INTEGRATION_REPAIR", "outcome_id": "OUT-68392db1ec0b07b098c6f0b1", "repair_category": "pagination_regression"}, "settlement_sha256": "65fc4631067242648ae9aead0e54fc11e15c9cbb4a6203adb8743b1770006864", "state": "FETCH_REPAIR_QUALIFIED"}
+=========================== short test summary info ============================
+FAILED test_independent.py::test_admission_cut_before_archiving_request_recovers_one_exact_request
+FAILED test_independent.py::test_indexed_settlement_outcome_drift_is_not_successful_replay
+2 failed in 0.68s
