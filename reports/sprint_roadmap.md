@@ -515,6 +515,15 @@ admitted one-shot entry, live approval and scoped retry are open.
 [Fresh hold](S5_AMPHENOL_FRESH_WINDOW_INDEPENDENT_HOLD_20261121.md)
 · [Recovery QA](S5_AMPHENOL_OPERATOR_ACTIVATION_CUT_INDEPENDENT_QA_20261121.md).
 
+Independent QA accepted the corrected one-shot operator entry after
+11 focused checks and two durable test-copy readbacks. Default-off
+holds; controls precede writable movement; and the terminal-only
+existing Store attachment skips schema initialization. Both first
+activation and interrupted recovery produced one confirmed fixture job
+and one stored coordinator completion, with replay unchanged. Live
+Amphenol qualification and the actual maintenance-bound first run
+remain required. [One-shot QA](S5_AMPHENOL_OPERATOR_ONE_SHOT_INDEPENDENT_QA_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.
@@ -571,9 +580,13 @@ latest-revision proposals, stale and withdrawn holds, and a busy result
 while committed SQLite changes await checkpoint. The preview acknowledged
 no event and created no request. The staged command read the native Jobs
 store in place under an immutable guard and reported zero pending events.
-Production installation and observe-only operation remain open.
+The installed normal shell/runner was later independently verified
+with zero pending events and zero audited write, network, mutation or
+subprocess attempts. Seven source pins and all scoped file content
+matched. Two SQLite sidecar timestamps changed with matching contents.
+This accepts the installed observe-only activation subgate.
 [Independent observation QA](S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md)
-· [Native readback](S6_NATIVE_INTAKE_OBSERVATION_20261121.json).
+· [Installed readback](S6_INSTALLED_OBSERVE_ONLY_INDEPENDENT_20261121.md).
 The staged separate scrape-launch control allows intake to keep a valid
 request queued while new launches are paused. Independent shell QA verified
 the exact ordinary admission once enabled, preserved publication handoff

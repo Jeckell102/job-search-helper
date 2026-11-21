@@ -43,6 +43,70 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## One-shot first activation and recovery accepted in a test copy
+
+### November 21 at 13:42 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Previous turn made concrete
+progress through a fresh public hold, independently accepted recovery,
+and verified 16-file backup. Sprint 5 remains the priority. Overall
+project acceptance remains approximately 40%.
+
+The staged one-shot takes the existing scheduler and supervision flocks
+in service order through one selected release, retry and receipt. A
+caller supplies the separately authorized quiet maintenance scope
+that excludes host startup, shutdown and other Store writers.
+Default-off returns a pure hold. Actual native maintenance admission
+and package installation are open.
+
+Independent QA rejected the original implementation for changing a
+held receiver's SQLite journal mode through the normal Store initializer.
+The corrected entry checks current controls via a read-only connection
+and uses existing-only Store attachment for terminal delivery. The Store
+attachment skips bootstrap, never creates a missing DB, and preserves
+standard Store behavior. A second finding caught omitted task status;
+the final source now holds at that evidence gap. Independent recheck
+passed 11 checks and three focused maintained suites passed 26.
+[One-shot independent QA](S5_AMPHENOL_OPERATOR_ONE_SHOT_INDEPENDENT_QA_20261121.md).
+
+Separate final-source disposable runs independently passed initial
+activation and post-install recovery, each through one job and one
+matching workbook-fixture batch with two receipt pairs and one
+VALIDATED_COMPLETE event. Replays made no duplicate calls or writes.
+The initial activation began with no release journal or pending request,
+used the real fixed candidate compiler/rebuild and installed verifier,
+and preserved the seeded synthetic task and completed choice. The typed
+observation, prompt projection, qualification and workbook are test
+fixtures. The interrupted recovery reused the existing installed release
+and preserved its receipt/file identity. [Initial result](S5_AMPHENOL_OPERATOR_FIRST_ACTIVATION_DISPOSABLE_20261121.json)
+and [recovery result](S5_AMPHENOL_OPERATOR_ONE_SHOT_RECOVERY_DISPOSABLE_20261121.json).
+No public calls, live release, workbook write, or new Jetson inference.
+
+Sprint 6 installed observe-only activation verified independently:
+exact normal command exited 0 with zero pending events, seven source
+pins matched, all file-content hashes across 805 scoped entries
+matched, and audit recorded zero write/network/mutation/subprocess
+attempts. Two SQLite sidecar timestamps moved with equal contents,
+so whole-window physical metadata equality is unclaimed. This
+advances the installed observe-only activation subgate. Deployed
+sequential acceptance and actual named cases remain open.
+[Installed intake QA](S6_INSTALLED_OBSERVE_ONLY_INDEPENDENT_20261121.md).
+
+Root owns release and backup. `/root/listener_ownership_qa` accepted
+the final one-shot and both saved canaries.
+`/root/architecture_publication_review` accepted installed observe-only
+activation. `/root/adapter_dependency_reconcile` preserved a separate
+held fixture with an incompatible scope. No shared edits or native
+mutations are assigned. Latest verified backup
+`07eaf5bada4d2260699733463f7c635d8fead60c`.
+Next bind the staged one-shot to the actual maintenance controller's
+bounded quiet window under exact host and live release approval.
+The latest public candidate check is still terminal HOLD at zero
+job details. No more calls in that ended window. Broad processing
+and automatic unqualified release stay disabled. One Jetson lane.
+No user action expected for continuing staged work.
+
 ## Fresh Amphenol public check held; activation-cut recovery passed in a test copy
 
 ### November 21 at 13:23 Eastern
@@ -104,10 +168,14 @@ and pacing are unchanged. It has not run live. The corrected staged
 report uses the independently observed one-day bound and retains the
 superseded report separately.
 [Observer QA](S5_AMPHENOL_DETAIL_OBSERVER_INDEPENDENT_QA_20261121.md).
-Latest verified backup `ec260924bc3ad8656a57942075a9c8c3281df37a`.
-Next finish observer QA and stage the exact admitted operator entry
-while retaining the live provider hold. No broad processing or
-unqualified release. No user action expected.
+Latest verified backup `07eaf5bada4d2260699733463f7c635d8fead60c`, all 16 changed files matched.
+[Backup readback](S5_AMPHENOL_FRESH_WINDOW_RECOVERY_BACKUP_VERIFIED_20261121.json).
+Next stage the exact admitted operator entry using existing
+cross-process scheduler and supervision ownership for the same
+configured Store. Never substitute stand-alone process-local locks
+for the running host boundary. The live provider window remains
+closed. No broad processing or unqualified release. No user action
+expected.
 
 ## Amphenol disposable release-to-receipt rehearsal passed
 

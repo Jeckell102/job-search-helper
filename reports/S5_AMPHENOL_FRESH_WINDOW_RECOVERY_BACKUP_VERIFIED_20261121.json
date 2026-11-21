@@ -1,0 +1,24 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "07eaf5bada4d2260699733463f7c635d8fead60c",
+  "files": {
+    "reports/COORDINATOR_STATUS.md": "a8420fec12f787c7a6aa84ca94cb2369e73cc66dbe7e7387993282553969e3d9",
+    "reports/S5_AMPHENOL_DETAIL_OBSERVER_INDEPENDENT_QA_20261121.md": "826e1a5bac0e23366fd5e23750230f742fce076cc696d0286d6efa056586a97e",
+    "reports/S5_AMPHENOL_DETAIL_OBSERVER_STAGED_20261121.md": "de58e0e80a2f60dfc09ca88f165533ee6cadfff4b0c6fec9c53088b7866b38fd",
+    "reports/S5_AMPHENOL_FRESH_WINDOW_INDEPENDENT_HOLD_20261121.md": "46f93f81f4adebe4e4722a33598322c5d0db49249f71578c67829cfea35388ed",
+    "reports/S5_AMPHENOL_FRESH_WINDOW_NATIVE_CONTROLS_20261121.json": "f4d3b52f905dd1fa03f7587565628f7bc96f5be7b05d073fdd8461bbeea3a62f",
+    "reports/S5_AMPHENOL_FRESH_WINDOW_PREPARATION_20261121.md": "085cf4f23b4477d6743fa02022fa12cf73029515f0e84bb45e7a5de777977440",
+    "reports/S5_AMPHENOL_OPERATOR_ACTIVATION_CUT_DISPOSABLE_RESULT_20261121.json": "9837bed2ad22fe379f6af8ab5bef8497947b9cdb3334c7bf65cc7c091ffb81e3",
+    "reports/S5_AMPHENOL_OPERATOR_ACTIVATION_CUT_INDEPENDENT_QA_20261121.md": "a5c248e5202ec3d6f058d9b33ab7a9b8919fcd611aff1d1aa3f86a3116471b93",
+    "reports/S5_AMPHENOL_OPERATOR_COMBINED_BACKUP_VERIFIED_20261121.json": "17f729c0578476c9bed2df968ba94f934fb4025d4adb36213ebc4d2892edf591",
+    "reports/S5_AMPHENOL_OPERATOR_NATIVE_READINESS_HOLD_20261121.md": "d493e5892a83fc7992c8aee499c8b03f515bf85ea5a5e1e80d1aa2866ddb480b",
+    "reports/sprint_roadmap.md": "c74abec02511f7384984b81de8afe9d20124d5c8726846f1e8bff4e0eee4b737",
+    "tools/sprint5-amphenol-retained-owner/amphenol_operator_retained_release.py": "df7e0aabcc961342aa18fed318ee957c6f679342a938d22dd4e8e51570e403b4",
+    "tools/sprint5-amphenol-retained-owner/canary/offline_child.py": "fe22646a0f682317841d8abf1c426969a10861aadf0e3841b612ec029095d6d3",
+    "tools/sprint5-amphenol-retained-owner/canary/prove_recovery.py": "1c3b341e5993a1fc9080f2b1c76c6336ebbdf10bacd84e39353244e804671679",
+    "tools/sprint5-amphenol-retained-owner/qualification-observer/confirm_recipe_candidate.py": "fb80eef5e864c3ee277a249c40e02aa0b78bad9ef4e6359c7609762bc26cf22c",
+    "tools/sprint5-amphenol-retained-owner/qualification-observer/tests/test_confirmation_observer.py": "8cd9ccfb2fcdd35151cfb64e598db895e9d607fc3c355db19906c0e3a9713507"
+  },
+  "repository": "Jeckell102/job-search-helper",
+  "verified_at": "2026-11-21T13:28:38-05:00"
+}

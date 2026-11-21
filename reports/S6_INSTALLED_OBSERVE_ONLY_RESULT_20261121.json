@@ -1,0 +1,89 @@
+{
+  "atime_excluded": true,
+  "audit": [
+    {
+      "mutation_attempts": 0,
+      "network_attempts": 0,
+      "subprocess_attempts": 0,
+      "write_attempts": 0
+    }
+  ],
+  "audit_loaded": true,
+  "changed_components": {
+    "inventories.sqlite3-shm": {
+      "after": {
+        "metadata": {
+          "ctime_ns": 1795286000544153471,
+          "device": 64513,
+          "inode": 28717296,
+          "mode": 384,
+          "mtime_ns": 1795286000544153471,
+          "nlink": 1,
+          "size": 32768
+        },
+        "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb",
+        "stable_read": true
+      },
+      "before": {
+        "metadata": {
+          "ctime_ns": 1795285970526648914,
+          "device": 64513,
+          "inode": 28717296,
+          "mode": 384,
+          "mtime_ns": 1795285970526648914,
+          "nlink": 1,
+          "size": 32768
+        },
+        "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb",
+        "stable_read": true
+      }
+    },
+    "jobs.sqlite3-shm": {
+      "after": {
+        "metadata": {
+          "ctime_ns": 1795285970524648947,
+          "device": 64513,
+          "inode": 28706723,
+          "mode": 384,
+          "mtime_ns": 1795285970524648947,
+          "nlink": 1,
+          "size": 32768
+        },
+        "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb",
+        "stable_read": true
+      },
+      "before": {
+        "metadata": {
+          "ctime_ns": 1795285940505147469,
+          "device": 64513,
+          "inode": 28706723,
+          "mode": 384,
+          "mtime_ns": 1795285940505147469,
+          "nlink": 1,
+          "size": 32768
+        },
+        "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb",
+        "stable_read": true
+      }
+    }
+  },
+  "changed_source_files": [],
+  "command": [
+    "./job-search-scraper",
+    "storage",
+    "intake-observe"
+  ],
+  "elapsed_total_seconds": 61.08,
+  "exit": 0,
+  "observation": {
+    "detail": "Actual scrape admission depends on the normal queue and workflow checks.",
+    "events": [],
+    "more_events": false,
+    "scope": "LOCAL_LATEST_PENDING_EVENTS_PER_COMPANY",
+    "state": "COMPANY_INTAKE_OBSERVATION"
+  },
+  "physical_entries": 805,
+  "result": "OBSERVED_WITH_CONCURRENT_CHANGE_LIMITATION",
+  "state_namespace_unchanged": true,
+  "unstable_reads": []
+}
