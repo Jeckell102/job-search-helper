@@ -43,6 +43,77 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Owner retirement passed staged integration QA
+
+### November 21 at 10:20 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5's staged wrapper
+and full public Amphenol capture remain accepted. Production retirement,
+wrapper pilot, exact publication and installed QA remain open.
+
+The verified archive independently matches the 45 inventories, six
+plans and cursors, original checkpoint and local mirror, and both
+confirmed receipts. The revised candidate records retirement only while
+the scraper, sync and review writers are excluded. Independent QA
+accepted archive checking, control replay and new Company admission.
+Old resume/exact routes and original queued request replay refuse.
+A missing/changed archive continues to hold fresh admission. The
+candidate and reviewed 44-path merged runtime each passed the combined
+29-case check. The broader candidate passed 205 with only the same
+12 established baseline failures. A native read found no live marker,
+pending next-scan or unresolved release.
+
+Root owns archive, old recovery choke points, source composition, backup
+and live coordination. `/root/adapter_dependency_reconcile` completed engine,
+runner and exact sync guards. `/root/approval_provenance_design` completed
+independent archived-record comparison. `/root/listener_ownership_qa`
+accepted the corrected staged integration after the replay defect.
+`/root/architecture_publication_review` completed the narrow 44-path
+maintenance parser and predecessor compatibility. Independent rerun passed
+68 policy checks.
+
+The actual disposable controller installed and rolled back all 44
+exact source paths with 12 absent paths restored and the original 143
+predecessor artifacts unchanged. The successor also passed seven
+existing wrapper-owner tests. The native checker, observer, current
+protected pin and signed handoff have not been enrolled. Next collect
+that native controller/service and archive witness under normal physical
+exclusion. Only a known compatible installed runtime may record the
+approved marker. The next product test is the actual owned single-Company
+Amphenol repair and ordinary publication. Keep one Jetson inference lane.
+[Checkpoint and evidence](S5_RETIREMENT_INTEGRATED_CHECKPOINT_20261121.md).
+
+## Owner selected archive-first retirement
+
+### November 21 at 10:01 Eastern
+
+Root remains coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The owner asked whether the old
+scrape could be cleared and still-active openings collected later, and
+confirmed the narrower archive-first retirement of only
+`CYC-B639C6D864EC`. Preserve original saved batches, earlier results,
+tracker rows and review decisions. Do not mark abandoned work synced or
+start a broad rescrape. This supersedes the previous turn's assumption
+that every saved batch in this cycle must be published first.
+
+Fresh read-only State and Inbox checks found this cycle still In Progress,
+40 unblocked and five blocked saved inventories, and original Saronic
+cursor 67. The copied local application and exact plan remain a backed
+up recovery option. Continuation to individual publication is deferred.
+The existing pause/supersede paths do not meet the new disposition:
+they require unsettled publication or create Company effects or a new
+full scrape. The next evidence is an exact guarded retirement rehearsal
+and ownership/readback proof. The live tracker and Jobs data have not
+been changed, and the Amphenol live wrapper acceptance is still pending.
+
+`/root/architecture_publication_review` owns installed lifecycle and
+retirement boundary review. `/root/approval_provenance_design` owns
+an immutable comparison of the exact live cycle with the verified
+backup. Root owns the retirement scope and integration. Independent
+QA will review the candidate before production.
+[Verified source backup](S5_LATE_CONTROL_SCOPED_BACKUP_VERIFIED_20261121.json).
+
 ## Signed late-control archive and copied local recovery
 
 ### November 21 at 09:57 Eastern
@@ -80,6 +151,8 @@ Keep the retained scopes and one Jetson inference lane intact.
 Deployment, real observation receipts and the rest of the historical
 cycle are outstanding.
 [Detailed checkpoint](S5_LATE_CONTROL_SCOPED_CHECKPOINT_20261121.md).
+Private GitHub checkpoint `73525baf50917f0e605424557aaccd034d0c1c07` was fetched
+and all 20 scoped files matched. [Backup verification](S5_LATE_CONTROL_SCOPED_BACKUP_VERIFIED_20261121.json).
 
 ## Guarded late-control recovery preview accepted
 

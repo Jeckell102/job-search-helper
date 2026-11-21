@@ -389,6 +389,14 @@ review fields on replay. Independent QA accepted that bounded result
 after correction of a raw-text binding failure. The live guarded apply,
 publication, terminal disposition and production wrapper pilot remain open.
 [Recovery checkpoint](S5_LATE_CONTROL_SCOPED_CHECKPOINT_20261121.md).
+The owner then selected archive-first retirement of only the unfinished
+historical cycle. Preserve the original checkpoint, 45 saved inventories,
+six plans and all confirmed publication history. Future still-active jobs
+can be fetched through an independently owned run. Retirement uses a
+distinct local control and no publication, cleanup, or Sheet changes. It
+must keep old resume and publication unavailable while leaving unrelated
+unfinished work and the release gates in force.
+[Archive and ownership plan](S5_RETIREMENT_OWNERSHIP_MAP_20261121.md).
 The actual corrected staged host reached the real installer and refused an
 unfinished legacy cycle before launch or any release, queue, workbook or
 source effect. Its release status now explains this hold. An independently

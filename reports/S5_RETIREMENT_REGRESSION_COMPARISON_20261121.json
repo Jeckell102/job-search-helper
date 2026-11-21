@@ -1,0 +1,20 @@
+{
+  "candidate_passed": 205,
+  "baseline_passed": 178,
+  "unchanged_legacy_failure_count": 12,
+  "new_failure_count": 0,
+  "matching_old_fixture_failures": [
+    "tests.test_exact_cycle_recovery.ExactCycleRecoveryTests::test_new_and_existing_selected_plans_are_processed_one_company_at_a_time",
+    "tests.test_exact_cycle_recovery.ExactCycleRecoveryTests::test_plan_checkpoint_split_and_post_final_split_route_without_global_work",
+    "tests.test_exact_cycle_recovery.ExactCycleRecoveryTests::test_planner_hold_does_not_publish_that_company_and_unselected_is_untouched",
+    "tests.test_exact_cycle_recovery.ExactCycleRecoveryTests::test_preflight_all_members_before_first_remote_planner_call",
+    "tests.test_exact_cycle_recovery.ExactCycleRecoveryTests::test_real_second_company_hold_preserves_first_and_unselected",
+    "tests.test_exact_cycle_recovery.ExactCycleRecoveryTests::test_supersession_race_fails_before_remote_or_unrelated_dirty_state",
+    "tests.test_fresh_scan_request.FreshScanRequestTests::test_company_event_request_cannot_widen_or_change_its_bound_event",
+    "tests.test_fresh_scan_request.FreshScanRequestTests::test_company_event_request_starts_only_its_bound_company",
+    "tests.test_release_admission_bootstrap.ReleaseAdmissionBootstrapTests::test_runner_consumes_exact_inherited_descriptor_without_reacquiring",
+    "tests.test_release_admission_bootstrap.ReleaseAdmissionBootstrapTests::test_terminal_release_tree_mismatch_fails_before_runner_import",
+    "tests.test_runner_cycles.ExactSyncContainmentTests::test_cli_named_exact_sync_never_enters_normal_lifecycle",
+    "tests.test_runner_cycles.ExactSyncContainmentTests::test_named_exact_preflight_is_readonly_for_selected_durable_records"
+  ]
+}

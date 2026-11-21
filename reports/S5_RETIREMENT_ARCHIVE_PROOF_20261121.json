@@ -1,0 +1,14 @@
+{
+  "archive_scope_sha256": "dfeb109aa9ef751053871e5d6f6f702e69bab6692fb8f28cbb317c3339cae7a7",
+  "blocked_inventory_count": 5,
+  "cycle_id": "CYC-B639C6D864EC",
+  "historical_confirmed_receipt_count": 2,
+  "original_mirror_sha256": "1009c4a360c39f64c9a53ee39b5e9191dbd094c1c8afb976d263d826dcd716cd",
+  "original_state_sha256": "ac52332c2009f9afa3a4b950fc97991d6fbae03641142329a9088cefe70e8fd8",
+  "published": false,
+  "retired": false,
+  "saved_inventory_count": 45,
+  "saved_plan_count": 6,
+  "status": "ARCHIVE_VERIFIED",
+  "version": "owner-retired-cycle-v1"
+}

@@ -1,0 +1,21 @@
+{
+  "baseline_pins": {
+    "controller.py": "7cebc5172d8334ceb665d1a942697bb9888992dd704ea518ba5cdfb8507422a8",
+    "gate.py": "7df4121796ce400461be9b4329984bc6f1ced83858588d3a63d4e5258d286537",
+    "installer.py": "ecf2bc46541f3477c3cc0878ddfa83729ba12e691ed580895cdb51bb22a4f984"
+  },
+  "elapsed_seconds": 0.46,
+  "manifest_sha256": "af3a43ce8031f5e5552fd0735ed6a96d6ccdf0d02f740fa829b5e2ca19dfa047",
+  "native_actions": false,
+  "source_pins": {
+    "controller.py": "83eb3246bdf0d5818e322ed85fb6fd73c6f2cd0138b62ad23585d73ba0b7d708",
+    "gate.py": "7df4121796ce400461be9b4329984bc6f1ced83858588d3a63d4e5258d286537",
+    "installer.py": "e335cbc47c00e9e8b1bbc1d1984161e0a71789f4b776667073e008d8e0d32909",
+    "test_current_pin_independent.py": "49957fd8b53964774af0178278cf345e4d29179c9aa1179937ab49879371bcc3",
+    "test_predecessor_guard.py": "0b0148e2c47ccffe9ec59691745b9055a779355ca59e00d8226a569f87cd1c8b",
+    "test_retirement_package.py": "d3f1c15974fd804731787e427ef111088a8660d67f5945a9bffcdd0280350b27"
+  },
+  "status": "PASS_STAGED_SOURCE_ONLY",
+  "test_execution": "system python3 -B, plugin autoload disabled, no cache provider, audit hook rejects socket/subprocess/os.system",
+  "tests_passed": 68
+}
