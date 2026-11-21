@@ -110,6 +110,27 @@ mechanisms with a fresh exact two-file scope. Root owns the native wiring.
 two-file rollback check. Both independent reviewers finished the source
 and fixture checks. [Fresh build stage](S5_AMPHENOL_FRESH_BUILD_STAGE_20261121.md).
 
+The scoped backup is now `993f66e92bc6f8b6e96affcaab0a9404a06de185`.
+All 37 changed files matched the fetched private GitHub branch byte for
+byte. [Backup verification](S5_AMPHENOL_FRESH_STAGE_BACKUP_VERIFIED_20261121.json).
+Root staged the -04-aware guard separately at
+`/tmp/jsh-amphenol-current-tool-guard.WWD2Taqd/current_tool_guard.py`.
+Independent scope review accepted the corrected guard. The new guard holds
+the existing leases and confirms the -03 installer transaction and layout
+with the current verified -04 host image. The staged two-file updater is
+`/tmp/jsh-amphenol-two-tool-forward.2IHocj/deploy_two_tool_forward.py`.
+Independent QA found a failed rollback stop response could leave the
+wrapper stopped and both staged files. The writer corrected the stop
+readback. Independent updater QA accepted exact `cf9f82f6…` after four
+offline checks passed, including the original repro. All worker lanes
+finished their source tasks. Root verified the prior native source hashes,
+unchanged wrapper and bridge PIDs, and inactive/disabled sync and timer.
+The next gate is to wire and verify the exact native process exclusion,
+restart source readback and restored default-off enrollment. Leave the
+administrator observer off for this checkpoint. Make no Amphenol calls
+before 15:22:24 Eastern.
+[Tool maintenance stage](S5_AMPHENOL_TWO_TOOL_NATIVE_STAGE_20261121.md).
+
 For the fresh candidate's later release, reuse the guarded installer and
 existing one-company terminal verifier. The retained operator preflight
 currently requires the historical `PAUSED_ERROR` task and recovered

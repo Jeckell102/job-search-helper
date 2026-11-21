@@ -554,6 +554,11 @@ are staged pending the guarded native tool update. The previous -03
 controller's terminal check still requires the old host bytes and cannot
 authorize the new scope unchanged. [Fresh build stage](S5_AMPHENOL_FRESH_BUILD_STAGE_20261121.md).
 
+At 14:47 Eastern, independent QA accepted the corrected two-file updater
+and the fresh -04-aware predecessor guard in offline checks. The live
+native process-exclusion and restart proof remain open. No change was
+applied to production. [Maintenance stage](S5_AMPHENOL_TWO_TOOL_NATIVE_STAGE_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.

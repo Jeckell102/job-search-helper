@@ -1,0 +1,19 @@
+error=rollback stop callback lost response after stopping; calls=['stop', 'start', 'stop']; running=False; files={'dev/wrapper-coder/tools/coordinator_store.py': b'new-store', 'dev/wrapper-coder/tools/host_server.py': b'new-host'}; receipt=False
+F
+=================================== FAILURES ===================================
+____________ test_rollback_reconciles_a_stop_that_lost_its_response ____________
+tests/test_independent_rollback.py:54: in test_rollback_reconciles_a_stop_that_lost_its_response
+    assert picked == before
+E   AssertionError: assert {'dev/wrapper...: b'new-host'} == {'dev/wrapper...: b'old-host'}
+E     Differing items:
+E     {'dev/wrapper-coder/tools/coordinator_store.py': b'new-store'} != {'dev/wrapper-coder/tools/coordinator_store.py': b'old-store'}
+E     {'dev/wrapper-coder/tools/host_server.py': b'new-host'} != {'dev/wrapper-coder/tools/host_server.py': b'old-host'}
+E     Full diff:
+E       {
+E     -  'dev/wrapper-coder/tools/coordinator_store.py': b'old-store',
+E     ?                                                    ^^^...
+E     
+E     ...Full output truncated (8 lines hidden), use '-vv' to show
+=========================== short test summary info ============================
+FAILED tests/test_independent_rollback.py::test_rollback_reconciles_a_stop_that_lost_its_response
+1 failed in 0.04s

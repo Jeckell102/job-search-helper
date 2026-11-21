@@ -1,0 +1,3 @@
+error=Restart readback did not attest the exact loaded two-tool hashes; calls=['stop', 'start', 'stop', 'start']; running=True; files={'dev/wrapper-coder/tools/coordinator_store.py': b'old-store', 'dev/wrapper-coder/tools/host_server.py': b'old-host'}; receipt=True
+....
+4 passed in 0.11s
