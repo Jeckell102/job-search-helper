@@ -1,0 +1,11 @@
+# Sprint 4 successor guard staged
+
+The verified rollback left its exact inert import guard at the named parked path. The terminal controller and installer receipt use this path and inode. A fresh release's default absence check would refuse that valid predecessor. The isolated handoff extends only the existing package exchange and preinstall verifier to accept a separately approved, successor-scoped guard. It preserves the old controller, installer, exchange, and restoration records.
+
+The successor binds the exact handoff once from the authenticated bytes. It names the fresh physical capsule, maintenance ID, checker, manifest, and exchange policy. It verifies the predecessor's completed rollback, exact installer bytes, original protected pin, restored exchange record, original package, and directory and marker inode. The successor writes the inherited identity in its `CLOSING` journal before any exchange. The existing atomic park and publish operations must return the same exact guard and hold on a missing, swapped, or changed marker. Default first releases still require the parked path to be absent.
+
+Nine focused checks passed after independent QA reproduced and confirmed repairs for approval replacement, same-inode marker change, and a missing inherited journal field. The existing default preinstall and exchange regression passed separately. Independent source QA accepted the exact controller `927063a9…`, gate `7df41217…`, and preinstall verifier `5d4c9487…`. The consecutive-release composition is a separate test-only lane. No fresh production enrollment, guard move, install, Company change or scrape has run. The existing production source and both services are on the recovered baseline.
+
+The separate restored-stage checker passed ten fixtures across both install and rollback targets using real disposable SQLite and asynchronous supervision. Settled activity passes a fresh full proof, and changed durable protected data or sustained churn stays held. This is bounded restart verification, with the permanent cooperative readiness design separately documented.
+
+[Guard handoff design](S4_TERMINAL_GUARD_HANDOFF_DESIGN_20261120.md) · [Independent source QA](S4_PREDECESSOR_GUARD_INDEPENDENT_20261120.md) · [Restored-stage startup fixture](S4_REALISTIC_RESTORED_READINESS_20261120.md).

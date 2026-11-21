@@ -1,0 +1,17 @@
+# Independent predecessor guard reuse review
+
+**ACCEPT the exact staged source.** The original candidate was held for three independently reproduced defects. The final source addresses all three and keeps the predecessor's actual receipt and transaction read-only.
+
+| Refreshed component | SHA-256 |
+| --- | --- |
+| [Controller](/tmp/jsh-s4-terminal-guard-staged.UKxQYcjO/controller.py) | `927063a9797c121a8c6e4b73011a79ea2874d72427c64387e969355503b092eb` |
+| [Gate](/tmp/jsh-s4-terminal-guard-staged.UKxQYcjO/gate.py) | `7df4121796ce400461be9b4329984bc6f1ced83858588d3a63d4e5258d286537` |
+| [Preinstall verifier](/tmp/jsh-s4-terminal-guard-staged.UKxQYcjO/preinstall_abort.py) | `5d4c94876a2b9325fc5f7f22bb4e8099a973ff66a67e642ef3ac7b56743562ea` |
+
+- The initial controller could authenticate one handoff read and bind later substituted bytes. The refreshed constructor derives expected references from its actual authenticated plan and handoff reads, then requires the binding snapshot to match. Checker policy parsing uses the same bytes that passed the pinned file reference for both capsules. The preinstall check binds the exact successor tuple, original protected pin, actual predecessor source and installer receipt, and the distinct original and successor exchange policies. Historical exchange verification authenticates the terminal evidence without asserting that the predecessor is physically restored after the successor closes the same paths. [Controller enrollment and handoff binding](/tmp/jsh-s4-terminal-guard-staged.UKxQYcjO/controller.py:453)
+- The initial guard comparison could miss a same-inode marker rewrite after reading its bytes. The refreshed gate reads the exact fixed marker through a bounded no-follow descriptor and verifies the same named object, size, timestamps, and link count after reading. It requires the inherited guard at the proper endpoint before and after an exchange. It holds a missing inherited guard instead of creating a replacement. [Guard and exchange checks](/tmp/jsh-s4-terminal-guard-staged.UKxQYcjO/gate.py:74)
+- The initial inherited journal loader allowed a missing guard in `CLOSING`. The refreshed controller requires the exact inherited identity on load and seeds it in `CLOSING` before mutation. The shared preinstall boundary allows only that verified parked guard. All other no-start checks remain in place. The normal installer continues using the successor's fresh capsule, transaction and hold ID. The predecessor controller, transaction, receipt, policy and terminal exchange remain unchanged. [Journal load and fresh release](/tmp/jsh-s4-terminal-guard-staged.UKxQYcjO/controller.py:651) · [Preinstall verifier](/tmp/jsh-s4-terminal-guard-staged.UKxQYcjO/preinstall_abort.py:124)
+
+The independent disposable fixture reproduces all three defects on the initial pins and checks the corrected boundaries live on temporary files. It also interrupts a real atomic park and publish after the rename, then confirms exact replay and a single swap. The final combined run passed **57 tests**, including the nine focused cases and 48 existing preinstall and host-exchange regression tests. The separate composed successor fixture remains under its own review. [Independent fixtures](/tmp/jsh-s4-guard-independent.ISitFau7/test_independent_guard_boundary.py)
+
+This review used staged source and disposable fixtures. It did not read or mutate production.
