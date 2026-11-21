@@ -319,12 +319,15 @@ Exit gate: an induced qualified integration failure leads to one validated
 release, fresh scoped retry and verified saved jobs without manual stage
 movement; unsupported capability is held rather than forced through.
 
-Current status, November 20: individual source gates passed for the positive
-finisher, issuance slot, coordinator storage, enrollment snapshot and repaired
-capture helper. The capture helper passed 42 focused independent checks at
-the repaired pin. Real transport and approved launcher/caller authority are
-still open. The actual qualified failure, bounded candidate release and
-fresh retry remain necessary for the end-to-end gate.
+Current status, November 21: the installed AcquireTM adapter stopped after
+25 of 39 advertised Amphenol Aerospace postings. The one-company pilot
+`WRAP-9b6f2e2274` started in an isolated workspace, and the Jetson recorded
+its first completed model calls. This is a selected generation test. The
+automatic failure-to-task route, exact candidate validation and release,
+fresh retry, and independent end-to-end QA remain open. Individual source
+gates for the candidate issuance and evidence pipeline have passed. Use
+only the parts needed for the actual supported failure and keep other
+capabilities held. [Current generation evidence](S5_AMPHENOL_FIRST_GENERATION_20261121.md).
 
 ## Sprint 6 — Reliability and sequential staged activation
 

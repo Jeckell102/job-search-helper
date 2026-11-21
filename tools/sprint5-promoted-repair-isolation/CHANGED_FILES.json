@@ -1,0 +1,12 @@
+[
+  {
+    "path": "dev/wrapper-coder/tools/coordinator_store.py",
+    "before": "389ca373da3c46ce22d1c87aff90a79f4940af1fe86b9dd06b6b7ac6007272aa",
+    "after": "4b1f8d14a7cfb4dbd558a59b4b476567737a4983b785e244a9acdc64552989e9"
+  },
+  {
+    "path": "dev/wrapper-coder/tools/test_outcome_intake.py",
+    "before": "43b19c5c0a6ec35990ca4654ae72071d3fa9eb3efde62410212ef2460f7d0be7",
+    "after": "2cede57547a9d4bee464a5a83d14cd9fe8edae0cdb1bf44be5d3fe402cf33946"
+  }
+]

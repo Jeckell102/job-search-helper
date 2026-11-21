@@ -1,5 +1,23 @@
 # Integration automation coordinator status
 
+## Reset to coordinator and release owner
+
+Read this card and the active gate in [sprint_roadmap.md](sprint_roadmap.md)
+after every reset and before changing approach. Name the next acceptance
+result and use the simplest existing supported path that can prove it.
+Add code, checks, or process only for a stated acceptance criterion or a
+concrete failure with evidence. Save optional hardening without delaying the
+current gate. If a blocker repeats, give independent QA the smallest repro
+and one decision to resolve. Apply the smallest accepted fix and return to
+the live path. Preserve protected data and independent acceptance criteria.
+
+The owner runs this alone and rarely adds companies. A new Company may wait
+for the next manual scrape. The priority is automatic Jetson wrapper
+generation when a scrape finds a failed or partial supported integration.
+Keep one Jetson lane, existing Python coordination, MuleLab validation and
+the bounded release/retry path. Do not delay wrapper generation to optimize
+immediate Company dispatch or support multiple editors.
+
 ## Reset rule for repeated blockers
 
 After every reset and during execution, escalate unresolved architecture or
@@ -25,7 +43,723 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 5 first real generation
+
+### Latest outcome, November 21 at 00:09 Eastern
+
+Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
+Freeform is independently accepted. Its ordinary next-manual-scrape route
+remains open. Sprint 5 one-company generation is active and has priority.
+Sprints 6–7 remain open. The next acceptance evidence is a Jetson-generated
+candidate in the existing isolated coordinator workspace, independently
+validated against the same genuine employer failure.
+
+Amphenol Aerospace `COMP-0490` returned 25 of 39 advertised postings and a
+genuine AcquireTM pagination repeat with the installed adapter. The native
+coordinator accepted fresh isolated pilot `WRAP-9b6f2e2274` at 00:08 Eastern
+and saved a current public source-read receipt. At 00:09 Eastern the first
+three Jetson inference receipts were `COMPLETED`; no draft yet. Root owns this pilot,
+monitoring, backup, and release decisions. Keep broad controls off and use
+exactly one Jetson lane. This manually selected generation pilot does not
+satisfy automatic trigger or end-to-end repair acceptance by itself.
+[Current failure and bounded launch](S5_AMPHENOL_FIRST_GENERATION_20261121.md).
+
+The promoted-repair isolation patch passed 84 author tests and three focused
+independent checks. Its accepted scope is `coordinator_store.py` and
+`test_outcome_intake.py`, source-only. `/root/s5_live_authority_plan` owns
+the read-only next automatic-trigger design sidecar.
+`/root/architecture_reuse_review` owns independent QA preparation, with no
+live employer request while this task is gathering its own data. No agent
+shares the Jetson edit workspace or holds deployment authority.
+[Promotion source evidence](S5_PROMOTED_REPAIR_ISOLATION_20261121.md).
+
+Latest verified private GitHub backup
+`109989c6038d5d29df790d2e27af200b165edd95` on
+`backup/integration-automation-m1-operator-20261120`. No current user action
+or blocker for generation and verification. A later production deployment
+may need a fresh administrator check. The desktop application's scrolling
+terminal must stay open because its standard output and error attach to it.
+Next action is monitor inference receipts, then independently test the exact
+draft once generation settles. Give the requested 10-minute plain-text updates.
+
 ## Sprint 4 active after Samtec acceptance
+
+### Latest outcome, 23:57 Eastern
+
+Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. The Freeform
+pilot in Sprint 4 is independently accepted. Next ordinary manually started
+intake proof and other still-applicable Sprint 4 acceptance items remain.
+Sprint 5 work directly prioritizes automatic Jetson wrapper generation for
+a genuine failed or partial supported integration. Sprints 6–7 remain open.
+The role-reset and operating-priority rules above came directly from the
+user's latest direction. Do not rebuild immediate dispatch, multi-editor
+intake, or optional fixture architecture before first real generation.
+
+Freeform: 80 fetched, 16 unique jobs saved and published, and those same 16
+in FIRST PASS. The wrapper delivered the one exact `COMPLETE` outcome, and
+the sender and receiver independently matched one `RECORDED_NO_REPAIR`
+receipt. The temporary one-outcome setting is absent from the new healthy
+wrapper process. Independent terminal QA accepted both delivery and physical
+restoration of all three original checkout paths. Actual guarded restore
+returned exit 0, receipt `10422b8f…` against approved `939c23dc…`, all 47
+installed files remain exact. Wrapper and assistant bridge active/enabled;
+scheduled sync inactive/disabled. User told they can close the observer.
+[Live pilot](S4_FREEFORM_LIVE_PILOT_20261120.md) ·
+[Independent final pilot evidence](S4_FREEFORM_PILOT_FROZEN_EVIDENCE_INDEPENDENT_20261120.md).
+
+Sprint 5 shortest route uses existing Python coordinator isolated task and
+single-pilot generation with no new scheduler. Actual scheduler readback:
+queue/autopilot/campaign all false, no pilot, no unresolved inference, no
+held repair record. Jobs has only the complete Freeform outcome, so do not
+fabricate a failed task or relabel already-working Forterra. Agent
+`/root/architecture_publication_review` owns only the isolated-workspace
+gap for qualified promotion in a scratch coordinator slice.
+`/root/s5_live_authority_plan` owns one current-candidate shortlist from the
+earlier partial audit, without resuming that backlog. Root owns genuine
+evidence, first real generation, and backup. Release requires the existing
+guards, with Jetson one inference lane and Saronic retained unchanged.
+[Sprint 6/7 acceptance map](S6_S7_ACCEPTANCE_GAP_MAP_20261120.md).
+Latest verified private backup `095a4d43f0af0b6809ed23fedecaff92b00538d0`;
+the final scoped pilot/report backup is next.
+
+### Earlier outcome, 23:46 Eastern
+
+Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted, 4 active, 5
+source-only, 6–7 open. User asked for a role reset after excessive edge-case
+work. Reread card and sprint gates. Keep the next work to the actual pilot
+acceptance and restore paths. The goal remains active.
+
+Freeform deployed install, native exact owner intake and exact event
+staging independently accepted as recorded below. Measured claims and
+existing owner signature succeeded at `77b4199f…`. Exact single-scope live
+execute returned 0 with `SYNC_CONFIRMED`, genuine publication receipt,
+outcome and request consumption. Execute capture
+`b387133309f7268f65b1f742b192faf66f04dfc046515ded49df12757396249d`.
+The exact local archived full inventory has 80 postings; actual saved count
+still to measure. Do not rerun. Derived delivery selection
+`5746906d0ffe1be7ab5320be6a13aacd6a2e666653d3cef53a8f20a2ca219a50`
+binds the actual fresh outcome and immutable record `8862a0fb…`.
+
+Root owns single-outcome existing authenticated delivery and exact temporary
+wrapper-only selector removal. Do not create a legacy wrapper-coordinator
+acknowledgement for this newly selected receipt-v1 record. Then use the
+existing terminal application/receiver verifier, obtain independent approval
+of the exact two-sided receipt and restore all three alternate paths.
+Original legacy Saronic/Atomic Machines holds, scheduled sync off, and one
+Jetson lane preserved. Native observer is up until the final proof. Normal
+idle/busy S4 acceptance remains separate. Latest verified private backup
+`095a4d43f0af0b6809ed23fedecaff92b00538d0`.
+
+### Earlier outcome, 23:41 Eastern
+
+Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted, 4 active,
+5 source-only, 6–7 open. Around 40% by accepted gates.
+
+Actual Freeform guarded install returned zero. Terminal controller digest
+`2e2c9747f0aa1c21bec1bd1fa1d796175d08ec16d9f304daf2af6a4ca21ca6c9`.
+Independent QA accepted all 47 installed paths and exact terminal native
+receipts; all three alternate checkout routes remain held for the pilot.
+The original wrapper and assistant bridge are active on the installed
+bundle; scheduled sync inactive/disabled. No older-cycle mutation.
+[Independent install gate](S4_FREEFORM_TERMINAL_INSTALL_INDEPENDENT_20261120.md).
+
+Native descriptor-bound `confirm_owner_edit` passed and durably imported
+the single owner-created Freeform row, revision 1, and eligible event; exact
+private capture `251cf09c82c7da95c77b2bf871a6d80766345a49474ed1e742f2cdd37112352d`.
+The exact installed `stage-event` also passed and captured
+`ce06ce74ca2bd6b75a371f76f6e1841def9d75de0f18f367aa106e8f6281f034`.
+`/tmp/jsh-s4-freeform-live.tif0p2q_/operator_pilot.py` now measuring and
+signing in tools session **40123**, not yet fetching. Do not rerun the
+staging; if preview holds inspect only the private exact capture and keep
+the request under current ownership. On exact signer success run one
+`operator_pilot.py execute`, then `read_published_freeform.py` only for a
+confirmed result. Root owns all native steps and backup.
+`/root/architecture_publication_review` owns isolated next delivery checks.
+Use exact published outcome ID only, preserve historic holds, services now
+settled and production source can be read by the explicitly named pilot.
+Latest verified backup `095a4d43f0af0b6809ed23fedecaff92b00538d0`.
+
+### Earlier outcome, 23:36 Eastern
+
+Coordinator and release owner, same active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted, 4 active,
+5 source-only, 6–7 open. Overall approximately 40% by accepted gates.
+
+The exact owner-confirmed, unique row 522 Freeform evidence chain passed
+independent review. Approval digest
+`99b99aa8836f88c0e009c8531045c89ce0771c04aeb18a3135728b9468149dad`.
+The user alone edited the row. The local descriptor-bound import has not
+run. Execute it only after live release terminal acceptance with
+`observe_owner_intake.py confirm` and that exact owner approval digest.
+
+The first wrapper invocation refused before any service, route, attempt,
+or source action because normal v3 pre-absence locks refresh their file
+timestamps. Two owned physical locks, `scraper.lock` and `writer.lock`, had
+only `ctime_ns` changes that occurred 3.6504 seconds before the observed
+absence. The other four leases and every other original field matched. Root
+verified original application source and the protected local baseline
+under the same leases. Independent QA accepted the fresh unused enrollment
+`d6e4705d530b741ed4ad6a2b4b277d98972efcef82cb4edc58e5d9a825a548b9`.
+The original enrollment is preserved. Alternate fresh file
+`/tmp/jsh-s4-freeform-live.tif0p2q_/preinstall-enrollment-current.json`.
+
+Actual guarded native release now running, functions session **38551**.
+Use the same session; do not rerun. No shell use against the live checkout
+or its interpreter while the controller runs. Observe only private capsule
+`/home/chris/.local/state/job-search-helper-maintenance/s4-freeform-20261120-01`
+and its `-attempt` sibling in a safe cwd. New root observer has passed both
+exact process challenges. Root owns native release/guarded recovery and
+Freeform. `/root/listener_ownership_qa` available for independent terminal
+installed-source checks. Next verify exact terminal, import, stage event,
+measure, sign and execute one scoped pilot, then independently read both
+delivery receipts before restoring the three alternate checkout paths.
+Do not hit the checkout before controller settlement. Keep historical
+Saronic/Atomic Machines hold and scheduled sync/backlog disabled.
+Latest private backup `095a4d43f0af0b6809ed23fedecaff92b00538d0`.
+
+### Earlier outcome, 23:28 Eastern
+
+Coordinator/release owner, same active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`; Sprints 1–3 accepted, 4 active, 5
+source-only, 6–7 open. Overall approximately 40% by accepted gates.
+
+The owner personally corrected the row. Strict native readback accepted
+one exact six-value Freeform row inside the restored 17-column Companies
+table, row 522. Sole authenticated Drive owner unchanged and working file
+modification `2026-11-21T04:27:36.623Z` follows the pre-absence. The
+assistant made zero working-workbook writes. Actual owner approvals are
+private in `/tmp/jsh-s4-freeform-live.tif0p2q_`: observed `13fded035…`,
+proposed canonical owner approval
+`99b99aa8836f88c0e009c8531045c89ce0771c04aeb18a3135728b9468149dad`,
+owner evidence `60293a835…`. `/root/candidate_independent_qa` owns exact
+approval of these read-only evidence files. Do not import before approval.
+
+User started the new native administrator observer and said `ready`.
+Root already challenged both enrolled processes for the exact listener
+using `verify_new_observer.py`, exit 0. Scope `s4-freeform-20261120-01`,
+socket `/run/jsh-s4-freeform-01/observer.sock`, unused enrollment
+`3d2bb8cee5cccf7948d1a657594f67a60d31f079bbb35d185ba49720b4738fc4`.
+Root owns one guarded release and only the actual Freeform pilot, with
+independent live receipt QA before opening alternate checkout paths. Prior
+Atomic Machines claim and Saronic stay protected. Do not run unrelated
+production-checkout processes (including `.venv`) during native release.
+No approval needed again. Latest verified private backup
+`095a4d43f0af0b6809ed23fedecaff92b00538d0`.
+
+### Earlier outcome, 23:21 Eastern
+
+Coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted, Sprint 4
+active, Sprint 5 source-only, Sprints 6–7 open. Approximately 40% by gates.
+
+The real user said `added`. The exact read-only workbook check found one
+Freeform row, at row 802, and verified all six literal values. The native
+Companies table ends at row 522 and has no completely empty body row. The
+helper correctly held because the entry was outside the native table.
+The exact same sole Drive owner was reverified and workbook modification
+`2026-11-21T04:16:00.845Z` follows the independent before-edit absence.
+Nothing has been imported locally. Root asked the owner to insert one row
+inside the table at 522 and move the existing entry there without duplicating
+it. Wait for actual `moved` response and exact strict readback, then pin the
+observed row number and independently approve the exact owner edit.
+
+Fresh private release and public source are unchanged. Root prepared but
+has not sent the exact observer command in the private Freeform workdir.
+Send it only after the owner's readback holds current. Root owns native
+deployment and pilot. `/root/listener_ownership_qa` passed one separate
+disposable actual CLI composition from the S4-only read-only owner input to
+exact retained staging, durable acknowledgement and receipt. The retained
+manifest remained identical and the default dispatcher held. Report at
+`/tmp/jsh-s4-owner-external-retained-composed.qNA17pl8/QA.md`.
+
+No scheduled sync, backlog, unqualified releases, or Jetson changes.
+Sprint 5 exact integrated transport/capture capsule has independent 89-test
+acceptance, and measured live owner/egress remain open. Sprint 6/7 acceptance
+map is owned by `/root/architecture_publication_review`. Latest verified
+private backup `095a4d43f0af0b6809ed23fedecaff92b00538d0`.
+
+### Earlier outcome, 23:12 Eastern
+
+Coordinator and release owner, goal `01a1f11f-e014-7493-8441-2f66502e23a9`
+active. Sprints 1–3 accepted, Sprint 4 active, Sprint 5 in source development,
+Sprints 6–7 open. Approximately 40% by accepted gates.
+
+The owner-external helper's native closure repair removes the Sprint 5-only
+dependency and independently checks the actual open Jobs descriptor. Exact
+source `c053591c…`, author 67 disposable tests, independent S4-only 24 tests
+passed, with Sheets write paths absent. The native Freeform before-edit
+absence run succeeded. Scope SHA
+`8f496f35aa0703c0af38f71cb208ee15cdf9a307227a5c7328fda403a8a15caf`, absence
+SHA `41a4943a0717a680145c62b41cd4f2692f69dd40b1513d25db3296c967d02770`,
+capture SHA `6d0c58e7…`. The private workspace is
+`/tmp/jsh-s4-freeform-live.tif0p2q_`. Proof used a read-only credential
+and exact Company absence locally and in Sheets. No Company added, no
+local event. The genuine external owner action is required for the live
+path. Root sent the owner exact field values and asked them to reply after
+entering the single Freeform Companies row. Wait for actual reply and
+independently review the exact post-edit raw row/owner evidence. Do not
+reissue Atomic Machines or send a direct append.
+
+The fresh application successor remains unused. Independently accepted
+private preparation and third-generation composition; native original
+baseline and both enrolled helper PIDs checked. No observer is running for
+the new scope. Once user edit and readback pass, give the user the new
+observer command. Root owns observed owner proof, next guarded release, pilot
+and backup. `/root/listener_ownership_qa` is available for independent native
+receipt verification. All normal services stay restored on original source,
+scheduled sync stays off, no broad backlog, zero Jetson changes.
+[Exact working sequence](S4_FREEFORM_RUN_SEQUENCE_20261120.md).
+
+Sprint 5 exact copied-source closure reproduced 89 synthetic tests and two
+pre-import substitution refusals. Fresh independent recheck confirmed the
+exact 42-module closure and all 89 tests. Actual measured runtime, egress
+and live issuer wiring remain open. `/root/architecture_publication_review`
+owns the separate Sprint 6/7 acceptance dependency map while the owner
+action is pending. No production issuer/collector enabled.
+Latest verified private backup `095a4d43f0af0b6809ed23fedecaff92b00538d0`.
+
+### Earlier outcome, 23:09 Eastern
+
+Coordinator and release owner, goal
+`01a1f11f-e014-7493-8441-2f66502e23a9` active. Sprints 1–3 accepted, Sprint 4
+open and active, Sprint 5 in source development, Sprints 6–7 open. Overall
+approximately 40% by accepted gates.
+
+The v2 direct-append QA rejection stands. We selected the intended genuine
+external owner-edit workflow instead of an exception. Current working
+workbook matched the authenticated Drive owner and has no other editor.
+Read-only local plus working-worksheet comparison found no eligible
+unmirrored alternative. Freeform passed exact workbook/historical and
+official 80-posting checks; no Company row was added. The owner-external
+scope `8f496f35…` pins exact owner, workbook, table, headers, Company row,
+Jobs file and pristine external-intake custody. The first native absence
+attempt failed before it could open the app because its staged dependency
+`runtime_mapping_facts.py` only exists in Sprint 5. No proof or application
+write occurred. `/root/listener_ownership_qa` owns the narrow dependency
+repair, with `/root/candidate_independent_qa` to recheck the new pin before
+the coordinator captures the native before-edit absence. Do not ask the
+owner to enter any Company values before the exact absence proof is saved.
+
+The new `s4-freeform-20261120-01` private bundle is independently accepted
+as unused, with exact latest immediate terminal predecessor `-02`, 70
+files and same approved 47-path app payload. The independent third-generation
+disposable CLI test passed; all 25 first-predecessor and 26 second-
+predecessor artifacts stayed exact. Checker `e62365c1…`, unused enrollment
+`3d2bb8ce…`, predecessor handoff `41359813…`, and exchange `8b230d6c…`.
+System helper PIDs 1249 and 4467 rechecked natively. New operator observer
+socket `/run/jsh-s4-freeform-01/observer.sock` will be needed only after the
+external-intake repair and exact proof. Root owns actual user handoff,
+selected independent post-owner readback, and one guarded release.
+[Exact working sequence](S4_FREEFORM_RUN_SEQUENCE_20261120.md).
+
+Sprint 5 transport isolated adapter passed 47 independent synthetic cases.
+Exact closure is pending for integration and real endpoint/issuer use is
+held. The parser and accepted collector are distinct source pins.
+`/root/s5_live_authority_plan` owns the exact copied dependency manifest and
+standalone composed runner. No production or Jetson operation. Latest
+verified private backup `5da10c6ed6c8ae4ec549996edc7d574357662583`.
+
+### Earlier outcome, 22:59 Eastern
+
+Coordinator and release owner. Goal `01a1f11f-e014-7493-8441-2f66502e23a9`
+is active; Sprints 1–3 accepted, Sprint 4 active, Sprint 5 source-only in
+parallel, Sprints 6–7 open. Overall estimate about 40% by accepted gates.
+
+Independent v2 intake QA rejected activation at source `3414ac18…`. A
+foreign authorized writer can add the exact prospective Company with a
+different marker between preflight and the atomic write. The guarded
+operation then appends a duplicate and only finds it on readback. Same-ID
+protection, original-claim recovery, unrelated local row preservation, and
+focused tests passed. Preserve `/tmp/JSH_S4_MANUAL_INTAKE_V2_INDEPENDENT_QA.md`
+and its reproducer. Do not deploy the helper against a contested writer.
+
+Root's exact working-workbook Drive check confirms it is not shared, not in
+a shared drive, and has one undeleted owner and no other editors. This does
+not exclude another device or automation using the owner's identity. Root
+will not lower the acceptance bar. `/root/candidate_independent_qa` owns
+the minimal trustworthy out-of-band quiet window versus genuine existing
+event alternatives. The bounded live read found zero pending Company events
+and zero active Greenhouse companies outside 801 unfinished memberships.
+No Freeform write or Company event exists. Its exact ID and board passed
+historical disjointness and absent proposed metadata ID. Google requires the
+existing Sheets write credential for metadata search even though this check
+only reads. One attempted search with the readonly token returned scope 403;
+the same exact search with the existing allowed credential found no marker
+and sent zero write requests. No new permissions were granted.
+
+Original production is healthy and restored. Sprint 4 exact prior pins,
+Saronic/retained history, original Atomic Machines claim and no backlog
+remain as below. `/root/architecture_publication_review` owns safe third
+successor inheritance at observation `545c09e2…`. No fresh native observer
+or live release has been started. Root owns final choice of well-scoped pilot
+and the protected cutoff. Sprint 5 transport is staged in
+`/tmp/jsh-s5-public-capture-transport.BCQkmMfW` at source `1df2a46f…`, 89
+author synthetic cases. No real collector, issuer, or Jetson operation.
+Latest verified private backup `1fdc0f1e62466584ece5318e79c1fa7507255bee`.
+
+### Earlier outcome, 22:55 Eastern
+
+Coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted, Sprint 4
+active, Sprint 5 source-only in parallel, Sprints 6–7 open. Overall gated
+estimate approximately 40%. No user action currently needed.
+
+Independent QA accepted the original-source rollback, all 47 before-images,
+and all three alternate checkout locations restored at exchange digest
+`b34626982fe987c99e95ae839923afaa2301aae5419ea6f2af8f211c5111bd00`.
+The wrapper and assistant bridge are active and enabled; scheduled sync
+stays inactive and disabled. The original Atomic Machines claim stays
+spent and readback-only. Do not replace its identity. The administrator
+observer may close. No changes were made to the retained Saronic conflict.
+
+Native Google scratch evidence isolated HTTP 400 `No grid with id: 0`
+without explicit `sheetId`. Supplying both the exact worksheet and table
+IDs succeeded. One atomic metadata-ID and append batch added one row. Its
+identical second request returned 400 and readback still showed one row and
+the retained marker. The artificial workbook was moved to recoverable
+Drive Trash. The original production HTTP response remains unavailable.
+[Exact diagnosis](S4_SHEETS_APPEND_WIRE_DIAGNOSTIC_20261120.md).
+
+Freeform is prospective. Two official board reads matched 80 descriptions
+and identities. The exact read-only local/workbook preview found no Company,
+ID, board or domain collision and wrote nothing. Prospective pin `8c0ce719…`;
+prepared canonical scope pin `4c308161…` with separate pristine custody.
+Fresh root observation `545c09e2…` binds the latest independently verified
+terminal predecessor. `/root/architecture_publication_review` owns the
+inherited-guard assessment. `/root/listener_ownership_qa` staged the new
+manual-only v2 intake at `3414ac18…` and its 43 tests; fresh independent
+`/root/candidate_independent_qa` reviewing. No v2 remote action is authorized
+by a prospective file alone. Root owns selected historic disjointness,
+exact reports, new enrollment coordination, and controlled release.
+
+Sprint 5 repaired source `6a8ff763…` independently accepted with 42 focused
+checks after an initial recorded QA rejection; fresh production transport
+and measured issuer are still absent. `/root/s5_live_authority_plan` owns
+isolated transport source and synthetic tests only. The measured caller
+planning slice is separate. Broad backlog, scheduled sync, and unqualified
+automatic releases remain held. Jetson stays at one inference lane.
+Verified private backup `1fdc0f1e62466584ece5318e79c1fa7507255bee`.
+Next finish exact source and fresh successor QA, then request the newly
+identified administrator witness only when everything else is ready.
+
+### Earlier outcome, 22:37 Eastern
+
+Coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted, Sprint 4
+active, Sprint 5 source-only in parallel, Sprints 6–7 open. Approximately
+40% by accepted roadmap gates.
+
+The successor native install passed and independent QA verified the 47
+approved files and release receipt. Atomic Machines then passed read-only
+containment and duplicate checks. The first launch had no credential path
+from its starting directory, and created no claim. From the normal project
+directory, exactly one later append created the durable claim
+`1125f401278c5d6ec7750472287fd264c0db9ece7df585d9002732039dd47b99`, then
+reported `UncertainWriteError`. The launcher retained only the error class.
+The exact readback found no Sheet row, local intake, or local revision. No
+request, scrape, publication, or Jetson change occurred. Do not resend the
+append, replace the ID, or infer definitive rejection from absence.
+
+The original-source rollback reached `RELEASED/ROLLED_BACK` with controller
+SHA `e7773d0fa755a404c8d59a1ed3f4156c6345aab141ee103c9e542bcb7b571b49`.
+Original wrapper and bridge are active, and sync remains inactive. The
+independent pre-pilot alternate-route restoration observation was accepted
+at `038c8718cf9bc8d6e65a37dc10d30131b1d3aa8e6f2f621c28e280fa29b5a762`.
+Root owns exact route restoration and final native state. Session 65194 is
+running. `/root/listener_ownership_qa` owns the final independent path readback.
+`/root/architecture_publication_review` owns append diagnosis and a safe
+future design review without replay of this claim. Next finish restoration,
+then characterize the failure with an exact read-only diagnostic and plan a
+separately qualified disposable test for unambiguous future Company writes.
+[Installation check](S4_SUCCESSOR_TERMINAL_INSTALL_INDEPENDENT_20261120.md) ·
+[Pilot intake hold](S4_ATOMIC_MACHINES_APPEND_UNCERTAIN_20261120.md).
+
+Latest private GitHub backup verified at
+`1d59dc15c6b159896dacb042c6a02a5db0dd9730`. Sprint 5 enrollment helper passed
+24 maintained/independent checks at exact pins. Bounded public acquisition
+helper passed 23 focused and 207 maintained combined fixtures, and awaits
+independent `/root/s5_live_authority_plan` result. Measured issuer caller is
+planning-only until the independent pre-import pins and exact private read
+custody are approved. No issuance, broad release, or Jetson changes enabled.
+
+### Earlier outcome, 22:27 Eastern
+
+Coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted, Sprint 4
+active, Sprint 5 source-only in parallel, Sprints 6–7 open. Overall gate
+estimate remains approximately 40%.
+
+The fresh native administrator observer and both enrolled processes passed.
+Successor `s4-atomic-machines-20261120-02` passed the full protected baseline,
+completed the captured installation with exit 0, and reported terminal
+`INSTALLED` controller receipt
+`1b3c2acf0d0410ab8e25e1193f1c442b0d98e74efc6c8b92a306fe11500ffb67`.
+Native status verifies wrapper and assistant bridge active and enabled,
+scheduled sync inactive and disabled. The three alternate routes remain held
+for the controlled pilot and final restoration. Root owns the native pilot.
+`/root/listener_ownership_qa` owns independent exact source, receipt and route
+verification before enrollment. Do not repeat the captured install. No
+Company append, scrape, publication or Jetson change has happened.
+
+The fresh five-read, zero-write Companies check confirmed exact table
+identity and no name, ID, board or domain collision. Exact Company and
+provider-board identity passed historical manifest containment for
+`CYC-B639C6D864EC`. The selected prospective input remains owner-private
+with digest `65768069858dfdd26c98519c34dc474adaaaf71cf6d03017d1edbb64a705465e`.
+Next, after independent deployment readback, append exactly one row via the
+reviewed intake and persist the real Company event revision. Verify all
+subsequent receipts before exact outcome delivery and route restoration.
+`/root/architecture_publication_review` continues only the isolated Sprint 5
+enrollment fixture. Broad backlog and automatic release remain held.
+[Pilot sequence](S4_ATOMIC_MACHINES_LIVE_RUNBOOK_20261120.md).
+
+### Earlier outcome, 21:40 Eastern
+
+Coordinator and release owner, same active six-milestone goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 remains the first open
+gate and Sprint 5 is source development in parallel. Sprints 1–3 remain
+accepted. Sprints 6–7 are open. Approximately 40% by roadmap acceptance.
+
+The authorized Sprint 4 deployment was rolled back and independently
+verified. All 47 scoped source before-images and the exact completed rollback
+receipt matched. All three old alternate checkout paths returned to their
+original places and were rechecked in the native process view. Wrapper and
+assistant bridge are active and enabled, scheduled sync off. Historical job
+evidence and Saronic remain protected; no Company append, scoped scrape or
+publication occurred. The user can close the temporary observer terminal.
+Do not replay either earlier exchange or transaction. The final proof and
+separate checker amendment evidence are durable.
+
+Root owns the next gated deployment decision and GitHub backup. The
+startup race is measured, and the checker availability fix verified the
+original-source rollback. `/root/architecture_publication_review` owns the
+separate realistic staged startup fixture for both source targets before
+new deployment enrollment. `/root/listener_ownership_qa` completed the
+independent rollback evidence. `/root/s5_issuance_slot_qa` owns the final
+fresh read-only QA of the repaired slot after independent final deadline
+findings. Preserve all rejected reports and exact runtime scope. Next
+accept or repair the realistic startup test, then prepare a fresh controlled
+release window and genuine Atomic Machines pilot. Sprint 5 still requires
+the actual approved issuer, evidence and live scoped retry. No permissions
+or broad automation settings changed; one Jetson inference lane remains.
+[Late hold and verified rollback](S4_LATE_STARTUP_HOLD_AND_ROLLBACK_20261120.md).
+
+21:43 Eastern. The private backup was verified at
+`2909fa265509484cf55645dba174f5367c854133`. Two new public Atomic Machines
+inventory reads matched 37 jobs with descriptions. Existing private signer
+matches its public trust. The five-read, zero-write prospective workbook
+scope remains uncommitted and must be rechecked at the guarded pilot.
+The latest isolated Sprint 5 QA found a concurrent expiry contradiction
+after otherwise passing earlier cases. The assigned worker is implementing a
+single final serialized authority decision, with independent probes retained.
+[Atomic Machines preview](S4_ATOMIC_MACHINES_CURRENT_PILOT_PREVIEW_20261120.md).
+
+21:46 Eastern. Independent Sprint 5 QA accepted the final isolated slot
+contract after 84 maintained and 16 independent checks at exact pins.
+The earlier rejected concurrency proof is preserved. The repaired slot
+has one serialized decision, retained spend, and absorbing expiry.
+No production authority is wired. `/root/s5_live_authority_plan` owns the small
+existing-coordinator storage design. `/root/listener_ownership_qa` owns the
+separate exact selected-outcome delivery dependency for Atomic Machines,
+since the host's current exact environment pin might otherwise require an
+extra restart. Root owns reconciliation and backup, and the live gate
+remains on original production copy. The realistic wrapper fixture has a
+separate owner and no production access.
+[Staged Sprint 5 slot](S5_LIVE_ISSUANCE_SLOT_STAGED_20261120.md).
+
+22:04 Eastern. Both isolated install and rollback readiness targets passed
+ten real SQLite/asynchronous-supervision tests. Exact selected-outcome
+delivery can reuse the existing host path after independently approved
+actual settlement. The process-scoped one-outcome environment must be
+removed and confirmed after both receipts; the project `.env` stays pinned.
+The terminal rollback left an inert exact import guard with authoritative
+historical receipts. Do not remove or recreate it. Root staged an explicitly
+bound successor inheritance and captured the prior native observation
+`35a44b22c792789478c35b3d95aadb27bbb559c46c88fabd55b4f9c2fab9b590`.
+Independent focused source QA accepted after three races were repaired.
+`/root/architecture_publication_review` owns the separate consecutive-release
+fixture. No fresh live enrollment or production change.
+
+Sprint 5 authority adapter uses one additive table in the existing Python
+coordinator store, with no production wiring. Root's independent QA lane ran
+20 tests, raised a defensive SQLite metadata comparison finding, then its
+tool turn was flagged and stopped. No independent acceptance is inferred.
+`/root/s5_live_authority_plan` owns the narrowly scoped metadata check fix.
+The separate slot remains independently accepted and the backup was verified
+at `f226062c81a85336b649df71160e0a0f6932daec`.
+[Staged successor guard](S4_SUCCESSIVE_RELEASE_GUARD_STAGED_20261120.md).
+
+22:09 Eastern. Successor source payload verified at 70 members and catalog
+`9c63f829867d268875cf829660c5f3845d3a11ad6766312cb7e8234da0bccc02`.
+The new private successor `s4-atomic-machines-20261120-02` is staged, with
+checker `a37cdd1b…`, unused enrollment `d39cf8bd…`, exact predecessor
+handoff `1f000ff0…`, fresh exchange `e4e0ec79…`. Production source, wrapper,
+assistant bridge, job state and the three alternate locations remain on the
+verified recovered baseline. Root verified both stable system helpers.
+Do not ask for the administrator observer until independent exact capsule
+and consecutive disposable release checks pass. Only then use a fresh
+observer bound to this new ID; previous observer and exchanges are retired.
+Progress evidence backup was verified at `9fcc256cb6d4b9a8c9d27b7632592dfe2122a348`.
+
+The independent defensive recheck accepted the repaired Sprint 5 authority
+adapter after 20 maintained tests. No live consumer or authority is wired.
+Next separately implement the measured application-owned enrollment bridge.
+[Staged coordinator authority](S5_COORDINATOR_ISSUANCE_AUTHORITY_STAGED_20261120.md).
+
+22:18 Eastern. Independent successor artifact QA accepted the exact unused
+capsule, 70 files, 47 candidate after images, inherited guard and terminal
+predecessor evidence. The independent composed CLI test passed a predecessor
+install/rollback and fresh successor hold, interruption before exchange,
+resumed install, terminal replay, rollback and rollback replay. Both used
+the exact original guard. All 25 predecessor artifact files stayed unchanged.
+Native process and service observations were substituted in that test.
+Root sent the user the exact fresh native observer invocation for maintenance
+ID `s4-atomic-machines-20261120-02`, socket
+`/run/jsh-s4-atomic-machines-03/observer.sock`, verified PIDs 1249 and 4467,
+and approved listener port 18789. Wait for actual fresh challenge through the
+native tool, then recheck all scopes and run one captured guarded installation.
+No new production change has occurred. The fresh observer is an external
+dependency, not an unapproved deployment gate or a new permission request.
+
+Root's separate read-only helper for the selected confirmed nonempty
+publication delivery passed three composed application fixture checks, at
+module `a06aa6e…` and test `a935e46…`. Independent QA underway. The exact
+host delivery route remains disabled until real settled, current evidence
+and owner-approved one-OUT placement. S5 coordinator storage backup was
+verified at `39ac1ad64e46fd34e50296cc43a242d53071db1f`.
+
+### Earlier checkpoint, 20:57 Eastern
+
+Coordinator and release owner. Goal `01a1f11f-e014-7493-8441-2f66502e23a9`
+is active. Sprints 1–3 retain their independent acceptance. Sprint 4
+deployment and Atomic Machines pilot remain unstarted. Sprint 5 staged
+positive finisher is independently accepted. Sprints 6–7 remain open.
+Overall gated estimate remains about 40%. Keep `CYC-B639C6D864EC`, the
+Saronic conflict and existing job data protected. Broad backlog and
+unqualified automatic release remain off. Jetson has one inference lane.
+
+21:06 Eastern follow-up. The one captured release attempt stopped at its
+first protected preflight. Independent QA verified the 47 original source
+paths unchanged. Exact recovery regenerated the canonical approval, restored
+all three alternate checkouts, and verified the durable `restored` record.
+The wrapper and bridge are active; sync is inactive and disabled. Nothing
+was deployed, appended or scraped. Root owns native diagnosis and
+re-enrollment only after root cause. `/root/architecture_publication_review`
+owns independent diagnostic analysis. `/root/s5_live_authority_plan` owns
+the separate Sprint 5 issuer dependency map. A fresh trusted workbook
+preview verified the native 17-column Companies table and found no name,
+new prospective ID, board or domain collision across five reads and zero
+writes. The prospective scope remains private and no Company event exists.
+[Attempt and recovery](S4_NATIVE_INSTALL_REFUSAL_AND_RESTORE_20261120.md).
+
+21:14 Eastern follow-up. The exact archive reproduced the protection hold
+when an ordinary read-only SQLite connection created WAL/SHM sidecars in
+parallel. The same archived diagnostics passed when serialized. This is
+not yet attribution of the first native refusal. A separate independently
+accepted checker adds only fixed protected-state failure labels. The
+`-diagnostic` private bundle has new prepared exchange and unused enrollment
+`16e50fdf972cf7058f86ece6c6630a820c14f050117bcd20f160845a788898ca`,
+with the same untouched application endpoints and second observer. The
+previous capture and restored exchange are terminal and remain preserved.
+After independent new-enrollment QA, root will run one calibrated fresh
+release with all live database reads serialized. The existing private
+retained-operator signer was located by expected public-trust configuration
+and file mode; no new key was minted or claims signed. Keep the prospective
+Atomic Machines scope private and uncommitted through release readback.
+[Diagnostics](S4_PROTECTED_DATABASE_PREFLIGHT_DIAGNOSTICS_20261120.md).
+
+Sprint 5 worker `/root/s5_live_authority_plan` completed the dependency map
+and owns an isolated dispatch-keyed private issuance slot and focused tests.
+That slice has no runner, network, outcome or release changes.
+[Issuer dependency map](S5_LIVE_ISSUER_DEPENDENCY_PLAN_20261120.md).
+
+21:22 Eastern follow-up. Independent QA accepted the exact new private
+diagnostic enrollment. The serialized release passed initial preflight,
+installed its scoped source, then held at the last `restored` check with
+`SQLITE_CONTINUITY`. The controller re-held the wrapper and retained the
+attempt. No Company append, scrape, or pilot started. Root immediately began
+the approved rollback. Its first call held during an installer checkpoint;
+the run was resumed from the exact recorded rollback with other checkout
+activity stopped. Installer now records `ROLLED_BACK` and the controller
+is finishing terminal source and service restoration. Do not reopen routes
+until the controller reaches genuine terminal rollback and independent
+verification accepts the exact pre-pilot restoration selection and receipt.
+Root owns rollback and services. `/root/listener_ownership_qa` verified the
+late-attempt transcript and owns independent terminal/restoration QA.
+`/root/architecture_publication_review` owns the isolated readiness design.
+Wrapper startup is a concrete lead: application boot runs initial scheduler
+and supervision work asynchronously after the OS sees a bound listener.
+
+The quiet diagnostic and recovery source and reports are backed up and
+verified at `3ee285ec060d3f7031fff3c4039b77809665f27d`. Sprint 5 slot worker
+finished isolated source and 58 focused fixture tests. Independent
+`/root/s5_issuance_slot_qa` found a late-commit versus readback deadline
+contradiction, is verifying it, and owns the new QA report. Hold that slice.
+
+21:35 Eastern recovery. Installer restored all before images, but wrapper
+startup raced the final SQLite proof on rollback too. The wrapper remained
+held after a bounded instrumented replay. The new monitor measured 370
+coordinator task WAL/SHM creation and deletion pairs, plus Jobs and Inbox
+sidecar activity, during startup through the re-hold. Exact quality gates
+still require a complete original attestation. Root staged a restored-only
+wait for a quiet interval followed by the full original attestation and
+stable current release owner. The independently accepted one-time checker
+binding amendment retains both checker physical endpoints and original
+journal, uses the original maintenance locks, marker, and rollback receipt,
+and changes only the approved checker reference. Root applied it at 21:34.
+Replacement checker `b96589be…`; amended private controller journal
+`74797a45…`; unchanged installer journal `25ed055b…`. A native monitored
+rollback finish is in progress. Await true terminal controller and active
+services. Then use exact separately approved pre-pilot restoration selection
+`040ace71…` and independent receipt to reopen the three alternate routes.
+The user was told the wrapper is still held. No pilot, Company edit, or
+Jetson change. Independent artifact readback only during this run. Avoid
+concurrent application, workbook, and checkout reads.
+
+Sprint 5 worker repaired the original slot expiry and out-of-directory
+spend findings. 71 focused and 536 expanded tests passed, with the broader
+run's 32 missing-fixture failures reproduced in unchanged baseline. The
+independent recheck is testing a new final post-custody expiry race.
+Production wiring remains open.
+
+Root owns the live release and recovery. `/root/listener_ownership_qa`
+accepted source and owns the separate read-only staged physical pin check.
+`/root/architecture_publication_review` accepted the Sprint 5 source and
+completed the Atomic Machines read-only intake handoff. Root owns subsequent
+workbook/table enrollment; no Company ID or event was created in preview.
+
+The first native observer worked, but the original listener check failed
+on protected process descriptors. The bridge restarted immediately. The
+repair passed 105 native and 114 independent source tests. The user started
+the revised native observer. Fresh exact listener challenges passed on both
+system helpers, followed by the six-lease protected snapshot, both listener
+samples, and the full checkout census during a brief bridge hold. The bridge
+is again verified active/enabled; scheduled sync is still off. The original
+capsule and route placements stay unchanged. New private bundle ends in
+`s4-atomic-machines-20261120-01-listener`. Checker SHA-256 begins `c70212dc`;
+unused enrollment begins `49176a21`. Next obtain independent pin acceptance,
+run the exact captured guarded release, and verify its installed source and
+services before the real selected event. Keep the observer available for
+the release or authorized recovery. See [native finding](S4_NATIVE_LISTENER_OWNERSHIP_HOLD_20261120.md)
+and [independent source QA](S4_NATIVE_LISTENER_OWNERSHIP_INDEPENDENT_20261120.md).
+
+Sprint 5 root regression passed 555 and independent QA passed 138. The new
+positive finisher remains staged and needs a reviewed application-owned live
+verdict issuer. Fresh public captures for Forterra and PDW passed full
+retrieval, independent authority, pagination, complete listings, and pinned
+candidate replay with 65 and 33 postings respectively. The first PDW hold
+was an evidence assembly label error. The corrected receipt was derived
+from the original request and body checksums and has public evidence only,
+without live release authority. Verified private GitHub backup
+`84831128898f95cc4a5c5c813d85f95073887a5d`. See
+[public readback](S5_FORTERRA_PDW_FRESH_PUBLIC_READBACK_20261120.md) and
+[staged source](S5_POSITIVE_MAPPING_FINISH_STAGED_20261120.md).
+
+### Earlier checkpoints
 
 19:28 Eastern. Coordinator and release owner for goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 native release and selected
@@ -242,6 +976,32 @@ retry replay and paired rollback passed. Root owns the next candidate
 evidence and application-writer integration. Fresh public collection
 still lacks new evidence. No native observer appeared at 20:20.
 [Paired mapping independent QA](S5_MAPPING_COMPANION_INDEPENDENT_20261120.md).
+
+20:22 Eastern. Verified private GitHub commit
+`3cfd2f312398577b44722be7e7128254ee3b2e7e` for paired mapping source,
+tests and independent report. It includes the accepted preinstall and
+verifier staging checkpoints in its history. The native observer still
+did not exist at 20:22. Continue from the independently accepted paired
+source. The next unmet gate is the genuine current candidate evidence
+and owner-qualified positive verdict into the exact fact, seal and
+Jobs outcome. Do not use the old offline corpus as fresh evidence.
+
+20:30 Eastern. Root is implementing the positive mapping finisher in
+`/tmp/jsh-s5-positive-mapping-finish.hPxOkAlS`. The separate live verdict
+reader pins the configured owner, exact approval bytes, dispatch,
+archived publication, original verifier input, private response
+manifest and reviewed tools. Offline evidence does not enter the
+fact writer. The exact fact with provenance and the detached Engine
+seal commit together in one State transaction. The Jobs writer uses a
+separate exact positive permit and rereads the approved receipt before
+the first new outcome. A committed Jobs outcome still wins on restart.
+13 initial focused cases passed, including atomic State rollback and
+cuts before Jobs or terminal checkpoint. The additional receipt
+withdrawal check and broad regression are running.
+`/root/architecture_publication_review` owns the independent design
+and subsequent narrow acceptance. Root owns code, validated staging
+and backups. No live issuer is provisioned. The native observer
+remained absent at 20:30.
 
 
 Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
