@@ -1,0 +1,11 @@
+ERROR: fixture intercepted the attempted remote factory
+remote callbacks=['remote factory']; queue created=False
+F
+=================================== FAILURES ===================================
+_________ test_selector_never_opens_remote_before_validating_admission _________
+test_independent_backend_drift.py:31: in test_selector_never_opens_remote_before_validating_admission
+    assert not calls
+E   AssertionError: assert not ['remote factory']
+=========================== short test summary info ============================
+FAILED test_independent_backend_drift.py::test_selector_never_opens_remote_before_validating_admission
+1 failed in 0.31s

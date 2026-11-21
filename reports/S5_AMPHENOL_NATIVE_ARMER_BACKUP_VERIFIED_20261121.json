@@ -1,0 +1,21 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "32687a700c8246888bbec79028510bbf6e761648",
+  "exact_file_count": 11,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "297e4821df4af4a86006d2aa0d086ed6b46586e0efc5a23abe803f25943aff64",
+    "reports/S5_AMPHENOL_ENROLLMENT_BACKUP_VERIFIED_20261121.json": "a5c93435ac07a0a9499f3ad40848a8b427256a80e6bd249d3ca0eae3cdb9590b",
+    "reports/S5_AMPHENOL_FRESH_RELEASE_TOOL_SCOPE_STAGED_20261121.json": "96c1e1596d476be888f43482c584111216757d06d68882e4aa337b8ed709f6af",
+    "reports/S5_AMPHENOL_NATIVE_ARMER_INDEPENDENT_QA_20261121.md": "a96bedd0046039cbf4624c9525dca6d28bff86f2e275656b5e45071dce25fa3f",
+    "reports/S5_AMPHENOL_NATIVE_ARMER_STAGE_20261121.md": "4aba0e0530b467e1e7f8f9d51b11a710c41ea8bdf92f168d1547127ae0def2e4",
+    "reports/sprint_roadmap.md": "9ebf1af940ddd96e98f3add519ea60272df0de7dca0392758116481f8bef5027",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/ARMER_OFFLINE_RESULT.txt": "eb5299053ff7ae46a2215d8c0c20ccfe35443209d4849f95c3afbeb8d5eaf2a4",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/ARMR_INITIAL_RESULT.txt": "840b9205f1cc0d4c6c042e91f28c3cd0334b958e3bfe79171f164879ec0ac190",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/arm_native_fresh_operator.py": "dcc020ee67a27747319727dbd3546928bcfbeeee3fbe567b05eeaad16cdd93cd",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/tests/arm_initial.py": "c06dc2fcbd2b7f7c520d2d2854babb4a0a50ec1709235408f9146d7ffe1bc20d",
+    "tools/sprint5-amphenol-fresh-operator/enrollment/tests/probe_startup_readiness.py": "01f49c976f6ab59bca74388514067e94317e99e9dac3dafa3d186e3c2b088e36"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T15:28:20-05:00"
+}

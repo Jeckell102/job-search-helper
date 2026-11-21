@@ -289,6 +289,12 @@ ordinary next-manual-run intake proof remains open. The selected successor's no-
 receipt and crash recovery passed the 198-test disposable regression.
 See the restart card and `S4_SHEETS_APPEND_WIRE_DIAGNOSTIC_20261120.md`.
 
+November 21 at 15:47 Eastern: independent QA reproduced the actual next
+manual-start routing gap, then accepted a private source fix that uses
+the inherited scraper lease and existing exact Company-event operations.
+Seven checks passed, including real private verified-zero settlement.
+The authorized live routing gate remains open. [Source and evidence](S4_NEXT_MANUAL_START_ROUTING_GAP_20261121.md).
+
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 
 Roadmap coverage: Milestones 4 and 5, including F5.
@@ -692,6 +698,12 @@ bootstrap is restricted to absent rows and cannot safely update Allen.
 [Current named origin review](S6_NEXT_GENUINE_NAMED_ORIGIN_REVIEW_20261121.md).
 
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
+
+The November 21 effective reconciliation covers all six milestones,
+F1–F8 and the seven demonstrations. The operator guide is saved, and
+the remaining gates still require direct live evidence.
+[Effective acceptance](S7_EFFECTIVE_ACCEPTANCE_20261121.md)
+· [Operator guide](INTEGRATION_AUTOMATION_OPERATOR_RUNBOOK.md).
 
 Roadmap coverage: complete-system acceptance and release ownership.
 

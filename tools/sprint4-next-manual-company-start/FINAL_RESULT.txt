@@ -1,0 +1,7 @@
+Ordinary Company event: {"cycle_id": "CYC-123456ABCDEF", "state": "SYNC_CONFIRMED"}
+.Ordinary Company event: {"cycle_id": "CYC-123456ABCDEF", "state": "SYNC_CONFIRMED"}
+.Ordinary Company event: {"state": "HELD_MANUAL_EVENT_NOT_UNIQUE"}
+....ERROR: Manual Company selection requires the admitted local SQLite layout
+remote callbacks=[]; queue created=False
+.
+7 passed in 1.28s

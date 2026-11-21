@@ -161,6 +161,39 @@ Overall acceptance is approximately 40%, with actual deployment and
 end-to-end receipts still open. All worker lanes from this checkpoint
 finished. Root retains native release ownership.
 
+Latest private backup `32687a700c8246888bbec79028510bbf6e761648` was
+fetched and all 11 scoped files matched byte for byte. The observer was
+still absent at backup verification. [Native armer backup verification](S5_AMPHENOL_NATIVE_ARMER_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 15:47 Eastern
+
+Root remains coordinator and release owner. While waiting for the
+administrator observer, the Sprint 4 lane proved a different remaining
+gate: installed plain Start holds a genuine pending Company event both
+before and after bridging. Root and independent QA completed a private
+fix using the inherited scraper lease and the existing exact path.
+Seven independent routing cases passed after correction of the observed
+backend drift. Ten updated private startup checks passed against both
+the installed and staged bootstrap. This is source-only progress. Keep
+the two-file native -05 updater on its original exact predecessor pins.
+[Manual routing evidence](S4_NEXT_MANUAL_START_ROUTING_GAP_20261121.md).
+
+The final-acceptance reconciliation now maps all six milestones, F1–F8,
+the seven demonstrations and the 0/3 named sequential cases to exact
+current evidence. The operator status and pause/resume guide is saved.
+The native local queue command returned no pending request. Overall gate
+acceptance remains approximately 40%. Both independent lanes finished.
+[Effective acceptance](S7_EFFECTIVE_ACCEPTANCE_20261121.md)
+· [Operator guide](INTEGRATION_AUTOMATION_OPERATOR_RUNBOOK.md).
+
+At 15:47 the -05 administrator observer socket was still absent.
+Native tool installation, fresh wrapper build and any provider activity
+remain held. The owner already has the Terminal command. As soon as
+fresh observer readiness is actual, run the measured native preflight,
+the exact two-file update if approved scope passes, and independent
+deployment readback before arming any fresh request. Do not repeat the
+now-complete source staging as a substitute for these gates.
+
 ## Earlier active checkpoint — fresh operator repair and provider hold
 
 ### November 21 at 14:28 Eastern
