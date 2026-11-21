@@ -13,7 +13,7 @@
   },
   "existing_maintenance_source_refs": {
     "controller.py": {
-      "mode": "0664",
+      "mode": "0700",
       "sha256": "f63f9399f3fcdec3d3b46a6d5e14fc3d1d78e420234b357b0adf44bd68a53ff8",
       "size": 68543
     },
@@ -30,7 +30,9 @@
   },
   "frozen_application_proposal_sha256": "fe5b0654bfe17f349d73162588a50e489d43427f5cbe55f7755dfe25b7bc8350",
   "live_qualification_receipt_provisioned": false,
+  "maintenance_reference_directory": "/home/chris/.local/state/job-search-helper-maintenance/s5-operator-trigger-20261121-03",
   "private_source_directory": "/tmp/jsh-amphenol-native-source-scope.r0nuir0k",
+  "reference_metadata_remeasured_at": "2026-11-21T14:19:12-05:00",
   "release_id": "REL-af662a11bf656819d418120a",
   "source_installed": false,
   "staged_tool_paths": {

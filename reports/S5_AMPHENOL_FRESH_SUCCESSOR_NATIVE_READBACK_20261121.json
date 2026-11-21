@@ -1,0 +1,29 @@
+{
+  "both_main_files_unchanged_with_empty_or_absent_wal": true,
+  "company_id": "COMP-0490",
+  "canonical_task_readback_at": "2026-11-21T14:33:00-05:00",
+  "canonical_task_state_sha256": "a6be4e6c48b6133dffb53f40fc8459650e9c84a5d177d3962570b0289f7405df",
+  "completed_model_receipt_sha256": "aeea900dc8bdcc5be0cd5e4e3781eca0706f8b2034ef98997d0028f439dcba7e",
+  "controls": {
+    "autopilot_enabled": false,
+    "campaign_enabled": false,
+    "pilot_task": null,
+    "queue_enabled": false
+  },
+  "current_company_source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501",
+  "current_cycle_id": "CYC-93EF06F8172F",
+  "existing_failure_fingerprint": "ea186593aa3998e7846139b1e9fc9c1bef5a1510bc5f6bc5b87ec947fef31bef",
+  "observed_at": "2026-11-21T14:24:26-05:00",
+  "open_inference": 0,
+  "original_outcome_id": "OUT-9f4b030568412faca159be2f",
+  "original_repair_key": "05ed3558affef4dbef7d4830daa1dabca4e6f4eb2a1cdeb38aa7a4baf4ff56b6",
+  "original_repair_status": "PROMOTED_PAUSED",
+  "original_task_id": "WRAP-6a3a372032",
+  "original_task_sha256": "95309e140a381be0b365a800fc76e2d4416705f8802691037ebf80f39c445db6",
+  "original_task_status": "PAUSED_ERROR",
+  "original_task_phase": "inspect",
+  "original_task_sessions": 1,
+  "original_task_max_sessions": 1,
+  "original_task_stop_requested": false,
+  "original_task_unsettled_tool_receipts": 0
+}

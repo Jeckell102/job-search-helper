@@ -1,0 +1,16 @@
+........F........                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_running_unrelated_task_refuses_reservation ________________
+
+case = <test_operator_repair_successor.OperatorRepairSuccessorTests testMethod=runTest>
+
+    def test_running_unrelated_task_refuses_reservation(case):
+        with case.store.connect() as db:db.execute("INSERT INTO tasks VALUES (?,?)",("WRAP-aaaaaaaaaa",json.dumps({"id":"WRAP-aaaaaaaaaa","status":"RUNNING"})))
+        before=logical(case.store)
+>       with pytest.raises(ValueError):case.store.reserve_operator_repair_successor(**case.pins)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_independent_boundary.py:56: Failed
+=========================== short test summary info ============================
+FAILED tests/test_independent_boundary.py::test_running_unrelated_task_refuses_reservation
+1 failed, 16 passed in 1.10s

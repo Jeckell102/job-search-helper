@@ -1,0 +1,2 @@
+All prior main source/cohort/verifier logic matches after removing only the new held branch; Retry-After parsing also unchanged.
+Candidate adapter bytes still match their exact previously accepted digest.

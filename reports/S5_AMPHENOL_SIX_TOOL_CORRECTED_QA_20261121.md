@@ -1,0 +1,9 @@
+# Corrected source-scope independent acceptance
+
+**ACCEPT SOURCE SCOPE ONLY**, after correction of the single metadata finding. The initial rejection and its evidence remain unchanged.
+
+The exact corrected scope SHA-256 is `009f2088ae79ce28009c1507ec4ae14e61142db6e229c59353c533f5d34ad761`. Its only changes are the correct controller reference mode `0700`, an explicit physical predecessor directory `/home/chris/.local/state/job-search-helper-maintenance/s5-operator-trigger-20261121-03`, and a remeasurement timestamp. Preserved `STAGED_SOURCE_SCOPE_INITIAL.json` remains byte-identical to the rejected `4a89449a876971dd8321ae7aae75e4eac88f74a4d403d8f46d6432b3366c8dca` input.
+
+A fresh read independently confirms all six named tools' current before-images and staged after-images, current host reference, and physical controller/gate/installer metadata. The six accepted tool pins in `INDEPENDENT_SOURCE_SCOPE.md` are unchanged. The held application manifest is unchanged at canonical SHA `fe5b0654bfe17f349d73162588a50e489d43427f5cbe55f7755dfe25b7bc8350`, release `REL-af662a11bf656819d418120a`. Both entire 252-member application runtime vectors were recomputed again and match. Exactly `acquiretm.py` changes; no other application file is hidden in the proposal.
+
+This verifies the package's declared source and metadata only. The state remains `STAGED_SOURCE_SCOPE_HELD`, with installation, current native authority enrollment and live qualification provisioning all false. It does not authorize execution or assert that native exclusions, runtime configuration or provider qualification are satisfied. No source was imported/executed, no tests rerun, and no credentials, configuration contents, native databases, services or external systems were accessed. Only private evidence files were written.

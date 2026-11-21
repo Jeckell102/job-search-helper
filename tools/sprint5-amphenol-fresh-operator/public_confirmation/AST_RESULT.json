@@ -1,0 +1,5 @@
+{
+  "main_identical_after_single_hold_branch_removal": true,
+  "retry_parser_identical": true,
+  "source_functions_identical": true
+}

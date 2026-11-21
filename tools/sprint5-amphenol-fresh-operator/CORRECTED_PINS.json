@@ -1,0 +1,12 @@
+{
+  "host_sha256": "a1cafe60d2025116bcaa43dd8dd1b4099a9c2845c35353f3f25dec98a8df5567",
+  "native_action": false,
+  "preserved_rejected_result_sha256": "99c1cdb2636a32e26df3571f231a60569cdbcd91bca7e9841a4793e9c13e148c",
+  "pytest_passed": 17,
+  "rejected_store_sha256": "1214a01f5ea6232b4e9e172f524a255ba2d2232377b3190fcd621bf5b3818141",
+  "result_sha256": "1e441d2f14798a28de29f9572622a0278c1ebe0319a8292bf8bf6cff81a4467c",
+  "store_sha256": "16c442d8019d5173f188348890fd89fe224d2c4315fde67528ed26e25478134d",
+  "unchanged_logical_database_on_active_task_refusal": true,
+  "unique_checks_passed": 13,
+  "verdict": "ACCEPT_SCOPED_SUCCESSOR_SOURCE"
+}

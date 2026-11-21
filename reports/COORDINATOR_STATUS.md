@@ -43,7 +43,83 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
-## PAUSED_NOT_COMPLETE — higher-reasoning decision handoff
+## ACTIVE — Sprint 5 fresh operator repair and provider hold
+
+### November 21 at 14:28 Eastern
+
+Root is coordinator and release owner for goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The owner resumed and the goal
+tool confirmed `active`. Overall roadmap acceptance remains about 40%.
+Sprint 5 automatic wrapper generation is first. The original six milestones
+and deployed QA remain in scope. Sprint 6 is deployed observe-only.
+
+Independent QA rejected the first six-file report's copied predecessor mode.
+After correction it accepted the six source comparisons and the separately
+held `acquiretm.py` proposal. This was source-only, for the historical
+request and package. The fresh owner requires its own updated scope.
+[Initial QA](S5_AMPHENOL_SIX_TOOL_INITIAL_QA_20261121.md)
+· [Corrected QA](S5_AMPHENOL_SIX_TOOL_CORRECTED_QA_20261121.md).
+
+After a documented quiet interval, one bounded public dispatch saw 39
+postings and 30 successful details before actual 429 responses. No
+complete candidate result or final reread was produced. The provider's
+Retry-After and terminal time establish no current Amphenol contact before
+15:22:24 Eastern. Treat this as an earliest boundary. Do not automatically
+retry at expiry. The copied evaluator is being changed to stop on the
+first 429 without the existing adapter's short retries.
+[Independent provider hold](S5_AMPHENOL_PUBLIC_429_HOLD_20261121.md).
+Independent QA accepted the updated observer in 27 offline checks, including
+the normal adapter dispatch with substituted HTTP input. The qualification
+criteria and adapter did not change. [Observer QA](S5_AMPHENOL_FIRST_429_INDEPENDENT_QA_20261121.md).
+
+The native readback found the same exact original outcome and repair owner,
+one completed inference unchanged, no unsettled inference and all broad
+controls off. Wrapper and bridge services were active. Sync service and
+expiry timer were disabled and idle. A new same-revision failure would be
+only evidence on the prior repair, so the existing exact-outcome launcher
+could not prove a fresh automatic build. Preserve the old task and
+receipts. No fresh native request or administrator observer is needed yet.
+[Native readback](S5_AMPHENOL_FRESH_SUCCESSOR_NATIVE_READBACK_20261121.json)
+· [Independent route review](S5_AMPHENOL_FRESH_ROUTE_INDEPENDENT_20261121.md).
+
+Root owns private host integration, exact scope, backups and release.
+`/root/adapter_dependency_reconcile` owns the private Store successor and
+focused tests. `/root/listener_ownership_qa` owns the private 429 stop and
+offline wire-observer tests. `/root/architecture_publication_review` finished
+independent scope and provider evidence checks. Current work has made no
+production code, queue, service, Sheet, or job-data changes. Latest verified
+GitHub backup is `a4cf75982cb5275afeade2cb5c4c4663d594f63f`.
+
+Next, compose the exact fresh operator enrollment with the normal scoped
+task launch, verify the deduplication fix and first-429 stop offline, and
+back up the scoped evidence. Wait for a later credible validation window
+or a genuinely eligible supported alternative. Production observer and
+installation follow only the exact qualified candidate and native quiet
+window gates. Keep one Jetson inference lane and preserve manual records.
+
+At 14:36 Eastern the private two-file fresh owner passed independent
+boundary review and both composed fixtures after a targeted correction.
+The old owner and both delivery pairs remained byte-identical. The tests
+included a restart after task preparation. It held the one paused task
+and issued no additional command. The deployment route is now the next
+source task. The -03 `restoration_terminal()` compares the historical
+host bytes and cannot be used unchanged after the verified -04 update.
+Reuse the verified -04 before-images and current host lock/readback
+mechanisms with a fresh exact two-file scope. Root owns the native wiring.
+`/root/adapter_dependency_reconcile` owns the private updater and focused
+two-file rollback check. Both independent reviewers finished the source
+and fixture checks. [Fresh build stage](S5_AMPHENOL_FRESH_BUILD_STAGE_20261121.md).
+
+For the fresh candidate's later release, reuse the guarded installer and
+existing one-company terminal verifier. The retained operator preflight
+currently requires the historical `PAUSED_ERROR` task and recovered
+candidate. The event-only reader already checks a completed automatic
+build, but reads baseline bytes from its task checkout. A fresh operator
+preflight must require the completed automatic review and its exact
+task-owned candidate/build receipt while using the same installed baseline
+that the operator builder used. Keep the historical recovery separate.
+
+## Historical pause — higher-reasoning decision handoff
 
 ### November 21 at 14:00 Eastern
 
@@ -75,12 +151,21 @@ Sprint 6 installed observe-only passed; no eligible current named
 Company event was observed. No administrator terminal or spreadsheet
 action is required now.
 
-Next decision belongs to the read-only higher-reasoning review:
-choose the shortest valid live proof, decide how to handle Amphenol's
-provider hold or use a genuinely eligible supported case, and identify
-the minimal maintenance/release path. Start with
-[the saved handoff](S5_S6_NEXT_DECISION_REVIEW_20261121.md).
+The higher-reasoning review is saved. On resume, wait for a credible
+Amphenol window unless another supported case has a verified current
+defect and a genuine company-scoped request. The live proof must start
+with a fresh failure and pass through the corrected automatic build.
+Finish the interrupted six-tool source review, qualify the exact new
+candidate, verify native writer exclusion, and match the one-company
+retry's local records, live workbook, and coordinator receipt. Reuse
+the accepted disposable tests on unchanged source.
+[Review recommendation](S5_S6_INDEPENDENT_RECOMMENDATION_20261121.md)
+and [saved handoff](S5_S6_NEXT_DECISION_REVIEW_20261121.md).
 Keep this goal paused until the owner's explicit resume.
+
+The completed paused checkpoint is backed up at `a4cf75982cb5275afeade2cb5c4c4663d594f63f`. All 15 changed
+files, including the handoff, matched the fetched private branch.
+[Backup readback](S5_S6_PAUSED_REVIEW_CHECKPOINT_BACKUP_VERIFIED_20261121.json).
 
 ## Guarded maintenance window joined to the one-shot in a test copy
 

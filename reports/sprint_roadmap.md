@@ -534,6 +534,26 @@ native admission and complete Amphenol public details remain open.
 [Quiet window QA](S5_AMPHENOL_OPERATOR_QUIET_WINDOW_INDEPENDENT_QA_20261121.md)
 · [Staged source scope](S5_AMPHENOL_OPERATOR_NATIVE_SOURCE_SCOPE_HELD_20261121.json).
 
+At 14:28 Eastern, independent QA had accepted the corrected six-file
+source scope for the historical package. A new bounded public validation
+returned 30 of 39 details before actual HTTP 429. The cohort is unqualified.
+No Amphenol contact before 15:22:24 Eastern. Fresh source evidence also
+showed that ordinary deduplication would leave the same-revision outcome
+under the already-spent repair owner. Stage one explicitly enrolled
+successor through existing paused-task and single-pilot controls. Keep the
+predecessor and receipts immutable. Prove the first-429 stop offline and
+independently verify the composed route before any fresh native request.
+[Source QA](S5_AMPHENOL_SIX_TOOL_CORRECTED_QA_20261121.md)
+· [Public hold](S5_AMPHENOL_PUBLIC_429_HOLD_20261121.md)
+· [Fresh route](S5_AMPHENOL_FRESH_ROUTE_INDEPENDENT_20261121.md).
+
+At 14:36 Eastern, independent boundary and composed offline QA accepted
+the fresh owner and confirmed exactly one pilot in the success case.
+The first-429 observer passed separate offline QA. The two tool files
+are staged pending the guarded native tool update. The previous -03
+controller's terminal check still requires the old host bytes and cannot
+authorize the new scope unchanged. [Fresh build stage](S5_AMPHENOL_FRESH_BUILD_STAGE_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.
