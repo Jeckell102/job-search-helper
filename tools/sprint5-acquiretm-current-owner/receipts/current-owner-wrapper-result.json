@@ -1,0 +1,9 @@
+{
+  "archived_choice_sha256": "dc7235dbeb02bca5cecd94c0b2e652cdbfad1a6bd9a7a26fe731cf5cdb46409e",
+  "new_model_calls": 0,
+  "outcome_id": "OUT-cffecec610203a71e5c23b82",
+  "result": "ACCEPT_DISPOSABLE_CURRENT_OWNER_TO_WRAPPER_COMPOSITION",
+  "source_installed": false,
+  "source_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "witness_sha256": "e84ecba78abc59939e70b7f819a3c8ffb659fb4ce805ade69522b6c672ded593"
+}

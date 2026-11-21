@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 01:55 Eastern
+### Latest outcome, November 21 at 02:09 Eastern
 
 Root is the coordinator and release owner. Active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
@@ -84,13 +84,42 @@ protected cycle holding Saronic and with Amphenol queued. A disjoint real
 event or safe separate settlement of the old cycle can supply a route once
 the necessary production-qualification pieces are installed. Preserve
 historic work and do not stage a fabricated edit or queue an unusable
-request. A maintained subset of the offline Sprint 6 coordinator checks
+request. While that production proof is held, `/root/s5_live_authority_plan`
+completed the two-sided receipt readback in staged source at
+`/tmp/jsh-s5-owned-choice-readback.PpzW7IwU`. The function returned the
+same bound choice preparation from a fresh copy of the original public
+fixture, held when disabled or asked for a foreign outcome, and changed
+zero bytes across seven owned files. Author suite passed 108 tests.
+`/root/architecture_publication_review` independently accepted four
+focused tests including actual sender receipt corruption, destination
+drift, default-off and read-only guards.
+
+`/root/architecture_reuse_review` owns the short integration seam
+decision. `/root/candidate_independent_qa` staged the fresh typed
+recipe. Independent QA and the actual disposable receipt both rejected
+its initial envelope interface. Root changed only that join to pass the
+exact W1 evidence through the existing ATS typed constructor. The original
+archive and prior candidate are preserved. `/root/s5_live_authority_plan`
+independently accepted the corrected recipe and the offline original
+receipt-to-wrapper composition. With the recorded single Jetson choice,
+the fresh entry generated the same live-validated wrapper without a new
+model call. Next, save these QA records and decide the single automatic
+launch seam. Existing native workflow rewrites generic checkpoint next
+action and persists only the response digest, so existing checkpoint
+replay cannot reconstruct the selected recipe. Reuse the existing
+inference reservation and preserve the accepted choice durably or hold
+without repeating inference. Root owns the caller and backup.
+[Exact composition evidence](S5_AMPHENOL_OWNED_RECIPE_COMPOSITION_20261121.md).
+
+A maintained subset of the offline Sprint 6 coordinator checks
 passed all 103 tests on the reviewed source. Reuse these results in the
 composed successive-work, restart, and native acceptance gates already in
-the roadmap. Do not enable automatic release early. Current verified private backup is
-`ee214470ddb3f5e985f4881aab6158a2abe0b113` on
-`backup/integration-automation-m1-operator-20261120`. No user action needed
-at this checkpoint. Keep the 10-minute plain-text update cadence.
+the roadmap. Do not enable automatic release early. The current verified
+private backup is `f1b4a388167d63c21dce7a7acd0b7c0f2c05dbc0` on
+`backup/integration-automation-m1-operator-20261120`. Refetched the
+remote commit and compared the workbook QA report, native-origin report
+and exact recovery source byte for byte. No user action needed at this
+checkpoint. Keep the 10-minute plain-text update cadence.
 [Native hold and actual unblock conditions](S5_AMPHENOL_NATIVE_ORIGIN_READBACK_20261121.md).
 [Coordinator reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
 
