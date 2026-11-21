@@ -1,0 +1,47 @@
+{
+  "approved_at_utc": "2026-11-21T23:19:53.101539+00:00",
+  "approved_interpreter": "/home/chris/job-search-helper_old/.venv/bin/python",
+  "approved_interpreter_resolved": "/usr/bin/python3.11",
+  "basis": "owner requested a bounded restart after the provider cooldown",
+  "candidate": {
+    "build_artifacts": {
+      "build-receipt.json": "aa12f5a86dbd13094f1473c79b1ca14840e1821bb3bbb2194dd9fee1e01578a5",
+      "reviewed.patch": "ce042dffa0addfdbb04e14e450d6e5ae3979d2c881bd1ff9bf9c8173ce749abc",
+      "src/job_search_helper/acquiretm.py": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d"
+    },
+    "candidate_root": "/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT/candidate",
+    "candidate_vector_count": 256,
+    "candidate_vector_sha256": "7e371be5094a3d23de58af47e8e8607c7f64d6d35a4a7e58bfb365baa132bdea",
+    "dispatcher_sha256": "111ccb9067402832ad96b798100dfca293668cf24830409874c1ab4d6eaac07e",
+    "failed_request_id": "operator-amphenol-20261121-05",
+    "inference_request_id": "d73599ddd718448bb9fa1297af268a08",
+    "manifest_sha256": "9b02e2bb924666d240ec666d5ad6292def584e8f7155f89bfa3c465999fc323e",
+    "outcome_id": "OUT-1dc536eeadea2d283052b05d",
+    "qualification": "pending",
+    "release_id": "REL-53592bb86b62492840c58267",
+    "request_sha256": "f8c53183ae54bb8b66f79f92edc68d1e0a9d136ed8d2e21a07d7ff497fde7feb",
+    "state": "HELD_PROPOSED_MANIFEST",
+    "task_id": "WRAP-11dc97a3dd"
+  },
+  "input_file_sha256": {
+    "EXPECTED_INSTALL_READBACK.json": "71e647c17aa5872b0647a974502fee6c056f3ede01dc419d6354c0a123a7bd7f",
+    "PREPARED.json": "1fa925be0a98ce89b18c797083a672cf87f5b538af259ada21028f78ab0c82f4",
+    "PROPOSED_MANIFEST.json": "631e113a7431acd33e7ee82bb33da73e9084559c64e870fed96dfd5cffb13c9a",
+    "confirm_recipe_candidate.py": "a6b23ca6c41f7552e1990870870a022da846a1c6e844bcaf8d146b3a50e98e32"
+  },
+  "model_choice": {
+    "prompt_digest": "8fb1d1794f3fbf10082aa6ced93e8548a2a75f106b1e34713e2a3cedf00da614",
+    "request_id": "d73599ddd718448bb9fa1297af268a08",
+    "response_digest": "eaa91c9a741861863d77142cabc01f034a7767f9f43465fdbce4bb1b06d0d514",
+    "status": "COMPLETED",
+    "task": "WRAP-11dc97a3dd",
+    "tools_digest": "bb3967446fe84756a1cc422a7a27d93fad2cb1c28a0b6590c60aeeae98b062a5"
+  },
+  "previous_provider_not_before_utc": "2026-11-21T22:48:54.201935+00:00",
+  "prior_429_log_sha256": "42da27f2769e03ea7687da9e489c6e1aa446369a7b591a8c5f4ea90dbb71a482",
+  "prior_complete_log_sha256": "dfd69d46fd48deeeab7feb88d457ba01978d5ef5d4ae4548adc076df5d41638e",
+  "prior_preparation_sha256": "dbf3196f8ff5e2467ae00a1b7ec0c7cf4afcfd66996f5ee70cf697fba40ac7ea",
+  "qualification_live": "pending",
+  "state": "APPROVED_ONE_PUBLIC_VALIDATION_EXECUTION",
+  "window": "/tmp/jsh-amphenol-qualification-retry.XzvXJ1qr"
+}

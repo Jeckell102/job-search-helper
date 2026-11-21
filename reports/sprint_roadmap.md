@@ -329,6 +329,11 @@ This closes the staged native/application join for the cut before retry
 settlement. It supplies no live source, job, or workbook acceptance.
 [Recovery evidence](S5_AMPHENOL_COMPLETE_ACTIVATION_RESUME_STAGE_20261121.md).
 
+At 18:22 Eastern, a single owner-requested retry after the prior cooldown
+stopped on a fresh HTTP 429 after 35 of 39 details. The new provider floor
+is 19:21:55 Eastern. Live qualification and release remain held.
+[Retry evidence](S5_AMPHENOL_POST_COOLDOWN_PUBLIC_HOLD_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,

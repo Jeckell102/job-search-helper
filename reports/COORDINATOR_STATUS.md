@@ -144,6 +144,72 @@ is needed before qualification. The persistent goal stays active at about
 40% overall acceptance. Both private versions and all QA reports remain
 available for exact release or later recovery.
 
+Latest private GitHub checkpoint `3362f98a933fe60557d84c1f40379485ca5731fd`
+was fetched at 17:23 Eastern. The 15 scoped files matched byte-for-byte.
+This turn materially advanced the required recovery join. The latest
+live gate did not change.
+[Backup verification](S5_AMPHENOL_COMPLETE_ACTIVATION_RESUME_BACKUP_VERIFIED_20261121.json).
+
+At 17:23 Eastern the installed local intake returned zero pending events.
+The verified cooldown remains in force. All current staged release and
+recovery work is saved. No eligible alternative or pending live operation
+was found. This is the first no-progress audit after the verified
+continuation checkpoint. No production or provider action occurred.
+
+At 17:24 Eastern the terminal HTTP 429 record still showed a future
+Retry-After deadline. There is no app release journal or live -06
+observer, and the preceding installed intake check remains the latest
+eligible-work check. This is the second consecutive no-progress audit on
+the same live qualification dependency. No user action is currently due.
+
+### November 21 at 17:24 Eastern — blocked on live qualification
+
+The third consecutive no-progress audit found the same provider-imposed
+hold. Its saved deadline, 17:48:54.201935 Eastern, was still future. The
+installed intake has no eligible alternative and there is no active app
+release. The accepted staged recovery and transport work is saved, with
+the latest 15-file private backup verified at `3362f98a…`. Root remains
+release owner and all worker lanes are idle. Set the persistent goal to
+blocked. Resume on a credible bounded Amphenol qualification window or
+a current eligible supported alternative. Eligibility requires more than
+the timer expiring. The -06 observer is needed only after qualification.
+No production or provider action occurred. Overall acceptance about 40%.
+
+### November 21 at 18:20 Eastern — owner requested a bounded restart
+
+Chris requested a restart after the recorded provider cooldown elapsed.
+Root rechecked the saved HTTP 429 deadline, exact proposal, automatic-build
+adapter and evaluator hashes. There is still no active app release. Root
+owns release custody and assigned `/root/adapter_dependency_reconcile` the
+single independent public qualification in fresh private window
+`/tmp/jsh-amphenol-qualification-retry.XzvXJ1qr`, preparation SHA `7a59adb4…`.
+The evaluator must stop on the first new 429. Do not replay after an
+ambiguous tool result or make a second provider call from another lane.
+The scheduler goal still showed blocked at the start of this explicit user
+turn. This work is proceeding under the owner's direct restart request.
+
+Root staged the exact -06 observer starter at
+`/tmp/jsh-amphenol-complete-activation-resume/start_observer.sh` and its
+shell syntax passed. Only the maintenance ID and directory differ from
+the previously accepted starter. Do not ask to run it until independent
+public qualification passes. No production changes in this checkpoint.
+
+### November 21 at 18:22 Eastern — requested retry held again
+
+The single owner-requested independent qualification ran on the exact
+candidate. Initial listing membership matched the previous 39-posting
+capture. Thirty-five descriptions returned HTTP 200 before the first new
+429. It stopped without a final reread or qualification. The new provider
+floor is 19:21:54.230019 Eastern. Do not contact Amphenol before 19:21:55
+Eastern or schedule a repeat from the time alone. Raw logs are private.
+[New public hold](S5_AMPHENOL_POST_COOLDOWN_PUBLIC_HOLD_20261121.md).
+
+Root retains release ownership. No observer is due, and there is no
+first-install or continuation authority. The exact staged build and
+recovery controls are preserved. The live dependency precedes any
+native release, scoped retry or workbook writes. Overall acceptance
+remains approximately 40%.
+
 ### November 21 at 16:39 Eastern — current coordinator checkpoint
 
 Root remains coordinator and release owner for the active persistent goal
@@ -184,7 +250,7 @@ only the row affected by a new verified checkpoint.
 | Production and canonical build input | `/home/chris/job-search-helper_old`; `src/job_search_helper/acquiretm.py` SHA `a95953af…`. The isolated task checkout is a historical snapshot. |
 | Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production, adapter SHA `895ec36e…`. Private full candidate and proposal `REL-53592bb86b62492840c58267` are in `/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT`. [Qualification status](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md). |
 | Current request and tool receipt | `operator-amphenol-20261121-05` / `f8c53183…`; local -05 maintenance receipt SHA `60b29ffc…`. See [exact identifiers and hashes](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md). |
-| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `5276d5b98454e9eda428e1c4ded7ca5a56cd89e8`. All nine scoped files matched the fetched copy. [Verification](S5_AMPHENOL_RETRY_AFTER_BACKUP_VERIFIED_20261121.json). |
+| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `3362f98a933fe60557d84c1f40379485ca5731fd`. All 15 scoped files matched the fetched copy. [Verification](S5_AMPHENOL_COMPLETE_ACTIVATION_RESUME_BACKUP_VERIFIED_20261121.json). |
 
 ## Prior Sprint 5 preparation checkpoints
 

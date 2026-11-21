@@ -1,0 +1,25 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "3362f98a933fe60557d84c1f40379485ca5731fd",
+  "exact_file_count": 15,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "3d8138fb2b2583c5703be5776f0436c819521f2c0f22a1be6cb9978091c7735c",
+    "reports/S5_AMPHENOL_COMPLETE_ACTIVATION_ENTRY_QA_20261121.md": "c422ec7fced169f8e0f3b1d58257b9eaab908620d41220f05ebe798ac96d1034",
+    "reports/S5_AMPHENOL_COMPLETE_ACTIVATION_NATIVE_QA_20261121.md": "8ace3be735278c8a4192b2e3dec9cb3c19871dd09ede80c1a9c9eb0bd368ac72",
+    "reports/S5_AMPHENOL_COMPLETE_ACTIVATION_RESUME_STAGE_20261121.md": "6d188788a83e72679870a5b1718a68355732ec4b295f28aa2ce8dee3c08917ee",
+    "reports/S5_AMPHENOL_RETRY_AFTER_BACKUP_VERIFIED_20261121.json": "cb255efe5056311c8cc757eb51581773a7120b200243e3e902101394b20b9d1b",
+    "reports/sprint_roadmap.md": "1c684b5652ce49c06b4f5ecfd36ddfc55283e50ab3c6774c7c427d09e50bf6b4",
+    "tools/sprint5-amphenol-fresh-operator/application_release/amphenol_operator_one_shot.py": "1090d18053a50323b996a1ff0f3bfe82228db3c15eeb2c3422cc99795262cb00",
+    "tools/sprint5-amphenol-fresh-operator/application_release/tests/test_fresh_operator_one_shot.py": "209e075d2602561d2f5b2f5f28a64f0f09d00b34aaf9befcd3a7b18cfd6983f9",
+    "tools/sprint5-amphenol-fresh-operator/native_release/DISPOSABLE_RESULT_RESUME.txt": "598eb27fb0ba9b8a53fb6f147db6bd04ba7b3a90d6cd6e5e5ff5fcdfec4292c9",
+    "tools/sprint5-amphenol-fresh-operator/native_release/RESUME_HANDOFF.md": "84b0499a59309f31d6fd854cc762914225f19cb9f42d34c119589e681c0b0aed",
+    "tools/sprint5-amphenol-fresh-operator/native_release/native_window.py": "9e51c5197f4682fe653685a690481f98645f056d0229d4dfde4ad7ec36494b91",
+    "tools/sprint5-amphenol-fresh-operator/native_release/test_native_window.py": "7895356b36b9cd68d8c5d5076d15f7da44d5e96d2c6edc66f8605dcc1880030a",
+    "tools/sprint5-amphenol-fresh-operator/native_release/vendor/integration_release.py": "69a4261f117a61d41a3a3cb023ca7c73098b1c0ee0a6c98b2fefb525d7ab21df",
+    "tools/sprint5-amphenol-fresh-operator/native_release/vendor/repair_retry.py": "1e3636e206724ee535699f16d4cbf82ac8ca28f047eeb537ff6167be0585555c",
+    "tools/sprint5-amphenol-fresh-operator/qualification/release_entry.py": "e83730be7e69dce3e5a787b61d42c70603859ce1dad8df850d8fcc658d96aecd"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T17:23:02-05:00"
+}
