@@ -1,0 +1,165 @@
+{
+  "result": "VISIBLE_TERMINAL_CONTROLS_MATCH_RETAINED_PLAN",
+  "sheet_writes": 0,
+  "receipts_created": 0,
+  "case_count": 5,
+  "cases": [
+    {
+      "company": "COMP-0002",
+      "delivery_mode": "observation_only",
+      "classifications": {
+        "dirty": 0,
+        "baseline_equal": 6,
+        "baseline_missing": 0,
+        "baseline_different": 2
+      },
+      "prior_delivery_attempt_count": 0,
+      "conflict_count": 0,
+      "all_visible_fields_currently_match": true,
+      "local_only_fields_matching_plan": [
+        "Scan State",
+        "Active Cycle ID",
+        "Coverage Status",
+        "Record Updated"
+      ],
+      "local_only_fields_differing_from_plan": [],
+      "legacy_baseline_different_fields": [
+        "Active Cycle ID",
+        "Record Updated"
+      ],
+      "live_visible_fields": [
+        "Blocked Reason",
+        "Automatic Retry?",
+        "Last Scan Result",
+        "Next Action"
+      ],
+      "baseline_different_visible_fields": []
+    },
+    {
+      "company": "COMP-0008",
+      "delivery_mode": "observation_only",
+      "classifications": {
+        "dirty": 0,
+        "baseline_equal": 5,
+        "baseline_missing": 0,
+        "baseline_different": 3
+      },
+      "prior_delivery_attempt_count": 0,
+      "conflict_count": 0,
+      "all_visible_fields_currently_match": true,
+      "local_only_fields_matching_plan": [
+        "Scan State",
+        "Active Cycle ID",
+        "Coverage Status",
+        "Record Updated"
+      ],
+      "local_only_fields_differing_from_plan": [],
+      "legacy_baseline_different_fields": [
+        "Active Cycle ID",
+        "Record Updated",
+        "Scan State"
+      ],
+      "live_visible_fields": [
+        "Blocked Reason",
+        "Automatic Retry?",
+        "Last Scan Result",
+        "Next Action"
+      ],
+      "baseline_different_visible_fields": []
+    },
+    {
+      "company": "COMP-0016",
+      "delivery_mode": "observation_only",
+      "classifications": {
+        "dirty": 0,
+        "baseline_equal": 6,
+        "baseline_missing": 0,
+        "baseline_different": 2
+      },
+      "prior_delivery_attempt_count": 0,
+      "conflict_count": 0,
+      "all_visible_fields_currently_match": true,
+      "local_only_fields_matching_plan": [
+        "Scan State",
+        "Active Cycle ID",
+        "Coverage Status",
+        "Record Updated"
+      ],
+      "local_only_fields_differing_from_plan": [],
+      "legacy_baseline_different_fields": [
+        "Active Cycle ID",
+        "Record Updated"
+      ],
+      "live_visible_fields": [
+        "Blocked Reason",
+        "Automatic Retry?",
+        "Last Scan Result",
+        "Next Action"
+      ],
+      "baseline_different_visible_fields": []
+    },
+    {
+      "company": "COMP-0040",
+      "delivery_mode": "observation_only",
+      "classifications": {
+        "dirty": 0,
+        "baseline_equal": 6,
+        "baseline_missing": 0,
+        "baseline_different": 2
+      },
+      "prior_delivery_attempt_count": 0,
+      "conflict_count": 0,
+      "all_visible_fields_currently_match": true,
+      "local_only_fields_matching_plan": [
+        "Scan State",
+        "Active Cycle ID",
+        "Coverage Status",
+        "Record Updated"
+      ],
+      "local_only_fields_differing_from_plan": [],
+      "legacy_baseline_different_fields": [
+        "Active Cycle ID",
+        "Record Updated"
+      ],
+      "live_visible_fields": [
+        "Blocked Reason",
+        "Automatic Retry?",
+        "Last Scan Result",
+        "Next Action"
+      ],
+      "baseline_different_visible_fields": []
+    },
+    {
+      "company": "COMP-0045",
+      "delivery_mode": "observation_only",
+      "classifications": {
+        "dirty": 0,
+        "baseline_equal": 5,
+        "baseline_missing": 0,
+        "baseline_different": 3
+      },
+      "prior_delivery_attempt_count": 0,
+      "conflict_count": 0,
+      "all_visible_fields_currently_match": true,
+      "local_only_fields_matching_plan": [
+        "Scan State",
+        "Active Cycle ID",
+        "Coverage Status",
+        "Record Updated"
+      ],
+      "local_only_fields_differing_from_plan": [],
+      "legacy_baseline_different_fields": [
+        "Active Cycle ID",
+        "Record Updated",
+        "Scan State"
+      ],
+      "live_visible_fields": [
+        "Blocked Reason",
+        "Automatic Retry?",
+        "Last Scan Result",
+        "Next Action"
+      ],
+      "baseline_different_visible_fields": []
+    }
+  ]
+}

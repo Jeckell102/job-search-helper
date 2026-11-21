@@ -1,0 +1,14 @@
+{
+  "result": "ROOT_ACTUAL_COPY_PREVIEW_AND_REGRESSION_PASS",
+  "source": "/tmp/jsh-saronic-suffix-candidate.YNzVjErI",
+  "source_sha256": {
+    "control_before_prefix_runner.py": "485952448d3058e5ba6c87d4a8d2a44f357b3a7414aa13fbc1b6bfb84e2f6c46",
+    "exact_control_before_prefix_recovery.py": "f94ba9c409c2c0d23b9d09230385f905ec9751f79a95b5d64534cac6df81c060",
+    "exact_legacy_migration_runner.py": "6681e573503650850112b7f872054ef3fbe65fcbbe14078b3356b560342caabb",
+    "sqlite_repository.py": "8dadbcbefae6a67dc7f2646baed730f33084e208b336f4dc9ebbe653befac12d"
+  },
+  "focused_tests_passed": 30,
+  "baseline_tests_passed": 26,
+  "copied_preview_sha256": "ce4dc0b153f000afa276132dc05b19edf6d33e928f4827fd38a81c539618b8ef",
+  "scope": "SOURCE_ONLY_NON_EXECUTABLE_PREVIEW"
+}

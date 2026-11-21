@@ -1,0 +1,29 @@
+{
+  "absent_suffix_count": 11,
+  "company_id": "COMP-0054",
+  "current_local_presence_snapshot_digest": "2927e9033d864367c0667d81d549a41da314af0873cb717e78be7d9b99367588",
+  "cycle_id": "CYC-B639C6D864EC",
+  "evidence_index": 194,
+  "exact_preserved_review_fields": [
+    "Added to Opportunities?",
+    "Decision",
+    "Fit Level",
+    "Reconsideration Status",
+    "Rejection Reason",
+    "Review Started At",
+    "Review Status"
+  ],
+  "existing_job_update_only": true,
+  "history_index": 193,
+  "late_control_index": 207,
+  "legacy_plan_digest": "54338d4aea38400e72f1534efa00117d0504f13db50e8171a329d25faba81970",
+  "local_write_performed": false,
+  "mutation_performed": false,
+  "operation_count": 208,
+  "original_prefix_operations_preserved": 67,
+  "original_verified_prefix_cursor": 67,
+  "receipt_created": false,
+  "remote_write_performed": false,
+  "successor_operations_digest": "5809ad61562f374315a8297cefbcd24457080b1d620d0346d80459fb572932bd",
+  "version": "selected-legacy-control-before-prefix-source-transition-preview-v1"
+}

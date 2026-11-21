@@ -1,0 +1,18 @@
+# Independent late-control source-transition preview QA
+
+**HOLD for the opt-in preview's evidence scope at planner pin `e13cbd6d7c2a0ed735809e5c3d2c52fa9cc73458fe4cf026ab0fa8bee81f59e4`.** Two private defensive cases were accepted. A paired `Job Evidence` append kept the correct job key, proposed Source Hash and Company but supplied a `Job Title` different from the matching, hash-verified archived posting. The preview returned that operation unchanged. A separately present non-transition `Opportunities` operation supplied a foreign `on_insert.Company` while its later `values.Company` matched. The current ownership extractor accepted the later value and left the contradictory map in the emitted preview. Both cases passed through the exact maintained fixture and produced no writes. [Defensive cases](/tmp/jsh-saronic-suffix-independent.fRom0y7E/check_negatives.py) · [Exact outcomes](/tmp/jsh-saronic-suffix-independent.fRom0y7E/NEGATIVES.json)
+
+The first gap follows from the evidence scan comparing the two-field final identity and Company without comparing posting-derived evidence material. The normal Engine's evidence records derive title, URL and formatted description from the posting. The second follows from value precedence on non-history operations. The optional preview can hold inconsistent evidence and contradictory ownership while retaining the ordinary v3 policy. [Preview evidence scan](/tmp/jsh-saronic-suffix-candidate.YNzVjErI/src/job_search_helper/exact_control_before_prefix_recovery.py:461) · [Normal evidence projection](/tmp/jsh-saronic-suffix-candidate.YNzVjErI/src/job_search_helper/engine.py:612)
+
+**Exact copied Saronic readback passed.** The unchanged v3 route refused the source transition. The opt-in route preserved all 67 applied prefix operations, left all other operations in order, changed only operation 194 to update an existing row under exact old-source and protected-review guards, and preserved the append at operation 195. The 208-operation stream and saved cursor stayed unchanged. Both copied databases stayed physically unchanged. The audit denied nonimmutable database connections, external activity and writable opens. The final opted-in runner itself requests immutable connection mode, rejects nonempty journals and brackets the read with file identities. [Copied preview result](/tmp/jsh-saronic-suffix-independent.fRom0y7E/COPIED_PREVIEW.json) · [Immutable runner](/tmp/jsh-saronic-suffix-candidate.YNzVjErI/src/job_search_helper/control_before_prefix_runner.py:60)
+
+Missing explicit old hash, changed archived compensation, duplicate evidence operation, duplicate posting and directly foreign owner each held. A pin changed only in `manual_choices` changed the bound manual-choice digest and left the apparent protected fields out of the proposed writes. The v3 binding, ownership, builder, preview and apply functions matched their backup counterparts by AST. This review opened only immutable verified backup copies and private fixtures. It exercised no live, remote, or recovery operation.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Exact frozen planner | `e13cbd6d7c2a0ed735809e5c3d2c52fa9cc73458fe4cf026ab0fa8bee81f59e4` |
+| Frozen runner | `485952448d3058e5ba6c87d4a8d2a44f357b3a7414aa13fbc1b6bfb84e2f6c46` |
+| Copied transition driver | `0ac7478ccb7293150a0447dc60c00cec1ced80e66d079791c33bf6509f498c53` |
+| Independent copied preview result | `ce4dc0b153f000afa276132dc05b19edf6d33e928f4827fd38a81c539618b8ef` |
+| Independent defensive-case script | `d1237e01727e1e480c69ec7a81dd1e295d83a40f35cff7725c5185ffb61f5a95` |
+| Independent outcomes | `31fe86e4c4183737c4f459a615ac9c032a320db2d42cfde518e67aac1559fb15` |

@@ -43,6 +43,48 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Guarded late-control recovery preview accepted
+
+### November 21 at 09:41 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Amphenol wrapper generation
+and complete retry remain tested and accepted in staging. Its production
+pilot remains held. The fresh 09:38 immutable check found zero eligible
+events and zero exact receipts for the five retained terminal plans.
+
+The exact staged runner produced a guarded preview from the verified
+backup using immutable SQLite. It preserved all 208 operation positions
+and the exact 67 completed operations. It treats the present History row
+as update-only and keeps all seven protected review fields unchanged.
+No backup or production data was modified and no receipt was created.
+Thirty focused tests passed. The initial QA found forged paired evidence
+and conflicting owner declarations. The planner owner repaired both;
+independent QA reran the original cases and exact copied preview and
+accepted the correction.
+[Preview checkpoint](S5_SARONIC_BOUND_PREVIEW_CHECKPOINT_20261121.md)
+· [Recheck](S5_SARONIC_SOURCE_TRANSITION_RECHECK_20261121.md).
+
+All five separately held Companies already match their four visible
+plan fields on the live workbook and four local-only fields in copied
+Jobs. Twelve lagging recorded baseline fields are local-only. The
+existing validator stays strict. A separately typed observation-only
+receipt path is still required to settle those controls and cannot
+come from the preview.
+[Five-Company readback](S5_FIVE_RETAINED_TERMINAL_CONTROLS_READBACK_20261121.json)
+· [Observation design](S5_FIVE_TERMINAL_OBSERVATION_CONTINUATION_DESIGN_20261121.md).
+
+`/root/adapter_dependency_reconcile` owned the planner/test and repair;
+root owned the runner, stable reads and composition;
+`/root/listener_ownership_qa` owned independent acceptance;
+`/root/architecture_publication_review` and
+`/root/approval_provenance_design` finished source-only reviews. All
+lanes settled. Root owns the next signed, durable continuation and
+exact application on disposable stores. Preserve original custody
+and separately prove remote prefix and pending effects. Keep one
+Jetson lane and existing production release and backlog controls off.
+[Durable continuation map](S5_LATE_CONTROL_DURABLE_CONTINUATION_MAP_20261121.md).
+
 ## Saronic read-only recovery evidence
 
 ### November 21 at 09:23 Eastern
@@ -75,6 +117,9 @@ Next build a bound effective suffix plan using existing policy and exact
 receipts. Preserve old cursor and archives. Five other blocked plans
 need separately attributable readback or disposition. No Sheet, Jobs,
 source, queue, service or production control was changed in this turn.
+Private GitHub backup `f1eb2578074d0f47f62830d3eec6ee3b5e40c63c` was fetched
+back and all 13 scoped file bytes matched.
+[Backup verification](S5_SARONIC_READBACK_BACKUP_VERIFIED_20261121.json).
 
 ## Goal resumed and current local backup
 

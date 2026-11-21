@@ -1,0 +1,12 @@
+{
+  "contradictory_other_operation_owner": "ACCEPTED",
+  "duplicate_evidence_operation": "duplicate_local_operation_target_requires_atomic_group",
+  "duplicate_retained_posting": "control_before_prefix_source_transition_archived_posting_not_unique",
+  "forged_evidence_title": "ACCEPTED",
+  "hidden_manual_choice": "ACCEPTED",
+  "hidden_manual_choice_bound_in_preview": true,
+  "hidden_manual_choice_writes_protected_fields": false,
+  "invalid_other_operation_owner": "control_before_prefix_operation_ownership_mismatch",
+  "legacy_explicit_old_hash_missing": "control_before_prefix_source_transition_old_source_not_guarded",
+  "wrong_planned_compensation": "control_before_prefix_source_transition_salary_not_archived"
+}
