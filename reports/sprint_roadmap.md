@@ -17,6 +17,25 @@ Source tests alone are not deployment or live-operation acceptance.
 Current overall completion estimate: approximately 40% by acceptance gates.
 This estimate changes only when a gate gains or loses verified evidence.
 
+## Current operating priorities
+
+The owner uses this as a single-operator system and adds companies rarely.
+The next ordinary manually launched scrape may pick up a new or changed
+Company. Immediate automatic dispatch on a spreadsheet edit is optional.
+Prove that the pending Company is found once on that next run, with existing
+jobs and decisions preserved. An advanced simultaneous-editor protocol is
+outside this operating scope. Keep the safeguards that prevent lost events,
+duplicate processing, accidental replacement, and unsafe replay.
+
+The primary automation is automatic wrapper generation for a failed or
+partial integration found during a scrape. For a supported source, save the
+failure and partial evidence, then have the existing Python coordinator send
+one bounded generation task to the Jetson without manual prompting. MuleLab
+handles retrieval, validation, storage, and release. Use a fresh company-only
+retry after the exact qualified release. Keep the single Jetson inference
+lane and the existing release gates. Automation that speeds up the initial
+Company intake must not delay the wrapper-generation path.
+
 ## Mandatory context-reset and restart protocol
 
 After every context reset, compaction, new window, model handoff, or resumed
@@ -52,7 +71,9 @@ Restore alignment in this order:
 6. Identify the first incomplete sprint. Reconcile its requirements one by one
    against current evidence, then continue from the exact next action in the
    restart card. Do not redo accepted work unless current evidence contradicts
-   it, and do not skip an open prerequisite because later code exists.
+   it, and do not skip an open prerequisite because later code exists. Use
+   the restart card's simplest-path rule. Add work only for an acceptance
+   criterion or an observed failure. Record optional hardening for later.
 7. Reconcile worker status before assigning work. Give each active lane explicit
    file/state ownership and prevent overlapping edits. Independent QA remains
    read-only and may not repair the candidate it judges.
@@ -235,8 +256,9 @@ Required work and evidence:
 1. Prove transactional/supported mutation outbox behavior plus reconciliation
    for external edits, bootstrap watermarking, durable acknowledgement and
    deduplication.
-2. Exercise idle/busy delivery, duplicate events, reordered revisions, crashes
-   on both sides and restart catch-up.
+2. Verify detection on the next ordinary manually launched scrape, one
+   logical outcome on rerun, and recovery from an interrupted handoff. A
+   Company added during a scrape may wait for the next manual run.
 3. Emit structured outcomes from full and company-only runs.
 4. Verify complete/zero, temporary provider error, access block, broken
    qualified integration, unsupported capability, storage/publication failure,
@@ -258,10 +280,11 @@ the original source, services and checkout paths, and the append claim
 remains spent. A separate synthetic Sheets fixture reproduced the missing
 worksheet-ID error and verified the corrected append with an atomic duplicate
 marker. Independent QA rejected the direct append for a concurrent foreign
-writer race. The Freeform scope stays prospective while a remote-read-only
-intake for a genuine owner-created Company is staged. Independent acceptance
-of that intake and the actual live event-to-outcome run are still required.
-Normal idle and busy evidence remains open. The selected successor's no-publication
+writer race. The genuine owner-created Freeform row passed remote-read-only
+intake and a guarded live run fetched 80 postings, saved and published 16,
+and queued the same 16 for first-pass review. Independent QA matched both
+delivery receipts and verified all three checkout paths restored. The
+ordinary next-manual-run intake proof remains open. The selected successor's no-publication
 receipt and crash recovery passed the 198-test disposable regression.
 See the restart card and `S4_SHEETS_APPEND_WIRE_DIAGNOSTIC_20261120.md`.
 
@@ -269,9 +292,10 @@ See the restart card and `S4_SHEETS_APPEND_WIRE_DIAGNOSTIC_20261120.md`.
 
 Roadmap coverage: Milestones 4 and 5, including F5.
 
-Objective: complete one minimal repair loop from failure evidence through a
-qualified candidate, validation, guarded release, fresh company retry and
-verified saved jobs without manual prompt copying.
+Objective: run one minimal automatic wrapper generation loop for a qualified
+failed or partial integration. Start from real failure evidence and produce
+the wrapper with the Jetson, then validate, release, make a fresh scoped retry,
+and verify saved jobs without manual prompt copying.
 
 Required work and evidence:
 
