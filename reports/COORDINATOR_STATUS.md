@@ -194,6 +194,37 @@ source/configuration hashes and matches the capture-root pin in the
 bootstrap. Independent QA is assigned to `/root/site_journal_qa`.
 [Preinstall design](S5_PREINSTALL_QUALIFICATION_REVIEW_20261120.md).
 
+20:10 Eastern. Verified private GitHub commit
+`cb7c52ae5f1574d758feecde83208f8e4ed693b0` for the accepted current
+offline verifier vector, tests and reports. Source-only automated
+pre-install guard advanced in `/tmp/jsh-s5-automated-release-preflight.6SuVCPap`.
+Independent review found the completed receipt readback needed to pin
+the whole receipt before it can schedule a retry. Root added the
+terminal journal digest and direct unchanged-receipt rechecks. The
+original QA turn stopped on a tool flag before reporting a disposition.
+`/root/architecture_publication_review` now owns the source-only
+qualification and positive readback review. Root passed 76 focused tests
+including qualified crash-before-schedule replay, mismatched completed
+receipt refusal, and old manual readback. Root owns code, release and
+backups. Checks are staged with no production actions; the native
+observer was absent at 20:10.
+[Automated preinstall source](S5_AUTOMATED_RELEASE_PREFLIGHT_STAGED_20261120.md).
+
+20:16 Eastern. `/root/architecture_publication_review` independently
+accepted the exact staged pre-install guard after 86 cases. Root's
+broad run passed 530. A separate root-owned mapping companion slice
+in `/tmp/jsh-s5-mapping-companion.4mbNVvkr` passed 85 focused,
+including exact registry/descriptor pairing, the real staged registry
+with a disposable induced stale board, one retry, and guarded rollback.
+`/root/architecture_publication_review` owns the separate source
+review. Unqualified and manual routes continue to reject the companion
+exception, and other package JSON remains outside release scope.
+No live-qualified producer is provisioned. Administrator observer absent
+at 20:16. Next verify the companion and preserve the accepted guard,
+then connect genuine fresh candidate evidence and the positive finisher.
+[Preinstall independent QA](S5_AUTOMATED_RELEASE_PREFLIGHT_INDEPENDENT_20261120.md) ·
+[Paired mapping source](S5_MAPPING_COMPANION_STAGED_20261120.md).
+
 
 Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
 the original endpoints and unused launch custody. Native ownership and
