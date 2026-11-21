@@ -334,6 +334,11 @@ stopped on a fresh HTTP 429 after 35 of 39 details. The new provider floor
 is 19:21:55 Eastern. Live qualification and release remain held.
 [Retry evidence](S5_AMPHENOL_POST_COOLDOWN_PUBLIC_HOLD_20261121.md).
 
+At 18:35 Eastern, independent offline QA accepted the paced public
+evaluator, with a twelve-second minimum gap and the original coverage
+checks. A single user-requested run is waiting out the provider cooldown.
+[Paced preparation](S5_AMPHENOL_PACED_PREPARATION_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,

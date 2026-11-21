@@ -1,0 +1,15 @@
+{
+  "basis": "owner requested a single slower scrape after the cooldown",
+  "candidate_adapter_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "candidate_root": "/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT/candidate",
+  "candidate_source_vector_sha256": "7e371be5094a3d23de58af47e8e8607c7f64d6d35a4a7e58bfb365baa132bdea",
+  "detail_gap_seconds": 12.0,
+  "launcher_sha256": "26be04f43b0586361cb08c31e35b0a4afb64e11d14ca127ae64b08fb98598246",
+  "manifest_file_sha256": "631e113a7431acd33e7ee82bb33da73e9084559c64e870fed96dfd5cffb13c9a",
+  "mode": "public_paced_validation_only",
+  "not_before_utc": "2026-11-22T00:21:55+00:00",
+  "paced_evaluator_sha256": "ab1b3c5813b59d9c82a8413342beff17d3e658b2d037344d61e8b05365870bd0",
+  "previous_429_log_sha256": "1d33814c36798fe34942fb8b85e48849b5f94e5c997e39d09b7e08673a26a5c7",
+  "previous_provider_not_before_utc": "2026-11-22T00:21:54.230019+00:00",
+  "release_id": "REL-53592bb86b62492840c58267"
+}

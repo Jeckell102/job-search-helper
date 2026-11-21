@@ -210,6 +210,38 @@ recovery controls are preserved. The live dependency precedes any
 native release, scoped retry or workbook writes. Overall acceptance
 remains approximately 40%.
 
+The independent retry report and manifests are durable. All eight scoped
+files were read back from the existing private GitHub branch at
+`ea20fdf2c382dbb7373d9542c511e6d5b3795604`. The independent run lane is
+finished. No new provider attempt or service action is scheduled.
+[Backup verification](S5_AMPHENOL_POST_COOLDOWN_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 18:32 Eastern — owner requested a paced check
+
+Chris asked for one slower Amphenol scrape after the provider cooldown.
+Root staged the exact paced public evaluator in
+`/tmp/jsh-amphenol-paced-qualification.v2IJmlp5`, using the unchanged
+candidate source, prior coverage checks and first-detail-429 hold.
+Each new detail attempt waits at least twelve seconds after the previous
+response or failed request. The final listing reread waits as well. Pace
+is observed in the log. The one-run launcher verifies source and prior
+receipt hashes, waits until 19:21:55 Eastern, and acquires an exclusive
+start marker before external work. It can be cancelled while waiting.
+Root verified the launcher inspect and 23 offline evaluator checks.
+`/root/listener_ownership_qa` owns independent source and fixture QA.
+No production release, data changes, new inference or provider contact
+occurred. This result evaluates the paced execution only.
+
+At 18:35 Eastern independent offline QA accepted exact evaluator
+`ab1b3c58…`, launcher `26be04f4…`, and preparation `4bc50bce…` after
+correcting the reproduced output-failure masking of a received 429. All
+25 fixture checks passed and the original acceptance assertions match.
+`/root/adapter_dependency_reconcile` now owns the sole live waiter, PID
+665762 and exec session 98442. It reports waiting for 19:21:55 Eastern.
+Root owns monitoring, cancellation and any later release decision. Do
+not start a second process on tool timeout. No provider contact yet.
+[Paced preparation](S5_AMPHENOL_PACED_PREPARATION_20261121.md).
+
 ### November 21 at 16:39 Eastern — current coordinator checkpoint
 
 Root remains coordinator and release owner for the active persistent goal
@@ -250,7 +282,7 @@ only the row affected by a new verified checkpoint.
 | Production and canonical build input | `/home/chris/job-search-helper_old`; `src/job_search_helper/acquiretm.py` SHA `a95953af…`. The isolated task checkout is a historical snapshot. |
 | Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production, adapter SHA `895ec36e…`. Private full candidate and proposal `REL-53592bb86b62492840c58267` are in `/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT`. [Qualification status](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md). |
 | Current request and tool receipt | `operator-amphenol-20261121-05` / `f8c53183…`; local -05 maintenance receipt SHA `60b29ffc…`. See [exact identifiers and hashes](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md). |
-| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `3362f98a933fe60557d84c1f40379485ca5731fd`. All 15 scoped files matched the fetched copy. [Verification](S5_AMPHENOL_COMPLETE_ACTIVATION_RESUME_BACKUP_VERIFIED_20261121.json). |
+| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `ea20fdf2c382dbb7373d9542c511e6d5b3795604`. All eight scoped files matched the fetched copy. [Verification](S5_AMPHENOL_POST_COOLDOWN_BACKUP_VERIFIED_20261121.json). |
 
 ## Prior Sprint 5 preparation checkpoints
 

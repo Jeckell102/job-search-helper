@@ -1,0 +1,18 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "ea20fdf2c382dbb7373d9542c511e6d5b3795604",
+  "exact_file_count": 8,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "b6d8f21f8bc47f5738a6f82247b0558d4385b31e8ea6bc0bded89314802b5410",
+    "reports/S5_AMPHENOL_COMPLETE_ACTIVATION_RESUME_BACKUP_VERIFIED_20261121.json": "757cd06569279acc8e1d93f78063569770091226d43b16b0fd9fcfad1a78885b",
+    "reports/S5_AMPHENOL_POST_COOLDOWN_INDEPENDENT_QA_20261121.md": "dfd6f2af9d3b9e769fc9eaf7993f4c3690428143f5436c7ccd864f0d6263d888",
+    "reports/S5_AMPHENOL_POST_COOLDOWN_PUBLIC_HOLD_20261121.md": "da68eeb9f37efc9eb913cc13032bf058d6e018b59dfbb24cb6ed067d92f737a5",
+    "reports/sprint_roadmap.md": "2223c69213dd3251b7fc4b0f4ca186040a425f0b397eb53efaf10254c6b3a169",
+    "tools/sprint5-amphenol-fresh-operator/native_release/start_observer.sh": "53162483c04ec6c21b0982856e1f390fa210cd2df879c3c177e0488a587fcad5",
+    "tools/sprint5-amphenol-fresh-operator/qualification/POST_COOLDOWN_CAPTURE_PREPARATION.json": "7a59adb41005f4e5ea61821436203b54a30de3c1d90512ccf0c9e8a252ea13ac",
+    "tools/sprint5-amphenol-fresh-operator/qualification/POST_COOLDOWN_LOG_SHA256SUM.txt": "2d23c8fc561cde7db06601e3d36811a62793af6bef192f640f91fb0810272bf0"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T18:25:20-05:00"
+}
