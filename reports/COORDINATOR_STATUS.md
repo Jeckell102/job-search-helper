@@ -179,6 +179,33 @@ raw-response capture design. No production actions.
 [Measured capture handoff](S5_ORDINARY_WORKER_CAPTURE_STAGED_20261120.md) ·
 [Final measured capture QA](S5_ORDINARY_WORKER_FINAL_QA_20261120.md) ·
 [Publication review hold](S5_ORDINARY_PUBLICATION_INITIAL_HOLD_20261120.md).
+The worker source and tests are verified on private GitHub at
+`6e9ea88530c7c17a975e1c59056e59154897a6ba`. The native observer was absent
+at 18:55. The second chat delivered the bounded raw-capture design and four
+offline tests. It now owns only a new private raw-custody module and tests;
+root still owns the actual worker and provider integration routing.
+[Raw capture design](S5_ORDINARY_RAW_CAPTURE_DESIGN_20261120.md).
+
+
+19:07 Eastern. Root joined measured named capture, exact publication and
+terminal checkpoint recovery in `/tmp/jsh-s5-ordinary-continuation.0wnbkEVB`.
+The staged case published once, survived a lost response without repeating
+a write, and reused the same verifier input after Inbox cleanup. A later
+claim preserves historical proof and blocks new positive verification.
+The private terminal checkpoint verifies exact archived publication and the
+existing canonical Jobs result, with no new outcome write. Root's latest
+combined run passed 234. Independent publication recheck stopped with a
+second display/safety flag before its final report, and the source remains
+staged. Root owns acceptance composition and the final measured finisher.
+`/root/site_journal_qa` owns the Jobs-first private outcome reservation and
+common in-transaction writer guard in a separate overlay. The second
+chat's isolated raw-custody module passed 54 focused/88 combined as
+reported by its author. Independent review is pending. Native Sprint 4
+observer remained absent at 19:02. Broad backlog and unqualified release
+remain held. No production actions.
+[Staged publication continuation](S5_ORDINARY_PUBLICATION_CONTINUATION_STAGED_20261120.md) ·
+[Outcome boundary design](S5_ORDINARY_OUTCOME_BOUNDARY_DESIGN_20261120.md) ·
+[Raw custody handoff](S5_ORDINARY_RAW_CAPTURE_CUSTODY_HANDOFF_20261120.md).
 
 Prepared live enrollment checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
