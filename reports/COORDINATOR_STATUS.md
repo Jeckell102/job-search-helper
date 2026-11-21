@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 terminal retries and Sprint 6 public qualification
 
-### Latest outcome, November 21 at 03:23 Eastern
+### Latest outcome, November 21 at 03:33 Eastern
 
 Root is coordinator and release owner for active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the Sprint 4
@@ -82,8 +82,27 @@ owned retry through exact admission, publication and the terminal recorder.
 Use the existing release controller and no generic start fallback. Keep
 broad backlog processing and unqualified releases disabled. One Jetson
 inference lane remains the deployment constraint. No user action is needed.
-Latest verified private backup before this checkpoint is
-`9f55f8103f6bdc1ca7255efbb7f68fd9d67914d6`.
+Latest private backup `9d169d54b1c833eee3fbb51871e7fb109ca477bf` was
+fetched back and all 21 changed file contents matched.
+[Backup verification](S5_S6_EXACT_RETRY_BACKUP_VERIFIED_20261121.json).
+`/root/s5_live_authority_plan` implemented the staged, one-retry closeout.
+Root owns the follow-on release/admission handoff.
+In `/tmp/jsh-s5-exact-release-continuation.20261121`, root extended the
+normal selector so the release owner can require its exact queued retry.
+An absent or foreign request never falls through to a full scrape. A
+partial restart reuses its saved cycle only after the exact source,
+runtime and sole Company scope are confirmed. Independent QA accepted
+the repaired source after 17 tests and the original adversarial restart
+probe. This selector is staged, and the release owner does not call it yet.
+`/root/architecture_publication_review` independently accepted the
+one-retry closeout. The saved Amphenol fixture preserved 18 jobs and the
+confirmed receipt while recording one completion. The composed focused
+sweep passed 41 tests. Its broader comparison retains the same 24 legacy
+test failures as baseline. These slices used disposable stores only.
+[Initial retry start QA](S5_EXACT_RETRY_START_INITIAL_QA_20261121.md).
+[Corrected retry start QA](S5_EXACT_RETRY_START_RECHECK_20261121.md).
+[Closeout QA](S5_EXACT_RETRY_CLOSEOUT_INDEPENDENT_20261121.md).
+[Composed seam report](S5_EXACT_RELEASE_CONTINUATION_20261121.md).
 
 ## Sprint 6 reliability while the Sprint 5 production pilot is held
 

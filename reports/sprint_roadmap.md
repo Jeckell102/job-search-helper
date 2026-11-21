@@ -345,7 +345,10 @@ Independent staged QA accepted the exact admission replay guard and terminal
 receipt join. A disposable Amphenol replay produced one sender COMPLETE and
 one receiver VALIDATED_COMPLETE. The maintained release owner still needs to
 call the measured release gate and follow its owned retry to this result.
+The staged exact admission and local closeout components now cover the
+guarded queue and post-publication restart boundaries.
 [Retry evidence and QA](S5_RETRY_ADMISSION_AND_TERMINAL_DELIVERY_20261121.md).
+[Release continuation components](S5_EXACT_RELEASE_CONTINUATION_20261121.md).
 [Public witness](S5_AMPHENOL_PUBLIC_PAGINATION_WITNESS_20261121.md) ·
 [Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md) ·
 [Test-workbook result](S5_AMPHENOL_FIXTURE_WORKBOOK_PASS_20261121.md) ·
