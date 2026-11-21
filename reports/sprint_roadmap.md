@@ -107,8 +107,9 @@ the project complete until Sprint 7's exit gate is proven.
 ## Global safety boundaries
 
 - Preserve unrelated working-tree changes and all existing job data.
-- Retain historical cycle `CYC-B639C6D864EC` and its unresolved Saronic
-  provenance conflict. Do not auto-reconcile, resume, delete, or overwrite it.
+- Preserve the archived historical cycle `CYC-B639C6D864EC` and its unresolved
+  Saronic provenance conflict. The owner retired it from active admission
+  on November 21. Do not auto-reconcile, resume, delete, or overwrite it.
 - Keep broad backlog processing and unqualified automatic releases disabled
   until their roadmap gates pass.
 - Keep the durable Samtec request scoped and held until its exact admission
@@ -397,10 +398,14 @@ distinct local control and no publication, cleanup, or Sheet changes. It
 must keep old resume and publication unavailable while leaving unrelated
 unfinished work and the release gates in force.
 [Archive and ownership plan](S5_RETIREMENT_OWNERSHIP_MAP_20261121.md).
-The production package is prepared and passed independent private
-custody checks. A freshly bound administrator observer remains required
-before the guarded install. No retirement marker is present yet.
-[Native preparation](S5_RETIREMENT_NATIVE_PREPARATION_20261121.md).
+The 44-file production package is installed and independently verified.
+The exact old cycle was retired against its independently verified archive.
+All three alternate checkout routes were restored, and independently checked
+with the original terminal installer receipt. The local admission view is
+clear of unfinished cycles. No genuine Amphenol Company event or other pending
+request exists. An ordinary operator queue request alone cannot create repair
+authority. The live wrapper pilot, exact retry publication and its QA remain
+open. [Native release evidence](S5_RETIREMENT_NATIVE_RELEASE_20261121.md).
 The actual corrected staged host reached the real installer and refused an
 unfinished legacy cycle before launch or any release, queue, workbook or
 source effect. Its release status now explains this hold. An independently

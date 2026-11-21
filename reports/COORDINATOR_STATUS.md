@@ -43,6 +43,119 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Archived retirement and route restoration independently accepted
+
+### November 21 at 11:15 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 cleared the old
+scrape blocker. Independent QA accepted the exact installed 44 files,
+the archive-bound unpublished retirement of `CYC-B639C6D864EC`, and all
+three restored alternate paths. The live installed receipt is unchanged.
+The archive retains 45 inventories, six plans, five blocked inventories,
+two historical confirmed receipts and Saronic's unresolved provenance.
+Live readback returned zero unfinished active cycles, no scoped request,
+no eligible pending Company event, zero Amphenol events or outcomes,
+an empty pilot slot and zero open inference. The wrapper and assistant
+bridge are active, and scheduled sync and broad automation controls are
+off. The user's administrator observer served its purpose.
+
+Sprint 5 production wrapper pilot is the next gate. The installed
+ordinary Company-event path already supports the typed Amphenol witness
+and exact default-off enrollment. It has no genuine current origin.
+Do not manufacture a Company revision or treat an ordinary operator
+request as a repair receipt. `/root/adapter_dependency_reconcile`
+owns the minimum operator-owned follow-up design, with no live changes.
+`/root/approval_provenance_design` verified the after-image capability
+and is finished. `/root/listener_ownership_qa` finished native retirement
+acceptance. Root owns scoped backup and the next integration decision.
+Overall remains approximately 40% by accepted project gates.
+[Release evidence](S5_RETIREMENT_NATIVE_RELEASE_20261121.md) ·
+[Independent QA](S5_RETIREMENT_NATIVE_INDEPENDENT_QA_20261121.md) ·
+[Genuine origin inventory](S5_AMPHENOL_GENUINE_EVENT_OWNERSHIP_PATH_20261121.md).
+
+## Archived retirement recorded
+
+### November 21 at 11:12 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Independent native QA accepted
+the captured child exit and all 44 installed source files. The exact
+installer receipt is `50d46905fa6f492cd05b24f2eec28ad99756e74ddc1f682cd9bc6ad7307ceff8`.
+Root then ran the exact authorized retirement once. It returned
+`RETIRED_UNPUBLISHED` for `CYC-B639C6D864EC` at `16:12:19Z`, with
+verified archive scope `dfeb109aa9ef751053871e5d6f6f702e69bab6692fb8f28cbb317c3339cae7a7`.
+The archive contains 45 inventories, six plans and two prior confirmed
+receipts. The three alternate routes are temporarily still held. The
+read-only native restoration observation is running. Root alone
+restores after independent review of that exact observation and then
+verifies all paths. Do not roll back to a version that lacks the
+retirement guard after this durable disposition. No Amphenol run,
+provider activity, Sheet update or new inference was initiated.
+
+## Retirement-compatible source installed and verified
+
+### November 21 at 11:12 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5's guarded release
+reached `RELEASED/INSTALLED`; captured runner exited 0. Root read all
+44 installed files and matched their exact manifest and terminal
+journal `d7020e99167df20e593874912435a709c0d7897d6eb37db7e488da611524d955`.
+Wrapper is active and unfrozen, assistant bridge active/enabled, and
+scheduled sync inactive. No retirement marker yet. The three alternate
+routes are still parked under the same release. Independent
+`/root/listener_ownership_qa` owns native validation. Root owns the only
+apply and restore actions. After independent source acceptance, apply
+the authorized archive-only retirement, freeze and verify the exact
+restoration observation, then restore all three alternate routes.
+
+`/root/approval_provenance_design` matched the reviewed -02 after-images
+to the existing typed AcquireTM and one-event worker enrollment. A
+genuine current Company event and exact default-off enrollment remain
+necessary for that route. `/root/adapter_dependency_reconcile` owns the
+read-only alternative design for a genuinely operator-selected scrape
+and typed partial. No resulting queue, inference or backlog activity
+has been started. Project stays about 40% by accepted project gates.
+
+## Retirement protected-state preflight recovered
+
+### November 21 at 11:07 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 remains at guarded
+rollout, roughly 80% of retirement preparation and 40% overall by
+accepted project gates. User started the fresh administrator observer.
+Both enrolled native helpers responded for the same approved listener.
+The -02 native runner got past its executable check. It refused the
+initial protected-state check before moving any checkout or starting
+the controller. All three routes remain open, the bridge returned
+active, the -02 attempt contains only `attempt.lock`, and the
+historical retirement remains unapplied.
+
+The first independent observation after refusal reproduced all 61
+approved private fingerprints byte for byte. The subsequently invoked
+exact sealed protected-state verifier, under the -02 controller's own
+exclusive leases, exited 0. This establishes a fresh passing check;
+the initial transient's exact cause is unconfirmed. Prior observed
+SQLite heartbeat writes justify briefly freezing only the independently
+verified idle wrapper during the unchanged launch. Systemd auto-thaws
+it before the ordinary stop in the existing controller. Root owns the
+native procedure. `/root/listener_ownership_qa` accepted the bound
+freezer compatibility and reviews the exact helper. No worker may
+touch the production checkout or start another inference. Read back
+the original terminal result, then proceed only on verified install
+to the authorized archive-bound retirement and alternate-route restore.
+
+`/root/approval_provenance_design` independently determined that the
+normal operator request alone cannot emit production repair authority
+for Amphenol. After retirement and route restore, use the supported
+typed owned outcome path or keep the pilot held. Do not count an
+ordinary queue receipt or the staged recipe as deployed end-to-end.
+The scoped backup commit `8597dad96596c6ffbe2de8af4e6b2dbc8226842e`
+was fetched and byte-verified across all 15 changed files. See
+[backup evidence](S5_RETIREMENT_RETRY_BACKUP_VERIFIED_20261121.json).
+
 ## Retirement launch recovery and executable retry
 
 ### November 21 at 10:57 Eastern
