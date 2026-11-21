@@ -1,0 +1,20 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "c580b75229fab08e3cc85ebeea995c55f2e83ff6",
+  "fetched_file_hashes": {
+    "reports/COORDINATOR_STATUS.md": "7d9f4dede6a156810028ca0dd3a60566bcc70782a45b565908e36266c4422344",
+    "reports/S5_AMPHENOL_FIRST_LIVE_TRIGGER_20261121.md": "8cee84332137576097977523b431c3c8ae201aa629d653ea33811ecaf0a3ee28",
+    "reports/S5_AMPHENOL_FORWARD_BUILD_INDEPENDENT_QA_20261121.md": "066f38c153cc1d8eeb80ed1e1ed4937732bee551cdd6db086f0fecab19e4d503",
+    "reports/S5_AMPHENOL_HOST_FORWARD_DEPLOYMENT_PLAN_20261121.md": "5d3175f3deaab4cf5b1ca9b65b19afdf39d7ae78fe0a918ef28ff33027e80837",
+    "reports/S5_AMPHENOL_LIVE_BUILD_FAILURE_INDEPENDENT_QA_20261121.md": "fc902a0df87c76a18b063b3f598125105d197cb837393fe14e8f39337ee23870",
+    "reports/S5_AMPHENOL_RETAINED_LIVE_CHOICE_REBUILD_20261121.json": "322f6f9acbff468923c80996f10b4273ec32617c05f875b2cab052339df68692",
+    "reports/S5_OPERATOR_HOST_BACKUP_VERIFIED_20261121.json": "d2f92bd437b75c5fea246aa9091dacd70533d721d2e8fbd0c4e08e883d324a63",
+    "reports/S5_OPERATOR_NATIVE_TERMINAL_INDEPENDENT_QA_20261121.md": "b4106caa2a473389773b41bb869be2d2e97472e4470bb0a3ea6de91b1b13a36a",
+    "reports/S5_OPERATOR_NATIVE_WIRING_INDEPENDENT_QA_20261121.md": "b55d5177b46e916889a78744bbca388ec02a24f2d206d5b92104ee5121dcfacb",
+    "tools/sprint5-operator-live-recovery/candidate/src/job_search_helper/acquiretm.py": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+    "tools/sprint5-operator-live-recovery/dev/wrapper-coder/tools/host_server.py": "5abe835b6b550f3bb81a7c787e97382910ce1d882687521c60e3e8ec630a37ad",
+    "tools/sprint5-operator-live-recovery/dev/wrapper-coder/tools/test_amphenol_operator_enrollment.py": "88d21c45af5268b139c3f95d8c0afb447b868add878053bb65b41cefc9972976"
+  },
+  "file_count": 12,
+  "repository": "Jeckell102/job-search-helper"
+}

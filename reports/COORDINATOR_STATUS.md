@@ -43,6 +43,82 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Coordinator source-selection fix installed and independently verified
+
+### November 21 at 12:31 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The exact one-file forward fix
+passed 13 maintained/independent rollback and receipt tests, then
+installed under the retained coordinator lock and existing native
+predecessor leases. Successor receipt
+`e07eab1cf86378f6b6fe0055763a83bb212b52626774fb6d0fe0366f311b7dc3`
+at `/home/chris/.local/state/job-search-helper-maintenance/s5-amphenol-host-source-20261121-04`.
+Independent installed readback accepted updated host
+`5abe835b6b550f3bb81a7c787e97382910ce1d882687521c60e3e8ec630a37ad`,
+private prior image 137563ad…, other eight unchanged before/after source
+paths and immutable -03 predecessor receipt. Root independently read
+the actual new wrapper PID 617189 and exact listener/default controls.
+The original `WRAP-6a3a372032` state and its single completed receipt
+were unchanged byte-for-byte; no new inference open or dispatched.
+Scheduled sync, queue, campaign, autopilot and recipe enrollments are off.
+Do not replay the -04 transaction or reinterpret -03 as current host
+version. Use -04 plus its immutable -03 scope as current baseline.
+[Installed QA](S5_AMPHENOL_HOST_FORWARD_NATIVE_QA_20261121.md).
+
+The prior isolated current validation remains held after one complete
+39-detail run and one provider-blocked 35-detail run. One more exact
+scoped public confirmation can follow a quiet interval with the same
+per-run checks and exact custody of the prior complete result. Its
+separate frozen evaluator `43ab6b9f…` awaits independent source QA. It
+does not reinterpret the failed result. Root owns actual public calls.
+`/root/architecture_publication_review` owns confirmation QA.
+`/root/listener_ownership_qa` owns the staged retained-operator release
+preflight review. No independently qualified PASS or actual release has
+been issued. User has been told the Jetson's choice succeeded in this
+case, with broader reliability still to be demonstrated.
+
+## Current Amphenol public qualification held while guarded host update is checked
+
+### November 21 at 12:26 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The recovered exact adapter was
+tested in a current-source-only copy (256-member manifest
+`7e371be5094a3d23de58af47e8e8607c7f64d6d35a4a7e58bfb365baa132bdea`).
+First fresh normal-dispatch run passed with 39 independently verified
+full descriptions and stable final listing. Second run saw the same
+initial listing but provider details were unavailable or rate-limited
+after 35; no final reread or complete second inventory. Independent
+review HOLD. Do not use a partial count as a complete run or submit an
+installation PASS for this candidate. Evidence remains intact at
+`/tmp/jsh-amphenol-current-validation.fehq8g9f/evidence.jsonl`, SHA
+`dfd69d46fd48deeeab7feb88d457ba01978d5ef5d4ae4548adc076df5d41638e`.
+[Current validation hold](S5_AMPHENOL_CURRENT_VALIDATION_HOLD_20261121.md).
+
+The source-only forward coordinator fix remains independently accepted.
+Native read-only preflight of the proposed one-host-file transaction
+passed with the exact -03 scope, wrapper ready, preserved task/receipt and
+all global controls disabled. Its deployment helper is not yet accepted:
+three source QA revisions are recorded; the latest reproduced an installed
+receipt left after compensation when its directory sync failed. The next
+repair preserves coherent source/runtime once an exact success receipt
+becomes visible. `/root/adapter_dependency_reconcile` owns only that
+helper's source and test, `/root/listener_ownership_qa` owns exact
+independent retest, root owns the installed host wiring. No live apply
+or new inference has been performed. [Latest updater rejection](S5_AMPHENOL_HOST_FORWARD_UPDATE_RECEIPT_HOLD_20261121.md).
+
+The existing low-level qualified release and scoped retry primitive can
+support a genuine operator source identity with the exact independent
+qualification owner. Host automatic release is still event-only. In a
+separate staged lane, `/root/approval_provenance_design` owns the narrow
+operator owner preflight/entry for later use, with no actual qualification
+claim while the public hold remains. [Release route](S5_AMPHENOL_RETAINED_QUALIFIED_ROUTE_20261121.md).
+The live trigger, recovered adapter, and verified source correction
+were backed up at `c580b75229fab08e3cc85ebeea995c55f2e83ff6`, fetched back and
+matched across all 12 paths. [Backup](S5_AMPHENOL_LIVE_RECOVERY_BACKUP_VERIFIED_20261121.json).
+Overall remains roughly 40% by accepted roadmap gates.
+
 ## Exact forward build fix accepted in staging
 
 ### November 21 at 12:14 Eastern
