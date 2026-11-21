@@ -5,16 +5,19 @@ It only reconnects a still-current operator settlement, its preserved completed
 choice, exact recovered candidate, and an independently pinned qualification
 owner to the existing guarded release primitive.
 """
-from contextlib import contextmanager
+from contextlib import closing
 from hashlib import sha256
 import json
 from pathlib import Path
+import re
 import sqlite3
 
 from acquiretm_membership_recipe import TARGET_PATH, build_current_owned
 from coordinator import AMPHENOL_RECIPE_WORK_ORDER
 from coordinator_inference import digest, valid_inference_binding
-from job_search_helper.integration_release import canonical_manifest, metadata
+from job_search_helper.integration_release import (
+    assert_active_release_binding, canonical_manifest, digest as release_digest, metadata, release_binding,
+)
 from job_search_helper.qualified_release_owner import release_and_continue_qualified
 from job_search_helper.release_qualification import open_release_qualification_owner
 
@@ -184,11 +187,14 @@ def preflight_operator_retained_release(*, project_root, root, store, outcome_id
 
 
 def continue_operator_retained_release(*, execute=False, current_source_revision, dependency_digest, verify,
-                                       **kwargs):
+                                       historical_task_id, **kwargs):
     """Preflight by default; explicit execution delegates to the existing primitive."""
-    prepared = preflight_operator_retained_release(**kwargs)
+    prepared = preflight_operator_retained_release(historical_task_id=historical_task_id, **kwargs)
     if prepared is None:
-        return {'state': 'HELD_OPERATOR_RETAINED_QUALIFICATION'}
+        return _resume_operator_retained_release(
+            execute=execute, current_source_revision=current_source_revision,
+            dependency_digest=dependency_digest, verify=verify, **kwargs,
+        )
     if execute is not True:
         return {'state': 'HELD_OPERATOR_RETAINED_RELEASE_PREFLIGHT', 'release_id': prepared['manifest']['release_id']}
     return release_and_continue_qualified(
@@ -197,3 +203,82 @@ def continue_operator_retained_release(*, execute=False, current_source_revision
         approval_fd=prepared['approval_fd'], owner_identity=prepared['owner_identity'],
         approval_sha256=prepared['approval_sha256'], current_source_revision=current_source_revision,
         dependency_digest=dependency_digest, verify=verify)
+
+
+def _resume_operator_retained_release(*, execute=False, current_source_revision, dependency_digest, verify,
+                                      project_root, root, store, outcome_id, request_sha256, source_revision,
+                                      candidate_root, manifest, approval_path, approval_fd,
+                                      owner_identity, approval_sha256):
+    """Resume only the same qualified completed activation and its durable retry."""
+    from amphenol_retry_completion import _delivery_pair, _historical_operator_origin_matches
+    from job_search_helper.engine import State
+    from job_search_helper.inbox import InventoryInbox
+    from job_search_helper.repository import RepositoryError
+    from job_search_helper.scrape_outcome_delivery import CONSUMER, OutcomeDelivery
+    from job_search_helper.sqlite_repository import SQLiteRepository
+
+    held = {'state': 'HELD_OPERATOR_RETAINED_QUALIFICATION'}
+    if (not isinstance(outcome_id, str) or not re.fullmatch(r'OUT-[0-9a-f]{24}', outcome_id)
+            or not isinstance(request_sha256, str) or not re.fullmatch(r'[0-9a-f]{64}', request_sha256)):
+        return held
+    try:
+        project_root = _physical_directory(project_root)
+        candidate_root = _physical_directory(candidate_root)
+        root = _physical_directory(root)
+        if project_root is None or candidate_root is None or root is None:
+            return held
+        database, jobs, inbox = (_physical_file(root / name) for name in (
+            'state.db', 'jobs.sqlite3', 'inventories.sqlite3',
+        ))
+        if None in (database, jobs, inbox) or _physical_file(getattr(store, 'path', None)) is None:
+            return held
+        manifest = canonical_manifest(manifest)
+        if (manifest['company_id'] != _COMPANY or manifest['source_revision'] != source_revision
+                or set(manifest['files']) != {TARGET_PATH}):
+            return held
+        released = release_binding(manifest)
+        manifest_sha256 = release_digest(manifest)
+        record_root = root / 'integration-releases'
+        record = record_root / manifest['release_id']
+
+        def active_source_revision(company_id):
+            # The release primitive repeats this under its scraper lease. If
+            # rollback wins first, recovery must never turn into installation.
+            if _physical_file(root / 'integration-release-journal.json') is None:
+                return None
+            journal = assert_active_release_binding(root, released)
+            if (journal['manifest_sha256'] != manifest_sha256 or journal['record'] != str(record)
+                    or _physical_file(record / 'receipt.json') is None):
+                return None
+            return current_source_revision(company_id)
+
+        if active_source_revision(_COMPANY) != source_revision:
+            return held
+        destination = InventoryInbox.destination_id(inbox)
+        with (closing(SQLiteRepository(jobs, destination, readonly=True)) as repository,
+              closing(State(database, readonly=True)) as state):
+            [row] = repository._outcome_delivery_rows(CONSUMER, outcome_id=outcome_id)
+            origin = OutcomeDelivery(repository, None)._preflight(row)
+            receipt = _delivery_pair(store, origin, row)
+            identity = origin[0]['identity']
+            if (receipt is None or receipt['sink_status'] != 'HELD_FOR_REPAIR_TRIAGE'
+                    or identity.get('company_id') != _COMPANY or identity.get('source_revision') != source_revision
+                    or identity.get('request_id') != manifest['failed_request_id']
+                    or not _historical_operator_origin_matches(repository, state, origin[0], request_sha256)):
+                return held
+        with open_release_qualification_owner(
+            approval_path, approval_fd, expected_owner_identity=owner_identity,
+            approved_receipt_sha256=approval_sha256,
+        ) as owner:
+            owner.require(manifest)
+    except (AttributeError, KeyError, OSError, RepositoryError, RuntimeError, TypeError, ValueError, sqlite3.Error):
+        return held
+
+    if execute is not True:
+        return {'state': 'HELD_OPERATOR_RETAINED_RECOVERY_PREFLIGHT', 'release_id': manifest['release_id']}
+    return release_and_continue_qualified(
+        project_root, candidate_root, database, record_root, manifest,
+        approval_path=approval_path, approval_fd=approval_fd, owner_identity=owner_identity,
+        approval_sha256=approval_sha256, current_source_revision=active_source_revision,
+        dependency_digest=dependency_digest, verify=verify,
+    )

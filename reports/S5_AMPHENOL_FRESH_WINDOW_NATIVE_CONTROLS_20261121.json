@@ -1,0 +1,14 @@
+{
+  "completed_receipt_sha256": "aeea900dc8bdcc5be0cd5e4e3781eca0706f8b2034ef98997d0028f439dcba7e",
+  "controls": {
+    "autopilot_enabled": false,
+    "campaign_enabled": false,
+    "pilot_task": null,
+    "queue_enabled": false
+  },
+  "coordinator_main_file_unchanged": true,
+  "observed_at": "2026-11-21T13:21:03-05:00",
+  "open_inference_receipts": 0,
+  "process_environment_claimed": false,
+  "task_sha256": "95309e140a381be0b365a800fc76e2d4416705f8802691037ebf80f39c445db6"
+}

@@ -43,6 +43,72 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Fresh Amphenol public check held; activation-cut recovery passed in a test copy
+
+### November 21 at 13:23 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Previous goal turn made concrete
+progress: the combined operator release-to-receipt rehearsal passed
+independent QA and the 14-file private backup was verified. Sprint 5 is
+active, overall acceptance approximately 40%.
+
+One separately bounded read-only validation ran against exact frozen
+candidate source vector `7e371be5…` with the approved evaluator
+`43ab6b9f…` after the previous window ended. The initial 39-job listing
+matched the complete earlier run, but normal dispatch returned blocked
+before observing any detail. It ended exit 1, no final reread or PASS;
+this new window is closed. Do not repeat it or reinterpret the earlier
+39/35/37 observations. Exact log SHA
+`0fef582b880b4e63a8745a5773f4cf5440e7027e2fe932334b11e202f60f3520`.
+Independent review confirms HOLD. The evaluator recorded no raw status
+or Retry-After, so the restriction's cause and next availability remain
+unknown. [Independent public hold](S5_AMPHENOL_FRESH_WINDOW_INDEPENDENT_HOLD_20261121.md).
+
+Fresh installed wrapper and Jetson bridge service readback reported
+active, scheduled sync and expiry timer disabled. An immutable Jobs
+intake observation reported no pending event. The native coordinator
+task and its single COMPLETED inference receipt still match the
+preserved hashes; no in-flight inference, pilot, queue, campaign or
+autopilot. [Native controls](S5_AMPHENOL_FRESH_WINDOW_NATIVE_CONTROLS_20261121.json).
+No live release, workbook write, job-data change or new inference.
+
+Native readiness remains held. The exact one-path manifest
+`REL-af662a11bf656819d418120a` and complete installed/candidate vector
+still match; operator continuation/terminal support remains staged.
+[Readiness review](S5_AMPHENOL_OPERATOR_NATIVE_READINESS_HOLD_20261121.md).
+A focused recovery now reuses the guarded installed release and
+measured retry after a durable COMPLETE activation with no retry intent
+or queue. It verifies the same active release under the existing lock,
+pins the independent owner and original exact operator receipt pair,
+and never relies on the before-image preflight to resume. After QA found
+a missing explicit outcome selector, root added the canonical pin and
+reran six preflight cases and the activation-cut fixture successfully.
+It recovered one job/one matching fixture workbook batch, unchanged
+activation receipt and adapter inode/mtime, and one coordinator
+VALIDATED_COMPLETE lifecycle. [Disposable result](S5_AMPHENOL_OPERATOR_ACTIVATION_CUT_DISPOSABLE_RESULT_20261121.json).
+
+Independent recovery QA accepted exact staged module `df7e0aab…`.
+It reproduced the old omitted outcome bug, then verified the fixed
+explicit outcome on the same disposable cut. The actual scraper-lock
+rollback race also held without a new activation or retry.
+[Independent recovery QA](S5_AMPHENOL_OPERATOR_ACTIVATION_CUT_INDEPENDENT_QA_20261121.md).
+
+Root owns release and backup. `/root/listener_ownership_qa` completed
+independent recovery QA. `/root/adapter_dependency_reconcile` staged a
+status/Retry-After observer for an eligible future window. Independent
+`/root/architecture_publication_review` accepted exact current
+`fb80eef5…`: 14 offline cases plus the actual copied Playwright request
+type and adapter proof. Existing evidence checks, request behavior
+and pacing are unchanged. It has not run live. The corrected staged
+report uses the independently observed one-day bound and retains the
+superseded report separately.
+[Observer QA](S5_AMPHENOL_DETAIL_OBSERVER_INDEPENDENT_QA_20261121.md).
+Latest verified backup `ec260924bc3ad8656a57942075a9c8c3281df37a`.
+Next finish observer QA and stage the exact admitted operator entry
+while retaining the live provider hold. No broad processing or
+unqualified release. No user action expected.
+
 ## Amphenol disposable release-to-receipt rehearsal passed
 
 ### November 21 at 13:10 Eastern
@@ -80,7 +146,8 @@ combined durable run: four immutable databases, original/retry receipt
 pairs, one confirmed job and lifecycle, no duplicate effects, tasks or
 inference. [Independent readback](S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_INDEPENDENT_READBACK_20261121.json).
 No shared edits or native work assigned.
-Latest verified private backup `1d538067a032d985f1f31500288049b1b8cf942e`.
+Latest verified private backup `ec260924bc3ad8656a57942075a9c8c3281df37a`; all 14 changed files matched.
+[Backup verification](S5_AMPHENOL_OPERATOR_COMBINED_BACKUP_VERIFIED_20261121.json).
 Keep scheduled sync, broad queue, automatic release and extra Jetson lanes off.
 
 ## Operator retry completion staged while Amphenol qualification stays held

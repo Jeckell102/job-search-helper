@@ -503,6 +503,18 @@ execution remain held on provider evidence.
 [Combined rehearsal](S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_20261121.md)
 · [Independent readback](S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_INDEPENDENT_READBACK_20261121.json).
 
+A distinct one-shot live read at 13:15 returned the same initial 39-job
+listing and zero observed descriptions. Independent QA ended it held.
+The original current scorecard is one complete observation and three
+incomplete confirmations, with 35, 37 and 0 details. The operator
+activation-cut branch independently recovered the same disposable
+installed release and retry from no intent or queue, preserved the
+adapter file and activation receipt, and confirmed one fixture job.
+A competing rollback held under the existing scraper lock. The native
+admitted one-shot entry, live approval and scoped retry are open.
+[Fresh hold](S5_AMPHENOL_FRESH_WINDOW_INDEPENDENT_HOLD_20261121.md)
+· [Recovery QA](S5_AMPHENOL_OPERATOR_ACTIVATION_CUT_INDEPENDENT_QA_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.

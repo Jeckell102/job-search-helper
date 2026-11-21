@@ -1,0 +1,22 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "ec260924bc3ad8656a57942075a9c8c3281df37a",
+  "files": {
+    "reports/COORDINATOR_STATUS.md": "a6833242d47d623d0e4900f6771f91cc5762a7ca1c7722f55476fedd761a298e",
+    "reports/S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_20261121.md": "8365f54a15bc8a699103b6deeb84340e56e3deccf0113781d14ac0b51c5d002a",
+    "reports/S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_INDEPENDENT_QA_20261121.md": "c83a818e9c59198213d992ce82f64edeb80d819638a322d4ba955949bcf8f245",
+    "reports/S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_INDEPENDENT_READBACK_20261121.json": "e4ed0af560234f721f254ecf81f3aefc3a24bb8b98f70878981225e3d07f9791",
+    "reports/S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_RESULT_20261121.json": "d81cff8c7ad871392fb6eb55215a04fa17fe488459bc40508540cb5ac0d2f3d4",
+    "reports/S5_AMPHENOL_OPERATOR_TERMINAL_BACKUP_VERIFIED_20261121.json": "c269cf2eac1795ad43cc7af7cde4ed2d650073c4a64de32ecf40fc40b8be6801",
+    "reports/S5_AMPHENOL_OPERATOR_WORKER_DISPOSABLE_QA_20261121.md": "f57d52a09a034410e285a55a2551784ea16180efc1d9aaeb0f5eb77cbd3ddf9d",
+    "reports/S5_AMPHENOL_RETRY_ORIGIN_BASELINE_READBACK_20261121.md": "fa7af7d2a98ee402dd7133668e9f1859818978191d72ba9168afb3355db30adf",
+    "reports/sprint_roadmap.md": "7b69aac93ecb155e4bb8e1d6bb217795f1650edeb1c2b68618a56dc96457e4a9",
+    "tools/sprint5-amphenol-operator-terminal/canary/combined/offline_child.py": "e6401c5572680edf9409ea7f1237ae5189ca774e34228c4a0d685fc258355b89",
+    "tools/sprint5-amphenol-operator-terminal/canary/combined/prove_combined.py": "d6742de22d2730f2c971635404556653e53279a41f5c7d10deaf8f4e1082d98a",
+    "tools/sprint5-amphenol-operator-terminal/canary/combined/verify_readback.py": "1ffad8e0bc12056718e36118d91c8420839c83110789f0382794bb6cc58e4eb6",
+    "tools/sprint5-amphenol-operator-terminal/canary/worker-only/offline_child.py": "2ad4cf308a8c1150215c8b0346941bd2773cb42e7f790461ca44122d2d723900",
+    "tools/sprint5-amphenol-operator-terminal/canary/worker-only/prove_amphenol_worker.py": "bdfd04e9c32a0818ac9605c6ff79e17e308ed57330f2be46e12e14c8d2a41c3d"
+  },
+  "repository": "Jeckell102/job-search-helper",
+  "verified_at": "2026-11-21T13:13:11-05:00"
+}
