@@ -1,0 +1,7 @@
+# Independent -03 operator preparation source review
+
+**ACCEPT** for exact `prepare_native.py` SHA-256 `b158fed44c688b56941544f26ce6bf04ed6e5d8f6b0bb7a751cc7fc7687e04ab`. Maintained test SHA-256 `b13c7482ff22f1dab021569f98d0edd91ffd703a31113b9caf557e57c13af403`.
+
+The restamp changes only scope-specific constants, catalog cardinalities and wording from the accepted preceding preparer. It binds the reviewed operator payload catalog `739159d5…`, nine-path manifest `8c73be24…`, approved installed retirement predecessor `-02`, fresh `s5-operator-trigger-20261121-03` and its exact `/run/jsh-s5-operator-03/observer.sock`. The same private executable copy is created at mode 0700 before enrollment. The existing current/historical pin split, predecessor terminal/exchange checks, prepare-only exchange, fresh empty attempt, source confinement and second witness read all remain intact.
+
+All seven disposable preparation checks passed under a guard permitting only the real copied `-03` controller `--help` child. An eighth independent disposable check verified the new root bootstrap policy mapping. The old hash remains in the before map, the new accepted bootstrap hash appears in the after map, and the fixture source remains untouched. Current measured state, native predecessor artifacts, physical routes and generated native enrollment require their own exact evidence. This lane read no production paths and performed no native action.

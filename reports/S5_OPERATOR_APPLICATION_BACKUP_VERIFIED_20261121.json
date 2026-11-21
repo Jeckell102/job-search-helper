@@ -1,0 +1,25 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "1eec33297f30f9b2b88ec11153a0231ad1fdf14d",
+  "fetched_file_hashes": {
+    "reports/COORDINATOR_STATUS.md": "99e8f79eda86431afaeee9072d8067c9166d1193f47a0be3dc0c760bd8f5ff22",
+    "reports/S5_OPERATOR_OBSERVATION_INDEPENDENT_QA_20261121.md": "4dacc74170a50cd75f1dc703ae2b7b606d77437d47e50b6a909e0c8556903d4d",
+    "reports/S5_OPERATOR_OBSERVATION_INITIAL_QA_20261121.md": "4fecb3f16bac524a73bcfa1a491497f7bfe8afe1336090e13877da2895cf1660",
+    "reports/S5_OPERATOR_RELEASE_PLAN_20261121.md": "ebeca8d9da925a742f1173d9a3e91524b83eab40a34bb2a38d8508a355186bc8",
+    "reports/S5_OPERATOR_SCOPED_APPLICATION_20261121.md": "3adbcfd7689f49588590f84c7f137ad625995eb68fbf50c8cea37adf31ca3ffa",
+    "reports/S5_OPERATOR_SETTLEMENT_INDEPENDENT_QA_20261121.md": "01b7b50b82c2b7e4bd9786022c4e4b9c438a90542afeab90e1e7d90bf7a2f027",
+    "reports/S5_OPERATOR_SETTLEMENT_INITIAL_QA_20261121.txt": "70ae51505a2d4dcccad50da1b0e8928648ce4d29a329c67a271a8f228efe5f1c",
+    "tools/sprint5-operator-observation/job-search-scraper": "8fb9939560f004a213ca94724cdada7734996072c31194679017fea492841f72",
+    "tools/sprint5-operator-observation/release_admission_bootstrap.py": "1258ac47b647d61361fa84ccdda14816a184e6c15cd4c6e7c78e6b27cd228d45",
+    "tools/sprint5-operator-observation/src/job_search_helper/operator_amphenol_fetch.py": "c1a9c970a9d8095043139a31c007b335deea8a6e9af784b13f8f5c790fff34e9",
+    "tools/sprint5-operator-observation/src/job_search_helper/operator_amphenol_settlement.py": "b3d57c0f8037b184ca0c133fc08bd45ef9465a338bce3b0bfb9add9a0138b77c",
+    "tools/sprint5-operator-observation/src/job_search_helper/operator_selected_observation.py": "1688c8a195b7e55a95b1c7917b9d4eca51e9f489beeac10f38c6d4511e6e2223",
+    "tools/sprint5-operator-observation/src/job_search_helper/ordinary_company_event_fetch.py": "240d931f66eb43e5cf9e9493a3b0da5d353112584c82877f08155d782e9dcd29",
+    "tools/sprint5-operator-observation/src/job_search_helper/runner.py": "de3c0f5045e1ad07d0b1e2e8b1da8b8dbce2acd3767182ddf9d1c7dbbaefb87b",
+    "tools/sprint5-operator-observation/tests/test_operator_amphenol_fetch.py": "38ef296263ecb1e18ef12add12dfcf315721b9442738a08a8a0199fed9f4b5c3",
+    "tools/sprint5-operator-observation/tests/test_operator_selected_observation.py": "ea30d5a545d0502cf87122d89f6b9d28db321896841418255de9277d33abd22d",
+    "tools/sprint5-operator-observation/tests/test_release_admission_bootstrap.py": "b39382814c364361df4d1a0aef175d265b445c90ac7895667f4e61ce3da9a833"
+  },
+  "file_count": 17,
+  "repository": "Jeckell102/job-search-helper"
+}

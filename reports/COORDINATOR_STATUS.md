@@ -43,6 +43,110 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Operator successor privately prepared and waiting for the administrator observer
+
+### November 21 at 11:52 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The independently accepted -03
+nine-path payload and new private capsule are prepared. The idle wrapper
+resumed with its original PID. Its separate native attempt contains only
+the unused lock. Root is verifying the enrolled artifact and final launch
+bindings. No source install, data action, or live Jetson call occurred.
+
+User has been given the one fresh read-only observer command
+`bash /tmp/jsh-operator-native-prep/start-observer.sh`. Wait for the
+authentic -03 root observer on `/run/jsh-s5-operator-03/observer.sock` and
+verify the two enrolled native helpers before the single captured install.
+The prior -02 observer cannot authenticate the separate -03 release.
+The user can continue adding Opportunities. There is no need to ask again
+about the already authorized release or backup.
+
+Capsule `/home/chris/.local/state/job-search-helper-maintenance/s5-operator-trigger-20261121-03`.
+Nine-source manifest `8c73be2432fdc49485f426f5be77d6588ea1e13f7b659595f6a4dad16710c57e`.
+Checker `c0bec31ab59dbdc1064e2ee7003b9aa68e115d5902c34e43ebbe75058bf2a53e`.
+Enrollment `8d428d7f605976867e36e9089ec0071e23b8baa1abb0727096e8eca5f2c54a5c`.
+Exchange policy `e35dac07cceb74964349c0daf14524e2555e213bb27ae740edc24e320765cd7b`.
+Predecessor handoff `5361bec9a98ab7a069eed4b459de02444f8a33a626b77bd31f47d7519beacff3`.
+Protected pin remains `d6fa29b0ad2e6af3568e38ccdb1f1606909e30d94f3d7e335b9444b5d5acd294`.
+Root owns the source backup and all native execution. Independent
+`/root/listener_ownership_qa` owns exact prepared and installed readback.
+After install, verify the terminal nine files and restore all three
+alternate paths before setting up the one explicit repair pilot. Keep
+all live needs separate from prepare-only evidence. Overall about 40%.
+
+## Final operator host bridge and nine-file release payload accepted in staging
+
+### November 21 at 11:51 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5's explicit operator-origin
+observation and host route now passed independent composed source QA under
+the final exact host and choice pins. The normal typed fixture generated one
+real local outcome, transported one matching receipt and queued one isolated
+one-session repair task. Restart retained that task and receipt. No model
+call or production operation was exercised in this staged QA. The Jetson's
+prior real choice and MuleLab's validated 39-posting wrapper still stand as
+separate evidence, not a live automatic run.
+
+The nine-path successor policy passed the disposable 44-path predecessor to
+nine-path install and rollback. A read-only native check at 11:44 verified
+the unchanged terminal -02 receipt and all original protected fingerprints.
+The staged offline payload is `/tmp/jsh-operator-reviewed-payload.lfxiw_h9`.
+Independent QA accepted its 28 exact files and manifest
+`8c73be2432fdc49485f426f5be77d6588ea1e13f7b659595f6a4dad16710c57e`.
+The restamped native preparer at `/tmp/jsh-operator-native-prep` passed the
+seven prior disposable cases and source QA. Root started only the fresh
+private preparation; do not claim source installed. The next step is to
+confirm the frozen -03 preparation and thawed wrapper, then obtain the one
+fresh read-only administrator observer for that exact scope. Use the
+existing maintenance procedure with root as the sole actor. No old cycle
+change, scrape, Sheet write, or Jetson call is needed for source installation.
+
+The author lanes are finished. `/root/listener_ownership_qa` owns native
+artifact and installed verification. `/root/architecture_publication_review`
+accepted the staged host and exact replay controls. Root owns backup and
+release. Overall remains about 40% by accepted roadmap gates. The next
+live wrapper pilot remains separately gated. [Host QA](S5_OPERATOR_HOST_INDEPENDENT_QA_20261121.md)
+· [Maintenance QA](S5_OPERATOR_MAINTENANCE_INDEPENDENT_QA_20261121.md)
+· [Payload QA](S5_OPERATOR_PAYLOAD_INDEPENDENT_QA_20261121.md).
+
+## Staged application backed up and host review repairs underway
+
+### November 21 at 11:41 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The accepted operator application
+and its tests, reports and release plan were fetched from private GitHub
+and matched byte for byte at `1eec33297f30f9b2b88ec11153a0231ad1fdf14d`
+across all 17 scoped paths. [Backup evidence](S5_OPERATOR_APPLICATION_BACKUP_VERIFIED_20261121.json).
+The production archive-only retirement remains independently accepted.
+The next live Amphenol proof stays held while its new host bridge is in QA.
+
+Independent host QA reproduced two real faults in the disposable joined
+path. The operator projector rejected the canonical lower-case provider
+from a genuine source read. After compensating for that fault, a changed
+terminal cycle could still return the prior prompt. The repair owner
+`/root/approval_provenance_design` is adding the single shared exact
+source verification and canonical provider comparison. Independent
+`/root/architecture_publication_review` owns correct-version recheck.
+`/root/adapter_dependency_reconcile` owns the narrow source-only nine-path
+successor maintenance policy in `/tmp/jsh-operator-source-maintenance.20261121`.
+Root owns integration, native authorization and release. No active work in
+production services, Google Sheets, live queue, or Jetson.
+[Initial host QA](S5_OPERATOR_HOST_INITIAL_QA_20261121.md).
+
+Current acceptance is about 40% overall. M1's exact deployed Samtec
+storage and sync are accepted. M2's genuine Freeform path passed, while
+the ordinary next-manual-run intake proof stays open. M3's automatic
+qualified production outcome-to-repair path stays open. M4 has a bounded
+real Jetson choice and independently accepted isolated generation, with
+live automatic composition still open. M5 has a protected install and
+retirement, while the new native wrapper, fresh retry and exact saved jobs
+need proof. M6 has deployed F4 reconciliation, but sequential acceptance,
+F8 operations and final independent QA remain. Keep one inference lane
+and broad processing, scheduled sync, and unqualified releases disabled.
+
 ## Exact scoped scraper and terminal settlement accepted in staging
 
 ### November 21 at 11:37 Eastern
