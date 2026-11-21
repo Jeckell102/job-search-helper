@@ -43,6 +43,49 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 5 measured release owner and exact retry
+
+### Latest checkpoint, November 21 at 03:50 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The previous goal turn produced
+reviewed retry guards, closeout and Allen evidence; that was verified
+progress. Sprints 1–3 and the Sprint 4 Freeform pilot remain accepted.
+Sprints 5–7 still need deployed acceptance.
+
+Root joined the guarded release controller and owner invocation to the
+exact retry. `/root/s5_live_authority_plan` authored the measured launcher
+and admitted runner. `/root/listener_ownership_qa` rejected the initial
+active-Company issue and verified the corrected controller, then separately
+ran a real guarded activation and measured child in a disposable project.
+The process held an unfinished prior cycle before changing source and
+preserved an unrelated queued request when restarted on eligible scratch
+state. `/root/architecture_publication_review` verified the captured
+Amphenol application path with 18 matching saved jobs, one workbook batch,
+exact terminal outcome, no repeated fetch/write, and two held cases.
+
+The final composed stage is
+`/tmp/jsh-s5-release-controller-join.20261121`. All 55 focused cases passed.
+The full Amphenol staged source projection with the accepted AcquireTM
+recipe differs in that application file alone and passed 16 affected tests.
+Neither disposable proof qualifies a native release. Production queue and
+runtime were untouched, the retained historical cycle remains the named
+case blocker, broad backlog and unqualified release remain disabled, and
+Jetson remains one inference lane.
+
+Root next owns exact delivery of this retry's durable success through
+the existing coordinator receipt bridge. `/root/s5_live_authority_plan`
+confirmed the next seam is the enrolled host catch-up before launching
+anything. It should require the same independent release approval, exact
+receipt pair and one canonical sender row, deliver only that outcome, and
+read back both delivery receipts and the receiver's exact lifecycle.
+The 03:51 read-only native check still found the same protected active
+cycle, no pending scan request and Saronic cursor 67.
+No user action is currently needed. Last verified private GitHub backup
+before this checkpoint is `54ed9abc985ab0630dc7ceadbb00c86ed207df16`.
+[Joined release evidence](S5_MEASURED_RELEASE_OWNER_JOIN_20261121.md).
+[Native readback](S5_NATIVE_READ_ONLY_RECHECK_0351_20261121.json).
+
 ## Sprint 5 terminal retries and Sprint 6 public qualification
 
 ### Latest outcome, November 21 at 03:33 Eastern
@@ -82,9 +125,9 @@ owned retry through exact admission, publication and the terminal recorder.
 Use the existing release controller and no generic start fallback. Keep
 broad backlog processing and unqualified releases disabled. One Jetson
 inference lane remains the deployment constraint. No user action is needed.
-Latest private backup `9d169d54b1c833eee3fbb51871e7fb109ca477bf` was
-fetched back and all 21 changed file contents matched.
-[Backup verification](S5_S6_EXACT_RETRY_BACKUP_VERIFIED_20261121.json).
+Latest private backup `54ed9abc985ab0630dc7ceadbb00c86ed207df16` was
+fetched back and all changed file contents across both checkpoints matched.
+[Backup verification](S5_EXACT_RELEASE_CONTINUATION_BACKUP_VERIFIED_20261121.json).
 `/root/s5_live_authority_plan` implemented the staged, one-retry closeout.
 Root owns the follow-on release/admission handoff.
 In `/tmp/jsh-s5-exact-release-continuation.20261121`, root extended the

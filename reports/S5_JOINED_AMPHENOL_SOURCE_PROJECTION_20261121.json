@@ -1,0 +1,12 @@
+{
+  "base": "/tmp/jsh-s5-release-controller-join.20261121",
+  "before_sha256": "a95953afe2bc10138714f6b11af22572b17ab344bf61d78b834647895025aa61",
+  "before_source_manifest_sha256": "3df218b6709081d31694f174dcde24e603790cf53a0ce45db132ec0e336c4ea5",
+  "candidate": "/tmp/jsh-s5-joined-amphenol-release-candidate.20261121",
+  "candidate_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "candidate_source_manifest_sha256": "e7056b5dffda28c316cf322a1de14290d753865dcd4fd393a29eba7ad68870d1",
+  "changed_application_file": "src/job_search_helper/acquiretm.py",
+  "local_validation_tests_passed": 16,
+  "native_release_qualification": false,
+  "status": "PREPARED_SOURCE_AND_OFFLINE_TESTS"
+}

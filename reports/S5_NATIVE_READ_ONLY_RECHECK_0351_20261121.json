@@ -1,0 +1,27 @@
+{
+  "company_event_counts": {
+    "company.eligible": 1
+  },
+  "effective_unfinished_state_cycles": [
+    "CYC-B639C6D864EC"
+  ],
+  "next_scan_exists": false,
+  "observed_at": "2026-11-21T03:51:01.584644-05:00",
+  "outcome_counts": {
+    "COMPLETE": 1
+  },
+  "protected_case_stages": {
+    "COMP-0024": "partial",
+    "COMP-0054": "inventory",
+    "COMP-0066": "queued",
+    "COMP-0164": "queued",
+    "COMP-0490": "queued"
+  },
+  "protected_cycle_mirror_status": [
+    "In Progress"
+  ],
+  "protected_cycle_status": "In Progress",
+  "qualification": "NATIVE_READ_ONLY_SNAPSHOT",
+  "saronic_saved_plan_cursor": 67,
+  "unchanged_database_stat_and_zero_wal": true
+}

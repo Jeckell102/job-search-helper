@@ -1,0 +1,15 @@
+{
+  "bootstrap_pin": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f",
+  "controller_pin": "2cd45aff4d52d3808c41b1bbd36e0c1a3a257634b2df79221185345742adff8c",
+  "launcher_pin": "2556de3371c32be1991273a1ee88d2baa25753dfcdc73a9656d34de6b91de78c",
+  "measured_child_pid": 6,
+  "parent_pin": "607a08c3d3e4728e411b95cfa9e4bd54a8dbcb767560ff077351e7bc268ebec9",
+  "release_state": "COMPLETE",
+  "result": "DISPOSABLE_ACTUAL_MEASURED_FOREIGN_QUEUE_WAIT",
+  "retry_state": "WAITING_FOR_EXACT_RETRY",
+  "runner_pin": "f1ade3af7fd4c50baf55078f8c158a8ecd66773f2d8c725ab9dfc4aaa65e26b3",
+  "same_foreign_queue_inode_and_bytes": true,
+  "same_three_logical_sqlite_dumps": true,
+  "source_digest": "870a3d2b0675a0a5455c1dced66f12f6953f7e7846b89b146fa3fbef245810b2",
+  "unfinished_cycle_refused_before_installation_or_child": true
+}

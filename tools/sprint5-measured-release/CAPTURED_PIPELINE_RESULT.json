@@ -1,0 +1,17 @@
+{
+  "disposition": "DISPOSABLE_COMPOSED_CONTINUATION_PASS",
+  "captured_inventory_jobs": 39,
+  "captured_sha256": "94250320f27fbf987f417405599f609de6ea965feb41f1b6297cfee57dba5fa8",
+  "filtered_local_jobs": 18,
+  "fixture_published_jobs": 18,
+  "fixture_remote_batches": 1,
+  "offline_fetch_calls": 1,
+  "remote_factory_calls": 1,
+  "terminal_outcomes": 1,
+  "prior_cycle_job_company_preserved": true,
+  "replay_logically_unchanged": true,
+  "cycle_id": "CYC-E5B3F68BCE80",
+  "attempt_id": "RTRY-94818009148713cd8859150f",
+  "outcome_id": "OUT-6e2d9162c7976a9d07fbe8bb",
+  "native_or_live_qualification": false
+}
