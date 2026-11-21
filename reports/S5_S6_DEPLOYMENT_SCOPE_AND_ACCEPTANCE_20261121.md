@@ -77,7 +77,7 @@ responses. [Shutdown](S6_OWNED_CHOICE_SHUTDOWN_QA_20261121.md)
 | 3. Controlled regression | The original Amphenol pagination defect, constrained recipe, one measured install and exact retry are independently documented. | Run the deployment-approved trigger-to-storage chain and its affected regression checks on the installed version. |
 | 4. External provider hold | A composed fixture held one failure and subsequently saved the unrelated second Company. [Provider hold proof](S6_SEQUENTIAL_PROVIDER_HOLD_REHEARSAL_20261121.md) | Verify the deployed hold and continued work using the frozen acceptance cases. |
 | 5. Restart | Real Jetson interruptions were separately accepted on the installed paired F4 source. The isolated end-to-end canary proved launch/replay. A new cross-process stop/restart retained a late accounted turn and no candidate. [Deployed Jetson QA](F4_PAIRED_DEPLOYED_QA_20261120.md) · [Shutdown proof](S6_OWNED_CHOICE_SHUTDOWN_QA_20261121.md) | Recheck final deployed pins and compose the relevant current transitions under one ownership record. |
-| 6. Source change or pause | Staged preinstall, exact Company/lease and shutdown guards hold scoped writes. | Show the deployed source-change and pause case on deliberately authorized scope. |
+| 6. Source change or pause | A staged Company source change after enqueue led the actual fresh measured worker to hold before admission, fetch or publication. Queue, release records and the logical stores matched the post-edit snapshot. The independently accepted staged status reader makes the hold visible. [Measured source hold](S6_MEASURED_QUEUED_SOURCE_DRIFT_QA_20261121.md) · [Exact retry status](S6_EXACT_RETRY_OPERATOR_STATUS_20261121.md) | Show the deployed source-change and pause case on deliberately authorized scope. |
 | 7. Sequential companies | Evidence supports Allen's exact Ashby migration and earlier bounded Forterra/PDW Rippling work. The existing two-company fixture supports continued progress. [Allen qualification](S6_ALLEN_ASHBY_PUBLIC_QUALIFICATION_20261121.md) | Qualify a third distinct completion structure, then show three sequential deployed results, shared-adapter regression and a separate safe hold. |
 
 An independent 04:17 Eastern recheck found that Draper's official careers
@@ -93,7 +93,10 @@ The next production action must preserve the older cycle and use a genuinely
 eligible owned Company. A future disjoint event could supply isolated native
 failure evidence under the installed signed path. Its existence alone
 would leave version qualification and the safe installation boundary open.
-The user does not need to make a change for the ongoing offline checks.
+Independent review enumerates the exact release approval inputs and the
+safe installation sequence. The user does not need to make a change for
+the ongoing offline checks.
+[Native qualification boundary](S5_NATIVE_QUALIFICATION_BOUNDARY_20261121.md).
 
 ## F1–F8 carry-forward
 

@@ -1,0 +1,1 @@
+{"all_files_preexisting": true, "changed_preexisting_paths": [], "created_paths": [], "rollback_journal_bytes": 4616, "rollback_journal_status": "STATUS_SNAPSHOT_BUSY", "rollback_store_paths_inode_mtime_bytes_identical": true, "status": "HELD_SOURCE", "wal_real_committed_bytes": 16512, "wal_status": "STATUS_SNAPSHOT_BUSY", "wal_store_paths_inode_mtime_bytes_identical": true}

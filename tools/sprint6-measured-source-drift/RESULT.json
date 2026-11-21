@@ -1,0 +1,21 @@
+{
+  "admitted_cycle": false,
+  "attempt_id": "RTRY-580584f56905b2ea0d7d68bb",
+  "bootstrap_pin": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f",
+  "changed_company_revision": "d91e1c83d53a70fe9fea86638bddccbf44a03199182c608ea6a35080219920df",
+  "controller_pin": "2cd45aff4d52d3808c41b1bbd36e0c1a3a257634b2df79221185345742adff8c",
+  "launch_count": 1,
+  "launcher_pin": "2556de3371c32be1991273a1ee88d2baa25753dfcdc73a9656d34de6b91de78c",
+  "measured_worker_pid": 8,
+  "original_company_revision": "fa6cede5ad39e6606e605400fbbe35a966284e3dd01cd740d332695babaf7689",
+  "parent_pin": "607a08c3d3e4728e411b95cfa9e4bd54a8dbcb767560ff077351e7bc268ebec9",
+  "queue_sha256": "84e95781ea98542fd66462fb2658bb996b94ffb385dcbfe0545a4d6c724f007e",
+  "request_admission_provider_publication_effects": 0,
+  "result": "DISPOSABLE_MEASURED_STALE_QUEUED_COMPANY_HELD",
+  "runner_pin": "f1ade3af7fd4c50baf55078f8c158a8ecd66773f2d8c725ab9dfc4aaa65e26b3",
+  "source_digest": "870a3d2b0675a0a5455c1dced66f12f6953f7e7846b89b146fa3fbef245810b2",
+  "unchanged_queue_identity_bytes": true,
+  "unchanged_release_journal_intent_records": true,
+  "unchanged_store_logical_dumps": true,
+  "worker_exit": 1
+}

@@ -1,0 +1,55 @@
+{
+  "admitted_cycle": false,
+  "attempt_id": "RTRY-179ab2475450ebdfd3a857f8",
+  "bootstrap_pin": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f",
+  "changed_company_revision": "d91e1c83d53a70fe9fea86638bddccbf44a03199182c608ea6a35080219920df",
+  "changed_status": {
+    "attempt_id": "RTRY-179ab2475450ebdfd3a857f8",
+    "company_id": "COMP-0490",
+    "cycle_id": null,
+    "message": "The Company source changed or is paused.",
+    "release_id": "REL-c7e10e6d3d3022d87acd8292",
+    "status": "HELD_SOURCE"
+  },
+  "controller_pin": "2cd45aff4d52d3808c41b1bbd36e0c1a3a257634b2df79221185345742adff8c",
+  "launch_count": 1,
+  "launcher_pin": "2556de3371c32be1991273a1ee88d2baa25753dfcdc73a9656d34de6b91de78c",
+  "measured_worker_pid": 20,
+  "missing_jobs_ack_status": {
+    "attempt_id": "RTRY-94818009148713cd8859150f",
+    "company_id": "COMP-0490",
+    "cycle_id": "CYC-8F35E1D030EF",
+    "message": "Final local closeout is still unverified.",
+    "release_id": "REL-76cc6f8179568b839386f429",
+    "status": "CLOSEOUT_PENDING"
+  },
+  "missing_status_exit": 1,
+  "ordinary_visibility": "local-only",
+  "original_company_revision": "fa6cede5ad39e6606e605400fbbe35a966284e3dd01cd740d332695babaf7689",
+  "parent_pin": "607a08c3d3e4728e411b95cfa9e4bd54a8dbcb767560ff077351e7bc268ebec9",
+  "queue_sha256": "69169211fed9cafa3878564514d5848a0d585048959d9c42ef04a2dee8b5f604",
+  "queued_status": {
+    "attempt_id": "RTRY-179ab2475450ebdfd3a857f8",
+    "company_id": "COMP-0490",
+    "cycle_id": null,
+    "message": "The exact Company retry is queued for safe admission.",
+    "release_id": "REL-c7e10e6d3d3022d87acd8292",
+    "status": "WAITING_TO_SCRAPE"
+  },
+  "request_admission_provider_publication_effects": 0,
+  "result": "DISPOSABLE_MEASURED_STALE_QUEUED_COMPANY_HELD",
+  "runner_pin": "0b4e80b429b242a1eec02eadb5b89ac501b8d13f7dc0c3122015e01eece91003",
+  "source_digest": "7ddd3b24f745e4ca90ba28ac2d75fa3e3f942fb2cf40b49ab9e1cecd13041743",
+  "terminal_status": {
+    "attempt_id": "RTRY-94818009148713cd8859150f",
+    "company_id": "COMP-0490",
+    "cycle_id": "CYC-8F35E1D030EF",
+    "message": "Jobs and Sheets were confirmed for this retry.",
+    "release_id": "REL-76cc6f8179568b839386f429",
+    "status": "SYNC_CONFIRMED"
+  },
+  "unchanged_queue_identity_bytes": true,
+  "unchanged_release_journal_intent_records": true,
+  "unchanged_store_logical_dumps": true,
+  "worker_exit": 1
+}

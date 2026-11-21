@@ -358,6 +358,11 @@ An independent isolated installation now verifies the guarded installer,
 fresh measured worker, normal storage and coordinator enrollment on one
 retry. A separate injected installed-verification failure held worker
 admission, preserved the stores, and restored the previous source.
+Independent review confirmed the current native release boundary. The
+approved public adapter and the complete isolated install prove different
+stages. Native acceptance requires one current application-owned failed
+request bound to independent validation of the exact full candidate release.
+[Native qualification boundary](S5_NATIVE_QUALIFICATION_BOUNDARY_20261121.md).
 [Retry evidence and QA](S5_RETRY_ADMISSION_AND_TERMINAL_DELIVERY_20261121.md).
 [Release continuation components](S5_EXACT_RELEASE_CONTINUATION_20261121.md).
 [Measured owner evidence](S5_MEASURED_RELEASE_OWNER_JOIN_20261121.md).
@@ -421,6 +426,15 @@ Two fresh-process staged QA checks proved planned shutdown with a late
 counted reply and no new candidate, and a visibly exhausted task that
 remained held across restart while a distinct owned task started with
 fresh counters.
+An independent staged test changed the Company source after exact enqueue.
+A fresh measured bootstrap launched the worker once. It held the stale
+request before admission, provider fetching or publication, preserving the
+request, the release records and all three logical stores. The staged local
+retry status now identifies that hold and reports confirmation only when
+both stores have matching evidence. The corrected reader passed physical
+no-write checks with idle databases and pending journals.
+[Measured source hold](S6_MEASURED_QUEUED_SOURCE_DRIFT_QA_20261121.md).
+[Exact retry status](S6_EXACT_RETRY_OPERATOR_STATUS_20261121.md).
 The composed two-Company fixture proved that a provider hold is saved
 without a repair, and that the next eligible Company proceeds to exact
 local and workbook-fixture storage. Live sequential acceptance with

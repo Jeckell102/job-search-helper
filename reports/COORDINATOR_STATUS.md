@@ -43,6 +43,47 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 5 native qualification and Sprint 6 source hold
+
+### Latest checkpoint, November 21 at 04:35 Eastern
+
+Root remains coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the native
+Sprint 4 Freeform pilot remain accepted. The staged end-to-end repair and
+retry are independently verified. Native Sprint 5 and deployed Sprints
+6–7 remain open. Overall completion remains approximately 40% by accepted
+gates. There is no current requirement for a Sheets edit or routine approval.
+
+`/root/listener_ownership_qa` independently ran a fresh measured worker on a
+disposable installation after an exact queued Company's source was changed.
+The worker held before admission, fetch or Sheets publication. Queue,
+release records, runtime source and all three logical stores were preserved.
+[Measured source hold](S6_MEASURED_QUEUED_SOURCE_DRIFT_QA_20261121.md).
+
+Root built the staged exact one-attempt Retry status reader.
+`/root/listener_ownership_qa` first held it after reproducing SQLite sidecar
+creation, then accepted the correction through the actual measured command.
+The command leaves files untouched and returns a retryable status when
+pending journals prevent a consistent read. Terminal confirmation needs
+matching Jobs and Inbox evidence. The focused offline suite passed 34 tests.
+[Status and test scope](S6_EXACT_RETRY_OPERATOR_STATUS_20261121.md).
+
+`/root/s5_live_authority_plan` confirmed the missing release input is one
+current, application-owned failure independently bound to an exact full
+candidate and validated under the existing release and idle gates.
+The evidence from public source evaluation and enrolled disposable testing
+stays distinguishable. The older retained cycle and Saronic stay protected.
+[Native qualification boundary](S5_NATIVE_QUALIFICATION_BOUNDARY_20261121.md).
+
+`/root/architecture_publication_review` owns the read-only check of a
+documented proposal for another Sprint 6 completion structure. Until that
+decision, the original matrix remains current and Draper remains held.
+Next reconcile the frozen matrix and independently qualify the first
+currently eligible native failure. Preserve the single Jetson lane.
+Broad processing and unqualified automatic release remain disabled.
+Last prior verified backup `68bf00c93535c343f9600d5150e4a6a29cfa324a`.
+[Prior backup verification](S5_S6_DEPLOYMENT_READINESS_BACKUP_VERIFIED_20261121.json).
+
 ## Sprint 5 isolated install and Sprint 6 restart controls
 
 ### Latest checkpoint, November 21 at 04:18 Eastern
@@ -91,8 +132,10 @@ Preserve Saronic, native services, queues and all data. Keep broad
 processing and unqualified releases disabled with one Jetson lane.
 Overall completion stays approximately 40% by accepted gates. Sprint 5
 has an independently installed isolated proof and its native exit remains
-open. No current user action. Last verified backup before this checkpoint
-`da79a2185c100ebf5be2ffe2850385d7734c3cb6`.
+open. No current user action. Latest private backup
+`68bf00c93535c343f9600d5150e4a6a29cfa324a` was fetched back and all 24
+scoped file contents matched.
+[Backup verification](S5_S6_DEPLOYMENT_READINESS_BACKUP_VERIFIED_20261121.json).
 
 ## Sprint 5 enrolled retry receipt and native readiness
 
