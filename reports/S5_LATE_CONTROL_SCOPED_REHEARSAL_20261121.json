@@ -1,0 +1,24 @@
+{
+  "backup_files_unchanged": true,
+  "mode": "read-only-backup-with-in-memory-inbox-and-simulated-remote-evidence",
+  "network_allowed": false,
+  "original_cursor": 67,
+  "original_positions": 208,
+  "original_rows_unchanged": true,
+  "other_suffix_positions_held": 139,
+  "pending_one_based_positions": [
+    194,
+    195
+  ],
+  "receipt_count": 0,
+  "result": "FROZEN_WITH_IDEMPOTENT_REPLAY",
+  "saved_inventory_bytes": 1929118,
+  "saved_plan_bytes": 1394752,
+  "scoped_copy_exact_local": {
+    "company_unchanged": true,
+    "existing_job_evidence_unchanged": true,
+    "manual_review_fields_preserved": 7,
+    "replay_readback": true,
+    "state": "VERIFIED"
+  }
+}

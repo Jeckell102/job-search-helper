@@ -1,0 +1,60 @@
+{
+  "case_count": 5,
+  "cases": [
+    {
+      "checkpoint_stage": "blocked",
+      "company_id": "COMP-0002",
+      "local_only_baseline_digest": "31e59d114887aabf5ac796dd951894bb6b5b35359fb5285b22b58dad0c996c15",
+      "local_only_field_count": 4,
+      "offline_read_calls": 2,
+      "receipt_state": "REMOTE_OBSERVED_MATCH",
+      "remote_projection_digest": "609efb5c3d88b1bee81b2b99c23e2b100b334271b88555247bc4842108eb43cd",
+      "remote_visible_field_count": 4
+    },
+    {
+      "checkpoint_stage": "blocked",
+      "company_id": "COMP-0008",
+      "local_only_baseline_digest": "eaf8e8a50e7bbd3192223357203bd5521a5055f4cb22bf0d33dd9dc3b20011c7",
+      "local_only_field_count": 4,
+      "offline_read_calls": 2,
+      "receipt_state": "REMOTE_OBSERVED_MATCH",
+      "remote_projection_digest": "5917c414b68bb8215396899e66808c3d59b643e9091eef36a0e0b891224d4804",
+      "remote_visible_field_count": 4
+    },
+    {
+      "checkpoint_stage": "blocked",
+      "company_id": "COMP-0016",
+      "local_only_baseline_digest": "ce10eb06a31abd4b7cea39bfc15ce329d8d86b71fe3e0f38641dc958c1b3cddf",
+      "local_only_field_count": 4,
+      "offline_read_calls": 2,
+      "receipt_state": "REMOTE_OBSERVED_MATCH",
+      "remote_projection_digest": "0dcaf4511dd92a2eb76d245f20b25c1d3e11a52961f5590327a367736e70a8b9",
+      "remote_visible_field_count": 4
+    },
+    {
+      "checkpoint_stage": "unsupported",
+      "company_id": "COMP-0040",
+      "local_only_baseline_digest": "447aed9b2182b868b00db1ee10dca372ad2b76ebba469693ac6780b52ccc357f",
+      "local_only_field_count": 4,
+      "offline_read_calls": 2,
+      "receipt_state": "REMOTE_OBSERVED_MATCH",
+      "remote_projection_digest": "cc7c0c6389332278b724b69c34c34388bead1ada7e2d865be416ee3534d6e21d",
+      "remote_visible_field_count": 4
+    },
+    {
+      "checkpoint_stage": "unsupported",
+      "company_id": "COMP-0045",
+      "local_only_baseline_digest": "47258fd1201ed1bab080be16be36fdba77c9d09f793fad079a4a5a02a4d46689",
+      "local_only_field_count": 4,
+      "offline_read_calls": 2,
+      "receipt_state": "REMOTE_OBSERVED_MATCH",
+      "remote_projection_digest": "36d51260d002a599583d942567cc0f4deea86194cbfe000772a273cdde4f9d92",
+      "remote_visible_field_count": 4
+    }
+  ],
+  "cycle_id": "CYC-B639C6D864EC",
+  "network": "not_constructed",
+  "remote_commit": "forbidden",
+  "stores_unchanged": true,
+  "transport": "disposable_expected_value_only"
+}

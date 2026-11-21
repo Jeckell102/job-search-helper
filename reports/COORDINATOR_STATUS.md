@@ -43,6 +43,44 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Signed late-control archive and copied local recovery
+
+### November 21 at 09:57 Eastern
+
+Root remains coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 wrapper creation is
+accepted in preproduction. The Amphenol production rollout, retry,
+publication and installed independent QA remain open.
+
+The signed Saronic admission now preserves the exact original SQLite
+text and cursor. On a disposable copy of the selected actual rows,
+existing exact local application verified operations 194 and 195 and
+reverified on restart without rewriting them. The 67 completed
+operations, all seven manual review fields, existing Evidence and the
+Company stayed protected. The offline archive used simulated remote
+evidence, left the original backup untouched, and created no publication
+receipts. Combined tests passed 43. Independent QA accepted the corrected
+byte binding and disposable application after a raw-text drift failure.
+The new observation-only adapter also passed five offline terminal
+fixtures and creates no durable receipt.
+
+Root owns durable archive and eventual application and publication
+composition. `/root/architecture_publication_review` owned claims and
+raw-text pin repair, `/root/adapter_dependency_reconcile` owned the
+exact delta/readback repair, and `/root/listener_ownership_qa` independently
+accepted the revised frozen archive and disposable primitive.
+`/root/approval_provenance_design` owned the five terminal shapes.
+All five built and passed offline-shaped readback from immutable copies.
+A separate QA and durable real receipts remain open.
+
+Next under bounded ownership verify real pending before-values and
+independent remote prefix observations, implement protected first-write
+and resumed application checks, and rehearse exact acknowledgement.
+Keep the retained scopes and one Jetson inference lane intact.
+Deployment, real observation receipts and the rest of the historical
+cycle are outstanding.
+[Detailed checkpoint](S5_LATE_CONTROL_SCOPED_CHECKPOINT_20261121.md).
+
 ## Guarded late-control recovery preview accepted
 
 ### November 21 at 09:41 Eastern
@@ -84,6 +122,8 @@ exact application on disposable stores. Preserve original custody
 and separately prove remote prefix and pending effects. Keep one
 Jetson lane and existing production release and backlog controls off.
 [Durable continuation map](S5_LATE_CONTROL_DURABLE_CONTINUATION_MAP_20261121.md).
+Private GitHub checkpoint `3e9bd52c89eaaab85b0900949343c93410103c33` was fetched back
+and all 18 scoped files matched. [Backup verification](S5_SARONIC_BOUND_PREVIEW_BACKUP_VERIFIED_20261121.json).
 
 ## Saronic read-only recovery evidence
 

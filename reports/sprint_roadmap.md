@@ -382,6 +382,13 @@ on that transition and does not supply terminal recovery. Leave the
 intentional retained cycle protected until a separate reviewed disposition
 can meet the actual recovery and publication gates.
 [Exact retained-work triage](S5_RETAINED_SOURCE_TRANSITION_TRIAGE_20261121.md).
+A signed staged admission now archives the old plan, inventory and cursor.
+The existing exact local application verified the two selected operations
+on a disposable copy of the real rows and preserved all seven manual
+review fields on replay. Independent QA accepted that bounded result
+after correction of a raw-text binding failure. The live guarded apply,
+publication, terminal disposition and production wrapper pilot remain open.
+[Recovery checkpoint](S5_LATE_CONTROL_SCOPED_CHECKPOINT_20261121.md).
 The actual corrected staged host reached the real installer and refused an
 unfinished legacy cycle before launch or any release, queue, workbook or
 source effect. Its release status now explains this hold. An independently
