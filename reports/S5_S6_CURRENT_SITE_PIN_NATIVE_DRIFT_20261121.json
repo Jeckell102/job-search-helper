@@ -1,0 +1,48 @@
+{
+  "historical_pin_unchanged": true,
+  "stable_store_checks": {
+    "state": {
+      "checked": [
+        "cycles"
+      ],
+      "changed": []
+    },
+    "jobs": {
+      "checked": [
+        "company_event_outbox",
+        "scrape_outcome_delivery_receipts",
+        "retained_publications"
+      ],
+      "changed": [
+        "company_event_outbox",
+        "scrape_outcome_delivery_receipts",
+        "retained_publications"
+      ]
+    },
+    "coordinator": {
+      "checked": [
+        "tasks",
+        "inference_receipts",
+        "scrape_outcome_delivery_receipts"
+      ],
+      "changed": [
+        "tasks",
+        "inference_receipts",
+        "scrape_outcome_delivery_receipts"
+      ]
+    },
+    "sessions": {
+      "checked": [
+        "retained_sessions"
+      ],
+      "changed": [
+        "retained_sessions"
+      ]
+    }
+  },
+  "volatile_store_checks": [],
+  "broad_controls_remain_off": true,
+  "pilot_slot_is_set": true,
+  "full_live_site_snapshot_attempt": "REFUSED_DATABASE_CHANGED_DURING_READ",
+  "note": "Each documented store check is one stable local observation. A full current enrollment requires exclusive authority."
+}

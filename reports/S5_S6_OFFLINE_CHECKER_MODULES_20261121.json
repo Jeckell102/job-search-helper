@@ -1,0 +1,19 @@
+{
+  "result": "VERIFIED_PREDECESSOR_CHECKER_SOURCE_MATCH",
+  "archived_checker_module_count": 11,
+  "verified_modules": [
+    "alternate_exchange_witness.py",
+    "alternate_writer_witness.py",
+    "ancillary_process_witness.py",
+    "host_check_main.py",
+    "host_checkpoint.py",
+    "host_exchange.py",
+    "launcher_witness.py",
+    "physical_protected_witness.py",
+    "protected_continuity.py",
+    "protected_state.py",
+    "site_policy.py"
+  ],
+  "staged_before_host_matches_current_approved_after": true,
+  "staged_before_launchers_match_current_approved_after": true
+}

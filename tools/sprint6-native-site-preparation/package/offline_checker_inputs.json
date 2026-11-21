@@ -1,0 +1,66 @@
+{
+  "after_host": {
+    "digest": "0e13fcae57c4baa4edf1b59454546d2924c49054aebd253dd1b24f666b8e672a",
+    "mode": 384,
+    "uid": 1000
+  },
+  "before_host": {
+    "digest": "2c57952bcc67dbaf321377956f7efa3ac45f39ed1ef40cb0f9e8aaccfcb62ae0",
+    "mode": 384,
+    "uid": 1000
+  },
+  "enrollment_state": "OFFLINE_SOURCE_PREPARATION",
+  "launcher_hashes": {
+    "after": {
+      "job-search-helper": "f692b6b6dbe57961402972190b61d8fc4d575f944f9be163c9ef9b2a6ed7c5bf",
+      "job-search-scraper": "2556de3371c32be1991273a1ee88d2baa25753dfcdc73a9656d34de6b91de78c",
+      "release_admission_bootstrap.py": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f"
+    },
+    "before": {
+      "job-search-helper": "f692b6b6dbe57961402972190b61d8fc4d575f944f9be163c9ef9b2a6ed7c5bf",
+      "job-search-scraper": "36124dd47557e3643ff9eba838b29f10a512e139d3a39ca9f28fe7473e44f740",
+      "release_admission_bootstrap.py": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f"
+    }
+  },
+  "source_manifest_sha256": "8ea29b5ae423c18c0b4b108ea1d337359132433e1ad1b9e0cb39e7179117ea11",
+  "source_paths": [
+    "dev/wrapper-coder/tools/acquiretm_membership_recipe.py",
+    "dev/wrapper-coder/tools/amphenol_candidate_release.py",
+    "dev/wrapper-coder/tools/amphenol_installed_verification.py",
+    "dev/wrapper-coder/tools/amphenol_recipe_candidate.py",
+    "dev/wrapper-coder/tools/amphenol_recipe_choice_input.py",
+    "dev/wrapper-coder/tools/amphenol_retry_completion.py",
+    "dev/wrapper-coder/tools/coordinator.py",
+    "dev/wrapper-coder/tools/coordinator_inference.py",
+    "dev/wrapper-coder/tools/coordinator_store.py",
+    "dev/wrapper-coder/tools/coordinator_supervision.py",
+    "dev/wrapper-coder/tools/host_server.py",
+    "job-search-scraper",
+    "src/job_search_helper/acquiretm.py",
+    "src/job_search_helper/ats.py",
+    "src/job_search_helper/company_events.py",
+    "src/job_search_helper/company_intake_dispatcher.py",
+    "src/job_search_helper/company_sources.py",
+    "src/job_search_helper/engine.py",
+    "src/job_search_helper/exact_cycle_planner.py",
+    "src/job_search_helper/exact_cycle_receipt.py",
+    "src/job_search_helper/exact_cycle_recovery.py",
+    "src/job_search_helper/exact_cycle_sync.py",
+    "src/job_search_helper/inbox.py",
+    "src/job_search_helper/integration_release.py",
+    "src/job_search_helper/ordinary_company_event_command.py",
+    "src/job_search_helper/ordinary_company_event_publication.py",
+    "src/job_search_helper/ordinary_event_settlement.py",
+    "src/job_search_helper/private_file_custody.py",
+    "src/job_search_helper/qualified_release_owner.py",
+    "src/job_search_helper/release_controller.py",
+    "src/job_search_helper/release_qualification.py",
+    "src/job_search_helper/repair_retry.py",
+    "src/job_search_helper/repair_retry_status.py",
+    "src/job_search_helper/runner.py",
+    "src/job_search_helper/scan_request.py",
+    "src/job_search_helper/scrape_outcome_producer.py",
+    "src/job_search_helper/sqlite_repository.py",
+    "src/job_search_helper/sync_cli.py"
+  ]
+}

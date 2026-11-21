@@ -1,0 +1,11 @@
+{
+  "result": "PASS_OFFLINE_EXISTING_SITE_LAUNCHER_WITNESS",
+  "stages": [
+    "preflight:before",
+    "admitted:after",
+    "restored:after"
+  ],
+  "ordinary_route_checked": true,
+  "scratch_state_created": false,
+  "source_or_service_changes_in_production": false
+}

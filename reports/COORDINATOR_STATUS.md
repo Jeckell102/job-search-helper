@@ -43,6 +43,51 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Offline release package and native baseline
+
+### November 21 at 06:10 Eastern
+
+Root remains coordinator and release owner for goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and Sprint 4 Freeform
+remain accepted. Sprints 5–7 still need live acceptance. About 40% by
+accepted gates. Keep one Jetson lane and the broad controls disabled.
+
+Root verified the original Freeform protected pin and found seven of
+eight sampled fingerprints now differ after the accepted Freeform and
+initial Amphenol work. The earlier protected capsule stayed intact.
+The first full passive read refused a database change. A follow-up
+separate stable read confirmed the changes and unchanged State cycles
+table sample. Controls remain off, with the original paused pilot slot
+set. The latest immutable origin snapshot still finds zero eligible
+events, with all prior fields apart from observation time unchanged.
+[Baseline drift](S5_S6_CURRENT_SITE_PIN_NATIVE_DRIFT_20261121.json).
+
+Root staged the consolidated installed-predecessor baseline correction.
+`/root/listener_ownership_qa` independently accepted the historical and
+current pin separation with six maintained and seven focused independent
+checks. The exact 47-path old installation, 38-path successor, and
+candidate-free rollback succeeded using different fixture snapshots.
+The latest rollback, historical files, bridge and physical guard were
+verified. No current native protected snapshot was enrolled.
+[Independent QA](S5_S6_CURRENT_SITE_PIN_INDEPENDENT_QA_20261121.md).
+
+The static 58-file release package is under
+`/tmp/jsh-s6-offline-release-package.UBvdjkSU/payload`. It includes
+all 38 approved after-images and the exact canonical manifest. Its 11
+checker modules match the accepted Freeform checker. Real launcher
+probes passed in a disposable copy before and after the proposed
+source change. Root owns the package and release. Earlier architecture
+and independent QA lanes investigated only their assigned read-only or
+fixture paths.
+[Release package checkpoint](S5_S6_RELEASE_PACKAGE_CHECKPOINT_20261121.md).
+
+No production source, job data, earlier receipts, services, locks, Sheet
+or Jetson configuration were modified. The latest verified private
+backup is `65a3fee9c5059e17d2f1587d98f25b05fb605605`. Next action
+requires an eligible live route and fresh protected-state and host
+authority. The owner choice between retained recovery preparation and
+a genuine disjoint pilot remains pending. No live ETA.
+
 ## Existing installed release and current native origin
 
 ### November 21 at 06:01 Eastern
@@ -93,10 +138,11 @@ Named production pilot remains ineligible.
 
 No production source, application data, services, old cycle, GitHub branch
 controls, queue or Jetson configuration changed. The previous verified
-backup is `483f00cd60e4962e5eaa4a0264c17d5b60d8b79f`. Next preserve
-this exact source and QA in the private backup. Native work still needs
-a genuine eligible Company request, the user's retained-run planning
+backup is `65a3fee9c5059e17d2f1587d98f25b05fb605605`, fetched back with all
+37 scoped sources, tests and reports verified. Native work still needs a
+genuine eligible Company request, the user's retained-run planning
 direction or a legitimate disjoint route, and fresh site authority.
+[Backup verification](S5_S6_NATIVE_SUCCESSOR_BACKUP_VERIFIED_20261121.json).
 
 ## Consolidated release preparation
 

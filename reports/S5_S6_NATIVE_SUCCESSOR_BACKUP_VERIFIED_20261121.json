@@ -1,0 +1,12 @@
+{
+  "result": "VERIFIED_PRIVATE_SCOPED_BACKUP",
+  "repository": "Jeckell102/job-search-helper",
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "65a3fee9c5059e17d2f1587d98f25b05fb605605",
+  "verified_at": "2026-11-21T11:02:57+00:00",
+  "remote_files_byte_matched": 37,
+  "exact_source_sha256": {
+    "controller.py": "b02b48c3bb10ce39b80b8ea0dfe7ffc7d6db6e12f85e4945451c5b7c9b8e7189",
+    "installer.py": "ecf2bc46541f3477c3cc0878ddfa83729ba12e691ed580895cdb51bb22a4f984"
+  }
+}

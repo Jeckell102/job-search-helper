@@ -405,7 +405,14 @@ receipt. The staged consolidated-only repair independently passed
 source review. Its new handoff requires the existing installed receipt,
 exact approved protected continuity and the same physical guard.
 Native predecessor approval and Company eligibility remain separate.
-[Native handoff readiness](S5_S6_NATIVE_HANDOFF_READINESS_20261121.md).
+The stable protected-state read reproduced seven changes from the original
+Freeform witness. The independently reviewed successor now binds
+historical and current pins separately. The 38 reviewed after-images and
+unchanged checker code are staged and the existing launcher probes passed
+on a disposable copy. A fresh live exclusion and eligible Company request
+remain prerequisites.
+[Native handoff readiness](S5_S6_NATIVE_HANDOFF_READINESS_20261121.md)
+· [Release package checkpoint](S5_S6_RELEASE_PACKAGE_CHECKPOINT_20261121.md).
 [Consolidated deployment preparation](S5_S6_CONSOLIDATED_DEPLOYMENT_PREPARATION_20261121.md)
 · [Independent policy QA](S5_S6_MAINTENANCE_SOURCE_POLICY_INDEPENDENT_QA_20261121.md).
 The staged Python host now has a default-off route from its completed
