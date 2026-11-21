@@ -397,6 +397,10 @@ distinct local control and no publication, cleanup, or Sheet changes. It
 must keep old resume and publication unavailable while leaving unrelated
 unfinished work and the release gates in force.
 [Archive and ownership plan](S5_RETIREMENT_OWNERSHIP_MAP_20261121.md).
+The production package is prepared and passed independent private
+custody checks. A freshly bound administrator observer remains required
+before the guarded install. No retirement marker is present yet.
+[Native preparation](S5_RETIREMENT_NATIVE_PREPARATION_20261121.md).
 The actual corrected staged host reached the real installer and refused an
 unfinished legacy cycle before launch or any release, queue, workbook or
 source effect. Its release status now explains this hold. An independently

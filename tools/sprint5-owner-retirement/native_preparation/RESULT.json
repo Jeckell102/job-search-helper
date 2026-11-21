@@ -1,0 +1,23 @@
+{
+  "errors": 0,
+  "failures": 0,
+  "fixture_limits": [
+    "Native predecessor ownership and source observations substituted",
+    "Protected measurement substituted",
+    "Final enroll_abort readback substituted"
+  ],
+  "native_execution": false,
+  "pins": {
+    "prepare_native.py": "0203d80925c54b5c7bee2e47b6caa06f44eb667a3501bdbef5b527e2fa607de4",
+    "test_prepare_native.py": "4348a0d06e1190420d82e8e6c789ff9f524f2ff71ade5e5ed6095b9ee8f80e21"
+  },
+  "real_fixture_components": [
+    "64 payload/catalog hashes",
+    "Immutable host-check zip creation",
+    "Fresh private exchange policy and prepare",
+    "Prepared exchange remains closing with zero placements",
+    "Old saved receipts and route inodes unchanged"
+  ],
+  "state": "PASS_OFFLINE_PREPARATION",
+  "tests": 6
+}

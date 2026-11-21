@@ -43,6 +43,47 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Retirement native private bundle prepared
+
+### November 21 at 10:40 Eastern
+
+Root is senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The exact staged Amphenol
+wrapper, local complete retry and scoped retirement remain accepted.
+The native 44-path bundle was privately prepared, with no install or
+retirement marker. The source backup at eb60d5d47539a6014ac5af5f3051b5958884f376
+was fetched and checked against all 39 scoped source, test and report
+files. Relevant new private authority is saved separately.
+
+Root verified and freed the settled old Amphenol pilot slot through the
+installed coordinator. It retained the original task and its eight
+receipts byte for byte. A protected witness initially held on one
+obsolete spelling of an already settled Freeform outcome. The new
+checker permits only that exact existing typed sender/receiver receipt,
+with unrelated work and delivery attempts still held. No outcome was
+replayed or relabelled. `/root/approval_provenance_design` independently
+classified the pending spelling, `/root/architecture_publication_review`
+prepared the exact native preparation tool, and
+`/root/listener_ownership_qa` independently accepted the revised receipt
+verifier, exact current pin and preparation script. Independent QA accepted
+the fresh native capsule: all 44 after images and all five exact pins;
+zero exchange moves and the unused attempt. The owner was told which
+read-only administrator observer command to run.
+
+The current protected witness carries 61 fingerprints. The original
+Freeform predecessor and historical pin matched. The briefly frozen
+idle wrapper was thawed and the original service process is active.
+Sync remains disabled. The fresh capsule is
+`/home/chris/.local/state/job-search-helper-maintenance/s5-owner-retirement-20261121-01`
+with its separate unused `-attempt` sibling. Current process reads
+verified actual helper PIDs 1249 and 4467 outside the desktop's process
+namespace. Sudo in the desktop cannot create the root observer. The exact one-hour observer script is saved at
+`/tmp/jsh-retirement-pilot-control/start-observer.sh`. Await the owner
+confirmation, then verify both privileged listener challenges before
+the existing captured native install. No manual phase bypass. No
+application, workbook or old scrape effects yet.
+[Native preparation and pins](S5_RETIREMENT_NATIVE_PREPARATION_20261121.md).
+
 ## Owner retirement passed staged integration QA
 
 ### November 21 at 10:20 Eastern
@@ -83,6 +124,12 @@ exclusion. Only a known compatible installed runtime may record the
 approved marker. The next product test is the actual owned single-Company
 Amphenol repair and ordinary publication. Keep one Jetson inference lane.
 [Checkpoint and evidence](S5_RETIREMENT_INTEGRATED_CHECKPOINT_20261121.md).
+Private GitHub checkpoint `eb60d5d47539a6014ac5af5f3051b5958884f376` was fetched;
+all 39 scoped files matched. [Backup verification](S5_RETIREMENT_BACKUP_VERIFIED_20261121.json).
+The private offline capsule holds 63 verified artifacts, including all 44
+reviewed source files. All live before-images still match. It has no
+native plan, observer enrollment or activated guard.
+[Offline capsule proof](S5_RETIREMENT_OFFLINE_PAYLOAD_PROOF_20261121.json).
 
 ## Owner selected archive-first retirement
 
