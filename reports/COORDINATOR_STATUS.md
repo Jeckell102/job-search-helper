@@ -68,6 +68,33 @@ process/bridge/alternate-route controls without holding the worker locks.
 make no further contact. Bridge, scheduled sync, queue, campaign and broad
 release remain in their prior state. Overall acceptance about 40%.
 
+At 16:54 independent package QA accepted the exact held proposal and the
+corrected default entry. The release execution gate remains held. Private
+GitHub checkpoint `30d1bd8e05279d7a6629d116b5865f47812833f4` read back all
+14 scoped preparation, source, plan and report files byte-for-byte.
+[Package QA](S5_AMPHENOL_FRESH_PROPOSAL_INDEPENDENT_QA_20261121.md)
+· [Backup](S5_AMPHENOL_FRESH_PUBLIC_HOLD_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 17:04 Eastern — guarded release source stage accepted
+
+All three private lanes completed. Independent QA accepted the staged
+explicit-action entry after two exact source-origin fixes and accepted the
+native window's nine disposable checks. Root measured the actual -03/-04/-05
+lineage and unchanged-before application source with no window entry. The
+installed intake again has no pending Company event. The normal-runtime
+detail client fixture exposed an eight-second cap after a one-hour provider
+Retry-After. Preserve that gap separately from the accepted one-inference
+build and held exact live qualification.
+[Current release evidence](S5_AMPHENOL_FRESH_NATIVE_EXECUTION_STAGE_20261121.md).
+
+Root retains qualification and release ownership. No provider contact
+before 17:48:55 Eastern and no retry on time alone. The gating next action
+is a defensible bounded independent qualification of the exact candidate,
+or a current legitimate supported alternative. The actual guarded release
+will also need the short -06 native observer after qualification. No need
+to open a second observer while this candidate is held. Broad backlog and
+unqualified release are off. Overall acceptance remains about 40%.
+
 ### November 21 at 16:39 Eastern — current coordinator checkpoint
 
 Root remains coordinator and release owner for the active persistent goal
@@ -108,7 +135,7 @@ only the row affected by a new verified checkpoint.
 | Production and canonical build input | `/home/chris/job-search-helper_old`; `src/job_search_helper/acquiretm.py` SHA `a95953af…`. The isolated task checkout is a historical snapshot. |
 | Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production, adapter SHA `895ec36e…`. Private full candidate and proposal `REL-53592bb86b62492840c58267` are in `/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT`. [Qualification status](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md). |
 | Current request and tool receipt | `operator-amphenol-20261121-05` / `f8c53183…`; local -05 maintenance receipt SHA `60b29ffc…`. See [exact identifiers and hashes](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md). |
-| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `9d8e5d5bc3c29c7d9c341d6464917aed7cb0a866`. All 19 scoped files matched the fetched copy. [Verification](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_BACKUP_VERIFIED_20261121.json). |
+| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `30d1bd8e05279d7a6629d116b5865f47812833f4`. All 14 scoped files matched the fetched copy. [Verification](S5_AMPHENOL_FRESH_PUBLIC_HOLD_BACKUP_VERIFIED_20261121.json). |
 
 ## Prior Sprint 5 preparation checkpoints
 

@@ -1,0 +1,24 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "30d1bd8e05279d7a6629d116b5865f47812833f4",
+  "exact_file_count": 14,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "de9e470e3d4d70f30ca48f0cca25cba060e50925222a45504429ff16670b4fb0",
+    "reports/S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_BACKUP_VERIFIED_20261121.json": "1dc547b808bca536716ec16c6e938a161c3fbe5a2c5062d8ca352c7730bafbc3",
+    "reports/S5_AMPHENOL_FRESH_NATIVE_RELEASE_MAP_20261121.md": "4148c6a5413b173c7b6cef8a582fd6c3fbeff86007051be73624e64219ad9f46",
+    "reports/S5_AMPHENOL_FRESH_PROPOSAL_INDEPENDENT_QA_20261121.md": "9d4413b93fa62aec03a86cb5b123ccd988911ad1ea9f5afa8688f031aec4a5f3",
+    "reports/S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md": "2c5000122d4bc7ec45f4bc4da52ed9368258a2866d1cdebacf2b81ed40892099",
+    "reports/S5_AMPHENOL_FRESH_PUBLIC_INDEPENDENT_QA_20261121.md": "4390a8570ec7e77ed4eda20df7f5646d9b5f3f636eee5c56a5d71d2d654741b7",
+    "reports/sprint_roadmap.md": "0b7fa008ec30751035b6dda2920f92288756913061ea67c44af4e2beb7b89a52",
+    "tools/sprint5-amphenol-fresh-operator/qualification/CAPTURE_PREPARATION.json": "dbf3196f8ff5e2467ae00a1b7ec0c7cf4afcfd66996f5ee70cf697fba40ac7ea",
+    "tools/sprint5-amphenol-fresh-operator/qualification/EXPECTED_INSTALL_READBACK.json": "71e647c17aa5872b0647a974502fee6c056f3ede01dc419d6354c0a123a7bd7f",
+    "tools/sprint5-amphenol-fresh-operator/qualification/PREPARED.json": "1fa925be0a98ce89b18c797083a672cf87f5b538af259ada21028f78ab0c82f4",
+    "tools/sprint5-amphenol-fresh-operator/qualification/PROPOSED_MANIFEST.json": "631e113a7431acd33e7ee82bb33da73e9084559c64e870fed96dfd5cffb13c9a",
+    "tools/sprint5-amphenol-fresh-operator/qualification/confirm_recipe_candidate.py": "a6b23ca6c41f7552e1990870870a022da846a1c6e844bcaf8d146b3a50e98e32",
+    "tools/sprint5-amphenol-fresh-operator/qualification/prepare_candidate.py": "41f9dd6939c0cdb18f934537e43e986f6b92a34d0c64075cbeeccc659fc8fdc6",
+    "tools/sprint5-amphenol-fresh-operator/qualification/release_entry.py": "b1e018358043de59ae4c525e7e778637a0a6986613398b63199b8626514d9199"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T16:54:27-05:00"
+}
