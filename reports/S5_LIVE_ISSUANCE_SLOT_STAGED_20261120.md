@@ -1,0 +1,11 @@
+# Sprint 5 live issuance slot staged
+
+The new private slot uses the exact dispatch, tool, publication, response and owner custody pins to preserve one authorized attempt. It requires a separately retained serialized authority that records spend, confirmation and terminal expiry even if evidence files are rolled back. The slot records digest evidence. It has no live collector, application verdict approval, finisher, release, retry or network route.
+
+Independent QA found three generations of timing and custody issues before acceptance. The final source places its handoff after all potentially blocking custody and cleanup. An exact final transaction compares the retained authority and samples boot, wall and elapsed clocks under the same serialization. If expiry is recorded first, the handoff holds. If the handoff succeeds first, a later caller independently rechecks freshness. Restart and directory rollback do not restore a spent allowance. Expiry preserves any prior receipt rather than erasing it.
+
+The final isolated tree `/tmp/jsh-s5-live-issuer-slot.pfmWxjB4` retained all 322 baseline files byte-identical. The worker's affected regression passed **214** cases. Independent QA passed **84** maintained cases and **16** separate probes and accepted the exact source and injected authority contract. The broader run's 32 missing ATS and Discovery fixture failures matched the original staged baseline. No test authority was given production use. Detached module SHA-256 `d652d6b258df7fea7112aebc9a7b421ff0c9e707e5c24d0bcfa5dcca0c239927`, maintained test SHA-256 `30b068922873f995c349f48307e94651263aae87cb908e488c87e3971a42988c`.
+
+Next implement and review a maintained independent authority in the existing coordinator's durable storage, then the owner-bound live evidence collector and private verdict issuance. Public Forterra and PDW sample receipts lack application authority. No production, Sheets, Jetson or GitHub operation occurred within the candidate tests.
+
+[Final independent acceptance](S5_LIVE_ISSUANCE_SLOT_SERIALIZED_INDEPENDENT_20261120.md) · [Previous independent rejection](S5_LIVE_ISSUANCE_SLOT_FINAL_REJECT_20261120.md) · [Live issuer dependency map](S5_LIVE_ISSUER_DEPENDENCY_PLAN_20261120.md).
