@@ -1,0 +1,24 @@
+{
+  "failure": {
+    "category": "pagination_regression",
+    "evidence": {
+      "advertised_total": 39,
+      "first_page_count": 25,
+      "first_page_ids_sha256": "6f7eca9ad1ac0a8b52027ff5d697b7a1abfc323bc6c9e112bcf4baf832b8a51f",
+      "page": 2,
+      "premature_elapsed_ms": 98,
+      "premature_page_ids_sha256": "6f7eca9ad1ac0a8b52027ff5d697b7a1abfc323bc6c9e112bcf4baf832b8a51f",
+      "refreshed_elapsed_ms": 347,
+      "refreshed_page_count": 14,
+      "refreshed_page_ids_sha256": "a0e0d5b28e34e8acf04aba4bf800d33f752b286d5441bfaae6f10a26601aec65"
+    },
+    "evidence_code": "acquiretm_updatepanel_premature_read",
+    "schema": "outcome-failure-v1"
+  },
+  "finished_at": "2026-11-21T05:30:26.102141+00:00",
+  "reason": "AcquireTM total changed or pagination repeated.",
+  "same_board": true,
+  "source": "https://amphenol-aerospace.acquiretm.com/home.aspx",
+  "started_at": "2026-11-21T05:30:22.455057+00:00",
+  "state": "partial"
+}

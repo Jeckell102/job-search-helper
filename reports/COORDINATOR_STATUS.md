@@ -45,43 +45,80 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 00:09 Eastern
+### Latest outcome, November 21 at 00:33 Eastern
 
 Coordinator and release owner, active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
 Freeform is independently accepted. Its ordinary next-manual-scrape route
-remains open. Sprint 5 one-company generation is active and has priority.
-Sprints 6–7 remain open. The next acceptance evidence is a Jetson-generated
+remains open. Sprint 5 one-company generation has priority. Sprints 6–7
+remain open. The next acceptance evidence is a Jetson-generated
 candidate in the existing isolated coordinator workspace, independently
 validated against the same genuine employer failure.
 
 Amphenol Aerospace `COMP-0490` returned 25 of 39 advertised postings and a
 genuine AcquireTM pagination repeat with the installed adapter. The native
 coordinator accepted fresh isolated pilot `WRAP-9b6f2e2274` at 00:08 Eastern
-and saved a current public source-read receipt. At 00:09 Eastern the first
-three Jetson inference receipts were `COMPLETED`; no draft yet. Root owns this pilot,
-monitoring, backup, and release decisions. Keep broad controls off and use
+and saved a current public source-read receipt. At 00:11 Eastern eight
+inference receipts were `COMPLETED`, and the coordinator stopped the worker
+in inspection without a source edit because reads repeated. The observed
+25-of-39 failure was in the durable operator objective but omitted from the
+structured worker prompt. Root owns the pilot, backup, and release decisions.
+Keep broad controls off and use
 exactly one Jetson lane. This manually selected generation pilot does not
 satisfy automatic trigger or end-to-end repair acceptance by itself.
 [Current failure and bounded launch](S5_AMPHENOL_FIRST_GENERATION_20261121.md).
+[First attempt failure report](S5_AMPHENOL_GENERATION_STALL_20261121.md).
+
+Guided test `WRAP-9f416bbfab` ran in the private source-only store
+`/tmp/jsh-s5-amphenol-guided.dev`. It uses the installed Python coordinator
+implementation, existing trusted guidance input, exact copied baseline,
+unchanged phase checks and the same one Jetson inference endpoint. The
+production failed task and its receipts are untouched, with that scheduler
+idle and all broad controls off. Guidance carried the recorded failure and
+source-range diagnosis without supplying code. At 00:23 Eastern it stopped
+at `PAUSED_BLOCKED` during implementation after 14 completed model calls.
+It produced two scoped edits and no candidate test receipt. Independent QA
+executed the browser predicate and reproduced `ReferenceError: page is not
+defined`. The added helper was uncalled. One exact QA-feedback session
+ended at 00:28 Eastern in `PAUSED_BUDGET` with 17 total completed model
+calls, no unsettled inference and both rejected file hashes unchanged.
+Keep this draft held. [QA failure and terminal result](S5_AMPHENOL_QA_FEEDBACK_TERMINAL_20261121.md).
+
+At 00:30 Eastern the independently accepted source diagnostic confirmed
+the same-click cause on the exact public board. The old 25 IDs were still
+visible at 98 ms, followed by 14 disjoint IDs at 347 ms with the same total
+of 39. This was a read-only isolated public listing test. No job data,
+Sheets, deployment, or inference changed. Use this evidence for the next
+approach. Reuse the prior Samtec method of a bounded Jetson choice and a
+reviewed MuleLab recipe rather than another free-form attempt. Keep the
+automatic path and all validation/retry acceptance gates open.
+[Public witness](S5_AMPHENOL_PUBLIC_PAGINATION_WITNESS_20261121.md).
 
 The promoted-repair isolation patch passed 84 author tests and three focused
 independent checks. Its accepted scope is `coordinator_store.py` and
 `test_outcome_intake.py`, source-only. `/root/s5_live_authority_plan` owns
-the read-only next automatic-trigger design sidecar.
-`/root/architecture_reuse_review` owns independent QA preparation, with no
-live employer request while this task is gathering its own data. No agent
-shares the Jetson edit workspace or holds deployment authority.
+the typed path from the existing ordinary event's no-publication preflight
+to owned settlement, in a separate source-only snapshot. The three-pin
+typed adapter stage passed 56 maintained tests and four independent source
+probes. `/root/architecture_publication_review` completed the typed-source
+QA. `/root/architecture_reuse_review` owns the independent recipe candidate
+review and has verified that the previous draft is still rejected. No agent
+holds the native edit workspace or deployment authority.
 [Promotion source evidence](S5_PROMOTED_REPAIR_ISOLATION_20261121.md).
+[Automatic trigger scope](S5_AMPHENOL_AUTOMATIC_LAUNCH_REVIEW_20261121.md).
+[Typed observation source handoff](S5_AMPHENOL_TYPED_PAGINATION_HANDOFF_20261121.md).
 
 Latest verified private GitHub backup
-`109989c6038d5d29df790d2e27af200b165edd95` on
+`7fb43965a5b7a1d7de79de13e038b986bfd767d8` on
 `backup/integration-automation-m1-operator-20261120`. No current user action
 or blocker for generation and verification. A later production deployment
 may need a fresh administrator check. The desktop application's scrolling
 terminal must stay open because its standard output and error attach to it.
-Next action is monitor inference receipts, then independently test the exact
-draft once generation settles. Give the requested 10-minute plain-text updates.
+Next action is to freeze a reviewed recipe and strict observed options,
+then invoke one bounded AI choice through the existing serialized Jetson
+interface. Independently execute the actual browser predicate offline before
+any employer scan. Continue the exact automatic outcome route in parallel.
+Give the requested 10-minute plain-text updates.
 
 ## Sprint 4 active after Samtec acceptance
 
