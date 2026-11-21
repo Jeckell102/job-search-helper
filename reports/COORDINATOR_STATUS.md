@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 01:02 Eastern
+### Latest outcome, November 21 at 01:13 Eastern
 
 Coordinator and release owner, active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
@@ -122,7 +122,7 @@ native edit or deployment authority.
 [Typed observation source handoff](S5_AMPHENOL_TYPED_PAGINATION_HANDOFF_20261121.md).
 
 Latest verified private GitHub backup
-`9de15165488c91963c0a35cf185edf18a18c357e` on
+`6e64efcf0cb850963c9aec9ec7872e45ca0b3cca` on
 `backup/integration-automation-m1-operator-20261120`. No current user action
 or blocker for generation and verification. A later production deployment
 may need a fresh administrator check. The desktop application's scrolling
@@ -150,14 +150,27 @@ same final reread. The independent report hash is `73f7b817…`, full private
 capture `4a112649…` under `/tmp/jsh-s5-amphenol-candidate-live.hrygHxP7`.
 Only `acquiretm.py` and `ats.py` differ in the 243-file application release
 tree compared to native. The candidate is validated and awaits qualified
-installation. The true automatic route remains pending. Owned settlement
-QA continues, and `/root/s5_live_authority_plan` owns a bounded
-receipt-to-choice composition. Root owns next exact release authority
-review. Do not substitute the bounded public evidence for a failed owned
-request, qualified receipt, or native post-install verification.
+installation. Independent QA accepted the source-only owned settlement
+with 89 maintained and three independent tests. Independent QA also
+accepted the default-off receipt-to-choice input slice from
+`/tmp/jsh-s5-amphenol-receipt-choice.aH9Skdfa`. The source stage only
+prepares input; the actual caller and release are separate gates.
+
+Root replayed the independently captured public pages in a separate
+application-owned fixture route at `/tmp/jsh-s5-amphenol-owned-replay`.
+It durably emitted exact outcome `OUT-cffecec610203a71e5c23b82`, one matched
+sender/receiver receipt, and accepted choice input `bb93a85d…`. No model
+call occurred in that preparation. `/root/s5_live_authority_plan` owns
+only the new private, explicit one-call harness and cannot launch it.
+Root owns the model launch and the staged disposable guarded release/queue
+rehearsal. Native Amphenol has no eligible event and the existing ordinary
+and retained source paths cannot supply a qualified failed request without
+new work. Do not mint production authority from any public or private
+fixture. Actual deployment and post-install verification remain open.
 Give the requested 10-minute plain-text updates.
 [Recipe choice and candidate build](S5_AMPHENOL_RECIPE_CHOICE_20261121.md).
 [Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md).
+[Controlled owned replay](S5_AMPHENOL_OWNED_REPLAY_20261121.md).
 
 ## Sprint 4 active after Samtec acceptance
 

@@ -31,6 +31,14 @@ The candidate source tree SHA is
 `24aa9e2d05398555bb738180d59eb075f118783aa3f9400cde361a48f4d9b5b3`.
 These source digests do not replace the complete qualified runtime vector.
 
+The evaluator's embedded task label is `WRAP-888acebf40`, inherited from
+the first recipe-choice probe that failed its response schema. The accepted
+model-choice task is `WRAP-545356ed48`. Its receipt `589442ef…` is bound in
+the candidate build receipt `94fabc0b…`, which produces the exact candidate
+source pinned in the live capture. The raw evaluator file and capture retain
+their original labels and hashes. Future receipt joins must use the accepted
+choice and build identities.
+
 This was an isolated public test of the selected candidate. The installed
 repair, authenticated event-to-generation, qualified release, fresh scoped
 retry, and synchronization checks remain open. Production and Google job
