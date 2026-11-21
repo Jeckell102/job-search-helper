@@ -1,0 +1,14 @@
+{
+  "attempt_id": "RTRY-94818009148713cd8859150f",
+  "company_id": "COMP-0490",
+  "cycle_id": "CYC-8F35E1D030EF",
+  "disposition": "DISPOSABLE_TEST_WORKBOOK_SYNC_CONFIRMED",
+  "fixture_sheet_jobs": 18,
+  "fixture_write_batches": 1,
+  "inventory_count": 39,
+  "local_jobs": 18,
+  "predecessor_preserved": true,
+  "provider_refetched": false,
+  "publication_receipt_count": 1,
+  "release_id": "REL-76cc6f8179568b839386f429"
+}

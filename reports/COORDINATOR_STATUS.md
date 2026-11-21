@@ -45,7 +45,41 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 01:36 Eastern
+### Latest outcome, November 21 at 01:47 Eastern
+
+Root is the coordinator and release owner. Active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
+Freeform pilot independently accepted, ordinary intake can wait until the
+next manual scrape. Sprint 5 active. Sprints 6–7 open.
+
+The combined retry and publication rehearsal passed. Guarded install
+`REL-76cc6f8179568b839386f429` passed 16 checks and queued exactly one fresh
+repair retry `RTRY-94818009148713cd8859150f`. The normal one-Company scan
+`CYC-8F35E1D030EF` replayed the frozen 39-posting Amphenol inventory without
+a provider fetch. The ordinary exact recovery filtered, saved, and published
+18 identical job keys through one in-memory workbook batch and issued one
+durable `SYNC_CONFIRMED` receipt for the actual request and release. The
+settled predecessor stayed identical. No production or Google write.
+[Coordinator pass and private evidence pins](S5_AMPHENOL_FIXTURE_WORKBOOK_PASS_20261121.md).
+
+`/root/s5_live_authority_plan` completed the deferred-checkpoint source
+patch and 180 composed offline tests. `/root/architecture_publication_review`
+owns its independent verdict. `/root/listener_ownership_qa` completed the
+receipt binding changes and 71 offline tests. `/root/architecture_reuse_review`
+owns independent receipt QA. Root owns the combined fixture check, backup
+and native release decision. Keep the prior failed fixture available.
+
+Next, independently reconcile the combined exact result and save its scoped
+GitHub backup. Determine the shortest supported route to genuine production
+failure ownership without manufacturing a Company edit, consuming old-cycle
+scope, or running the broad scraper. If none is available for Amphenol, use
+the first independently qualified real case with an existing application
+owner. Do not enable automatic release early. Current verified private
+backup is `e767683bd94b8acbb6bcd51a46c49d13c7719604` on
+`backup/integration-automation-m1-operator-20261120`. No user action needed
+at this checkpoint. Keep the 10-minute plain-text update cadence.
+
+### Earlier outcome, November 21 at 01:36 Eastern
 
 Coordinator and release owner, active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4

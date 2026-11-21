@@ -328,11 +328,16 @@ typed diagnostic source passed independent QA. The Jetson then made one
 valid evidence-backed choice. MuleLab generated the isolated candidate using
 the frozen recipe. Independent live-capture QA accepted both complete
 normal-dispatch runs with 39 jobs each, all descriptions and stable rereads.
-A separate source fixture exercised the existing ordinary event's qualified
-no-publication settlement and receipt replay. Authentic live automatic
-launch, qualified release, fresh retry and installed QA remain open.
+A separate fixture exercised the existing ordinary event's qualified
+failure settlement and one Jetson repair choice. The guarded fixture release
+then queued one fresh company-only retry. The pre-captured 39-posting
+inventory passed normal filtering and exact recovery, with 18 matching
+stored and workbook rows and one terminal receipt bound to the actual
+fixture release. Independent combined QA and genuine production ownership,
+release, retry, publication and installed QA remain open.
 [Public witness](S5_AMPHENOL_PUBLIC_PAGINATION_WITNESS_20261121.md) ·
-[Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md).
+[Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md) ·
+[Test-workbook result](S5_AMPHENOL_FIXTURE_WORKBOOK_PASS_20261121.md).
 
 The next bounded case is `COMP-0490` Amphenol Aerospace, exact AcquireTM
 board and independently observed delayed page-two membership. The approved
