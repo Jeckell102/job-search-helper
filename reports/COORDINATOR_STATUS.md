@@ -194,6 +194,36 @@ the exact two-file update if approved scope passes, and independent
 deployment readback before arming any fresh request. Do not repeat the
 now-complete source staging as a substitute for these gates.
 
+Latest verified private GitHub backup is `99479669774a430317bc929eca39775f47b409cd`.
+All 17 scoped source, test and report files matched the fetched copy. The
+observer was still absent at verification. This checkpoint advanced the
+manual intake source and the explicit acceptance and operator artifacts.
+[Backup verification](S4_NEXT_MANUAL_START_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 15:57 Eastern
+
+Root remains coordinator and release owner. Both Sprint 4 private worker
+assignments finished. A genuine fixture Company event waited behind an
+unfinished different Company cycle and the next bare Start settled only
+the new Company. The interruption case recovered the saved inventory with
+one provider fetch. Independent QA reproduced the missing request digest
+after a simulated lost workbook response and accepted the narrow output
+correction `bb1e010e…`. Recovery confirmed the original write with one
+provider fetch, no duplicate batch, and one local job and evidence row.
+Ten coordinator tests and nine isolated independent tests passed. This
+advances the staged route, with live acceptance still open.
+[Recovery evidence](S4_NEXT_MANUAL_START_RECOVERY_STAGE_20261121.md).
+
+The owner asked whether to start the observer. Root rechecked that the
+starter matched the accepted hash, the observer directory was absent,
+and confirmed the exact MuleLab Terminal command. The -05 observer socket
+was still absent at 15:57. Root owns the native read-only preflight on
+actual observer readiness, then the measured two-file update and
+independent native verification if preflight passes. The staged manual
+Start changes must stay separate from this update. Overall acceptance is
+about 40%. No production change, scrape or provider request occurred in
+this checkpoint.
+
 ## Earlier active checkpoint — fresh operator repair and provider hold
 
 ### November 21 at 14:28 Eastern

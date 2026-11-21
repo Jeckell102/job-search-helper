@@ -1,0 +1,27 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "99479669774a430317bc929eca39775f47b409cd",
+  "exact_file_count": 17,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "b4b864042fae6eb8ca429eff6cdca971c9f147a5e55cd91d0fb65a344523f76a",
+    "reports/INTEGRATION_AUTOMATION_OPERATOR_RUNBOOK.md": "4608596f54e9f420c6ed5fcf701960c3300b60533908bda3202267bd0739eceb",
+    "reports/S4_NEXT_MANUAL_START_CANDIDATE_INDEPENDENT_20261121.md": "bf1c5adff65d326593394abd8a4103945c3289f5e00cfa606a61f322ef60e9d2",
+    "reports/S4_NEXT_MANUAL_START_GAP_INDEPENDENT_20261121.md": "fdc60729be10f894612aa30943a47052dce897cc2f8347bdc14d8a393778c6a2",
+    "reports/S4_NEXT_MANUAL_START_ROUTING_GAP_20261121.md": "1a68e2f7eb0dc8915d5b21d564a303f056521b8fd670de2c01a50bc8edef7ad4",
+    "reports/S5_AMPHENOL_NATIVE_ARMER_BACKUP_VERIFIED_20261121.json": "5d042d2c6521c8cad91e49426abfc19934ce623f780a54188bbe948c6b5e98b3",
+    "reports/S7_EFFECTIVE_ACCEPTANCE_20261121.md": "f8bda67fd1e49ee572812c41d21dc9897ff4fb3667bef73bcc1d97ccf1681c1b",
+    "reports/sprint_roadmap.md": "531f6a4bcd4b7202e4e2eca73b041c3001ec8883bc8353897c080166ce62e4bd",
+    "tools/sprint4-next-manual-company-start/FINAL_RESULT.txt": "e8218877dd0688c8673fbd6454c442e25af7b26cb7b3dcc0ecf3faccf123a12b",
+    "tools/sprint4-next-manual-company-start/INDEPENDENT_FAILURE.txt": "5a5800fcbd9223d12756364afb6af4ed25f3e6c8c5c6dffb69c98628fb66333f",
+    "tools/sprint4-next-manual-company-start/release_admission_bootstrap.py": "9cafc1f6b283d77e769640134756df7e67d81702789ada5e5b2381f427cef152",
+    "tools/sprint4-next-manual-company-start/src/job_search_helper/manual_company_start.py": "8b9c0806968f40baa977d78fefe1f92899e1b7a558f2a74c0e8b02053e307b17",
+    "tools/sprint4-next-manual-company-start/src/job_search_helper/runner.py": "4abc4fd6d7713294e0029fb770c3a5ffd57968569386ffaffd44f468cfcf2dd0",
+    "tools/sprint4-next-manual-company-start/test_current_manual_start_gap.py": "414d199f141dece18a2d05bbd4586d98b5be9070ae6cef931a156c6cbe53dbe2",
+    "tools/sprint4-next-manual-company-start/test_independent_backend_drift.py": "c5dda7276f3a56d5be2f8a38ea799dbc1e0822a4f41da7226a32d3ba8c45e1d1",
+    "tools/sprint4-next-manual-company-start/test_manual_company_start.py": "7243e9e830deff0f0a053b45754abace72221813d09e0c322db0bfe89af8cbb8",
+    "tools/sprint4-next-manual-company-start/tests/test_release_admission_bootstrap.py": "e13e64b3d0ff287ab6bbc33e4c9fb28320cec89e10534fc3272a623fcfc6c7cf"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T15:49:55-05:00"
+}

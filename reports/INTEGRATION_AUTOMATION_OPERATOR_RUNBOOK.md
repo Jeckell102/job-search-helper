@@ -74,6 +74,16 @@ failure and installed version. A real publication failure is handled from
 the existing local receipts so the jobs need not be fetched again.
 Manual workbook decisions and Opportunities retain their own ownership.
 
+If an ordinary Company run stops after saving its inventory, the supported
+continuation is the existing `ordinary-company-event publish` command
+with the exact request digest and cycle ID. If the run was interrupted
+before printing those values, the coordinator reads them from the local
+receipts. A subsequent bare Start can report that the ordinary event
+owns the cycle. The staged manual-start route also prints those values
+when a workbook write response is uncertain. The coordinator checks the
+saved inventory before resuming publication and verifies the terminal
+receipt afterwards.
+
 ## Current release boundary
 
 The active Amphenol work is awaiting the administrator observer and a

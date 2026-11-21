@@ -1,13 +1,14 @@
 from contextlib import closing
 import fcntl
 import importlib.util
+import json
 import os
 from pathlib import Path
 import sys
 
 import pytest
 
-from job_search_helper import ats, cli, scrape_first_pass
+from job_search_helper import ats, cli, ordinary_company_event_command, scrape_first_pass
 from job_search_helper.company_events import CompanyEventBridge, _json_digest, read_verified_queued_event
 from job_search_helper.engine import State
 from job_search_helper.inbox import InventoryInbox
@@ -55,8 +56,10 @@ def manual(tmp_path, monkeypatch):
     with closing(SQLiteRepository(jobs, workbook, initialize=True)) as repository:
         repository.set_meta('ready', 'yes')
         repository.set_meta('sheets_profile', COMPACT_PROFILE)
+        repository.ensure_columns('Opportunities', ['Opportunity ID'])
 
-        def launch():
+        def launch(*arguments):
+            arguments = list(arguments or ('start',))
             returned = []
 
             def worker(_exe, _argv, environment):
@@ -64,14 +67,14 @@ def manual(tmp_path, monkeypatch):
                 duplicated = os.dup(original)
                 try:
                     monkeypatch.setenv('JSH_SCRAPER_ADMISSION_FD', str(duplicated))
-                    returned.append(runner.main(['start']))
+                    returned.append(runner.main(arguments))
                 finally:
                     if os.environ.get('JSH_SCRAPER_ADMISSION_FD') == str(duplicated):
                         os.close(duplicated)
                         monkeypatch.delenv('JSH_SCRAPER_ADMISSION_FD')
 
             monkeypatch.setattr(bootstrap.os, 'execve', worker)
-            bootstrap.admit_and_exec(tmp_path, ['start'])
+            bootstrap.admit_and_exec(tmp_path, arguments)
             [result] = returned
             return result
 
@@ -178,3 +181,97 @@ def test_manual_start_settles_one_verified_zero_through_existing_ordinary_path(m
     assert not (root / 'next-scan.json').exists()
     [outcome] = repository.scrape_outcomes(company_id=event['company_id'])
     assert outcome['outcome'] == 'COMPLETE' and outcome['action'] == 'save_without_repair'
+
+
+def test_interrupted_manual_start_continues_exact_frozen_cycle_without_refetch(manual, monkeypatch, capsys):
+    root, repository, launch = manual
+    event = add_company(repository, 1)
+    sheet = RangeSheets({'Companies': repository.read('Companies')}, schemas=COMPACT_SCHEMAS)
+    remote = GoogleRepository(sheet, repository.spreadsheet_id, schemas=COMPACT_SCHEMAS, min_request_interval=0)
+    fetches = []
+    frozen = []
+
+    def provider(_ats, _board, company_id, _name):
+        fetches.append(company_id)
+        return ats.Inventory('complete', source_url='https://boards-api.greenhouse.io/v1/boards/manual-fixture/jobs',
+                             ats='Greenhouse', verified_zero='greenhouse_explicit_total_zero')
+
+    def workbook(*, write, **kwargs):
+        assert write is False
+        return remote
+
+    def interrupt_before_publish(action, admission, **scope):
+        if action == 'publish':
+            raise KeyboardInterrupt
+        result = ordinary_company_event_command.execute_ordinary_event(action, admission, **scope)
+        assert result['state'] == 'INVENTORY_FROZEN'
+        frozen.append(result)
+        return result
+
+    monkeypatch.setattr(ats, 'fetch_inventory', provider)
+    monkeypatch.setattr(cli, 'get_remote_repository', workbook)
+    monkeypatch.setattr(scrape_first_pass, 'main', lambda *args: pytest.fail('entered broad scan'))
+    with monkeypatch.context() as interrupted:
+        interrupted.setattr(sys.modules['job_search_helper.manual_company_start'],
+                            'execute_ordinary_event', interrupt_before_publish)
+        assert launch() == 130
+    [saved] = frozen
+    assert not (root / 'next-scan.json').exists()
+    assert repository.scrape_outcomes(company_id=event['company_id']) == []
+
+    assert launch() == 1
+    assert 'requires its exact cycle' in capsys.readouterr().err
+
+    for _ in range(2):
+        assert launch('ordinary-company-event', 'publish', '--request-sha256', saved['request_sha256'],
+                      '--cycle-id', saved['cycle_id']) == 0
+        assert 'VERIFIED_ZERO' in capsys.readouterr().out
+    assert fetches == [event['company_id']]
+    assert sheet.batches == []
+    [outcome] = repository.scrape_outcomes(company_id=event['company_id'])
+    assert outcome['outcome'] == 'COMPLETE' and outcome['identity']['cycle_id'] == saved['cycle_id']
+
+
+def test_manual_start_recovers_lost_fixture_write_response_from_same_scope(manual, monkeypatch, capsys):
+    _, repository, launch = manual
+    event = add_company(repository, 1)
+    sheet = RangeSheets({'Companies': repository.read('Companies')}, schemas=COMPACT_SCHEMAS)
+    sheet.lose_response = True
+    remote = GoogleRepository(sheet, repository.spreadsheet_id, schemas=COMPACT_SCHEMAS, min_request_interval=0)
+    fetches = []
+    job = {'title': 'Implementation Manager', 'posting_id': 'manual-fixture-42',
+           'location': 'Remote, United States', 'url': 'https://boards.greenhouse.io/manual-fixture/jobs/42',
+           'description': 'Coordinate deployment and customer implementation. ' +
+                          'Work with customers on production rollout and testing. ' * 130,
+           'ats': 'Greenhouse'}
+
+    def provider(_ats, _board, company_id, _name):
+        fetches.append(company_id)
+        return ats.Inventory('complete', [job],
+            source_url='https://boards-api.greenhouse.io/v1/boards/manual-fixture/jobs', ats='Greenhouse')
+
+    def result(output):
+        marker = 'Ordinary Company event: '
+        [line] = [line for line in output.splitlines() if line.startswith(marker)]
+        return json.loads(line.removeprefix(marker))
+
+    monkeypatch.setattr(ats, 'fetch_inventory', provider)
+    monkeypatch.setattr(cli, 'get_remote_repository', lambda **kwargs: remote)
+    monkeypatch.setattr(scrape_first_pass, 'main', lambda *args: pytest.fail('entered broad scan'))
+    assert launch() == 1
+    held = result(capsys.readouterr().out)
+    assert held['state'] == 'PUBLICATION_HELD'
+    assert held['held'] == [{'company_id': event['company_id'], 'reason': 'uncertain_write'}]
+    assert held['request_sha256'] and held['cycle_id']
+    first_batches = list(sheet.batches)
+    assert first_batches
+
+    assert launch('ordinary-company-event', 'publish', '--request-sha256', held['request_sha256'],
+                  '--cycle-id', held['cycle_id']) == 0
+    confirmed = result(capsys.readouterr().out)
+    assert confirmed['state'] == 'SYNC_CONFIRMED'
+    assert confirmed['binding']['request_sha256'] == held['request_sha256']
+    assert sheet.batches == first_batches
+    assert fetches == [event['company_id']]
+    assert len(repository.read('Job History')) == 1
+    assert len(repository.read('Job Evidence')) == 1

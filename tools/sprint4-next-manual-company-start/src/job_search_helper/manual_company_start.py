@@ -56,4 +56,5 @@ def run_manual_company_start(admission):
     result = execute_ordinary_event('admit-fetch', admission, request_sha256=request_digest)
     if result['state'] != 'INVENTORY_FROZEN':
         return result
-    return execute_ordinary_event('publish', admission, request_sha256=request_digest, cycle_id=result['cycle_id'])
+    scope = {'request_sha256': request_digest, 'cycle_id': result['cycle_id']}
+    return {**scope, **execute_ordinary_event('publish', admission, **scope)}

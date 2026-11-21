@@ -295,6 +295,12 @@ the inherited scraper lease and existing exact Company-event operations.
 Seven checks passed, including real private verified-zero settlement.
 The authorized live routing gate remains open. [Source and evidence](S4_NEXT_MANUAL_START_ROUTING_GAP_20261121.md).
 
+November 21 at 15:57 Eastern: independent offline QA accepted the busy
+cycle and next manual run, interrupted freeze publication recovery, and
+lost workbook response recovery without a second fetch or write. The
+changed output identifies the preexisting exact request and cycle.
+[Recovery stage](S4_NEXT_MANUAL_START_RECOVERY_STAGE_20261121.md).
+
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 
 Roadmap coverage: Milestones 4 and 5, including F5.
