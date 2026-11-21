@@ -23,6 +23,15 @@ network-denial hook rejected address resolution and network connects.
 An already dispatched fixture reply was accounted for and could not apply
 an action. The tests used simulated disk usage and never filled a disk.
 
+A separate composed replay exercised the enrolled host with the original
+owned Amphenol fixture. A low-space tick cleared the queued pilot. A new
+host instance with healthy space retained the same paused task and declined
+catch-up without inference. An explicit fixture-only resume was then able
+to build the exact reviewed wrapper. It used one simulated reply across the
+later restart and zero actual model calls. The durable result is
+`DISPOSABLE_ENROLLED_DISK_HOLD_AND_RESTART_PASS` at
+`/tmp/jsh-s6-disk-pressure-pilot.20261121/enrolled-disk-hold-result.json`.
+
 | Source or test | SHA-256 |
 | --- | --- |
 | `coordinator_store.py` | `9f0a84a626fcf910f24233759ff940ff68db81c97b9b0e7096a3d4b0580ea835` |

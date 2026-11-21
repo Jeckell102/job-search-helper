@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 6 reliability while the Sprint 5 production pilot is held
 
-### Latest outcome, November 21 at 02:49 Eastern
+### Latest outcome, November 21 at 03:04 Eastern
 
 Root is coordinator and release owner for active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 are accepted, the
@@ -69,17 +69,43 @@ before workspace creation, and clears the disk hold without restarting
 work. The final focused run passed 79 tests.
 `/root/listener_ownership_qa` independently accepted the exact source,
 reproduced both baseline failures, and proved that a bound late reply
-is accounted once with zero candidate writes.
-`/root/architecture_publication_review` owns an isolated ordinary
-two-Company sequence from an external provider hold to a separate
-eligible Company's exact storage/publication. No application edits in
-that lane. Root owns verification and backup.
+is accounted once with zero candidate writes. Root's composed enrolled
+host replay additionally proved that after low disk space stops the
+selected task, healthy catch-up leaves it paused. A fixture-only manual
+resume produced the identical wrapper using one simulated and zero real
+model calls.
+`/root/architecture_publication_review` independently reached the
+first ordinary provider hold with both matching receipts and no
+repair task, preserving both of its fixture checkpoints. Root corrected
+the two fixture-only assumptions and finished the actual two-Company
+sequence on composed source in `/tmp/jsh-s6-sequential-composed.20261121`.
+The second event waited in the outbox while the first owned the lane.
+After the block settled as `RECORDED_NO_REPAIR`, the second event
+produced 18 matching local and test-workbook jobs and a single exact
+`SYNC_CONFIRMED` receipt. Both outcomes kept their original identity.
+Terminal replay opened neither provider nor workbook. Independent QA
+accepted the core sequence and initially rejected the estimate claim
+because the fixture used the wrong column name. Root corrected only the
+fixture and reproduced both events with explicit seed, intermediate and
+final comparisons. The exact corrected root is
+`/tmp/jsh-s6-sequential-composed-estimate.20261121`. Independent QA
+accepted the actual manual estimate readback in both stores. The original
+fixture and initial QA finding remain separate.
 [Disk-pressure pilot fix](S6_DISK_PRESSURE_PILOT_HOLD_20261121.md).
+[Sequential fixture result](S6_SEQUENTIAL_PROVIDER_HOLD_REHEARSAL_20261121.md).
 
-Next, back up the independent verdict and verify the sequential fixture. Do not
-start a native pilot while the authority is held. Keep broad backlog,
-automatic release and Jetson concurrency unchanged. User action is
-currently unnecessary.
+Current verified private backup `b7f2333422b5288fe5894a4f7c71d098d0f6462d`
+includes the disk-pressure fix and independent QA verified by remote
+commit and exact file comparison. Draper's official public careers page
+still points to the Workday tenant, but the configured board redirected the
+public reader to an outage page. It stays a proposed case with qualification
+on hold. Next, retain the verified staged evidence for the release and
+obtain current support for the remaining qualified structures. The next
+native pilot depends on legitimate owned scope or a separately cleared
+historical admission blocker. Keep broad backlog and automatic release
+disabled and retain a single Jetson lane. User action is currently
+unnecessary.
+[Draper source check](S6_DRAPER_SOURCE_PREFLIGHT_20261121.md).
 
 ## Sprint 5 first real generation
 

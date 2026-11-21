@@ -390,7 +390,16 @@ Current status: open. The maintained 103-test offline baseline and a
 follow-up 114-test composed run passed on the staged coordinator and
 exact owner reader. The final installed version and the sequential
 deployed pilot remain open.
+A separate 79-test staged fix and independent QA cover a low-disk hold
+of the selected pilot. The enrolled host replay also preserved the
+paused task after space recovered.
+The composed two-Company fixture proved that a provider hold is saved
+without a repair, and that the next eligible Company proceeds to exact
+local and workbook-fixture storage. Live sequential acceptance with
+three qualified completion structures remains open.
 [Reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
+[Disk pressure and pilot hold](S6_DISK_PRESSURE_PILOT_HOLD_20261121.md).
+[Provider hold and continued progress](S6_SEQUENTIAL_PROVIDER_HOLD_REHEARSAL_20261121.md).
 
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 

@@ -1,0 +1,17 @@
+{
+  "application_changes": 0,
+  "company_id": "COMP-7001",
+  "cycle_id": "CYC-686B97C65DD1",
+  "cycle_status": "Complete with exceptions",
+  "disposition": "FIRST_EVENT_VERIFIED_SECOND_EVENT_PENDING_ROOT_COPY",
+  "external_calls": 0,
+  "first_driver_preserved": true,
+  "inference_calls": 0,
+  "outcome": "BLOCKED",
+  "queued_scan_file_exists": false,
+  "repair_intake_rows": 0,
+  "repair_tasks": 0,
+  "second_company_publication_verified_here": false,
+  "sink_status": "RECORDED_NO_REPAIR",
+  "two_sided_receipt_identical": true
+}
