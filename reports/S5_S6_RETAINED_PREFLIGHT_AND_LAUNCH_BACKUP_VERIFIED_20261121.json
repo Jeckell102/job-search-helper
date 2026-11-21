@@ -1,0 +1,29 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "fetched_commit": "eb4b30b9cf53dead7fcb6e5c635d636c3bebdbed",
+  "local_commit": "eb4b30b9cf53dead7fcb6e5c635d636c3bebdbed",
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "125ae5c392773f58ac998b62d8a3f52a4c33bd57f37b443172e91e20fc0f359c",
+    "reports/S5_OWNED_HOST_RELEASE_BACKUP_VERIFIED_20261121.json": "24edb42711c183d774d5540216ae6acc98643cb05d77fb3b48dde14ad0b4137f",
+    "reports/S5_RETAINED_CYCLE_NATIVE_SNAPSHOT_20261121.json": "a5c7016a051312fe05e9a5ffc2f82e8215bb3d69bd0b9ef84faee867d98cb579",
+    "reports/S5_RETAINED_CYCLE_NATIVE_SNAPSHOT_20261121.md": "a15ccc05ac87bf9a34cb44a971ee75db3c66338c94d95c5aa25cd419f1c28d6b",
+    "reports/S5_RETAINED_NATIVE_PREFLIGHT_20261121.json": "77ffa70c2505626b13a7f315fbeda73e69ad611280e1ffd41a18daa658939669",
+    "reports/S5_RETAINED_RECOVERY_PREREQUISITES_20261121.md": "6d8748d30cc2cedfe47295fc69fd6153e9151f6c6d49c640ff28f4047e7ebbb4",
+    "reports/S5_RETAINED_SOURCE_TRANSITION_TRIAGE_20261121.md": "eebacc063022306f69085397a6ebe7cdbc90e531eebd4fa63ecfe23fe032f0a8",
+    "reports/S5_S6_DEPLOYMENT_SCOPE_AND_ACCEPTANCE_20261121.md": "64584fbd2b9df9f09e5b84208c3356a2595a123dced71d40f06cc661d8a84613",
+    "reports/S5_SARONIC_SOURCE_TRANSITION_INDEPENDENT_20261121.json": "67cdff89859f4b052d338cdd71d6eae9d79d2472eddf08468be58d67859c1e86",
+    "reports/S5_SARONIC_SOURCE_TRANSITION_INDEPENDENT_20261121.md": "49866e0ce4d4f360ab3a669a9206b11f394136c656578d065dbb6efa6b5112e1",
+    "reports/S6_INTAKE_SCRAPE_CONTROL_20261121.md": "5110361ed181a7bdbc3d8cc9e78514923e224c85cd0096c13495323ea0e3a429",
+    "reports/S6_INTAKE_SCRAPE_CONTROL_INDEPENDENT_QA_20261121.md": "8ba052afb7a24107af095e1ef0939192137a9a23eedc0a33ad4513816a08291f",
+    "reports/sprint_roadmap.md": "6f1450e750238f118b51326afd8c73fe61f52430b11932bf6fe9a863b16bd06c",
+    "tools/sprint5-retained-native-preflight/preflight.py": "cf8ee38fe4b7d449e713c58f439aa53393f63c756cb330b0039e801f00b3fb77",
+    "tools/sprint6-intake-scrape-control/qa/RESULT.json": "138929da7a8d448eb854afd77bcb5cea9aa33d07d97697218b4878245a4a8983",
+    "tools/sprint6-intake-scrape-control/qa/test_independent_launch_control.py": "6f55c4fd9add2e751056496264421ca15dbbf2799d4eaec5850902190a7cb132",
+    "tools/sprint6-intake-scrape-control/src/job_search_helper/company_intake_dispatcher.py": "4f7181b4f701fefbb05db3803c53cd1c148832a73cbf6fc415773f9de6f57f85",
+    "tools/sprint6-intake-scrape-control/src/job_search_helper/sync_cli.py": "5af96a0d8abe8496d52824c197e0245207df7ce6e949027f2c392a6bf2d13de2",
+    "tools/sprint6-intake-scrape-control/tests/test_ordinary_company_event_dispatch.py": "08d401d979c524f5db97807a96b67ce5614a88482ac573adf1e60b104d16da0c"
+  },
+  "verified_at": "2026-11-21T05:20:30-05:00",
+  "verified_scoped_files": 19
+}

@@ -1,0 +1,27 @@
+{
+  "absent_effect_paths": [
+    "integration-release-journal.json",
+    "integration-releases",
+    "next-scan.json",
+    "repair-retry",
+    "measured-child.jsonl",
+    "captured-fetch-once",
+    "workbook-open-once",
+    "workbook-after.private.json"
+  ],
+  "guard_error": "Unfinished scrape work keeps the current runtime on hold",
+  "host_result": "HELD_RECIPE_BOUNDARY",
+  "installed_source_sha256_preserved": "7774928a8b5b7486e5df4040d15e03c907413ae2387868d0a644d00f15518a9f",
+  "legacy_and_mirror_status": "In Progress",
+  "legacy_cycle": "CYC-DA7A00000001",
+  "measured_worker_count": 0,
+  "native_qualification": false,
+  "old_legacy_unrelated_and_archive_preserved": true,
+  "old_request_pointer_and_workbook_fixture_exact": true,
+  "owned_task": "WRAP-4da55d42ea",
+  "provider_or_workbook_calls": 0,
+  "real_preinstall_guard_calls": 1,
+  "release_id": "REL-8abc83fc428b45079c356eb2",
+  "result": "PASS_LEGACY_INSTALLATION_FENCE",
+  "three_app_stores_and_receiver_logically_identical": true
+}

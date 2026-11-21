@@ -66,6 +66,14 @@ source versions and establish an eligible disposition for saved work
 before any new shared runtime release.
 [Retained source transition](S5_RETAINED_SOURCE_TRANSITION_TRIAGE_20261121.md).
 
+Actual staged host and release-owner QA now confirms that the shared
+installation gate holds before source changes or worker launch when a
+legacy cycle remains unfinished. The host exposes that specific cause.
+A separate runtime design remains a planning option for a future disjoint
+case. Current native eligibility provides no such case or pending event.
+[Typed hold proof](S6_NATIVE_RELEASE_HOLD_REASON_INDEPENDENT_20261121.md)
+· [Pilot directions](S5_NATIVE_PILOT_DIRECTION_20261121.md).
+
 A separate disposable copy deliberately failed the installed verification
 after the qualified installer placed the scoped candidate. The nonterminal
 journal stopped the measured worker from loading it. No fresh retry,

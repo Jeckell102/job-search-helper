@@ -1,0 +1,29 @@
+{
+  "absent_effect_paths": [
+    "integration-release-journal.json",
+    "integration-releases",
+    "next-scan.json",
+    "repair-retry",
+    "measured-child.jsonl",
+    "captured-fetch-once",
+    "workbook-open-once",
+    "workbook-after.private.json"
+  ],
+  "exact_host_release_id": "REL-aac87beba2b22823392b60e2",
+  "guard_error": "Unfinished scrape work keeps the current runtime on hold",
+  "host_result": "HELD_UNFINISHED_SCRAPE",
+  "installed_source_sha256_preserved": "1b79c58a4f22883c3933aabce23e8813daf9f1474fcd934d531ed9fa520d6fbe",
+  "legacy_and_mirror_status": "In Progress",
+  "legacy_cycle": "CYC-DA7A00000001",
+  "measured_worker_count": 0,
+  "native_qualification": false,
+  "old_legacy_unrelated_and_archive_preserved": true,
+  "old_request_pointer_and_workbook_fixture_exact": true,
+  "operator_detail": "A saved unfinished scrape blocks installation into the shared runtime.",
+  "owned_task": "WRAP-32b12c4d99",
+  "provider_or_workbook_calls": 0,
+  "real_preinstall_guard_calls": 1,
+  "release_id": "REL-aac87beba2b22823392b60e2",
+  "result": "PASS_LEGACY_INSTALLATION_FENCE",
+  "three_app_stores_and_receiver_logically_identical": true
+}

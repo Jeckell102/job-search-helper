@@ -1,0 +1,239 @@
+{
+  "active_incomplete_named_completion_count": 3,
+  "active_incomplete_named_completions_outside_all_unfinished": [],
+  "active_named_case_count_outside_all_unfinished": 0,
+  "bridge_events": {
+    "latest_acknowledged_or_below_watermark": 1,
+    "latest_durable": {
+      "company.eligible": 1
+    },
+    "latest_eligible_pending": 0,
+    "latest_eligible_pending_outside_all_unfinished": 0,
+    "latest_exact_consumer_acknowledged": 1,
+    "latest_pending_by_kind": {}
+  },
+  "effective_unfinished_state_cycle_ids": [
+    "CYC-B639C6D864EC"
+  ],
+  "five_at_end_terminal_plans": [
+    {
+      "company_id": "COMP-0002",
+      "cursor": 1,
+      "inbox_blocked": true,
+      "inventory_status": "blocked",
+      "operation_count": 1,
+      "operation_tabs": {
+        "Companies": 1
+      },
+      "plan_format": "legacy_unversioned",
+      "publication_receipts_for_company": 0,
+      "state_stage": "blocked",
+      "terminal_support_disposition": "HELD_CONFIRMED_RECEIPT_MISSING"
+    },
+    {
+      "company_id": "COMP-0008",
+      "cursor": 1,
+      "inbox_blocked": true,
+      "inventory_status": "blocked",
+      "operation_count": 1,
+      "operation_tabs": {
+        "Companies": 1
+      },
+      "plan_format": "legacy_unversioned",
+      "publication_receipts_for_company": 0,
+      "state_stage": "blocked",
+      "terminal_support_disposition": "HELD_CONFIRMED_RECEIPT_MISSING"
+    },
+    {
+      "company_id": "COMP-0016",
+      "cursor": 1,
+      "inbox_blocked": true,
+      "inventory_status": "blocked",
+      "operation_count": 1,
+      "operation_tabs": {
+        "Companies": 1
+      },
+      "plan_format": "legacy_unversioned",
+      "publication_receipts_for_company": 0,
+      "state_stage": "blocked",
+      "terminal_support_disposition": "HELD_CONFIRMED_RECEIPT_MISSING"
+    },
+    {
+      "company_id": "COMP-0040",
+      "cursor": 1,
+      "inbox_blocked": true,
+      "inventory_status": "unsupported",
+      "operation_count": 1,
+      "operation_tabs": {
+        "Companies": 1
+      },
+      "plan_format": "legacy_unversioned",
+      "publication_receipts_for_company": 0,
+      "state_stage": "unsupported",
+      "terminal_support_disposition": "HELD_CONFIRMED_RECEIPT_MISSING"
+    },
+    {
+      "company_id": "COMP-0045",
+      "cursor": 1,
+      "inbox_blocked": true,
+      "inventory_status": "unsupported",
+      "operation_count": 1,
+      "operation_tabs": {
+        "Companies": 1
+      },
+      "plan_format": "legacy_unversioned",
+      "publication_receipts_for_company": 0,
+      "state_stage": "unsupported",
+      "terminal_support_disposition": "HELD_CONFIRMED_RECEIPT_MISSING"
+    }
+  ],
+  "jobs_mirror_statuses": [
+    "In Progress"
+  ],
+  "named_cases": [
+    {
+      "active_named_case": true,
+      "company_id": "COMP-0066",
+      "company_statuses": [
+        "Active"
+      ],
+      "has_configured_source": true,
+      "protected_cycle_stage": "queued",
+      "raw_unfinished_membership_count": 19,
+      "raw_unfinished_stage_counts": {
+        "complete": 11,
+        "partial": 1,
+        "queued": 7
+      },
+      "role": "completion_forterra",
+      "unique_company": true
+    },
+    {
+      "active_named_case": true,
+      "company_id": "COMP-0164",
+      "company_statuses": [
+        "Active"
+      ],
+      "has_configured_source": true,
+      "protected_cycle_stage": "queued",
+      "raw_unfinished_membership_count": 19,
+      "raw_unfinished_stage_counts": {
+        "complete": 4,
+        "inventory": 1,
+        "partial": 6,
+        "queued": 8
+      },
+      "role": "completion_allen",
+      "unique_company": true
+    },
+    {
+      "active_named_case": true,
+      "company_id": "COMP-0490",
+      "company_statuses": [
+        "Active"
+      ],
+      "has_configured_source": true,
+      "protected_cycle_stage": "queued",
+      "raw_unfinished_membership_count": 19,
+      "raw_unfinished_stage_counts": {
+        "blocked": 2,
+        "partial": 8,
+        "queued": 9
+      },
+      "role": "completion_amphenol",
+      "unique_company": true
+    },
+    {
+      "active_named_case": true,
+      "company_id": "COMP-0072",
+      "company_statuses": [
+        "Active"
+      ],
+      "has_configured_source": true,
+      "protected_cycle_stage": "queued",
+      "raw_unfinished_membership_count": 19,
+      "raw_unfinished_stage_counts": {
+        "partial": 9,
+        "queued": 10
+      },
+      "role": "hold_ga_asi",
+      "unique_company": true
+    },
+    {
+      "active_named_case": true,
+      "company_id": "COMP-0178",
+      "company_statuses": [
+        "Active"
+      ],
+      "has_configured_source": true,
+      "protected_cycle_stage": "queued",
+      "raw_unfinished_membership_count": 19,
+      "raw_unfinished_stage_counts": {
+        "complete": 9,
+        "failed": 1,
+        "partial": 1,
+        "queued": 8
+      },
+      "role": "regression_pdw",
+      "unique_company": true
+    },
+    {
+      "active_named_case": true,
+      "company_id": "COMP-0110",
+      "company_statuses": [
+        "Active"
+      ],
+      "has_configured_source": true,
+      "protected_cycle_stage": "queued",
+      "raw_unfinished_membership_count": 19,
+      "raw_unfinished_stage_counts": {
+        "complete": 4,
+        "inventory": 1,
+        "partial": 6,
+        "queued": 8
+      },
+      "role": "hold_gotenna",
+      "unique_company": true
+    },
+    {
+      "active_named_case": true,
+      "company_id": "COMP-0024",
+      "company_statuses": [
+        "Active"
+      ],
+      "has_configured_source": true,
+      "protected_cycle_stage": "partial",
+      "raw_unfinished_membership_count": 19,
+      "raw_unfinished_stage_counts": {
+        "complete": 12,
+        "partial": 2,
+        "queued": 5
+      },
+      "role": "proposed_held_draper",
+      "unique_company": true
+    },
+    {
+      "active_named_case": true,
+      "company_id": "COMP-0739",
+      "company_statuses": [
+        "Active"
+      ],
+      "has_configured_source": true,
+      "protected_cycle_stage": "queued",
+      "raw_unfinished_membership_count": 1,
+      "raw_unfinished_stage_counts": {
+        "queued": 1
+      },
+      "role": "known_good_samtec",
+      "unique_company": true
+    }
+  ],
+  "observed_at": "2026-11-21T10:23:49.251551+00:00",
+  "protected_cycle_id": "CYC-B639C6D864EC",
+  "qualified_terminal_plans_of_five": 0,
+  "raw_unfinished_cycles": 19,
+  "raw_unfinished_membership_union_size": 801,
+  "stable_main_and_journal_identity": true,
+  "state_status": "In Progress",
+  "usable_owned_event_origins": 0
+}

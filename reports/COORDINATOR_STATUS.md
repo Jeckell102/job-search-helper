@@ -43,6 +43,51 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Native pilot direction and exact release hold
+
+### Latest checkpoint, November 21 at 05:29 Eastern
+
+Root remains coordinator and release owner for goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the Sprint 4
+Freeform pilot remain accepted. The one-company Amphenol wrapper loop has
+independent staged QA. Native Sprint 5 and deployed Sprints 6–7 remain
+open. About 40% of the project is accepted. Keep one Jetson lane and broad
+backlog and unqualified releases off.
+
+`/root/listener_ownership_qa` proved the actual staged host and guarded
+installer refuse before effects when an unrelated legacy cycle is still
+In Progress in State and its Jobs mirror. Root exposed the same exact
+guard as `HELD_UNFINISHED_SCRAPE` with a plain-language reason and release
+identity. Independent QA accepted the updated source and verified the
+saved old cycle, source, queue, publication and receiver effects matched
+their no-effect baselines. The combined release, host and intake suites
+passed 71 tests. This is staged only.
+[Deployment fence](S5_LEGACY_INSTALL_FENCE_INDEPENDENT_QA_20261121.md)
+· [Exact operator hold QA](S6_NATIVE_RELEASE_HOLD_REASON_INDEPENDENT_20261121.md).
+
+`/root/s5_live_authority_plan` verified zero pending eligible Company
+events across the native outbox. All three named cases are inside all 19
+raw unfinished scopes. The five at-end blocked or unsupported plans have
+zero exact receipts and cannot qualify for the installed terminal gate.
+[Native eligible-origin audit](S5_NATIVE_DISJOINT_ORIGIN_AUDIT_20261121.md).
+
+`/root/architecture_publication_review` found the bounded attempt-version
+design feasible with an explicit per-attempt release authority. It needs
+a real disjoint owned origin, the same canonical application locks and
+stores, and exact admission/publication checks. It cannot admit any current
+named case and is outside the existing live path. Root asked the user
+which direction to prepare. The scope choices themselves authorize no
+data changes. Keep the frozen cases and old work protected pending that
+direction. All QA lanes finished. Root owns the restart and backup.
+[Native pilot directions](S5_NATIVE_PILOT_DIRECTION_20261121.md)
+· [Bounded version design](S5_DISJOINT_VERSIONED_WORKER_DESIGN_20261121.md).
+
+Next act on the scoped planning choice and revalidate actual eligibility.
+No native data, source, service, workbook, queues or Jetson changes in
+this checkpoint. There is no live ETA. Prior verified private backup
+`eb4b30b9cf53dead7fcb6e5c635d636c3bebdbed`.
+[Prior verification](S5_S6_RETAINED_PREFLIGHT_AND_LAUNCH_BACKUP_VERIFIED_20261121.json).
+
 ## Retained source transition and Sprint 6 launch control
 
 ### Latest checkpoint, November 21 at 05:19 Eastern
@@ -83,9 +128,10 @@ focused and adjacent checks passed. The control remains staged.
 
 All three assigned lanes completed. Root owns scope, reconciliation and
 backup. No production configuration or data, locks, services, Google or
-Jetson changes. No live ETA. Prior verified private backup
-`5b2cf0f7b794c3e05304dcce622fc8a19d003d4a`.
-[Prior verification](S5_OWNED_HOST_RELEASE_BACKUP_VERIFIED_20261121.json).
+Jetson changes. No live ETA. Private backup
+`eb4b30b9cf53dead7fcb6e5c635d636c3bebdbed` was fetched back and all 19
+scoped files matched.
+[Backup verification](S5_S6_RETAINED_PREFLIGHT_AND_LAUNCH_BACKUP_VERIFIED_20261121.json).
 
 ## Sprint 5 approved candidate to installer
 

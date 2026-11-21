@@ -382,6 +382,14 @@ on that transition and does not supply terminal recovery. Leave the
 intentional retained cycle protected until a separate reviewed disposition
 can meet the actual recovery and publication gates.
 [Exact retained-work triage](S5_RETAINED_SOURCE_TRANSITION_TRIAGE_20261121.md).
+The actual corrected staged host reached the real installer and refused an
+unfinished legacy cycle before launch or any release, queue, workbook or
+source effect. Its release status now explains this hold. An independently
+reviewed versioned-worker design could preserve the old runtime for a
+genuine disjoint Company later. The native audit found no pending event and
+all current named cases overlap. The user was asked which scope to prepare.
+[Native pilot directions](S5_NATIVE_PILOT_DIRECTION_20261121.md)
+· [Exact operator hold QA](S6_NATIVE_RELEASE_HOLD_REASON_INDEPENDENT_20261121.md).
 The staged Python host now has a default-off route from its completed
 owned recipe build and exact independent approval to the guarded installer.
 The focused callback coverage passed. The separately checked installed
