@@ -524,6 +524,16 @@ and one stored coordinator completion, with replay unchanged. Live
 Amphenol qualification and the actual maintenance-bound first run
 remain required. [One-shot QA](S5_AMPHENOL_OPERATOR_ONE_SHOT_INDEPENDENT_QA_20261121.md).
 
+The bounded maintenance wrapper reused the existing Systemd condition
+and restoration logic in a private end-to-end fixture. Independent QA
+verified one fixture job/receipt and two restored service windows.
+Wrong application configuration is rejected before service changes;
+failed restoration proof reapplies the fence. The six-file planned
+tool source scope has exact before/after measurements. Fresh actual
+native admission and complete Amphenol public details remain open.
+[Quiet window QA](S5_AMPHENOL_OPERATOR_QUIET_WINDOW_INDEPENDENT_QA_20261121.md)
+· [Staged source scope](S5_AMPHENOL_OPERATOR_NATIVE_SOURCE_SCOPE_HELD_20261121.json).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.
@@ -620,6 +630,13 @@ regression. Prior runs do not contribute deployed sequential completion.
 [Planned shutdown QA](S6_OWNED_CHOICE_SHUTDOWN_QA_20261121.md).
 [Budget restart QA](S6_OWNED_REPAIR_BUDGET_RESTART_QA_20261121.md).
 [Current Draper source hold](S6_DRAPER_CURRENT_AVAILABILITY_HOLD_20261121.md).
+
+The next supported separate live named case still requires a real
+eligible Company event and exact ordinary fetch/publish. The installed
+observation was empty. No tested isolation route exists for normal
+generic queue/start without an event. The first-company compact
+bootstrap is restricted to absent rows and cannot safely update Allen.
+[Current named origin review](S6_NEXT_GENUINE_NAMED_ORIGIN_REVIEW_20261121.md).
 
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 

@@ -1,0 +1,28 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "e76fee1127e32025740c8b8db464f85227bafe09",
+  "files": {
+    "reports/COORDINATOR_STATUS.md": "62416473f71a848d626a796df4855a1334e9cae577de4d9d26146f35cff6f0e1",
+    "reports/S5_AMPHENOL_FRESH_WINDOW_RECOVERY_BACKUP_VERIFIED_20261121.json": "9d02d630327bfb8a20972af31e4c7847066bd401b042cd98768e1212a457e106",
+    "reports/S5_AMPHENOL_OPERATOR_FIRST_ACTIVATION_DISPOSABLE_20261121.json": "ae1dbb4c8e9d27363aece045d45d84779e09ce215a36a1140fc08b7cfd1c8058",
+    "reports/S5_AMPHENOL_OPERATOR_ONE_SHOT_INDEPENDENT_QA_20261121.md": "b42b48f87a739c142ce3e4c924ea743e9e95ebd8f5189399ac36a172b9adc509",
+    "reports/S5_AMPHENOL_OPERATOR_ONE_SHOT_INITIAL_QA_20261121.md": "43c95410908ee5558bf4719b52dcbf0c45e36db2c30a434f417fa53da2a99616",
+    "reports/S5_AMPHENOL_OPERATOR_ONE_SHOT_RECOVERY_DISPOSABLE_20261121.json": "4ab34f7c38a16f43467191bba835d80bb84cb94982c44b17d5c673b4c6f42ec8",
+    "reports/S6_INSTALLED_OBSERVE_ONLY_INDEPENDENT_20261121.md": "86c4c726d8fc82e510fc579bc7604e573ea81d6740c3621b63492a9f54bbc80b",
+    "reports/S6_INSTALLED_OBSERVE_ONLY_RESULT_20261121.json": "2b0b38033eee75068705b3329436a559cccb4a2bdce457b575fe59572a999f6c",
+    "reports/sprint_roadmap.md": "1a98f181ee63efb8f77658161bb9d181a7a3caf9a000036683e6e05a2a9bb70d",
+    "tools/sprint5-amphenol-operator-one-shot/amphenol_operator_one_shot.py": "8af5c70848baec3b8da53df209ff260aaeff3940b4d48c4c3a4552440e5432c6",
+    "tools/sprint5-amphenol-operator-one-shot/canary/first/offline_child.py": "0f52700d377cf75780bf713f31baad945c6f2eec7eb4ae381babed7435939db3",
+    "tools/sprint5-amphenol-operator-one-shot/canary/first/prove_first_activation.py": "c221c1ec04321fd4bff5af153512fb163e80220814ea4ab99f7af7da66834fa3",
+    "tools/sprint5-amphenol-operator-one-shot/canary/recovery/offline_child.py": "6c642b56ab72e8e96920ecffa35d1c56a88b4679f6afe43aa7a4a6514dbb9be7",
+    "tools/sprint5-amphenol-operator-one-shot/canary/recovery/prove_one_shot.py": "5b5eb4d8a461a138660201e23402c583fa40f9b6bbd5687944e6f999e34012f4",
+    "tools/sprint5-amphenol-operator-one-shot/coordinator.py": "db41607834c42a90f742d048c3df5a9e68ac8c9f75deb1414cc4d554c0d9caec",
+    "tools/sprint5-amphenol-operator-one-shot/coordinator_store.py": "4b09a063fd657be2f4febaddaa23f2d283987e18604f6a8d20d97b0910d423b2",
+    "tools/sprint5-amphenol-operator-one-shot/tests/test_existing_store.py": "e10ee4ea4c1e175b09353baaa7855da7ad38bd7a300d001d0c4a988c6dfd8522",
+    "tools/sprint5-amphenol-operator-one-shot/tests/test_one_shot_independent.py": "36ae8d08c4453ea3170089f7db03f1ff23b4dad8dc02ab218b5af324dfff0cf1",
+    "tools/sprint6-intake-observe/installed-qa/guard/sitecustomize.py": "acbadf914d1830b3f8d7e63ca226dd562ff8d63b3431b62c841cd69046ff26df",
+    "tools/sprint6-intake-observe/installed-qa/verify_installed_observe.py": "0b34f7198ed6cad2b561c15c59762a5182ed8f084f344ed5bc59bd59d22842d3"
+  },
+  "repository": "Jeckell102/job-search-helper",
+  "verified_at": "2026-11-21T13:44:23-05:00"
+}

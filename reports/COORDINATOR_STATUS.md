@@ -43,6 +43,108 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## PAUSED_NOT_COMPLETE — higher-reasoning decision handoff
+
+### November 21 at 14:00 Eastern
+
+The owner paused goal `01a1f11f-e014-7493-8441-2f66502e23a9` and
+authorized only checkpoint completion and a saved higher-reasoning
+handoff. Goal status readback confirmed `paused`. Root is coordinator
+and release owner. Overall roadmap acceptance is approximately 40%.
+The original six milestones and final deployed acceptance remain in
+scope when the owner resumes. No live execution is active.
+
+The corrected quiet-window helper and end-to-end disposable result
+passed independent QA. Both simulated host windows restored, and the
+same scoped retry produced one fixture job and one confirmed receipt.
+The actual source-only package has six verified coordinator-measured
+tool files and one separate held application wrapper proposal. The
+independent package verification lane was interrupted for this pause;
+it has no final verdict. `/root/listener_ownership_qa` completed the
+quiet-window QA, `/root/adapter_dependency_reconcile` completed its
+separate prior fixture, and `/root/architecture_publication_review`
+is stopped. No worker is assigned continuing work during the pause.
+
+The Amphenol production release is held on public full-detail coverage.
+The last separate bounded window confirmed the initial 39 postings and
+observed zero details. No more requests in that window. Native writer
+exclusion, live independently qualified approval and production
+release-to-receipt acceptance remain open. Keep broad queue,
+unqualified release and scheduled sync disabled. One Jetson lane.
+Sprint 6 installed observe-only passed; no eligible current named
+Company event was observed. No administrator terminal or spreadsheet
+action is required now.
+
+Next decision belongs to the read-only higher-reasoning review:
+choose the shortest valid live proof, decide how to handle Amphenol's
+provider hold or use a genuinely eligible supported case, and identify
+the minimal maintenance/release path. Start with
+[the saved handoff](S5_S6_NEXT_DECISION_REVIEW_20261121.md).
+Keep this goal paused until the owner's explicit resume.
+
+## Guarded maintenance window joined to the one-shot in a test copy
+
+### November 21 at 13:55 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Prior goal turn delivered the
+independently verified one-shot, installed observe-only pilot result,
+and 20-file GitHub backup. Sprint 5 stays first. Overall acceptance
+remains approximately 40%.
+
+The existing -03 Controller's exact terminal check is historical:
+-04 changed its scoped host source, and -03's outer application leases
+would prevent the current measured retry from acquiring its own leases.
+The new private window reuses the proven actual Systemd restart fence,
+durable file writer and unit restoration on a distinct fresh scope.
+The fresh external maintenance admission still needs to own the host
+writer exclusion, without holding scraper/writer locks across the
+measured worker. Existing scheduler/supervision flocks remain held by
+the accepted one-shot through terminal verification.
+[Mechanism review](S5_AMPHENOL_OPERATOR_MAINTENANCE_SPAN_REVIEW_20261121.md).
+
+Root staged `amphenol_operator_quiet_window.py` `8b124170…`.
+It requires SQLite and the exact configured State/Jobs paths, durably
+saves the prior services before beginning the fence, and uses separate
+restoration with the original scope after interruption. An unsettled
+application release retains the fence. After a failed restart proof it
+reapplies the exact fence under admission. Root's seven maintained
+offline tests passed. In the integrated disposable canary the actual
+Systemd methods under a simulated command backend joined first release,
+fresh measured worker, one fixture publication and terminal receipt.
+It restored both first/replay maintenance windows, preserved the
+original task/choice and unrelated rows, and made one fixture fetch and
+one workbook batch. Outer process/alternate-route authority and
+provider qualification were explicit fixtures. [Integrated result](S5_AMPHENOL_OPERATOR_QUIET_WINDOW_DISPOSABLE_20261121.json).
+
+`/root/listener_ownership_qa` reproduced a restart proof initially
+leaving an active unfenced wrapper and a wrong backend/Jobs path
+stopping services. Root fixed both. Independent QA accepted all 12
+corrected checks and the exact integrated canary. Immutable readback
+confirmed both RESTORED journals, two exact receipt pairs, one
+VALIDATED_COMPLETE and one SYNC_CONFIRMED fixture publication.
+[Independent window QA](S5_AMPHENOL_OPERATOR_QUIET_WINDOW_INDEPENDENT_QA_20261121.md).
+`/root/architecture_publication_review` independently found that the
+next non-Amphenol sequential live action needs a genuine present
+Company event before the existing exact fetch and publish calls.
+No qualifying current event was observed. A compact raw Allen row
+cannot be installed via the first-company bootstrap helper.
+[Origin review](S6_NEXT_GENUINE_NAMED_ORIGIN_REVIEW_20261121.md).
+
+Root owns backups, package verification and live deployment decisions.
+Latest verified backup `e76fee1127e32025740c8b8db464f85227bafe09`.
+Root assembled the six exact tool files in a private source-only
+scope using readbacks of current native before-images. The separate
+one-path proposed application source vector remains exact.
+[Staged native source scope](S5_AMPHENOL_OPERATOR_NATIVE_SOURCE_SCOPE_HELD_20261121.json).
+Independent source-scope recheck assigned to
+`/root/architecture_publication_review`. Fresh actual host authority,
+provider qualification and guarded deployment remain open. Latest
+public provider window remains terminal HOLD.
+All new action above used source copies and test state. Keep the
+native queue, sync and unqualified release controls off. One Jetson
+lane. No user action needed for staged work.
+
 ## One-shot first activation and recovery accepted in a test copy
 
 ### November 21 at 13:42 Eastern
@@ -99,7 +201,8 @@ the final one-shot and both saved canaries.
 activation. `/root/adapter_dependency_reconcile` preserved a separate
 held fixture with an incompatible scope. No shared edits or native
 mutations are assigned. Latest verified backup
-`07eaf5bada4d2260699733463f7c635d8fead60c`.
+`e76fee1127e32025740c8b8db464f85227bafe09`; all 20 changed files matched.
+[Backup readback](S5_S6_OPERATOR_ONE_SHOT_OBSERVE_BACKUP_VERIFIED_20261121.json).
 Next bind the staged one-shot to the actual maintenance controller's
 bounded quiet window under exact host and live release approval.
 The latest public candidate check is still terminal HOLD at zero

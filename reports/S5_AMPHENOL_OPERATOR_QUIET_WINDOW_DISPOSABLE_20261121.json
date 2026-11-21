@@ -1,0 +1,30 @@
+{
+  "activation_receipt_and_file_identity_unchanged": true,
+  "attempt_id": "RTRY-78bf3e1d71957ee683b6b29e",
+  "company_event_route_used": false,
+  "coordinator_lifecycle": "VALIDATED_COMPLETE",
+  "cycle_id": "CYC-21015FD97388",
+  "duplicate_effects_on_replay": false,
+  "failed_request_id": "operator-amphenol-disposable-qualification-proof",
+  "fixture_batches": 1,
+  "host_completion_exercised": true,
+  "jobs": 1,
+  "matching_receipts": 2,
+  "measured_workers": 2,
+  "native_qualification": false,
+  "origin": "real_synthetic_operator_request",
+  "original_cycle_unchanged": true,
+  "outcome_id": "OUT-b783a2e6deeba8df4f3272fa",
+  "provider_fixture_calls": 1,
+  "release_id": "REL-65befecee443c282df68c65c",
+  "restored_windows": 2,
+  "result": "PASS_DISPOSABLE_BOUND_QUIET_WINDOW",
+  "source_pins": {
+    "job-search-scraper": "8fb9939560f004a213ca94724cdada7734996072c31194679017fea492841f72",
+    "release_admission_bootstrap.py": "1258ac47b647d61361fa84ccdda14816a184e6c15cd4c6e7c78e6b27cd228d45",
+    "src/job_search_helper/qualified_release_owner.py": "5cf4e70829ad40d797dde4779cb6a1f0a75953f303ed330c0610ee7f0e5b23e6",
+    "src/job_search_helper/runner.py": "de3c0f5045e1ad07d0b1e2e8b1da8b8dbce2acd3767182ddf9d1c7dbbaefb87b"
+  },
+  "unrelated_rows_unchanged": true,
+  "workbook_fixture_calls": 1
+}

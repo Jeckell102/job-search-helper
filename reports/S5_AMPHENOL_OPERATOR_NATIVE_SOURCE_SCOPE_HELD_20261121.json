@@ -1,0 +1,99 @@
+{
+  "alternate_process_and_current_native_authority_enrolled": false,
+  "application_before_source_manifest_sha256": "aae173eaf94a553d51cd280a5e9ba7915bffdb7244f3b5a5ab8b9cfa87922813",
+  "application_proposal_paths": [
+    "src/job_search_helper/acquiretm.py"
+  ],
+  "application_proposed_source_manifest_sha256": "7269a0b5f2cb593f5a5b44b70d62b58646d7a902a7e2b81969d7031e57fc98f4",
+  "assembled_at": "2026-11-21T13:56:20-05:00",
+  "current_host_server_reference": {
+    "mode": "0600",
+    "sha256": "5abe835b6b550f3bb81a7c787e97382910ce1d882687521c60e3e8ec630a37ad",
+    "size": 37833
+  },
+  "existing_maintenance_source_refs": {
+    "controller.py": {
+      "mode": "0664",
+      "sha256": "f63f9399f3fcdec3d3b46a6d5e14fc3d1d78e420234b357b0adf44bd68a53ff8",
+      "size": 68543
+    },
+    "gate.py": {
+      "mode": "0664",
+      "sha256": "7df4121796ce400461be9b4329984bc6f1ced83858588d3a63d4e5258d286537",
+      "size": 5145
+    },
+    "installer.py": {
+      "mode": "0664",
+      "sha256": "d85405266310a425bcc49027b5629cfb81dcc89f391cfbf75df33da7ac2a0920",
+      "size": 32611
+    }
+  },
+  "frozen_application_proposal_sha256": "fe5b0654bfe17f349d73162588a50e489d43427f5cbe55f7755dfe25b7bc8350",
+  "live_qualification_receipt_provisioned": false,
+  "private_source_directory": "/tmp/jsh-amphenol-native-source-scope.r0nuir0k",
+  "release_id": "REL-af662a11bf656819d418120a",
+  "source_installed": false,
+  "staged_tool_paths": {
+    "dev/wrapper-coder/tools/amphenol_operator_one_shot.py": {
+      "observed_before": null,
+      "staged_after": {
+        "mode": "0644",
+        "sha256": "8af5c70848baec3b8da53df209ff260aaeff3940b4d48c4c3a4552440e5432c6",
+        "size": 7320
+      }
+    },
+    "dev/wrapper-coder/tools/amphenol_operator_quiet_window.py": {
+      "observed_before": null,
+      "staged_after": {
+        "mode": "0644",
+        "sha256": "8b124170b12897dcc37a82d6a5af5ed38538fee22d9194ddf4146c2565a2fdc4",
+        "size": 5761
+      }
+    },
+    "dev/wrapper-coder/tools/amphenol_operator_retained_release.py": {
+      "observed_before": null,
+      "staged_after": {
+        "mode": "0644",
+        "sha256": "df7e0aabcc961342aa18fed318ee957c6f679342a938d22dd4e8e51570e403b4",
+        "size": 15133
+      }
+    },
+    "dev/wrapper-coder/tools/amphenol_retry_completion.py": {
+      "observed_before": {
+        "mode": "0664",
+        "sha256": "c7ca5f021989a5f552482be2f3eb3d40a3da428c733f49b6f8a601c05945f6ef",
+        "size": 10583
+      },
+      "staged_after": {
+        "mode": "0644",
+        "sha256": "1b598db426c24611adc5303a71c4f9d21fe4ddc5e2560459be7a78d1989abf67",
+        "size": 14547
+      }
+    },
+    "dev/wrapper-coder/tools/coordinator.py": {
+      "observed_before": {
+        "mode": "0664",
+        "sha256": "dcf6f14ea4ff15e6c221ff3f46c29523419d931dfbf0dffe6e2edd6b0f427a91",
+        "size": 83802
+      },
+      "staged_after": {
+        "mode": "0644",
+        "sha256": "db41607834c42a90f742d048c3df5a9e68ac8c9f75deb1414cc4d554c0d9caec",
+        "size": 83908
+      }
+    },
+    "dev/wrapper-coder/tools/coordinator_store.py": {
+      "observed_before": {
+        "mode": "0644",
+        "sha256": "9f0a84a626fcf910f24233759ff940ff68db81c97b9b0e7096a3d4b0580ea835",
+        "size": 96398
+      },
+      "staged_after": {
+        "mode": "0644",
+        "sha256": "4b09a063fd657be2f4febaddaa23f2d283987e18604f6a8d20d97b0910d423b2",
+        "size": 96802
+      }
+    }
+  },
+  "state": "STAGED_SOURCE_SCOPE_HELD"
+}
