@@ -486,6 +486,14 @@ issuer and separate PDW regression remain open.
 · [Retained preflight QA](S5_AMPHENOL_RETAINED_RELEASE_INDEPENDENT_QA_20261121.md)
 · [Forterra composition QA](S5_FORTERRA_ORDINARY_COMPOSITION_INDEPENDENT_QA_20261121.md).
 
+At 13:01, a narrow staged operator completion connector independently
+passed eight focused checks, including canonical operator request pin,
+unchanged event path and physical qualification owner, and original request
+receipt after Company/last-request advancement. No native qualification,
+installation, retry receipt or new inference. Current-source measured
+worker and combined disposable terminal proof are separate gates.
+[Operator terminal staging](S5_AMPHENOL_OPERATOR_RETRY_TERMINAL_STAGED_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.

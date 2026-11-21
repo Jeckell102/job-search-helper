@@ -1,0 +1,50 @@
+{
+  "admission_or_qualification": false,
+  "companies": [
+    {
+      "normal_dispatch_provider": "Ashby",
+      "normal_dispatch_source": "https://jobs.ashbyhq.com/allen-control-systems",
+      "projection": {
+        "ATS / Source": "Greenhouse",
+        "Automatic Retry?": "No",
+        "Company": "Allen Control Systems",
+        "Company ID": "COMP-0164",
+        "Company Status": "Active",
+        "Official Careers URL": "https://job-boards.greenhouse.io/allencontrolsystems"
+      },
+      "source_revision": "af09ccc00f9f125e8fe7d6bce5dcdbfccc2660f82513931fe5c8822c3e82851d"
+    },
+    {
+      "normal_dispatch_provider": "Rippling",
+      "normal_dispatch_source": "https://ats.rippling.com/forterra/jobs",
+      "projection": {
+        "ATS / Source": "Rippling",
+        "Automatic Retry?": "No",
+        "Company": "Forterra",
+        "Company ID": "COMP-0066",
+        "Company Status": "Active",
+        "Official Careers URL": "https://www.forterra.com/careers"
+      },
+      "source_revision": "017ff3ba04284922e13691781c0150f48a2b733b93a4923aa444eb2c82e38670"
+    },
+    {
+      "normal_dispatch_provider": "Rippling",
+      "normal_dispatch_source": "https://ats.rippling.com/pdwcareers/jobs",
+      "projection": {
+        "ATS / Source": "Rippling",
+        "Automatic Retry?": "No",
+        "Company": "Performance Drone Works (PDW)",
+        "Company ID": "COMP-0178",
+        "Company Status": "Active",
+        "Official Careers URL": "https://ats.rippling.com/pdwcareers/jobs"
+      },
+      "source_revision": "3ba70cfdb1ebe1038bb5bf2d17cbc2e4cc2e8a09b1a12f4a6d3adea0d22962f7"
+    }
+  ],
+  "jobs_database_and_empty_wal_metadata_unchanged": true,
+  "measured_at": "2026-11-21T12:49:59-05:00",
+  "provider_or_workbook_access": false,
+  "registry_sha256": "8c7cbbb998be771dd8387b010af34afb32f88071baa71f3f459ad6b436ab7f80",
+  "source_only_resolution": true,
+  "status": "INSTALLED_SOURCE_RESOLUTION_OBSERVED"
+}

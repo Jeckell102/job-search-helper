@@ -43,6 +43,50 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Operator retry completion staged while Amphenol qualification stays held
+
+### November 21 at 12:59 Eastern
+
+Root remains coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 priority. Project
+approximately 40% by accepted roadmap milestones. No native pilot,
+release, retry, Sheets write or Jetson session is executing in this slice.
+The user asked whether they are needed in the next hour. Root expects no
+Sheets edit, administrator terminal or approval for the active private work.
+
+The -04 MuleLab fix remains installed and verified. Amphenol's preserved
+original task has exactly one completed Jetson choice. Current live
+qualification remains held after one 39-posting pass and two provider
+holds at 35 and 37. Do not call this provider again in the ended window or
+issue a qualification receipt or release based on it.
+
+Current copied source passed five staged operator preflight checks. The old
+Company-event canary lacks the operator reader and cannot supply the new
+provenance. After activation, an exact admitted attempt can resume using
+the existing measured `continue-qualified-repair` entry and pinned owner
+receipt. Neither the mutable last request nor the still-paused task should
+be reused for recovery. The coordinator confirmation separately matches an
+immutable operator settlement plus permanent request receipt to the original
+sender/receiver before confirming the new retry. The source-only staged
+connector `/tmp/jsh-amphenol-operator-terminal.2nqf6fxc/amphenol_retry_completion.py`
+is `1b598db426c24611adc5303a71c4f9d21fe4ddc5e2560459be7a78d1989abf67`.
+Three author tests passed in a private source copy with disposable
+configuration. Independent QA found that a direct null request pin could
+skip the operator history check. The corrected code holds before opening
+either owner. The independent recheck passed eight focused checks and
+confirmed the existing event path stayed behavior-equivalent. The full
+disposable worker and joint terminal acceptance remain separate. No
+source installed. [Staged operator completion](S5_AMPHENOL_OPERATOR_RETRY_TERMINAL_STAGED_20261121.md)
+and [retained preflight composition](S5_AMPHENOL_OPERATOR_RELEASE_COMPOSITION_20261121.md).
+
+Root owns the connector only; `/root/listener_ownership_qa` owns its
+independent recheck; `/root/architecture_publication_review` owns the
+separate current-source measured installer/worker fixture. No shared edits.
+Next accept or repair the connector, verify the actual disposable worker
+result, then combine those proofs without counting fixture results as live.
+Latest verified scoped backup `4c965e4518ee6a05761ae03da345a1960badedbe`.
+Keep scheduled sync, broad queue and unqualified auto-release disabled.
+
 ## Automatic wrapper trigger verified; release held on current provider evidence
 
 ### November 21 at 12:45 Eastern
@@ -84,14 +128,25 @@ reported zero pending events, with no admission. The scheduled sync,
 broad queue, automatic release and recipe enrollments remain off.
 [Forterra QA](S5_FORTERRA_ORDINARY_COMPOSITION_INDEPENDENT_QA_20261121.md).
 
-Root owns evidence backup and next source decision.
-`/root/architecture_publication_review` is checking the existing Allen
-Ashby route against the current release prerequisites without native activity.
-`/root/adapter_dependency_reconcile` completed the Forterra composition.
-Other lanes have no current edits or deployment authority. Latest verified
-private GitHub backup is `5fdfb48213388b386add6b7e46754bfefecdecdc`.
-Next: back up this checkpoint and use the existing guarded one-company
-path where eligible. Do not run the frozen Sprint 6 sequence out of order.
+Root owns release, native readback and scoped backup. GitHub commit
+`4c965e4518ee6a05761ae03da345a1960badedbe` was pushed and fetched; all 13
+files matched. [Verification](S5_AMPHENOL_HOLD_FORTERRA_COMPOSITION_BACKUP_VERIFIED_20261121.json).
+
+Root's immutable Jobs read and installed source resolution found Allen
+still lists Greenhouse in its stored Company row, while the accepted
+installed override already dispatches to its exact Ashby board. Forterra
+and PDW already resolve to their separate canonical Rippling boards.
+No new source defect, Company event or native qualification is established.
+[Current case resolution](S6_INSTALLED_CASE_SOURCE_RESOLUTION_20261121.json).
+Independent Allen guard review confirmed the correction is already
+installed and the old Samtec exception requires the archived cycle to be
+unfinished. Do not reopen it. A clean normal Allen request would not
+prove the required failure-to-retry sequence, so no live Allen run began.
+[Allen route review](S6_ALLEN_INSTALLED_ROUTE_INDEPENDENT_REVIEW_20261121.md).
+`/root/adapter_dependency_reconcile` owns a disposable test of the retained
+Amphenol operator preflight through the existing measured release/retry.
+Other lanes have no current edits or deployment authority. Do not run the
+frozen Sprint 6 sequence out of order. Keep Amphenol held for this window.
 
 ## Coordinator source-selection fix installed and independently verified
 
