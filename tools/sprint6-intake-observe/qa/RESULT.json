@@ -1,0 +1,65 @@
+{
+  "application_paths_inode_mode_mtime_ctime_and_bytes_unchanged": true,
+  "checkpointed_events": {
+    "detail": "Actual scrape admission depends on the normal queue and workflow checks.",
+    "events": [
+      {
+        "company_id": "COMP-1001",
+        "event_id": "CEV-2c3f2c982c0d41acbbd9de023350ad09",
+        "revision": 2,
+        "state": "PROPOSED_COMPANY_ONLY_SCRAPE"
+      },
+      {
+        "company_id": "COMP-1002",
+        "event_id": "CEV-41be22f8f39e49159a23a096accead61",
+        "revision": 1,
+        "state": "HELD_STALE_SOURCE"
+      },
+      {
+        "company_id": "COMP-1003",
+        "event_id": "CEV-44c3ad3da9894b92beca6600215b04a0",
+        "revision": 2,
+        "state": "HELD_WITHDRAWN"
+      }
+    ],
+    "more_events": false,
+    "scope": "LOCAL_LATEST_PENDING_EVENTS_PER_COMPANY",
+    "state": "COMPANY_INTAKE_OBSERVATION"
+  },
+  "committed_wal": {
+    "detail": "The local Jobs journal has pending data or the database changed during observation.",
+    "state": "STATUS_SNAPSHOT_BUSY"
+  },
+  "committed_wal_bytes": 53592,
+  "created_queue_or_lease": false,
+  "events_after_checkpoint": {
+    "detail": "Actual scrape admission depends on the normal queue and workflow checks.",
+    "events": [
+      {
+        "company_id": "COMP-1001",
+        "event_id": "CEV-3b86f7c6a0074d12bd3441fadde0eef1",
+        "revision": 3,
+        "state": "PROPOSED_COMPANY_ONLY_SCRAPE"
+      },
+      {
+        "company_id": "COMP-1002",
+        "event_id": "CEV-41be22f8f39e49159a23a096accead61",
+        "revision": 1,
+        "state": "HELD_STALE_SOURCE"
+      },
+      {
+        "company_id": "COMP-1003",
+        "event_id": "CEV-44c3ad3da9894b92beca6600215b04a0",
+        "revision": 2,
+        "state": "HELD_WITHDRAWN"
+      }
+    ],
+    "more_events": false,
+    "scope": "LOCAL_LATEST_PENDING_EVENTS_PER_COMPANY",
+    "state": "COMPANY_INTAKE_OBSERVATION"
+  },
+  "guarded_subprocess_count": 3,
+  "normal_shell_route": "./job-search-scraper storage intake-observe",
+  "profile_watched_request_ack_provider_workbook_effects": 0,
+  "result": "PASS"
+}

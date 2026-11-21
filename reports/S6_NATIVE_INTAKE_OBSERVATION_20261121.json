@@ -1,0 +1,11 @@
+{
+  "observed_at": "2026-11-21T04:47:54-05:00",
+  "application_source": "staged runner; not installed",
+  "jobs_store": "native Jobs database opened immutable",
+  "shell_exit": 0,
+  "observation_state": "COMPANY_INTAKE_OBSERVATION",
+  "event_count_in_page": 0,
+  "more_events": false,
+  "native_state_directory_contents_and_metadata_matched": true,
+  "outbound_and_writable_python_open_denied": true
+}

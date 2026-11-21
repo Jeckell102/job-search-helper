@@ -440,6 +440,15 @@ both stores have matching evidence. The corrected reader passed physical
 no-write checks with idle databases and pending journals.
 [Measured source hold](S6_MEASURED_QUEUED_SOURCE_DRIFT_QA_20261121.md).
 [Exact retry status](S6_EXACT_RETRY_OPERATOR_STATUS_20261121.md).
+The first activation step has a staged local intake preview through the
+existing `storage intake-observe` command. Independent shell QA verified
+latest-revision proposals, stale and withdrawn holds, and a busy result
+while committed SQLite changes await checkpoint. The preview acknowledged
+no event and created no request. The staged command read the native Jobs
+store in place under an immutable guard and reported zero pending events.
+Production installation and observe-only operation remain open.
+[Independent observation QA](S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md)
+· [Native readback](S6_NATIVE_INTAKE_OBSERVATION_20261121.json).
 The composed two-Company fixture proved that a provider hold is saved
 without a repair, and that the next eligible Company proceeds to exact
 local and workbook-fixture storage. Live sequential acceptance with

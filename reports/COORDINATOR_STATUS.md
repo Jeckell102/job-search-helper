@@ -45,6 +45,37 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 6 case sequence and Sprint 5 native ownership
 
+### Observe-only checkpoint, November 21 at 04:48 Eastern
+
+Root remains coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Accepted milestone gates and native
+restrictions below remain as recorded. The additional staged source makes
+the first Sprint 6 activation step observable without starting work.
+
+`/root/s5_live_authority_plan` implemented the staged `storage intake-observe`
+command under the existing local CLI. `/root/listener_ownership_qa` accepted
+the exact source through the actual shell. Latest eligible events were
+proposed, stale and withdrawn events remained held, and a 53,592-byte
+committed WAL returned a busy result until checkpoint. No app file, queue,
+acknowledgement or external service changed. Eighteen focused and adjacent
+tests passed. One existing measured terminal fixture reached the same
+missing dependency manifest on both the baseline and candidate.
+[Staged evidence](S6_INTAKE_OBSERVATION_STAGED_20261121.md)
+· [Independent QA](S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md).
+
+Root ran the independently checked command from the staged checkout
+against the native Jobs database in immutable mode under an outbound and
+write guard. It returned zero pending events. All tracked state directory
+entries and metadata matched. This was a read-only test of staged source.
+[Native readback](S6_NATIVE_INTAKE_OBSERVATION_20261121.json).
+
+The source and focused QA remain scoped to two Python modules and the
+author and independent tests. The launcher and bootstrap are unchanged.
+Next incorporate the independent native-route verdict below. A production
+observe-only release still requires installed readback. Last verified
+private backup `646eef04f84f9c7e409c1a2626f4880c1e0590a7`.
+[Prior backup verification](S6_SEQUENTIAL_MATRIX_BACKUP_VERIFIED_20261121.json).
+
 ### Latest checkpoint, November 21 at 04:41 Eastern
 
 Root is coordinator and release owner for active goal
@@ -78,12 +109,20 @@ an eligible application-owned repair is present in the native Store.
 
 `/root/architecture_publication_review` owns one bounded verification of
 whether an existing exact path admits both genuine repair origin and
-installed retry while preserving the intentionally retained cycle. Next use
-that verdict to identify the exact native input or document the external
-blocker. Preserve Saronic, one Jetson lane and existing controls. Keep broad
-processing and unqualified releases disabled. No present user action.
-Last verified private backup `b89df9fdd98e421c0aeafdca26666759b684feca`.
-[Prior backup verification](S6_LOCAL_RETRY_STATUS_BACKUP_VERIFIED_20261121.json).
+installed retry while preserving the intentionally retained cycle.
+`/root/s5_live_authority_plan` owns the staged observe-only intake command
+and its focused fixture. The existing status reports controls/counters and
+enabled intake can create work. The staged preview uses the real outbox
+without admitting or starting work. Root owns reconciliation and backup.
+Independent QA will own the source verdict.
+
+Next use the native verdict to identify the exact external input and send
+the first observe-only source version for independent QA. Preserve Saronic,
+one Jetson lane and existing controls. Keep broad processing and
+unqualified releases disabled. No present user action. Private backup
+`646eef04f84f9c7e409c1a2626f4880c1e0590a7` was fetched back and all eight
+scoped file contents matched.
+[Backup verification](S6_SEQUENTIAL_MATRIX_BACKUP_VERIFIED_20261121.json).
 
 ## Sprint 5 native qualification and Sprint 6 source hold
 

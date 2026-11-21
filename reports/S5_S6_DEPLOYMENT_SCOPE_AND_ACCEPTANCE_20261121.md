@@ -68,6 +68,14 @@ zero prior sessions, calls or tokens. These tests used fixture model
 responses. [Shutdown](S6_OWNED_CHOICE_SHUTDOWN_QA_20261121.md)
 · [Budget restart](S6_OWNED_REPAIR_BUDGET_RESTART_QA_20261121.md).
 
+The staged observe-only intake preview passed the independently guarded
+public shell on one latest eligible event, stale and withdrawn holds and
+a committed-WAL retry. A separate read-only invocation against native
+Jobs found zero pending events. This preview is outside the 31-endpoint
+Sprint 5 installation inventory and remains staged.
+[Observation QA](S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md)
+· [Native readback](S6_NATIVE_INTAKE_OBSERVATION_20261121.json).
+
 ## Final acceptance evidence to carry forward
 
 | Demonstration | Verified evidence | Remaining live proof |

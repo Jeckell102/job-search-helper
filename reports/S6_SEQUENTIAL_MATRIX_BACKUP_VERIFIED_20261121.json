@@ -1,0 +1,18 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "fetched_commit": "646eef04f84f9c7e409c1a2626f4880c1e0590a7",
+  "local_commit": "646eef04f84f9c7e409c1a2626f4880c1e0590a7",
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "7e4ffc473e451319a546fc51987bf9fbf8ac39487061bd64f95545df52b75af4",
+    "reports/S5_NATIVE_OWNED_ORIGIN_RECHECK_20261121.json": "4dfd3fa011b51c4f0c0635c3d0061daf6d98beb062e109bdef8ee499eabd57d3",
+    "reports/S5_OWNED_LIVE_CHOICE_FEASIBILITY_20261121.md": "86b028af54637c6faf2c7ac6a447ff3d5b861a73250525195282e983d9a0eb83",
+    "reports/S5_S6_DEPLOYMENT_SCOPE_AND_ACCEPTANCE_20261121.md": "f049b5f79050a511a1b44537bec9953d48b0c8a85f559eef04c571502f3c14b5",
+    "reports/S6_AMPHENOL_THIRD_STRUCTURE_INDEPENDENT_20261121.md": "6b049b70c96dc123f2337951b35ef162f3b055dc72a948ff65b6993b3dc7a942",
+    "reports/S6_LOCAL_RETRY_STATUS_BACKUP_VERIFIED_20261121.json": "7fdde529df3a7881e8c6cdecc9de32203958cbd2371f9a0fb2f310e212417a55",
+    "reports/S6_SEQUENTIAL_MATRIX_AMENDMENT_20261121.md": "8fb7a2eac63432c65c2bf4ed232cd182876ef80d8318b628fb77b219f12f0706",
+    "reports/sprint_roadmap.md": "dc3aecc326e30e60c8b1f2122fc03598685b0eb1a69fb2e63c35dce152997c00"
+  },
+  "verified_at": "2026-11-21T04:44:02-05:00",
+  "verified_scoped_files": 8
+}
