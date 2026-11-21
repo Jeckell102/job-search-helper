@@ -1,0 +1,29 @@
+# Existing native paths versus intentionally unfinished retained work
+
+2026-11-21. **NO-GO for the complete owned repair → qualified new release → real Sheets confirmation chain while the historical cycle remains unfinished.** This is a bounded source verdict on existing paths, not a new architecture proposal. Input state is the coordinator's fresh native observation: State and Jobs mirror both In Progress, named cases in raw old scope, no eligible event. This lane read source only and did not reopen application data or make network/writer calls.
+
+| Existing path | What it can legitimately prove | Why it does not complete the requested chain now |
+| --- | --- | --- |
+| Signed selected operator membership | One exact unstarted membership, current runtime, complete inventory, exact real publication/acknowledgement, preserved historical data | A partial inventory is frozen then rejected; the plain operator path does not create a qualified failed-event repair. It does not install a new repair runtime. |
+| Signed disjoint Company event | A real event outside every raw unfinished membership can produce scoped returned-failure/no-publication evidence, or complete-inventory publication | All named cases overlap and no event exists. Even a genuine new disjoint event supplies origin/publication scope only; it cannot override the new-version installation gate. |
+| Existing legacy sync-only recovery | Processing saved pre-upgrade work without fetching, only while actual runtime is NO_RELEASE, subject to all exact provenance/publication guards | A new COMPLETE release does not inherit this exemption, and the old cycle must not be assigned a retroactive runtime binding. |
+| Qualified owner/installer | Approved version installation, fresh measured worker and exact retry after qualified release | Its preinstall guard refuses any unfinished State/mirror cycle before new record/source writes. Only exact replay of the same already COMPLETE release skips replacement; there is no such new qualified native release here. |
+
+## Exact source basis
+
+- Roadmap `/home/chris/job-search-helper_old/temp/integration-automation-roadmap-20261118/AUTOMATION_ROADMAP.md:85`: pin complete versions per attempt and activate validated versions for new attempts without changing an active attempt's version. This is a required invariant; it is not an implemented exemption allowing an unbound historical attempt to be moved to a new shared runtime.
+- Installed `retained_operator_scope.py:12–24` separates exact queued membership from disjoint event scope. Lines 35–49 collect membership from **every raw unfinished cycle**, including superseded membership for this check, and reject an overlap.
+- Installed `retained_operator_run.py:199–219,249–277` verifies the exact independent signature, request/Company/runtime and durable claim. Lines 276–277 allow the incomplete no-publication branch only for EVENT_ACTION. Lines 288–292 reject incomplete plain operator inventory. Lines 50–69 and 73–106 require/read back exact publication evidence and then consume the request; these existing real receipt paths are not a release authority.
+- Installed `engine.py:843–859` permits missing historical runtime binding only for sync-only, non-repair work under NO_RELEASE. Otherwise current and saved runtime bindings must be identical; no pin is synthesized.
+- Maintained qualified path `/tmp/jsh-s5-enrolled-retry-receipt.20261121/src/job_search_helper/qualified_release_owner.py:35–39,72–95` supplies the preinstall idle guard and rejects unfinished State/Jobs views under writer ownership. `integration_release.py:319–356` invokes that preflight under scraper admission before record/journal/source writes. A direct older/lower-level activation or maintenance file copy omitting this qualified guard is not an accepted substitute for the chain.
+- Installed `runner.py:1124–1152` refuses ordinary recovery-pause with saved inventories/plans. Installed `exact_recovery_pause.py:137–167` refuses unblocked saved work and requires complete exact revalidated blocked-manifest coverage. Installed `selected_recovery_runner.py:164–176` cancels only an untouched FROZEN selected successor; it does not erase or settle the old partially applied Saronic plan.
+
+The historical sync-only path can still produce exact receipts when its original provenance and conflict gates pass. Its availability does not imply a qualified repair-release path exists. Likewise, adding the missing host-to-installer caller is useful implementation work but does not remove these independent data/runtime admission constraints.
+
+## One non-destructive requirement that changes this decision
+
+**An owner-reviewed, evidence-backed disposition of the retained unfinished work that can be executed through the existing recovery/settlement gates while preserving disputed records and history.** In particular, the Saronic source-provenance conflict must have an authoritative resolution or a supported terminal hold, and remaining saved work must satisfy the existing exact recovery checks; then the cycle can legitimately become terminal or enter a supported disposition that removes its unfinished ownership. This opens a recover-first path and a later fresh-release preflight; it is not itself a release permit.
+
+A new event, signer, Google access, a manual status edit, removal of locks, deletion of saved work, or a source-only install does not meet that requirement. If the owner's requirement remains to retain this cycle **unfinished** with its current work/provenance, these existing paths remain insufficient. This verdict does not authorize changing that requirement or weakening any gate.
+
+No new code, source changes, live writes, provider observations, Sheets/Google calls, Jetson calls, process changes, or receipt changes were made.

@@ -9,6 +9,15 @@ VALIDATED_COMPLETE event. Two measured child calls and two host callback
 processes demonstrated terminal replay without repeating data effects.
 [Installed same-attempt evidence](S5_ISOLATED_INSTALLED_SAME_ATTEMPT_20261121.md).
 
+A later independently verified disposable run used the maintained Python
+host itself to carry the owned generated candidate and exact independent
+fixture approval to the installer. It made one measured worker launch,
+confirmed 18 matching jobs through the existing test workbook and matched
+the terminal receiver receipt. A rebuilt host held a separate incomplete
+retry after its one measured worker. This newer staged host join is
+outside the original 31-endpoint installation inventory below.
+[Host release QA](S5_OWNED_HOST_RELEASE_INDEPENDENT_QA_20261121.md).
+
 The latest enrolled candidate has 31 runtime changes against production,
 with 24 replacements and seven additions. Sixteen native endpoints still
 match the independently verified Freeform installation. Of the other

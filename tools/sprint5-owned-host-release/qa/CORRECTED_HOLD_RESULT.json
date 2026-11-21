@@ -1,0 +1,16 @@
+{
+  "actual_install": "REL-7d704fd946810f0251993aa8",
+  "actual_remote_calls": 0,
+  "first": "RETRY_INVENTORY_HELD",
+  "fresh_host": {
+    "release_id": "REL-7d704fd946810f0251993aa8",
+    "state": "HELD_RECIPE_RETRY_CONTINUATION"
+  },
+  "host_sha256": "30854d51eaaf0bc2dcd4f833d192acf28572b8c0ec63ba0ac2a25c1f4e6dc586",
+  "measured_child_pids": [
+    10
+  ],
+  "result": "HELD_WITH_ONE_MEASURED_WORKER",
+  "saved_inventory_durable": true,
+  "unchanged_local_dumps_after_recheck": true
+}

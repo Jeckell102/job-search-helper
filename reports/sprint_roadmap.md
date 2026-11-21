@@ -368,6 +368,24 @@ reservation and recovery ledger. The production coordinator's existing
 single-task pilot requires a current application-owned repair. Keep prior
 real and simulated inference results under their original task identities.
 [One-lane feasibility](S5_OWNED_LIVE_CHOICE_FEASIBILITY_20261121.md).
+The independently checked existing native routes cannot complete a fresh
+qualified release while the historical cycle owns unfinished work.
+Selected complete-inventory publication and disjoint event origin remain
+distinct supported operations. A non-destructive supported disposition of
+the old cycle is required to clear the fresh-release gate.
+[Existing native route verdict](S5_EXISTING_NATIVE_RELEASE_ROUTE_INDEPENDENT_20261121.md).
+The staged Python host now has a default-off route from its completed
+owned recipe build and exact independent approval to the guarded installer.
+The focused callback coverage passed. The separately checked installed
+runtime reader persisted its full measurements within the real disposable
+release. Independent QA ran the corrected host through one measured
+install and retry with 18 matching fixture jobs and terminal replay.
+The initial held-retry replay bug was independently reproduced. A fresh
+corrected host held its incomplete inventory without a second worker.
+Production activation and workbook confirmation remain open.
+[Owned build reader](S5_OWNED_BUILD_RELEASE_READER_20261121.md)
+· [Installed runtime QA](S5_INSTALLED_RECIPE_READBACK_INDEPENDENT_20261121.md)
+· [Host release QA](S5_OWNED_HOST_RELEASE_INDEPENDENT_QA_20261121.md).
 [Retry evidence and QA](S5_RETRY_ADMISSION_AND_TERMINAL_DELIVERY_20261121.md).
 [Release continuation components](S5_EXACT_RELEASE_CONTINUATION_20261121.md).
 [Measured owner evidence](S5_MEASURED_RELEASE_OWNER_JOIN_20261121.md).

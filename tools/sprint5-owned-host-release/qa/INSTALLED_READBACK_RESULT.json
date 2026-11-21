@@ -1,0 +1,32 @@
+{
+  "actual_installed_callback_calls": 1,
+  "attempt_id": "RTRY-5764602ed0cb9effa7965cbd",
+  "captured_fetch_calls": 1,
+  "child_pids": [
+    8,
+    13
+  ],
+  "cycle_id": "CYC-E0284B3FA4FD",
+  "fixture_batches": 1,
+  "host_pids": [
+    16,
+    17
+  ],
+  "host_receipt_sha256": "c4364f6725609b978abcad0b82742f9f3d0e8a48b2e4865039109be216c5ae3a",
+  "installed_source_sha256": "431b7c8a447a1f10ceadcf343c7ee265bb61eda3b97a3a5c738d47ed60ef9635",
+  "installed_verifier_pin": "aeea069ce3ea41d721f19eba73b21ac351ac820d991e3da9f85e546c33d58b8d",
+  "measured_dependency_sha256": "3be7662fa09d28eb80a835a4da23b43e5f368e16f7121b7fa98b70629de2c4a9",
+  "native_release_qualification": false,
+  "original_outcome_id": "OUT-cffecec610203a71e5c23b82",
+  "outcome_id": "OUT-f6cd4bcb924e484e9456f43c",
+  "preserved_archived_inputs": true,
+  "real_provider_or_workbook_calls": 0,
+  "receiver_commands_on_restart": 0,
+  "receiver_events": 1,
+  "release_id": "REL-0dc65d5bb3c67016c0201aef",
+  "result": "DISPOSABLE_SAME_ATTEMPT_INSTALLED_AND_RECEIVED",
+  "saved_and_published_job_count": 18,
+  "verification_digest": "dd72aec85511ff35e380355b71b9d7da032bb3c3c7f76a4781e0a27ea20da309",
+  "verified_release_receipt_sha256": "e43331dc1baf515bb65a48010b7e9953d1ed93766320f310ba11d76ea9c74d5d",
+  "workbook_factory_calls": 1
+}

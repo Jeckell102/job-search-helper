@@ -1,0 +1,25 @@
+{
+  "actual_install": "REL-094312b41dcc33a1c56f4734",
+  "actual_remote_calls": 0,
+  "first": "RETRY_INVENTORY_HELD",
+  "fresh_host": {
+    "release": {
+      "attempt_id": "RTRY-fdff45bbce32c93386854f26",
+      "company_id": "COMP-0490",
+      "failed_request_id": "company-event:CEV-660792c2c5724f33adf7822151b666d8",
+      "release_id": "REL-094312b41dcc33a1c56f4734",
+      "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501",
+      "state": "REQUEST_ALREADY_ADMITTED"
+    },
+    "retry_state": "RETRY_INVENTORY_HELD",
+    "state": "RECIPE_RELEASE_RETRY_CHECKED"
+  },
+  "host_sha256": "f0c936dcdf09459bc160180cf2c4dd2e18a30fb05a5fbf64c63ff796dd25e376",
+  "measured_child_pids": [
+    13,
+    18
+  ],
+  "result": "REPRODUCED_UNWANTED_SECOND_MEASURED_WORKER",
+  "saved_inventory_durable": true,
+  "unchanged_local_dumps_after_recheck": true
+}

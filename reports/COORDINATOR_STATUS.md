@@ -43,6 +43,68 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 5 approved candidate to installer
+
+### Latest checkpoint, November 21 at 05:06 Eastern
+
+Root remains coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the Sprint 4
+Freeform pilot remain accepted. Ordinary intake and native Sprint 5 through
+final deployed acceptance are open. Overall completion remains about 40%
+by accepted gates. One Jetson inference lane, existing broad controls off.
+
+`/root/architecture_publication_review` independently confirmed the
+existing native paths cannot install and retry a new qualified wrapper
+while the protected cycle remains unfinished. The selected membership
+route can publish an eligible complete inventory on the current runtime.
+A genuinely disjoint event could supply an owned origin. Neither opens the
+fresh release gate. The old unbound cycle retains its NO_RELEASE-only
+sync exception. A recovery disposition requires authoritative Saronic
+provenance or a supported terminal hold and review of remaining saved
+work before the existing cycle can legitimately release ownership.
+[Native route verdict](S5_EXISTING_NATIVE_RELEASE_ROUTE_INDEPENDENT_20261121.md).
+
+Root found that the maintained host stopped after the build or delivered an
+already-finished retry. Only test harnesses called the qualified installer
+between those stages. `/root/s5_live_authority_plan` built the isolated
+owned build and release reader. Root composed it in the staged host with
+an explicit default-off activation switch, independent approval, exact
+pilot and generation and current Company guards. It leaves the earlier
+application read scope before invoking the existing installer in its
+normal lock order. Combined tests passed 21 cases including the callback
+join with a fixture installer. The previously blocked terminal intake test
+also passed after the actual project dependency manifest was included in a
+disposable copy.
+[Owned build reader](S5_OWNED_BUILD_RELEASE_READER_20261121.md)
+· [Host activation implementation](S5_OWNED_AMPHENOL_HOST_RELEASE_JOIN_20261121.md).
+
+Root added deterministic full runtime readback. Independent QA used it
+in the actual disposable installer, measured worker and receipt callback.
+One installed verification, 18 matching local and workbook-fixture jobs,
+one workbook batch, and exact terminal replay were observed. Six focused
+tests passed. This was a direct installer canary on the prior host and
+does not prove the new activation hook.
+[Installed recipe readback QA](S5_INSTALLED_RECIPE_READBACK_INDEPENDENT_20261121.md).
+
+`/root/listener_ownership_qa` reproduced the first host's second measured
+worker after a saved incomplete inventory. Root fixed the host, then
+independent QA accepted positive and negative real disposable proofs at
+host pin `30854d51…`. On the positive run the host itself installed the
+candidate, launched one measured child, confirmed the same 18 fixture
+jobs and re-read the receiver receipt in a fresh process with no second
+worker. A rebuilt host preserved the incomplete attempt, issued no
+second worker and opened no workbook. No production source, data,
+services, workbook, or Jetson changes.
+[Initial hold](S5_OWNED_HOST_RELEASE_INITIAL_QA_HOLD_20261121.md)
+· [Corrected independent QA](S5_OWNED_HOST_RELEASE_INDEPENDENT_QA_20261121.md).
+
+Next identify whether a supported non-destructive disposition is available
+for the retained cycle and independent current release qualification.
+Do not treat a new event alone as clearing the native release gate. There
+is no live ETA. Verified prior backup
+`2d0c5dc2413395178ff4dbebbcb13e91c0ef8015`.
+[Backup verification](S6_INTAKE_OBSERVATION_BACKUP_VERIFIED_20261121.json).
+
 ## Sprint 6 case sequence and Sprint 5 native ownership
 
 ### Observe-only checkpoint, November 21 at 04:48 Eastern
@@ -72,9 +134,10 @@ entries and metadata matched. This was a read-only test of staged source.
 The source and focused QA remain scoped to two Python modules and the
 author and independent tests. The launcher and bootstrap are unchanged.
 Next incorporate the independent native-route verdict below. A production
-observe-only release still requires installed readback. Last verified
-private backup `646eef04f84f9c7e409c1a2626f4880c1e0590a7`.
-[Prior backup verification](S6_SEQUENTIAL_MATRIX_BACKUP_VERIFIED_20261121.json).
+observe-only release still requires installed readback. Private backup
+`2d0c5dc2413395178ff4dbebbcb13e91c0ef8015` was fetched back and all 12
+scoped file contents matched.
+[Backup verification](S6_INTAKE_OBSERVATION_BACKUP_VERIFIED_20261121.json).
 
 ### Latest checkpoint, November 21 at 04:41 Eastern
 

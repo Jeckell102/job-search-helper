@@ -1,0 +1,22 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "fetched_commit": "2d0c5dc2413395178ff4dbebbcb13e91c0ef8015",
+  "local_commit": "2d0c5dc2413395178ff4dbebbcb13e91c0ef8015",
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "fc541e4b2952c14162911353f3da0019c42502943de617ea918dfae7d95a2309",
+    "reports/S5_S6_DEPLOYMENT_SCOPE_AND_ACCEPTANCE_20261121.md": "b39113fd4da603651a8ee0422020e3b87a971e5ea785919907ac21e4d518e34b",
+    "reports/S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md": "8b77ac3cf5d7a709d26284090e6bdb09f63d4d89747c5539f333360b3ab9c7d7",
+    "reports/S6_INTAKE_OBSERVATION_STAGED_20261121.md": "a7ba382f89b39515c4494f26cdcb5395470f22e7ab64215256eb805f5a1b3bd5",
+    "reports/S6_NATIVE_INTAKE_OBSERVATION_20261121.json": "581fd879ffdab9f694e79258e3644592e46c6c43cdbdf40da075c3ac9b2678c1",
+    "reports/S6_SEQUENTIAL_MATRIX_BACKUP_VERIFIED_20261121.json": "16b4e252279d2bb99e0763cccf373aa37eac71879cfa9e7216cdc4648e017a73",
+    "reports/sprint_roadmap.md": "44d5b9b61dbdb5d5bfb14c40f3507eb531404addc3f4aea17a40c0c3b0f49e81",
+    "tools/sprint6-intake-observe/qa/RESULT.json": "f1767cff5147f22016c7e0cafb421bfcb34b0bd6f91c2d698683596025cd129b",
+    "tools/sprint6-intake-observe/qa/prove_intake_observe.py": "cfed5934b1b78bb0bb4037d9002bcdf9b3221099cb7c24cf3d90ceb4b9ecdd60",
+    "tools/sprint6-intake-observe/src/job_search_helper/company_events.py": "0c82c1091b413622f0fc4a727225efcd3792598e527d0731e78d3d427b5d265b",
+    "tools/sprint6-intake-observe/src/job_search_helper/sync_cli.py": "4c94908e60638a49cf066e550829c9241d10a8c78d7583a6d7b8e8f0caffe529",
+    "tools/sprint6-intake-observe/tests/test_company_intake_observe.py": "ae876c2a0562eda8ccecbd85cba7daea462917c191b6adf767ef7241b7c92927"
+  },
+  "verified_at": "2026-11-21T04:50:19-05:00",
+  "verified_scoped_files": 12
+}
