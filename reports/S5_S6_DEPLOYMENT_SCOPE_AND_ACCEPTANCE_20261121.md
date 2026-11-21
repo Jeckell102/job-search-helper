@@ -78,15 +78,15 @@ responses. [Shutdown](S6_OWNED_CHOICE_SHUTDOWN_QA_20261121.md)
 | 4. External provider hold | A composed fixture held one failure and subsequently saved the unrelated second Company. [Provider hold proof](S6_SEQUENTIAL_PROVIDER_HOLD_REHEARSAL_20261121.md) | Verify the deployed hold and continued work using the frozen acceptance cases. |
 | 5. Restart | Real Jetson interruptions were separately accepted on the installed paired F4 source. The isolated end-to-end canary proved launch/replay. A new cross-process stop/restart retained a late accounted turn and no candidate. [Deployed Jetson QA](F4_PAIRED_DEPLOYED_QA_20261120.md) · [Shutdown proof](S6_OWNED_CHOICE_SHUTDOWN_QA_20261121.md) | Recheck final deployed pins and compose the relevant current transitions under one ownership record. |
 | 6. Source change or pause | A staged Company source change after enqueue led the actual fresh measured worker to hold before admission, fetch or publication. Queue, release records and the logical stores matched the post-edit snapshot. The independently accepted staged status reader makes the hold visible. [Measured source hold](S6_MEASURED_QUEUED_SOURCE_DRIFT_QA_20261121.md) · [Exact retry status](S6_EXACT_RETRY_OPERATOR_STATUS_20261121.md) | Show the deployed source-change and pause case on deliberately authorized scope. |
-| 7. Sequential companies | Evidence supports Allen's exact Ashby migration and earlier bounded Forterra/PDW Rippling work. The existing two-company fixture supports continued progress. [Allen qualification](S6_ALLEN_ASHBY_PUBLIC_QUALIFICATION_20261121.md) | Qualify a third distinct completion structure, then show three sequential deployed results, shared-adapter regression and a separate safe hold. |
+| 7. Sequential companies | The independently reviewed matrix names Forterra Rippling, Allen Ashby and Amphenol AcquireTM as the three completion cases. The existing two-company fixture supports continued progress. [Matrix amendment](S6_SEQUENTIAL_MATRIX_AMENDMENT_20261121.md) | Independently qualify the current proposed versions and ownership, then show the three ordered deployed results, PDW regression and a separate safe hold. |
 
 An independent 04:17 Eastern recheck found that Draper's official careers
 page still links the exact Workday tenant. The one bounded provider read
 redirected to Workday's tenant outage page and returned an access/fetch
 error in that public reader. Employer-to-tenant linkage remains verified.
 Listing completeness, descriptions and end-to-end scope remain unverified.
-Draper remains an externally held proposal for the third completion
-structure. [Bounded readback](S6_DRAPER_CURRENT_AVAILABILITY_HOLD_20261121.md)
+Draper remains on the matrix record as an externally held proposal.
+[Bounded readback](S6_DRAPER_CURRENT_AVAILABILITY_HOLD_20261121.md)
 · [Official employer careers page](https://www.draper.com/careers).
 
 The next production action must preserve the older cycle and use a genuinely

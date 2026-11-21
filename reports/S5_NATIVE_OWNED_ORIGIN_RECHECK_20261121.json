@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-11-21T04:39:15-05:00",
+  "protected_cycle_id": "CYC-B639C6D864EC",
+  "local_state_status": "In Progress",
+  "workbook_mirror_status": "In Progress",
+  "scope_size": 800,
+  "raw_in_progress_membership_count": {
+    "COMP-0066": 19,
+    "COMP-0164": 19,
+    "COMP-0490": 19,
+    "COMP-0024": 19
+  },
+  "pending_company_bridge_events": 0,
+  "saronic_saved_postings": 276,
+  "saronic_inventory_blocked": false,
+  "saronic_legacy_cursor": 67,
+  "next_scan_request_present": false,
+  "active_release_journal_present": false,
+  "tracked_files_metadata_unchanged": true
+}

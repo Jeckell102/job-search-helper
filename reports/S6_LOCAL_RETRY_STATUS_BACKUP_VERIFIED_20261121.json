@@ -1,0 +1,33 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "fetched_commit": "b89df9fdd98e421c0aeafdca26666759b684feca",
+  "local_commit": "b89df9fdd98e421c0aeafdca26666759b684feca",
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "6244adeb2e107c81ae97287a8f42d6f78f5493383033bbc4b5b7fb9090d88983",
+    "reports/S5_NATIVE_QUALIFICATION_BOUNDARY_20261121.md": "7e4b19f169e9afc8c073520b5ccfc1e66bd5d9d4056474f09b7f643fac7a0f04",
+    "reports/S5_S6_DEPLOYMENT_SCOPE_AND_ACCEPTANCE_20261121.md": "9c80d852f05104af48b261eed20846626aceaf5d7a4919ea86f0b8b75808a17b",
+    "reports/S6_EXACT_RETRY_OPERATOR_STATUS_20261121.md": "41563808e0d6334ea77693656a28e93fce30394fbcb57cbbc5a761b09ad822b0",
+    "reports/S6_EXACT_RETRY_STATUS_INDEPENDENT_QA_20261121.md": "7fb715f264821fc01ea468043b218eab78085570ceecc8f14b7a8a3a8cf0b806",
+    "reports/S6_EXACT_RETRY_STATUS_INITIAL_HOLD_20261121.md": "5471dcb354112266fb03e641560f96de27fd67b586c5aa8a34efe0d8611de842",
+    "reports/S6_MEASURED_QUEUED_SOURCE_DRIFT_QA_20261121.md": "b4a4d485d3496c94a9dc9648c8ef3ec032af6a44f32849ca423184f34b5aa543",
+    "reports/sprint_roadmap.md": "51403a81cd3affc9c7d1e20e6d3dfe74741d83e2c55c84038c7c3cf6b544671b",
+    "tools/sprint6-exact-retry-status/qa/initial/RESULT.json": "333880f771d8f8f1c55e119510118b32fd711353fe6eac957df71114969debfe",
+    "tools/sprint6-exact-retry-status/qa/initial/read_surface.py": "81e1616f83e0597d109d5be44e269f6e57eb3ad1ae02986bf927f0fdad4428bf",
+    "tools/sprint6-exact-retry-status/qa/recheck/PHYSICAL_RESULT.json": "4c4e009a478e72a2e96e3dfd39877754a00b201dff48b404fe088c603cb0c124",
+    "tools/sprint6-exact-retry-status/qa/recheck/SHELL_RESULT.json": "dd47be548d594e51b5c82e70e675fec425b1824ced439714a9a6945391db2d2c",
+    "tools/sprint6-exact-retry-status/qa/recheck/prove_status.py": "6e97403bc5febad379ba66ad61ca1719e58feb7866e6ae1b0ba5d8d31d877195",
+    "tools/sprint6-exact-retry-status/qa/recheck/read_surface.py": "752d0a650a38a76d5d126282bd250502a47e0f5d7026a17573b09bb6a0e61aa4",
+    "tools/sprint6-exact-retry-status/src/job_search_helper/engine.py": "1c466d8c33d1dbd102325eee8b7d834667024ad9f20d119a4efab019fc3424f8",
+    "tools/sprint6-exact-retry-status/src/job_search_helper/inbox.py": "dc6f207088e755ac98bd6541ed1ec1b608dc81b2359b7c908883eeb81e43dee1",
+    "tools/sprint6-exact-retry-status/src/job_search_helper/repair_retry_status.py": "ef5e8d51490e073de119fca876e5cc85ffb6418961f3daf97b36191e041b5290",
+    "tools/sprint6-exact-retry-status/src/job_search_helper/runner.py": "0b4e80b429b242a1eec02eadb5b89ac501b8d13f7dc0c3122015e01eece91003",
+    "tools/sprint6-exact-retry-status/src/job_search_helper/sqlite_repository.py": "3ab772748e685a131f885c0eefa7bd8055ed5c22114d4f89204a6dce3d8ff742",
+    "tools/sprint6-exact-retry-status/tests/test_repair_retry_status.py": "23c2c6a3c657bf1d0b42f5dc1803cbb147b2af6f5571cfdefd8e080334e06a4f",
+    "tools/sprint6-measured-source-drift/RESULT.json": "d7af9d862cca8f521b59098a4027d0fcfb81522861a4f6ecc8993fdd6b2e3d0f",
+    "tools/sprint6-measured-source-drift/WORKER_STDERR.txt": "e4e3ded76fc090df1d43342926c52459c29c5ab1423a5d77968b83f89c85f7b1",
+    "tools/sprint6-measured-source-drift/prove_queued_company.py": "5b1d3160f80e6ac96714f9f50937c924e727bef7345b61674ab26f7f249cb2a5"
+  },
+  "verified_at": "2026-11-21T04:35:24-05:00",
+  "verified_scoped_files": 23
+}

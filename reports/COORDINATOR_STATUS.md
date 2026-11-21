@@ -43,6 +43,48 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 6 case sequence and Sprint 5 native ownership
+
+### Latest checkpoint, November 21 at 04:41 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the Sprint 4
+Freeform pilot remain accepted. Sprint 5 has independently verified staged
+repair/retry evidence. Native Sprint 5, ordinary Sprint 4 idle/busy and
+deployed Sprints 6–7 remain open. About 40% of the project is accepted.
+
+`/root/architecture_publication_review` independently accepted Amphenol
+AcquireTM as the third proposed completion structure. Root adopted the
+documented qualification matrix and froze the execution order. It keeps
+Forterra Rippling and Allen Ashby, the original General Atomics/goTenna
+holds, PDW's Rippling regression and Draper's Workday hold. Previous public
+or isolated runs earn no sequential completion credit.
+[Matrix and evidence requirements](S6_SEQUENTIAL_MATRIX_AMENDMENT_20261121.md).
+
+Fresh read-only native evidence shows CYC-B639C6D864EC In Progress in
+State and the local workbook mirror with 800 Companies. Saronic's 276
+saved postings and cursor 67 remain intact. All three completion cases
+appear in the raw unfinished scopes. No pending Company bridge event,
+next-scan request or active release journal exists. No protected file
+metadata changed. A native process read identified the assistant bridge.
+[Native origin recheck](S5_NATIVE_OWNED_ORIGIN_RECHECK_20261121.json).
+
+`/root/s5_live_authority_plan` verified that the disposable proof has its
+own host inference ledger. The shared remote request gate cannot make it
+the native owner. Keep the earlier live choice and fixture ownership proofs
+under their actual identities. Use the installed one-task pilot only once
+an eligible application-owned repair is present in the native Store.
+[Shared Jetson lane decision](S5_OWNED_LIVE_CHOICE_FEASIBILITY_20261121.md).
+
+`/root/architecture_publication_review` owns one bounded verification of
+whether an existing exact path admits both genuine repair origin and
+installed retry while preserving the intentionally retained cycle. Next use
+that verdict to identify the exact native input or document the external
+blocker. Preserve Saronic, one Jetson lane and existing controls. Keep broad
+processing and unqualified releases disabled. No present user action.
+Last verified private backup `b89df9fdd98e421c0aeafdca26666759b684feca`.
+[Prior backup verification](S6_LOCAL_RETRY_STATUS_BACKUP_VERIFIED_20261121.json).
+
 ## Sprint 5 native qualification and Sprint 6 source hold
 
 ### Latest checkpoint, November 21 at 04:35 Eastern
@@ -81,8 +123,9 @@ decision, the original matrix remains current and Draper remains held.
 Next reconcile the frozen matrix and independently qualify the first
 currently eligible native failure. Preserve the single Jetson lane.
 Broad processing and unqualified automatic release remain disabled.
-Last prior verified backup `68bf00c93535c343f9600d5150e4a6a29cfa324a`.
-[Prior backup verification](S5_S6_DEPLOYMENT_READINESS_BACKUP_VERIFIED_20261121.json).
+Private backup `b89df9fdd98e421c0aeafdca26666759b684feca` was fetched
+back and all 23 scoped file contents matched.
+[Backup verification](S6_LOCAL_RETRY_STATUS_BACKUP_VERIFIED_20261121.json).
 
 ## Sprint 5 isolated install and Sprint 6 restart controls
 

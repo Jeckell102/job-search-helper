@@ -363,6 +363,11 @@ approved public adapter and the complete isolated install prove different
 stages. Native acceptance requires one current application-owned failed
 request bound to independent validation of the exact full candidate release.
 [Native qualification boundary](S5_NATIVE_QUALIFICATION_BOUNDARY_20261121.md).
+One real inference on the disposable host would use a separate host
+reservation and recovery ledger. The production coordinator's existing
+single-task pilot requires a current application-owned repair. Keep prior
+real and simulated inference results under their original task identities.
+[One-lane feasibility](S5_OWNED_LIVE_CHOICE_FEASIBILITY_20261121.md).
 [Retry evidence and QA](S5_RETRY_ADMISSION_AND_TERMINAL_DELIVERY_20261121.md).
 [Release continuation components](S5_EXACT_RELEASE_CONTINUATION_20261121.md).
 [Measured owner evidence](S5_MEASURED_RELEASE_OWNER_JOIN_20261121.md).
@@ -449,6 +454,11 @@ The proposed Draper third structure remains held. Its current official
 link still identifies the exact Workday tenant. The bounded public reader
 was redirected to Workday's outage page, leaving inventory and description
 qualification open.
+The independently reviewed November 21 amendment adds Amphenol AcquireTM
+as the third named completion case alongside Forterra Rippling and Allen
+Ashby. It fixes the sequence and keeps the original external holds and PDW
+regression. Prior runs do not contribute deployed sequential completion.
+[Sequential matrix amendment](S6_SEQUENTIAL_MATRIX_AMENDMENT_20261121.md).
 [Allen source qualification](S6_ALLEN_ASHBY_PUBLIC_QUALIFICATION_20261121.md).
 [Allen source QA](S6_ALLEN_ASHBY_SOURCE_INDEPENDENT_20261121.md).
 [Reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
