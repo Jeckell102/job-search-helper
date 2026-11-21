@@ -1,0 +1,19 @@
+{
+  "additional_requests": 0,
+  "case": "COMP-0024 Draper / Workday / proposed third completion structure",
+  "descriptions_verified": false,
+  "disposition": "HELD_EXTERNAL_PUBLIC_AVAILABILITY",
+  "inventory_count_verified": false,
+  "native_or_release_qualification": false,
+  "observed_at_eastern": "2026-11-21 04:17:54 EST",
+  "observed_at_utc": "2026-11-21T09:17:54Z",
+  "official_current_openings_target": "https://draper.wd5.myworkdayjobs.com/en-US/Draper_Careers",
+  "official_reads": 1,
+  "official_url": "https://www.draper.com/careers",
+  "production_access_or_changes": false,
+  "provider_observation": "redirected_to_outage_endpoint",
+  "provider_observations": 1,
+  "provider_retries": 0,
+  "reader_diagnostic": "Failed to fetch exact board: (500) redirected to outage endpoint which is not accessible via this tool; non-retryable error",
+  "redirect_target": "https://wd5.myworkday.com/wday/drs/outage?t=draper&s=Draper_Careers"
+}

@@ -1,0 +1,23 @@
+{
+  "campaign_open": false,
+  "duplicate_absorbed": true,
+  "exhaust_pid": 5,
+  "first_counters": [
+    1,
+    1,
+    560
+  ],
+  "first_status": "PAUSED_BUDGET",
+  "global_queue_open": false,
+  "reopen_model_calls": 0,
+  "reopen_pid": 6,
+  "result": "PASS",
+  "resume_refused": true,
+  "second_counters": [
+    0,
+    0,
+    0
+  ],
+  "second_status": "RUNNING",
+  "unchanged_first_state_and_receipts": true
+}

@@ -1,0 +1,17 @@
+{
+  "application_stores_unchanged": true,
+  "complete_release_receipt_written": false,
+  "disposition": "DISPOSABLE_INSTALLED_VERIFICATION_FAILURE_ROLLED_BACK",
+  "idempotent_rollback": true,
+  "installed_failure_blocked_worker_admission": true,
+  "isolated_verifier_calls": 1,
+  "release_id": "REL-c8eb84a6355255c19882980f",
+  "restored_source_sha256": "32febaff164e3acd04d0c861c7948472500e874897d5ec786bd01f9832c90b57",
+  "retry_written": false,
+  "rollback_receipt": {
+    "manifest_sha256": "605fa584abd6d4462a58c852e5ea28a4bad7010eff91607b88e54ee3dcbbb462",
+    "release_id": "REL-c8eb84a6355255c19882980f",
+    "state": "ROLLED_BACK"
+  },
+  "runtime_restored": true
+}

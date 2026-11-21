@@ -1,0 +1,24 @@
+{
+  "calls_and_tokens": [
+    1,
+    560
+  ],
+  "late_receipt": "RESPONSE_DROPPED",
+  "process_ids": [
+    5,
+    9
+  ],
+  "restart_candidate_builds": 0,
+  "restart_model_calls": 0,
+  "result": "DISPOSABLE_SUPERVISED_OWNED_CHOICE_STOP_RESTART_PASS",
+  "same_paused_task_and_exact_receipt": true,
+  "shutdown": "SHUTDOWN_PAUSED",
+  "staged_sha256": {
+    "coordinator.py": "dcf6f14ea4ff15e6c221ff3f46c29523419d931dfbf0dffe6e2edd6b0f427a91",
+    "coordinator_inference.py": "4d94acad23e879089dee088c04826ddef4b062b77316915bf493ee2db17db968",
+    "coordinator_store.py": "9f0a84a626fcf910f24233759ff940ff68db81c97b9b0e7096a3d4b0580ea835",
+    "coordinator_supervision.py": "c06e77fc42170277e462f811b32c2ff9821993c78a1765a83a4c92929eeeb012",
+    "test_coordinator.py": "14b7af68303c9aab38765df9b31538cd6691fd1689e7292f09f605fa1532728b",
+    "test_owned_recipe_scheduler.py": "e7f5975ef3ea5ae8c65efd25a6431da712a9ee0eb018a4be832141300f18c0fc"
+  }
+}

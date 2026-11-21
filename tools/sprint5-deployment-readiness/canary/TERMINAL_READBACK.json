@@ -1,0 +1,10 @@
+{
+  "before_image_preserved": true,
+  "coordinator_state": "VALIDATED_COMPLETE",
+  "delivery_receipt_id": "ODR-8314a9547718a03ec3782cb5",
+  "jobs_acknowledgment_id": "d0da0013c4b034f7eb2633c05204aa929bf37603a4039015e5028bc86f1022ce",
+  "publication_receipt_id": "0f71fa1153c16263c5929ef5ddfaf66e63f9c4a5957c1d0f1a20ea407c7c9c4a",
+  "publication_state": "SYNC_CONFIRMED",
+  "release_journal_sha256": "5d6106d0c06e14153d53d542d44396582723c8216a7e41445a05214204ebc045",
+  "same_retry": "RTRY-af36478201f94150a868d03e"
+}

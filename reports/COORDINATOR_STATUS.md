@@ -43,6 +43,57 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 5 isolated install and Sprint 6 restart controls
+
+### Latest checkpoint, November 21 at 04:18 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The previous turn delivered an
+independently accepted staged host receipt and fresh bounded public
+rehearsal. Sprint 1–3 and the Sprint 4 Freeform pilot remain accepted.
+Native Sprint 5 and deployed Sprints 6–7 are open.
+
+`/root/s5_live_authority_plan` independently ran the guarded installation,
+two fresh measured worker calls and two fresh host callbacks for one
+isolated Amphenol retry. The paired publication and outcome receipts
+cover the same 18 saved jobs. The sole receiver event reached
+VALIDATED_COMPLETE. Worker and host replay made no further capture,
+workbook or receiver call. Root reproduced a separate failed installed
+verification and exact rollback with no retry, no changed stores and
+the same rollback receipt on replay.
+[Same-attempt canary](S5_ISOLATED_INSTALLED_SAME_ATTEMPT_20261121.md).
+[Rollback result](S5_DISPOSABLE_VERIFICATION_ROLLBACK_20261121.json).
+
+Root froze the candidate's exact 31 endpoints for deployment review.
+Independent QA corroborated 24 replacements, seven additions, no other
+runtime delta and an unchanged measured bootstrap. The protected cycle
+is legacy and unbound. Exact staged admission allows its legacy
+sync-only case under NO_RELEASE and holds both ordinary execution and
+sync-only under an active COMPLETE release. No legacy operation ran.
+[Deployment scope and remaining acceptance](S5_S6_DEPLOYMENT_SCOPE_AND_ACCEPTANCE_20261121.md).
+
+`/root/listener_ownership_qa` passed real fresh-process staged
+Coordinator checks for planned shutdown with a late accounted reply and
+for budget exhaustion preserved across reopen, original-task deduplication,
+ordinary resume refusal, and a distinct next pilot with fresh counters.
+`/root/architecture_publication_review` verified Draper's official
+Workday link on one bounded source and provider observation. The provider
+redirected the public reader to its outage page. Draper remains held and
+does not satisfy the third completion structure.
+[Shutdown QA](S6_OWNED_CHOICE_SHUTDOWN_QA_20261121.md).
+[Budget restart QA](S6_OWNED_REPAIR_BUDGET_RESTART_QA_20261121.md).
+[Draper hold](S6_DRAPER_CURRENT_AVAILABILITY_HOLD_20261121.md).
+
+Next reconcile the qualified third structure and obtain independent
+native source, ownership and runtime qualification. The older unfinished
+cycle and absent genuine disjoint event still hold the native pilot.
+Preserve Saronic, native services, queues and all data. Keep broad
+processing and unqualified releases disabled with one Jetson lane.
+Overall completion stays approximately 40% by accepted gates. Sprint 5
+has an independently installed isolated proof and its native exit remains
+open. No current user action. Last verified backup before this checkpoint
+`da79a2185c100ebf5be2ffe2850385d7734c3cb6`.
+
 ## Sprint 5 enrolled retry receipt and native readiness
 
 ### Latest checkpoint, November 21 at 04:05 Eastern
@@ -86,8 +137,10 @@ path against the historical scope and finalize the pending qualification
 prerequisites. Native execution still requires legitimate owned scope
 and installed release gates with the historical cycle protected. Keep broad backlog and
 unqualified automatic release disabled. Maintain one Jetson inference lane.
-No user action needed for the current checks. Last verified backup before
-this checkpoint is `1ba3587be48729a5fcbfa98ae6b1ecc3130d7434`.
+No user action needed for the current checks. Latest private backup
+`da79a2185c100ebf5be2ffe2850385d7734c3cb6` was fetched back and all 25
+scoped file contents matched.
+[Backup verification](S5_ENROLLED_RETRY_BACKUP_VERIFIED_20261121.json).
 
 ## Sprint 5 measured release owner and exact retry
 

@@ -354,11 +354,17 @@ A fresh official Amphenol scrape also exercised the normal disposable
 pipeline in the same attempt. It returned 39 full jobs, kept 18 through
 filtering and confirmed the same local/workbook records in one batch.
 Replay made no further provider or workbook calls.
+An independent isolated installation now verifies the guarded installer,
+fresh measured worker, normal storage and coordinator enrollment on one
+retry. A separate injected installed-verification failure held worker
+admission, preserved the stores, and restored the previous source.
 [Retry evidence and QA](S5_RETRY_ADMISSION_AND_TERMINAL_DELIVERY_20261121.md).
 [Release continuation components](S5_EXACT_RELEASE_CONTINUATION_20261121.md).
 [Measured owner evidence](S5_MEASURED_RELEASE_OWNER_JOIN_20261121.md).
 [Enrolled retry receipt](S5_ENROLLED_RETRY_COORDINATOR_RECEIPT_20261121.md).
 [Fresh combined public-source test](S5_AMPHENOL_PUBLIC_COMPOSED_PASS_20261121.md).
+[Isolated installed same-attempt proof](S5_ISOLATED_INSTALLED_SAME_ATTEMPT_20261121.md).
+[Current deployment scope](S5_S6_DEPLOYMENT_SCOPE_AND_ACCEPTANCE_20261121.md).
 [Public witness](S5_AMPHENOL_PUBLIC_PAGINATION_WITNESS_20261121.md) ·
 [Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md) ·
 [Test-workbook result](S5_AMPHENOL_FIXTURE_WORKBOOK_PASS_20261121.md) ·
@@ -411,6 +417,10 @@ deployed pilot remain open.
 A separate 79-test staged fix and independent QA cover a low-disk hold
 of the selected pilot. The enrolled host replay also preserved the
 paused task after space recovered.
+Two fresh-process staged QA checks proved planned shutdown with a late
+counted reply and no new candidate, and a visibly exhausted task that
+remained held across restart while a distinct owned task started with
+fresh counters.
 The composed two-Company fixture proved that a provider hold is saved
 without a repair, and that the next eligible Company proceeds to exact
 local and workbook-fixture storage. Live sequential acceptance with
@@ -421,11 +431,18 @@ configuration. Normal dispatch returned 19 listed postings with full
 descriptions and a stable reread. Treat the Ashby migration as the reviewed
 candidate structure; production admission and end-to-end acceptance remain
 open. Independent staged QA accepted the one-entry source correction.
+The proposed Draper third structure remains held. Its current official
+link still identifies the exact Workday tenant. The bounded public reader
+was redirected to Workday's outage page, leaving inventory and description
+qualification open.
 [Allen source qualification](S6_ALLEN_ASHBY_PUBLIC_QUALIFICATION_20261121.md).
 [Allen source QA](S6_ALLEN_ASHBY_SOURCE_INDEPENDENT_20261121.md).
 [Reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
 [Disk pressure and pilot hold](S6_DISK_PRESSURE_PILOT_HOLD_20261121.md).
 [Provider hold and continued progress](S6_SEQUENTIAL_PROVIDER_HOLD_REHEARSAL_20261121.md).
+[Planned shutdown QA](S6_OWNED_CHOICE_SHUTDOWN_QA_20261121.md).
+[Budget restart QA](S6_OWNED_REPAIR_BUDGET_RESTART_QA_20261121.md).
+[Current Draper source hold](S6_DRAPER_CURRENT_AVAILABILITY_HOLD_20261121.md).
 
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 

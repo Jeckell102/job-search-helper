@@ -1,0 +1,36 @@
+{
+  "additions": [
+    "dev/wrapper-coder/tools/acquiretm_membership_recipe.py",
+    "dev/wrapper-coder/tools/amphenol_recipe_candidate.py",
+    "dev/wrapper-coder/tools/amphenol_recipe_choice_input.py",
+    "dev/wrapper-coder/tools/amphenol_retry_completion.py",
+    "src/job_search_helper/private_file_custody.py",
+    "src/job_search_helper/qualified_release_owner.py",
+    "src/job_search_helper/release_qualification.py"
+  ],
+  "bootstrap": {
+    "bytes": 14210,
+    "mode": "0664",
+    "owner": [
+      1000,
+      1000
+    ],
+    "sha256": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f"
+  },
+  "disposition": "CORROBORATED_STATIC_SCOPE_ONLY",
+  "historical_labels": {
+    "matches_freeform_capsule": 16,
+    "unlisted_in_freeform_capsule": 15
+  },
+  "legacy_rejections": {
+    "complete_sync_only": "rejected",
+    "no_release_fresh": "rejected"
+  },
+  "legacy_report_sha256": "0da9f1ce023998657499f52af1def83429bb728e39fa342b9c6473b176de5c69",
+  "native_only_paths_outside_scope": [],
+  "no_release_sync_only": "returns None; no retroactive runtime binding",
+  "protected_cycle_state_mode_ro_immutable": true,
+  "replacement_count": 24,
+  "scope_count": 31,
+  "scope_report_sha256": "2d3be570a4503850d437670b7b5ea3bfca4a6b9a57f909228eabd88d37125217"
+}

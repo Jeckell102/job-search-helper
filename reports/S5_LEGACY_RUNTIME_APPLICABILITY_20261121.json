@@ -1,0 +1,15 @@
+{
+  "disposition": "NATIVE_READ_ONLY_RUNTIME_APPLICABILITY",
+  "markers_present": {
+    "integration-release-journal.json": false,
+    "next-scan.json": false,
+    "recovery-pause.json": false
+  },
+  "observed_at": "2026-11-21T04:13:53.061560-05:00",
+  "protected_cycle_id": "CYC-B639C6D864EC",
+  "protected_cycle_status": "In Progress",
+  "protected_scope_count": 800,
+  "protected_state_with_zero_wal_unchanged": true,
+  "runtime_binding_present": false,
+  "runtime_binding_state": null
+}

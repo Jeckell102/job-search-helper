@@ -1,0 +1,28 @@
+{
+  "attempt_id": "RTRY-af36478201f94150a868d03e",
+  "captured_fetch_calls": 1,
+  "child_pids": [
+    8,
+    13
+  ],
+  "cycle_id": "CYC-BDAFF5A1B2E5",
+  "fixture_batches": 1,
+  "host_pids": [
+    16,
+    17
+  ],
+  "host_receipt_sha256": "f7b279e74ce34a9ddf630b6f6fea310245a0447cef2c75570c7f911dc5534c72",
+  "installed_source_sha256": "431b7c8a447a1f10ceadcf343c7ee265bb61eda3b97a3a5c738d47ed60ef9635",
+  "measured_dependency_sha256": "0c9142f4b3c2cf4fc5f521aade2bc238041495a8deb84a9dc9e07b235d2ac6a7",
+  "native_release_qualification": false,
+  "original_outcome_id": "OUT-cffecec610203a71e5c23b82",
+  "outcome_id": "OUT-9404d01555786581fe0595a5",
+  "preserved_archived_inputs": true,
+  "real_provider_or_workbook_calls": 0,
+  "receiver_commands_on_restart": 0,
+  "receiver_events": 1,
+  "release_id": "REL-b721c10b11730e614c0140c5",
+  "result": "DISPOSABLE_SAME_ATTEMPT_INSTALLED_AND_RECEIVED",
+  "saved_and_published_job_count": 18,
+  "workbook_factory_calls": 1
+}
