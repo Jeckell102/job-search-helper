@@ -45,7 +45,7 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 00:33 Eastern
+### Latest outcome, November 21 at 01:02 Eastern
 
 Coordinator and release owner, active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
@@ -94,6 +94,17 @@ reviewed MuleLab recipe rather than another free-form attempt. Keep the
 automatic path and all validation/retry acceptance gates open.
 [Public witness](S5_AMPHENOL_PUBLIC_PAGINATION_WITNESS_20261121.md).
 
+Second read-only listing capture saved four private HTML snapshots. An
+independent standard-library parser verified that the initial and early
+snapshots had the same 25 IDs and the final 14 were disjoint, exactly 39
+combined. Manifest `acc0ba9b1fa8855dc588cc28d9911bf4ab6fa58816cba426e8ca9954437e4bdf`.
+Native readback at 00:42 Eastern found one eligible Amphenol revision and
+zero Company outbox events for it. Its retained-cycle membership is still
+queued and the historical cycle is In Progress. Do not mint an event or
+mutate the retained scope to make this pilot pass. Candidate public
+validation can proceed separately. Actual automatic launch requires
+supported provenance through the owned live route.
+
 The promoted-repair isolation patch passed 84 author tests and three focused
 independent checks. Its accepted scope is `coordinator_store.py` and
 `test_outcome_intake.py`, source-only. `/root/s5_live_authority_plan` owns
@@ -102,23 +113,51 @@ to owned settlement, in a separate source-only snapshot. The three-pin
 typed adapter stage passed 56 maintained tests and four independent source
 probes. `/root/architecture_publication_review` completed the typed-source
 QA. `/root/architecture_reuse_review` owns the independent recipe candidate
-review and has verified that the previous draft is still rejected. No agent
-holds the native edit workspace or deployment authority.
+review and has verified that the previous draft is still rejected.
+`/root/candidate_independent_qa` owns only the recipe compiler as author of
+that scratch slice. Root owns inference selection and release. No agent has
+native edit or deployment authority.
 [Promotion source evidence](S5_PROMOTED_REPAIR_ISOLATION_20261121.md).
 [Automatic trigger scope](S5_AMPHENOL_AUTOMATIC_LAUNCH_REVIEW_20261121.md).
 [Typed observation source handoff](S5_AMPHENOL_TYPED_PAGINATION_HANDOFF_20261121.md).
 
 Latest verified private GitHub backup
-`7fb43965a5b7a1d7de79de13e038b986bfd767d8` on
+`9de15165488c91963c0a35cf185edf18a18c357e` on
 `backup/integration-automation-m1-operator-20261120`. No current user action
 or blocker for generation and verification. A later production deployment
 may need a fresh administrator check. The desktop application's scrolling
 terminal must stay open because its standard output and error attach to it.
-Next action is to freeze a reviewed recipe and strict observed options,
-then invoke one bounded AI choice through the existing serialized Jetson
-interface. Independently execute the actual browser predicate offline before
-any employer scan. Continue the exact automatic outcome route in parallel.
+The recipe compiler is frozen at SHA
+`d6465801a0932a85895441914170d11e0258e642927f2d3349e2d044dfebc377`.
+Its exact output is `895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d`.
+Root verified the actual candidate predicate in offline Chromium with
+captured inert anchors. It rejected old, premature, and foreign membership
+and accepted the actual late page. The first one-call recipe choice
+`WRAP-888acebf40` picked the right strategy but failed the exact response
+schema and remains held. The corrected enumerated interface used one new
+call in `WRAP-545356ed48`. It selected `listing_membership_change` from
+W1, returned `CHOICE_ACCEPTED`, and used the existing single endpoint with
+no unsettled inference. MuleLab materialized the exact candidate under
+`/tmp/jsh-s5-amphenol-recipe-live-candidate`. Original and related offline
+tests passed 16/16 in the existing sandbox. Choice receipt `589442ef…` and
+build receipt `94fabc0b…`. Independent source QA accepted this exact
+candidate, and independent QA accepted the bounded live capture. The
+243-file source vector is
+`48f80b004f69fe4015f711e7f235176ffb69742162010091e017d21143dd1cae`. Both
+fresh normal-dispatch runs returned 39 of 39 with 25/14 pages, unique
+matching IDs/URLs, exact employer scopes, complete descriptions and the
+same final reread. The independent report hash is `73f7b817…`, full private
+capture `4a112649…` under `/tmp/jsh-s5-amphenol-candidate-live.hrygHxP7`.
+Only `acquiretm.py` and `ats.py` differ in the 243-file application release
+tree compared to native. The candidate is validated and awaits qualified
+installation. The true automatic route remains pending. Owned settlement
+QA continues, and `/root/s5_live_authority_plan` owns a bounded
+receipt-to-choice composition. Root owns next exact release authority
+review. Do not substitute the bounded public evidence for a failed owned
+request, qualified receipt, or native post-install verification.
 Give the requested 10-minute plain-text updates.
+[Recipe choice and candidate build](S5_AMPHENOL_RECIPE_CHOICE_20261121.md).
+[Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md).
 
 ## Sprint 4 active after Samtec acceptance
 

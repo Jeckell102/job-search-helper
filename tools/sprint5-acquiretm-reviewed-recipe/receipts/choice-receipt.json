@@ -1,0 +1,14 @@
+{
+  "calls": 1,
+  "model_request_id": "a2c8c86a8ca64550b1e0cbb7cc10aa7d",
+  "model_response_sha256": "cb3d0d49088986620229c220912472405d4e15ac8c164e8f010ef5f3031f58f4",
+  "recipe_sha256": "d6465801a0932a85895441914170d11e0258e642927f2d3349e2d044dfebc377",
+  "selection": {
+    "evidence": "W1",
+    "strategy": "listing_membership_change"
+  },
+  "status": "CHOICE_ACCEPTED",
+  "task_id": "WRAP-545356ed48",
+  "task_state": "REVIEW_COMPLETE_LIVE_NOT_VALIDATED",
+  "witness_sha256": "d10331c3e89b63ef00a8a26af7ac4c69f66beb95167e3b2005b4d9e101cd0602"
+}

@@ -319,15 +319,29 @@ Exit gate: an induced qualified integration failure leads to one validated
 release, fresh scoped retry and verified saved jobs without manual stage
 movement; unsupported capability is held rather than forced through.
 
-Current status, November 21: the installed AcquireTM adapter stopped after
-25 of 39 advertised Amphenol Aerospace postings. The one-company pilot
-`WRAP-9b6f2e2274` started in an isolated workspace, and the Jetson recorded
-its first completed model calls. This is a selected generation test. The
-automatic failure-to-task route, exact candidate validation and release,
-fresh retry, and independent end-to-end QA remain open. Individual source
-gates for the candidate issuance and evidence pipeline have passed. Use
-only the parts needed for the actual supported failure and keep other
-capabilities held. [Current generation evidence](S5_AMPHENOL_FIRST_GENERATION_20261121.md).
+Current status, November 21: Amphenol Aerospace's installed AcquireTM
+adapter stopped after 25 of 39 advertised postings. The two bounded
+free-form attempts ended held. Independent browser QA rejected the draft.
+A fresh public same-click capture then verified the old 25 postings and
+14 disjoint refreshed postings, with the unchanged total. The exact
+typed diagnostic source passed independent QA. The Jetson then made one
+valid evidence-backed choice. MuleLab generated the isolated candidate using
+the frozen recipe. Independent live-capture QA accepted both complete
+normal-dispatch runs with 39 jobs each, all descriptions and stable rereads.
+A separate source fixture exercised the existing ordinary event's qualified
+no-publication settlement and receipt replay. Authentic live automatic
+launch, qualified release, fresh retry and installed QA remain open.
+[Public witness](S5_AMPHENOL_PUBLIC_PAGINATION_WITNESS_20261121.md) ·
+[Independent candidate live verdict](S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md).
+
+The next bounded case is `COMP-0490` Amphenol Aerospace, exact AcquireTM
+board and independently observed delayed page-two membership. The approved
+test choice is the versioned membership-wait recipe. Unknown outcomes,
+different employers or boards, unavailable public evidence, access blocks,
+and unvalidated variants stay held in this experiment. The Jetson supplies
+only the finite evidence-backed choice. The candidate keeps the original
+scope, full-description, total, unique-ID, and stable-reread gates. This
+case does not expand the supported production family or enable release.
 
 ## Sprint 6 — Reliability and sequential staged activation
 

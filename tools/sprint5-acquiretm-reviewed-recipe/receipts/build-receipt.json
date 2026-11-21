@@ -1,0 +1,17 @@
+{
+  "authorship": "Host-written fixed source transformation; selection accepts only W1.",
+  "installed": false,
+  "live_validated": false,
+  "model_choice_receipt_sha256": "589442ef8b8fcd1d3487ff9e9b283c3b74a83bb814e2cdc384a238878cb3846f",
+  "output_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "pre_repair_diagnostic_retained": true,
+  "recipe_version": "acquiretm-listing-membership-v1",
+  "selected_evidence": {
+    "evidence": "W1",
+    "strategy": "listing_membership_change"
+  },
+  "source_sha256": "a95953afe2bc10138714f6b11af22572b17ab344bf61d78b834647895025aa61",
+  "target_path": "src/job_search_helper/acquiretm.py",
+  "witness_id": "W1",
+  "witness_sha256": "d10331c3e89b63ef00a8a26af7ac4c69f66beb95167e3b2005b4d9e101cd0602"
+}
