@@ -163,6 +163,37 @@ Sprint 4 observer absent, so no production launch or Atomic Machines
 intake. No live employer collection or production edits.
 [Control identity evidence](S5_CURRENT_CONTROL_IDENTITY_STAGED_20261120.md).
 
+19:58 Eastern. Verified the private GitHub branch at
+`c9f5c720dffcea682bcfd481fd59960eaad6c995` for the current control
+validator, focused tests, independent cases and reports. The preceding
+offline handoff backup `e463dec3dc7c66f727ca37b3dc69bbd8c89618c7`
+is part of that branch history. The administrator observer was still
+absent at 19:58. Resume with the explicit reviewed tool-vector repin
+and independent candidate qualification. The overall goal stays active.
+
+20:08 Eastern. Root explicitly repinned the offline verifier and owner
+handoff in `/tmp/jsh-s5-ordinary-current-tools.0HAtnw3z` to the
+independently accepted current PDW validator. Root passed 454 combined.
+`/root/site_journal_qa` accepted 20 final independent checks. Exact old
+and full display labels each returned 114 offline reads and reused the
+same receipt. Old tools were refused at zero reads, and cross-vector
+slots stayed held without recapture, budget reset or application writes.
+[Repin evidence](S5_CURRENT_TOOL_VECTOR_STAGED_20261120.md).
+
+The separately assigned fresh public capture lane
+`/root/s4_pilot_receipt_map` stopped on a tool flag before reporting any
+new evidence. No retry of that worker was dispatched. The earlier
+offline corpus remains historical. `/root/architecture_publication_review`
+confirmed that the existing post-install callback runs after file
+replacement, so release qualification must gate entry and be rechecked
+inside the original scraper lease before backup. Root owns the isolated
+automated preflight in `/tmp/jsh-s5-automated-release-preflight.6SuVCPap`.
+70 tests passed in the initial implementation. Current source also
+verifies the exact candidate file set projects to the qualified full
+source/configuration hashes and matches the capture-root pin in the
+bootstrap. Independent QA is assigned to `/root/site_journal_qa`.
+[Preinstall design](S5_PREINSTALL_QUALIFICATION_REVIEW_20261120.md).
+
 
 Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
 the original endpoints and unused launch custody. Native ownership and
