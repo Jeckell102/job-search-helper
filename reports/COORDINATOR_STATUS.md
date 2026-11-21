@@ -43,9 +43,47 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Sprint 6 reliability while the Sprint 5 production pilot is held
+
+### Latest outcome, November 21 at 02:49 Eastern
+
+Root is coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 are accepted, the
+Sprint 4 Freeform pilot is accepted, the Sprint 5 source rehearsal is
+accepted, and Sprints 5–7 still have live acceptance to complete. The
+previous goal turn made progress through host-trigger independent QA and
+the verified private backup `73b1f9436ff6a64003072a8d973b23a25ae9be89`.
+
+This turn, `/root/s5_live_authority_plan` verified the installed retained
+operator and guarded pause routes cannot supply a qualified Amphenol
+failure and fresh retry. The native pause assessment held on 45 saved
+inventories and six partly applied plans. The protected Saronic cursor
+remained 67. Amphenol overlapped historical scope and its exact
+unstarted-membership guard refused. No native effects.
+
+Root owns the staged Sprint 6 disk-pressure and pilot safety fix at
+`/tmp/jsh-s6-disk-pressure-pilot.20261121`. Two real-store fixtures first
+failed on the existing source, then passed. The supervisor now stops a
+selected pilot, preserves in-flight evidence, blocks fresh activation
+before workspace creation, and clears the disk hold without restarting
+work. The final focused run passed 79 tests.
+`/root/listener_ownership_qa` independently accepted the exact source,
+reproduced both baseline failures, and proved that a bound late reply
+is accounted once with zero candidate writes.
+`/root/architecture_publication_review` owns an isolated ordinary
+two-Company sequence from an external provider hold to a separate
+eligible Company's exact storage/publication. No application edits in
+that lane. Root owns verification and backup.
+[Disk-pressure pilot fix](S6_DISK_PRESSURE_PILOT_HOLD_20261121.md).
+
+Next, back up the independent verdict and verify the sequential fixture. Do not
+start a native pilot while the authority is held. Keep broad backlog,
+automatic release and Jetson concurrency unchanged. User action is
+currently unnecessary.
+
 ## Sprint 5 first real generation
 
-### Latest outcome, November 21 at 02:39 Eastern
+### Latest outcome, November 21 at 02:41 Eastern
 
 Root is the coordinator and release owner. Active goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 accepted. Sprint 4
@@ -164,12 +202,16 @@ task `WRAP-4e42f50414`. `/root/architecture_publication_review`
 independently accepted the staged host. All six enrollment cases and
 three existing host checks passed. One pre-existing consumer expectation
 failed on both untouched baseline and staged host and remains recorded.
-Root owns backup and the release decision. Native checkouts still carry
-the older AcquireTM adapter, and the protected cycle owns Amphenol's
-queued scope. The next live action is a read-only native recheck when a
-legitimate eligible owner exists, then separately qualified installation,
-single real pilot, and installed independent QA. No qualifying live
-input is currently available. Keep broad controls off.
+Root owns backup and the release decision. At 02:40 Eastern the native
+read-only check still found zero eligible waiting Company events, zero
+qualified repair records, no pending scan request, and one admission
+blocker, `CYC-B639C6D864EC`. Amphenol is queued and Saronic is held at
+inventory in that cycle. Native checkouts still carry the older AcquireTM
+adapter. Continue native work when a legitimate eligible owner exists
+or the protected historical scope can safely be settled separately.
+Before the real pilot, independently qualify installation and retry.
+Keep broad controls off. The persistent goal remains active and the
+overall completion contract stays open.
 [Composed coordinator rehearsal](S5_AMPHENOL_CHOICE_SCHEDULER_REHEARSAL_20261121.md).
 [Host-trigger result](S5_AMPHENOL_HOST_TRIGGER_REHEARSAL_20261121.md).
 
@@ -179,11 +221,11 @@ and promoted owner reader, the composed offline suite passed 114
 tests, zero skips. Reuse these results in the
 composed successive-work, restart, and native acceptance gates already in
 the roadmap. Do not enable automatic release early. The current verified
-private backup is `10c8df9d1ef036f91406471a9c8ab0a66320e71f` on
+private backup is `73b1f9436ff6a64003072a8d973b23a25ae9be89` on
 `backup/integration-automation-m1-operator-20261120`. Refetched the
-remote commit and compared the independent scheduler QA, corrected reader
-recheck and exact reviewed coordinator source byte for byte. No user action needed at this
-checkpoint. Keep the 10-minute plain-text update cadence.
+remote commit and compared the independent host QA, host rehearsal
+and exact reviewed host source byte for byte. No user action needed at
+this checkpoint. Keep the 10-minute plain-text update cadence.
 [Native hold and actual unblock conditions](S5_AMPHENOL_NATIVE_ORIGIN_READBACK_20261121.md).
 [Coordinator reliability baseline](S6_COORDINATOR_RELIABILITY_BASELINE_20261121.md).
 
