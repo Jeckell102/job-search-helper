@@ -1,0 +1,19 @@
+{
+  "result": "PENDING_SOURCE_TRANSITION_CONFIRMED_VISIBLE_ONLY",
+  "checked_visible_fields": 18,
+  "matching_current_fields": 18,
+  "visible_fields_with_pending_changes": [
+    "Last Checked",
+    "Salary / Range",
+    "Review Status"
+  ],
+  "pending_changes_already_observed": [],
+  "exact_job_key_unique": true,
+  "visible_before_guards_matched": true,
+  "local_only_guard_count": 5,
+  "local_only_candidate_field_count": 10,
+  "focused_ranges_checked_for_formulas": 4,
+  "protected_formula_count": 0,
+  "protected_note_count": 0,
+  "workbook_modified": false
+}

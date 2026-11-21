@@ -1,0 +1,20 @@
+{
+  "current_source_jobs_evidence_rows": 1,
+  "inventory_jobs": 276,
+  "inventory_payload_sha256": "c6eb96518b91119188133fbb2ee0371acb6c7e9647b6c0082738cd63bc2ac181",
+  "inventory_status": "complete",
+  "inventory_unblocked": true,
+  "jobs_cycle_mirror_matches": true,
+  "paired_plan_evidence_operation": 195,
+  "plan_payload_sha256": "7ae4bcf36413f1c96e46f9793ab861a15b30b8b53b1c80650f3f64e89e3f350b",
+  "plan_source_transition_operation": 194,
+  "proposed_source_jobs_evidence_rows": 0,
+  "retained_checkpoint": {
+    "cycle": "CYC-B639C6D864EC",
+    "saronic_cursor": 67,
+    "saronic_operations": 208,
+    "status": "In Progress"
+  },
+  "saved_cycle_company_count": 800,
+  "state_company_stage": "inventory"
+}

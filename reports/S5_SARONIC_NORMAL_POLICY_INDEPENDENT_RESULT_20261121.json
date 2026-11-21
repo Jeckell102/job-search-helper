@@ -1,0 +1,13 @@
+{
+  "all_review_fields_and_notes_preserved": true,
+  "exact_retained_compensation_field_applied": true,
+  "history_policies_equal": true,
+  "material_hash_recomputed": true,
+  "new_evidence_matches_planned_fields": true,
+  "no_workbook_or_publication_exercised": true,
+  "original_evidence_fields_and_policy_identical": true,
+  "pinned_manual_choice_value_equal": true,
+  "retained_cursor": 67,
+  "review_fields_count": 7,
+  "total_operations": 208
+}

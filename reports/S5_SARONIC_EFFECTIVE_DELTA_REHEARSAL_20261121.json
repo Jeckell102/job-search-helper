@@ -1,0 +1,25 @@
+{
+  "disposition": "PASS_DISPOSABLE_NORMAL_REPOSITORY_ONLY",
+  "retained_cursor": 67,
+  "total_operations": 208,
+  "fixture_local_inserts": 1,
+  "fixture_local_updates": 1,
+  "actual_changed_fields": [
+    "Current Snapshot",
+    "Job Description",
+    "Last Checked",
+    "Last Seen In Inventory",
+    "Record Updated",
+    "Salary / Range",
+    "Source Hash"
+  ],
+  "protected_review_and_decision_preserved": true,
+  "old_and_new_evidence_survived": true,
+  "isolated_update_only_proposal_matches_normal_local_delta": true,
+  "proposal_guards_salary_old_source_review_and_manual_choice": true,
+  "original_legacy_operation_unchanged": true,
+  "proposed_hash_matches_retained_posting": true,
+  "retained_posting_declares_salary": true,
+  "planned_salary_matches_posting_field": true,
+  "no_network_or_live_store_access": true
+}

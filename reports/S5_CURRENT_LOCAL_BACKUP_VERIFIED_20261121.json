@@ -1,0 +1,16 @@
+{
+  "manifest_sha256": "236c688c5a5636b7ac9e57d77e54510d5867b536292f14483072d671e649a3bf",
+  "scope_file_count": 2352,
+  "byte_count": 6745247566,
+  "database_integrity_checks": 9,
+  "local_path": "/home/chris/.local/state/job-search-helper-backups/current-scraper-20261121-090919",
+  "copied_scraper_stores_stable_during_capture": true,
+  "coordinator_stable_separate_capture": true,
+  "spreadsheet_snapshot_included": false,
+  "retained_work_readback": {
+    "cycle": "CYC-B639C6D864EC",
+    "saronic_cursor": 67,
+    "saronic_operations": 208,
+    "status": "In Progress"
+  }
+}

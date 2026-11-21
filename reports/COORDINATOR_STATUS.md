@@ -43,6 +43,105 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Saronic read-only recovery evidence
+
+### November 21 at 09:23 Eastern
+
+Root remains coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Preproduction automatic
+Amphenol repair remains independently accepted. Sprint 5 deployment,
+production retry and remaining milestone acceptance are open. Keep one
+Jetson lane and broad releases and backlog disabled.
+
+Root matched one exact live Job History row to the verified local copy.
+All 18 available fields agree with the saved old row, including the
+three originally planned visible differences. Nothing was published or
+acknowledged. The Sheet is compact, with source and Decision among the
+local-only fields. The frozen plan would have overwritten Decision.
+Normal repository manual-choice behavior suppressed that reset in the
+two-operation disposable replay, preserved original evidence, and
+recorded the proposed source. The retained posting explicitly contains
+the proposed compensation. Root's strictly present-row update-only
+projection matched the actual seven-field delta. All published fields,
+old source, current user decisions and existing evidence still require
+their exact guards.
+[Readback and recovery checkpoint](S5_SARONIC_RECOVERY_CHECKPOINT_20261121.md).
+
+`/root/architecture_publication_review` confirmed explicit bounded
+late-control continuation is still needed, and `/root/listener_ownership_qa`
+independently verified the normal policy replay and the verified local
+backup. Both lanes settled. Root owns the source-only recovery work.
+Next build a bound effective suffix plan using existing policy and exact
+receipts. Preserve old cursor and archives. Five other blocked plans
+need separately attributable readback or disposition. No Sheet, Jobs,
+source, queue, service or production control was changed in this turn.
+
+## Goal resumed and current local backup
+
+### November 21 at 09:13 Eastern
+
+The user resumed goal `01a1f11f-e014-7493-8441-2f66502e23a9`. Root
+is coordinator and release owner. Sprint 5 has one complete test-
+environment repair workflow for Amphenol. The Jetson selected the
+AcquireTM repair and MuleLab built the wrapper. In public-source
+testing, normal dispatch recovered all 39 postings. Deployment,
+production retry and final readback remain open.
+
+Root created a new private local copy of the current scraper code,
+saved work and receipts. All 2,352 files were hash-checked and nine
+SQLite copies passed integrity checks. The first attempt detected
+a live coordinator status write and discarded its own partial copy.
+The successful attempt captured that ledger at a separate stable
+instant. The application files and scraper stores held their
+identities across copying. No services were stopped, and the live
+spreadsheet and production files were unchanged.
+[Verified local copy](S5_CURRENT_LOCAL_BACKUP_VERIFIED_20261121.json).
+
+`/root/listener_ownership_qa` independently confirmed from the finalized
+backup that the historical cycle is In Progress, all 276 Saronic
+postings are preserved, and the exact operation 194 and 195 pair is
+reconstructable at cursor 67/208. Root ran all six stored-plan previews
+against the backup's code and SQLite copies with network and writes
+denied. The existing Saronic recovery routes all held. No production
+recovery action was executed. Independent verification also matched
+all 2,352 file hashes and all nine SQLite checks from the finalized
+backup. Root owns the next evidence step on the saved work. Keep broad
+controls disabled and one Jetson inference lane.
+[Independent backup QA](S5_CURRENT_LOCAL_BACKUP_INDEPENDENT_QA_20261121.json)
+· [Copied recovery preview](S5_RETAINED_BACKUP_RECOVERY_PREFLIGHT_20261121.json).
+
+## Live eligibility hold
+
+### November 21 at 06:13 Eastern
+
+Root remains coordinator and release owner for goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Its tool status is BLOCKED.
+Sprint 5's test-environment evidence remains accepted. Deployed Sprint 5,
+remaining Sprint 4 evidence and Sprints 6–7 remain open. Approximate
+overall progress is 40% by deployed acceptance.
+
+Three consecutive read-only eligibility checks at 11:12:04, 11:12:36
+and 11:13:03 UTC found zero usable owned events, no named completion
+case outside all unfinished scopes, and zero qualifying receipts for
+the five old plans. The historical scrape stays In Progress in both
+State and Jobs. All prior result fields besides the timestamp
+matched. No worker or other process is in flight for this gate.
+
+The next decision is whether to prepare a reviewed recovery for the
+unfinished scrape or leave it held and set up a genuine eligible company
+outside that scope. This decision is about what to prepare. It does
+not authorize production data changes. Once either route supplies a
+legitimate pilot, recheck the release eligibility, protected-state
+snapshot under native exclusion and fresh host and service authority.
+Keep one Jetson lane, broad processing and unqualified automatic
+release disabled. No production changes were made during the rechecks.
+
+The scoped source, tests and evidence were fetched back and verified at
+private GitHub commit `03205aa84fc041a3bcad45959e5f294d821f5a34`.
+[Exact pilot paths](S5_NATIVE_PILOT_DIRECTION_20261121.md)
+· [Verified package checkpoint](S5_S6_RELEASE_PACKAGE_CHECKPOINT_20261121.md)
+· [Backup verification](S5_S6_OFFLINE_RELEASE_PACKAGE_BACKUP_VERIFIED_20261121.json).
+
 ## Offline release package and native baseline
 
 ### November 21 at 06:10 Eastern
@@ -83,10 +182,15 @@ fixture paths.
 
 No production source, job data, earlier receipts, services, locks, Sheet
 or Jetson configuration were modified. The latest verified private
-backup is `65a3fee9c5059e17d2f1587d98f25b05fb605605`. Next action
-requires an eligible live route and fresh protected-state and host
-authority. The owner choice between retained recovery preparation and
-a genuine disjoint pilot remains pending. No live ETA.
+backup is `03205aa84fc041a3bcad45959e5f294d821f5a34`, fetched with all 22 scoped
+files and the exact reviewed controller hash verified.
+[Backup verification](S5_S6_OFFLINE_RELEASE_PACKAGE_BACKUP_VERIFIED_20261121.json).
+
+No known release-package implementation is pending ahead of native
+pilot scope. Next action needs an eligible live route and fresh
+protected-state and host authority. The owner choice between retained
+recovery preparation and a genuine disjoint pilot remains pending.
+No live ETA. This checkpoint made concrete staging progress.
 
 ## Existing installed release and current native origin
 
