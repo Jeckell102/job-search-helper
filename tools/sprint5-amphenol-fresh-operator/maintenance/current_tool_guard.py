@@ -53,9 +53,8 @@ class CurrentToolGuard:
 
             # The historical source layout still applies, with the single
             # explicitly measured -04 host version in its existing slot.
-            current = {**old.manifest.after, HOST_RELATIVE: {
-                **old.manifest.after[HOST_RELATIVE], 'sha256': receipt['after_sha256'],
-            }}
+            host_mode, _ = old.manifest.after[HOST_RELATIVE]
+            current = {**old.manifest.after, HOST_RELATIVE: (host_mode, receipt['after_sha256'])}
             if (old.verify_tree(record, current) != old.canonical
                     or any(existing.present(path) for path in (old.marker, old.units.sentinel))):
                 raise ValueError('Current checkout or maintenance state differs from the restored baseline.')

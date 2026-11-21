@@ -559,6 +559,15 @@ and the fresh -04-aware predecessor guard in offline checks. The live
 native process-exclusion and restart proof remain open. No change was
 applied to production. [Maintenance stage](S5_AMPHENOL_TWO_TOOL_NATIVE_STAGE_20261121.md).
 
+At 14:59 Eastern the exact launcher passed independent source QA. Native
+read-only preflight reached the fresh administrator observation boundary
+after verifying the previous transaction and current source layout. The
+administrator observer must confirm the two inaccessible system helpers
+before the two-file tool change. A separate private combination preserves
+the new successor Store behavior while supporting the application release's
+existing-only coordinator entry. No provider call or native change began.
+[Preflight](S5_AMPHENOL_NATIVE_LAUNCHER_PREFLIGHT_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.

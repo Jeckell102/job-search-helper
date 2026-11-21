@@ -43,7 +43,48 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
-## ACTIVE — Sprint 5 fresh operator repair and provider hold
+## ACTIVE — Sprint 5 native tool window and fresh release prep
+
+### November 21 at 14:59 Eastern
+
+Root is coordinator and release owner for active persistent goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Prior goal turn made concrete
+progress and verified two GitHub checkpoints. Overall gate acceptance
+remains approximately 40%. The six original milestones, frozen Sprint 6
+sequence and final deployed QA remain in scope.
+
+Independent source QA accepted the exact native launcher and corrected
+predecessor guard. The real default read-only preflight found and then
+passed the historical manifest endpoint shape mismatch. It reached
+listener inspection after validating the recorded -03 transaction and
+actual -04 layout. Native inspection confirms helper PIDs 1249 and 4467
+remain inaccessible from the normal account. Root asked the user to
+start the fresh restricted administrator observer at 14:57. The -05
+socket was absent at last check. No native tool installation began.
+[Live preflight](S5_AMPHENOL_NATIVE_LAUNCHER_PREFLIGHT_20261121.md)
+· [Exact wiring QA](S5_AMPHENOL_NATIVE_LAUNCHER_INDEPENDENT_QA_20261121.md).
+
+Root owns exact live preflight, any guarded two-file install and backup.
+Continue when actual observer readiness is verified, then compare both
+installed files, wrapper restart identity, unchanged bridge and sync
+controls, backups and historical task/receipt. This tool-only operation
+keeps the recipe enrollment off and does not scrape or release a wrapper.
+Do not contact Amphenol before 15:22:24 Eastern or automatically at expiry.
+Wait for a current defensible validation or alternative same-company case.
+
+In parallel, `/root/adapter_dependency_reconcile` owns the private
+fresh-built operator candidate reader and one-shot, compiled but not yet
+accepted. The retained one-shot fixtures returned 6/6 using their exact
+accepted staged Coordinator/Store. `/root/architecture_publication_review`
+owns the independent fresh completed-build reader fixture. Root merged
+the two disjoint Store changes for the later application release at
+`/tmp/jsh-amphenol-fresh-release-store.RzNF73bB/coordinator_store.py`,
+SHA `48e3f2ccee38b83f5577d2a66398074d58ab16b3f3c9afd5fda69e83af8e3d7b`.
+The merged stage preserved the new successor route in four offline tests
+and passed the existing-only reopen/no-create check. It is outside the
+current two-file native tool install. [Minimum release design](S5_AMPHENOL_FRESH_RELEASE_MINIMUM_DESIGN_20261121.md).
+
+## Earlier active checkpoint — fresh operator repair and provider hold
 
 ### November 21 at 14:28 Eastern
 
@@ -130,6 +171,11 @@ restart source readback and restored default-off enrollment. Leave the
 administrator observer off for this checkpoint. Make no Amphenol calls
 before 15:22:24 Eastern.
 [Tool maintenance stage](S5_AMPHENOL_TWO_TOOL_NATIVE_STAGE_20261121.md).
+
+Latest verified backup at 14:49 Eastern is
+`5fb4572c5dfd7b3e36cd9b5eb8ae1e172341bcf3`. All 15 updated maintenance
+files and reports matched the fetched private GitHub branch byte for byte.
+[Maintenance backup verification](S5_AMPHENOL_TWO_TOOL_BACKUP_VERIFIED_20261121.json).
 
 For the fresh candidate's later release, reuse the guarded installer and
 existing one-company terminal verifier. The retained operator preflight

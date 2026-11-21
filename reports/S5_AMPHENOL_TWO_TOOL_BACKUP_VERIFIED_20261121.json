@@ -1,0 +1,25 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "5fb4572c5dfd7b3e36cd9b5eb8ae1e172341bcf3",
+  "exact_file_count": 15,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "58d3cd9a9a001db649a41828d02e2b10a1d443e0762384db787d26e4a58aac0b",
+    "reports/S5_AMPHENOL_CURRENT_TOOL_GUARD_INITIAL_20261121.md": "4a3fcde4c4117469469992717d7f144f8e6aa13001328e3462463f80251c79d4",
+    "reports/S5_AMPHENOL_CURRENT_TOOL_GUARD_QA_20261121.md": "0071905ac919f9ba7a3e9103a4bf926b435888834dbbb5b27f09d5586d0c7214",
+    "reports/S5_AMPHENOL_FRESH_STAGE_BACKUP_VERIFIED_20261121.json": "bbae88c59f1b784f3a498890eec672cdca85fe27894fde37fa1b3dbe6f47bcce",
+    "reports/S5_AMPHENOL_TWO_TOOL_NATIVE_STAGE_20261121.md": "f26b72663c1cdf31b8e585829c6b559f88b6c5b54fe74350fd886cf188cea400",
+    "reports/S5_AMPHENOL_TWO_TOOL_UPDATER_INITIAL_20261121.md": "1a58135c2364533172004831b96073aae4b413d0c90343896a483f2ecb31402b",
+    "reports/S5_AMPHENOL_TWO_TOOL_UPDATER_QA_20261121.md": "ee6877b1e4ced42326cd4df43e0aa4b265d396a96f9fb572443533d66dfff55d",
+    "reports/sprint_roadmap.md": "4a0499f785b0f49fb496fcfc119674faf8fbe5f91c8ac8b60f9b77ef586f84d5",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/CORRECTED_UPDATER_RESULT.txt": "826bf083c20f096cafd7f7635e7a3aedd57cd902eca38da1a0bbd71cceffe91c",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/INITIAL_UPDATER_FAILURE.txt": "4523ddabb0103b42faa2d27b17fb23bfff5da256550af38c0f475f943059ca84",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/current_tool_guard.py": "e77f4ecc994ea45e8ddab97fbda76673bf2e41a2dc701b52bbb2e0d1a038dc31",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/deploy_two_tool_forward.py": "cf9f82f6b85f441ab2e0fdd9bfee1448aa6c1e444ade09a3e66e2748ebb75597",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/tests/test_current_tool_guard.py": "a614fc84492549aebb7d0345c766acb1d937710eb622af98846f447595cbff78",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/tests/test_deploy_two_tool_forward.py": "0ab6e58b6260918ddf409af778239248e9ac0689d55561f530e5f1730b2ee697",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/tests/test_independent_rollback.py": "23ea7c001f16a8a8d8e35674dffe99b9685e84dac2b0a97eda6c70ed58494cd2"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T14:48:39-05:00"
+}

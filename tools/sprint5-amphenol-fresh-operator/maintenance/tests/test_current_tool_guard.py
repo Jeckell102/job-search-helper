@@ -34,7 +34,7 @@ def test_guard_keeps_old_receipt_and_leases_but_accepts_exact_current_host(tmp_p
     record = {'phase': 'RELEASED', 'target': 'INSTALLED', 'prior': {}, 'guard': 'parked', 'receipt': {
         'phase': 'INSTALLED', 'source_directories': {'src': {'identity': 'source'}, 'guard': {'identity': 'parked'}},
     }}
-    previous = {guard.HOST_RELATIVE: {'mode': '0600', 'sha256': 'old'}, 'unrelated.py': {'sha256': 'untouched'}}
+    previous = {guard.HOST_RELATIVE: (0o600, 'old'), 'unrelated.py': (0o644, 'untouched')}
     historical = {'maintenance_id': 'fixture', 'project': str(tmp_path), 'source': 'INSTALLED',
                   'source_manifest_sha256': 'fixture-manifest',
                   'controller_journal_sha256': installer.digest(installer.encode(record)),
@@ -65,8 +65,8 @@ def test_guard_keeps_old_receipt_and_leases_but_accepts_exact_current_host(tmp_p
         assert terminal == {**historical, 'predecessor_receipt_sha256': pin,
                             'historical_predecessor_receipt_sha256': historical['installer_receipt_sha256']}
         assert locks == {controller_gate, app_lock, installer_gate}
-    assert readback == [{**previous, guard.HOST_RELATIVE: {'mode': '0600', 'sha256': 'current'}}]
-    assert old.manifest.after[guard.HOST_RELATIVE]['sha256'] == 'old'
+    assert readback == [{**previous, guard.HOST_RELATIVE: (0o600, 'current')}]
+    assert old.manifest.after[guard.HOST_RELATIVE] == (0o600, 'old')
     assert locks == set()
 
     with pytest.raises(ValueError, match='Exclusive wrapper host'):
