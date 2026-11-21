@@ -89,6 +89,53 @@ verifier request/result prototype in the positive finisher plan. The
 [Controller evidence](S5_ORDINARY_REVIEW_GATE_STAGED_20261120.md) ·
 [Independent recheck](S5_ORDINARY_REVIEW_GATE_INDEPENDENT_RECHECK_20261120.md).
 
+19:37 Eastern. Private GitHub branch lookup matched
+`eb930d78ba7051256bc332c6a445e79103376e0b` for the independently accepted
+controller source, both QA reports, tests and next-slice plan. The native
+Sprint 4 observer remained absent at the same time. Production launch
+and Atomic Machines intake remain unstarted. Resume from the named
+positive finisher plan and keep the enrolled result held until qualified.
+
+19:48 Eastern. Root staged a one-attempt offline verifier job and
+receipt handoff in `/tmp/jsh-s5-ordinary-verifier-handoff.UvvxzGcv`. It
+uses the exact archived publication and private response. Independent QA
+found a missing work directory could silently reset a budget. The repaired
+separate owner record prevents that; the pinned independent recheck passed
+16 and accepted private staging/readback. Root passed 451 combined and
+proved the real approved offline worker recorded 114 reads and reused the
+same receipt. All three application database snapshots were identical.
+The result has fixture authority only. Root owns the separate launch
+overlay `/tmp/jsh-s5-ordinary-verifier-bound-launch.c33tr0iC`;
+`/root/site_journal_qa` owns its independent launch recheck. Root passed
+11 focused cases on the launch overlay, including rejection of an exact
+copy at the old pathname, an absent owner record, or an omitted owner
+token before supervisor reservation. No production, Sheets, provider or
+Jetson activity. The native Sprint 4 observer was still absent at 19:48.
+Next accept and back up the launch slice, then bind a real candidate
+validation source and separately qualified result to the positive finisher.
+[Offline handoff evidence](S5_ORDINARY_VERIFIER_HANDOFF_STAGED_20261120.md).
+
+19:52 Eastern. The pinned offline owner-launch slice passed 26 final-pin
+workflow tests, 19 standalone verifier regressions and 18 separate
+independent cases. Initial independent QA found two more ways to spend the
+offline allowance before proving ownership. The distinct pinned owner job
+schema now excludes fallback to the legacy fixture path when an owner
+manifest is missing. The supervisor rechecks the sibling owner record
+while holding the verifier mutex before a first reservation or reuse.
+Independent QA accepted the repaired offline launch. The saved-corpus
+test returned 114 reads on the original launch and reused the receipt.
+No application writes and no live collection. Native Sprint 4 observer
+still absent.
+
+Next, the production read-only Company projection matched the fixture
+for Forterra. The active PDW control differs only in the displayed name,
+`Performance Drone Works (PDW)` vs fixture `PDW`. The fixture validator
+hardcodes the old label. Root owns the next source-only validator and
+fresh capture/prequalification boundary. Preserve exact Company ID,
+employer authority, provider board, role, row hash and source revision.
+Independent QA of a current real release candidate is still required.
+[Bound launch recheck](S5_ORDINARY_VERIFIER_BOUND_LAUNCH_INDEPENDENT_RECHECK_20261120.md).
+
 
 Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
 the original endpoints and unused launch custody. Native ownership and
