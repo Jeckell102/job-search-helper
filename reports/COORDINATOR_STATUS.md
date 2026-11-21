@@ -27,6 +27,36 @@ coordinator owns implementation. Independent QA owns acceptance.
 
 ## Sprint 4 active after Samtec acceptance
 
+19:29 Eastern. Coordinator and release owner for goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 4 native release and selected
+Atomic Machines intake remain held. The 19:26 read found no administrator
+observer socket. The user's 15-hour MuleLab authorization remains in
+effect. Sprint 5 source staging advanced through measured enrollment,
+private direct Rippling response custody, exact historical publication,
+and the first immutable nonrepair outcome. Root's full disposable
+regression passed 434. `/root/site_journal_qa` independently found a direct
+recovery bypass after the Jobs-first interruption. Root applied the same
+cycle guard to recovery and pause. The pinned independent recheck passed
+50 maintained and five independent fixtures, and accepted this narrow
+staging scope. Second chat direct capture and raw custody were independently
+accepted and integrated at matching source and policy pins.
+
+Root owns the combined source and evidence in
+`/tmp/jsh-s5-ordinary-enrolled.42mkjmFo`. Follow-ups assigned to
+`/root/s4_abort_repair` for launcher transition and
+`/root/s4_pilot_receipt_map` for the qualified verifier dependency map both
+ended with a tool flag before producing evidence. No acceptance inferred,
+and no repeat dispatched. Root owns the next application transition slice
+and offline dependency readback. Keep pending/invalid scopes held before
+generic publication or AI. Then verify the positive offline report-to-fact
+and seal boundary with a separate reviewer before any live Sprint 5
+qualification. Sprints 1–3 remain independently accepted, and Sprints 6–7
+remain open. Broad processing and unqualified automatic release remain
+disabled. No production, Sheets, or Jetson change in this checkpoint.
+[Enrolled staging](S5_ORDINARY_ENROLLED_STAGED_20261120.md) ·
+[Initial independent QA](S5_ORDINARY_ENROLLED_INITIAL_QA_20261120.md) ·
+[Independent recheck](S5_ORDINARY_ENROLLED_INDEPENDENT_RECHECK_20261120.md).
+
 
 Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
 the original endpoints and unused launch custody. Native ownership and
@@ -206,6 +236,13 @@ remain held. No production actions.
 [Staged publication continuation](S5_ORDINARY_PUBLICATION_CONTINUATION_STAGED_20261120.md) ·
 [Outcome boundary design](S5_ORDINARY_OUTCOME_BOUNDARY_DESIGN_20261120.md) ·
 [Raw custody handoff](S5_ORDINARY_RAW_CAPTURE_CUSTODY_HANDOFF_20261120.md).
+At 19:08 Eastern the native observer socket was still absent. The staged
+code, tests and reports were verified on the private GitHub branch at
+`511f14326961e92f60b69c6671cf6aa8b0d6244b`. Latest exact publication run
+passed 234 on the release interpreter. The Jobs-first reservation lane
+is active. Complete its exact admission, independent publication QA and
+the protected terminal launcher before claiming verified production use.
+
 
 Prepared live enrollment checkpoint. Coordinator and release owner, goal
 `01a1f11f-e014-7493-8441-2f66502e23a9`. User reserved MuleLab for 15 hours
