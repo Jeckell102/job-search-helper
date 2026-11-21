@@ -1,0 +1,33 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "9f3714badf31a60e7916fa05776984f8571510da",
+  "fetched_file_hashes": {
+    "reports/COORDINATOR_STATUS.md": "858d445915b866eb6077a6ee7e980efe778cc90590cefd241858d12bb3b405ef",
+    "reports/S5_OPERATOR_APPLICATION_BACKUP_VERIFIED_20261121.json": "c483a6f5d286cd4d56c2d5c4d6c067690e3ca24c1e97f05d5ea0d9d6d6fb65f0",
+    "reports/S5_OPERATOR_HOST_INDEPENDENT_QA_20261121.md": "efe4a1e8cd7f150607b3400b2e44b28dcdf04b25cc7afb86219ced749dadcc0c",
+    "reports/S5_OPERATOR_HOST_INITIAL_QA_20261121.md": "a8ff9cb4c098e60885fdca5b877ef637e5a44d322501647c55ac0c04df1eac18",
+    "reports/S5_OPERATOR_MAINTENANCE_INDEPENDENT_QA_20261121.md": "defb29d41772911f4ddaf8afedc03dbae25a78871f87ef3fd2be1ef1e7ceef32",
+    "reports/S5_OPERATOR_NATIVE_PREPARATION_INDEPENDENT_QA_20261121.md": "3d3bd297b38ded11ab1315ca7c493ae3d025c306137fd5a672964df32d152a98",
+    "reports/S5_OPERATOR_PAYLOAD_INDEPENDENT_QA_20261121.md": "1b5054ed2c87da76bfd2d84425b0c69b67130ebf124b01dcd9c917332507ba64",
+    "reports/S5_OPERATOR_PREPARER_INDEPENDENT_QA_20261121.md": "30bee0d4bd0d6cb6209c6adce919ce0521cfae47ec0082511699d84f1b15a1c0",
+    "tools/sprint5-operator-host/dev/wrapper-coder/tools/amphenol_recipe_choice_input.py": "f9014988ab91f65cc8060fe0b358920fadb4feb62f3df70b47675eb7898cd426",
+    "tools/sprint5-operator-host/dev/wrapper-coder/tools/host_server.py": "137563add244929e36f53dc0e4b87f2f9a9faaeb22a799102c89e9b939b79eae",
+    "tools/sprint5-operator-host/dev/wrapper-coder/tools/test_amphenol_operator_enrollment.py": "30871cabd730311047915e4196e272064ae97444cbc4fbef2507eb669e90bd40",
+    "tools/sprint5-operator-host/maintenance/OFFLINE_PAYLOAD_PROOF.json": "739159d52060840d4c086d10b1636de87ad44c0707b1e9e5857873540528fe29",
+    "tools/sprint5-operator-host/maintenance/controller.py": "f63f9399f3fcdec3d3b46a6d5e14fc3d1d78e420234b357b0adf44bd68a53ff8",
+    "tools/sprint5-operator-host/maintenance/installer.py": "d85405266310a425bcc49027b5629cfb81dcc89f391cfbf75df33da7ac2a0920",
+    "tools/sprint5-operator-host/maintenance/manifest.json": "8c73be2432fdc49485f426f5be77d6588ea1e13f7b659595f6a4dad16710c57e",
+    "tools/sprint5-operator-host/maintenance/prepare_native.py": "b158fed44c688b56941544f26ce6bf04ed6e5d8f6b0bb7a751cc7fc7687e04ab",
+    "tools/sprint5-operator-host/maintenance/prepare_with_stable_coordinator.py": "605ff38a260701c154603d78e0f70bfa27aeeaba53eef527fc4d16068a4e3ff8",
+    "tools/sprint5-operator-host/maintenance/restore_after_verified_retirement.py": "a24e299c898cae876564594807a72a8b5b30d3407a41455544023527f68cbec0",
+    "tools/sprint5-operator-host/maintenance/retirement_restoration.py": "0fd177a9d6e23f4320f33473485b946108631b25b5fe48e2714956fb4def7e48",
+    "tools/sprint5-operator-host/maintenance/run_retry_with_stable_coordinator.py": "d3ba82f1e0a0929b9f57e6febde00d733d6743933f8a45c93dd61238431ee6e1",
+    "tools/sprint5-operator-host/maintenance/start-observer.sh": "40c6e4866b14770e283da34241e2622d44e1e054867149f3a234cf32c9c98567",
+    "tools/sprint5-operator-host/maintenance/test_operator_successor_package.py": "15b63561a11f28f23c972b2eb6fd8ec459621de8cc07e98793769bba4cb8ebb8",
+    "tools/sprint5-operator-host/maintenance/test_prepare_native.py": "b13c7482ff22f1dab021569f98d0edd91ffd703a31113b9caf557e57c13af403",
+    "tools/sprint5-operator-host/maintenance/verify_installed_source.py": "5eb34e8e3271df2cc359cd8515feb8cb9992c29287812a3a687f048281242ce7",
+    "tools/sprint5-operator-host/maintenance/verify_retry_observer.py": "837fd402cd9b46c677abd340feaeafd613ff8936c05bd81096b408cd1ca58065"
+  },
+  "file_count": 25,
+  "repository": "Jeckell102/job-search-helper"
+}

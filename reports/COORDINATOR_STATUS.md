@@ -43,6 +43,147 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Exact forward build fix accepted in staging
+
+### November 21 at 12:14 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The live pilot proved one
+automatic Jetson call and accepted W1. The separately recovered wrapper
+is byte-identical to the previously verified full 39-posting adapter.
+The original live task, stale isolated baseline, and completed receipt
+are preserved. Its one-off enrollment and slot have been closed.
+
+The narrow forward host fix now independently passed seven disposable
+checks, including actual stale workspace bytes and real existing compiler.
+It refuses the wrong installed adapter before exposing Jetson work,
+checks the approved installed bytes again before building, and saves only
+the isolated recipe result. Existing event behavior is unchanged.
+Exact staged host source pin `5abe835b6b550f3bb81a7c787e97382910ce1d882687521c60e3e8ec630a37ad`.
+This fix is not yet installed. `/root/approval_provenance_design` completed
+its source change and `/root/architecture_publication_review` independently
+accepted the source. `/root/adapter_dependency_reconcile` owns a tightly
+scoped host-only guarded successor tool, with the retained deployment lock,
+unchanged application data, rollback and predecessor continuity. Root
+owns the source backup and any later guarded live action. Do not require
+or schedule another inference for the terminal original task. Overall is
+about 40% by accepted gates, with qualified release, exact retry and
+independent final acceptance still open.
+[Live trigger and recovery](S5_AMPHENOL_FIRST_LIVE_TRIGGER_20261121.md) ·
+[Forward QA](S5_AMPHENOL_FORWARD_BUILD_INDEPENDENT_QA_20261121.md).
+
+## Settled one-session live pilot closed safely
+
+### November 21 at 12:08 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The one-off Amphenol pilot's
+terminal error is preserved. Root removed only the exact pilot enrollment
+and cleared its slot through the existing coordinator command. The wrapper
+returned active with its default environment. Before and after readback
+proved the paused task and one completed Jetson receipt byte-for-byte
+unchanged. Task SHA `95309e140a381be0b365a800fc76e2d4416705f8802691037ebf80f39c445db6`.
+Receipt SHA `aeea900dc8bdcc5be0cd5e4e3781eca0706f8b2034ef98997d0028f439dcba7e`.
+Zero inference is open. Broad queue, campaign, autopilot and unqualified
+release remain off. No new production changes are authorized by the test
+artifact. The current remaining work is source-only narrow forward
+repair and independent verification. The exact candidate reconstructed
+from the retained choice remains isolated and matches prior live-tested
+bytes. Do not resume the old task or spend a new Jetson session for it.
+
+## First live automatic handoff proved and stale workspace build held
+
+### November 21 at 12:07 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The exact live Amphenol request
+`operator-amphenol-20261121-03` reproduced the typed pagination defect.
+It observed 39 advertised, 25 initial postings and 14 distinct refreshed
+members. `CYC-93EF06F8172F` produced `OUT-9f4b030568412faca159be2f` and
+one sender acknowledgement and one receiver intake. The existing
+coordinator automatically created `WRAP-6a3a372032`. One Jetson inference
+`2b444fe8f48a4c6e9638f1c6a7acb40c` completed with the accepted
+`W1/listing_membership_change` choice. No inference is open. The native
+task stays `PAUSED_ERROR` with its one-session budget consumed. It saved
+no native candidate and did not release, retry, or publish jobs.
+
+Independent QA identified the actual blocker. The task used its approved
+queue-base Git copy `fb55bc79937571b970c73cb5b10c1f2a0fe9fd03`; its adapter
+is `88893583bb01ed0b8878020d9b71ddb9043bbfcdb70d6e0eb6b2475bc8855392`.
+The exact deployed typed source and compiler input are
+`a95953afe2bc10138714f6b11af22572b17ab344bf61d78b834647895025aa61`.
+Root reread the accepted receipt and identical prompt/tool digests. The
+same choice and approved source rebuilt the correct wrapper without
+inference at `/tmp/jsh-amphenol-retained-choice.ehpkrf0l/recipe-candidate`,
+exact source `895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d`.
+That hash matches the previous independently validated full 39-posting
+wrapper. The recovery artifact is outside production. The native task,
+old workspace and immutable receipt remain intact. Do not resume or
+reset its inference budget. See [independent live failure](S5_AMPHENOL_LIVE_BUILD_FAILURE_INDEPENDENT_QA_20261121.md).
+
+`/root/approval_provenance_design` owns a narrow source-only fix: verify the
+installed typed source before model admission and use it for the isolated
+deterministic operator build under the same owner leases. Root owns
+production scope cleanup of the already settled one-session pilot and
+source/receipt preservation. Independent QA will recheck exact forward
+composition. The archive and user opportunities stay protected. Overall
+acceptance remains roughly 40% with automatic native build, qualified
+release, fresh retry and verified saved jobs still open.
+
+## One live Amphenol observation is running
+
+### November 21 at 12:01 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Independent native QA confirmed
+all nine -03 files and all three restored paths, with the installed
+receipt and protected retirement unchanged. Restored exchange journal
+`29ec14d16c30e4b55e4712f6ad46a2d28aba13466681d31ce738ee1ae087cfa4`.
+The installed source is staged for the live proof, not an automatic
+release or synced-jobs claim. [Native QA](S5_OPERATOR_NATIVE_TERMINAL_INDEPENDENT_QA_20261121.md).
+
+Root created one exact `COMP-0490` operator request
+`operator-amphenol-20261121-03`, digest
+`b6e19d0b289f0286b68936c4f777cafebf61a14f3cc0655ca34362bc31a8c0d8`,
+current source revision `b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501`.
+Wrapper PID 612551 was verified active with only that exact process
+enrollment. Release/retry flags were absent. The named live operator
+scrape started once as terminal session `58001`. It can trigger only one
+review pilot after an actual typed partial, with one Jetson lane. Monitor
+the original session, its exact durable outcome, and the actual inference
+receipt. No replay after uncertain transport. On a healthy/unqualified
+result, retain its real hold and the original queue. On a verified success,
+prove exact generated bytes and independent evidence before any subsequent
+release or retry. Root owns all live actions and no worker may mutate.
+
+## Operator trigger source installed and independently verified
+
+### November 21 at 11:58 Eastern
+
+Root remains senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The user started the exact -03
+administrator observer. Root verified both enrolled system helpers,
+then invoked one captured maintenance install. The installed wrapper
+and assistant bridge are active, wrapper unfrozen, sync inactive.
+Independent native QA accepted child exit 0 and all nine source files.
+Controller `0f2543519bbd7dcf9737533c3e2caebf62e2e8a8cc1574d09287e21055ed1793`,
+installer receipt `eecbb742a212acdfb30a7be7687daf90dd8cb348a4076b7041680ad2d1243058`.
+
+The three alternate paths are still parked. The exact leased native
+read-only restoration observation passed, digest
+`c092dfc357a96f13c4b8c02740e89caa6430228239630edb80a1acadf82dcb25`.
+After `/root/listener_ownership_qa` accepts that observation, root restores
+only those three paths and verifies readback. The installation created no
+scrape, Google write, or Jetson inference. First live pilot follows only
+after all routes are restored and runtime facts remain clear. Make exactly
+one durable Amphenol operator request, enroll its exact ID/SHA/revision
+before dispatch, and run the named scoped observation. Preserve healthy
+or unqualified holds. No release/retry flag or broad automation.
+
+Verified private backup `9f3714badf31a60e7916fa05776984f8571510da` was fetched
+and all 25 scoped files matched. [Backup evidence](S5_OPERATOR_HOST_BACKUP_VERIFIED_20261121.json).
+Overall remains about 40%; production generation and final gates are open.
+
 ## Operator successor privately prepared and waiting for the administrator observer
 
 ### November 21 at 11:52 Eastern

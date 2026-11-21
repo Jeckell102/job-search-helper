@@ -1,0 +1,13 @@
+{
+  "candidate": "/tmp/jsh-amphenol-retained-choice.ehpkrf0l/recipe-candidate",
+  "candidate_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "choice": "listing_membership_change",
+  "inference_receipt": "2b444fe8f48a4c6e9638f1c6a7acb40c",
+  "inference_receipt_count": 1,
+  "inference_replayed": false,
+  "outcome": "OUT-9f4b030568412faca159be2f",
+  "production_state_mutated": false,
+  "source_sha256": "a95953afe2bc10138714f6b11af22572b17ab344bf61d78b834647895025aa61",
+  "status": "OFFLINE_CANDIDATE_FROM_RETAINED_LIVE_CHOICE",
+  "task": "WRAP-6a3a372032"
+}
