@@ -136,6 +136,33 @@ employer authority, provider board, role, row hash and source revision.
 Independent QA of a current real release candidate is still required.
 [Bound launch recheck](S5_ORDINARY_VERIFIER_BOUND_LAUNCH_INDEPENDENT_RECHECK_20261120.md).
 
+19:55 Eastern. Verified remote private GitHub commit
+`e463dec3dc7c66f727ca37b3dc69bbd8c89618c7` for the accepted offline
+verifier source, both stages of QA, tests, and release-boundary plan.
+Root staged the exact PDW display-name update in
+`/tmp/jsh-s5-current-control-identity.YOyPUIW8`. The prior validator
+reproduced a hold when given the current name. The updated validator
+permits both reviewed literals under the same control ID and board,
+and the test requires the pinned row projection to match exactly.
+`/root/site_journal_qa` owns independent readback. Keep that new
+validator vector separate from the earlier offline verifier pins
+until it is reviewed and explicitly repinned. Continue with a
+separately approved fresh candidate capture after that check.
+
+19:57 Eastern. Independent QA accepted the exact current control display
+identity change. 86 maintained cases and nine independent cases passed
+offline. Exact full-name pins worked. Stale or label-only repins,
+substituted IDs, roles, boards or employers, and wrong source revisions
+continued to hold before PDW provider replay. The new combined tool
+digest is `86723e7fdc0e4e8acdae2dbdc9516c93f0e4557c60ef3b75d17f20869bd3eac0`.
+Root still owns the next explicit reviewed tool-vector repin and
+qualification of a fresh actual candidate. The installed Forterra mapping
+already selects its canonical board; induce a stale mapping only in a
+disposable build for acceptance. The 19:55 read again showed the native
+Sprint 4 observer absent, so no production launch or Atomic Machines
+intake. No live employer collection or production edits.
+[Control identity evidence](S5_CURRENT_CONTROL_IDENTITY_STAGED_20261120.md).
+
 
 Checkpoint 18:13 Eastern. Prepared enrollment recheck independently accepted
 the original endpoints and unused launch custody. Native ownership and
