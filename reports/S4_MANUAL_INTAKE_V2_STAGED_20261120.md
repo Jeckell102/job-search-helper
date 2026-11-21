@@ -1,0 +1,16 @@
+# Sprint 4 scoped manual-pilot Company intake v2
+
+The staged helper adds one fresh manual-pilot Company append and a separate readback-only recovery path for Sheets. The version 1 Atomic Machines helper and tests retain their original bytes. The new scope denies the unresolved legacy name and board, including normalized name variants, and will reject a version 1 claim file. [New helper](/tmp/jsh-s4-manual-intake-v2.8WVknvUm/scoped_manual_pilot_intake_v2.py) · [Version 1 helper](/tmp/jsh-s4-company-intake.R5s9VWJ6/atomic_machines_intake.py) · [Prior uncertainty review](/tmp/jsh-s4-intake-uncertainty-future-review.md)
+
+| Artifact | SHA-256 |
+| --- | --- |
+| v2 helper | `3414ac18b52a03867e1f1f96d1ecf8bf1fe2090baa7358530e03747943263f76` |
+| v2 focused tests | `0ebb15af37a7694a103565fc521fe31b10ea956a749348e2a28898e719236aae` |
+| Unchanged v1 helper | `4127e7c6e7b26fc0b5a9a87cc6df0856b4e59bb4d962bcdaffd7dc58563dd73b` |
+| Unchanged v1 tests | `77a44f7066231d43df0f06675d3aea22a29128a36f5631a06ca1914f417c91c9` |
+
+`start_new_intake` verifies canonical approval bytes against the independently configured digest. The scope binds the literal Company name, ID, active Greenhouse board row and Date Added, the workbook digest, exact worksheet and table IDs, ordered compact headers, one positive signed-32-bit metadata ID, and the pristine private custody directory's device, inode and timestamps. With the existing scraper and writer leases held, it checks for existing marker, remote identity and local identity or revision. It then creates and fsyncs the exclusive claim and submits one batch with spreadsheet-scoped `createDeveloperMetadata` and one literal `appendCells` carrying both `sheetId` and `tableId`. The marker value hashes the immutable claim intent, and the claim retains the exact deterministic request body and its digest. Deleting a spent claim does not restore pristine authorization for the same approved custody.
+
+`recover_intake` requires the original retained claim and exact body. It reads the exact metadata ID, a unique current literal Company row inside the native table body, and the same metadata again. A missing, moved, changed or ambiguous marker or row holds. Exact evidence permits one existing SQLite transaction to create or read back the scoped row, baseline, event and receipt. Recovery has no call that writes to Sheets. The staged helper grants no retry authority when a marker is absent after uncertainty, including when the row is also absent.
+
+All 43 combined cases passed in 3.76 seconds with the system interpreter and disposable fixtures. The 24 v2 cases cover both timeout cuts, claim deletion, exact readback and replay refusal, metadata or row drift, native table or approved header mismatch, duplicate board aliases, a racing marker ID collision, legacy denial, the exact atomic request, and preservation of the out-of-table tail. The preceding 19 v1 cases passed with their original source and tests. The test service models the batch atomically and never authenticates. No production database, data, network, credentials, live worker, launcher or installation was used or changed. [Focused fixtures](/tmp/jsh-s4-manual-intake-v2.8WVknvUm/test_scoped_manual_pilot_intake_v2.py)

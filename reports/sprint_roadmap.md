@@ -251,11 +251,19 @@ Exit gate: a supported company change creates one logical scoped request and
 realistic failures create exactly the correct retry, hold or repair task across
 duplicates, restarts and source drift.
 
-Current status is source staging. The selected successor's no-publication
+Current status, November 20: the guarded installation passed independent
+native checks. The Atomic Machines intake held after an unconfirmed external
+append. Readback found no Company row or event. The guarded rollback restored
+the original source, services and checkout paths, and the append claim
+remains spent. A separate synthetic Sheets fixture reproduced the missing
+worksheet-ID error and verified the corrected append with an atomic duplicate
+marker. Independent QA rejected the direct append for a concurrent foreign
+writer race. The Freeform scope stays prospective while a remote-read-only
+intake for a genuine owner-created Company is staged. Independent acceptance
+of that intake and the actual live event-to-outcome run are still required.
+Normal idle and busy evidence remains open. The selected successor's no-publication
 receipt and crash recovery passed the 198-test disposable regression.
-Independent QA is reviewing the terminal settlement. Live and full-chain
-evidence, including the applicable normal idle and busy paths, remains open.
-See the restart card and `S4_SELECTED_RETRY_TERMINAL_STAGED_20261120.md`.
+See the restart card and `S4_SHEETS_APPEND_WIRE_DIAGNOSTIC_20261120.md`.
 
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 
@@ -287,8 +295,12 @@ Exit gate: an induced qualified integration failure leads to one validated
 release, fresh scoped retry and verified saved jobs without manual stage
 movement; unsupported capability is held rather than forced through.
 
-Current status: open. Individual source components and historical pilot
-evidence do not yet prove the maintained end-to-end loop.
+Current status, November 20: individual source gates passed for the positive
+finisher, issuance slot, coordinator storage, enrollment snapshot and repaired
+capture helper. The capture helper passed 42 focused independent checks at
+the repaired pin. Real transport and approved launcher/caller authority are
+still open. The actual qualified failure, bounded candidate release and
+fresh retry remain necessary for the end-to-end gate.
 
 ## Sprint 6 — Reliability and sequential staged activation
 
