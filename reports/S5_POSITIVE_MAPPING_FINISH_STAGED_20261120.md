@@ -1,0 +1,13 @@
+# Sprint 5 exact positive mapping finish
+
+The staged finisher can use an approved verdict from an independently configured live authority. It reopens the exact receipt from that physical owner directory and compares the approved receipt bytes, reviewed tool vector, dispatch, archived publication, frozen verifier input, and retained raw response manifest. It rejects offline, held, incomplete or wrong-scope results. The live result reader does not issue or attest a verdict by itself.
+
+The exact mapping fact and its provenance commit in one State transaction with the detached Engine seal. A compare-and-swap binds the seal to the original persisted State bytes. The existing generic mapping writer stays available for legacy non-enrolled work. An enrolled dispatch reserves the fact and its outcome for the owned route.
+
+The Jobs write runs in its own transaction under the same leases. Its private permit rereads the current Company, installed qualification matrix, original receipt, exact State, archived publication and durable fact row before accepting the specific qualified mapping outcome. A prior immutable outcome takes precedence. Once Jobs commits, restart only reconciles the terminal checkpoint, even if the original verdict later becomes unavailable.
+
+The disposable tests use a real measured scraper capture and exact publication, an in-memory workbook, and a fixture standing in for the independent verdict authority. The fixture proved one qualified repair outcome, atomic State rollback, restart before Jobs and before terminal checkpoint, retained State evidence after verdict withdrawal, and held output after a qualification-matrix change at the Jobs write. Negative fixtures covered offline mode, no application authority, held disposition, and drifted scope or evidence pins. Legacy test failures exposed the existing in-memory checkpoint contract, which is retained after an ordinary successful save.
+
+This slice has no live verdict issuer or production route for the optional authority. The default finish continues to hold a current verified-mismatch candidate for review. A source-probe validation in a future live mapping verdict identifies the potentially correct board and is separate from qualification of the eventual release candidate. Both boundaries still need current end-to-end field evidence. No fresh employer fetch, production account, workbook, queue, or Jetson was used.
+
+The coordinator's broader compatibility suite passed **555** cases. Independent QA accepted the exact staged source with **138** passing cases, including eight independent probes. See [independent acceptance](S5_POSITIVE_MAPPING_FINISH_INDEPENDENT_20261120.md). The later public-employer sample is separate from this source acceptance.
