@@ -87,6 +87,8 @@ class FakeSystemd:
         self.s['commands'].append((op, args))
         if op == 'daemon-reload': return ''
         if op == 'show':
+            if args and args[0] == n.TIMER:
+                return 'inactive' if 'ActiveState' in args else 'disabled'
             unit = n.BRIDGE
             drop = self.directory / (unit + '.d') / '98-amphenol-release-window.conf'
             active = self.s['bridge']
@@ -332,6 +334,125 @@ class NativeComposition(unittest.TestCase):
         self.w.observer=True
         self.w.restore()
         self.history_preserved()
+
+
+class CompleteHarness(Harness):
+    # Keep only external service/observer/lineage boundaries substituted.
+    # Exercise the actual default admission, exact app checks and binding.
+    ready = n.NativeWindow.ready
+    _approval = n.NativeWindow._approval
+    _terminal = n.NativeWindow._terminal
+
+
+class CompleteContinuation(unittest.TestCase):
+    setUp = NativeComposition.setUp
+    tearDown = NativeComposition.tearDown
+    history_preserved = NativeComposition.history_preserved
+
+    def _complete_fixture(self):
+        modules = {
+            'job_search_helper': ModuleType('job_search_helper'),
+            'job_search_helper.cli': SimpleNamespace(scraper_lock_name=lambda: 'scraper.lock', writer_lock=Files.lock),
+        }
+        patcher = patch.dict(sys.modules, modules)
+        patcher.start(); self.addCleanup(patcher.stop)
+        load('job_search_helper.repair_retry', Path(__file__).parent/'vendor/repair_retry.py')
+        release = load('job_search_helper.integration_release', Path(__file__).parent/'vendor/integration_release.py')
+        target = self.project/'src/job_search_helper/acquiretm.py'
+        target.parent.mkdir(parents=True)
+        target.write_bytes(b'BEFORE = True\n')
+        (self.project/'requirements.txt').write_bytes(b'# disposable dependency policy\n')
+        before = release.metadata(target)
+        before_tree = release.source_tree_digest(self.project)
+        target.write_bytes(b'AFTER = True\n')
+        manifest = dict(schema=release.MANIFEST_SCHEMA, failed_request_id='operator-fixture',
+            company_id='COMP-0490', source_revision='fixture-current-source',
+            files={'src/job_search_helper/acquiretm.py': {'before':before,'after':release.metadata(target)}},
+            before_source_manifest_sha256=before_tree, source_manifest_sha256=release.source_tree_digest(self.project),
+            before_config_sha256=release.config_tree_digest(self.project), config_sha256=release.config_tree_digest(self.project),
+            dependency_manifest_sha256=release.dependency_manifest_digest(self.project), validation_receipt_sha256='e'*64)
+        manifest['release_id'] = release.manifest_release_id(manifest)
+        manifest = release.canonical_manifest(manifest)
+        self.w.__class__ = CompleteHarness
+        self.w.release_id, self.w.manifest = manifest['release_id'], manifest
+        self.w.manifest_sha256 = release.digest(manifest)
+        self.w.qualification_check = lambda: {'release_id': self.w.release_id, 'manifest_sha256': self.w.manifest_sha256}
+        self.w.resume_complete = True
+        journal = dict(schema=release.JOURNAL_SCHEMA, state='COMPLETE', release_id=self.w.release_id,
+                       manifest_sha256=self.w.manifest_sha256, release=release.release_binding(manifest))
+        path = self.project/'.state/integration-release-journal.json'
+        Files.write(path,n.encode(journal))
+        bridge = self.directory/n.BRIDGE
+        for key, value in [('BRIDGE_UNIT',bridge), ('BRIDGE_SOURCE',bridge),
+                           ('BRIDGE_UNIT_SHA',sha256(bridge.read_bytes()).hexdigest()),
+                           ('BRIDGE_SOURCE_SHA',sha256(bridge.read_bytes()).hexdigest())]:
+            p=patch.object(n,key,value); p.start(); self.patches.append(p)
+        return release, path, journal, target
+
+    def test_complete_continuation_real_exchange_and_scoped_restore(self):
+        release,path,journal,target = self._complete_fixture()
+        originals = {path:path.read_bytes(),target:target.read_bytes()}
+        self.assertEqual(self.w.ready()['state'],'QUALIFIED_NATIVE_WINDOW_READY')
+        self.assertEqual(list(self.window_root.iterdir()),[])
+        yielded = []
+        with self.assertRaises(ValueError):
+            with self.w.hold():
+                yielded.append('existing application resume only')
+                with Files.lock(self.app_lock): pass
+                self.w.fail_readiness = True
+        self.assertEqual(self.system['wrapper'],'inactive')
+        self.assertEqual(self.system['bridge'],'inactive')
+        self.assertEqual(json.loads(self.w.journal.read_bytes())['binding']['continuation'],
+                         'same-qualified-complete-release-v1')
+        # Recovery cannot reinterpret this continuation as an initial install.
+        self.w.resume_complete=False
+        commands=list(self.system['commands'])
+        with self.assertRaisesRegex(ValueError,'Unknown native recovery'):self.w.restore()
+        self.assertEqual(commands,self.system['commands'])
+        self.w.resume_complete=True; self.w.fail_readiness=False
+        path.unlink()
+        commands=list(self.system['commands'])
+        with self.assertRaises((ValueError,RuntimeError)):self.w.restore()
+        self.assertEqual(commands,self.system['commands'])
+        Files.write(path,originals[path])
+        self.w.restore(); self.w.restore()
+        self.assertEqual(yielded,['existing application resume only'])
+        self.assertEqual(originals,{p:p.read_bytes() for p in originals})
+        self.w.exchange.witness('restored'); self.history_preserved()
+        with self.assertRaisesRegex(ValueError,'Existing window'):
+            with self.w.hold(): self.fail('spent window reused')
+
+    def test_complete_continuation_refuses_missing_wrong_or_changed_active_release(self):
+        release,path,journal,target = self._complete_fixture()
+        original=path.read_bytes()
+        variants=[None, {**journal,'state':'ROLLED_BACK'}, {**journal,'release_id':'REL-'+'f'*24},
+                  {**journal,'manifest_sha256':'f'*64}, {**journal,'release':{}},
+                  {**journal,'release':{**journal['release'],'source_manifest_sha256':'f'*64}}]
+        for value in variants:
+            if value is None:path.unlink()
+            else:Files.write(path,n.encode(value),replace=path.exists())
+            with self.assertRaises((ValueError,RuntimeError)):
+                with self.w.hold():self.fail('invalid activation entered worker')
+            self.assertEqual(list(self.window_root.iterdir()),[])
+            self.assertEqual(self.system['commands'],[])
+        Files.write(path,original,replace=True)
+        target.write_bytes(b'DRIFT = True\n')
+        with self.assertRaisesRegex(ValueError,'Settled source'):
+            with self.w.hold():self.fail('changed source entered worker')
+        self.assertEqual(list(self.window_root.iterdir()),[])
+
+    def test_default_admission_still_requires_before_and_same_qualified_approval(self):
+        release,path,journal,target = self._complete_fixture()
+        self.w.resume_complete=False
+        with self.assertRaisesRegex(ValueError,'Different active release'):self.w.ready()
+        path.unlink();target.write_bytes(b'BEFORE = True\n')
+        self.assertEqual(self.w.ready()['state'],'QUALIFIED_NATIVE_WINDOW_READY')
+        self.w.resume_complete=True
+        self.w.qualification_check=lambda:None
+        commands=list(self.system['commands'])
+        with self.assertRaisesRegex(ValueError,'independent live qualification'):self.w.ready()
+        self.assertEqual(commands,self.system['commands'])
+        self.assertEqual(list(self.window_root.iterdir()),[])
 
 
 if __name__=='__main__':

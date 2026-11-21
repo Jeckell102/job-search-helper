@@ -69,13 +69,18 @@ def test_fresh_success_path_owns_cut_and_compares_exact_terminal(prepared, monke
 
 
 @pytest.mark.parametrize('status', ('PAUSED_ERROR', 'REVIEW_COMPLETE_LIVE_NOT_VALIDATED'))
-def test_fresh_recovery_only_checks_active_release_for_completed_task(prepared, monkeypatch, status):
+@pytest.mark.parametrize('resume_complete', (False, True))
+def test_fresh_recovery_only_checks_active_release_for_completed_task(prepared, monkeypatch, status, resume_complete):
     fresh, prove_owned = request(prepared)
     state = {'id': fresh['completed_task_id'], 'status': status,
              'repair_provenance': {'outcome_id': fresh['original_outcome']}}
     with closing(sqlite3.connect(prepared[2].path)) as db, db:
         db.execute('INSERT INTO tasks VALUES (?,?)', (state['id'], json.dumps(state)))
-    monkeypatch.setattr(reader, 'read_operator_generated_candidate_release', lambda *a, **ka: None)
+    def missing_before_image(*args, **kwargs):
+        assert not resume_complete, 'Continuation must never call the fresh install selector'
+        return None
+
+    monkeypatch.setattr(reader, 'read_operator_generated_candidate_release', missing_before_image)
     monkeypatch.setattr(qualified_release_owner, 'release_and_continue_qualified',
                         lambda *a, **ka: pytest.fail('released without an eligible fresh candidate'))
 
@@ -86,6 +91,6 @@ def test_fresh_recovery_only_checks_active_release_for_completed_task(prepared, 
         return {'state': 'HELD_OPERATOR_RETAINED_QUALIFICATION'}
 
     monkeypatch.setattr(retained, '_resume_operator_retained_release', recover)
-    result = one_shot.run_fresh_operator_release(execute=True, **fresh)
+    result = one_shot.run_fresh_operator_release(execute=True, resume_complete=resume_complete, **fresh)
     assert result == {'state': 'HELD_OPERATOR_FRESH_BUILD_PREFLIGHT' if status == 'PAUSED_ERROR'
                       else 'HELD_OPERATOR_RETAINED_QUALIFICATION'}

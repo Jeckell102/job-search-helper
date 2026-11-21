@@ -71,14 +71,14 @@ def run_operator_release(*, approval, original_outcome, request_sha256, historic
 
 
 def run_fresh_operator_release(*, approval, original_outcome, request_sha256, completed_task_id,
-                               maintenance_scope=None, execute=False):
+                               maintenance_scope=None, execute=False, resume_complete=False):
     """Release the exact output of a successfully completed automatic build."""
     return _run_operator_release(approval=approval, original_outcome=original_outcome,
         request_sha256=request_sha256, task_id=completed_task_id, maintenance_scope=maintenance_scope,
-        execute=execute, fresh=True)
+        execute=execute, fresh=True, resume_complete=resume_complete)
 
 
-def _continue_fresh_release(approval, enrollment, coordinator, task_id, release):
+def _continue_fresh_release(approval, enrollment, coordinator, task_id, release, *, resume_complete):
     from amphenol_candidate_release import read_operator_generated_candidate_release
     from amphenol_operator_retained_release import _resume_operator_retained_release
     from job_search_helper.qualified_release_owner import release_and_continue_qualified
@@ -87,11 +87,13 @@ def _continue_fresh_release(approval, enrollment, coordinator, task_id, release)
     if (_physical_directory(root) is None or any(_physical_file(root / name) is None for name in (
             'state.db', 'jobs.sqlite3', 'inventories.sqlite3'))):
         return {'state': 'HELD_OPERATOR_APPLICATION_STORE'}
-    candidate = read_operator_generated_candidate_release(
-        enrollment, coordinator, root, outcome_id=release['outcome_id'],
-        candidate_root=release['candidate_root'], manifest=release['manifest'], completed_task_id=task_id,
-        canonical_baseline=release['project_root'], approval=approval,
-    )
+    candidate = None
+    if not resume_complete:
+        candidate = read_operator_generated_candidate_release(
+            enrollment, coordinator, root, outcome_id=release['outcome_id'],
+            candidate_root=release['candidate_root'], manifest=release['manifest'], completed_task_id=task_id,
+            canonical_baseline=release['project_root'], approval=approval,
+        )
     if candidate is None:
         # The input owner can move to the retry after activation. Only the
         # same completed build can attempt recovery. The existing recovery
@@ -114,10 +116,11 @@ def _continue_fresh_release(approval, enrollment, coordinator, task_id, release)
 
 
 def _run_operator_release(*, approval, original_outcome, request_sha256, task_id, maintenance_scope,
-                          execute, fresh):
+                          execute, fresh, resume_complete=False):
     if execute is not True:
         return {'state': 'HELD_OPERATOR_EXECUTION_NOT_REQUESTED'}
     if (not isinstance(approval, RetryReleaseApproval) or not callable(maintenance_scope)
+            or type(resume_complete) is not bool
             or not isinstance(original_outcome, str) or not re.fullmatch(r'OUT-[0-9a-f]{24}', original_outcome)
             or not isinstance(request_sha256, str) or not re.fullmatch(r'[0-9a-f]{64}', request_sha256)
             or not isinstance(task_id, str) or not re.fullmatch(r'WRAP-[0-9a-f]{10}', task_id)):
@@ -167,7 +170,8 @@ def _run_operator_release(*, approval, original_outcome, request_sha256, task_id
                     if fresh:
                         coordinator = Coordinator(base=base, company_revision_resolver=current_company_revision,
                                                   existing_store_only=True)
-                        result = _continue_fresh_release(approval, enrollment, coordinator, task_id, release)
+                        result = _continue_fresh_release(
+                            approval, enrollment, coordinator, task_id, release, resume_complete=resume_complete)
                     else:
                         result = continue_operator_retained_release(
                             execute=True, historical_task_id=task_id, **release,

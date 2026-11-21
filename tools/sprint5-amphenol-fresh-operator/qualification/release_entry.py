@@ -23,11 +23,11 @@ TASK = 'WRAP-11dc97a3dd'
 STAGED_TOOLS = STAGE / 'release-tools'
 INSTALLED_TOOLS = PROJECT / 'dev/wrapper-coder/tools'
 CONTROLLER_ROOT = Path('/home/chris/.local/state/job-search-helper-maintenance/s5-operator-trigger-20261121-03')
-NATIVE_STAGE = Path('/tmp/jsh-fresh-amphenol-native-window')
+NATIVE_STAGE = Path('/tmp/jsh-amphenol-complete-activation-resume')
 BRIDGE_DRAIN = Path('/tmp/jsh-amphenol-native-two-tool.HQkjpe8m/two_tool_route_drain.py')
 TOOLS = {
     'amphenol_candidate_release': 'bf9ac48a86ee6e19290423899409f2603031e2ce3977247f05df21a4cd7d7c42',
-    'amphenol_operator_one_shot': 'e00a40688045377d06a515004360ded7004fb336a99a6e5faa92ccca95a35638',
+    'amphenol_operator_one_shot': '1090d18053a50323b996a1ff0f3bfe82228db3c15eeb2c3422cc99795262cb00',
     'amphenol_operator_quiet_window': '8b124170b12897dcc37a82d6a5af5ed38538fee22d9194ddf4146c2565a2fdc4',
     'amphenol_operator_retained_release': 'df7e0aabcc961342aa18fed318ee957c6f679342a938d22dd4e8e51570e403b4',
     'amphenol_retry_completion': '1b598db426c24611adc5303a71c4f9d21fe4ddc5e2560459be7a78d1989abf67',
@@ -133,10 +133,12 @@ def main():
     parser.add_argument('--native-window-sha256')
     parser.add_argument('--wrapper-scope-sha256')
     parser.add_argument('--window-root', type=Path)
+    parser.add_argument('--resume-complete', action='store_true',
+                        help='Continue the exact already-installed release without selecting installation.')
     args = parser.parse_args()
     inputs = (args.approval_record, args.approval_record_sha256, args.native_window_sha256,
               args.wrapper_scope_sha256, args.window_root)
-    if args.action == 'inspect' and any(item is not None for item in inputs):
+    if args.action == 'inspect' and (args.resume_complete or any(item is not None for item in inputs)):
         parser.error('Package inspection takes no approval or window inputs')
     if args.action != 'inspect' and (None in inputs or any(not re.fullmatch(r'[a-f0-9]{64}', pin)
             for pin in (args.approval_record_sha256, args.native_window_sha256, args.wrapper_scope_sha256))):
@@ -174,7 +176,8 @@ def main():
         window_module, modules = load_native_window(loaded, args.native_window_sha256)
         window = window_module.create_window(release_id=RELEASE_ID, manifest_sha256=MANIFEST_SHA,
             manifest=manifest, qualification_check=qualification_check, window_root=args.window_root,
-            native_modules=modules, wrapper_scope_sha256=args.wrapper_scope_sha256)
+            native_modules=modules, wrapper_scope_sha256=args.wrapper_scope_sha256,
+            resume_complete=args.resume_complete)
         if args.action == 'ready':
             result = window.ready()
         elif args.action == 'restore':
@@ -182,7 +185,8 @@ def main():
         else:
             result = loaded['amphenol_operator_one_shot'].run_fresh_operator_release(
                 approval=approval, original_outcome=OUTCOME, request_sha256=REQUEST_SHA,
-                completed_task_id=TASK, maintenance_scope=window.hold, execute=True)
+                completed_task_id=TASK, maintenance_scope=window.hold, execute=True,
+                resume_complete=args.resume_complete)
     print(json.dumps(result, sort_keys=True))
     return 1 if args.action == 'apply' and result.get('state') != 'OPERATOR_RELEASE_CONFIRMED' else 0
 

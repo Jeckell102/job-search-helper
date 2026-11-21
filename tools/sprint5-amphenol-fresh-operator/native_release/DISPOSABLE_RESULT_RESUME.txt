@@ -1,0 +1,17 @@
+test_complete_continuation_real_exchange_and_scoped_restore (test_native_window.CompleteContinuation) ... ok
+test_complete_continuation_refuses_missing_wrong_or_changed_active_release (test_native_window.CompleteContinuation) ... ok
+test_default_admission_still_requires_before_and_same_qualified_approval (test_native_window.CompleteContinuation) ... ok
+test_bridge_start_failure_reholds_and_restores_exact_routes (test_native_window.NativeComposition) ... ok
+test_default_refusals_make_no_effects (test_native_window.NativeComposition) ... ok
+test_nonterminal_application_blocks_all_restoration (test_native_window.NativeComposition) ... ok
+test_partial_real_swap_recovers_without_worker (test_native_window.NativeComposition) ... ok
+test_quiet_restore_failure_is_fenced_and_recoverable (test_native_window.NativeComposition) ... ok
+test_real_default_entry_and_fixed_digest_grammar (test_native_window.NativeComposition) ... ok
+test_real_exchange_quiet_window_and_free_worker_lock (test_native_window.NativeComposition) ... ok
+test_recovery_requires_fresh_observer_before_service_actions (test_native_window.NativeComposition) ... ok
+test_site_module_origin_requires_pinned_zip_and_members (test_native_window.NativeComposition) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 1.975s
+
+OK

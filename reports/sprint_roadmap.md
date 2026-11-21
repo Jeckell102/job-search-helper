@@ -323,6 +323,12 @@ detail call or whole-Company attempt. The actual generated wrapper and
 its still-held live qualification retain their original identities.
 [Transport source stage](S5_AMPHENOL_RETRY_AFTER_STAGE_20261121.md).
 
+At 17:22 Eastern, independent offline QA accepted explicit recovery of
+the same qualified COMPLETE activation without selecting installation.
+This closes the staged native/application join for the cut before retry
+settlement. It supplies no live source, job, or workbook acceptance.
+[Recovery evidence](S5_AMPHENOL_COMPLETE_ACTIVATION_RESUME_STAGE_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,

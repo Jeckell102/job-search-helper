@@ -1,0 +1,19 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "5276d5b98454e9eda428e1c4ded7ca5a56cd89e8",
+  "exact_file_count": 9,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "a9ce3184b8795a96500f3147e037b75c8d324fbbf2fb5650adff89f05235b56c",
+    "reports/S5_AMPHENOL_FRESH_NATIVE_STAGE_BACKUP_VERIFIED_20261121.json": "54158a3aa1a60c6ce422b4aedf60af0c59adfc41b17c10824929872473d38c90",
+    "reports/S5_AMPHENOL_RETRY_AFTER_INDEPENDENT_QA_20261121.md": "83979b944759ba97445abf6ecd30c3da3440526a607fb58de105ddcf6b8645e8",
+    "reports/S5_AMPHENOL_RETRY_AFTER_INITIAL_QA_20261121.md": "6774411ed4d5522bc72c787b14b09c295297eb835e0695bacc4eaed1f0d98e3d",
+    "reports/S5_AMPHENOL_RETRY_AFTER_RELEASE_DECISION_20261121.md": "dbccf5e3578eae91c91a12ba682d7ea0a1795f4d4eadc20c958fa4679ce36f26",
+    "reports/S5_AMPHENOL_RETRY_AFTER_STAGE_20261121.md": "56a865da27a4330dc1436ff3afeee051ce85813d1659fa00aba235b06a63ed02",
+    "reports/sprint_roadmap.md": "276b073ff8604b12c955e43806c821cd9fd963f76fc82b6ee88fc550c6090a1c",
+    "tools/sprint5-amphenol-fresh-operator/retry_after_stage/src/job_search_helper/acquiretm.py": "63f7a91af1185bcb171cb70a8a93e7097d46519bd43f1a198911acc84a27f2c8",
+    "tools/sprint5-amphenol-fresh-operator/retry_after_stage/tests/test_acquiretm.py": "9729563bb49716ce9236b70ad6b05c636dd4999bd17dd7778e7e2e7df2552841"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T17:14:39-05:00"
+}

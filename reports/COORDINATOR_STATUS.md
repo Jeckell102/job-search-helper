@@ -119,6 +119,31 @@ and release identity. Do not retry Amphenol before 17:48:55 Eastern or on
 time alone. The ordinary intake had no alternative event at the last
 verified check. The project is active and approximately 40% accepted.
 
+Latest GitHub checkpoint `5276d5b98454e9eda428e1c4ded7ca5a56cd89e8` was
+fetched at 17:14 Eastern. All nine files matched on the existing private
+branch. This turn made concrete progress in the staged provider transport
+and did not change live qualification or production.
+[Backup verification](S5_AMPHENOL_RETRY_AFTER_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 17:22 Eastern — COMPLETE-only release continuation staged
+
+Root and all three development/QA lanes finished the required post-install
+recovery gap. The explicit `--resume-complete` entry reaches the existing
+retry owner only for the same qualified COMPLETE release. It leaves normal
+first installation and worker locks unchanged. Two independent suites each
+passed 12 disposable cases. The exact assembled staged entry's read-only
+inspection passed. Actual before-source readback refused continuation with
+no active release, as expected. The real Amphenol candidate and proposal
+identities are unchanged. No provider contact or production change.
+[Continuation evidence](S5_AMPHENOL_COMPLETE_ACTIVATION_RESUME_STAGE_20261121.md).
+
+Root remains release owner. The live progress dependency remains complete
+public qualification and a current supported source. No Amphenol contact
+before 17:48:55 Eastern and no automatic retry at expiry. No fresh observer
+is needed before qualification. The persistent goal stays active at about
+40% overall acceptance. Both private versions and all QA reports remain
+available for exact release or later recovery.
+
 ### November 21 at 16:39 Eastern — current coordinator checkpoint
 
 Root remains coordinator and release owner for the active persistent goal
@@ -159,7 +184,7 @@ only the row affected by a new verified checkpoint.
 | Production and canonical build input | `/home/chris/job-search-helper_old`; `src/job_search_helper/acquiretm.py` SHA `a95953af…`. The isolated task checkout is a historical snapshot. |
 | Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production, adapter SHA `895ec36e…`. Private full candidate and proposal `REL-53592bb86b62492840c58267` are in `/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT`. [Qualification status](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md). |
 | Current request and tool receipt | `operator-amphenol-20261121-05` / `f8c53183…`; local -05 maintenance receipt SHA `60b29ffc…`. See [exact identifiers and hashes](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md). |
-| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `2d001a5a4efb153d1221efeb7261ddafcbd235bb`. All 13 scoped files matched the fetched copy. [Verification](S5_AMPHENOL_FRESH_NATIVE_STAGE_BACKUP_VERIFIED_20261121.json). |
+| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `5276d5b98454e9eda428e1c4ded7ca5a56cd89e8`. All nine scoped files matched the fetched copy. [Verification](S5_AMPHENOL_RETRY_AFTER_BACKUP_VERIFIED_20261121.json). |
 
 ## Prior Sprint 5 preparation checkpoints
 

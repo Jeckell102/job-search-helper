@@ -199,7 +199,9 @@ class BridgeFence:
 
 class NativeWindow:
     def __init__(self, *, release_id, manifest_sha256, manifest, qualification_check,
-                 window_root, native_modules, wrapper_scope_sha256):
+                 window_root, native_modules, wrapper_scope_sha256, resume_complete=False):
+        require(type(resume_complete) is bool, 'Continuation policy must be explicit boolean')
+        self.resume_complete = resume_complete
         self.release_id, self.manifest_sha256, self.manifest = release_id, manifest_sha256, manifest
         self.qualification_check, self.root = qualification_check, Path(window_root)
         self.modules, self.wrapper_scope_sha256 = native_modules, wrapper_scope_sha256
@@ -355,7 +357,7 @@ class NativeWindow:
                 and self.root not in PROJECT.parents, 'Independent private window directory required')
         require(not os.path.lexists(self.journal), 'Existing window requires explicit recovery')
         self._lineage()
-        self._terminal(before_only=True)
+        self._terminal(before_only=not self.resume_complete)
         self._running(bridge_allowed=True)  # current observer is required by real process checks
         for path, digest in ((BRIDGE_UNIT, BRIDGE_UNIT_SHA), (BRIDGE_SOURCE, BRIDGE_SOURCE_SHA)):
             require(sha256(physical(path).read_bytes()).hexdigest() == digest, 'Approved bridge source differs')
@@ -374,6 +376,10 @@ class NativeWindow:
         from job_search_helper.integration_release import (assert_release_settled, source_tree_digest,
             config_tree_digest, dependency_manifest_digest)
         journal = assert_release_settled(PROJECT / '.state')
+        if self.resume_complete:
+            from job_search_helper.integration_release import assert_active_release_binding, release_binding
+            active = assert_active_release_binding(PROJECT / '.state', release_binding(self.manifest))
+            require(active == journal and not before_only, 'Continuation requires the exact active COMPLETE release')
         after = journal is not None and journal.get('state') == 'COMPLETE'
         if after:
             require(not before_only and journal.get('release_id') == self.release_id
@@ -391,10 +397,13 @@ class NativeWindow:
                 'release_id': self.release_id, 'manifest_sha256': self.manifest_sha256}
 
     def _binding(self):
-        return {'schema': 'amphenol-native-window-v1', 'maintenance_id': MAINTENANCE_ID,
+        binding = {'schema': 'amphenol-native-window-v1', 'maintenance_id': MAINTENANCE_ID,
                 'release_id': self.release_id, 'manifest_sha256': self.manifest_sha256,
                 'predecessor_receipt_sha256': RECEIPT_05, 'observer': str(OBSERVER),
                 'wrapper_scope_sha256': self.wrapper_scope_sha256}
+        if self.resume_complete:
+            binding['continuation'] = 'same-qualified-complete-release-v1'
+        return binding
 
     def _save(self, record, phase):
         if os.path.lexists(self.journal):
@@ -413,6 +422,9 @@ class NativeWindow:
             self.exchange.witness('closed')
             self.h.verify_listener(self.policy, 0, Path('/proc'))
             self.h.verify_route_drain(self.policy, 0, Path('/proc'))
+            if self.resume_complete:
+                # Recheck after writer exclusion, before yielding to the existing retry owner.
+                self._terminal()
             return True
 
         def restored(prior):
@@ -480,6 +492,8 @@ class NativeWindow:
             try:
                 self._lineage(check_restored=False)
                 self._observer()
+                if self.resume_complete:
+                    self._terminal()
                 self.record = json.loads(read_private(self.journal))
                 require(self.record['binding'] == self._binding()
                         and self.record['phase'] in {'BRIDGE_CLOSING', 'ROUTES_CLOSING', 'HELD',
