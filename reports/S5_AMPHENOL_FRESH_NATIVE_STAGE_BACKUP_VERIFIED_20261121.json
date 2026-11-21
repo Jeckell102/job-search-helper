@@ -1,0 +1,23 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "2d001a5a4efb153d1221efeb7261ddafcbd235bb",
+  "exact_file_count": 13,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "b4e4d07d2050a9e054050e0558fe0ae1448ff6b046b3c7f61c8f627de426c11a",
+    "reports/S5_AMPHENOL_FRESH_NATIVE_EXECUTION_STAGE_20261121.md": "3abe15807ea59e1afb8a06e01615ec1ea6aefe052e5bc1e5eeba8f29c3714985",
+    "reports/S5_AMPHENOL_FRESH_NATIVE_WINDOW_QA_20261121.md": "40251f1fe84001c04df9c14750b4c0243ebccaba5a2abafbc81bec11c38f8784",
+    "reports/S5_AMPHENOL_FRESH_PUBLIC_HOLD_BACKUP_VERIFIED_20261121.json": "253df92769f2f96608d47bdc34874493d28da679cf0d28e5e45bc50d7785163d",
+    "reports/S5_AMPHENOL_FRESH_RELEASE_ENTRY_QA_20261121.md": "215db4965b049c1b7900eafd033dfe5c5163a63cd15fe3d3c0cd3ec1a4c0ba91",
+    "reports/S5_AMPHENOL_RUNTIME_RATE_LIMIT_GAP_20261121.md": "597c2123d79f217d31988db14cf22ab7d0e3d9204726470988d7afd8a663b175",
+    "tools/sprint5-amphenol-fresh-operator/native_release/DISPOSABLE_RESULT_SEALED.txt": "4c29a2f406e28dab674134903da6fac2db2db875373e08e83f3961976a3fb470",
+    "tools/sprint5-amphenol-fresh-operator/native_release/HANDOFF.md": "fdbd96f5ae9bd0b687498f3c2f31c5a4b2e373dd9bed07a7d3959e468cfb82ff",
+    "tools/sprint5-amphenol-fresh-operator/native_release/native_window.py": "8f40d99f3718cee74cb5d522e648f41befde5ca1f3a4282650b711fc555ef069",
+    "tools/sprint5-amphenol-fresh-operator/native_release/test_native_window.py": "0581e8a7020a553d2624ececc542b4adb48d07415a543e60285c712568f068ad",
+    "tools/sprint5-amphenol-fresh-operator/native_release/vendor/host_exchange.py": "8168d900979d68aebc950d7bb8495705a5190368e8ca3ac932a7da4d4c7dfb1f",
+    "tools/sprint5-amphenol-fresh-operator/native_release/vendor/quiet_window.py": "8b124170b12897dcc37a82d6a5af5ed38538fee22d9194ddf4146c2565a2fdc4",
+    "tools/sprint5-amphenol-fresh-operator/qualification/release_entry.py": "f4daf43c80506d118bda222c76a86782c6ec31f778f9165b4067eb26d495bd92"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T17:06:19-05:00"
+}

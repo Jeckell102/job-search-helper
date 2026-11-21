@@ -95,6 +95,30 @@ will also need the short -06 native observer after qualification. No need
 to open a second observer while this candidate is held. Broad backlog and
 unqualified release are off. Overall acceptance remains about 40%.
 
+Latest verified GitHub checkpoint `2d001a5a4efb153d1221efeb7261ddafcbd235bb`
+contains the exact final entry, recovery window, tests and reports. All
+13 files matched the existing private branch on fetch. This turn materially
+advanced the release preparation and resolved the public result to a hold.
+[Backup verification](S5_AMPHENOL_FRESH_NATIVE_STAGE_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 17:13 Eastern — Retry-After source check closed
+
+Root implemented the demonstrated inherited transport correction in a
+private stage. Independent QA rejected the early partial status on a
+long 503 because the real whole-Company retry ran again. The final source
+`63f7a91a…` passed seven tests and the composed fixture made exactly one
+request and one Company attempt for long 429 and 503. Normal blocked work
+requires manual disposition and does not compute provider deadlines for
+future scheduling. Both independent lanes completed. No live changes.
+[Staged correction](S5_AMPHENOL_RETRY_AFTER_STAGE_20261121.md).
+
+Root retains qualification and release. The transport source stage stays
+separate from the accepted generated wrapper and its held exact proposal.
+Changing that proposal would require a new independently qualified source
+and release identity. Do not retry Amphenol before 17:48:55 Eastern or on
+time alone. The ordinary intake had no alternative event at the last
+verified check. The project is active and approximately 40% accepted.
+
 ### November 21 at 16:39 Eastern — current coordinator checkpoint
 
 Root remains coordinator and release owner for the active persistent goal
@@ -135,7 +159,7 @@ only the row affected by a new verified checkpoint.
 | Production and canonical build input | `/home/chris/job-search-helper_old`; `src/job_search_helper/acquiretm.py` SHA `a95953af…`. The isolated task checkout is a historical snapshot. |
 | Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production, adapter SHA `895ec36e…`. Private full candidate and proposal `REL-53592bb86b62492840c58267` are in `/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT`. [Qualification status](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md). |
 | Current request and tool receipt | `operator-amphenol-20261121-05` / `f8c53183…`; local -05 maintenance receipt SHA `60b29ffc…`. See [exact identifiers and hashes](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md). |
-| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `30d1bd8e05279d7a6629d116b5865f47812833f4`. All 14 scoped files matched the fetched copy. [Verification](S5_AMPHENOL_FRESH_PUBLIC_HOLD_BACKUP_VERIFIED_20261121.json). |
+| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `2d001a5a4efb153d1221efeb7261ddafcbd235bb`. All 13 scoped files matched the fetched copy. [Verification](S5_AMPHENOL_FRESH_NATIVE_STAGE_BACKUP_VERIFIED_20261121.json). |
 
 ## Prior Sprint 5 preparation checkpoints
 
