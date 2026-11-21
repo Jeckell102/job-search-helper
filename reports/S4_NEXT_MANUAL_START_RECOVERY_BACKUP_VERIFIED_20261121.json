@@ -1,0 +1,20 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "e8ef986b95450559a0779b74756625fcce8c7047",
+  "exact_file_count": 10,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "5aea068a119b43a3f1d4edc00ed1a0460c9cb4e870637fd100501b4b319f135a",
+    "reports/INTEGRATION_AUTOMATION_OPERATOR_RUNBOOK.md": "88e4297292696715164c30d9dbf112855fe49a00d38a6a1427b6207eef620f64",
+    "reports/S4_NEXT_MANUAL_START_BACKUP_VERIFIED_20261121.json": "cc78301982da3246d0af9edabc48b41acf254b06be6bb2cb929bbcf341fc853b",
+    "reports/S4_NEXT_MANUAL_START_RECOVERY_FAILURE_20261121.md": "ff154ca518ee819fa1fccd62ade99a99b351676e41a19a798e9797ce462dd069",
+    "reports/S4_NEXT_MANUAL_START_RECOVERY_INDEPENDENT_20261121.md": "010c0d294336a086cc0086d8687e6cecf29f4959acadd6273e613f8cf28e887a",
+    "reports/S4_NEXT_MANUAL_START_RECOVERY_STAGE_20261121.md": "16d51e189584ffad42f4a04511d7317f10e01b1e8858614665c3abf7c5733e30",
+    "reports/sprint_roadmap.md": "0b0dc58b0fa651aba4bdb74b221e58844294672cf2db8818bac5729153c3dbf2",
+    "tools/sprint4-next-manual-company-start/src/job_search_helper/manual_company_start.py": "bb1e010e6e14d0e7fe1df1bc91d5f633d37ed726fcc2ce2ee074f2252f0f6c5e",
+    "tools/sprint4-next-manual-company-start/test_manual_busy_boundary.py": "503e6d34bb1200383fc57dbb4ce6b1d50b04e405a671fbafabc70a5b80853448",
+    "tools/sprint4-next-manual-company-start/test_manual_company_start.py": "99f09ee5dc0f85b25f4fb21f2aafae30f5ccbcce4dee4643b0337bf101c52958"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T15:58:19-05:00"
+}

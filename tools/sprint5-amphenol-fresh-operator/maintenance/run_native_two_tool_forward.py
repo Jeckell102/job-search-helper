@@ -30,6 +30,9 @@ WRAPPER = 'wrapper-development-host.service'
 SYNC = 'job-search-sync.service'
 TIMER = 'job-search-sync-expiry.timer'
 BRIDGE = 'jetson-assistant-bridge.service'
+BRIDGE_UNIT = Path('/home/chris/.config/systemd/user') / BRIDGE
+BRIDGE_UNIT_SHA = '14bb10660f819d255155f5fdb70c85d2215c7673963ef6678f27ee263db3dfdc'
+BRIDGE_SOURCE_SHA = 'fa6b6b5655797c36ead623f3dae01285a251b9fe266d696a00d44114ed1099d9'
 MANIFEST = '8c73be2432fdc49485f426f5be77d6588ea1e13f7b659595f6a4dad16710c57e'
 CONTROLLER = '0f2543519bbd7dcf9737533c3e2caebf62e2e8a8cc1574d09287e21055ed1793'
 CHECKER = 'c0bec31ab59dbdc1064e2ee7003b9aa68e115d5902c34e43ebbe75058bf2a53e'
@@ -48,6 +51,7 @@ PYTHON_OVERRIDES = ('PYTHONPATH', 'PYTHONHOME', 'PYTHONPYCACHEPREFIX', 'PYTHONOP
 TOOL_PINS = {
     'deploy_two_tool_forward.py': 'cf9f82f6b85f441ab2e0fdd9bfee1448aa6c1e444ade09a3e66e2748ebb75597',
     'current_tool_guard.py': '11cd0a2a9e7d7c11317706c61390eb613cccfe3a59458062503a32a4d755f9cd',
+    'two_tool_route_drain.py': 'aac2a747a6389f3e98e7e38dad9ce562e9f80c6ed1a039d0d2b5e6ac3d539b25',
 }
 HISTORICAL_PINS = {
     'controller.py': 'f63f9399f3fcdec3d3b46a6d5e14fc3d1d78e420234b357b0adf44bd68a53ff8',
@@ -77,6 +81,7 @@ def unit_field(unit, field):
 def verify_source_selection(forward_paths):
     """Measure the two startup files with the exact default import path."""
     checked(TOOLS / 'coordinator.py', COORDINATOR)
+    PathFinder.invalidate_caches()
     for filename in ('coordinator.py', 'coordinator_store.py'):
         source = TOOLS / filename
         module = PathFinder.find_spec(source.stem, [str(TOOLS)])
@@ -153,9 +158,10 @@ def main():
     import controller as historical
     import deploy_two_tool_forward as updater
     from current_tool_guard import CurrentToolGuard, FORWARD_RECEIPT_SHA256
-    from host_checkpoint import unit_status, verify_listener, verify_route_drain, verify_wrapper_process
+    from host_checkpoint import process_start, unit_status, verify_listener, verify_wrapper_process
     from host_exchange import HostExchange
     from site_policy import load_policy
+    from two_tool_route_drain import BRIDGE_ARGS, BRIDGE_CGROUP, verify_two_tool_route_drain
 
     controller = historical.Controller(BUNDLE)
     policy, *_ = load_policy(str(BUNDLE / 'host-check'))
@@ -168,18 +174,34 @@ def main():
     remaining = {path: digest for path, (_, digest) in controller.manifest.after.items()
                  if path != updater.HOST_RELATIVE}
     file_modes = {updater.HOST_RELATIVE: 0o600, updater.STORE_RELATIVE: 0o644}
-    bridge_start = unit_field(BRIDGE, 'ExecMainStartTimestampMonotonic')
-    if not bridge_start.isdecimal() or int(bridge_start) <= 0:
+    bridge_unit = unit_status(policy.systemctl, BRIDGE)
+    bridge_started = unit_field(BRIDGE, 'ExecMainStartTimestampMonotonic')
+    bridge_pid = int(bridge_unit['MainPID'])
+    if (bridge_pid <= 0 or bridge_unit['ActiveState'] != 'active'
+            or bridge_unit['FragmentPath'] != str(BRIDGE_UNIT) or bridge_unit['ControlGroup'] != BRIDGE_CGROUP
+            or not bridge_started.isdecimal() or int(bridge_started) <= 0):
         raise ValueError('Expected the existing Jetson bridge to be running')
+    bridge = (bridge_pid, process_start(PROC / str(bridge_pid)))
+    clock_ticks = os.sysconf('SC_CLK_TCK')
+    boot_time = next(int(line.split()[1]) for line in (PROC / 'stat').read_text().splitlines()
+                     if line.startswith('btime '))
+    bridge_started_ns = (boot_time * clock_ticks + int(bridge[1])) * 1_000_000_000 // clock_ticks
     start_facts = None
 
     def verify_other_services():
+        for path, digest in ((BRIDGE_UNIT, BRIDGE_UNIT_SHA), (Path(BRIDGE_ARGS[2]), BRIDGE_SOURCE_SHA)):
+            before = path.stat()
+            checked(path, digest)
+            after = path.stat()
+            if (not os.path.samestat(before, after) or before.st_ctime_ns != after.st_ctime_ns
+                    or max(after.st_mtime_ns, after.st_ctime_ns) >= bridge_started_ns):
+                raise ValueError('The measured Jetson bridge files must predate the running service')
         sync = unit_status(policy.systemctl, SYNC)
         if (sync['FragmentPath'] != str(policy.sync_unit_file) or sync['ActiveState'] != 'inactive'
                 or sync['MainPID'] != '0' or sync['UnitFileState'] != 'disabled'
                 or unit_field(TIMER, 'ActiveState') != 'inactive' or unit_field(TIMER, 'UnitFileState') != 'disabled'
-                or unit_field(BRIDGE, 'ActiveState') != 'active'
-                or unit_field(BRIDGE, 'ExecMainStartTimestampMonotonic') != bridge_start):
+                or unit_status(policy.systemctl, BRIDGE) != bridge_unit
+                or unit_field(BRIDGE, 'ExecMainStartTimestampMonotonic') != bridge_started):
             raise ValueError('Scheduled sync or the existing Jetson bridge changed state')
 
     def active_wrapper():
@@ -192,7 +214,7 @@ def main():
         pid = int(unit['MainPID'])
         identity = verify_wrapper_process(policy, pid, PROC)
         verify_listener(policy, pid, PROC)
-        verify_route_drain(policy, pid, PROC)
+        verify_two_tool_route_drain(policy, pid, PROC, bridge)
         started = int(unit_field(WRAPPER, 'ExecMainStartTimestampMonotonic'))
         keys = {item.split(b'=', 1)[0].decode() for item in (PROC / str(pid) / 'environ').read_bytes().split(b'\0') if item}
         if keys.intersection(CONTROLS + PYTHON_OVERRIDES):
@@ -239,7 +261,7 @@ def main():
         if unit['ActiveState'] != 'inactive' or unit['MainPID'] != '0':
             raise ValueError('Wrapper stop has not settled')
         verify_listener(policy, 0, PROC)
-        verify_route_drain(policy, 0, PROC)
+        verify_two_tool_route_drain(policy, 0, PROC, bridge)
         return True
 
     def start(unit):

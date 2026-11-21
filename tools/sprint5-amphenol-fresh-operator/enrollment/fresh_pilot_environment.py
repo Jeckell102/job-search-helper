@@ -20,7 +20,15 @@ def manager_scope(system):
         key = line.lstrip('\'"').partition('=')[0]
         if key not in SCOPED:
             continue
-        parts = shlex.split(line)
+        rendered = line.partition('=')[2]
+        if line.startswith(key + "=$'"):
+            # systemctl renders the canonical JSON with ANSI-C shell quoting.
+            # An owned enrollment never needs shell escapes or expansion.
+            if not rendered.endswith("'") or any(char in rendered[2:-1] for char in "\\'"):
+                raise ValueError('Unrecognized scoped service-manager environment')
+            parts = [key + '=' + rendered[2:-1]]
+        else:
+            parts = shlex.split(line)
         if len(parts) != 1 or parts[0].partition('=')[0] != key or key in result:
             raise ValueError('Unrecognized scoped service-manager environment')
         result[key] = parts[0].partition('=')[2]

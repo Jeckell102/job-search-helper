@@ -305,6 +305,13 @@ changed output identifies the preexisting exact request and cycle.
 
 Roadmap coverage: Milestones 4 and 5, including F5.
 
+November 21 at 16:39 Eastern: the two-file builder is deployed and passed
+independent native QA. A fresh real Amphenol-only pagination failure
+produced one owned Jetson choice and a complete automatic candidate build.
+The temporary enrollment was withdrawn. Current public qualification,
+guarded release, fresh local save and live workbook confirmation remain
+open. [Live build evidence](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,

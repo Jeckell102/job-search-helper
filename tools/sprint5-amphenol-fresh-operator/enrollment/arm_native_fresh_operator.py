@@ -15,10 +15,11 @@ import time
 
 HERE = Path(__file__).resolve().parent
 PINS = {
-    'run_native_two_tool_forward.py': 'eff0b52862f189d3592e69d13a02ee229a8b79cc67bbc891a3c6af9cc19149d9',
+    'run_native_two_tool_forward.py': 'd2c902d3daaafa6bf631e388b3400897444731999d2d5de6ca1ac1c1055547f5',
     'deploy_two_tool_forward.py': 'cf9f82f6b85f441ab2e0fdd9bfee1448aa6c1e444ade09a3e66e2748ebb75597',
+    'two_tool_route_drain.py': 'aac2a747a6389f3e98e7e38dad9ce562e9f80c6ed1a039d0d2b5e6ac3d539b25',
     'fresh_operator_enrollment_input.py': 'd8cbe0da4e3439e2b28a92f9eecb26b42f278ad591660d0623798743f888d7f6',
-    'fresh_pilot_environment.py': '2a00894c617904ee4edae4b0c4fccf0d45e63776550f9ffe569141ad5507307c',
+    'fresh_pilot_environment.py': '8255eb149845ea66fcc1a850693e703ae64bd34996dd267e9ad7bb36c1d45ae4',
 }
 PREDECESSOR = HERE / 'S5_AMPHENOL_FRESH_SUCCESSOR_NATIVE_READBACK_20261121.json'
 PREDECESSOR_PIN = '96cf0cbc51de8cd6f5972614ec81e711a8aaf6a9f87a58b6b76e661d5c0d5434'
@@ -65,8 +66,9 @@ def main():
             raise ValueError('Unexpected cached historical maintenance helper')
     sys.path[1:1] = [str(native.BUNDLE), str(native.BUNDLE / 'host-check')]
     import controller as historical
-    from host_checkpoint import unit_status, verify_listener, verify_route_drain, verify_wrapper_process
+    from host_checkpoint import process_start, unit_status, verify_listener, verify_wrapper_process
     from site_policy import load_policy
+    from two_tool_route_drain import BRIDGE_ARGS, BRIDGE_CGROUP, verify_two_tool_route_drain
 
     policy, *_ = load_policy(str(native.BUNDLE / 'host-check'))
     policy = replace(policy, maintenance_id=native.MAINTENANCE_ID, ancillary_process_evidence=native.OBSERVER)
@@ -82,6 +84,17 @@ def main():
             or receipt.get('predecessor', {}).get('receipt_sha256') != updater.PREDECESSOR_RECEIPT_SHA256):
         raise ValueError('Current installed receipt is outside the exact two-tool scope')
 
+    bridge_unit = unit_status(policy.systemctl, native.BRIDGE)
+    bridge_pid = int(bridge_unit['MainPID'])
+    if (bridge_pid <= 0 or bridge_unit['ActiveState'] != 'active'
+            or bridge_unit['FragmentPath'] != str(native.BRIDGE_UNIT) or bridge_unit['ControlGroup'] != BRIDGE_CGROUP):
+        raise ValueError('Expected the existing Jetson bridge to be running')
+    bridge = (bridge_pid, process_start(native.PROC / str(bridge_pid)))
+    clock_ticks = os.sysconf('SC_CLK_TCK')
+    boot_time = next(int(line.split()[1]) for line in (native.PROC / 'stat').read_text().splitlines()
+                     if line.startswith('btime '))
+    bridge_started_ns = (boot_time * clock_ticks + int(bridge[1])) * 1_000_000_000 // clock_ticks
+
     def check_quiescent():
         native.checked(native.PROJECT / 'src/job_search_helper/acquiretm.py', native.ADAPTER)
         if (native.verify_source_selection(modes) != updater.TWO_TOOL_AFTER
@@ -93,6 +106,15 @@ def main():
             raise ValueError('Current source, sync, or repair controls differ from the admitted quiet state')
 
     def inspect_wrapper():
+        for path, digest in ((native.BRIDGE_UNIT, native.BRIDGE_UNIT_SHA), (Path(BRIDGE_ARGS[2]), native.BRIDGE_SOURCE_SHA)):
+            before = path.stat()
+            pinned_file(path, digest)
+            after = path.stat()
+            if (not os.path.samestat(before, after) or before.st_ctime_ns != after.st_ctime_ns
+                    or max(after.st_mtime_ns, after.st_ctime_ns) >= bridge_started_ns):
+                raise ValueError('The measured Jetson bridge files must predate the running service')
+        if unit_status(policy.systemctl, native.BRIDGE) != bridge_unit:
+            raise ValueError('The Jetson bridge service changed during enrollment')
         wrapper = unit_status(policy.systemctl, native.WRAPPER)
         pid = int(wrapper['MainPID'])
         if (wrapper['ActiveState'] != 'active' or wrapper['UnitFileState'] != 'enabled' or pid <= 0
@@ -101,7 +123,7 @@ def main():
         pinned_file(policy.wrapper_unit_file, native.UNIT_SHA)
         start = verify_wrapper_process(policy, pid, native.PROC)
         verify_listener(policy, pid, native.PROC)
-        verify_route_drain(policy, pid, native.PROC)
+        verify_two_tool_route_drain(policy, pid, native.PROC, bridge)
         scoped = {}
         for item in (native.PROC / str(pid) / 'environ').read_bytes().split(b'\0'):
             key, _, value = item.partition(b'=')

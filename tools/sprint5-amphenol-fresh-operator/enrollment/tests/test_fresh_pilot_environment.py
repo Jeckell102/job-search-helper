@@ -1,8 +1,9 @@
+import json
 import shlex
 
 import pytest
 
-from fresh_pilot_environment import ENROLLMENT, ENROLLMENT_FIELDS, WRAPPER, reconcile_enrollment
+from fresh_pilot_environment import ENROLLMENT, ENROLLMENT_FIELDS, WRAPPER, manager_scope, reconcile_enrollment
 
 
 class WrapperFixture:
@@ -12,9 +13,12 @@ class WrapperFixture:
         self.pid = 10
         self.calls = []
         self.failed_restart = False
+        self.systemd_rendering = False
 
     def system(self, operation, *values):
         if operation == 'show-environment':
+            if self.systemd_rendering and ENROLLMENT in self.manager:
+                return f"{ENROLLMENT}=$'{self.manager[ENROLLMENT]}'"
             return '\n'.join(f'{key}={shlex.quote(value)}' for key, value in self.manager.items())
         self.calls.append((operation, *values))
         if operation == 'set-environment':
@@ -47,6 +51,22 @@ def test_arm_and_withdraw_only_exact_scope():
     assert fixture.reconcile(False)['wrapper_pid'] == 12
     assert fixture.manager == {'OTHER': 'leave this alone'} and fixture.process == {}
     assert [call[0] for call in fixture.calls] == ['set-environment', 'restart', 'unset-environment', 'restart']
+
+
+def test_actual_systemd_rendering_recovers_after_manager_write_only():
+    fixture = WrapperFixture()
+    fixture.systemd_rendering = True
+    values = {key: 'fixture-' + key for key in ENROLLMENT_FIELDS}
+    fixture.manager[ENROLLMENT] = json.dumps(values, sort_keys=True, separators=(',', ':'))
+    assert fixture.reconcile(True)['wrapper_pid'] == 11
+    assert fixture.calls == [('restart', WRAPPER)]
+    assert fixture.reconcile(False)['wrapper_pid'] == 12
+    assert fixture.manager == {'OTHER': 'leave this alone'}
+
+
+def test_unknown_shell_escape_stops_manager_inspection():
+    with pytest.raises(ValueError, match='Unrecognized scoped'):
+        manager_scope(lambda _command: ENROLLMENT + "=$'foreign\\ninput'")
 
 
 def test_other_recipe_scope_is_never_overwritten():

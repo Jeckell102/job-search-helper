@@ -43,7 +43,51 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
-## ACTIVE — Sprint 5 native tool window and fresh release prep
+## ACTIVE — Sprint 5 fresh build accepted, public qualification next
+
+### November 21 at 16:39 Eastern — current coordinator checkpoint
+
+Root remains coordinator and release owner for the active persistent goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The owner started the observer and
+resumed the goal. The exact two-file builder update deployed and passed
+independent native QA. The bridge kept PID 612085 and its previous start.
+Both private before-images, historical receipts, and scheduled-sync state
+verified. The exact -05 installation receipt is `60b29ffc…`.
+[Native QA](S5_AMPHENOL_TWO_TOOL_DEPLOYED_INDEPENDENT_QA_20261121.json).
+
+Independent QA accepted the actual fresh automatic build. One real
+Amphenol request `operator-amphenol-20261121-05` produced typed partial
+`OUT-1dc536eeadea2d283052b05d`. Sender and receiver agreed on its exact
+receipt. New `WRAP-11dc97a3dd` used one Jetson inference `d73599dd…`,
+returned the reviewed choice, and built exact adapter `895ec36e…` under
+its private task. The original task and inference receipt remain intact.
+Root confirmed zero open inference, stopped the one pilot, withdrew the
+temporary enrollment and verified default wrapper PID 653884. The
+administrator observer expired. Both independent QA lanes finished.
+[Actual build](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md).
+
+Root owns assembly of the full private candidate and proposed manifest
+from the real new request, immutable build and approved installed source.
+Independent QA will own the current public capture after the exact
+preparation and defensible provider window. Release/install and scoped
+retry with real Sheets verification remain gated. There is no candidate
+installation or live validation yet. Broad work and unqualified release
+remain off. Overall acceptance remains about 40%; sequential cases 0/3.
+[Existing preparation map](S5_AMPHENOL_FRESH_CANDIDATE_PREPARATION_MAP_20261121.md).
+
+#### Current paths and versions
+
+Use this short table in the restart card as the working reference. Update
+only the row affected by a new verified checkpoint.
+
+| Item | Current reference |
+| --- | --- |
+| Production and canonical build input | `/home/chris/job-search-helper_old`; `src/job_search_helper/acquiretm.py` SHA `a95953af…`. The isolated task checkout is a historical snapshot. |
+| Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production; adapter SHA `895ec36e…`. Its build receipt and approval requirements are in the [independent build QA](S5_AMPHENOL_FRESH_OUTCOME_BUILD_QA_20261121.md). |
+| Current request and tool receipt | `operator-amphenol-20261121-05` / `f8c53183…`; local -05 maintenance receipt SHA `60b29ffc…`. See [exact identifiers and hashes](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md). |
+| GitHub checkpoint | Existing private backup branch `backup/integration-automation-m1-operator-20261120`. Back up scoped source, tests, plans and reports on this branch and fetch to verify. |
+
+## Prior Sprint 5 preparation checkpoints
 
 ### November 21 at 14:59 Eastern
 
@@ -223,6 +267,41 @@ independent native verification if preflight passes. The staged manual
 Start changes must stay separate from this update. Overall acceptance is
 about 40%. No production change, scrape or provider request occurred in
 this checkpoint.
+
+Latest verified private GitHub backup `e8ef986b95450559a0779b74756625fcce8c7047`
+was fetched at 15:58 Eastern. All ten scoped changes matched byte for
+byte. The observer was still absent and the installed builder files were
+still the measured before-images.
+[Recovery backup verification](S4_NEXT_MANUAL_START_RECOVERY_BACKUP_VERIFIED_20261121.json).
+
+At 16:00 Eastern the installed intake showed no pending Company events.
+The wrapper (PID 617189) and Jetson bridge (PID 612085) were active, while
+scheduled sync and its timer were inactive. The -05 observer socket and
+release directory were both absent. This is the first no-progress audit
+after the verified recovery backup. Production remains unchanged. Wait
+for the owner's Terminal observer, then run the exact preflight before
+the scoped builder update. No alternate eligible current pilot was found.
+
+The bounded check through 16:01:14 Eastern ended without an observer
+socket. This is the second consecutive no-progress audit for the same
+external prerequisite. No service, provider, production code, or data
+change occurred. The owner has the accepted Terminal command.
+
+### November 21 at 16:02 Eastern — waiting for the MuleLab observer
+
+A third consecutive goal turn again found no -05 administrator observer
+through 16:02:13. The approved two-file builder update needs that live
+process proof. The installed intake has no eligible alternate event and
+the independent offline recovery and arming stages are already saved.
+No other action currently advances the pending live acceptance chain.
+Record the persistent goal as blocked on administrator observation.
+Resume after the owner runs the approved Terminal starter at
+`/tmp/jsh-amphenol-native-two-tool.HQkjpe8m/start_observer.sh` and sees
+readiness. Root then verifies the live observer challenge via the default
+read-only two-tool preflight. Apply only if the gate passes and give the
+native result to independent QA. Preserve the provider qualification
+hold until a defensible scoped attempt exists. Acceptance remains about
+40%, with the project and final independent QA incomplete.
 
 ## Earlier active checkpoint — fresh operator repair and provider hold
 

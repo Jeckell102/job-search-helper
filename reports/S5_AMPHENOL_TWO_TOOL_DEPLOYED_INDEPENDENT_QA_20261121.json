@@ -1,0 +1,20 @@
+{
+  "status": "ACCEPT_TWO_TOOL_05_READONLY_QA",
+  "receipt_sha256": "60b29ffc98f4ef35399f9c9fdefe949f42f34b928a35b51e766dc0ba41d480cf",
+  "installed": {
+    "dev/wrapper-coder/tools/coordinator_store.py": "16c442d8019d5173f188348890fd89fe224d2c4315fde67528ed26e25478134d",
+    "dev/wrapper-coder/tools/host_server.py": "a1cafe60d2025116bcaa43dd8dd1b4099a9c2845c35353f3f25dec98a8df5567"
+  },
+  "private_backups": {
+    "dev/wrapper-coder/tools/coordinator_store.py": "9f0a84a626fcf910f24233759ff940ff68db81c97b9b0e7096a3d4b0580ea835",
+    "dev/wrapper-coder/tools/host_server.py": "5abe835b6b550f3bb81a7c787e97382910ce1d882687521c60e3e8ec630a37ad"
+  },
+  "wrapper_pid": 652287,
+  "bridge_pid": 612085,
+  "bridge_start_monotonic": 142917989445,
+  "open_inference": 0,
+  "retained_task_sha256": "95309e140a381be0b365a800fc76e2d4416705f8802691037ebf80f39c445db6",
+  "retained_receipt_sha256": "aeea900dc8bdcc5be0cd5e4e3781eca0706f8b2034ef98997d0028f439dcba7e",
+  "scheduled_sync": "inactive_disabled",
+  "scope": "read-only independent post-install verification"
+}

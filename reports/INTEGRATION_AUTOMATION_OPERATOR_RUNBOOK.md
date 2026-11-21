@@ -86,10 +86,12 @@ receipt afterwards.
 
 ## Current release boundary
 
-The active Amphenol work is awaiting the administrator observer and a
-qualified fresh run. Sprint 6 intake can be observed locally. Broad backlog
-processing and unqualified automatic releases remain disabled. Sites
-outside the approved capability scope go to engineering review.
+The corrected MuleLab builder is installed, and the fresh Amphenol pilot
+produced a candidate with one Jetson decision. Current public qualification,
+guarded release and the company-only retry still await verification. Sprint
+6 intake can be observed locally. Broad backlog processing and unqualified
+automatic releases remain disabled. Sites outside the approved capability
+scope go to engineering review.
 
 Use the [current coordinator checkpoint](COORDINATOR_STATUS.md) for the
 active request, worker ownership and versioned recovery evidence. Use the
