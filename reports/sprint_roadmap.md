@@ -473,6 +473,19 @@ only the finite evidence-backed choice. The candidate keeps the original
 scope, full-description, total, unique-ID, and stable-reread gates. This
 case does not expand the supported production family or enable release.
 
+Current checkpoint, November 21 at 12:45 Eastern. The native one-time
+Amphenol trigger and one Jetson choice are verified. The MuleLab coordinator
+source-selection correction is installed and independently verified. The
+recovered wrapper completed one current run at 39 and two subsequent
+provider-blocked runs stopped at 35 and 37. The window ended held. Release
+preflight for the retained operator build passed independently and the actual
+proposal stayed held at the missing qualified approval. A separate Forterra
+ordinary composition passed independently in disposable fixtures. Its real
+issuer and separate PDW regression remain open.
+[Current provider decision](S5_AMPHENOL_VALIDATION_FINAL_WINDOW_HOLD_20261121.md)
+· [Retained preflight QA](S5_AMPHENOL_RETAINED_RELEASE_INDEPENDENT_QA_20261121.md)
+· [Forterra composition QA](S5_FORTERRA_ORDINARY_COMPOSITION_INDEPENDENT_QA_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.

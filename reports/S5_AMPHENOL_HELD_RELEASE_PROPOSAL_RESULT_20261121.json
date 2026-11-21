@@ -1,0 +1,10 @@
+{
+  "actual_install": false,
+  "candidate_root": "/tmp/jsh-amphenol-held-release.46bh2lu0/candidate",
+  "proposal_sha256": "fe5b0654bfe17f349d73162588a50e489d43427f5cbe55f7755dfe25b7bc8350",
+  "qualified_approval_created": false,
+  "reason": "Independent live qualification has not passed",
+  "release_id": "REL-af662a11bf656819d418120a",
+  "scope_paths": 1,
+  "state": "HELD_PROPOSED_MANIFEST"
+}

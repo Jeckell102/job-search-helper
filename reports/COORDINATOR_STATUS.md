@@ -43,6 +43,56 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Automatic wrapper trigger verified; release held on current provider evidence
+
+### November 21 at 12:45 Eastern
+
+Root is senior coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 remains the priority.
+Overall acceptance is approximately 40%. Sprints 1–3 and the Sprint 4
+Freeform pilot retain their prior acceptance. Sprint 5 deployed release
+and saved retry, Sprint 6 live sequential work, and Sprint 7 final
+installed QA remain open.
+
+The native operator-trigger chain captured an Amphenol partial inventory,
+enqueued one repair and settled one Jetson choice. That choice produced the
+recovered wrapper from the approved source. MuleLab's one-file source-selection
+fix is installed and independently verified under -04, receipt
+`e07eab1cf86378f6b6fe0055763a83bb212b52626774fb6d0fe0366f311b7dc3`.
+The original completed inference receipt and paused task remain exact.
+Keep one Jetson lane. No new inference, replay, or changes to that task.
+
+Current independent normal-dispatch evidence is one complete run with 39
+full descriptions and stable final inventory. The next two attempts stopped
+on provider detail access at 35 and 37. That validation window is terminal
+HOLD. Do not make more Amphenol calls in this window, pool partial runs, or
+authorize installation. [Final provider hold](S5_AMPHENOL_VALIDATION_FINAL_WINDOW_HOLD_20261121.md).
+
+The narrow retained operator preflight passed 11 independent fixtures.
+Using the actual retained task and exact recovered source, the proposed
+one-path release `REL-af662a11bf656819d418120a` reached the prerequisite
+owner check and stayed held with an intentionally absent qualification owner.
+There is no PASS, installation or saved retry. The held candidate's private
+configuration stays local. [Operator preflight QA](S5_AMPHENOL_RETAINED_RELEASE_INDEPENDENT_QA_20261121.md)
+and [proposal disposition](S5_AMPHENOL_HELD_RELEASE_PROPOSAL_RESULT_20261121.json).
+
+The staged Forterra ordinary path passed nine independently rerun cases:
+one authorized fixture repair outcome and safe replay, with unchanged
+accepted source. Live scope and issuer evidence and a distinct PDW
+regression remain open. The installed `storage intake-observe` command
+reported zero pending events, with no admission. The scheduled sync,
+broad queue, automatic release and recipe enrollments remain off.
+[Forterra QA](S5_FORTERRA_ORDINARY_COMPOSITION_INDEPENDENT_QA_20261121.md).
+
+Root owns evidence backup and next source decision.
+`/root/architecture_publication_review` is checking the existing Allen
+Ashby route against the current release prerequisites without native activity.
+`/root/adapter_dependency_reconcile` completed the Forterra composition.
+Other lanes have no current edits or deployment authority. Latest verified
+private GitHub backup is `5fdfb48213388b386add6b7e46754bfefecdecdc`.
+Next: back up this checkpoint and use the existing guarded one-company
+path where eligible. Do not run the frozen Sprint 6 sequence out of order.
+
 ## Coordinator source-selection fix installed and independently verified
 
 ### November 21 at 12:31 Eastern
