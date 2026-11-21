@@ -1,0 +1,11 @@
+# Corrected fresh operator candidate reader acceptance
+
+**ACCEPT the scoped reader** at SHA `bf9ac48a86ee6e19290423899409f2603031e2ce3977247f05df21a4cd7d7c42`.
+
+All nine independent checks passed. The positive still reads a real SQLite selected task and sole completed inference receipt, requires REVIEW_COMPLETE_LIVE_NOT_VALIDATED, reconstructs the deterministic wrapper from the exact canonical a95953 baseline, checks the real stored task source/patch/build receipt, verifies the full fixture candidate projections and opens a real pinned synthetic qualification owner. A deliberately stale isolated workspace is never entered. The operator enrollment carries no retry approval; authority is now an explicit reader argument.
+
+Both original narrow regressions are resolved: manifest release ID must equal the explicit approval ID, and candidate root must be an absolute physical path equal to its strict resolution before any candidate projection is accepted. Wrong task, PAUSED_ERROR, truncated source/patch/build receipt, forged response binding, changed baseline and changed qualification continue to hold. The event reader keeps its prior behavior and the common build helper's default still uses its existing task workspace; only the explicit operator branch uses canonical source.
+
+Fixture: `corrected/test_reader.py`, SHA `25c22c88e274d195ccd1a271b55b75744e5179a84a243952d391f60a16ffd2f0`. Result: nine passed in 0.79 seconds. Exact pins are in corrected/PINS.json. Initial source150e3237, seven-pass output, both subsequent red outputs and INITIAL_HOLD.md remain unchanged in the parent private directory.
+
+Limits: current application-source and owned-choice reads are exact-argument I/O doubles; this review does not re-prove live State/Jobs/Inbox custody or actual provider qualification. The synthetic qualification receipt tests the real closed owner API only and authorizes no external action. No nested support fixture, host scheduler, model, installer, publisher, native database/config/service, provider/browser, Google or Jetson was used. Test audit hooks deny network/process execution and native /home/chris opens. The author source tree was not edited. Deployment and the separate one-shot composition remain independent gates.

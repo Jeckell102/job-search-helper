@@ -568,6 +568,13 @@ the new successor Store behavior while supporting the application release's
 existing-only coordinator entry. No provider call or native change began.
 [Preflight](S5_AMPHENOL_NATIVE_LAUNCHER_PREFLIGHT_20261121.md).
 
+At 15:07 Eastern independent offline QA accepted the fresh completed-build
+reader and shared scoped release selector after focused repairs. Tool-only
+installation still waits for actual administrator observation. The live
+application release must qualify the exact freshly produced candidate
+and verify its real company-only retry and workbook receipts.
+[Fresh release source stage](S5_AMPHENOL_FRESH_RELEASE_SOURCE_STAGE_20261121.md).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.

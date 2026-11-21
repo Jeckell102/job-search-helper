@@ -84,6 +84,24 @@ The merged stage preserved the new successor route in four offline tests
 and passed the existing-only reopen/no-create check. It is outside the
 current two-file native tool install. [Minimum release design](S5_AMPHENOL_FRESH_RELEASE_MINIMUM_DESIGN_20261121.md).
 
+At 15:07 Eastern, fresh reader QA accepted `bf9ac48a…` after two
+reproduced rejects were corrected. One-shot interface QA accepted exact
+`e00a4068…` after ten maintained/focused fixture checks. The fresh
+release workspace is `/tmp/jsh-fresh-operator-candidate.p1Jipj`. Root
+owns the final common one-shot selector. Both QA lanes completed. They
+proved private source and control boundaries with selected offline
+inputs. Independent live normal-dispatch qualification and the full
+release-through-real-workbook acceptance remain open.
+[Fresh release stage](S5_AMPHENOL_FRESH_RELEASE_SOURCE_STAGE_20261121.md).
+
+Native readback independently verified the unchanged two source hashes,
+wrapper PID 617189, default process environment, exact old task/model
+receipt, zero open inference and all three restored exchange routes.
+The -05 observer socket is still absent. Wait for the user's Terminal
+step. The latest verified staged launcher backup was `68b6addf1c1e3910f394f12669f247b1c1a6817d`
+with all eleven files compared byte for byte.
+[Launcher backup verification](S5_AMPHENOL_NATIVE_LAUNCHER_BACKUP_VERIFIED_20261121.json).
+
 ## Earlier active checkpoint — fresh operator repair and provider hold
 
 ### November 21 at 14:28 Eastern

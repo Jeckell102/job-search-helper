@@ -1,0 +1,21 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "68b6addf1c1e3910f394f12669f247b1c1a6817d",
+  "exact_file_count": 11,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "cec6a5933dd2324050ea87fbd099778c15b0ba06ef30795057e23139cb0b9c3c",
+    "reports/S5_AMPHENOL_FRESH_RELEASE_MINIMUM_DESIGN_20261121.md": "ca031ca2edad566a957018bf0116e161e34ecb9b4193fe334965893e72edd649",
+    "reports/S5_AMPHENOL_NATIVE_LAUNCHER_INDEPENDENT_QA_20261121.md": "69f626859e4659311f8be16464369430d4d131fb196dc0c353dc704da42e1267",
+    "reports/S5_AMPHENOL_NATIVE_LAUNCHER_PREFLIGHT_20261121.md": "f9be4fc7bb857b1bf46d6963f5836050851249247c5dba706c2fb66b1e2cf9fe",
+    "reports/S5_AMPHENOL_TWO_TOOL_BACKUP_VERIFIED_20261121.json": "3954da667fcc41bc67f9aa554a0bb4fce2e48c0bcc274c85d75e90a6f8a4bdee",
+    "reports/sprint_roadmap.md": "8358dd745445c598a9a94bf540404d3b3de790226d939cff02242d09ded187ed",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/current_tool_guard.py": "11cd0a2a9e7d7c11317706c61390eb613cccfe3a59458062503a32a4d755f9cd",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/run_native_two_tool_forward.py": "eff0b52862f189d3592e69d13a02ee229a8b79cc67bbc891a3c6af9cc19149d9",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/start_observer.sh": "9ed7727153cab1ab57cbe0f520f67ca7950da5abe25601053d39f6114761ac45",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/tests/test_current_tool_guard.py": "139dd007715ee4236356ede7aebf7d3dcf03330fabfef0ae86cee9922ddce2e4",
+    "tools/sprint5-amphenol-fresh-operator/maintenance/tests/test_native_two_tool_readback.py": "19a1ab074c2d4fa09160d208f348232d61da1a79fa5fd7da8308a16a9ccb1e4a"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T15:01:32-05:00"
+}
