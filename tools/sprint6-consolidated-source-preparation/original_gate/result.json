@@ -1,0 +1,71 @@
+{
+  "accepted_47_control_paths": 47,
+  "accepted_47_control_sha256": "a1863753a251058e1cd99266568aef3b6e9b3076e49c52dd0adff11d93f6a163",
+  "endpoint_rows_well_formed": 38,
+  "exact_38_manifest_sha256": "c9e9a59c78e874703c9689f3ccab517a2fb0539da10896baf1a35979d0d8cd8b",
+  "freeform_parser_sha256": "796e8b04cca48c7641c45480611ab43f2d19a2a96da9dc9a08d548d029fc1ee4",
+  "frozen_scope_sha256": "09e871ceb0cc91685461294abef1651766cbebcb52b5655a63940fde74db13e3",
+  "lexically_allowed_package_module_count": 26,
+  "lexically_allowed_paths": [
+    "dev/wrapper-coder/tools/coordinator_store.py",
+    "dev/wrapper-coder/tools/host_server.py",
+    "job-search-scraper",
+    "src/job_search_helper/acquiretm.py",
+    "src/job_search_helper/ats.py",
+    "src/job_search_helper/company_events.py",
+    "src/job_search_helper/company_intake_dispatcher.py",
+    "src/job_search_helper/company_sources.py",
+    "src/job_search_helper/engine.py",
+    "src/job_search_helper/exact_cycle_planner.py",
+    "src/job_search_helper/exact_cycle_receipt.py",
+    "src/job_search_helper/exact_cycle_recovery.py",
+    "src/job_search_helper/exact_cycle_sync.py",
+    "src/job_search_helper/inbox.py",
+    "src/job_search_helper/integration_release.py",
+    "src/job_search_helper/ordinary_company_event_command.py",
+    "src/job_search_helper/ordinary_company_event_publication.py",
+    "src/job_search_helper/ordinary_event_settlement.py",
+    "src/job_search_helper/private_file_custody.py",
+    "src/job_search_helper/qualified_release_owner.py",
+    "src/job_search_helper/release_controller.py",
+    "src/job_search_helper/release_qualification.py",
+    "src/job_search_helper/repair_retry.py",
+    "src/job_search_helper/repair_retry_status.py",
+    "src/job_search_helper/runner.py",
+    "src/job_search_helper/scan_request.py",
+    "src/job_search_helper/scrape_outcome_producer.py",
+    "src/job_search_helper/sqlite_repository.py",
+    "src/job_search_helper/sync_cli.py"
+  ],
+  "lexically_allowed_wrapper_paths": [
+    "dev/wrapper-coder/tools/coordinator_store.py",
+    "dev/wrapper-coder/tools/host_server.py"
+  ],
+  "lexically_refused_paths": [
+    "dev/wrapper-coder/tools/acquiretm_membership_recipe.py",
+    "dev/wrapper-coder/tools/amphenol_candidate_release.py",
+    "dev/wrapper-coder/tools/amphenol_installed_verification.py",
+    "dev/wrapper-coder/tools/amphenol_recipe_candidate.py",
+    "dev/wrapper-coder/tools/amphenol_recipe_choice_input.py",
+    "dev/wrapper-coder/tools/amphenol_retry_completion.py",
+    "dev/wrapper-coder/tools/coordinator.py",
+    "dev/wrapper-coder/tools/coordinator_inference.py",
+    "dev/wrapper-coder/tools/coordinator_supervision.py"
+  ],
+  "mandatory_existing_wrapper_paths": [
+    "dev/wrapper-coder/tools/coordinator_receipt_host_bridge.py",
+    "dev/wrapper-coder/tools/coordinator_store.py",
+    "dev/wrapper-coder/tools/host_server.py"
+  ],
+  "missing_bridge_matches_accepted_after_bytes_and_mode_in_staged_candidate": {
+    "mode": "0664",
+    "sha256": "efba3e77d3c4b9a9f85984ba345f58846309b301bc0b96aaad89b096e24c86ca"
+  },
+  "missing_mandatory_wrapper_paths": [
+    "dev/wrapper-coder/tools/coordinator_receipt_host_bridge.py"
+  ],
+  "only_load_manifest_called": true,
+  "refusal": "Source path is outside the allowed scope: dev/wrapper-coder/tools/acquiretm_membership_recipe.py",
+  "result": "REFUSED_EXACT_38_BY_ACCEPTED_FREEFORM_PARSER",
+  "same_before_after_rows_rejected_by_exact_parser_rule": true
+}

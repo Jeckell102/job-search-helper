@@ -1,0 +1,1422 @@
+{
+  "candidate_source_symlinks": [],
+  "candidate_vs_installed_delta": {
+    "dev/wrapper-coder/tools/acquiretm_membership_recipe.py": {
+      "candidate": {
+        "bytes": 7643,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "e753da1c44d2bafe8b1d1ce8a5954fd23c113c3eeeced11fa5a2592d8854479a"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "dev/wrapper-coder/tools/amphenol_candidate_release.py": {
+      "candidate": {
+        "bytes": 5879,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "7cf2c0795925f077b5cda4a67ce6418adf6fbafae2a955732f60765951ab087f"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": null,
+      "old_scope": "unlisted"
+    },
+    "dev/wrapper-coder/tools/amphenol_installed_verification.py": {
+      "candidate": {
+        "bytes": 2162,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "aeea069ce3ea41d721f19eba73b21ac351ac820d991e3da9f85e546c33d58b8d"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": null,
+      "old_scope": "unlisted"
+    },
+    "dev/wrapper-coder/tools/amphenol_recipe_candidate.py": {
+      "candidate": {
+        "bytes": 2350,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "126b2d4c29e4aa7a26acd0f7f00d813031475bfb7fe07bb30920513c0daf67ae"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "dev/wrapper-coder/tools/amphenol_recipe_choice_input.py": {
+      "candidate": {
+        "bytes": 12129,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "0c5162fcaeb4cba599250ebe4dd20e6cb7e97628a608c9d2906eaaee8d77c800"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "dev/wrapper-coder/tools/amphenol_retry_completion.py": {
+      "candidate": {
+        "bytes": 10583,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "c7ca5f021989a5f552482be2f3eb3d40a3da428c733f49b6f8a601c05945f6ef"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": true,
+      "old_scope": "changed_after"
+    },
+    "dev/wrapper-coder/tools/coordinator.py": {
+      "candidate": {
+        "bytes": 83802,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "dcf6f14ea4ff15e6c221ff3f46c29523419d931dfbf0dffe6e2edd6b0f427a91"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 79503,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "b9fe2de378bcf942e1a7123e3d3e727ec97c41c803703ef6a2bae982a6a74175"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "dev/wrapper-coder/tools/coordinator_inference.py": {
+      "candidate": {
+        "bytes": 18988,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "4d94acad23e879089dee088c04826ddef4b062b77316915bf493ee2db17db968"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 18068,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "33b453fce23359b61f32f29d7dc1c3d40b8231e8a1c06d1b08862351da9a8bba"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "dev/wrapper-coder/tools/coordinator_store.py": {
+      "candidate": {
+        "bytes": 96398,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "9f0a84a626fcf910f24233759ff940ff68db81c97b9b0e7096a3d4b0580ea835"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 95235,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "389ca373da3c46ce22d1c87aff90a79f4940af1fe86b9dd06b6b7ac6007272aa"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "dev/wrapper-coder/tools/coordinator_supervision.py": {
+      "candidate": {
+        "bytes": 11945,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "c06e77fc42170277e462f811b32c2ff9821993c78a1765a83a4c92929eeeb012"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 11923,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "8826696a83c1b510a8baeb0b4793e72d3e858e8f117faab06e45b7b096abe162"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "dev/wrapper-coder/tools/host_server.py": {
+      "candidate": {
+        "bytes": 31545,
+        "mode": "0600",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "0e13fcae57c4baa4edf1b59454546d2924c49054aebd253dd1b24f666b8e672a"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 14114,
+        "mode": "0600",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "2c57952bcc67dbaf321377956f7efa3ac45f39ed1ef40cb0f9e8aaccfcb62ae0"
+      },
+      "old_native_matches": true,
+      "old_scope": "changed_after"
+    },
+    "job-search-scraper": {
+      "candidate": {
+        "bytes": 518,
+        "mode": "0755",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "2556de3371c32be1991273a1ee88d2baa25753dfcdc73a9656d34de6b91de78c"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 492,
+        "mode": "0755",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "36124dd47557e3643ff9eba838b29f10a512e139d3a39ca9f28fe7473e44f740"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/acquiretm.py": {
+      "candidate": {
+        "bytes": 13122,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "a95953afe2bc10138714f6b11af22572b17ab344bf61d78b834647895025aa61"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 9750,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "88893583bb01ed0b8878020d9b71ddb9043bbfcdb70d6e0eb6b2475bc8855392"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/ats.py": {
+      "candidate": {
+        "bytes": 95646,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "111ccb9067402832ad96b798100dfca293668cf24830409874c1ab4d6eaac07e"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 93996,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "a43ca8a0b337ff8a61d63a81619390c9860791af84cff6115f87581ff6313a29"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/company_events.py": {
+      "candidate": {
+        "bytes": 52242,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "0c82c1091b413622f0fc4a727225efcd3792598e527d0731e78d3d427b5d265b"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 50671,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "149ec39ca47f3adbb338fa77d95fc99d12db70ccbe6544a678c11a3d0ab422ea"
+      },
+      "old_native_matches": null,
+      "old_scope": "unlisted"
+    },
+    "src/job_search_helper/company_intake_dispatcher.py": {
+      "candidate": {
+        "bytes": 55745,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "4f7181b4f701fefbb05db3803c53cd1c148832a73cbf6fc415773f9de6f57f85"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 53991,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "fb3b04aaa61d43e3729750235f74aaffdb02ef2ac52f7b75f0b68d5c014ea409"
+      },
+      "old_native_matches": null,
+      "old_scope": "unlisted"
+    },
+    "src/job_search_helper/company_sources.py": {
+      "candidate": {
+        "bytes": 164824,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "8c7cbbb998be771dd8387b010af34afb32f88071baa71f3f459ad6b436ab7f80"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 164730,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "e8e0163d21328be42f96216c10cae9cfd80aa6a4b848815ece79f83c492680b7"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/engine.py": {
+      "candidate": {
+        "bytes": 139606,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "1c466d8c33d1dbd102325eee8b7d834667024ad9f20d119a4efab019fc3424f8"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 139397,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "3ede2b3b9ee4d3fa429c8eca2e4a96428ca69730dee71bf806165ce5812e17d9"
+      },
+      "old_native_matches": null,
+      "old_scope": "unlisted"
+    },
+    "src/job_search_helper/exact_cycle_planner.py": {
+      "candidate": {
+        "bytes": 51650,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "0932566520c9807e7e5066bf4f7787c3a88b057f011f68167eed0bcb1425063b"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 49345,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "b0aff54d63a97b77791f373ff622d56d3cba3caa573c31c2bc61981c11f8115c"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/exact_cycle_receipt.py": {
+      "candidate": {
+        "bytes": 21214,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "7602084179e929f0cc06ec664e60ebe30c7afcccbc052d26c490d9060a7b9ce6"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 12041,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "fc0ca1b83324eacc8acad6d87136176c18a789fd38c95f5d86b7e7ca8becf7d9"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/exact_cycle_recovery.py": {
+      "candidate": {
+        "bytes": 30077,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "e9ad790842de5d1406f90d816e45ec0bc39fe5b5545e5df8c1a0e09c5758074f"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 19069,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "917cd5dd8f3aeb93110aeae692c4d51e6beb7b4c67bd9e8c1f7e8b533fd26f06"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/exact_cycle_sync.py": {
+      "candidate": {
+        "bytes": 44596,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "e7268d3eb103ef2deb7300e05d595892d55135764186f92a8f57e330a131139d"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 43438,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "148e9339d1d4580b471a1b69f486f265c44ffbba51b718573d5e4352e29305e7"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/inbox.py": {
+      "candidate": {
+        "bytes": 138708,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "dc6f207088e755ac98bd6541ed1ec1b608dc81b2359b7c908883eeb81e43dee1"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 136030,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "2e09cf06a5220162192a06dd76a9a903f2ba510266cef494315c41dfe28b529f"
+      },
+      "old_native_matches": true,
+      "old_scope": "changed_after"
+    },
+    "src/job_search_helper/integration_release.py": {
+      "candidate": {
+        "bytes": 29478,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "69a4261f117a61d41a3a3cb023ca7c73098b1c0ee0a6c98b2fefb525d7ab21df"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 26630,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "9ddd1e9c6908670415f6e4c7b61dbf5e16d0297e2f32213afeedbd37d77217ff"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/ordinary_company_event_command.py": {
+      "candidate": {
+        "bytes": 20232,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "f8765638f4a437a1a619bfe20161987f63b3f42bf508169850140ef9de0a1d9d"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 20311,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "c585f583a07282f01447ca7999020d51bd5e8843bd9645a37469a54fad5859b8"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/ordinary_company_event_publication.py": {
+      "candidate": {
+        "bytes": 6520,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "ca34435dad229dd637f0470e1aa39cca98d298583ce6ece2e33f9c3fdca1c85c"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 6500,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "ffc8c480a15fa1d44b8305639ca569a5c44aaa8d0753093d35a5df27dd66c9fb"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/ordinary_event_settlement.py": {
+      "candidate": {
+        "bytes": 22306,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "5d99a2674d7a6db844fbdd5da0a1ac037a254130cde4112fde4ac8b9b1c1d16f"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 19686,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "afceb1430f23fe2b2a20ecb0cab13b08a8d416dd5896f1176a13a5cb1e741c3b"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/private_file_custody.py": {
+      "candidate": {
+        "bytes": 3291,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "9f1ec341e3556aaf3a4460781c1cff78f29dae720c673add2fb64416d924cdce"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/qualified_release_owner.py": {
+      "candidate": {
+        "bytes": 5145,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "5cf4e70829ad40d797dde4779cb6a1f0a75953f303ed330c0610ee7f0e5b23e6"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": true,
+      "old_scope": "changed_after"
+    },
+    "src/job_search_helper/release_controller.py": {
+      "candidate": {
+        "bytes": 13805,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "2cd45aff4d52d3808c41b1bbd36e0c1a3a257634b2df79221185345742adff8c"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 2890,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "cb916ba55634051420f0998ab6dcc76455fb184e4f6901c8074ccf29eee0031d"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/release_qualification.py": {
+      "candidate": {
+        "bytes": 3527,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "e91a7015f457b4acfb514ec3952f4173699962e7a2712cf43e088cd1a2005613"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/repair_retry.py": {
+      "candidate": {
+        "bytes": 15643,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "1e3636e206724ee535699f16d4cbf82ac8ca28f047eeb537ff6167be0585555c"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 11993,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "a15653e38d2026cc1f06a40fb194641256619995f0a0a736e847d41a0641b356"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/repair_retry_status.py": {
+      "candidate": {
+        "bytes": 8501,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "ef5e8d51490e073de119fca876e5cc85ffb6418961f3daf97b36191e041b5290"
+      },
+      "category": "addition",
+      "installed": null,
+      "old_native_matches": null,
+      "old_scope": "unlisted"
+    },
+    "src/job_search_helper/runner.py": {
+      "candidate": {
+        "bytes": 91483,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "0b4e80b429b242a1eec02eadb5b89ac501b8d13f7dc0c3122015e01eece91003"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 86585,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "4e26c0a86eb0fb1136c47ac684f4f664de4fdd25ff5838f7b65216e3e5b8bbba"
+      },
+      "old_native_matches": true,
+      "old_scope": "changed_after"
+    },
+    "src/job_search_helper/scan_request.py": {
+      "candidate": {
+        "bytes": 29135,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "c5dbda4c01ab100a219b454e95db02cfd0d3372ed1123ec459b24b55b255d8dc"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 27848,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "dde75760c6dec3503f792aa64059fbb5438d316107b4eb1ab40c46a099b05469"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/scrape_outcome_producer.py": {
+      "candidate": {
+        "bytes": 13653,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "a88c2f970950992ca376bc58eb17710b851e5c042e231baa7e1d9eafa7bac181"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 12558,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "7d8229a8bc4830842c80726039d8cb73f195d88cd06e8e17101eb873a25358f1"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "src/job_search_helper/sqlite_repository.py": {
+      "candidate": {
+        "bytes": 84388,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "3ab772748e685a131f885c0eefa7bd8055ed5c22114d4f89204a6dce3d8ff742"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 80477,
+        "mode": "0644",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "de76d0329b726f475a399273af268366a6708973a9c5252995e68aa172ff4134"
+      },
+      "old_native_matches": true,
+      "old_scope": "changed_after"
+    },
+    "src/job_search_helper/sync_cli.py": {
+      "candidate": {
+        "bytes": 14942,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "5af96a0d8abe8496d52824c197e0245207df7ce6e949027f2c392a6bf2d13de2"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 13038,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "26dd710d279134ed9a1d12320d4da1b3ff51e7daf8435a497318a460e1cf5674"
+      },
+      "old_native_matches": null,
+      "old_scope": "unlisted"
+    }
+  },
+  "counts_by_source_scope": {
+    "dev/wrapper-coder/tools": {
+      "addition": 6,
+      "equal": 28,
+      "native_only_absent_from_snapshot": 523,
+      "replacement": 5
+    },
+    "src/job_search_helper": {
+      "addition": 4,
+      "equal": 218,
+      "replacement": 22
+    }
+  },
+  "counts_including_launchers": {
+    "addition": 10,
+    "equal": 247,
+    "native_only_absent_from_snapshot": 523,
+    "replacement": 28
+  },
+  "extra_delta": [
+    "dev/wrapper-coder/tools/amphenol_candidate_release.py",
+    "dev/wrapper-coder/tools/amphenol_installed_verification.py",
+    "src/job_search_helper/company_events.py",
+    "src/job_search_helper/company_intake_dispatcher.py",
+    "src/job_search_helper/engine.py",
+    "src/job_search_helper/repair_retry_status.py",
+    "src/job_search_helper/sync_cli.py"
+  ],
+  "launcher_results": {
+    "job-search-scraper": {
+      "candidate": {
+        "bytes": 518,
+        "mode": "0755",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "2556de3371c32be1991273a1ee88d2baa25753dfcdc73a9656d34de6b91de78c"
+      },
+      "category": "replacement",
+      "installed": {
+        "bytes": 492,
+        "mode": "0755",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "36124dd47557e3643ff9eba838b29f10a512e139d3a39ca9f28fe7473e44f740"
+      },
+      "old_native_matches": true,
+      "old_scope": "unchanged_after"
+    },
+    "release_admission_bootstrap.py": {
+      "candidate": {
+        "bytes": 14210,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f"
+      },
+      "category": "equal",
+      "installed": {
+        "bytes": 14210,
+        "mode": "0664",
+        "owner": [
+          1000,
+          1000
+        ],
+        "sha256": "c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f"
+      },
+      "old_native_matches": null,
+      "old_scope": "unlisted"
+    }
+  },
+  "native_only_paths": [
+    "dev/wrapper-coder/tools/coordinator_vendor/_yaml/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_backends/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_backends/_asyncio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_backends/_trio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_asyncio_selector_thread.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_concurrency_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_contextmanagers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_eventloop.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_exceptions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_fileio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_futures.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_resources.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_signals.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_sockets.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_streams.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_subprocesses.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_synchronization.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_tasks.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_tempfile.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_testing.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_core/_typedattr.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/_lazyimport.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/abc/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/abc/_eventloop.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/abc/_resources.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/abc/_sockets.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/abc/_streams.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/abc/_subprocesses.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/abc/_tasks.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/abc/_testing.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/from_thread.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/functools.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/itertools.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/lowlevel.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/pytest_plugin.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/streams/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/streams/buffered.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/streams/file.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/streams/memory.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/streams/stapled.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/streams/text.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/streams/tls.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/to_interpreter.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/to_process.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/anyio/to_thread.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/_compat.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/_termui_impl.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/_textwrap.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/_winconsole.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/core.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/decorators.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/exceptions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/formatting.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/globals.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/parser.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/shell_completion.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/termui.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/testing.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/types.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/click/utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_async.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_async_read_write.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_descriptor.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_error.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_identity.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_lease.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_marker.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_read_write.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_soft.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_soft_protocol.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_soft_rw/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_soft_rw/_async.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_soft_rw/_protocol.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_soft_rw/_storage.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_soft_rw/_sync.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_strict.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_unix.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_util.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/_windows.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/asyncio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock/version.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/_version.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/archive.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/asyn.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/caching.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/callbacks.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/compression.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/config.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/core.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/dircache.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/exceptions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/fuse.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/generic.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/gui.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/arrow.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/asyn_wrapper.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/cache_mapper.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/cache_metadata.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/cached.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/chained.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/dask.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/data.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/dbfs.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/dirfs.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/ftp.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/gist.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/git.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/github.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/http.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/http_sync.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/jupyter.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/libarchive.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/local.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/memory.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/reference.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/sftp.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/smb.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/tar.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/webhdfs.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/implementations/zip.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/json.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/mapping.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/parquet.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/prefetcher.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/registry.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/spec.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/transaction.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/fsspec/utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_abnf.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_connection.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_events.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_headers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_readers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_receivebuffer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_state.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_util.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_version.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/h11/_writers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/hf_xet/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_async/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_async/connection.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_async/connection_pool.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_async/http11.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_async/http2.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_async/http_proxy.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_async/interfaces.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_async/socks_proxy.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_backends/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_backends/anyio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_backends/auto.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_backends/base.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_backends/mock.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_backends/sync.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_backends/trio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_exceptions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_models.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_ssl.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_sync/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_sync/connection.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_sync/connection_pool.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_sync/http11.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_sync/http2.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_sync/http_proxy.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_sync/interfaces.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_sync/socks_proxy.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_synchronization.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_trace.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_types.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpcore2/_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/__version__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_alias.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_auth.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_client.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_config.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_content.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_cookies.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_decoders.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_exceptions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_main.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_models.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_multipart.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_sse.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_status_codes.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_transports/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_transports/asgi.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_transports/base.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_transports/default.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_transports/mock.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_transports/wsgi.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_types.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_urlparse.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_urls.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/websockets/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/websockets/_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/websockets/_exceptions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/websockets/_ping.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/httpx2/websockets/_transport.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_bucket_live_follow.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_buckets.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_commit_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_commit_scheduler.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_dataset_viewer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_eval_results.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_hot_reload/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_hot_reload/client.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_hot_reload/sse_client.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_hot_reload/types.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_inference_endpoints.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_jobs_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_local_folder.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_login.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_oauth.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_oidc.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_revision.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_sandbox.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_sandbox_cache.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_snapshot_download.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_space_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_tensorboard_logger.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_tree_cache.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_upload_pipeline.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_webhooks_payload.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/_webhooks_server.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_city_game.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_cli_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_completion.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_cp.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_errors.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_file_listing.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_framework.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_help_formatter.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_output.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_skills.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/_uv_script_header.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/auth.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/buckets.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/cache.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/collections.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/datasets.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/discussions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/download.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/extensions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/hf.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/inference_endpoints.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/jobs.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/lfs.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/models.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/papers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/repos.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/sandbox.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/skills.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/spaces.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/system.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/upload.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/cli/webhooks.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/community.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/constants.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/dataclasses.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/errors.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/fastai_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/file_download.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/hf_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/hf_file_system.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/hub_mixin.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_client.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_common.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/_async_client.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/audio_classification.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/audio_to_audio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/automatic_speech_recognition.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/base.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/chat_completion.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/depth_estimation.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/document_question_answering.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/feature_extraction.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/fill_mask.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/image_classification.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/image_segmentation.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/image_text_to_image.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/image_text_to_video.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/image_to_image.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/image_to_text.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/image_to_video.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/object_detection.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/question_answering.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/sentence_similarity.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/summarization.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/table_question_answering.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/text2text_generation.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/text_classification.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/text_generation.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/text_to_audio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/text_to_image.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/text_to_speech.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/text_to_video.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/token_classification.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/translation.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/video_classification.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/visual_question_answering.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/zero_shot_classification.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/zero_shot_image_classification.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_generated/types/zero_shot_object_detection.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_mcp/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_mcp/_cli_hacks.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_mcp/agent.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_mcp/cli.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_mcp/constants.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_mcp/mcp_client.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_mcp/types.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_mcp/utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/_common.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/baseten.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/cerebras.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/cohere.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/deepinfra.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/fal_ai.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/featherless_ai.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/fireworks_ai.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/groq.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/hf_inference.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/novita.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/nscale.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/openai.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/ovhcloud.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/publicai.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/replicate.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/scaleway.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/together.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/wavespeed.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/inference/_providers/zai_org.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/lfs.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/repocard.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/repocard_data.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/serialization/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/serialization/_base.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/serialization/_dduf.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/serialization/_torch.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_auth.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_cache_assets.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_cache_manager.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_chunk_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_datetime.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_deprecation.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_detect_agent.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_dotenv.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_experimental.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_fixes.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_git_credential.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_headers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_hf_uris.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_http.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_lfs.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_oauth_device.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_pagination.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_parsing.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_paths.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_runtime.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_safetensors.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_shared_blobs.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_subprocess.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_telemetry.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_terminal.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_typing.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_validators.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_verification.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_xet.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/_xet_progress_reporting.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/endpoint_helpers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/insecure_hashlib.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/logging.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/sha.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/huggingface_hub/utils/tqdm.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/__main__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/cli.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/codec.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/compat.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/core.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/idnadata.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/intranges.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/package_data.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/idna/uts46data.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/_identifier.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/async_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/bccache.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/compiler.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/constants.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/debug.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/defaults.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/environment.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/exceptions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/ext.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/filters.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/idtracking.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/lexer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/loaders.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/meta.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/nativetypes.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/nodes.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/optimizer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/parser.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/runtime.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/sandbox.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/tests.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/jinja2/visitor.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/markupsafe/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/markupsafe/_native.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/_elffile.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/_manylinux.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/_musllinux.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/_parser.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/_ranges.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/_structures.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/_tokenizer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/dependency_groups.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/direct_url.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/errors.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/licenses/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/licenses/_spdx.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/markers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/metadata.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/pylock.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/ranges.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/requirements.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/specifiers.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/tags.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/packaging/version.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/decoders/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/implementations/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/implementations/base_tokenizer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/implementations/bert_wordpiece.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/implementations/byte_level_bpe.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/implementations/char_level_bpe.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/implementations/sentencepiece_bpe.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/implementations/sentencepiece_unigram.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/models/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/normalizers/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/pre_tokenizers/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/processors/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/tools/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/tools/visualizer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers/trainers/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/__main__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/_main.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/_monitor.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/_tqdm.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/_tqdm_gui.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/_tqdm_notebook.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/_tqdm_pandas.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/_utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/asyncio.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/auto.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/autonotebook.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/cli.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/bells.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/concurrent.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/discord.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/itertools.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/logging.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/slack.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/telegram.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/contrib/utils_worker.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/dask.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/gui.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/keras.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/notebook.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/rich.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/std.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/tk.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/utils.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/tqdm/version.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/truststore/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/truststore/_api.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/truststore/_macos.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/truststore/_openssl.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/truststore/_ssl_constants.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/truststore/_windows.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/typing_extensions.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/__init__.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/composer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/constructor.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/cyaml.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/dumper.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/emitter.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/error.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/events.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/loader.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/nodes.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/parser.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/reader.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/representer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/resolver.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/scanner.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/serializer.py",
+    "dev/wrapper-coder/tools/coordinator_vendor/yaml/tokens.py"
+  ],
+  "native_source_symlinks": [],
+  "observed_at": "2026-11-21T10:32:46.910662+00:00",
+  "original_s5_after_changed": [
+    "dev/wrapper-coder/tools/amphenol_retry_completion.py",
+    "dev/wrapper-coder/tools/host_server.py",
+    "src/job_search_helper/inbox.py",
+    "src/job_search_helper/qualified_release_owner.py",
+    "src/job_search_helper/runner.py",
+    "src/job_search_helper/sqlite_repository.py"
+  ],
+  "original_s5_native_drift": [],
+  "s5_manifest_sha256": "2d3be570a4503850d437670b7b5ea3bfca4a6b9a57f909228eabd88d37125217",
+  "scoped_configuration_json_excluded": [
+    "dev/wrapper-coder/tools/coordinator_vendor/filelock-4.2.11.dist-info/sboms/filelock.cdx.json",
+    "dev/wrapper-coder/tools/coordinator_vendor/hf_xet-1.8.0.dist-info/sboms/hf_xet.cyclonedx.json",
+    "dev/wrapper-coder/tools/coordinator_vendor/tokenizers-0.23.3.dist-info/sboms/tokenizers-python.cyclonedx.json",
+    "dev/wrapper-coder/tools/resources/qwen35/tokenizer.json",
+    "dev/wrapper-coder/tools/resources/qwen35/tokenizer_config.json",
+    "src/job_search_helper/source_configuration_manifest.json",
+    "src/job_search_helper/source_configuration_mapping_facts.json",
+    "src/job_search_helper/source_configuration_qualification.json"
+  ]
+}

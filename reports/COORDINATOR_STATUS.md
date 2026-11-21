@@ -43,6 +43,53 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Consolidated release preparation
+
+### Latest checkpoint, November 21 at 05:46 Eastern
+
+Root remains coordinator and release owner for active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprints 1–3 and the Sprint 4
+Freeform pilot remain accepted. Sprints 5–7 still need deployed acceptance.
+Progress remains about 40% by accepted gates. Keep one Jetson inference
+lane with broad backlog and unqualified releases disabled.
+
+`/root/s5_live_authority_plan` independently matched the consolidated
+38-file runtime change set to installed before-images and accepted staged
+after-images. Root proved an overlay of 28 replacements and 10 additions
+recreates the full staged application and direct wrapper source. All 71
+release, host and intake tests passed from that reconstructed source after
+including its unchanged, measured bootstrap and package manifest.
+[Consolidated release preparation](S5_S6_CONSOLIDATED_DEPLOYMENT_PREPARATION_20261121.md).
+
+`/root/listener_ownership_qa` reproduced the current installer restriction
+with the exact previously accepted Freeform parser. Its original 47-file
+manifest passed. The current 38-file overlay held on the first of nine
+out-of-policy wrapper paths. The unchanged receipt bridge is required as a
+replacement by the old policy, which refuses unchanged entries.
+[Original parser hold](S5_S6_OLD_INSTALLER_SCOPE_HOLD_20261121.md).
+
+`/root/architecture_publication_review` identified that broadening the
+old wrapper allowlist alone would exclude unmodified files from the
+controller's witness. Root staged a distinct, exact 38-path source policy
+and limited the witness exclusion to actual validated mutations. The
+focused parser and sibling-drift checks passed. `/root/listener_ownership_qa`
+independently accepted the exact staged 38-path parser and the disposable
+guarded installer transaction, including all 38 after-images and rollback
+with the candidate unavailable. Its synthetic before-images included the
+ten absences and the unchanged protected bridge. Native controller, host
+witness and service acceptance remain pending. The old capsule remains
+unchanged. Source is under `/tmp/jsh-s6-maintenance-source-policy.20261121`.
+[Independent policy QA](S5_S6_MAINTENANCE_SOURCE_POLICY_INDEPENDENT_QA_20261121.md).
+
+The original user choice is still pending. Root checked the current
+user service states read-only. The wrapper host and assistant bridge are
+running. Scheduled sync was disabled and inactive.
+No hold, restart, configuration, source, queue, Jetson or data change
+was made. No live ETA. The last verified private backup is
+`fcd0f90f2a171a4693a418aa0e2e8ee455ffad70`.
+[Service observation](S5_NATIVE_USER_SERVICES_READBACK_20261121.json)
+· [Prior backup verification](S5_NATIVE_DIRECTION_AND_HOLD_BACKUP_VERIFIED_20261121.json).
+
 ## Native pilot direction and exact release hold
 
 ### Latest checkpoint, November 21 at 05:29 Eastern
@@ -84,9 +131,10 @@ direction. All QA lanes finished. Root owns the restart and backup.
 
 Next act on the scoped planning choice and revalidate actual eligibility.
 No native data, source, service, workbook, queues or Jetson changes in
-this checkpoint. There is no live ETA. Prior verified private backup
-`eb4b30b9cf53dead7fcb6e5c635d636c3bebdbed`.
-[Prior verification](S5_S6_RETAINED_PREFLIGHT_AND_LAUNCH_BACKUP_VERIFIED_20261121.json).
+this checkpoint. There is no live ETA. Private backup
+`fcd0f90f2a171a4693a418aa0e2e8ee455ffad70` was fetched back and all 18
+scoped files matched.
+[Backup verification](S5_NATIVE_DIRECTION_AND_HOLD_BACKUP_VERIFIED_20261121.json).
 
 ## Retained source transition and Sprint 6 launch control
 

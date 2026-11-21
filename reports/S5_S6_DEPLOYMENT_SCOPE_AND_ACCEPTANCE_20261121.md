@@ -18,7 +18,7 @@ retry after its one measured worker. This newer staged host join is
 outside the original 31-endpoint installation inventory below.
 [Host release QA](S5_OWNED_HOST_RELEASE_INDEPENDENT_QA_20261121.md).
 
-The latest enrolled candidate has 31 runtime changes against production,
+The earlier enrolled candidate had 31 runtime changes against production,
 with 24 replacements and seven additions. Sixteen native endpoints still
 match the independently verified Freeform installation. Of the other
 15 paths, seven are absent and eight have current before images outside
@@ -35,12 +35,25 @@ additions and replacements against the explicit list.
 · [Deployed F3 pins](F3_DEPLOYED_INDEPENDENT_QA_20261120.md)
 · [Retry baseline](S5_RETRY_ADMISSION_REPLAY_INITIAL_QA_20261121.md).
 
+The current consolidated reviewed overlay has 38 runtime changes, with
+28 replacements and 10 additions. Rebuilding the exact source in scratch
+passed the 71 focused release, host and intake checks. The accepted
+Freeform maintenance parser refused the wider wrapper scope. A staged
+separate exact policy keeps the unchanged bridge protected by the
+controller's witness. Independent QA passed the actual guarded installer
+with all 38 exact after-images and a candidate-independent rollback with
+synthetic before-images. The native controller and full deployed proof
+require separate QA.
+[Consolidated scope and parser hold](S5_S6_CONSOLIDATED_DEPLOYMENT_PREPARATION_20261121.md)
+· [Independent policy QA](S5_S6_MAINTENANCE_SOURCE_POLICY_INDEPENDENT_QA_20261121.md).
+
 The preview includes normal source routing, provider and scraper changes.
 It is a review input for a fresh scoped maintenance capsule. Reuse the
 existing maintenance hold, endpoint/absence verification, rollback and
-independent native readback. Service ownership still needs a fresh native
-check because the current tool session could not reach the user service
-bus. There was no service or source modification. Stable bootstrap,
+independent native readback. A read-only native check observed both
+services running with their expected entrypoints. That is separate from
+the maintenance process witness. There was no service or source
+modification. Stable bootstrap,
 workbook settings, source-only copies, test data and the old journal stay
 outside the proposed replacement list.
 [Prior maintenance design](F6_F7_SAMTEC_DEPLOYMENT_DESIGN_20261120.md)

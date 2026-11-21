@@ -1,0 +1,117 @@
+{
+  "dev/wrapper-coder/tools/amphenol_candidate_release.py": {
+    "exact_independent_review_documents": [
+      "S5_OWNED_HOST_RELEASE_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": [
+      "dev/wrapper-coder/tools/acquiretm_membership_recipe.py",
+      "dev/wrapper-coder/tools/amphenol_retry_completion.py",
+      "dev/wrapper-coder/tools/coding_tools.py",
+      "dev/wrapper-coder/tools/coordinator.py",
+      "dev/wrapper-coder/tools/coordinator_inference.py",
+      "dev/wrapper-coder/tools/coordinator_store.py",
+      "dev/wrapper-coder/tools/coordinator_workspace.py",
+      "src/job_search_helper/integration_release.py"
+    ]
+  },
+  "dev/wrapper-coder/tools/amphenol_installed_verification.py": {
+    "exact_independent_review_documents": [
+      "S5_OWNED_HOST_RELEASE_INDEPENDENT_QA_20261121.md",
+      "S5_INSTALLED_RECIPE_READBACK_INDEPENDENT_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": [
+      "dev/wrapper-coder/tools/acquiretm_membership_recipe.py",
+      "src/job_search_helper/integration_release.py"
+    ]
+  },
+  "dev/wrapper-coder/tools/amphenol_retry_completion.py": {
+    "exact_independent_review_documents": [
+      "S5_OWNED_HOST_RELEASE_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": [
+      "src/job_search_helper/private_file_custody.py"
+    ]
+  },
+  "dev/wrapper-coder/tools/host_server.py": {
+    "exact_independent_review_documents": [
+      "S6_NATIVE_RELEASE_HOLD_REASON_INDEPENDENT_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": [
+      "dev/wrapper-coder/tools/amphenol_candidate_release.py",
+      "dev/wrapper-coder/tools/amphenol_installed_verification.py",
+      "src/job_search_helper/integration_release.py",
+      "src/job_search_helper/qualified_release_owner.py"
+    ]
+  },
+  "src/job_search_helper/company_events.py": {
+    "exact_independent_review_documents": [
+      "S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": []
+  },
+  "src/job_search_helper/company_intake_dispatcher.py": {
+    "exact_independent_review_documents": [
+      "S6_INTAKE_SCRAPE_CONTROL_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": []
+  },
+  "src/job_search_helper/engine.py": {
+    "exact_independent_review_documents": [
+      "S6_EXACT_RETRY_STATUS_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": []
+  },
+  "src/job_search_helper/inbox.py": {
+    "exact_independent_review_documents": [
+      "S6_EXACT_RETRY_STATUS_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": []
+  },
+  "src/job_search_helper/qualified_release_owner.py": {
+    "exact_independent_review_documents": [
+      "S6_NATIVE_RELEASE_HOLD_REASON_INDEPENDENT_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": []
+  },
+  "src/job_search_helper/repair_retry_status.py": {
+    "exact_independent_review_documents": [
+      "S6_EXACT_RETRY_STATUS_INDEPENDENT_QA_20261121.md",
+      "S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": [
+      "src/job_search_helper/company_events.py",
+      "src/job_search_helper/engine.py",
+      "src/job_search_helper/exact_cycle_receipt.py",
+      "src/job_search_helper/inbox.py",
+      "src/job_search_helper/integration_release.py",
+      "src/job_search_helper/release_controller.py",
+      "src/job_search_helper/repair_retry.py",
+      "src/job_search_helper/scan_request.py",
+      "src/job_search_helper/sqlite_repository.py"
+    ]
+  },
+  "src/job_search_helper/runner.py": {
+    "exact_independent_review_documents": [
+      "S6_EXACT_RETRY_STATUS_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": [
+      "src/job_search_helper/repair_retry_status.py"
+    ]
+  },
+  "src/job_search_helper/sqlite_repository.py": {
+    "exact_independent_review_documents": [
+      "S6_EXACT_RETRY_STATUS_INDEPENDENT_QA_20261121.md",
+      "S6_INTAKE_OBSERVATION_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": []
+  },
+  "src/job_search_helper/sync_cli.py": {
+    "exact_independent_review_documents": [
+      "S6_INTAKE_SCRAPE_CONTROL_INDEPENDENT_QA_20261121.md"
+    ],
+    "new_local_imports_since_original_s5_candidate": [
+      "src/job_search_helper/company_events.py",
+      "src/job_search_helper/repair_retry_status.py"
+    ]
+  }
+}

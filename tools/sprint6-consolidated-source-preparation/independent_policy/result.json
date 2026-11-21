@@ -1,0 +1,22 @@
+{
+  "actual_native_controller_or_observer_executed": false,
+  "all_exact_candidate_after_images_verified": true,
+  "before_posts_and_original_ten_absences_restored": true,
+  "candidate_absent_on_rollback": true,
+  "exact_38_metadata_sha256": "8ea29b5ae423c18c0b4b108ea1d337359132433e1ad1b9e0cb39e7179117ea11",
+  "fixture_manifest_sha256": "dc08a92cce5270dfb6dd3ffaa4090341d686d5e7994403ae6f2a6a15628bedae",
+  "installed_phase": "INSTALLED",
+  "parsed_paths": 38,
+  "protected_bridge_inode_mode_bytes_preserved": true,
+  "refused": {
+    "expanded paths in v1": "Source path is outside the allowed scope: dev/wrapper-coder/tools/acquiretm_membership_recipe.py",
+    "missing existing store": "The consolidated release requires the existing wrapper host and store",
+    "missing reviewed path": "The consolidated manifest must list the exact reviewed source paths",
+    "protected bridge in v2": "The consolidated manifest must list the exact reviewed source paths"
+  },
+  "result": "ACCEPT_PARSER_AND_DISPOSABLE_INSTALL_ROLLBACK",
+  "rollback_phase": "ROLLED_BACK",
+  "synthetic_original_images": true,
+  "unchanged_freeform_v1_paths": 47,
+  "verified_hold_checkpoints": 87
+}

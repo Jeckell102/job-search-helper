@@ -1,0 +1,31 @@
+{
+  "observed_at": "2026-11-21T05:39:02-05:00",
+  "operation": "read_only_service_manager_and_process_arguments",
+  "units": {
+    "jetson-assistant-bridge.service": {
+      "active": true,
+      "enabled": true,
+      "entrypoint": "bridge.py",
+      "entrypoint_matched": true,
+      "loaded": true,
+      "main_pid": 498982,
+      "state": "running"
+    },
+    "job-search-sync.service": {
+      "active": false,
+      "enabled": false,
+      "loaded": true,
+      "main_pid": 0,
+      "state": "dead"
+    },
+    "wrapper-development-host.service": {
+      "active": true,
+      "enabled": true,
+      "entrypoint": "host_server.py",
+      "entrypoint_matched": true,
+      "loaded": true,
+      "main_pid": 500254,
+      "state": "running"
+    }
+  }
+}

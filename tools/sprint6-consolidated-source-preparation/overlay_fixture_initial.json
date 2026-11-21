@@ -1,0 +1,18 @@
+{
+  "reconstructed_runtime_sha256": "28015a3d3b9be15dc1c91bdc4dce378c8daf10638bb294f20e9f50af0b8f6a2c",
+  "runtime_paths_unchanged_by_fixture": true,
+  "scope_manifest_sha256": "09e871ceb0cc91685461294abef1651766cbebcb52b5655a63940fde74db13e3",
+  "test_exit": 2,
+  "test_files": [
+    "tests/test_qualified_release_owner.py",
+    "tests/test_amphenol_installed_verification.py",
+    "dev/wrapper-coder/tools/test_amphenol_candidate_release.py",
+    "dev/wrapper-coder/tools/test_amphenol_host_enrollment.py",
+    "dev/wrapper-coder/tools/test_owned_recipe_scheduler.py",
+    "tests/test_ordinary_company_event_dispatch.py",
+    "tests/test_company_event_bridge.py",
+    "tests/test_company_intake_observe.py",
+    "tests/test_retained_company_event.py"
+  ],
+  "test_stdout": "\n==================================== ERRORS ====================================\n________ ERROR collecting tests/test_ordinary_company_event_dispatch.py ________\nImportError while importing test module '/tmp/jsh-deployment-source-proof.akhv_i1z/tests/test_ordinary_company_event_dispatch.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.11/importlib/__init__.py:126: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_ordinary_company_event_dispatch.py:16: in <module>\n    from test_ordinary_company_event_command import execute, queued\ntests/test_ordinary_company_event_command.py:13: in <module>\n    import release_admission_bootstrap as bootstrap\nE   ModuleNotFoundError: No module named 'release_admission_bootstrap'\n=========================== short test summary info ============================\nERROR tests/test_ordinary_company_event_dispatch.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.79s\n"
+}

@@ -1,0 +1,22 @@
+{
+  "reconstructed_runtime_sha256": "28015a3d3b9be15dc1c91bdc4dce378c8daf10638bb294f20e9f50af0b8f6a2c",
+  "retained_root_files_verified": [
+    "pyproject.toml",
+    "release_admission_bootstrap.py"
+  ],
+  "runtime_paths_unchanged_by_fixture": true,
+  "scope_manifest_sha256": "09e871ceb0cc91685461294abef1651766cbebcb52b5655a63940fde74db13e3",
+  "test_exit": 0,
+  "test_files": [
+    "tests/test_qualified_release_owner.py",
+    "tests/test_amphenol_installed_verification.py",
+    "dev/wrapper-coder/tools/test_amphenol_candidate_release.py",
+    "dev/wrapper-coder/tools/test_amphenol_host_enrollment.py",
+    "dev/wrapper-coder/tools/test_owned_recipe_scheduler.py",
+    "tests/test_ordinary_company_event_dispatch.py",
+    "tests/test_company_event_bridge.py",
+    "tests/test_company_intake_observe.py",
+    "tests/test_retained_company_event.py"
+  ],
+  "test_stdout": ".......................................................................  [100%]\n71 passed in 10.31s\n"
+}

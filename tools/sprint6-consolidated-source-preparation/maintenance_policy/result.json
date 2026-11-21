@@ -1,0 +1,28 @@
+{
+  "controller_rejects_protected_receipt_bridge_drift": true,
+  "installer_action_run": false,
+  "invalid_manifests_refused": {
+    "missing existing host before-image": "The consolidated release requires the existing wrapper host and store",
+    "missing required endpoint": "The consolidated manifest must list the exact reviewed source paths",
+    "old schema cannot gain the extra source paths": "Source path is outside the allowed scope: dev/wrapper-coder/tools/acquiretm_membership_recipe.py",
+    "retained bridge added to write list": "The consolidated manifest must list the exact reviewed source paths",
+    "unchanged endpoint presented as replacement": "Invalid or unchanged source manifest entry: src/job_search_helper/engine.py",
+    "wrong approved manifest digest": "Source manifest hash differs from the approved pin"
+  },
+  "original_approved_manifest_paths": 47,
+  "receipt_bridge_outside_mutation_set": true,
+  "staged_consolidated_manifest_paths": 38,
+  "staged_consolidated_mutable_wrapper_paths": [
+    "acquiretm_membership_recipe.py",
+    "amphenol_candidate_release.py",
+    "amphenol_installed_verification.py",
+    "amphenol_recipe_candidate.py",
+    "amphenol_recipe_choice_input.py",
+    "amphenol_retry_completion.py",
+    "coordinator.py",
+    "coordinator_inference.py",
+    "coordinator_store.py",
+    "coordinator_supervision.py",
+    "host_server.py"
+  ]
+}

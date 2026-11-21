@@ -1,0 +1,21 @@
+# Consolidated Sprint 5/6 runtime endpoint audit
+
+**38 overlay endpoints. Original 31-path inventory requires an update for this exact candidate.** The consolidated source has 10 additions and 28 byte replacements against the installed checkout. Application source accounts for 4 additions and 22 replacements. Wrapper tools account for 6 additions and 5 replacements. The top shell accounts for one replacement. There are zero metadata-only changes. Every original Sprint 5 installed before endpoint still matches. Twenty-five original after endpoints still match that inventory. Six original after endpoints changed, and seven deltas are outside its path list. [Original Sprint 5 inventory](/tmp/job-search-helper-integration-automation/temp/integration-coordinator/S5_NATIVE_SOURCE_SCOPE_20261121.json) [Full endpoint evidence](/tmp/jsh-s6-endpoint-audit.5E0i8alW/ENDPOINTS.json)
+
+| Seven endpoints outside original scope | Comparison with installed | Owning change |
+|---|---|---|
+| `amphenol_candidate_release.py`, `amphenol_installed_verification.py` | Additions | Exact build/candidate admission and installed readback |
+| `repair_retry_status.py` | Addition | Exact local retry status |
+| `engine.py` | Replacement | Immutable read of State for status |
+| `company_events.py` | Replacement | Latest outbox observation |
+| `company_intake_dispatcher.py` | Replacement | Independent scrape control on existing dispatcher |
+| `sync_cli.py` | Replacement | Observe-only command and durable scrape-control switches |
+
+The six changed original after paths are wrapper tools `amphenol_retry_completion.py` and `host_server.py`, and application `inbox.py`, `qualified_release_owner.py`, `runner.py` and `sqlite_repository.py`. All 13 changed or added after endpoints match exact **later independent source QA** pins. None lacked exact later source QA in the checked crosswalk. Those individual reports do not constitute one combined installed review or authorization. [Independent exact-pin and dependency crosswalk](/tmp/jsh-s6-endpoint-audit.5E0i8alW/DEPENDENCY_AND_QA_CROSSWALK.json)
+
+- Host activation now references the new candidate and installed verification modules and the existing release owner. The candidate and verifier reuse the exact measured recipe, workspace, Store, inference and integration-release helpers. Approval-side custody reuses the original scoped private-file custody module. The newly referenced `coding_tools.py` and `coordinator_workspace.py` match installed bytes and metadata. No new package import was found in these added source modules.
+- The runner now references local `repair_retry_status.py`. It uses existing release/request/exact-receipt helpers and the immutable Jobs, State and Inbox readers. Observation reuses that same snapshot check and the existing bridge selector. The scrape control uses the existing dispatcher journal. The `storage` shell route is unchanged.
+- `job-search-scraper` retains mode `0755` and owner. It differs from native by only the originally inventoried `continue-qualified-repair` dispatch arm. Its SHA-256 matches the original staged after pin `2556de3371c32be1991273a1ee88d2baa25753dfcdc73a9656d34de6b91de78c`. Native and candidate measured bootstrap bytes, mode and owner match exactly, SHA-256 `c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f`.
+- No candidate-only symlink or application-source omission was found. The 523 recursively observed native-only Python files are all below the existing `dev/wrapper-coder/tools/coordinator_vendor/` dependency tree. The source-only candidate omits that vendor tree by construction. The unchanged coordinator budget helper references it, so the result applies to an explicit overlay and provides no basis to prune the installed tree. The three source-configuration JSON files, root project/configuration files, stores, credentials, caches, evidence and tests are outside this review. [Installed tokenizer dependency seam](/tmp/jsh-s6-native-release-hold-reason.20261121/dev/wrapper-coder/tools/coordinator_budget.py:59)
+
+This was a read-only source comparison. Endpoint files had stable metadata across each read. No service, model, application command, provider or deployment ran.

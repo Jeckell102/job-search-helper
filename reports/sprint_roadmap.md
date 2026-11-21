@@ -390,6 +390,17 @@ genuine disjoint Company later. The native audit found no pending event and
 all current named cases overlap. The user was asked which scope to prepare.
 [Native pilot directions](S5_NATIVE_PILOT_DIRECTION_20261121.md)
 · [Exact operator hold QA](S6_NATIVE_RELEASE_HOLD_REASON_INDEPENDENT_20261121.md).
+The complete current source-only candidate now has an exact 38-file
+inventory and a reconstructed disposable overlay with 71 passing tests.
+Independent QA confirmed the existing maintenance parser cannot admit
+it. The staged newer policy preserves the old manifest rules and limits
+wrapper changes to the exact 38-file manifest. The unchanged receipt
+bridge stays in the controller protection witness. Independent QA
+verified all 38 exact staged after-images and rollback in an isolated
+installer transaction with synthetic before-images. Native controller,
+host witness and service acceptance remain pending.
+[Consolidated deployment preparation](S5_S6_CONSOLIDATED_DEPLOYMENT_PREPARATION_20261121.md)
+· [Independent policy QA](S5_S6_MAINTENANCE_SOURCE_POLICY_INDEPENDENT_QA_20261121.md).
 The staged Python host now has a default-off route from its completed
 owned recipe build and exact independent approval to the guarded installer.
 The focused callback coverage passed. The separately checked installed

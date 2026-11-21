@@ -1,0 +1,28 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "fetched_commit": "fcd0f90f2a171a4693a418aa0e2e8ee455ffad70",
+  "local_commit": "fcd0f90f2a171a4693a418aa0e2e8ee455ffad70",
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "f9adaa4472f9678c7fe2ff7567cbc86d4357da35a0996d76ced6f633853d31db",
+    "reports/S5_DISJOINT_VERSIONED_WORKER_DESIGN_20261121.md": "bde8372a77ae9fdb0797bff791a82839cac4d362cade23d6bbf0049d38aac155",
+    "reports/S5_LEGACY_INSTALL_FENCE_INDEPENDENT_QA_20261121.md": "b0e442b1017780162bb8916486870e4a54c7f39cfb64bbc58126c8b72c2154a6",
+    "reports/S5_NATIVE_DISJOINT_ORIGIN_AUDIT_20261121.json": "28386c4f7735a8f783943c5674a5d5500825b4bf3dc377393d4cc910fa689da7",
+    "reports/S5_NATIVE_DISJOINT_ORIGIN_AUDIT_20261121.md": "b90fee67d86326347b8b8d8766097dd6937e12144bd41228d326befffe2aab56",
+    "reports/S5_NATIVE_PILOT_DIRECTION_20261121.md": "eb65b615e4d3503f857201da7235b7d7083e9739c3e2588ed88daf86e816f9b7",
+    "reports/S5_S6_DEPLOYMENT_SCOPE_AND_ACCEPTANCE_20261121.md": "10598e240e2dc1343c3fe8c3968ed64a8e0e7c52f64160a2aed0feacfc132de9",
+    "reports/S5_S6_RETAINED_PREFLIGHT_AND_LAUNCH_BACKUP_VERIFIED_20261121.json": "f501f182adc4327d405037c38cac899fb3bc3e6f6f1112b2b7e3bfeab196ca94",
+    "reports/S6_NATIVE_RELEASE_HOLD_REASON_INDEPENDENT_20261121.md": "12840e10e5198e79c9cf3ef383daf9bdcb63e2f58b1d19d759319cd361a9a236",
+    "reports/sprint_roadmap.md": "012af73992625afa0d5f37625b92c81214c92fb40b4ba74869d15b8ddd80bca9",
+    "tools/sprint6-native-release-hold/dev/wrapper-coder/tools/host_server.py": "0e13fcae57c4baa4edf1b59454546d2924c49054aebd253dd1b24f666b8e672a",
+    "tools/sprint6-native-release-hold/qa/corrected/RESULT.json": "eef418c4713fea4d5b8957ed1fc79b04244ab9243982aac677fbd8bb65bf3c83",
+    "tools/sprint6-native-release-hold/qa/corrected/offline_child.py": "a155ffa461942ace3e50b1e8784bbe2118f9d5c12f22c7dc151306bbce2e736d",
+    "tools/sprint6-native-release-hold/qa/corrected/prove_legacy_install_fence.py": "8ffac82d4b7bd2f01363e3c183687cb8acbb0d71c695e679fba317ef6a83a1e3",
+    "tools/sprint6-native-release-hold/qa/initial/RESULT.json": "f46094c38492b34368546f5ad1758b5a449c94d39f7bcaef1ab829cafbe22ce1",
+    "tools/sprint6-native-release-hold/qa/initial/offline_child.py": "a155ffa461942ace3e50b1e8784bbe2118f9d5c12f22c7dc151306bbce2e736d",
+    "tools/sprint6-native-release-hold/qa/initial/prove_legacy_install_fence.py": "2b2a71d4fe8ee913a1ab8d34af7a9dda50f799d89798b2754451df7bf77e0f45",
+    "tools/sprint6-native-release-hold/src/job_search_helper/qualified_release_owner.py": "5cf4e70829ad40d797dde4779cb6a1f0a75953f303ed330c0610ee7f0e5b23e6"
+  },
+  "verified_at": "2026-11-21T05:31:07-05:00",
+  "verified_scoped_files": 18
+}
