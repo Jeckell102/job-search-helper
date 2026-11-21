@@ -43,6 +43,46 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
+## Amphenol disposable release-to-receipt rehearsal passed
+
+### November 21 at 13:10 Eastern
+
+Root is senior coordinator and release owner, active goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Sprint 5 remains the priority and
+overall roadmap acceptance remains about 40%. No user action expected
+in the next hour for the current isolated work.
+
+The actual copied current installer/launcher and exact operator settlement
+ran a fixture-qualified release. The measured fresh retry filtered one
+test job, stored the exact local row, and confirmed one matching workbook
+fixture batch. Replay caused no additional fetch or write. The isolated
+whole-path rehearsal then used the accepted staged explicit operator
+terminal helper and real receipt bridge into the real Python coordinator.
+It retained two matching original/retry receipt pairs, one
+VALIDATED_COMPLETE event, and no tasks or inferences. Worker and host
+replays matched without changing logical stores or unrelated fixture rows.
+[Worker-only evidence](S5_AMPHENOL_OPERATOR_WORKER_DISPOSABLE_QA_20261121.md)
+and [combined rehearsal](S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_20261121.md).
+
+The exact observed native Amphenol outcome and original Jetson receipt stay
+preserved. No live release, retry, workbook publication or fresh pilot.
+Current independently held live candidate has one 39-detail complete run
+and two later provider holds at 35 and 37. Do not reinterpret the private
+fixture qualification as actual approval. No more calls in the ended
+window. Only a new bounded current public window can satisfy the
+unchanged live criteria. If it passes, bind the exact approved manifest,
+perform one guarded deployed release/retry and independent live QA.
+Do not reset or replay the spent Jetson request.
+
+Root owns next release and backup. The worker lane completed the private
+worker proof. `/root/listener_ownership_qa` independently accepted the exact
+combined durable run: four immutable databases, original/retry receipt
+pairs, one confirmed job and lifecycle, no duplicate effects, tasks or
+inference. [Independent readback](S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_INDEPENDENT_READBACK_20261121.json).
+No shared edits or native work assigned.
+Latest verified private backup `1d538067a032d985f1f31500288049b1b8cf942e`.
+Keep scheduled sync, broad queue, automatic release and extra Jetson lanes off.
+
 ## Operator retry completion staged while Amphenol qualification stays held
 
 ### November 21 at 12:59 Eastern
@@ -82,9 +122,17 @@ and [retained preflight composition](S5_AMPHENOL_OPERATOR_RELEASE_COMPOSITION_20
 Root owns the connector only; `/root/listener_ownership_qa` owns its
 independent recheck; `/root/architecture_publication_review` owns the
 separate current-source measured installer/worker fixture. No shared edits.
-Next accept or repair the connector, verify the actual disposable worker
-result, then combine those proofs without counting fixture results as live.
-Latest verified scoped backup `4c965e4518ee6a05761ae03da345a1960badedbe`.
+The initial generic disposable worker installed its scoped fixture
+candidate and collected one inventory, then correctly held before Sheets
+publication on expected-value mismatch. Immutable actual Amphenol Jobs
+readback shows both implicated fields unchanged from baseline. The
+generic source fixture had updated fields that the exact operator partial
+settlement does not. Keep the guard. The worker lane is trying the exact
+fixture and root will verify the result. No live credit.
+[Native baseline check](S5_AMPHENOL_RETRY_ORIGIN_BASELINE_READBACK_20261121.md).
+Latest verified scoped backup `1d538067a032d985f1f31500288049b1b8cf942e`
+with all 12 changed files matched.
+[Verification](S5_AMPHENOL_OPERATOR_TERMINAL_BACKUP_VERIFIED_20261121.json).
 Keep scheduled sync, broad queue and unqualified auto-release disabled.
 
 ## Automatic wrapper trigger verified; release held on current provider evidence

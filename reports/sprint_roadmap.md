@@ -494,6 +494,15 @@ installation, retry receipt or new inference. Current-source measured
 worker and combined disposable terminal proof are separate gates.
 [Operator terminal staging](S5_AMPHENOL_OPERATOR_RETRY_TERMINAL_STAGED_20261121.md).
 
+At 13:11, the exact Amphenol operator fixture completed the guarded
+release, one measured retry, one matching local and workbook fixture job,
+and one Python coordinator VALIDATED_COMPLETE event. Independent QA checked
+the durable paired receipts and absence of duplicate fetch/write, tasks,
+inference and unrelated fixture changes. Live candidate approval and native
+execution remain held on provider evidence.
+[Combined rehearsal](S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_20261121.md)
+· [Independent readback](S5_AMPHENOL_OPERATOR_COMBINED_DISPOSABLE_INDEPENDENT_READBACK_20261121.json).
+
 ## Sprint 6 — Reliability and sequential staged activation
 
 Roadmap coverage: Milestone 6 plus F8.

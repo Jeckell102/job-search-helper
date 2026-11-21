@@ -1,0 +1,20 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "1d538067a032d985f1f31500288049b1b8cf942e",
+  "files": {
+    "reports/COORDINATOR_STATUS.md": "89502d2c4d3f0d8f5f7438e74c076071e3142311a68d9d764b1eaa508521e535",
+    "reports/S5_AMPHENOL_HOLD_FORTERRA_COMPOSITION_BACKUP_VERIFIED_20261121.json": "3eed84e37bf27babac824e09f3b762323c01efe09fa96d67e3ec88b4ab469244",
+    "reports/S5_AMPHENOL_OPERATOR_RELEASE_COMPOSITION_20261121.md": "521760e12978a337e60126fe19d271cb8b442a565777727018557389dfa9f5db",
+    "reports/S5_AMPHENOL_OPERATOR_RETRY_TERMINAL_INDEPENDENT_QA_20261121.md": "9f1b3a48beaf716f221f229bdf69b7184c3b8d0731024ddfa012aab36652d116",
+    "reports/S5_AMPHENOL_OPERATOR_RETRY_TERMINAL_STAGED_20261121.md": "5c9231cf96436377a1f830a90c888f2346e15336ec2c4feea337883c2431fb0d",
+    "reports/S6_ALLEN_ASHBY_SOURCE_INDEPENDENT_QA_20261121.md": "13e472a272db0c25c671134016486c53ce9fafd1427e6816f9f68118cf1f5604",
+    "reports/S6_ALLEN_INSTALLED_ROUTE_INDEPENDENT_REVIEW_20261121.md": "b45062118deccd938bfff1e72a0d662555734c85a44e64f1b1b0f81bd768d3b5",
+    "reports/S6_INSTALLED_CASE_SOURCE_RESOLUTION_20261121.json": "6f6fa8c39520aef2d3f2c13cf7dbd8369a93a9dd1df77e44c4064c775deb6443",
+    "reports/sprint_roadmap.md": "70ca2bd09a9c8884989b2a73b2abb94389a2f88a114ab4adda9d23217287f0e9",
+    "tools/sprint5-amphenol-operator-terminal/amphenol_retry_completion.py": "1b598db426c24611adc5303a71c4f9d21fe4ddc5e2560459be7a78d1989abf67",
+    "tools/sprint5-amphenol-operator-terminal/tests/test_explicit_entry.py": "ddc09af395cb55742ee2d41a895ec0209cbb07feb8001511154876d8221b6485",
+    "tools/sprint5-amphenol-operator-terminal/tests/test_operator_retry_completion.py": "f0584d3c347099485b80ebca63003b7b0aec9d6f6dab670829957c835efa1ecc"
+  },
+  "repository": "Jeckell102/job-search-helper",
+  "verified_at": "2026-11-21T13:03:03-05:00"
+}
