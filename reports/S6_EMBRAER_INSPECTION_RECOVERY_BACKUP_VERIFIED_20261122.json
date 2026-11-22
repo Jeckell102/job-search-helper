@@ -1,0 +1,10 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "b5f4de7957201b40497d929635d4a59d66b50488",
+  "matched_files": {
+    "reports/S6_EMBRAER_INSPECTION_RECOVERY_CANDIDATE_20261122.md": "d03cf3589eff3fd981e850bae9adaa9668b9a0d5a8ab075dced4fea8f5571bd0",
+    "reports/embraer-inspection-recovery-20261122/coordinator.py": "3d5d42249f4e8b277e3d86de57658c2275214629b78aff9cd61fbcb8d65680d4",
+    "reports/embraer-inspection-recovery-20261122/test_embraer_inspection_recovery.py": "54ca14e8878a8218e47035aef5cc84924de7e1813bf0dc4351fde59264184615"
+  },
+  "repository": "Jeckell102/job-search-helper"
+}
