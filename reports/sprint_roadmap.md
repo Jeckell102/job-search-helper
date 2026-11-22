@@ -301,6 +301,13 @@ lost workbook response recovery without a second fetch or write. The
 changed output identifies the preexisting exact request and cycle.
 [Recovery stage](S4_NEXT_MANUAL_START_RECOVERY_STAGE_20261121.md).
 
+At 20:25 Eastern the accepted manual Start scope passed ten offline tests
+when composed with the exact paced Amphenol candidate. A bare source
+overlay is rejected by the previous active runtime binding. The disposable
+guarded successor preserved the paced adapter and original receipt. The
+later native bootstrap and genuine next-manual-run gate remain open.
+[Manual Start successor](S4_NEXT_MANUAL_START_AFTER_PACED_RELEASE_20261121.md).
+
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 
 Roadmap coverage: Milestones 4 and 5, including F5.

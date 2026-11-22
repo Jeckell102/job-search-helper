@@ -1,0 +1,18 @@
+{
+  "after_source_sha256": "bcfdcc203138be9bfecb31e02039be469d451034ab926cb641dcfc45df5584c3",
+  "before_source_sha256": "bfab80ca6a455671c1956f18bfce1e1d7ff7b77e6ec1bd52b08e06be0a52e82c",
+  "files": {
+    "release_admission_bootstrap.py": "9cafc1f6b283d77e769640134756df7e67d81702789ada5e5b2381f427cef152",
+    "src/job_search_helper/manual_company_start.py": "bb1e010e6e14d0e7fe1df1bc91d5f633d37ed726fcc2ce2ee074f2252f0f6c5e",
+    "src/job_search_helper/runner.py": "4abc4fd6d7713294e0029fb770c3a5ffd57968569386ffaffd44f468cfcf2dd0",
+    "test_manual_busy_boundary.py": "503e6d34bb1200383fc57dbb4ce6b1d50b04e405a671fbafabc70a5b80853448",
+    "test_manual_company_start.py": "99f09ee5dc0f85b25f4fb21f2aafae30f5ccbcce4dee4643b0337bf101c52958"
+  },
+  "paced_acquiretm_sha256": "ac1b1e62ca139fcef47cae368ac25ebc56043a6d3133428ec2e97f22fdbc9e7c",
+  "predecessor_release_id": "REL-f509ed362bf8781ea8840adc",
+  "scope": "prospective source composition, pending release",
+  "source_module_changes": [
+    "manual_company_start.py",
+    "runner.py"
+  ]
+}
