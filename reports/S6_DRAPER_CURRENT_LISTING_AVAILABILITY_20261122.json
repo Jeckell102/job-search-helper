@@ -1,0 +1,10 @@
+{
+  "advertised_total": 226,
+  "board": "https://draper.wd5.myworkdayjobs.com/en-US/Draper_Careers",
+  "first_page_count": 20,
+  "http_status": 200,
+  "observed_at": "2026-11-22T16:26:50.238586+00:00",
+  "scope": "one public read-only listing search at offset zero; no details or retry",
+  "status": "PUBLIC_LISTING_RESPONSE",
+  "workday_adapter_sha256": "e9e23c9e2d120becd1bfd964dc1c8b96652b9dd34089b7beeaefa10ddf4bfa99"
+}
