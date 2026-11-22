@@ -81,6 +81,49 @@ the three-case Sprint 6 acceptance remains open.
 [Public qualification at tested pace](S5_AMPHENOL_PACED_PUBLIC_RESULT_20261121.md)
 · [Production transport offline QA](S5_AMPHENOL_PRODUCTION_PACING_INDEPENDENT_QA_20261121.md).
 
+The existing private backup branch was read back at `ce8945e4894b64f5e2e4c110114afcde58ade450`.
+All 17 scoped source, test, proposal, plan and evidence files matched.
+[Backup verification](S5_AMPHENOL_PRODUCTION_PACING_BACKUP_VERIFIED_20261121.json).
+
+At 19:46 Eastern the owner confirmed the three exact candidate runtime
+dimensions and 46 offline adapter and ATS tests. The installed runtime
+has zero effective unfinished cycles, no active application release and
+no held scraper or writer lock. Wrapper and bridge are active; scheduled
+sync is inactive and disabled. The new -06 observer is prepared and not
+running. Its 30-minute duration uses the existing observer's default.
+Do not start it before an exact live pass and release prep.
+
+Independent QA accepted the composed generated-build reader and exact
+delta. The updated held release entry preserves the qualified owner on
+every action and prevents an unaudited candidate from entering the native
+window for new installation. Native restoration does not inherit a new
+staged-candidate dependency. The initial observation evaluator was rejected
+after the real adapter fixture exposed a lost hold and missing timing
+assertions. The separate evaluator worker owns the repair; independent QA
+will repeat with the actual adapter and fake browser before any provider
+contact.
+[Native window preparation](S5_AMPHENOL_PACED_NATIVE_WINDOW_PREPARATION_20261121.md)
+· [Initial package QA](S5_AMPHENOL_PACED_COMPOSITION_INITIAL_QA_20261121.md).
+
+At 19:49 Eastern the exact corrected evaluator and release entry passed
+independent offline QA. The measurements reflect the adapter's own waits.
+The observed first-429 and long-503 hold evidence remains available when
+normal dispatch raises its internal blocked result. The coordinator will
+check chronological listing starts even on a hold. Root verified exact
+prepared source/config/shared dependencies and native wrapper-tool scope.
+The independent QA lane owns the sole bounded public launcher, with its
+exact inputs already verified and no start marker as of package inspection.
+Root monitors only that launch and will use the terminal result to decide
+whether to open the guarded release window. Release authority is pending.
+[Independent evaluator and entry QA](S5_AMPHENOL_PACED_OBSERVER_INDEPENDENT_QA_20261121.md).
+
+At 19:49:17 Eastern independent QA started the sole public qualification
+on the exact staged proposal using the adapter's normal public route.
+The private durable start is `PUBLIC_RUN_STARTED.json`. The lane owns
+exec handle 40943 and must observe it through terminal. Root may inspect
+its logs and may not run it again. No production approval, installation,
+workbook access, or native service change was requested.
+
 ## Earlier Sprint 5 release preparation and public evidence
 
 ### November 21 at 16:51 Eastern — exact candidate prepared, provider hold

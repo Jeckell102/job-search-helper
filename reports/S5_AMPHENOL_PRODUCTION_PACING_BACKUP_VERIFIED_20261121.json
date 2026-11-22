@@ -1,0 +1,27 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "ce8945e4894b64f5e2e4c110114afcde58ade450",
+  "exact_file_count": 17,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "605e21f4fa5206726de8ea13244739d4e0963e801d5425d821f24a2030f63982",
+    "reports/S5_AMPHENOL_PACED_PREPARATION_BACKUP_VERIFIED_20261121.json": "5bde875cb21b9341367c2a88bc521b97f8fd6c5586b48fc18fefe108bfeecbe5",
+    "reports/S5_AMPHENOL_PACED_PUBLIC_RESULT_20261121.md": "f8604ab0be21b0821adad088689924ab7d23919d5212dfa59706d401d61e43c1",
+    "reports/S5_AMPHENOL_PRODUCTION_PACING_INDEPENDENT_QA_20261121.md": "294b0e381170337682c2bea9e3380eb0202a0cc4879e2cc74271e898db664774",
+    "reports/S5_AMPHENOL_PRODUCTION_PACING_INITIAL_QA_20261121.md": "d48bcd371e4e39704b69327ff5ab176d259f27210ae710f78c7fb94e9a81eae4",
+    "reports/sprint_roadmap.md": "e999cefbe0224d3d50fd948b19fd85260afaed531462aaab0f2777411a56bfc8",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/EXPECTED_INSTALL_READBACK.json": "03e0776faa0a4eb182e0b43b8f4b482df0170cdd7bd6c568c8abae1049365e4d",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/PREPARED.json": "7e0ca2034fc3be3003edce8bf77375ce0f6d74ce8754ab8822dd770b1378fa0c",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/PROPOSED_MANIFEST.json": "e5550751500ac50d8ac95153135c53c311b976b72b7d0bffc95e894c7a6366cc",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/prepare_candidate.py": "d41ab739405ab8616569f2cd37b98b4cb9cdbbd174f0a49e0098b6f8330822ba",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/reviewed-pacing.patch": "a6833199c738174cec0ce3015863a22bdaf59f5d5c45fb00c371f45a0b3193c4",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/src/job_search_helper/acquiretm.py": "ac1b1e62ca139fcef47cae368ac25ebc56043a6d3133428ec2e97f22fdbc9e7c",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/tests/test_acquiretm.py": "6006ce80137e87c4d6dd66c61ee94b78288a823739da17201d608ad142ab1e2c",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/tests/test_independent_cleanup_hold.py": "3beeddf511b29fc22b645764bfe3aa8cafdc0ffcf611b93e34d9f56943b2cb70",
+    "tools/sprint5-amphenol-fresh-operator/qualification/production-pacing/tests/test_independent_cycle_spacing.py": "08eb8905dc11beeb1b949277ca198031c5d60bba41266e487f293d3f6dbb2f1c",
+    "tools/sprint5-amphenol-fresh-operator/qualification/timed-192200/CAPTURE_PREPARATION.json": "b9819940888d60398a2f36e98ab51f4d7bb0baeed242879484772172ab0ad992",
+    "tools/sprint5-amphenol-fresh-operator/qualification/timed-192200/RUN_TERMINAL.json": "433dbcdde17431089f6a0afcbb403f3394665aacbb582d2bf7cac7f60ddb9d2e"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T19:44:59-05:00"
+}
