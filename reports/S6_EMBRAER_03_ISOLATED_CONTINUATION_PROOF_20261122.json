@@ -1,0 +1,52 @@
+{
+  "artifact_sha256": {
+    "SCOPED_SOURCE.patch": "d750220585f168a430cc4be1685a35a295d7b3acba5b487ef1aba1d33e08dc1d",
+    "capture_saved_fixture.py": "564f6e0d8e3177143f8518e862a7b4fcb64f15dda749e5a3bb430f7b43f148d3",
+    "prove_saved_continuation.py": "3ffab3752a41029f0db5ffc732335416c620dad8761d332cd614e368d82f3670"
+  },
+  "attempt": {
+    "fixture_child_id": "WRAP-598cfd1b60",
+    "new_outcomes": 0,
+    "new_scrape_requests": 0,
+    "parent_inference_receipts_preserved": 15,
+    "prompt_tokens": 1005,
+    "reservations": 1,
+    "reserved_output_tokens": 936,
+    "restored_same_child": true,
+    "simulated_edit_verified": true,
+    "simulated_total_tokens": 119204,
+    "terminal_state": "AWAITING_LIVE_VALIDATION"
+  },
+  "baseline_sha256": "065c73e80aa9a306b3691ca268a332c00b5c476b4ce4da46d9d224b2b81c5251",
+  "live_authorized": false,
+  "outcome_id": "OUT-89a8561a79f99e2b3c3eb243",
+  "parent_task_id": "WRAP-250158dc79",
+  "production_modified": false,
+  "scope": "isolated source and simulated response only",
+  "source_pins": {
+    "embraer_terminal_candidate.py": {
+      "prior_sha256": "10ed3c1100e5a64fb1abc2e83e6d4bf43063a72a306af8b47863579539f8eb85",
+      "staged_sha256": "bdfa83bf493c00d2022788bead5caaa83119aa930166e274405c7a94b56d9020"
+    },
+    "tools/coordinator.py": {
+      "prior_sha256": "f7c302326b4d7b8ed85d54f08ae3ee1ab3f89ad74629cc1ccbd0fb6d2300c8e9",
+      "staged_sha256": "400cb4e55396e0f1ab2fbccf06f7aa427927f76c43e7f6514d23e508b1a171a9"
+    },
+    "tools/coordinator_inference.py": {
+      "prior_sha256": "4d94acad23e879089dee088c04826ddef4b062b77316915bf493ee2db17db968",
+      "staged_sha256": "bed0b5ef0b8d0956ef9add345cb7e35a2c4cfbb3278f96b650ec326732b92808"
+    },
+    "tools/coordinator_store.py": {
+      "prior_sha256": "16c442d8019d5173f188348890fd89fe224d2c4315fde67528ed26e25478134d",
+      "staged_sha256": "028bb731ddf9cfce1ec9e228dd1ab8d6c4511aae94117e2e1243778f6b57d1f4"
+    },
+    "tools/embraer_compact_prompt.py": {
+      "prior_sha256": null,
+      "staged_sha256": "c9d1b67b7dae3aeaf49270ffd2ff18b2b82ea9341b35760f25599f9ec5a38ef4"
+    },
+    "tools/embraer_operator_pilot.py": {
+      "prior_sha256": "9669ae6860acff34c24af4164f4fe7e5b859da53dd8187045befb97a85d1e41a",
+      "staged_sha256": "355a0beb0e81074ed27d79d5a8ef4c87b1bb07607f9004c6782262c916798fb0"
+    }
+  }
+}
