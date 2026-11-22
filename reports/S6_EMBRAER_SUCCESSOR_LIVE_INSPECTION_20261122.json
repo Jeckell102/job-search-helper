@@ -1,0 +1,17 @@
+{
+  "calls": 4,
+  "checkpoint_offer": true,
+  "focus_receipt": 243,
+  "manifest_matches": true,
+  "note_visible_under_focus": false,
+  "note_visible_without_focus": true,
+  "observed_at": "2026-11-22T20:19:16.218698+00:00",
+  "outcome_id": "OUT-f5084fdec013f314e5353c0c",
+  "phase": "inspect",
+  "sessions": 2,
+  "source_receipt_sha256": "5f65476a121019f8beb573b40333dddd092de71b2c9521e71e16c68f1befb7c4",
+  "task_id": "WRAP-289593fcc0",
+  "terminal_status": "PAUSED_BLOCKED",
+  "unresolved": 0,
+  "wrapper_pid": 764700
+}

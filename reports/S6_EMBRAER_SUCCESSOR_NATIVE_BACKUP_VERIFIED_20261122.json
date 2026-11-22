@@ -1,0 +1,18 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "ec0b7695ed8b59c4b0f302c085a14ba18d883d18",
+  "matched_files": {
+    "reports/S6_EMBRAER_SUCCESSOR_NATIVE_WINDOW_READY_20261122.md": "0e0ac1a4df361675915c8f9621d49faaff774f4eea292bea28ca45382817943c",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/HANDOFF.md": "1f48baa6977c86f46ecb10536216a6b91b8b16d6db5456482423b6a538a153f8",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/PINS.json": "7ecf6d4a4dded993fac749e97319252dd977c52182ba3db08204d889b37da6a8",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/RESULT.json": "d87b09b270318216021e9a7412939f389b5f3722b8749fce77baa96504bbf493",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/native_projection.py": "64f4a0372603faf4ae2b9c5c33950a4bf836979cae774749d79c430e21fecd12",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/native_runtime.py": "05377be0ff3124e2fb641b378443251f63ec415d9de3dddc11e7bb12913f7521",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/native_successor_entry.py": "94cd3d90b049820896ae8a73830b744a597ae5e9bb75d3ca1790174517aecb3a",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/start_observer.sh": "4023c96df5e3530edfd940e9cba9e1cd9ae34825166063f2ab8e8392f81a935e",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/successor_environment.py": "f86bb7e48d0c36f2fe5edb47baba1544b91ed7ec9df4be46a65018b188f610fc",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/successor_tool_forward.py": "a91aa6f7c67948415a346215ca5e51fd6a652dd23b697662ccafb3a6ae8d287a",
+    "reports/embraer-inspection-recovery-20261122/successor-enrollment/native/test_native_successor.py": "7966dec1971d5e1b40a14dce9d40cc95bde93dbb7bb6076d30abec72cd656a83"
+  },
+  "repository": "Jeckell102/job-search-helper"
+}
