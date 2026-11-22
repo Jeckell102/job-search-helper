@@ -1,0 +1,24 @@
+[Unit]
+Description=Job Search Helper single read-only process observation
+
+[Service]
+Type=exec
+User=root
+Group=root
+ExecStart=/usr/bin/python3 -I -B /usr/local/libexec/jsh-maintenance-observer/observe_once.py
+StandardInput=socket
+StandardOutput=null
+RuntimeMaxSec=3s
+TimeoutStopSec=1s
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
