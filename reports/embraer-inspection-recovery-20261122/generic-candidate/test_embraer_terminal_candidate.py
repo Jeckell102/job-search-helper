@@ -4,6 +4,7 @@ import hashlib
 import json
 
 from embraer_terminal_candidate import derive_embraer_final_diff, read_embraer_terminal_candidate
+from coordinator_store import Store as InstalledStore
 
 
 MANIFEST = {'src/job_search_helper/shared_boards.py': 'a' * 64}
@@ -17,7 +18,9 @@ class Enrollment:
     def _sources_match(self, project): return project == '/workspace'
     def _source(self, jobs, destination):
         return {'record': {'outcome_id': 'OUT-' + 'd' * 24}, 'company': {'company_id': 'COMP-0634'}}
-    def _paired(self, store, source): return store.held, store.task
+    def _paired(self, store, source, *, exact_repair_key=None):
+        self.paired_key = exact_repair_key
+        return store.held, store.task
     def _proposal(self, held, company): return {'integration': {'work_order': 'breezy-embraer-brand-heading-v1'}}
     def _task_matches(self, held, task, proposal): return held == {'repair_key': 'r'}
 
@@ -72,11 +75,20 @@ def test_exact_terminal_binding(monkeypatch):
         _receipt(3, 'code_diff', {'ok': True,
          'source_unchanged_during_diff': True, 'source_manifest_sha256': source_digest}),
     ]
-    result = read_embraer_terminal_candidate(Enrollment(), store, project='/workspace', jobs='jobs', destination='sheet',
+    enrollment = Enrollment()
+    result = read_embraer_terminal_candidate(enrollment, store, project='/workspace', jobs='jobs', destination='sheet',
                                               current_source_manifest=MANIFEST,
                                               current_acceptance_source_manifest=MANIFEST,
-                                              final_diff={'paths': ['src/job_search_helper/shared_boards.py'], 'source_manifest': MANIFEST})
+                                              final_diff={'paths': ['src/job_search_helper/shared_boards.py'], 'source_manifest': MANIFEST},
+                                              expected_task_id='WRAP-fbb9ff24d3')
     assert result and result['task_id'] == 'WRAP-fbb9ff24d3'
+    enrollment.successor = types.SimpleNamespace(predecessor_repair_key='e' * 64)
+    successor = read_embraer_terminal_candidate(enrollment, store, project='/workspace', jobs='jobs', destination='sheet',
+                                                 current_source_manifest=MANIFEST,
+                                                 current_acceptance_source_manifest=MANIFEST,
+                                                 final_diff={'paths': ['src/job_search_helper/shared_boards.py'], 'source_manifest': MANIFEST},
+                                                 expected_task_id='WRAP-fbb9ff24d3')
+    assert successor and enrollment.paired_key == InstalledStore._operator_successor_repair_key('e' * 64)
 
 
 def test_nonterminal_or_out_of_scope_candidate_holds(monkeypatch):
@@ -84,11 +96,13 @@ def test_nonterminal_or_out_of_scope_candidate_holds(monkeypatch):
     assert read_embraer_terminal_candidate(Enrollment(), Store('RUNNING'), project='/workspace', jobs='jobs', destination='sheet',
                                             current_source_manifest=MANIFEST,
                                             current_acceptance_source_manifest=MANIFEST,
-                                            final_diff={'paths': ['src/job_search_helper/shared_boards.py'], 'source_manifest': MANIFEST}) is None
+                                            final_diff={'paths': ['src/job_search_helper/shared_boards.py'], 'source_manifest': MANIFEST},
+                                            expected_task_id='WRAP-fbb9ff24d3') is None
     assert read_embraer_terminal_candidate(Enrollment(), Store(), project='/workspace', jobs='jobs', destination='sheet',
                                             current_source_manifest=MANIFEST,
                                             current_acceptance_source_manifest=MANIFEST,
-                                            final_diff={'paths': ['src/other.py'], 'source_manifest': MANIFEST}) is None
+                                            final_diff={'paths': ['src/other.py'], 'source_manifest': MANIFEST},
+                                            expected_task_id='WRAP-fbb9ff24d3') is None
 
 
 def test_unsettled_ordinary_tool_row_holds_without_invented_status(monkeypatch):
@@ -99,7 +113,8 @@ def test_unsettled_ordinary_tool_row_holds_without_invented_status(monkeypatch):
                                             current_source_manifest=MANIFEST,
                                             current_acceptance_source_manifest=MANIFEST,
                                             final_diff={'paths': ['src/job_search_helper/shared_boards.py'],
-                                                        'source_manifest': MANIFEST}) is None
+                                                        'source_manifest': MANIFEST},
+                                            expected_task_id='WRAP-fbb9ff24d3') is None
 
 
 def test_derives_only_scoped_changed_source_from_physical_pilot_baseline(tmp_path):
@@ -118,13 +133,17 @@ def test_derives_only_scoped_changed_source_from_physical_pilot_baseline(tmp_pat
             'edit_scope': {'paths': ['src/job_search_helper/shared_boards.py', 'tests/test_embraer_typed_defect.py']},
             'integration_identity': {'source_targets': ['src/job_search_helper/shared_boards.py']},
             'manifest': files(workspace)}
-    projection = derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline)
+    projection = derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline,
+                                            expected_task_id='WRAP-fbb9ff24d3')
     assert projection['paths'] == ['src/job_search_helper/shared_boards.py']
     assert projection['before'] != projection['after']
     (workspace / 'src/job_search_helper/off_scope.py').write_text('drift = 1\n')
-    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline) is None
+    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline,
+                                     expected_task_id='WRAP-fbb9ff24d3') is None
     (workspace / 'src/job_search_helper/off_scope.py').write_text('stable = 1\n')
-    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline)['paths'] == [
+    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline,
+                                     expected_task_id='WRAP-fbb9ff24d3')['paths'] == [
         'src/job_search_helper/shared_boards.py']
     (workspace / 'src/job_search_helper/shared_boards.py').unlink()
-    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline) is None
+    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline,
+                                     expected_task_id='WRAP-fbb9ff24d3') is None

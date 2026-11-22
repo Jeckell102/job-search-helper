@@ -1,8 +1,10 @@
 """Freeze the measured Embraer worktree changes for independent qualification."""
 
 from pathlib import Path
+import re
 from shutil import copy2
 
+from coordinator_evidence import manifest_digest
 from embraer_installed_verification import SCOPE, SOURCE, measure_embraer_runtime
 from job_search_helper.integration_release import (
     MANIFEST_SCHEMA, _tree_metadata, _verify_inputs, _verify_projected_release,
@@ -14,8 +16,11 @@ def freeze_embraer_candidate(project, workspace, candidate, binding, final_diff)
     """Copy only candidate source/config and the verified changed test files."""
     project, workspace, candidate = map(Path, (project, workspace, candidate))
     paths = set(binding['changed_paths'])
+    task_id = binding['task_id']
     if (binding['schema'] != 'embraer-generic-terminal-candidate-v1'
-            or binding['task_id'] != 'WRAP-fbb9ff24d3'
+            or not isinstance(task_id, str) or not re.fullmatch(r'WRAP-[0-9a-f]{10}', task_id)
+            or workspace != project / 'dev/wrapper-coder/tasks' / task_id / 'repo'
+            or binding['source_manifest_sha256'] != manifest_digest(final_diff['source_manifest'])
             or binding['company_id'] != 'COMP-0634'
             or SOURCE not in paths or not paths <= SCOPE
             or paths != set(final_diff['paths'])

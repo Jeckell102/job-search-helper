@@ -3,7 +3,25 @@
 WORK_ORDER = 'breezy-embraer-brand-heading-v1'
 
 
-def derive_embraer_final_diff(task, store, *, pilot_baseline):
+def _expected_task(value):
+    import re
+    return value if isinstance(value, str) and re.fullmatch(r'WRAP-[0-9a-f]{10}', value) else None
+
+
+def _successor_repair_key(enrollment):
+    """Use the installed Store's domain separation, never a caller-provided key."""
+    successor = getattr(enrollment, 'successor', None)
+    if successor is None:
+        return None
+    predecessor = getattr(successor, 'predecessor_repair_key', None)
+    import re
+    if not isinstance(predecessor, str) or not re.fullmatch(r'[0-9a-f]{64}', predecessor):
+        return False
+    from coordinator_store import Store
+    return Store._operator_successor_repair_key(predecessor)
+
+
+def derive_embraer_final_diff(task, store, *, pilot_baseline, expected_task_id):
     """Read the exact isolated workspace against its saved pilot baseline.
 
     It returns only content digests and manifests.  The baseline and workspace
@@ -17,7 +35,7 @@ def derive_embraer_final_diff(task, store, *, pilot_baseline):
         task_id = task.get('id')
         workspace = Path(store.base) / task_id / 'repo'
         baseline = Path(pilot_baseline)
-        if (task_id != 'WRAP-fbb9ff24d3' or not workspace.is_absolute() or not baseline.is_absolute()
+        if (task_id != _expected_task(expected_task_id) or not workspace.is_absolute() or not baseline.is_absolute()
                 or workspace.is_symlink() or baseline.is_symlink()
                 or workspace.resolve(strict=True) != workspace or baseline.resolve(strict=True) != baseline
                 or not workspace.is_dir() or not baseline.is_dir()):
@@ -75,7 +93,8 @@ def _verified_receipts(receipts, source_manifest, acceptance_source_manifest, sc
 
 
 def read_embraer_terminal_candidate(enrollment, store, *, project, jobs, destination,
-                                    current_source_manifest, current_acceptance_source_manifest, final_diff):
+                                    current_source_manifest, current_acceptance_source_manifest, final_diff,
+                                    expected_task_id):
     """Return an immutable candidate binding or ``None`` for every nonexact case.
 
     ``final_diff`` is an independently supplied read-only projection with
@@ -83,18 +102,23 @@ def read_embraer_terminal_candidate(enrollment, store, *, project, jobs, destina
     later candidate copy, qualification, installation, or retry.
     """
     try:
+        if _expected_task(expected_task_id) is None:
+            return None
         if not enrollment._sources_match(project):
             return None
         source = enrollment._source(jobs, destination)
         if source is None:
             return None
-        paired = enrollment._paired(store, source)
+        repair_key = _successor_repair_key(enrollment)
+        if repair_key is False:
+            return None
+        paired = enrollment._paired(store, source, exact_repair_key=repair_key) if repair_key else enrollment._paired(store, source)
         if paired is None:
             return None
         held, task = paired
         proposal = enrollment._proposal(held, source['company'])
         if (proposal is None or not enrollment._task_matches(held, task, proposal)
-                or task.get('id') != 'WRAP-fbb9ff24d3'
+                or task.get('id') != expected_task_id
                 or task.get('status') != 'AWAITING_LIVE_VALIDATION'
                 or task.get('phase') != 'verify'
                 or (task.get('integration') or {}).get('work_order') != WORK_ORDER

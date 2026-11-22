@@ -13,6 +13,15 @@ def digest(value):
     return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
 
+def record(*, request_id, source_revision, fingerprint):
+    value = {'outcome': 'QUALIFIED_INTEGRATION_REPAIR', 'action': 'upsert_qualified_repair',
+             'identity': {'request_id': request_id, 'company_id': 'COMP-0634',
+                          'source_revision': source_revision},
+             'failure_fingerprint': fingerprint, 'repair_category': 'full_description_regression'}
+    immutable = {key: value[key] for key in ('identity', 'failure_fingerprint', 'outcome', 'repair_category')}
+    return {'outcome_id': 'OUT-'+digest(immutable)[:24], **value}
+
+
 @pytest.fixture
 def sample(tmp_path, monkeypatch):
     project=tmp_path/'project'; root=project/'.state'; root.mkdir(parents=True)
@@ -25,6 +34,12 @@ def sample(tmp_path, monkeypatch):
     selected={'request_id':entry.REQUEST,'request_sha256':entry.REQUEST_SHA256,'source_revision':'a'*64,
               'shared_boards_sha256':'b'*64,'ats_sha256':'c'*64,'baseline_sha256':old}
     pins=dict(entry.OWNER_PINS)
+    predecessor = record(request_id=entry.OLD_REQUEST, source_revision=selected['source_revision'],
+                         fingerprint=pins['failure_fingerprint'])
+    fresh = record(request_id=entry.REQUEST, source_revision=selected['source_revision'],
+                   fingerprint=pins['failure_fingerprint'])
+    pins['predecessor_outcome_id'] = predecessor['outcome_id']
+    pins['outcome_id'] = fresh['outcome_id']
     task={'id':pins['predecessor_task_id'],'held_repair_key':pins['predecessor_repair_key'],
           'status':'PAUSED','stop_requested':True,'sessions':3}
     pins['predecessor_task_state_sha256']=digest(task); monkeypatch.setattr(entry,'OWNER_PINS',pins)
@@ -47,17 +62,17 @@ def sample(tmp_path, monkeypatch):
     with sqlite3.connect(database) as db:
         db.executescript('CREATE TABLE settings(key TEXT,value TEXT);CREATE TABLE tasks(id TEXT,state TEXT);'
             'CREATE TABLE inference_receipts(status TEXT);CREATE TABLE receipts(result TEXT);'
-            'CREATE TABLE repair_intake(repair_key TEXT,outcome_id TEXT,company_id TEXT,source_revision TEXT,status TEXT,task_id TEXT);'
+            'CREATE TABLE repair_intake(repair_key TEXT,outcome_id TEXT,company_id TEXT,source_revision TEXT,status TEXT,task_id TEXT,payload TEXT);'
             'CREATE TABLE scrape_outcome_delivery_receipts(consumer TEXT,outcome_id TEXT,receipt_sha256 TEXT,receipt TEXT);')
         db.executemany('INSERT INTO settings VALUES (?,?)',[('queue_enabled','false'),('campaign_enabled','false'),('autopilot_enabled','false'),('pilot_task','null')])
         db.execute('INSERT INTO tasks VALUES (?,?)',(task['id'],json.dumps(task)))
-        db.execute('INSERT INTO repair_intake VALUES (?,?,?,?,?,?)',(pins['predecessor_repair_key'],pins['predecessor_outcome_id'],'COMP-0634',selected['source_revision'],'PROMOTED_PAUSED',task['id']))
+        db.execute('INSERT INTO repair_intake VALUES (?,?,?,?,?,?,?)',(pins['predecessor_repair_key'],pins['predecessor_outcome_id'],'COMP-0634',selected['source_revision'],'PROMOTED_PAUSED',task['id'],json.dumps(predecessor)))
         db.execute('INSERT INTO scrape_outcome_delivery_receipts VALUES (?,?,?,?)',('repair-coordinator',pins['predecessor_outcome_id'],pair,receipt))
     seen=[]
     def original_reader(**kw):
         assert kw['request_id']==entry.REQUEST and kw['request_sha256']==entry.REQUEST_SHA256
         seen.append('source')
-        kw['source_reader'](None,{'outcome_id':pins['outcome_id'],'failure_fingerprint':pins['failure_fingerprint']},entry.REQUEST_SHA256)
+        kw['source_reader'](None,fresh,entry.REQUEST_SHA256)
         return selected.copy(),pins['outcome_id']
     def repository_factory(path):
         assert path==root/'jobs.sqlite3'
@@ -70,7 +85,7 @@ def sample(tmp_path, monkeypatch):
             baseline_files=lambda path:manifests[path.name.removeprefix('embraer-')],
             baseline_binding=lambda files:{'digest':digest(files)})
     return SimpleNamespace(run=run,db=database,owner=owner,task=task,selected=selected,pins=pins,
-                           manifests=manifests,new=new,seen=seen)
+                           manifests=manifests,new=new,seen=seen,predecessor=predecessor)
 
 
 def test_exact_readonly_successor_projection_preserves_original_input(sample):
@@ -92,6 +107,12 @@ def test_drifted_receipt_stopped_task_baseline_and_missing_db_hold(sample):
     sample.manifests[sample.new]['src/a.py']='f'*64
     with pytest.raises(ValueError,match='baseline'):sample.run()
     sample.manifests[sample.new]['src/a.py']='a'*64
+    with sqlite3.connect(sample.db) as db:
+        db.execute('UPDATE tasks SET state=?',(json.dumps(sample.task),))
+        bad = {**sample.predecessor, 'failure_fingerprint': 'f' * 64}
+        db.execute('UPDATE repair_intake SET payload=?', (json.dumps(bad),))
+    with pytest.raises(ValueError, match='classifier'):
+        sample.run()
     sample.db.rename(sample.db.with_suffix('.saved'))
     with pytest.raises(FileNotFoundError):sample.run()
     assert not sample.db.exists()

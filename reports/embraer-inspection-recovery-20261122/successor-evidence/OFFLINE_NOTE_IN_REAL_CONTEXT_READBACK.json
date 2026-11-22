@@ -1,0 +1,39 @@
+{
+  "actual_task_changed": false,
+  "diagnostic": {
+    "new_task_shape": {
+      "contains_count": true,
+      "contains_detail_scope": true,
+      "contains_listing_endpoint": true,
+      "focus_receipt_id": null,
+      "note_excerpt_chars": 1487,
+      "note_visible": true,
+      "packet_member_paths": [
+        "web_read",
+        "tests/test_shared_boards.py",
+        "tests/test_embraer_typed_defect.py",
+        "docs/backlog/COMP-0634.md",
+        "src/job_search_helper/shared_boards.py",
+        "src/job_search_helper/ats.py"
+      ]
+    },
+    "stopped_original_shape": {
+      "contains_count": false,
+      "contains_detail_scope": false,
+      "contains_listing_endpoint": false,
+      "focus_receipt_id": 232,
+      "note_excerpt_chars": 0,
+      "note_visible": false,
+      "packet_member_paths": [
+        "src/job_search_helper/shared_boards.py",
+        "web_read",
+        "tests/test_shared_boards.py",
+        "tests/test_embraer_typed_defect.py"
+      ]
+    }
+  },
+  "note_required": true,
+  "note_sha256": "441dce96d66f64c22b22016eb709f68ef2d5f34d71fd6b903ce7ea3320089025",
+  "observed_at": "2026-11-22T20:02:51.523132+00:00",
+  "old_receiver_receipt_rows_used_in_memory": 11
+}

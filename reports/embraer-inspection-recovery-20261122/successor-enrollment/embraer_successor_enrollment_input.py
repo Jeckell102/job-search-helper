@@ -125,10 +125,26 @@ def read_operator_embraer_successor_enrollment(*, state_root, wrapper_base,
                 or task.get('status') != 'PAUSED' or task.get('stop_requested') is not True
                 or task.get('held_repair_key') != OWNER_PINS['predecessor_repair_key']):
             raise ValueError('The original stopped counted task changed.')
-        repair = db.execute('SELECT outcome_id,company_id,source_revision,status,task_id FROM repair_intake WHERE repair_key=?',
+        repair = db.execute('SELECT outcome_id,company_id,source_revision,status,task_id,payload FROM repair_intake WHERE repair_key=?',
                             (OWNER_PINS['predecessor_repair_key'],)).fetchone()
-        if repair != (OWNER_PINS['predecessor_outcome_id'],'COMP-0634',selected['source_revision'],'PROMOTED_PAUSED',task['id']):
+        if (repair is None or repair[:5] != (OWNER_PINS['predecessor_outcome_id'], 'COMP-0634',
+                                              selected['source_revision'], 'PROMOTED_PAUSED', task['id'])):
             raise ValueError('Original held repair ownership changed.')
+        from coordinator_store import canonical_scrape_outcome
+        try:
+            old_record = json.loads(repair[5])
+            old_canonical = canonical_scrape_outcome(old_record)
+            new_canonical = canonical_scrape_outcome(captured[0][0])
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise ValueError('Original or fresh classifier record is not canonical.') from exc
+        if (old_record != old_canonical or captured[0][0] != new_canonical
+                or old_canonical['outcome_id'] != OWNER_PINS['predecessor_outcome_id']
+                or new_canonical['outcome_id'] != OWNER_PINS['outcome_id']
+                or old_canonical['failure_fingerprint'] != OWNER_PINS['failure_fingerprint']
+                or new_canonical['failure_fingerprint'] != OWNER_PINS['failure_fingerprint']
+                or old_canonical['identity'].get('request_id') != OLD_REQUEST
+                or new_canonical['identity'].get('request_id') != REQUEST):
+            raise ValueError('Original and fresh classifier pins differ.')
         pair = db.execute('SELECT receipt_sha256,receipt FROM scrape_outcome_delivery_receipts WHERE consumer=? AND outcome_id=?',
                           ('repair-coordinator',OWNER_PINS['predecessor_outcome_id'])).fetchone()
         if (not pair or pair[0] != PAIRED_RECEIPT or not isinstance(pair[1], str)

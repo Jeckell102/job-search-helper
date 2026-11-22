@@ -47,23 +47,30 @@ def test_freeze_copies_exact_scoped_change_and_keeps_config(tmp_path):
     from freeze_embraer_candidate import freeze_embraer_candidate
     from job_search_helper.integration_release import config_tree_digest
 
-    project, workspace, candidate = (tmp_path / name for name in ('project', 'workspace', 'candidate'))
+    from coordinator_evidence import manifest_digest
+
+    project, candidate = tmp_path/'project', tmp_path/'candidate'
+    task_id = 'WRAP-d012345678'
+    workspace = project/'dev/wrapper-coder/tasks'/task_id/'repo'
     for root, text in ((project, 'before = True\n'), (workspace, 'after = True\n')):
         target = root / SOURCE
         target.parent.mkdir(parents=True)
         target.write_text(text)
     (project / 'pyproject.toml').write_text('[project]\nname = "fixture"\n')
     (project / '.env').write_text('# private fixture configuration\n')
+    generated = {SOURCE: metadata(workspace / SOURCE)['sha256']}
     binding = {
         'schema': 'embraer-generic-terminal-candidate-v1',
-        'task_id': 'WRAP-fbb9ff24d3',
+        'task_id': task_id,
         'request_id': 'operator-embraer-fixture',
         'company_id': 'COMP-0634',
         'source_revision': 'fixture-revision',
         'changed_paths': [SOURCE],
+        'source_manifest_sha256': manifest_digest(generated),
     }
     diff = {
         'paths': [SOURCE],
+        'source_manifest': generated,
         'before': {SOURCE: metadata(project / SOURCE)['sha256']},
         'after': {SOURCE: metadata(workspace / SOURCE)['sha256']},
     }
