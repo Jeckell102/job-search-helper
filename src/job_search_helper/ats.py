@@ -138,6 +138,15 @@ def _challenge(response: HTTPResponse, *, expect_html: bool = False) -> bool:
     return any(marker in preview for marker in markers)
 
 
+def _blocked_reason(response: HTTPResponse) -> str:
+    """Return a safe manual-review reason without exposing response bodies."""
+    if _challenge(response):
+        return "Human verification detected; manual review required."
+    if response.status in (401, 403):
+        return f"HTTP {response.status}: access denied; manual review required; no automatic retry."
+    return ""
+
+
 class HTTPTransport:
     """Timeouts, rate limiting and bounded retries; never follows redirects.
 
@@ -316,10 +325,8 @@ def _json(url: str, transport: Any, payload: dict | None = None) -> Any:
     response = transport.get(url) if payload is None else transport.post(url, payload)
     if not isinstance(response, HTTPResponse):
         raise FetchError("failed", "Transport must return HTTPResponse.")
-    if _challenge(response):
-        raise FetchError("blocked", "Human verification detected; manual review required.")
-    if response.status in (401, 403):
-        raise FetchError("blocked", f"HTTP {response.status}: access denied; manual review, no automatic retry.")
+    if reason := _blocked_reason(response):
+        raise FetchError("blocked", reason)
     if not 200 <= response.status < 300:
         message = ("Redirect refused; verify the official board URL." if 300 <= response.status < 400
                    else f"HTTP {response.status}; inventory unavailable, not evidence of closure.")
