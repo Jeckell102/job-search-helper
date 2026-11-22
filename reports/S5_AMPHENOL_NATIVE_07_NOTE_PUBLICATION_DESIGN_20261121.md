@@ -1,0 +1,29 @@
+# Addendum: three linked publication defects, one unchanged frozen receipt
+
+Decision: the private recovery remains possible through the existing synchronizer injection, but adding four source guards or overriding planning alone is insufficient. Treat the prior decision as conditional on this addendum. No further native attempt until the complete 24-operation disposable publication, fresh readback, acknowledgement and closeout succeeds with interruption/replay coverage.
+
+Coordinator observed the four retained before-image Source Hashes match current, then stock planning rejected frozen-projection equality. Coordinator also observed 21/24 positional target mismatches. This lane inspected source, not the production stores or probe execution.
+
+## Exact three corrections
+
+1. The four missing Source Hash guards still require the narrow durable scope archive/CAS described in DECISION.md. Do not change either frozen plan, cursor, receipt or data fields.
+2. sheets_sync._plan_exact_row currently converts selected append fields into current full values (around 739), then separates append semantics only for Opportunities Notes (744–752). Thus Job History Review Notes appends cannot equal their frozen projection. A case-pinned subclass can call the original method first, retaining identity, conflict, dirty, salary, baseline, expected-value and source checks. For exactly the four approved note-only targets, require the frozen nonblank Review Notes suffix, expected old text and local post-append text to agree using the repository's existing append-once semantics (repository.py:401–409). Remove only the spurious Review Notes set value and restore exactly the already-sealed append_notes. Preserve all other keys and require full operation equality through inherited plan_exact_scope.
+3. _durable_exact_plan (sheets_sync.py:1395–1424) both positionally zips sorted scopes against frozen projection order and rebuilds sent values without applying append_notes. The normal acknowledgement compares actual remote text with this sent value at 1559. A planning override alone cannot pass correct confirmation. Because the original durable method can fail before returning on positional mismatch, it cannot simply be called then patched. The smallest viable private implementation copies this one method with all authority checks preserved, replacing positional pairing with the same stable-identity mapping already used by plan_exact_scope (808–855), retaining frozen projection order and refusing missing/duplicate identities. For only the four approved note targets, derive sent Review Notes deterministically from frozen expected old text plus sealed suffix; never use caller-provided row metadata or current mutable notes as the authority. Every other row and field retains existing reconstruction.
+
+## Supported entry and authority
+
+publish_exact_cycle explicitly accepts synchronizer (exact_cycle_sync.py:613–678) and _publish_exact_v2 selects that object at 538. There is no exact-type synchronizer restriction here. The real Inbox/destination check remains in SheetsSynchronizer._require_exact_inbox (around 1000). All durable claim, remote commit, remote readback, receipt confirmation, acknowledgement, cleanup and Company revalidation must remain inherited unchanged. Do not override confirmation or manufacture its result.
+
+_recover_exact_cycle_locked does not forward a synchronizer (exact_cycle_recovery.py:519). For this already verified cursor-42 cut, the measured private entry can require that exact cut and call publish_exact_cycle directly with the original real local/Inbox/State/remote, exact Company list, normal Company guard and scoped synchronizer; then use original qualified closeout. Keep original scraper/writer/native exclusion and release/intent/qualification ownership. No monkeypatch, proxy authority, refetch, plan replacement or installer call is necessary.
+
+The installed source manifest, active release, successor plan digest, remote projection digest, receipt binding and 24 record fingerprints remain unchanged. Separately pin the private subclass, metadata repair and entry in the explicit reviewed recovery approval/transcript. This is new reviewed maintenance logic, not evidence that the existing stock path already supports the case. If that private authority or the full proof is unavailable, remain held; a generic fix belongs in a separately measured canonical release.
+
+## Minimum acceptance evidence
+
+- Red fixture reproduces all three defects independently from the same retained plan/scope shape.
+- Full realistic 24-operation case uses deliberately different scope/projection orders, four existing note-only rows, the real durable Inbox and Jobs journals, and the real inherited publisher/readback/ack. Assert unchanged exact plan/projection/receipt binding, correct appended text, exact dirty-field acknowledgement and unchanged unrelated rows/review data.
+- Wrong note suffix/before text, foreign or duplicate identity, changed source, missing before-image, wrong plan/release/intent, modified stored projection and changed scope refuse without new remote writes or unrelated dirty changes.
+- Crash after guard CAS, after remote intent/claim, after actual fixture write, after full confirmation and before local ack/cleanup. Reopen the same pinned component; claimed write never replays and a completed retry remains idempotent.
+- Source diff confirms the durable-method copy retains every original authority/destination/plan-digest/remote-projection/delivery-mode check, with only identity pairing and the four sealed note reconstructions changed. The other 20 rows and ordinary nonselected paths remain unchanged.
+
+The absence of an identity check banning subclasses is not acceptance by itself. The decisive gate is real full publication plus canonical confirmation/acknowledgement at the exact case pins. No live operation, private job-data read or code edit occurred in this review.

@@ -386,6 +386,17 @@ provider request, inference, or adapter installation is required for this
 retry. Actual workbook and coordinator terminal evidence remain open.
 [Saved retry recovery](S5_AMPHENOL_SAVED_RETRY_RECOVERY_20261121.md).
 
+The actual -07 continuation completed and verified local storage for the
+39-description Amphenol retry. It stopped before a Sheets write while
+the local application held a pending publication receipt. Services and
+routes restored. The independent final note repair passed exact normal
+and lost-response disposable publication, verifying all 24 original
+receipt fingerprints. The -08 continuation retains the same applied
+plan and pending receipt. It awaits the fresh administrator observer,
+live publication and independent deployed acceptance.
+[Locally saved and held](S5_AMPHENOL_NATIVE_07_PUBLICATION_HOLD_20261121.md)
+· [Verified -08 readiness checkpoint](S5_AMPHENOL_NATIVE_08_PUBLICATION_READY_20261122.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,
