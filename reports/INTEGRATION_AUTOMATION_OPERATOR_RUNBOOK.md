@@ -79,13 +79,15 @@ when a workbook write response is uncertain. The coordinator checks the
 saved inventory before resuming publication and verifies the terminal
 receipt afterwards.
 
-A new Company row stored only in Sheets needs guarded reconciliation
-before the company-only manual Start path can select it. For an
-established Company baseline, the coordinator verifies the pending
-publication scope, reconciles the row, and checks that exactly one
-eligible Company event is available. The first bare Start currently
-checks local events before the regular startup workbook pull.
-[Measured intake behavior](S7_MANUAL_INTAKE_RECHECK_20261122.md).
+On the active release, the first manual Start can discover one new active
+Company that exists only in Sheets when the compact workbook has an
+established Company baseline. The row needs a stable Company ID, a
+careers source and an unambiguous company name. Start uses the scoped
+Company route when it finds exactly one eligible addition. Multiple
+additions or ambiguous or incomplete ownership require reconciliation.
+Read-only discovery found no genuine new row after deployment, so live
+first-Start publication remains to be verified.
+[Deployed source evidence](S7_FIRST_START_DEPLOYED_ACCEPTANCE_20261122.md).
 
 ## Current release boundary
 

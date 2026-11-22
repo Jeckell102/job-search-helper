@@ -324,6 +324,14 @@ and its matching workbook write on the first Start. Deployment and a
 genuine first-Start case remain open.
 [Staged acceptance](S7_EXTERNAL_FIRST_START_STAGED_20261122.md).
 
+November 22 deployed update: the guarded release installed the reviewed
+first-Start discovery fix and two small corrections. Independent QA
+matched the exact source, rollback receipts, restored services and all
+three checkout routes. A current deployed read-only workbook check found
+zero new eligible rows. The live first-Start case and subsequent
+qualifying sequence still need their own receipts.
+[Deployed acceptance](S7_FIRST_START_DEPLOYED_ACCEPTANCE_20261122.md).
+
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 
 Roadmap coverage: Milestones 4 and 5, including F5.
