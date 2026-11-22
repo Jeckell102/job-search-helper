@@ -49,3 +49,10 @@ scope is 13 endpoints with 51 focused tests passing, and the patch checks
 against current installed preimages. The independent shell fixture also
 verified exact admitted arguments, canonical database inode layout and
 the inherited exclusive scraper lease.
+
+Independent source decision after repair: ACCEPT. The exact Crown
+composition passed again. The previous unprefixed request case remained
+queued and failed before provider or Sheets access. Wrong-company and
+malformed Crown IDs refused before Company lookup or queue write. The
+actual host parser accepted the exact Crown request and refused the
+invalid forms. Native preflight and deployed tests remain open.
