@@ -94,7 +94,7 @@ def main(argv=None):
     window=projection.wrap_window(window)
     environment=load('embraer_context_environment',CURRENT/'successor_environment.py','f86bb7e48d0c36f2fe5edb47baba1544b91ed7ec9df4be46a65018b188f610fc')
     five = load('five', Path('/tmp/jsh-embraer-03-continuation-release/five_tool_forward.py'), '6d0e16123ddee3e48e37ad0707a70b117e8770f0f49054187ed6cae860ff24f6')
-    custody = load('custody', Path('/tmp/jsh-embraer-03-live-readiness/measure_coordinator_custody.py'), 'a23b333f9d8ab9e1ca2e3ee53b0e7a09d8f0f4444deb547db496b539bde3edba')
+    custody = load('custody', Path('/tmp/jsh-embraer-03-live-readiness/measure_coordinator_custody.py'), '22d8d9011df6291d67b684bd57a654546be230308146cb338a84a3d5bc6c5d15')
     from job_search_helper.inbox import InventoryInbox
     from coordinator_store import Store
     from embraer_operator_pilot import EmbraerOperatorEnrollment

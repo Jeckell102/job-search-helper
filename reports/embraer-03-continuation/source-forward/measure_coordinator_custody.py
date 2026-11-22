@@ -21,6 +21,7 @@ def measure(path):
             'SELECT type,name,tbl_name,sql FROM sqlite_schema ORDER BY type,name').fetchall()
         original = [row for row in schema if row[2] != CONTINUATION_TABLE]
         summary = {}
+        supervisor = None
         for kind, name, _, _ in original:
             if kind != 'table':
                 continue
@@ -28,6 +29,9 @@ def measure(path):
             digest = sha256()
             count = 0
             for row in db.execute(f'SELECT * FROM {quoted} ORDER BY rowid'):
+                if name == 'settings' and row[0] == 'supervision_status':
+                    supervisor = json.loads(row[1])
+                    continue
                 # Preserve raw stored text including its exact JSON spelling.
                 blob = json.dumps(row, separators=(',', ':'), ensure_ascii=True).encode()
                 digest.update(blob + b'\n')
@@ -36,8 +40,13 @@ def measure(path):
         has_continuation = any(kind == 'table' and name == CONTINUATION_TABLE for kind, name, _, _ in schema)
         if has_continuation and db.execute(f'SELECT 1 FROM {CONTINUATION_TABLE} LIMIT 1').fetchone():
             raise ValueError('Source-only maintenance cannot create a continuation owner.')
+        if (not isinstance(supervisor, dict) or supervisor.get('schema') != 'coordinator-supervision-v1'
+                or supervisor.get('state') != 'ACTIVE' or supervisor.get('recovery_required') is not False
+                or supervisor.get('error') != ''):
+            raise ValueError('Current wrapper supervision must be active without a recovery hold.')
         return {
             'existing_schema_sha256': sha256(json.dumps(original, separators=(',', ':')).encode()).hexdigest(),
             'existing_tables': summary,
             'continuation_table_exists_and_empty': has_continuation,
+            'supervision_active_without_recovery': True,
         }
