@@ -1,5 +1,6 @@
 """One composed fixture for source-only installation and interrupted rollback."""
 
+import fcntl
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -7,14 +8,18 @@ from shutil import copy2, copytree, ignore_patterns
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
 SOURCE = Path(__file__).resolve().parent
 LIVE = Path('/home/chris/job-search-helper_old')
-sys.path[:0] = [str(SOURCE), str(LIVE), str(LIVE / 'src')]
+WINDOW = Path('/tmp/jsh-s6-native-source-window-09')
+sys.path[:0] = [str(SOURCE), str(WINDOW), str(LIVE), str(LIVE / 'src')]
 from release_admission_bootstrap import _validate_runtime
+from maintenance_source_owner import MaintenanceSourceOwner
 import native_source_advance as advance
+from native_window import NativeWindow
 
 
 RUN_BOOTSTRAP = '''
@@ -74,6 +79,16 @@ def fixture(directory):
     return project, package, sha256(raw).hexdigest(), journal, predecessor, receipt
 
 
+def verify_application_locks(project):
+    for name in ('scraper.lock', 'writer.lock'):
+        with (project / '.state' / name).open('rb') as lock:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                continue
+            raise AssertionError(name + ' was not held during the idle scan check.')
+
+
 def test_single_reversible_source_advance():
     with TemporaryDirectory(prefix='jsh-s6-native-install-fixture-') as directory:
         root = Path(directory)
@@ -81,10 +96,25 @@ def test_single_reversible_source_advance():
         before_dir.mkdir()
         failing_dir.mkdir()
         project, package, pin, journal, predecessor, old_receipt = fixture(before_dir)
+        owner = MaintenanceSourceOwner(project, package, pin)
+        assert owner.status()['phase'] == 'BEFORE'
         historical = old_receipt.read_bytes()
         old_adapter = (project / 'src/job_search_helper/acquiretm.py').read_bytes()
         original_journal = journal.read_bytes()
         write_json = advance.release._write_json
+
+        def active_work(project):
+            verify_application_locks(project)
+            raise ValueError('fixture unfinished scrape')
+
+        try:
+            owner.advance(check_idle=active_work)
+        except ValueError as error:
+            assert str(error) == 'fixture unfinished scrape'
+        else:
+            raise AssertionError('An unfinished scrape did not block installation.')
+        assert journal.read_bytes() == original_journal
+        assert not (journal.parent / 'native-runtime-releases').exists()
 
         def cut_before_prepared(path, value):
             if path == journal and value.get('state') == 'PREPARED':
@@ -93,7 +123,7 @@ def test_single_reversible_source_advance():
 
         with patch.object(advance.release, '_write_json', cut_before_prepared):
             try:
-                advance.advance(project, package, pin)
+                owner.advance(check_idle=verify_application_locks)
             except OSError as error:
                 assert str(error) == 'fixture cut before PREPARED'
             else:
@@ -101,7 +131,8 @@ def test_single_reversible_source_advance():
         assert journal.read_bytes() == original_journal
         assert len(list((journal.parent / 'native-runtime-releases').iterdir())) == 1
         check_fresh_bootstrap(project, project / 'release_admission_bootstrap.py', predecessor)
-        result = advance.advance(project, package, pin)
+        result = owner.advance(check_idle=verify_application_locks)
+        assert owner.status()['phase'] == 'STAGED'
         assert result['schema'] == 'native-source-maintenance-receipt-v1'
         assert 'failed_request_id' not in result and 'company_id' not in result
         expected = {'state': 'COMPLETE', **{key: result['release'][key]
@@ -112,22 +143,65 @@ def test_single_reversible_source_advance():
         assert not (journal.parent / 'next-scan.json').exists()
 
         project, package, pin, journal, predecessor, old_receipt = fixture(failing_dir)
+        owner = MaintenanceSourceOwner(project, package, pin)
         original_journal = journal.read_bytes()
         original_receipt = old_receipt.read_bytes()
         with patch.object(advance, '_complete', side_effect=OSError('fixture cut before COMPLETE')):
             try:
-                advance.advance(project, package, pin)
+                owner.advance(check_idle=verify_application_locks)
             except OSError as error:
                 assert str(error) == 'fixture cut before COMPLETE'
             else:
                 raise AssertionError('The fixture did not interrupt installation.')
         for side in ('before', 'staged'):
             check_fresh_bootstrap(project, package / side / 'release_admission_bootstrap.py', None)
-        result = advance.rollback_prepared(project, package, pin)
-        assert result['state'] == 'ROLLED_BACK'
+        assert owner.status()['phase'] == 'PREPARED'
+        verify_native_rollback(failing_dir, owner)
+        assert owner.status()['phase'] == 'BEFORE'
         assert journal.read_bytes() == original_journal and old_receipt.read_bytes() == original_receipt
         check_fresh_bootstrap(project, project / 'release_admission_bootstrap.py', predecessor)
         assert not (journal.parent / 'next-scan.json').exists()
+
+
+def verify_native_rollback(directory, owner):
+    window = NativeWindow(release_id='REL-' + 'a' * 24, manifest_sha256='b' * 64,
+                          manifest={}, qualification_check=None, window_root=directory,
+                          native_modules={}, wrapper_scope_sha256='c' * 64, source_owner=owner)
+    window.record = {'phase': 'HELD', 'bridge_prior': {'bridge': 'active'}}
+    window.policy = object()
+    window.x = SimpleNamespace(CLOSED_ACKNOWLEDGED='closed-acknowledged')
+    quiet_journal = directory / 'operator-quiet-window.json'
+    quiet_journal.write_text(json.dumps({'binding': {'schema': 'fixture-quiet'},
+                                        'prior': {'wrapper': 'active'}, 'phase': 'HELD'}))
+    quiet_journal.chmod(0o600)
+    window._quiet = lambda: SimpleNamespace(journal=quiet_journal, _binding=lambda: {'schema': 'fixture-quiet'})
+    checks = []
+    window.bridge = SimpleNamespace(verify=lambda *_, **__: checks.append('bridge'))
+    window.exchange = SimpleNamespace(witness=lambda _: checks.append('routes'))
+    window.units = SimpleNamespace(verify=lambda _: checks.append('units'))
+
+    def blocked(*_):
+        raise ValueError('fixture alternate writer')
+
+    window.h = SimpleNamespace(verify_listener=lambda *_: checks.append('listener'), verify_route_drain=blocked)
+    try:
+        window._rollback_interrupted_source({'phase': 'closed'})
+    except ValueError as error:
+        assert str(error) == 'fixture alternate writer'
+    else:
+        raise AssertionError('An unfenced writer did not hold rollback.')
+    assert owner.status()['phase'] == 'PREPARED'
+
+    checks.clear()
+    window.h.verify_route_drain = lambda *_: checks.append('route drain')
+    rollback = owner.rollback_prepared
+
+    def ordered_rollback():
+        assert checks == ['bridge', 'routes', 'units', 'listener', 'route drain']
+        return rollback()
+
+    with patch.object(owner, 'rollback_prepared', ordered_rollback):
+        window._rollback_interrupted_source({'phase': 'closed'})
 
 
 if __name__ == '__main__':

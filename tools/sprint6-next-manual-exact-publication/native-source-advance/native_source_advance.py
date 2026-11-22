@@ -146,7 +146,7 @@ def _complete(project, journal, record, marker, binding, spec):
     return receipt
 
 
-def advance(project, package, spec_sha256):
+def advance(project, package, spec_sha256, *, check_idle):
     project, package = project.resolve(strict=True), package.resolve(strict=True)
     root = project / '.state'
     journal = root / 'integration-release-journal.json'
@@ -163,6 +163,7 @@ def advance(project, package, spec_sha256):
                 or (root / 'next-scan.json').exists() or (root / 'next-scan.json').is_symlink()):
             raise ValueError('The previous runtime or empty scan queue no longer matches approval.')
         _check_vectors(project, spec, 'before')
+        check_idle(project)
         _seal_record(record_root, record, package, manifest, spec, journal)
         release._write_json(journal, marker)
         _apply_sources(project, record, spec, 'staged')
