@@ -1,0 +1,18 @@
+# ACCEPT — candidate preparation and bounded qualification tool
+
+Independent source/offline review only, 2026-11-22. No worker workspace, native application data/configuration, network, provider, Jetson, Google, services or live qualification was accessed. Source and tests remain unchanged.
+
+Exact final pins below /tmp/jsh-embraer-owned-pilot.xXaXrqW0:
+- generic-release/freeze_embraer_candidate.py: 3d17576a1ad78270ae01147bb5c8a9b2076ff122ecfd918b894740aa38236ac1
+- generic-release/embraer_installed_verification.py: 7f3caf88058e216d99d91de00021b5f8f0dc85c54c110411cb3d49d77e9e361c
+- generic-release/test_embraer_installed_verification.py: 2f397f19c336bad28f4fcbc56b703c1fa57a1bd142af48f31b8fa9f2584a83e2
+- generic-qualification/qualify_embraer_normal_dispatch.py: 4323336abfe585a77dc4a2102e985cad12c22cda4ebd6d6be9a28046d111ccd3
+- generic-qualification/test_qualify_embraer_normal_dispatch.py: 648da1a52bea88c7374f1fb68f4abdc164becfe268b7c6709177196124ad6898
+
+Ran only the three requested tests: the two generic-release/test_embraer_installed_verification.py cases and the one generic-qualification/test_qualify_embraer_normal_dispatch.py case. System Python, explicit staged paths, PYTHONDONTWRITEBYTECODE=1, PYTEST_DISABLE_PLUGIN_AUTOLOAD=1, pytest no cache provider. Final result: 3 passed in 0.29s. All configurations and HTTP responses used by these tests are fabricated private fixtures, not production .env or public calls.
+
+Preparation: the exact scope requires COMP-0634, WRAP-fbb9ff24d3 and changed shared_boards.py with only its two assigned tests permitted. Before and worker bytes must match the independently derived diff. A fresh private candidate receives the full application source projection and unchanged exact configuration, with changed files copied from the measured worker bytes and original installation modes retained. It computes the canonical release manifest, checks candidate configuration equality, and invokes the actual existing _verify_inputs and _verify_projected_release. This closes the earlier candidate-config mismatch; installed dependency measurement remains separate without copying the venv. The callable consumes an already independently verified terminal binding/diff; it does not itself promote or certify a live task.
+
+Qualification: exact loaded ats/shared_boards pins and full frozen application-source tree are checked before use and the full tree is checked again before returning. The actual ats.fetch_inventory normal route receives only the exact Breezy Embraer board/Company identity and a bounded recording transport. Transport uses normal GET, one-second minimum spacing, no redirect, no transport retry, response-size/timeout bounds and at most 80 calls. Its recorder prevents further inner calls after any observed non-200 status. Acceptance requires a complete nonempty result without a typed failure, matching Company/board, two identical listing cohorts surrounding the detail reads, exact advertised IDs/URLs/count, and full returned-description hashes equal to independently extracted detail-body hashes. Normal adapter uniqueness checks are reused. Outputs are hashes/counts and source pins, not raw postings.
+
+The real-dispatch fixture returns two complete details and final listing, then proves an omitted result row is held. No alternate fixture status can be reported as live qualification: this report accepts source/tool behavior only. A fresh actual complete validation with its frozen manifest and subsequent independent evidence review are still required before issuing the release-qualification owner receipt. No additional optional test grid was run.

@@ -1,0 +1,18 @@
+{
+  "after_sha256": "3d5d42249f4e8b277e3d86de57658c2275214629b78aff9cd61fbcb8d65680d4",
+  "before_sha256": "dcf6f14ea4ff15e6c221ff3f46c29523419d931dfbf0dffe6e2edd6b0f427a91",
+  "observed_at": "2026-11-22T19:35:52.609900+00:00",
+  "original_application_release": "REL-2a5c7bb2ad922f73cf868d15",
+  "pre_resume_task_sha256": "18ca6d1120c5ffb18b1d10f7934abe81d56feebe40b511b9de7c133287cfc010",
+  "receipt_sha256": "9d3798a65d403743a84e4fee3783f86df1e80d9c2f9e5e8e16849aa8ffbcb48b",
+  "resume": {
+    "activated_at": 1795373201.1956606,
+    "calls": 5,
+    "phase": "inspect",
+    "sessions": 2,
+    "state": "QUEUED"
+  },
+  "status": "INSTALLED",
+  "task_id": "WRAP-fbb9ff24d3",
+  "wrapper_pid": 759911
+}

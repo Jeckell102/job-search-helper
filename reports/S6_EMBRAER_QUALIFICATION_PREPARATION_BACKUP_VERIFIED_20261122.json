@@ -1,0 +1,16 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "0d2ed86dea84260ab52457bfeb8917ef3d950eb3",
+  "matched_files": {
+    "reports/S6_EMBRAER_ORIGINAL_DEADLINE_FALLBACK_20261122.md": "a59256f1721cfc409830ccb9f377a92593282a2695a68071eb680e10a309621e",
+    "reports/S6_EMBRAER_QUALIFICATION_PREPARATION_20261122.md": "da28648ae3ee680bd6783023c458d23d6943f8e4673817435ff1936b5006180c",
+    "reports/embraer-inspection-recovery-20261122/generic-candidate/embraer_terminal_candidate.py": "8e47107839dfdac0183dce2812c7990cc7219f9e0a01128e25ff8cb7ffbc9c0f",
+    "reports/embraer-inspection-recovery-20261122/generic-candidate/test_embraer_terminal_candidate.py": "3f2366ca129bc3763a8f211ad43bc11a3502bb593e0d39a4b3bd91106ba70653",
+    "reports/embraer-inspection-recovery-20261122/generic-qualification/qualify_embraer_normal_dispatch.py": "4323336abfe585a77dc4a2102e985cad12c22cda4ebd6d6be9a28046d111ccd3",
+    "reports/embraer-inspection-recovery-20261122/generic-qualification/test_qualify_embraer_normal_dispatch.py": "648da1a52bea88c7374f1fb68f4abdc164becfe268b7c6709177196124ad6898",
+    "reports/embraer-inspection-recovery-20261122/generic-release/embraer_installed_verification.py": "7f3caf88058e216d99d91de00021b5f8f0dc85c54c110411cb3d49d77e9e361c",
+    "reports/embraer-inspection-recovery-20261122/generic-release/freeze_embraer_candidate.py": "3d17576a1ad78270ae01147bb5c8a9b2076ff122ecfd918b894740aa38236ac1",
+    "reports/embraer-inspection-recovery-20261122/generic-release/test_embraer_installed_verification.py": "2f397f19c336bad28f4fcbc56b703c1fa57a1bd142af48f31b8fa9f2584a83e2"
+  },
+  "repository": "Jeckell102/job-search-helper"
+}

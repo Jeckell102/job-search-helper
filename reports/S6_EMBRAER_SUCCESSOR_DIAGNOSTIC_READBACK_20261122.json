@@ -1,0 +1,41 @@
+{
+  "affected_count": 4,
+  "affected_identity_sha256": "773f482ead9dbbfbc407060ade247e0299665219013f8eab32fb5763c80c3ffd",
+  "board": "https://embraer.breezy.hr/",
+  "company_id": "COMP-0634",
+  "company_schema_fields": [
+    "friendly_id",
+    "isMultipleLocationsEnabled",
+    "logo_url",
+    "name"
+  ],
+  "listing_count": 53,
+  "listing_schema_fields": [
+    "company",
+    "department",
+    "friendly_id",
+    "id",
+    "location",
+    "locations",
+    "name",
+    "published_date",
+    "salary",
+    "type",
+    "url"
+  ],
+  "listing_sha256": "d94d1fa31e3eb3e35cc97efecbab6844b95ed83f236bbb92ba35225ff09001a1",
+  "observation_sha256": "399afce0bc247263f1501fff7466dc23a2aeb4a005185f54f4c6186a897ca1d6",
+  "observed_at": "2026-11-22T19:39:19.898436+00:00",
+  "private_note_sha256": "441dce96d66f64c22b22016eb709f68ef2d5f34d71fd6b903ce7ea3320089025",
+  "request_count": 3,
+  "request_sha256": "19e7af99bd90d243f9b9f7465d5b6c38455ef99208cade05b7e1cfe5ca7536d2",
+  "retained_detail_count": 49,
+  "sample": {
+    "brand_heading_and_listing_title_banner": true,
+    "description_count": 1,
+    "metadata_url_matches": true,
+    "response_sha256": "f995073591b54c97e67f3dc890da6fb78a27c53034648d7ed5a9e8276a982c76",
+    "structured_job_present": false
+  },
+  "stable_reread": true
+}
