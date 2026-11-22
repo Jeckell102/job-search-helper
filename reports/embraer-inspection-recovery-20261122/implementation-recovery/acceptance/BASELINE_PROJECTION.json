@@ -1,0 +1,13 @@
+{
+  "changed_paths": {
+    "tests/test_embraer_typed_defect.py": {
+      "after": "c029561b133971409ba0285d90e5f4ed51f26246ac0984026ffdbfe4f299cc9d",
+      "before": "6b985dcb31fbdd02caa140f06dd7d85f9c289c027877df5a726a4b7fe18d2c35"
+    }
+  },
+  "member_count": 700,
+  "next_baseline_sha256": "065c73e80aa9a306b3691ca268a332c00b5c476b4ce4da46d9d224b2b81c5251",
+  "previous_baseline_sha256": "df0a9c5461e0a46965757499a4f20abadc46f74d99313b9c018977cfe6868369",
+  "provider_note_unchanged": "441dce96d66f64c22b22016eb709f68ef2d5f34d71fd6b903ce7ea3320089025",
+  "state": "PROJECTED_ONLY"
+}

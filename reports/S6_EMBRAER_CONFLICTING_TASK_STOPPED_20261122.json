@@ -1,0 +1,15 @@
+{
+  "baseline_sha256_projected": "065c73e80aa9a306b3691ca268a332c00b5c476b4ce4da46d9d224b2b81c5251",
+  "calls": 10,
+  "held_repair_key": "ffef857a2e6ee4f718a44e9c79d158e4550c2823004432a1515e6354bb7e3360",
+  "observed_at": "2026-11-22T20:39:51.494789+00:00",
+  "outcome": "OUT-f5084fdec013f314e5353c0c",
+  "paired_receipt_sha256": "69842a9e33a21eb43476d7fd66b0b7836c6d1811ea18de3a8c2fe7c992526c34",
+  "pilot_task": null,
+  "receipt_rows_sha256": "28bb956830890129b43ad7973a3b8c22f8c1ec3e3978154613a67d08f430877c",
+  "sessions": 5,
+  "status": "PAUSED",
+  "stop_requested": true,
+  "task": "WRAP-289593fcc0",
+  "task_state_sha256": "0bdfb4ba6e226e8082148cb77d92a66faf650fa9fb5ee1b61cd4c35d9e8d2bb3"
+}
