@@ -1,0 +1,18 @@
+{
+  "commit": "8b07aa32b0901d64af3d47b26070b608e23604bf",
+  "matched_files": {
+    "reports/S6_EMBRAER_CORRECTED_REGRESSION_BACKUP_VERIFIED_20261122.json": "b71092c6fc95a80dde4667a3284f1740d007d65c509a510cc71c48aa61aa53eb",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/arm-next/HANDOFF.md": "b36ea2af7a947a8c015534373fb93015fe114ab982685afac58e041ccc73e973",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/arm-next/PINS.json": "c3a8ab6a9a5d59de3fb31a04c4e3ce93b463b8b99478d06f038fae5b3affa7f8",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/arm-next/RESULT.json": "4d22de291d999c375542cbe1c63f00d53b974a183ca683a64064e930a11322a6",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/arm-next/native_arm_next.py": "1a1674f0479c4d38fc7fac79a445071747c92fc96808cded1c95e6ce6aec41be",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/arm-next/test_arm_next.py": "e50dc728f9c9456054a3c5e5049d67716ff9f4ce2743c87d4db98f2718bcd840",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/next-input/embraer_next_successor_input.py": "f29ff1a8d9dc2f58376cce11c6016553df8ef9119b6d4a2c46ec219e2245f87d",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/withdraw-current/HANDOFF.md": "ac4df93fed51915e49cae615c86c37ce770b7f5f43d1ad21449c1b858cbb5669",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/withdraw-current/PINS.json": "c91e9c2953c7513e0b7af618ef7d1bc84f17e5b0adf97ce00e9eace2cf57cc7f",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/withdraw-current/RESULT.json": "14f7a0850e52f8e802f5a33fa2f8d5249861b95192899bfc30df2c21c8206129",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/withdraw-current/native_withdraw_current.py": "7c418e9fdad9c891fae1131b2dd783880c520fef3f043317a05acf815ce350e0",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/withdraw-current/start_observer.sh": "5a70b55a7d557835ea1795ace7c6b780533137220c9c56e344f0784ad2390381",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/withdraw-current/test_withdraw_current.py": "ab80222442d5fc876a30bdf5304a4165a47648927e97985abddbeb2542ba74e4"
+  }
+}

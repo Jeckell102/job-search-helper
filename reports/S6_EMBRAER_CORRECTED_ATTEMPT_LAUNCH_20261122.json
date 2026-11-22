@@ -1,0 +1,14 @@
+{
+  "arm_sha256": "8e4b51732b72c69ce9c404fb39c10f01e56c8dcbdae3dbc799c8695743ff74bf",
+  "baseline_passed": false,
+  "baseline_red_expected": true,
+  "baseline_sha256": "065c73e80aa9a306b3691ca268a332c00b5c476b4ce4da46d9d224b2b81c5251",
+  "cycle": "CYC-3043A30F2355",
+  "new_task": "WRAP-250158dc79",
+  "observed_at": "2026-11-22T21:01:16.543780+00:00",
+  "outcome": "OUT-89a8561a79f99e2b3c3eb243",
+  "request_id": "operator-embraer-20261122-03",
+  "request_sha256": "cfec4cac835ece828aeb3c1a583441b272c1dab3c764382b39c112651d2789d0",
+  "stopped_predecessor": "WRAP-289593fcc0",
+  "withdrawal_sha256": "4de420ec49940e159b429cdf7c44cbf86660c02203a9e7e896a76193336df24f"
+}
