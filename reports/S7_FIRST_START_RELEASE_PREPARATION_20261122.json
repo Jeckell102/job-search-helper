@@ -35,6 +35,16 @@
   },
   "installer_test_sha256": "064eb026e7b094a406c0ad991e6341f2a73d1cc9d6d95eca6d48d08267350a25",
   "native_deployment": "NOT_PERFORMED",
+  "native_read_only": {
+    "adapter_sha256": "92cc58f58cc0c5a9665fca3149afeab27661f9779a4a4a87ffb6ce6eecd31277",
+    "independent_adapter_review": "ACCEPT_STAGED_SOURCE",
+    "native_fixture_cases": 15,
+    "observer_launcher_sha256": "6d1842d7d5ae6bc7dd9cde392b6fcf8aee120683f618f34318fb2555476c645f",
+    "readiness": "ADMINISTRATOR_OBSERVER_UNAVAILABLE",
+    "readiness_proposal_sha256": "4e734090402ef55ac5a034e2bc8a04d94841bfcefe761400d16a7ec276b033af",
+    "scope": "s7-first-start-source-advance-20261122-11",
+    "source_lineage_verified": true
+  },
   "preparation_script_sha256": "2c166126a16cf3b67ab5cb9cd1de304084bded75268130bdd2786a35907190f8",
   "prepared_package_sha256": "17b5874f20bc65e2ddeb8063d5b2000deb8b9a9324b61058af1c69457bac67ea",
   "private_capsule_manifest_mode": "0600",

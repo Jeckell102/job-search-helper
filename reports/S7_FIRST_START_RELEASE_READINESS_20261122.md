@@ -35,7 +35,11 @@ protections and passed its 13 focused private tests. Independent host review
 found an omitted GA predecessor layer in the new readiness comparison.
 The installed 12 cumulative GA and Allen endpoints and all five
 successor before images matched in a separate read-only comparison.
-The adapter repair preserves those exact sources in the comparison.
+The repaired adapter preserves those exact sources in the comparison and
+accepts mixed pinned before and staged files during protected rollback.
+Its focused checks passed 15 cases, and independent QA accepted the repaired staged adapter. The actual read-only entry passed
+the source lineage and reached the administrator listener check. It held
+because the new observer socket was absent.
 [Native lineage review hold](S7_FIRST_START_NATIVE_LINEAGE_QA_HOLD_20261122.md).
 
 Live intake and the Company-only queue were empty. The wrapper and
