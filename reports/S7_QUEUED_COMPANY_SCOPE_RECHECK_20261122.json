@@ -1,0 +1,63 @@
+{
+  "before_install": {
+    "pause": {
+      "changed_company_revision": null,
+      "installed_baseline_digest": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+      "release_record_journal_queue_intent_and_worker_absent": true,
+      "result": "DISPOSABLE_PREINSTALL_COMPANY_CHANGE_HELD",
+      "result_sha256": "16ef08ebcf94c7bd2ca9a905d519c533326191fecfb554d1a30677b1b81fb2a9",
+      "scenario": "pause",
+      "source_and_post_edit_stores_unchanged": true
+    },
+    "source": {
+      "changed_company_revision": "d91e1c83d53a70fe9fea86638bddccbf44a03199182c608ea6a35080219920df",
+      "installed_baseline_digest": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+      "release_record_journal_queue_intent_and_worker_absent": true,
+      "result": "DISPOSABLE_PREINSTALL_COMPANY_CHANGE_HELD",
+      "result_sha256": "a517123658c6246e27bb9068208aac99313d0eb9c69b4be47abfc69c8fa0957e",
+      "scenario": "source",
+      "source_and_post_edit_stores_unchanged": true
+    }
+  },
+  "fixture_source_sha256_after_install": "56b805b6fbbe90cceb9840e127d3360b7e2a1a0e0bdd5ce4c8f03af6cd0fa628",
+  "harness_sha256": "4bd53e4a51dbe6e32680e9cd8d906af2d93a40cf7b3c01f3b6e9ea2448793037",
+  "installed_baseline_release": "REL-d37d7d64a0fd3788e02e699f",
+  "installed_baseline_source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+  "kind": "disposable measured runtime behavior using copied installed source",
+  "measured_pins": {
+    "bootstrap_pin": "9e15bf97ef9af0db88a48ff7632fdb826320f50463a0b64ef11f6aa07e9df6e5",
+    "controller_pin": "2cd45aff4d52d3808c41b1bbd36e0c1a3a257634b2df79221185345742adff8c",
+    "launcher_pin": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+    "parent_pin": "5cf4e70829ad40d797dde4779cb6a1f0a75953f303ed330c0610ee7f0e5b23e6",
+    "runner_pin": "496a3f598ea754458cbb55f33d98bccf17279777fdd731f74d65722d6a04a9b8"
+  },
+  "preinstall_unit_check": "tests/test_integration_release.py::IntegrationReleaseTests::test_company_revision_drift_changes_nothing passed on copied installed source",
+  "scenarios": {
+    "pause": {
+      "admitted_cycle": false,
+      "attempt_id": "RTRY-659ab876e695bbeb943c6ad6",
+      "changed_company_revision": null,
+      "launch_count": 1,
+      "queue_sha256": "ea0ee80eced21275af84593e03cc0a688a380d001b7477388300222b210168ad",
+      "request_admission_provider_publication_effects": 0,
+      "result_sha256": "d5c965f341ef87302656cf6d9c9f4bf6afd6986c57148ed899a4c2af8311dacf",
+      "unchanged_queue_identity_bytes": true,
+      "unchanged_release_journal_intent_records": true,
+      "unchanged_store_logical_dumps": true,
+      "worker_exit": 1
+    },
+    "source": {
+      "admitted_cycle": false,
+      "attempt_id": "RTRY-8e3c24abb63e70603ab57170",
+      "changed_company_revision": "d91e1c83d53a70fe9fea86638bddccbf44a03199182c608ea6a35080219920df",
+      "launch_count": 1,
+      "queue_sha256": "fa4bef5daeace2056d37a672a35e8f056d8e5f59a6f4ad1301ade50f50e83c00",
+      "request_admission_provider_publication_effects": 0,
+      "result_sha256": "d858eca4ac9c215b35f4bec1536f59e2098fffa61d0aee35f6c78dede53fddd6",
+      "unchanged_queue_identity_bytes": true,
+      "unchanged_release_journal_intent_records": true,
+      "unchanged_store_logical_dumps": true,
+      "worker_exit": 1
+    }
+  }
+}
