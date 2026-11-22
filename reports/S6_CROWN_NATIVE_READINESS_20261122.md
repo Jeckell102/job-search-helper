@@ -34,3 +34,14 @@ The readiness-only record cannot authorize mutation. Independent
 native review, the new read-only observer, and the matching native ready
 receipt precede release application. No live Crown request, worker job,
 publication or alternate-checkout exchange has started.
+
+Independent native source disposition accepted the current capsule for the
+fresh observer. All 13 live preimages, tool and package hashes, prior
+restored and installed receipts, and the exact protected coordinator
+boundary independently matched. After apply, verify the active Crown
+release, restored services and custody before enrollment. If wrapper
+supervision is still starting, recheck the same service and journal
+read-only. Never replay the source transaction for that startup delay.
+
+The owner received the fresh 15-minute read-only observer command.
+No observer or live release has started at this checkpoint.
