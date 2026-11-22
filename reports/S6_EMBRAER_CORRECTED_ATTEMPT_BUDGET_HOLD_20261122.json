@@ -1,0 +1,20 @@
+{
+  "accounted_tokens": 118059,
+  "checkpoint_recovery_advanced_to_implementation": true,
+  "implementation_actions": [
+    "code_read",
+    "code_read"
+  ],
+  "observed_at": "2026-11-22T21:07:25.052607+00:00",
+  "outcome_id": "OUT-89a8561a79f99e2b3c3eb243",
+  "phase": "implement",
+  "reason": "Remaining cumulative token allowance cannot fit inference.",
+  "remaining_token_allowance": 1941,
+  "sessions": 7,
+  "settled_inference_calls": 15,
+  "status": "PAUSED_BUDGET",
+  "task_id": "WRAP-250158dc79",
+  "terminal_checkpoint_sha256": "93d70a05c8d8f1f05f11642fee3fc202e120ac6418e57df5f18df98cf6211d00",
+  "tracked_source_changes": [],
+  "unsettled_inference_calls": 0
+}
