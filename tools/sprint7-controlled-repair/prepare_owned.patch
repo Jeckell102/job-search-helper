@@ -1,0 +1,15 @@
+--- a/tools/sprint5-acquiretm-guarded-rehearsal/prepare_owned.py
++++ b/tools/sprint5-acquiretm-guarded-rehearsal/prepare_owned.py
+@@ -12,0 +13,6 @@
++def deny_network(event, _args):
++    if event.startswith('socket.'):
++        raise AssertionError('Controlled regression forbids network access.')
++
++
++sys.addaudithook(deny_network)
+@@ -14 +20 @@
+-stage = Path('/tmp/jsh-s5-amphenol-receipt-choice.aH9Skdfa')
++stage = run.parent / 'current-source-with-controlled-regression'
+@@ -123 +129 @@
+-current = owner_fixture._verified_readbacks(root, coordinator.store, selection)
++current = owner_fixture._verified_readbacks(root, coordinator.store, selection['outcome_id'])

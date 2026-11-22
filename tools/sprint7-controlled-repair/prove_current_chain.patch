@@ -1,0 +1,24 @@
+--- a/tools/sprint5-owned-host-release/qa/prove_installed_same_attempt.py
++++ b/tools/sprint5-owned-host-release/qa/prove_installed_same_attempt.py
+@@ -18 +18 @@
+-SOURCE = Path('/tmp/jsh-s5-owned-host-trigger-held-guard.20261121')
++SOURCE = HERE / 'current-source-with-controlled-regression'
+@@ -20 +20 @@
+-ARCHIVE = Path('/tmp/jsh-s5-amphenol-owned-replay')
++ARCHIVE = HERE / 'current-origin-confirmed'
+@@ -27 +27 @@
+-ORIGINAL = 'OUT-cffecec610203a71e5c23b82'
++ORIGINAL = json.loads((ARCHIVE / 'prepared-choice.json').read_bytes())['binding']['outcome_id']
+@@ -32,2 +32,2 @@
+-    'src/job_search_helper/qualified_release_owner.py': '607a08c3d3e4728e411b95cfa9e4bd54a8dbcb767560ff077351e7bc268ebec9',
+-    'src/job_search_helper/runner.py': '0b4e80b429b242a1eec02eadb5b89ac501b8d13f7dc0c3122015e01eece91003',
++    'src/job_search_helper/qualified_release_owner.py': '5cf4e70829ad40d797dde4779cb6a1f0a75953f303ed330c0610ee7f0e5b23e6',
++    'src/job_search_helper/runner.py': '496a3f598ea754458cbb55f33d98bccf17279777fdd731f74d65722d6a04a9b8',
+@@ -36 +36 @@
+-    'dev/wrapper-coder/tools/host_server.py': '30854d51eaaf0bc2dcd4f833d192acf28572b8c0ec63ba0ac2a25c1f4e6dc586',
++    'dev/wrapper-coder/tools/host_server.py': 'a1cafe60d2025116bcaa43dd8dd1b4099a9c2845c35353f3f25dec98a8df5567',
+@@ -40,2 +40,2 @@
+-    'job-search-scraper': '2556de3371c32be1991273a1ee88d2baa25753dfcdc73a9656d34de6b91de78c',
+-    'release_admission_bootstrap.py': 'c8a915a8311d74454d292a7f89a0f583b199a5a13832a89f00012cb99c0b500f',
++    'job-search-scraper': '429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca',
++    'release_admission_bootstrap.py': '9e15bf97ef9af0db88a48ff7632fdb826320f50463a0b64ef11f6aa07e9df6e5',

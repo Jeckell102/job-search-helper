@@ -1,0 +1,52 @@
+{
+  "combined_exact_adapter_proofs": {
+    "S5_AMPHENOL_RECIPE_LIVE_ACCEPT_20261121.md": "73f7b817a5689d7c24b3684b2f9013005693303ba05973a470b12b211a316cc8",
+    "S5_AMPHENOL_RECIPE_SOURCE_ACCEPT_20261121.md": "efc4f90c2603e7a032ff924ff811167f3882a2de42b83fc62f30f9b0c36a101b"
+  },
+  "controlled_before_adapter_sha256": "a95953afe2bc10138714f6b11af22572b17ab344bf61d78b834647895025aa61",
+  "controlled_before_source_sha256": "46b1c0ac7dab247554078c971f96590ceb6c77b20899a47a984e8e1c76bd99eb",
+  "controlled_generated_adapter_sha256": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d",
+  "installed_baseline_release": "REL-d37d7d64a0fd3788e02e699f",
+  "installed_paced_adapter_sha256": "ac1b1e62ca139fcef47cae368ac25ebc56043a6d3133428ec2e97f22fdbc9e7c",
+  "installed_source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+  "only_application_delta": "src/job_search_helper/acquiretm.py",
+  "origin_prepared_receipt_sha256": "be4ee632d321c88fe211bf70c499147e7edc4a7c6226936e8813788e222c1bb0",
+  "scope": "private controlled regression replay through normal application paths; no native release qualification",
+  "scripts_sha256": {
+    "current-origin-confirmed/prepare_owned.py": "70e96fecc4052fae329ca7b0cceef37f1667358df43583ef03c3e2385cfef8f5",
+    "host_readback.py": "d5aa61aa702843122ebeac68faa343a07d280a72f682d53c4e192a875afc3f1d",
+    "offline_child.py": "a155ffa461942ace3e50b1e8784bbe2118f9d5c12f22c7dc151306bbce2e736d",
+    "prove_current_chain.py": "09d3beb46e7f664b020035efdf34dbc90ae50165d417f7e7290e3b07a6f2a51c"
+  },
+  "shared_dispatcher_sha256": "111ccb9067402832ad96b798100dfca293668cf24830409874c1ab4d6eaac07e",
+  "terminal": {
+    "actual_host_install_worker_launches": 1,
+    "attempt_id": "RTRY-4017a9ae2a2c3b84068316c2",
+    "build_choice_calls": 1,
+    "captured_fetch_calls": 1,
+    "cycle_id": "CYC-C6D214CC2713",
+    "default_off_hold": "HELD_EXACT_RETRY_TERMINAL",
+    "fixture_batches": 1,
+    "genuine_build_task": "WRAP-5b964e31d6",
+    "host_launch_state": "RECIPE_RELEASE_RETRY_CHECKED",
+    "host_receipt_sha256": "fc1b44f5d5298b0e51c6869bf85052393c002d3413fa42f05ed2b026a594fad2",
+    "installed_source_sha256": "c2ba88a575e1ece779a994ae18de09f90e14bb9518779e5edc8bec2bdfc30974",
+    "installed_verifier_pin": "aeea069ce3ea41d721f19eba73b21ac351ac820d991e3da9f85e546c33d58b8d",
+    "measured_dependency_sha256": "953e3d294ed8fc7c6a1928c07b318a2cccde2848f12a50291e28cbe624e2811a",
+    "native_release_qualification": false,
+    "original_outcome_id": "OUT-75fc488d11cf70037754ef17",
+    "outcome_id": "OUT-6f88b324e3b0b578d3696c75",
+    "preserved_archived_inputs": true,
+    "real_provider_or_workbook_calls": 0,
+    "receiver_commands_on_restart": 0,
+    "receiver_events": 1,
+    "release_id": "REL-5942916f388ff616e98302e5",
+    "resolved_inferences": true,
+    "result": "DISPOSABLE_SAME_ATTEMPT_INSTALLED_AND_RECEIVED",
+    "saved_and_published_job_count": 18,
+    "verification_digest": "e326c8d123fe39481f00a25a88ca2b029e2879229b34cda412b22a5cdd4921f7",
+    "verified_release_receipt_sha256": "27ea6f04424bcf84db8274f8bf862c98679bda2191b2896b7385d7682c0b61ed",
+    "workbook_factory_calls": 1
+  },
+  "terminal_receipt_sha256": "1790a41f23bc6101988b61e1445a6cea5ab56e411d9e51efacab20f120a7c3b2"
+}
