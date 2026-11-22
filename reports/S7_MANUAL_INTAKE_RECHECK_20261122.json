@@ -1,0 +1,48 @@
+{
+  "cases": {
+    "busy_then_idle": {
+      "busy_elapsed_seconds": 0.68,
+      "busy_status": "WAITING_FOR_UNFINISHED_CYCLE",
+      "company_count": 1,
+      "cycle_id": "CYC-29B7242ACFDA",
+      "event_id": "CEV-e1dcfdb4e96d4965aadc5e19badef161",
+      "event_preserved_while_busy": true,
+      "fixture_blocking_cycle": "CYC-AB1B34807B37",
+      "launcher_sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+      "manual_start_elapsed_seconds": 0.848,
+      "manual_start_status": "VERIFIED_ZERO",
+      "outcome_id": "OUT-275f397ab00fd518b15fbb5a",
+      "provider_fixture_calls": 1,
+      "source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+      "workbook_fixture_reads": 2,
+      "workbook_writes": 0
+    },
+    "idle": {
+      "company_count": 1,
+      "cycle_id": "CYC-1E4380CFAD34",
+      "event_id": "CEV-8712b1d5fbba4aa7a18cea19e89f22f4",
+      "launcher_sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+      "manual_start_elapsed_seconds": 0.82,
+      "manual_start_status": "VERIFIED_ZERO",
+      "outcome_id": "OUT-dd0a6a5443fd2741c4e2388f",
+      "provider_fixture_calls": 1,
+      "source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+      "workbook_fixture_reads": 2,
+      "workbook_writes": 0
+    },
+    "sheets_only": {
+      "external_baseline_established": true,
+      "fixture_workbook_reads": 0,
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+      "state": "BROAD_FALLBACK_BEFORE_SHEETS_DISCOVERY"
+    }
+  },
+  "harness_sha256": {
+    "manual_intake_child.py": "70187c0a2022e474d2a4302c31707e1828fe9c73dc57de56f895c6c00de7534f",
+    "prove_manual_intake.py": "22b19fd5048d15f180e860a61c303cd35faabb131416a9cc88153370e3252b01"
+  },
+  "scope": "offline measured public shell, copied application, simulated provider and workbook",
+  "source_release": "REL-d37d7d64a0fd3788e02e699f"
+}

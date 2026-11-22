@@ -74,10 +74,18 @@ continuation is the existing `ordinary-company-event publish` command
 with the exact request digest and cycle ID. If the run was interrupted
 before printing those values, the coordinator reads them from the local
 receipts. A subsequent bare Start can report that the ordinary event
-owns the cycle. The staged manual-start route also prints those values
+owns the cycle. The manual-start route also prints those values
 when a workbook write response is uncertain. The coordinator checks the
 saved inventory before resuming publication and verifies the terminal
 receipt afterwards.
+
+A new Company row stored only in Sheets needs guarded reconciliation
+before the company-only manual Start path can select it. For an
+established Company baseline, the coordinator verifies the pending
+publication scope, reconciles the row, and checks that exactly one
+eligible Company event is available. The first bare Start currently
+checks local events before the regular startup workbook pull.
+[Measured intake behavior](S7_MANUAL_INTAKE_RECHECK_20261122.md).
 
 ## Current release boundary
 
