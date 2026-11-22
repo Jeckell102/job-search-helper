@@ -1,0 +1,29 @@
+{
+  "current_ats_adapter_changed": false,
+  "files": {
+    "release_admission_bootstrap.py": {
+      "before": "1258ac47b647d61361fa84ccdda14816a184e6c15cd4c6e7c78e6b27cd228d45",
+      "staged": "9cafc1f6b283d77e769640134756df7e67d81702789ada5e5b2381f427cef152"
+    },
+    "src/job_search_helper/exact_cycle_planner.py": {
+      "before": "0932566520c9807e7e5066bf4f7787c3a88b057f011f68167eed0bcb1425063b",
+      "staged": "ddea425474e8559a3bbe95b96876c407eb21cc174086ec6f89815b1a1026df02"
+    },
+    "src/job_search_helper/manual_company_start.py": {
+      "before": null,
+      "staged": "bb1e010e6e14d0e7fe1df1bc91d5f633d37ed726fcc2ce2ee074f2252f0f6c5e"
+    },
+    "src/job_search_helper/runner.py": {
+      "before": "de3c0f5045e1ad07d0b1e2e8b1da8b8dbce2acd3767182ddf9d1c7dbbaefb87b",
+      "staged": "4abc4fd6d7713294e0029fb770c3a5ffd57968569386ffaffd44f468cfcf2dd0"
+    },
+    "src/job_search_helper/sheets_sync.py": {
+      "before": "305c59767cf679b3d757f65c1d3e7eee2080e17c2df55ce8774cc6e62822d5fa",
+      "staged": "52845a8c0b59ce59e22840abc21748785dd35ad6c74db30f76be74b5697d2589"
+    }
+  },
+  "focused_fixture_tests": 4,
+  "live_source_sha256": "bfab80ca6a455671c1956f18bfce1e1d7ff7b77e6ec1bd52b08e06be0a52e82c",
+  "scope": "source-only candidate, no deployment or unreviewed activation",
+  "staged_source_sha256": "6c6e223021cfe5b3dded419a791c2572b77b326d9aa25d18cf3bc686de3a6d2b"
+}

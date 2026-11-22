@@ -1,0 +1,343 @@
+--- a/release_admission_bootstrap.py
++++ b/release_admission_bootstrap.py
+@@ -244,14 +244,21 @@
+         RETAINED_OPERATOR_COMMAND, ORDINARY_EVENT_COMMAND, OPERATOR_AMPHENOL_COMMAND,
+     })
+     layout = _retained_operator_sqlite_layout(project, state, backend) if operator else None
++    if not operator and tuple(arguments) == ('start',) and backend == 'sqlite':
++        # A compatible bare start may route one ordinary event. Preserve the
++        # existing workflow for noncanonical or not-yet-initialized stores.
++        try:
++            layout = _retained_operator_sqlite_layout(project, state, backend)
++        except (OSError, RuntimeError, ValueError):
++            pass
+     lock_path = state.parent / ("scraper.lock" if backend == "sqlite" else "writer.lock")
+     lock_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+     flags = os.O_RDWR | os.O_CREAT
+-    if operator:
++    if operator or layout is not None:
+         flags |= os.O_NOFOLLOW | os.O_NONBLOCK
+     descriptor = os.open(lock_path, flags, 0o600)
+     try:
+-        if operator:
++        if operator or layout is not None:
+             lock_stat = os.fstat(descriptor)
+             if not stat.S_ISREG(lock_stat.st_mode) or lock_stat.st_nlink != 1:
+                 raise RuntimeError("Retained operator admission requires the ordinary scraper lock")
+@@ -261,7 +268,7 @@
+         except BlockingIOError as exc:
+             raise RuntimeError(f"Another scraper or release owns admission: {lock_path}") from exc
+         runtime = _validate_runtime(project, state.parent)
+-        if operator:
++        if operator or layout is not None:
+             if not os.path.samestat(lock_stat, lock_path.stat(follow_symlinks=False)):
+                 raise RuntimeError("Retained operator scraper lock identity changed")
+             if layout != _retained_operator_sqlite_layout(project, state, backend):
+--- a/src/job_search_helper/exact_cycle_planner.py
++++ b/src/job_search_helper/exact_cycle_planner.py
+@@ -472,7 +472,11 @@
+         expected = operation.get('expected', {})
+         for number, row in planner.indexes['Job History'].matches(operation['identity']):
+             prior = originals.get(('Job History', number), {})
+-            manual = expected.get('Added to Opportunities?', prior.get('Added to Opportunities?', ''))
++            # A compact planning row materializes omitted protected fields as
++            # blanks.  Once targeted hydration found a real row, that blank is
++            # never a trustworthy manual-choice guard.
++            manual = (prior.get('Added to Opportunities?', '') if ('Job History', number) in originals
++                      else expected.get('Added to Opportunities?', ''))
+             # Keep every source/review/decision guard emitted by Engine.  The
+             # retained planner has no ordinary lifecycle checkpoint to repair
+             # a lost race later, so narrowing this set would silently weaken
+@@ -482,8 +486,110 @@
+                 for field, value in expected.items()
+             }
+             operation['expected']['Added to Opportunities?'] = manual
++            # A note-only absence/reconciliation operation has no Source Hash
++            # mutation to carry into the later exact row scope.  Keep the
++            # authoritative pre-local value as a local-only expected guard;
++            # after the exact local commit, ``_row_scope`` seals that same
++            # (or a simultaneously updated) value as the required current
++            # Source Hash guard.  Compact publication removes this field from
++            # the remote projection, so this never widens a Sheets write.
++            if ('Job History', number) in originals:
++                source_hash = prior.get('Source Hash', '')
++                if str(source_hash).strip():
++                    operation['expected']['Source Hash'] = source_hash
+             if 'Job Key' in expected:
+                 operation['expected']['Job Key'] = expected['Job Key']
++
++
++def _hydrate_authoritative_operation_scope(planner, operation, originals):
++    """Replace only an operation's partial cache rows with full local values.
++
++    ``PlanningRepository`` intentionally begins with compact rows.  That is
++    sufficient to choose an identity, but it is not sufficient to decide a
++    no-op or preserve a manual/salary field.  SQLite's targeted ``matches``
++    gives the full record for precisely that identity without enumerating a
++    whole tab.  The replacement happens before simulated commit so later
++    operations retain the same full user-owned values.
++    """
++    from .repository import _equivalent
++
++    tab, identity = operation.get('tab'), operation.get('identity')
++    if tab not in planner.rows or not isinstance(identity, Mapping) or not identity:
++        raise ValueError('planner_operation_scope_invalid')
++    cached = planner.indexes[tab].matches(identity)
++    matcher = getattr(planner.base, 'matches', None)
++    if not callable(matcher):
++        # In-memory fixtures use full rows from PlanningRepository's fallback
++        # loader.  A compact cache without targeted lookup must fail closed.
++        if hasattr(planner.base, 'read_cached_columns'):
++            raise ValueError('authoritative_operation_scope_unavailable')
++        for number, row in cached:
++            originals.setdefault((tab, number), copy.deepcopy(row))
++        return
++    authoritative = matcher(tab, identity)
++    if len(authoritative) != len(cached):
++        raise ValueError('authoritative_operation_scope_changed')
++    pairs = list(zip(cached, authoritative))
++    if len(cached) > 1:
++        # Local Opportunities may deliberately fan one Company/URL operation
++        # out by stable Opportunity ID.  Do not pair two otherwise-identical
++        # compact rows by incidental repository order.
++        cached_ids = {str(row.get('Opportunity ID') or ''): (number, row)
++                      for number, row in cached}
++        full_ids = {str(row.get('Opportunity ID') or ''): row for _, row in authoritative}
++        if (tab != 'Opportunities' or '' in cached_ids or '' in full_ids
++                or len(cached_ids) != len(cached) or set(cached_ids) != set(full_ids)):
++            raise ValueError('authoritative_operation_scope_ambiguous')
++        pairs = [(cached_ids[key], (key, full_ids[key])) for key in sorted(cached_ids)]
++    compact_fields = {
++        'Job History': {
++            'Company', 'Job Key', 'Official Job URL', 'Requisition ID', 'Job Title',
++            'Current Snapshot', 'Added to Opportunities?', 'Review Status', 'Review Started At',
++            'Decision', 'Reconsideration Count', 'Description Hash', 'Source Hash',
++            'Rejection Reason', 'Review Notes', 'Job Status', 'Consecutive Missing Scans', 'Prior Job Key',
++        },
++        'Job Evidence': {'Job Key', 'Source Hash'},
++        'Opportunities': {'Company', 'Job URL'},
++        'Scan Cycles': {'Cycle ID'},
++    }
++    # A full snapshot already observed every field; a compact snapshot observed
++    # only PlanningRepository's selected columns.  In both cases a visible
++    # change is a stale planning guard, not a missing field to hydrate.
++    # Companies is deliberately loaded by full ``read('Companies')`` even in
++    # a compact planning repository.  It is therefore never an omitted-field
++    # hydration target.
++    visible = (set(planner.schemas[tab]) if tab == 'Companies' or not hasattr(planner.base, 'read_cached_columns')
++               else compact_fields.get(tab, set()))
++    if tab == 'Opportunities' and 'Opportunity ID' in planner.schemas[tab]:
++        visible.add('Opportunity ID')
++    for (number, partial), (_row_id, full) in pairs:
++        if not isinstance(full, Mapping) or not all(
++                _equivalent(header, full.get(header, ''), value)
++                for header, value in identity.items()):
++            raise ValueError('authoritative_operation_scope_identity_changed')
++        # The compact identity must still refer to the exact authoritative
++        # record; a mismatch is not an invitation to guess a replacement.
++        if not all(_equivalent(header, partial.get(header, ''), value)
++                   for header, value in identity.items()):
++            raise ValueError('planning_operation_scope_identity_changed')
++        if any(not _equivalent(header, partial.get(header, ''), full.get(header, ''))
++               for header in visible):
++            raise ValueError('authoritative_operation_scope_visible_drift')
++        expected = operation.get('expected')
++        if isinstance(expected, dict):
++            for header, value in tuple(expected.items()):
++                # Replace only a guard that exactly reflects the compact cache
++                # placeholder.  A deliberately different guard remains a
++                # guard and is never rewritten by hydration.
++                if header not in visible and _equivalent(header, value, partial.get(header, '')):
++                    expected[header] = copy.deepcopy(full.get(header, ''))
++        hydrated = copy.deepcopy(dict(full))
++        planner.rows[tab][number] = hydrated
++        # ``IdentityIndex.put`` updates only columns already materialized by
++        # prior exact matches.  It avoids rebuilding every column/index for
++        # the user's whole Jobs cache after each selected operation.
++        planner.indexes[tab].put(number, hydrated)
++        originals.setdefault((tab, number), copy.deepcopy(hydrated))
+ 
+ 
+ def _company_from(planner, company_id):
+@@ -654,6 +760,7 @@
+                 for operation in operations
+             ]
+         for operation in operations:
++            _hydrate_authoritative_operation_scope(planner, operation, originals)
+             existing = (_check_membership_posting_operation(operation, planner, company, current_posting)
+                         if membership_only else None)
+             tab = operation['tab']
+--- /dev/null
++++ b/src/job_search_helper/manual_company_start.py
+@@ -0,0 +1,60 @@
++"""Route one ordinary Company event from a manual bare start."""
++
++from contextlib import ExitStack, closing
++import os
++
++from . import cli
++from .company_events import (BRIDGE_CONSUMER, CompanyEventBridge, _json_digest,
++                             has_pending_eligible_company_event, read_verified_queued_event)
++from .integration_release import assert_release_settled
++from .ordinary_company_event_command import (
++    _has_event_provenance, _open_readers, _request_file, execute_ordinary_event,
++)
++from .retained_work_runner import assert_normal_lifecycle_not_held
++from .sqlite_repository import SQLiteRepository
++
++
++def manual_company_start_pending(database):
++    """Check for work without consuming the startup lease or opening a workbook."""
++    request = _request_file(database.parent)
++    if request is not None:
++        return 'manual_retained' not in request and _has_event_provenance(request, request_field='request_id')
++    jobs = cli.job_database_path()
++    if (cli.storage_backend() != 'sqlite' or jobs != database.with_name('jobs.sqlite3')
++            or jobs.resolve(strict=True) != jobs):
++        raise ValueError('Manual Company selection requires the admitted local SQLite layout')
++    with closing(SQLiteRepository(jobs, os.environ.get('SPREADSHEET_ID', ''), readonly=True)) as repository:
++        return has_pending_eligible_company_event(repository)
++
++
++def run_manual_company_start(admission):
++    """Under inherited scraper admission, bridge and run only the exact event."""
++    database, jobs, _ = admission
++    root = database.parent
++    with cli.writer_lock(root / 'writer.lock'), ExitStack() as readers:
++        assert_release_settled(root)
++        local, _ = _open_readers(readers, database, jobs, root / 'inventories.sqlite3')
++        request = _request_file(root)
++        if request is None:
++            with closing(SQLiteRepository(jobs, local.spreadsheet_id)) as repository:
++                bridge = CompanyEventBridge(repository, root, state_database=database)
++                events = repository.pending_latest_company_events(BRIDGE_CONSUMER, limit=2)
++                if len(events) != 1 or events[0]['kind'] != 'company.eligible':
++                    return {'state': 'HELD_MANUAL_EVENT_NOT_UNIQUE'}
++                [observed] = bridge.observe_pending()['events']
++                if observed['state'] != 'PROPOSED_COMPANY_ONLY_SCRAPE':
++                    return {'state': 'HELD_MANUAL_EVENT_STALE'}
++                assert_normal_lifecycle_not_held(root, jobs)
++                [delivery] = bridge.process_pending(limit=1, writer_lock_held=True)
++                if delivery['state'] != 'REQUEST_WRITTEN' or delivery['event_id'] != events[0]['event_id']:
++                    return {'state': 'HELD_MANUAL_EVENT_BRIDGE', 'bridge': delivery}
++                _, request = read_verified_queued_event(repository, root)
++        else:
++            _, request = read_verified_queued_event(local, root)
++        request_digest = _json_digest(request)
++
++    result = execute_ordinary_event('admit-fetch', admission, request_sha256=request_digest)
++    if result['state'] != 'INVENTORY_FROZEN':
++        return result
++    scope = {'request_sha256': request_digest, 'cycle_id': result['cycle_id']}
++    return {**scope, **execute_ordinary_event('publish', admission, **scope)}
+--- a/src/job_search_helper/runner.py
++++ b/src/job_search_helper/runner.py
+@@ -165,6 +165,8 @@
+ 
+ Commands:
+   start        Start a fresh scan of all currently active companies.
++               - A bare start with one verified Company event handles that
++                 event through the scoped Company path first.
+                - After completed scraping and verified Sheets sync, automatically
+                  read AI Prompt in Google Drive and run FIRST PASS through Codex
+                  using GPT-5.6 Luna with medium reasoning.
+@@ -1791,6 +1793,28 @@
+         if forbidden is not None:
+             print(f'ERROR: {forbidden} applies to sync only.', file=sys.stderr)
+             return 2
++    if arguments == ['start']:
++        try:
++            from release_admission_bootstrap import RETAINED_OPERATOR_LAYOUT_ENV
++
++            if os.environ.get(RETAINED_OPERATOR_LAYOUT_ENV):
++                from .manual_company_start import manual_company_start_pending, run_manual_company_start
++
++                _load_environment()
++                if manual_company_start_pending(state_path()):
++                    with _retained_operator_admission() as admission:
++                        result = run_manual_company_start(admission)
++                    print('Ordinary Company event: ' + json.dumps(result, sort_keys=True))
++                    return 0 if result['state'] in {
++                        'SYNC_CONFIRMED', 'VERIFIED_ZERO', 'FETCH_TEMPORARY', 'FETCH_BLOCKED',
++                        'FETCH_REPAIR_QUALIFIED',
++                    } else 1
++                os.environ.pop(RETAINED_OPERATOR_LAYOUT_ENV)
++        except KeyboardInterrupt:
++            return 130
++        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
++            print(f'ERROR: {exc}', file=sys.stderr)
++            return 1
+     if arguments and arguments[0] in {'start', '--admitted-workflow'}:
+         pipeline_args = (
+             ['run', '--scraper-args', *arguments[1:]] if arguments[0] == 'start' else arguments[1:]
+--- a/src/job_search_helper/sheets_sync.py
++++ b/src/job_search_helper/sheets_sync.py
+@@ -740,6 +740,26 @@
+         values = {header: current.get(header, '') for header in value_fields
+                   if frozen_operation is not None or header not in identity}
+         notes = {}
++        # A locally applied Job History review note is materialized in the
++        # current row, while its sealed remote projection is append-only.
++        # Reconstitute only that explicitly sealed existing-row operation.
++        if (frozen_operation is not None and tab == 'Job History'
++                and frozen_operation.get('append_if_missing') is False
++                and set(frozen_operation.get('append_notes', {})) == {'Review Notes'}):
++            suffix = frozen_operation['append_notes']['Review Notes']
++            frozen_expected = frozen_operation.get('expected', {})
++            if (not isinstance(suffix, str) or not suffix.strip()
++                    or not isinstance(frozen_expected, Mapping)
++                    or 'Review Notes' not in frozen_expected
++                    or 'Review Notes' in frozen_operation.get('values', {})
++                    or 'Review Notes' in frozen_operation.get('on_insert', {})):
++                raise ValueError('Exact Sheets sealed Job History note is invalid.')
++            prefix = str(frozen_expected['Review Notes'] or '')
++            target = prefix if suffix in prefix else prefix + ('\n\n' if prefix else '') + suffix
++            if values.get('Review Notes') != target:
++                raise ValueError('Exact Sheets sealed Job History note differs from local value.')
++            values.pop('Review Notes')
++            notes['Review Notes'] = suffix
+         if base and tab == 'Opportunities':
+             forbidden = set(values) & set(USER_FIELDS)
+             if forbidden:
+@@ -1404,8 +1424,19 @@
+                         identity[key] = values[key]
+             return identity
+ 
++        def scope_key(tab, identity):
++            return tab, tuple(sorted((header, _identity_key(header, value))
++                                     for header, value in identity.items()))
++        by_identity = {scope_key(item['tab'], item['identity']): item
++                       for item in normalized}
++        projected = [scope_key(operation['tab'], final_identity(operation))
++                     for operation in projection]
++        if (len(by_identity) != len(normalized) or len(set(projected)) != len(projected)
++                or set(by_identity) != set(projected)):
++            raise ValueError('Exact Sheets durable scope/projection identities differ.')
+         rows = []
+-        for item, operation in zip(normalized, projection):
++        for operation, selected in zip(projection, projected):
++            item = by_identity[selected]
+             candidates = [candidate for candidate in plan['local_operations']
+                           if candidate.get('tab') == item['tab']
+                           and final_identity(candidate) == item['identity']]
+@@ -1415,6 +1446,20 @@
+             frozen_values = dict(local_operation.get('expected', {}))
+             frozen_values.update(local_operation.get('on_insert', {}))
+             frozen_values.update(local_operation.get('values', {}))
++            if (operation.get('tab') == 'Job History'
++                    and operation.get('append_if_missing') is False
++                    and set(operation.get('append_notes', {})) == {'Review Notes'}):
++                suffix = operation['append_notes']['Review Notes']
++                expected = local_operation.get('expected', {})
++                if (local_operation.get('append_notes') != operation['append_notes']
++                        or not isinstance(suffix, str) or not suffix.strip()
++                        or 'Review Notes' not in expected
++                        or expected['Review Notes'] != operation.get('expected', {}).get('Review Notes')
++                        or 'Review Notes' in local_operation.get('values', {})
++                        or 'Review Notes' in local_operation.get('on_insert', {})):
++                    raise ValueError('Exact Sheets durable Job History note differs from sealed append.')
++                prefix = str(expected['Review Notes'] or '')
++                frozen_values['Review Notes'] = prefix if suffix in prefix else prefix + ('\n\n' if prefix else '') + suffix
+             if any(header not in frozen_values for header in item['fields']):
+                 raise ValueError('Exact Sheets durable row evidence is incomplete.')
+             rows.append({**copy.deepcopy(item),

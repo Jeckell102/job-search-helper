@@ -810,6 +810,14 @@ generic queue/start without an event. The first-company compact
 bootstrap is restricted to absent rows and cannot safely update Allen.
 [Current named origin review](S6_NEXT_GENUINE_NAMED_ORIGIN_REVIEW_20261121.md).
 
+November 22 follow-up: the actual Amphenol Sprint 5 pilot passed. Sprint 6
+intake remains empty, with no effective unfinished cycle. Read-only live
+tracker evidence confirms Allen's stored Greenhouse source remains stale,
+while Forterra has no saved current qualifying failure. The combined
+source-only manual Start and publisher candidate passed four targeted tests.
+Reuse prior accepted proof and advance the named live cases only on their
+actual eligibility. [Lean Sprint 6 checkpoint](S6_LEAN_NEXT_PILOT_CHECKPOINT_20261122.md).
+
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 
 The November 21 effective reconciliation covers all six milestones,
