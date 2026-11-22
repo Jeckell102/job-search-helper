@@ -1,0 +1,26 @@
+{
+  "active_or_unresolved_inference_count": 0,
+  "controls": {
+    "autopilot_enabled": false,
+    "campaign_enabled": false,
+    "pilot_task": "WRAP-fbb9ff24d3",
+    "queue_enabled": false
+  },
+  "inference_by_status": {
+    "COMPLETED": 5
+  },
+  "observed_at": "2026-11-22T18:49:11.471501+00:00",
+  "other_active_tasks": 0,
+  "outcome_id": "OUT-719882e9ec8b8ad044885426",
+  "paired_receipt_sha256": "d3964ed3d2f3d63adb17d0af72ce616a397a3c8e8a62676ed1711b15d5a24afb",
+  "paired_record_sha256": "c1e010c361085b6f15e5c621800a042e527a3429fc732fb95173eb53d65c222a",
+  "task": {
+    "calls": 5,
+    "errors": 0,
+    "no_progress": 1,
+    "phase": "inspect",
+    "sessions": 2,
+    "status": "PAUSED_BLOCKED"
+  },
+  "task_id": "WRAP-fbb9ff24d3"
+}

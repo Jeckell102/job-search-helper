@@ -1,0 +1,14 @@
+{
+  "existing_inspection_evidence_satisfies_gate": true,
+  "measured_workspace_matches_task": true,
+  "missing_evidence": "",
+  "observed_at": "2026-11-22T18:51:31.338880+00:00",
+  "phase": "inspect",
+  "source_evidence_receipt_ids": [
+    [
+      236
+    ]
+  ],
+  "status": "PAUSED_BLOCKED",
+  "task_id": "WRAP-fbb9ff24d3"
+}
