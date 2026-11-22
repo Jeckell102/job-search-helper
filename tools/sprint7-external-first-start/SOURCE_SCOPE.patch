@@ -1,0 +1,180 @@
+--- a/src/job_search_helper/manual_company_start.py
++++ b/src/job_search_helper/manual_company_start.py
+@@ -1,16 +1,21 @@
+ """Route one ordinary Company event from a manual bare start."""
+ 
++from collections import Counter
+ from contextlib import ExitStack, closing
+ import os
+ 
+ from . import cli
+-from .company_events import (BRIDGE_CONSUMER, CompanyEventBridge, _json_digest,
+-                             has_pending_eligible_company_event, read_verified_queued_event)
++from .company_events import (BRIDGE_CONSUMER, INELIGIBLE_STATUSES, CompanyEventBridge,
++                             _json_digest, has_pending_eligible_company_event,
++                             read_verified_queued_event)
+ from .integration_release import assert_release_settled
+ from .ordinary_company_event_command import (
+     _has_event_provenance, _open_readers, _request_file, execute_ordinary_event,
+ )
++from .repository import _identity_key
+ from .retained_work_runner import assert_normal_lifecycle_not_held
++from .sheet_profile import COMPACT_PROFILE, COMPACT_SCHEMAS
++from .sheets_sync import unique_rows
+ from .sqlite_repository import SQLiteRepository
+ 
+ 
+@@ -27,7 +32,52 @@
+         return has_pending_eligible_company_event(repository)
+ 
+ 
+-def run_manual_company_start(admission):
++def _external_addition(repository, *, interactive=False):
++    if (repository.get_meta('company_event_external_baseline') != 'yes'
++            or repository.get_meta('sheets_profile') != COMPACT_PROFILE):
++        return None
++    remote = cli.get_remote_repository(write=False, interactive=interactive, schemas=COMPACT_SCHEMAS,
++                                       evidence_archives=False)
++    if remote.spreadsheet_id != repository.spreadsheet_id or remote.schemas != COMPACT_SCHEMAS:
++        raise ValueError('Manual Company discovery requires the current compact workbook.')
++    companies = repository.read_columns('Companies', ['Company ID', 'Company'])
++    known_names = {_identity_key('Company', row['Company']) for _, row in companies}
++    known_ids = {_identity_key('Company ID', row['Company ID']) for _, row in companies}
++    known_ids.update(_identity_key('Company ID', company_id) for (company_id,) in
++                     repository.db.execute('SELECT DISTINCT company_id FROM company_revisions'))
++    rows = unique_rows('Companies', list(enumerate(remote.read('Companies'), 2)))
++    sheet_names = Counter(_identity_key('Company', row.get('Company') or '') for _, row in rows)
++    additions = []
++    for number, row in rows:
++        company_id = _identity_key('Company ID', row.get('Company ID') or '')
++        name = _identity_key('Company', row.get('Company') or '')
++        if not name or (company_id and company_id in known_ids) or (not company_id and name in known_names):
++            continue
++        status = str(row.get('Company Status') or '').strip().casefold()
++        if status in INELIGIBLE_STATUSES or not str(row.get('Official Careers URL') or '').strip():
++            continue
++        if not company_id:
++            raise ValueError('A new eligible Company in Sheets needs a stable Company ID for manual intake.')
++        if status != 'active':
++            raise ValueError('A new Company in Sheets needs an explicit Active status for manual intake.')
++        if sheet_names[name] != 1 or repository.company_name_is_owned(name):
++            raise ValueError('A new Company ID in Sheets conflicts with a current or historical Company name.')
++        additions.append((number, row))
++    if len(additions) > 1:
++        raise ValueError('Multiple new eligible Companies in Sheets need separate scoped intake.')
++    return additions[0] if additions else None
++
++
++def read_manual_company_addition(database):
++    """Look for a new workbook-only Company without consuming startup admission."""
++    if _request_file(database.parent) is not None:
++        return None
++    jobs = database.with_name('jobs.sqlite3')
++    with closing(SQLiteRepository(jobs, os.environ.get('SPREADSHEET_ID', ''), readonly=True)) as repository:
++        return _external_addition(repository, interactive=True)
++
++
++def run_manual_company_start(admission, *, external_addition=None):
+     """Under inherited scraper admission, bridge and run only the exact event."""
+     database, jobs, _ = admission
+     root = database.parent
+@@ -35,10 +85,22 @@
+         assert_release_settled(root)
+         local, _ = _open_readers(readers, database, jobs, root / 'inventories.sqlite3')
+         request = _request_file(root)
++        if request is not None and external_addition is not None:
++            raise ValueError('A different request arrived during manual Company discovery.')
+         if request is None:
+             with closing(SQLiteRepository(jobs, local.spreadsheet_id)) as repository:
++                events = repository.pending_latest_company_events(BRIDGE_CONSUMER, limit=2)
++                if external_addition is not None:
++                    if events:
++                        raise ValueError('A Company event arrived during manual Company discovery.')
++                    assert_normal_lifecycle_not_held(root, jobs)
++                    fresh = _external_addition(repository)
++                    if fresh is None or fresh[1] != external_addition[1]:
++                        raise ValueError('The new Company in Sheets changed during manual discovery.')
++                    imported = repository.import_companies_with_events(
++                        [fresh], origin='sheets-reconciliation', require_new=True)
++                    events = imported['company_events']
+                 bridge = CompanyEventBridge(repository, root, state_database=database)
+-                events = repository.pending_latest_company_events(BRIDGE_CONSUMER, limit=2)
+                 if len(events) != 1 or events[0]['kind'] != 'company.eligible':
+                     return {'state': 'HELD_MANUAL_EVENT_NOT_UNIQUE'}
+                 [observed] = bridge.observe_pending()['events']
+--- a/src/job_search_helper/runner.py
++++ b/src/job_search_helper/runner.py
+@@ -1824,12 +1824,16 @@
+             from release_admission_bootstrap import RETAINED_OPERATOR_LAYOUT_ENV
+ 
+             if os.environ.get(RETAINED_OPERATOR_LAYOUT_ENV):
+-                from .manual_company_start import manual_company_start_pending, run_manual_company_start
++                from .manual_company_start import (manual_company_start_pending, read_manual_company_addition,
++                                                   run_manual_company_start)
+ 
+                 _load_environment()
+-                if manual_company_start_pending(state_path()):
++                database = state_path()
++                pending = manual_company_start_pending(database)
++                addition = None if pending else read_manual_company_addition(database)
++                if pending or addition is not None:
+                     with _retained_operator_admission() as admission:
+-                        result = run_manual_company_start(admission)
++                        result = run_manual_company_start(admission, external_addition=addition)
+                     print('Ordinary Company event: ' + json.dumps(result, sort_keys=True))
+                     return 0 if result['state'] in {
+                         'SYNC_CONFIRMED', 'VERIFIED_ZERO', 'FETCH_TEMPORARY', 'FETCH_BLOCKED',
+--- a/src/job_search_helper/sqlite_repository.py
++++ b/src/job_search_helper/sqlite_repository.py
+@@ -411,8 +411,16 @@
+                                                         protect_existing_choices=protect_existing_choices)
+             return count
+ 
++    def company_name_is_owned(self, name):
++        """Check current and historical ownership before adding a new Company."""
++        from .sheets_sync import COMPANY_ALIAS_PREFIX
++        alias = COMPANY_ALIAS_PREFIX + _identity_key('Company', name)
++        return (self.get_meta(alias) is not None
++                or bool(self.matches('Companies', {'Company': name})))
++
+     def _import_rows_in_transaction(self, tab, numbered_rows, *, policies=None,
+-                                    protect_existing_choices=False, event_origin=None):
++                                    protect_existing_choices=False, event_origin=None,
++                                    require_new_company=False):
+         _tab(tab)
+         count = 0
+         events = []
+@@ -424,6 +432,8 @@
+             matches = self.matches(tab, identity)
+             if len(matches) > 1:
+                 raise RepositoryError(f'{tab}: duplicate import identity.')
++            if require_new_company and (matches or self.company_name_is_owned(row['Company'])):
++                raise RepositoryError('A Company with this ID or name already exists; reconcile before importing.')
+             row_id = matches[0][0] if matches else self.db.execute(
+                 'SELECT COALESCE(MAX(row_id),0)+1 FROM records WHERE tab=?', (tab,)).fetchone()[0]
+             if self.db.execute('SELECT 1 FROM dirty WHERE tab=? AND row_id=?', (tab, row_id)).fetchone():
+@@ -441,11 +451,13 @@
+             count += 1
+         return count, events
+ 
+-    def import_companies_with_events(self, numbered_rows, *, policies=None, origin='import'):
++    def import_companies_with_events(self, numbered_rows, *, policies=None, origin='import',
++                                     require_new=False):
+         """Import authoritative Company rows and outbox facts in one transaction.
+ 
+         A caller must explicitly choose this API; plain bootstrap imports do
+         not backfill the historical backlog into the live intake queue.
++        The new-Company path can require both ID and name to be unoccupied.
+         """
+         if self.readonly:
+             raise RepositoryError('This repository was opened read-only.')
+@@ -455,7 +467,8 @@
+             raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
+         with self.transaction():
+             count, events = self._import_rows_in_transaction('Companies', numbered_rows, policies=policies,
+-                                                               event_origin=origin)
++                                                               event_origin=origin,
++                                                               require_new_company=require_new)
+         return {'imported': count, 'company_events': events}
+ 
+     def bootstrap_company_event_reconciliation(self):

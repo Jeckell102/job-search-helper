@@ -1,0 +1,150 @@
+{
+  "candidate_source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+  "files": {
+    "src/job_search_helper/manual_company_start.py": {
+      "after_sha256": "186d1203f35de96f75b0c0fc1a739cce37220d8899655dd86afbfad2a5d43277",
+      "before_sha256": "bb1e010e6e14d0e7fe1df1bc91d5f633d37ed726fcc2ce2ee074f2252f0f6c5e"
+    },
+    "src/job_search_helper/runner.py": {
+      "after_sha256": "3f6ebd8c0ffcf2b08213837564b589eca64b7819667a7816f91cb030571df116",
+      "before_sha256": "496a3f598ea754458cbb55f33d98bccf17279777fdd731f74d65722d6a04a9b8"
+    },
+    "src/job_search_helper/sqlite_repository.py": {
+      "after_sha256": "48cc7b1dc2c6c54ef7be085f2c082358d275bf2ae84e2c8001f23cbe25b0cb31",
+      "before_sha256": "a5a22c4d683ff58925370915aa63c8c58c5aa7e7f8ecefacb60b8af9d3dade3f"
+    }
+  },
+  "fixture_cases": {
+    "alias": {
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "state": "current or historical Company name",
+      "workbook_fixture_reads": 1
+    },
+    "blank_status": {
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "state": "explicit Active status",
+      "workbook_fixture_reads": 1
+    },
+    "busy_then_idle": {
+      "busy_elapsed_seconds": 0.668,
+      "busy_status": "WAITING_FOR_UNFINISHED_CYCLE",
+      "company_count": 1,
+      "cycle_id": "CYC-9772AF4175EE",
+      "event_id": "CEV-82dcded78ad44ca09a72a38c301f669f",
+      "event_preserved_while_busy": true,
+      "fixture_blocking_cycle": "CYC-4F0B9EA56BB7",
+      "launcher_sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+      "manual_start_elapsed_seconds": 0.785,
+      "manual_start_status": "VERIFIED_ZERO",
+      "outcome_id": "OUT-d7d42bd71abc3454cdca3b16",
+      "provider_fixture_calls": 1,
+      "saved_job_count": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "workbook_fixture_reads": 2,
+      "workbook_fixture_writes": 0
+    },
+    "duplicate_name": {
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "state": "current or historical Company name",
+      "workbook_fixture_reads": 1
+    },
+    "idle": {
+      "company_count": 1,
+      "cycle_id": "CYC-A1B6734D74EA",
+      "event_id": "CEV-66202b23ad264051b92f22f3077b58a7",
+      "launcher_sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+      "manual_start_elapsed_seconds": 0.778,
+      "manual_start_status": "VERIFIED_ZERO",
+      "outcome_id": "OUT-199baac2176f0edfc415d33b",
+      "provider_fixture_calls": 1,
+      "saved_job_count": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "workbook_fixture_reads": 2,
+      "workbook_fixture_writes": 0
+    },
+    "missing_id": {
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "state": "stable Company ID",
+      "workbook_fixture_reads": 1
+    },
+    "multiple": {
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "state": "Multiple new eligible Companies",
+      "workbook_fixture_reads": 1
+    },
+    "no_addition": {
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "state": "PRESERVED_NORMAL_START",
+      "workbook_fixture_reads": 1
+    },
+    "sheets_only": {
+      "company_count": 1,
+      "cycle_id": "CYC-DE112559A83F",
+      "event_first_discovered_from_workbook": true,
+      "event_id": "CEV-50233df9df6749d1b5dd07ca93e47f00",
+      "launcher_sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+      "manual_start_elapsed_seconds": 0.8,
+      "manual_start_status": "VERIFIED_ZERO",
+      "outcome_id": "OUT-c0d0e7ed81bde69a2f2ec694",
+      "provider_fixture_calls": 1,
+      "saved_job_count": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "workbook_fixture_reads": 4,
+      "workbook_fixture_writes": 0
+    },
+    "sheets_only_jobs": {
+      "company_count": 1,
+      "cycle_id": "CYC-0D3442E6E913",
+      "event_first_discovered_from_workbook": true,
+      "event_id": "CEV-a921edc315b04157aec7091dc59eea3a",
+      "launcher_sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+      "manual_start_elapsed_seconds": 0.949,
+      "manual_start_status": "SYNC_CONFIRMED",
+      "outcome_id": "OUT-4ea775dbe972823e376c9bd0",
+      "provider_fixture_calls": 1,
+      "saved_job_count": 1,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "workbook_fixture_reads": 3,
+      "workbook_fixture_writes": 1
+    },
+    "stale_external": {
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+      "state": "changed during manual discovery",
+      "workbook_fixture_reads": 2
+    }
+  },
+  "focused_regression_tests": [
+    "existing manual lost-response exact recovery",
+    "backend drift holds before workbook selection",
+    "legacy no-pending manual Start preserved"
+  ],
+  "harness_sha256": {
+    "manual_intake_child.py": "68ffecfb79cb3e355860a1d3fd24ca7c37f6bd78c366358fc97f870e4af20c25",
+    "prove_manual_intake.py": "19fe10329199436de0d9f91a2334c33016f076cbfd9bd654e43783a413dd0356"
+  },
+  "independent_review": {
+    "reviewed_terminal_receipt_sha256": "ff3200df866c1c85751be0e66a8551dcbf64b33d097c45d503abb879a29bb86f",
+    "source_sha256": "6790d8b388045ef6b32736944c6f78007ff158099d574d66e982825ab749cde5",
+    "verdict": "ACCEPT_STAGED_SOURCE",
+    "verified_shell_case_count": 11
+  },
+  "installed_release": "REL-d37d7d64a0fd3788e02e699f",
+  "installed_source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+  "scope": "source-only staged manual external Company discovery",
+  "source_patch_sha256": "467769990c9accc106c1693c27eb939670a8ea62e18821e60c681233fa6311c9",
+  "terminal_results_sha256": "ff3200df866c1c85751be0e66a8551dcbf64b33d097c45d503abb879a29bb86f"
+}

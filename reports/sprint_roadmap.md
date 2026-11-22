@@ -315,6 +315,15 @@ guarded successor preserved the paced adapter and original receipt. The
 later native bootstrap and genuine next-manual-run gate remain open.
 [Manual Start successor](S4_NEXT_MANUAL_START_AFTER_PACED_RELEASE_20261121.md).
 
+November 22: the first bare Start missed an eligible Company still only
+in Sheets. A three-file source fix now performs exact read-only Company
+discovery, revalidates under the existing leases, and creates one durable
+event through the existing scoped path. The independent hold and repair
+are preserved. Measured fixture acceptance confirmed one nonzero job
+and its matching workbook write on the first Start. Deployment and a
+genuine first-Start case remain open.
+[Staged acceptance](S7_EXTERNAL_FIRST_START_STAGED_20261122.md).
+
 ## Sprint 5 — Bounded repair, validation, release and scoped retry
 
 Roadmap coverage: Milestones 4 and 5, including F5.
