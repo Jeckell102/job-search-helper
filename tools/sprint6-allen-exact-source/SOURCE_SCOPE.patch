@@ -1,0 +1,378 @@
+diff --git a/src/job_search_helper/allen_source_reconciliation.py b/src/job_search_helper/allen_source_reconciliation.py
+new file mode 100644
+--- /dev/null
++++ b/src/job_search_helper/allen_source_reconciliation.py
+@@ -0,0 +1,213 @@
++"""One exact external-first Allen source correction using supplied clients.
++
++The caller owns normal scraper/writer leases and runtime approval. This module
++creates no clients, services, requests, cycles, or provider/model work.
++"""
++import copy
++import hashlib
++import json
++
++from .company_events import canonical_company_fact, source_revision
++from .repository import RepositoryError, ReviewFieldsChangedError, UncertainWriteError
++from .sheets_sync import SheetsSynchronizer
++from .sqlite_repository import encode
++
++
++COMPANY_ID = 'COMP-0164'
++COMPANY_NAME = 'Allen Control Systems'
++BEFORE = {'ATS / Source': 'Greenhouse',
++          'Official Careers URL': 'https://job-boards.greenhouse.io/allencontrolsystems'}
++AFTER = {'ATS / Source': 'Ashby',
++         'Official Careers URL': 'https://jobs.ashbyhq.com/allen-control-systems'}
++SOURCE_FIELDS = frozenset(AFTER)
++CONTROL_FIELDS = ('Company ID', 'Company', 'Company Status')
++RECORD_KEY = 'allen_source_reconciliation:COMP-0164'
++ORIGIN = 'allen-source-reconciliation'
++
++
++def _intent(value, local, remote):
++    fields = {'schema', 'spreadsheet_id', 'company_id', 'company', 'company_status',
++              'before', 'after', 'expected_source_revision'}
++    if (not isinstance(value, dict) or set(value) != fields
++            or value['schema'] != 'allen-source-reconciliation-v1'
++            or value['company_id'] != COMPANY_ID or value['company'] != COMPANY_NAME
++            or value['before'] != BEFORE or value['after'] != AFTER
++            or not isinstance(value['company_status'], str)
++            or value['company_status'].strip().casefold() != 'active'
++            or not isinstance(value['spreadsheet_id'], str) or not value['spreadsheet_id']
++            or value['spreadsheet_id'] != local.spreadsheet_id
++            or value['spreadsheet_id'] != remote.spreadsheet_id):
++        raise RepositoryError('Allen source correction requires the exact approved intent and workbook.')
++    before = {'Company ID': COMPANY_ID, 'Company': COMPANY_NAME,
++              'Company Status': value['company_status'], **BEFORE}
++    if source_revision(before) != value['expected_source_revision']:
++        raise RepositoryError('Allen source correction before revision differs from its source intent.')
++    return copy.deepcopy(value), hashlib.sha256(encode(value).encode('utf-8')).hexdigest()
++
++
++def _record(local, intent, digest):
++    raw = local.get_meta(RECORD_KEY)
++    if raw is None:
++        return None
++    try:
++        record = json.loads(raw)
++    except (TypeError, ValueError) as exc:
++        raise RepositoryError('Allen source correction record is unreadable.') from exc
++    if (not isinstance(record, dict) or record.get('intent') != intent
++            or record.get('intent_sha256') != digest
++            or record.get('state') not in {'WRITE_CLAIMED', 'REMOTE_CONFIRMED', 'COMPLETE'}):
++        raise RepositoryError('Allen source correction has a conflicting durable owner.')
++    return record
++
++
++def _local(local, intent):
++    if local.get_meta('company_event_external_baseline') != 'yes':
++        raise RepositoryError('Allen reconciliation requires Jobs with its external baseline.')
++    rows = local.matches('Companies', {'Company ID': COMPANY_ID})
++    if len(rows) != 1:
++        raise RepositoryError('Allen reconciliation requires one existing local Company.')
++    rid, row = rows[0]
++    if (row.get('Company') != COMPANY_NAME
++            or row.get('Company Status') != intent['company_status']
++            or any(str(row.get(field) or '').strip() for field in ('Claimed By', 'Claim Token'))):
++        raise RepositoryError('Allen reconciliation local Company controls changed.')
++    source = {field: row.get(field, '') for field in SOURCE_FIELDS}
++    if source not in (BEFORE, AFTER):
++        raise RepositoryError('Allen reconciliation local source is outside the exact transition.')
++    baseline = local.baseline('Companies', rid)
++    if not baseline or any(baseline.get(field, '') != row.get(field, '')
++                           for field in SOURCE_FIELDS | set(CONTROL_FIELDS)):
++        raise RepositoryError('Allen reconciliation source or identity has an unsynchronized baseline.')
++    dirty = {item[0] for item in local.db.execute(
++        "SELECT header FROM dirty WHERE tab='Companies' AND row_id=?", (rid,))}
++    conflicts = {item[0] for item in local.db.execute(
++        "SELECT header FROM conflicts WHERE tab='Companies' AND row_id=?", (rid,))}
++    if dirty & (SOURCE_FIELDS | set(CONTROL_FIELDS)) or conflicts & (
++            SOURCE_FIELDS | set(CONTROL_FIELDS) | {'__missing__'}):
++        raise RepositoryError('Allen reconciliation source or identity has a pending change.')
++    delivery = local.db.execute(
++        "SELECT data FROM delivery_attempts WHERE tab='Companies' AND row_id=?", (rid,)).fetchone()
++    if delivery and SOURCE_FIELDS & set(json.loads(delivery[0])):
++        raise RepositoryError('Allen reconciliation has an unresolved source delivery.')
++    return rid, row, 'BEFORE' if source == BEFORE else 'AFTER'
++
++
++def _remote(remote, intent):
++    matches = [(number, row) for number, row in remote.read_columns('Companies', ['Company ID'])
++               if str(row.get('Company ID', '')).strip() == COMPANY_ID]
++    if len(matches) != 1:
++        raise RepositoryError('Allen reconciliation requires one exact remote Company.')
++    number = matches[0][0]
++    row = remote.read_row('Companies', number)
++    if (row.get('Company ID') != COMPANY_ID or row.get('Company') != COMPANY_NAME
++            or row.get('Company Status') != intent['company_status']
++            or any(str(row.get(field) or '').strip() for field in ('Claimed By', 'Claim Token'))):
++        raise RepositoryError('Allen reconciliation remote Company controls changed.')
++    source = {field: row.get(field, '') for field in SOURCE_FIELDS}
++    if source not in (BEFORE, AFTER):
++        raise ReviewFieldsChangedError('Companies', {'Company ID': COMPANY_ID})
++    return number, row, 'BEFORE' if source == BEFORE else 'AFTER'
++
++
++def _inspect(local, remote, intent):
++    intent, digest = _intent(intent, local, remote)
++    sync = SheetsSynchronizer(local, remote)
++    sync._refuse_retained_publication_hold()
++    _rid, row, local_phase = _local(local, intent)
++    record = _record(local, intent, digest)
++    number, observed, remote_phase = _remote(remote, intent)
++    if local_phase == 'AFTER' and remote_phase != 'AFTER':
++        raise RepositoryError('Allen local source cannot precede confirmed external source.')
++    if record and record['state'] in {'REMOTE_CONFIRMED', 'COMPLETE'} and remote_phase != 'AFTER':
++        raise RepositoryError('Allen confirmed remote source changed.')
++    if record and record['state'] == 'COMPLETE' and local_phase != 'AFTER':
++        raise RepositoryError('Allen completed local source changed.')
++    if record and record['state'] == 'COMPLETE' and record.get('company_event') != _current_event(local, row):
++        raise RepositoryError('Allen completed source event changed.')
++    return intent, digest, sync, record, number, observed, remote_phase, row
++
++
++def preflight_allen_source_reconciliation(local, remote, intent):
++    """Read the exact intent/Company/record; never write local or remote state."""
++    _intent_value, digest, _sync, record, _number, _observed, phase, _row = _inspect(
++        local, remote, intent)
++    held = bool(record and record['state'] == 'WRITE_CLAIMED' and phase == 'BEFORE')
++    return {'state': 'HELD_UNCERTAIN_WRITE' if held else 'READY',
++            'intent_sha256': digest, 'remote_phase': phase,
++            'would_write_remote': phase == 'BEFORE' and record is None}
++
++
++def _save(local, intent, digest, state, *, event=None):
++    with local.transaction():
++        _local(local, intent)
++        previous = _record(local, intent, digest)
++        if state == 'WRITE_CLAIMED' and previous is not None:
++            raise RepositoryError('Allen remote write was already claimed.')
++        if previous and previous['state'] == 'COMPLETE' and state != 'COMPLETE':
++            return previous
++        record = {'intent': intent, 'intent_sha256': digest, 'state': state}
++        if event is not None:
++            record['company_event'] = event
++        local.set_meta(RECORD_KEY, encode(record))
++    return record
++
++
++def _current_event(local, current):
++    expected = source_revision(current)
++    rows = local.db.execute(
++        'SELECT o.payload FROM company_revisions r JOIN company_event_outbox o '
++        'ON o.company_id=r.company_id AND o.revision=r.revision '
++        'WHERE r.company_id=? AND r.revision=(SELECT MAX(revision) FROM company_revisions '
++        'WHERE company_id=?) AND r.source_revision=?', (COMPANY_ID, COMPANY_ID, expected)).fetchall()
++    if len(rows) != 1:
++        raise RepositoryError('Allen source reconciliation has no unique current event.')
++    event = json.loads(rows[0][0])
++    if event.get('fact') != canonical_company_fact(current) or event.get('source_revision') != expected:
++        raise RepositoryError('Allen source reconciliation event differs from current source.')
++    return event
++
++
++def continue_allen_source_reconciliation(local, remote, intent):
++    """Confirm two remote source cells, merge only those fields, emit one event.
++
++    A claimed write is never retried. Only exact remote AFTER readback can
++    advance that claim, including after an uncertain commit or a restart.
++    """
++    if local.readonly:
++        raise RepositoryError('Allen source continuation requires writable Jobs.')
++    intent, digest, sync, record, number, observed, phase, _row = _inspect(local, remote, intent)
++    wrote = False
++    if phase == 'BEFORE':
++        if record is not None:
++            raise UncertainWriteError('Allen source write is claimed; exact after readback is required.')
++        _save(local, intent, digest, 'WRITE_CLAIMED')
++        operation = {'tab': 'Companies', 'identity': {'Company ID': COMPANY_ID},
++                     'expected': {**{field: observed[field] for field in CONTROL_FIELDS},
++                                  **{field: observed[field] for field in ('Claimed By', 'Claim Token')
++                                     if field in observed}, **BEFORE},
++                     'values': dict(AFTER), 'append_if_missing': False}
++        try:
++            remote.commit([operation])
++        except UncertainWriteError:
++            # The readback below is the only permitted resolution, never a second commit.
++            pass
++        wrote = True
++        number, observed, phase = _remote(remote, intent)
++        if phase != 'AFTER':
++            raise UncertainWriteError('Allen source write remains unconfirmed; no replay is permitted.')
++    _save(local, intent, digest, 'REMOTE_CONFIRMED')
++    _local(local, intent)
++    sync.merge_remote('Companies', [(number, {'Company ID': COMPANY_ID, **AFTER})],
++                      complete_snapshot=False)
++    _rid, current, local_phase = _local(local, intent)
++    if local_phase != 'AFTER':
++        raise RepositoryError('Allen source merge did not confirm the exact transition.')
++    expected = source_revision(current)
++    local.reconcile_external_company_events(company_id=COMPANY_ID,
++                                            expected_source_revision=expected, origin=ORIGIN)
++    event = _current_event(local, current)
++    if record and record['state'] == 'COMPLETE' and record.get('company_event') != event:
++        raise RepositoryError('Allen completed source event changed.')
++    _save(local, intent, digest, 'COMPLETE', event=event)
++    return {'state': 'COMPLETE', 'intent_sha256': digest,
++            'company_event': event, 'remote_write_attempted': wrote}
+diff --git a/src/job_search_helper/exact_cycle_sync.py b/src/job_search_helper/exact_cycle_sync.py
+--- a/src/job_search_helper/exact_cycle_sync.py
++++ b/src/job_search_helper/exact_cycle_sync.py
+@@ -19,7 +19,8 @@
+ from .repository import UncertainWriteError, _equivalent
+ from .sqlite_repository import timestamp
+ from .exact_cycle_receipt import (
+-    REPAIR_RETRY_PLAN_BINDING, derive_receipt, has_repair_retry_scope, require_current_repair_retry,
++    ORDINARY_EVENT_PLAN_BINDING, REPAIR_RETRY_PLAN_BINDING, derive_receipt,
++    has_repair_retry_scope, require_current_repair_retry,
+     require_unambiguous_repair_retry_receipt,
+ )
+ 
+@@ -553,12 +554,19 @@
+     post_observation_read_guard = refreshed_company_guard if delivery_mode == 'observation_only' else None
+     pre_commit_guard = (
+         refreshed_company_guard if (repair_retry or 'selected_retry_receipt_binding' in plan
+-                                    or 'ordinary_company_event' in plan)
++                                    or ORDINARY_EVENT_PLAN_BINDING in plan)
+         else None
+     )
+-    exact_plan = sync.plan_exact_scope(
+-        authoritative['row_scope'], remote_projection,
+-        delivery_mode=delivery_mode)
++    if ORDINARY_EVENT_PLAN_BINDING in plan:
++        # The binding above was re-derived from the verified ordinary
++        # observation and its sealed local/Inbox plan. Generic exact planning
++        # has no way to pass a binding to this private planning path.
++        exact_plan = sync._plan_frozen_exact_scope(
++            authoritative['row_scope'], remote_projection,
++            delivery_mode=delivery_mode, ordinary_company_binding=receipt['binding'])
++    else:
++        exact_plan = sync.plan_exact_scope(
++            authoritative['row_scope'], remote_projection, delivery_mode=delivery_mode)
+     intent_id = _remote_intent_id(
+         cycle_id, company_id, plan['plan_digest'], exact_plan['projection_digest'],
+         delivery_mode)
+diff --git a/src/job_search_helper/sheets_sync.py b/src/job_search_helper/sheets_sync.py
+--- a/src/job_search_helper/sheets_sync.py
++++ b/src/job_search_helper/sheets_sync.py
+@@ -669,7 +669,7 @@
+         return sorted(normalized, key=lambda item: (ORDER[item['tab']], item['row_id']))
+ 
+     def _plan_exact_row(self, item, frozen_operation=None, *,
+-                        delivery_mode='write_once'):
++                        delivery_mode='write_once', ordinary_company_binding=None):
+         """Derive one operation from only one explicitly named local row."""
+         tab, row_id = item['tab'], item['row_id']
+         current = self.local.row(tab, row_id)
+@@ -678,10 +678,25 @@
+         matches = self.local.matches(tab, item['identity'])
+         if len(matches) != 1 or matches[0][0] != row_id:
+             raise ValueError('Exact Sheets stable identity moved or became ambiguous.')
+-        if self.local.db.execute(
+-                'SELECT 1 FROM conflicts WHERE tab=? AND row_id=? LIMIT 1',
+-                (tab, row_id)).fetchone():
+-            raise ValueError('Exact Sheets scoped row has an unresolved conflict.')
++        fields = set(item['fields'])
++        conflicts = {header for (header,) in self.local.db.execute(
++            'SELECT header FROM conflicts WHERE tab=? AND row_id=?', (tab, row_id))}
++        if conflicts:
++            # The Company-level source fence still protects older outputs.
++            # Only the already verified ordinary event may publish the two
++            # fresh status fields for its current Company and cycle.
++            from .company_events import source_revision
++            from .exact_cycle_receipt import ORDINARY_EVENT_AUTHORITY
++
++            binding = ordinary_company_binding or {}
++            if (conflicts != {'__company_source__'} or tab != 'Companies'
++                    or binding.get('authority') != ORDINARY_EVENT_AUTHORITY
++                    or item['identity'] != {'Company ID': binding.get('company_id')}
++                    or not fields <= {'Last Checked', 'Next Action'}
++                    or item['append_if_missing'] or delivery_mode != 'write_once'
++                    or current.get('Active Cycle ID') != binding.get('cycle_id')
++                    or source_revision(current) != binding.get('source_revision')):
++                raise ValueError('Exact Sheets scoped row has an unresolved conflict.')
+         if any(not _equivalent(header, current.get(header, ''), value)
+                for header, value in item['guards'].items()):
+             raise ValueError('Exact Sheets local manual or source guard changed.')
+@@ -690,7 +705,6 @@
+             raise ValueError('Exact Sheets Source Hash guard is required.')
+         dirty = {header for (header,) in self.local.db.execute(
+             'SELECT header FROM dirty WHERE tab=? AND row_id=?', (tab, row_id))}
+-        fields = set(item['fields'])
+         missing_dirty = (fields - set(item['identity'])) - dirty
+         # A new row has no baseline yet.  Empty frozen insert cells may not
+         # appear in SQLite's dirty table because writing blank over blank is
+@@ -821,6 +835,10 @@
+         This method does not call ``pull``, ``once``, ``publish_batch``,
+         ``prune_local_only_delivery`` or global dirty-candidate discovery.
+         """
++        return self._plan_frozen_exact_scope(row_scope, frozen_projection, delivery_mode=delivery_mode)
++
++    def _plan_frozen_exact_scope(self, row_scope, frozen_projection, *,
++                                 delivery_mode, ordinary_company_binding=None):
+         if (delivery_mode not in {'write_once', 'observation_only'}
+                 or not isinstance(frozen_projection, list)
+                 or not frozen_projection):
+@@ -871,8 +889,12 @@
+             item = scoped[label(operation['tab'], final_identity(operation))]
+             if item['append_if_missing'] != operation['append_if_missing']:
+                 raise ValueError('Exact Sheets sealed insert semantics differ from the frozen projection.')
+-            rows.append(self._plan_exact_row(
+-                item, operation, delivery_mode=delivery_mode))
++            if ordinary_company_binding is None:
++                row = self._plan_exact_row(item, operation, delivery_mode=delivery_mode)
++            else:
++                row = self._plan_exact_row(item, operation, delivery_mode=delivery_mode,
++                                           ordinary_company_binding=ordinary_company_binding)
++            rows.append(row)
+         operations = [row['operation'] for row in rows]
+         if encode(operations) != encode(frozen_projection):
+             raise ValueError('Exact Sheets scoped plan differs from the frozen projection.')
+diff --git a/src/job_search_helper/sqlite_repository.py b/src/job_search_helper/sqlite_repository.py
+--- a/src/job_search_helper/sqlite_repository.py
++++ b/src/job_search_helper/sqlite_repository.py
+@@ -700,8 +700,14 @@
+                        {'seeded': seeded, 'watermark': 'frozen-external-snapshot'})
+         return {'bootstrapped': True, 'seeded': seeded}
+ 
+-    def reconcile_external_company_events(self, *, origin='sheets-reconciliation'):
+-        """Emit durable events for authoritative Company rows changed after bootstrap."""
++    def reconcile_external_company_events(self, *, origin='sheets-reconciliation',
++                                          company_id=None, expected_source_revision=None):
++        """Emit changed Company facts, optionally selecting one exact current revision.
++
++        Selection does not merge external fields or acknowledge a request.  A
++        caller can replay this after a committed field-aware merge without
++        reconciling other Companies or creating another same-revision event.
++        """
+         if self.readonly:
+             raise RepositoryError('This repository was opened read-only.')
+         if not isinstance(origin, str) or not origin.strip():
+@@ -710,9 +716,25 @@
+             raise RepositoryError('Company event schema is unavailable; reopen writable to migrate first.')
+         if self.get_meta('company_event_external_baseline') != 'yes':
+             raise RepositoryError('External Company reconciliation requires a completed baseline.')
++        selected = company_id is not None or expected_source_revision is not None
++        if selected and (not isinstance(company_id, str) or not company_id.strip()
++                         or not isinstance(expected_source_revision, str)
++                         or len(expected_source_revision) != 64
++                         or any(char not in '0123456789abcdef' for char in expected_source_revision)):
++            raise RepositoryError('Selected Company reconciliation requires an ID and exact source revision.')
+         events = []
+         with self.transaction():
+-            for company in self.read('Companies'):
++            if selected:
++                from .company_events import source_revision
++                matches = self.matches('Companies', {'Company ID': company_id.strip()})
++                if len(matches) != 1:
++                    raise RepositoryError('Selected Company reconciliation requires one current Company.')
++                companies = [matches[0][1]]
++                if source_revision(companies[0]) != expected_source_revision:
++                    raise RepositoryError('Selected Company reconciliation source revision changed.')
++            else:
++                companies = self.read('Companies')
++            for company in companies:
+                 event = self._record_company_event(company, origin=origin)
+                 if event:
+                     events.append(event)

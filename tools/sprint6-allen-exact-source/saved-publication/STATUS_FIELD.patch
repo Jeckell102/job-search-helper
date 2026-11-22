@@ -1,0 +1,22 @@
+--- a/src/job_search_helper/sheets_sync.py
++++ b/src/job_search_helper/sheets_sync.py
+@@ -683,8 +683,8 @@
+             'SELECT header FROM conflicts WHERE tab=? AND row_id=?', (tab, row_id))}
+         if conflicts:
+             # The Company-level source fence still protects older outputs.
+-            # Only the already verified ordinary event may publish the two
+-            # fresh status fields for its current Company and cycle.
++            # Only the already verified ordinary event may publish fresh
++            # scan status for its current Company and cycle.
+             from .company_events import source_revision
+             from .exact_cycle_receipt import ORDINARY_EVENT_AUTHORITY
+ 
+@@ -692,7 +692,7 @@
+             if (conflicts != {'__company_source__'} or tab != 'Companies'
+                     or binding.get('authority') != ORDINARY_EVENT_AUTHORITY
+                     or item['identity'] != {'Company ID': binding.get('company_id')}
+-                    or not fields <= {'Last Checked', 'Next Action'}
++                    or not fields <= {'Last Checked', 'Last Scan Result', 'Next Action'}
+                     or item['append_if_missing'] or delivery_mode != 'write_once'
+                     or current.get('Active Cycle ID') != binding.get('cycle_id')
+                     or source_revision(current) != binding.get('source_revision')):

@@ -1,0 +1,26 @@
+{
+  "active_journal_sha256": "22da0b905498584bd4327289f12be912d962bff8d1c18281e467b037247f6c6f",
+  "active_release": "REL-d37d7d64a0fd3788e02e699f",
+  "active_state": "COMPLETE",
+  "manifest_sha256": "d37d7d64a0fd3788e02e699fba1a700a624db423f527168609e8967f1d7374b3",
+  "native_records": {
+    "exchange-private/exchange.json": {
+      "phase": "restored",
+      "sha256": "85c19c9b2da2f81cab95539274c78f88ad8532f4a09088c7d4ae0cf952bace21"
+    },
+    "native-window.json": {
+      "phase": "RESTORED",
+      "sha256": "419339717821ca2faaf73b53cba96c9510d341b76d8c7508e97902043b638d78"
+    },
+    "operator-quiet-window.json": {
+      "phase": "RESTORED",
+      "sha256": "f6ccde920c69de3a695f52b675559a1738a3fbe3e12893d660753f695bf7ea3a"
+    }
+  },
+  "observed_service_state": {
+    "assistant_bridge": "active/enabled",
+    "scheduled_sync": "inactive/disabled",
+    "scheduled_sync_timer": "inactive/disabled",
+    "wrapper": "active/enabled"
+  }
+}

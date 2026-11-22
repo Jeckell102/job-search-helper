@@ -1,0 +1,49 @@
+{
+  "acknowledgement_id": "6083c0d7ead1653ef087bc0b1ed0d8c019528a87a777d6a0a3bf80d3f6fadd14",
+  "cycle_id": "CYC-93DE6012E332",
+  "event_id": "CEV-6e7076066ca6446bb596540f437e81bd",
+  "exchange_journal_sha256": "85c19c9b2da2f81cab95539274c78f88ad8532f4a09088c7d4ae0cf952bace21",
+  "installed_endpoints": 4,
+  "live_journal_sha256": "22da0b905498584bd4327289f12be912d962bff8d1c18281e467b037247f6c6f",
+  "native_journal_sha256": "419339717821ca2faaf73b53cba96c9510d341b76d8c7508e97902043b638d78",
+  "native_restoration_sha256": "04bf5461718e980cc953d3c96572f6e9763589d295643c191006065a6a6641ca",
+  "observed": {
+    "durable_cycle_listed_postings": null,
+    "exact_source_evidence_rows": 5,
+    "frozen_inventory_status": "complete",
+    "job_history_rows": 5,
+    "nonempty_descriptions": 19,
+    "nonempty_evidence_descriptions": 5,
+    "observed_postings": 19,
+    "same_cycle_company_inventory_count": 19,
+    "snapshot_full_description_verified": 5,
+    "state_inventory_status": "complete",
+    "unique_nonempty_posting_ids": 19,
+    "untruncated_descriptions": 19,
+    "untruncated_evidence_descriptions": 5
+  },
+  "outcome": "COMPLETE",
+  "outcome_id": "OUT-0a5adaf3eb35f964f769d10a",
+  "paired_coordinator_receipt": {
+    "matched_bytes": true,
+    "receipt_sha256": "792ab14b19d994a2df5b084662389e5b34c161f406193ba3b537e1f20190e506",
+    "record_sha256": "7daa161d09c5d93525e4fa4f62cb724b882d2346e519f4b4875e8442659fbcc5",
+    "repair_or_task": false,
+    "sink_status": "RECORDED_NO_REPAIR"
+  },
+  "plan_digest": "899f83a758529d9e0b280c098b8a6ee9d539d91a724e1f286ba8f93065a4844c",
+  "preserved_source_fences_by_tab": {
+    "Companies": 1
+  },
+  "publication_records_by_tab": {
+    "Companies": 1,
+    "Job History": 5
+  },
+  "quiet_journal_sha256": "f6ccde920c69de3a695f52b675559a1738a3fbe3e12893d660753f695bf7ea3a",
+  "receipt_id": "fd70eb1db7b44a80301307bc1ced024f6e12a8365ea582ca99a30e9c25178f8a",
+  "receipt_state": "SYNC_CONFIRMED",
+  "release_id": "REL-d37d7d64a0fd3788e02e699f",
+  "restored_alternates": 3,
+  "source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+  "terminal_publication_archive_sha256": "1d5dc0428640c7ebfaa42d9e3f2170bb36194ad9421ed2845f1b6f64810d891e"
+}

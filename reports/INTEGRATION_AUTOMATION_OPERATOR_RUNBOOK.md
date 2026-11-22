@@ -37,20 +37,15 @@ Leave broad queue resume and autopilot controls off during pilot work.
 
 ## Start the administrator observer when requested
 
-The current two-file MuleLab update needs a short administrator observer
-window. The observer verifies process and listener ownership. Start it
-only when the coordinator has the exact maintenance scope ready.
+The administrator observer verifies process and listener ownership during
+a short MuleLab maintenance window. Use the exact command the coordinator
+provides for that window in a regular MuleLab Terminal. Leave the terminal
+open and report `Administrator process observer ready.`
 
-For the current `-05` window, open a regular MuleLab Terminal and run:
-
-```bash
-bash /tmp/jsh-amphenol-native-two-tool.HQkjpe8m/start_observer.sh
-```
-
-Leave the terminal open and report `Administrator process observer ready.`
-The current window lasts 15 minutes. If the script reports an existing
-observer directory, send the exact message to the coordinator so it can
-check ownership and choose the proper next action.
+The GA-ASI `-09` and Allen `-10` windows have both restored the services.
+Each later maintenance window has its own observer command. If the script
+reports an existing observer directory, send the message to the coordinator
+so it can check ownership. Close the terminal when restoration is confirmed.
 
 The coordinator first runs the native preflight. If it passes, the exact
 tool update can stop and restart the wrapper host. The live result must
@@ -86,12 +81,15 @@ receipt afterwards.
 
 ## Current release boundary
 
-The corrected MuleLab builder is installed, and the fresh Amphenol pilot
-produced a candidate with one Jetson decision. Current public qualification,
-guarded release and the company-only retry still await verification. Sprint
-6 intake can be observed locally. Broad backlog processing and unqualified
-automatic releases remain disabled. Sites outside the approved capability
-scope go to engineering review.
+The bounded Amphenol repair and scoped retry passed independent deployed
+verification. Sprint 6 intake can be observed locally. The GA-ASI case
+demonstrated a deployed employer-scope hold without launching a scrape or
+repair. Allen has a verified source correction and saved Ashby inventory.
+Read the active checkpoint for its current publication status.
+
+Broad backlog processing and unqualified automatic releases remain disabled.
+Sites outside the approved capability scope go to engineering review. Sprint 7
+requires current deployed proof and final independent acceptance.
 
 Use the [current coordinator checkpoint](COORDINATOR_STATUS.md) for the
 active request, worker ownership and versioned recovery evidence. Use the

@@ -1,0 +1,26 @@
+{
+  "current_ats_adapter_changed": false,
+  "files": {
+    "src/job_search_helper/allen_source_reconciliation.py": {
+      "before": null,
+      "staged": "6e27a14271b56b13d72aef8ea118a730e6922ed2de8afe52442343327cc4e90a"
+    },
+    "src/job_search_helper/exact_cycle_sync.py": {
+      "before": "40450ef4fa250daf473c5afc549533046b1caa41ccb73f543a6f410c40b3f80e",
+      "staged": "4a8e9b949870b10ae6e8342f002ee4c71dd2309c74e1f0fbb85bcfad67805604"
+    },
+    "src/job_search_helper/sheets_sync.py": {
+      "before": "52845a8c0b59ce59e22840abc21748785dd35ad6c74db30f76be74b5697d2589",
+      "staged": "8202aa448b01b98af90a2ea3a088dc9f9cc1e3f47fa05a3c273afd9e1150ea9f"
+    },
+    "src/job_search_helper/sqlite_repository.py": {
+      "before": "3ab772748e685a131f885c0eefa7bd8055ed5c22114d4f89204a6dce3d8ff742",
+      "staged": "a5a22c4d683ff58925370915aa63c8c58c5aa7e7f8ecefacb60b8af9d3dade3f"
+    }
+  },
+  "focused_test_sha256": "49200295d935894be2ea5faea9a693f7c31530ae3d10f38068da57921a141e74",
+  "live_journal_sha256": "de1c2a8445b810574c626eef4f9fb0d60e3561bc7208584028193da95e30738c",
+  "live_source_sha256": "7f0c0f77620304725fbcf36584a7d1f84e1ad6c4ca8017a2121e03dede5c0dd5",
+  "scope": "Allen source reconciliation and fresh exact publication; preparation only",
+  "staged_source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5"
+}

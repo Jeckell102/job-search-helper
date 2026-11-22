@@ -818,6 +818,38 @@ source-only manual Start and publisher candidate passed four targeted tests.
 Reuse prior accepted proof and advance the named live cases only on their
 actual eligibility. [Lean Sprint 6 checkpoint](S6_LEAN_NEXT_PILOT_CHECKPOINT_20261122.md).
 
+November 22 guarded readiness: the five-file source advance passed targeted
+installation and interruption checks and independent source QA. MuleLab's
+read-only check reached the administrator observation gate. Production is
+still on the prior accepted Amphenol version. The newly observed GA-ASI
+source points to a shared board. Its current adapter reads the entire board
+before filtering, outside the frozen pilot scope. Use a genuine operator
+request and existing local outcome storage to prove the scope hold before
+any dispatch. Forterra still needs a current qualifying result. The first
+live receipt and all three sequential completions remain open.
+[Readiness](S6_SOURCE_ADVANCE_NATIVE_READINESS_20261122.md) ·
+[Installed source observations](S6_FIRST_TWO_COMPANY_ORIGIN_OBSERVATION_20261122.json).
+
+November 22 deployed sequence: the exact GA-ASI scope hold passed independent
+QA on the newly installed nine-file source release. Local and coordinator
+receipts both record no repair. The original native services and three
+alternate paths are restored. Forterra has no saved current qualifying
+outcome and stays held. PDW is conditional on a qualified Forterra change
+and has not run. Allen is next, with its exact old Greenhouse source and
+clean local source baseline verified. No three-company completion credit
+has been earned. [Deployed GA acceptance](S6_GAASI_DEPLOYED_INDEPENDENT_20261122.md)
+· [Ordered dispositions](S6_ORDERED_FIRST_HOLD_AND_FORTERRA_ELIGIBILITY_20261122.json).
+
+November 22 Allen progression: the reviewed update was installed and the
+exact two-field tracker source correction produced one genuine Company
+event. The Allen-only Ashby run found 19 postings. Five Job History records
+and the Allen Company row passed exact workbook readback after normal
+filtering. The publisher used the original saved plan and one narrow status
+field correction, with no repeated provider fetch. This verifies the
+ordinary source-change flow. The current required qualified repair runs
+and three sequential completion proofs remain open.
+[Deployed Allen ordinary result](S6_ALLEN_DEPLOYED_ORDINARY_SYNC_20261122.md).
+
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 
 The November 21 effective reconciliation covers all six milestones,
