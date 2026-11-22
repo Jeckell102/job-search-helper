@@ -1,0 +1,715 @@
+--- /dev/null
++++ b/dev/wrapper-coder/tools/crown_operator_pilot.py
+@@ -0,0 +1,49 @@
++"""Reviewed operator enrollment for one Crown SuccessFactors repair."""
++
++import json
++import os
++import re
++
++from embraer_operator_pilot import EmbraerOperatorEnrollment
++from job_search_helper.operator_partial_scope import CROWN, CROWN_REQUEST_ID
++
++
++ENV = 'WRAPPER_CROWN_OPERATOR_PILOT_ENROLLMENT'
++
++
++class CrownOperatorEnrollment(EmbraerOperatorEnrollment):
++    scope = CROWN
++    target = 'src/job_search_helper/successfactors.py'
++    profile_id = 'successfactors-crown-listing-range-v1'
++    test_paths = ('tests/test_crown_inventory_regression.py', 'tests/test_successfactors.py')
++    max_sessions = 4
++    repair_instructions = (
++        ' Crown’s first-party search omits the published range and shows only a subset. Use '
++        'the first-party job sitemap for exact Crown membership, including the observed TheGoods '
++        'and 17West job paths. Require stable scoped membership and complete canonical details. '
++        'Keep failures partial and do not relax other tenants’ completeness checks.'
++    )
++
++    def _read_settlement_source(self, repository, record):
++        from job_search_helper.operator_embraer_settlement import read_operator_partial_source
++
++        return read_operator_partial_source(repository, record, self.request_sha256, scope=CROWN)
++
++    @classmethod
++    def from_process_environment(cls, environ=None):
++        raw = (os.environ if environ is None else environ).get(ENV)
++        if raw is None:
++            return None
++        keys = {'request_id', 'source_revision', 'request_sha256', 'successfactors_sha256',
++                'ats_sha256', 'baseline_sha256'}
++        try:
++            pairs = json.loads(raw, object_pairs_hook=tuple) if isinstance(raw, str) and len(raw) <= 900 else None
++            value = dict(pairs) if isinstance(pairs, tuple) and len(pairs) == len(dict(pairs)) else {}
++            if (set(value) == keys and all(isinstance(item, str) for item in value.values())
++                    and CROWN_REQUEST_ID.fullmatch(value['request_id'])
++                    and all(re.fullmatch(r'[0-9a-f]{64}', value[key]) for key in keys - {'request_id'})):
++                return cls(value['request_id'], value['source_revision'], value['request_sha256'],
++                           value['successfactors_sha256'], value['ats_sha256'], value['baseline_sha256'])
++        except (TypeError, ValueError):
++            pass
++        raise ValueError('Invalid exact Crown operator pilot enrollment.')
+--- a/dev/wrapper-coder/tools/embraer_operator_pilot.py
++++ b/dev/wrapper-coder/tools/embraer_operator_pilot.py
+@@ -1,4 +1,4 @@
+-"""One default-off, receipt-owned Embraer development pilot; never a release."""
++"""Default-off, receipt-owned operator development pilots."""
+ from contextlib import closing, contextmanager, nullcontext
+ from contextvars import ContextVar
+ from dataclasses import dataclass
+@@ -16,6 +16,7 @@
+ from coordinator_store import Store
+ from coordinator_baseline import binding, files
+ from coordinator_workspace import BATCH_SOURCE_OVERRIDE, workspace
++from job_search_helper.operator_partial_scope import EMBRAER
+ from job_search_helper.scrape_outcome_delivery import CONSUMER, OutcomeDelivery
+ from job_search_helper.sqlite_repository import SQLiteRepository
+ 
+@@ -64,6 +65,17 @@
+     baseline_sha256: str
+     successor: EmbraerSuccessorAuthorization | None = None
+     uses_generic_develop = True
++    scope = EMBRAER
++    target = TARGET
++    profile_id = PROFILE
++    test_paths = ('tests/test_shared_boards.py', 'tests/test_embraer_typed_defect.py')
++    max_sessions = 8
++    repair_instructions = (
++        ' For this exact Embraer Breezy board, inspect the typed brand-heading defect fixture. '
++        'Distinguish the employer brand heading from the job banner title while preserving '
++        'canonical posting URL, exact listing identity, and full description checks. '
++        'Verify the focused regression and shared-board compatibility tests.'
++    )
+ 
+     @classmethod
+     def from_process_environment(cls, environ=None):
+@@ -96,16 +108,16 @@
+ 
+     @property
+     def source_files(self):
+-        return {TARGET: self.shared_boards_sha256, DISPATCHER: self.ats_sha256}
++        return {self.target: self.shared_boards_sha256, DISPATCHER: self.ats_sha256}
+ 
+     def qualified(self, record):
+         identity = record.get('identity', {})
+         return (set(identity) == {'company_id', 'request_id', 'source_revision', 'cycle_id', 'provider', 'adapter_version'}
+-                and identity == {**identity, 'company_id': COMPANY_ID, 'request_id': self.request_id,
+-                                 'source_revision': self.source_revision, 'provider': 'Breezy HR',
++                and identity == {**identity, 'company_id': self.scope.company_id, 'request_id': self.request_id,
++                                 'source_revision': self.source_revision, 'provider': self.scope.provider,
+                                  'adapter_version': 'normal-scraper-v1'}
+                 and (record.get('outcome'), record.get('action'), record.get('repair_category')) == (
+-                    'QUALIFIED_INTEGRATION_REPAIR', 'upsert_qualified_repair', 'full_description_regression'))
++                    'QUALIFIED_INTEGRATION_REPAIR', 'upsert_qualified_repair', self.scope.failure_category))
+ 
+     @contextmanager
+     def owner_scope(self):
+@@ -143,7 +155,7 @@
+ 
+     @property
+     def baseline_path(self):
+-        return coding_tools.BASE / 'pilot-bases' / ('embraer-' + self.baseline_sha256)
++        return coding_tools.BASE / 'pilot-bases' / f'{self.scope.slug}-{self.baseline_sha256}'
+ 
+     @contextmanager
+     def _pilot_source(self, project):
+@@ -157,9 +169,13 @@
+             coding_tools.WORKSPACE.reset(workspace_token)
+             BATCH_SOURCE_OVERRIDE.reset(source_token)
+ 
++    def _read_settlement_source(self, repository, record):
++        from job_search_helper.operator_embraer_settlement import read_operator_embraer_source
++
++        return read_operator_embraer_source(repository, record, self.request_sha256)
++
+     def _source(self, jobs, destination):
+         from job_search_helper.company_events import current_company_repair_snapshot
+-        from job_search_helper.operator_embraer_settlement import read_operator_embraer_source
+ 
+         with closing(SQLiteRepository(jobs, destination, readonly=True)) as repository:
+             selected = repository.db.execute(
+@@ -170,12 +186,13 @@
+             record, digest, stale, acknowledged, _ = OutcomeDelivery(repository, None)._preflight(row)
+             if stale or not self.qualified(record):
+                 return None
+-            proof = read_operator_embraer_source(repository, record, self.request_sha256)
+-            company = current_company_repair_snapshot(repository, COMPANY_ID)
++            proof = self._read_settlement_source(repository, record)
++            company = current_company_repair_snapshot(repository, self.scope.company_id)
+             if (not isinstance(proof, dict) or proof.get('source_files') != self.source_files
+-                    or proof.get('evidence_code') != CODE
+-                    or company != {'company_id': COMPANY_ID, 'source_revision': self.source_revision,
+-                                   'company': 'Embraer', 'official_careers_url': SOURCE, 'ats_source': 'breezy hr'}):
++                    or proof.get('evidence_code') != self.scope.failure_code
++                    or company != {'company_id': self.scope.company_id, 'source_revision': self.source_revision,
++                                   'company': self.scope.company_name, 'official_careers_url': self.scope.careers_url,
++                                   'ats_source': self.scope.provider.casefold()}):
+                 return None
+             return dict(row=row, record=record, digest=digest, acknowledged=acknowledged,
+                         proof=proof, company=company)
+@@ -207,7 +224,8 @@
+             if len(held) != 1 or held[0]['evidence_outcome_ids'] != [record['outcome_id']]:
+                 return None
+             held = held[0]
+-            continuation = Store._resolve_embraer_03_continuation_tx(db, held['repair_key'])
++            continuation = (Store._resolve_embraer_03_continuation_tx(db, held['repair_key'])
++                            if self.scope is EMBRAER else None)
+             if continuation is not None:
+                 if (self.request_id != 'operator-embraer-20261122-03'
+                         or continuation['outcome_id'] != record['outcome_id']
+@@ -234,7 +252,7 @@
+ 
+     def authorize_continuation(self, coordinator, authorization, *, expected_control_generation):
+         """Explicit local owner operation, never an implicit catch-up retry."""
+-        if self.request_id != 'operator-embraer-20261122-03' or coordinator.stop.is_set():
++        if self.scope is not EMBRAER or self.request_id != 'operator-embraer-20261122-03' or coordinator.stop.is_set():
+             raise ValueError('Only the held exact #03 enrollment may authorize this child.')
+         if not coordinator.workspace_lock.acquire(blocking=False):
+             raise ValueError('The isolated worker workspace is busy.')
+@@ -311,17 +329,14 @@
+ 
+     def _proposal(self, held, company):
+         proposal = select_profile(held, company, profiles=({
+-            'profile_id': PROFILE, 'company_id': COMPANY_ID, 'provider': 'Breezy HR',
+-            'adapter_version': 'normal-scraper-v1', 'failure_category': 'full_description_regression',
+-            'configured_url': SOURCE, 'tests': ['tests/test_shared_boards.py', 'tests/test_embraer_typed_defect.py'],
+-            'source_targets': [TARGET], 'max_sessions': 8,
++            'profile_id': self.profile_id, 'company_id': self.scope.company_id,
++            'provider': self.scope.provider, 'adapter_version': 'normal-scraper-v1',
++            'failure_category': self.scope.failure_category,
++            'configured_url': self.scope.careers_url, 'tests': list(self.test_paths),
++            'source_targets': [self.target], 'max_sessions': self.max_sessions,
+         },))
+         if proposal is not None:
+-            proposal['objective'] += (
+-                ' For this exact Embraer Breezy board, inspect the typed brand-heading defect fixture. '
+-                'Distinguish the employer brand heading from the job banner title while preserving '
+-                'canonical posting URL, exact listing identity, and full description checks. '
+-                'Verify the focused regression and shared-board compatibility tests.')
++            proposal['objective'] += self.repair_instructions
+         return proposal
+ 
+     def profile(self, held):
+@@ -337,11 +352,11 @@
+         validate_bound_identity(task)
+         return (held['status'] == 'PROMOTED_PAUSED' and held['task_id'] == task.get('id')
+                 and task.get('isolated_workspace') is True and task.get('mode') == 'develop'
+-                and task.get('max_sessions') == 8 and task.get('held_repair_key') == held['repair_key']
++                and task.get('max_sessions') == self.max_sessions and task.get('held_repair_key') == held['repair_key']
+                 and task.get('assignment_baseline') == binding(files(self.baseline_path))
+                 and task['assignment_baseline']['digest'] == self.baseline_sha256
+                 and task.get('repair_provenance') == {'repair_key': held['repair_key'],
+-                    'outcome_id': held['outcome_id'], 'company_id': COMPANY_ID,
++                    'outcome_id': held['outcome_id'], 'company_id': self.scope.company_id,
+                     'source_revision': self.source_revision})
+ 
+     def _never_activated(self, store, task):
+@@ -364,50 +379,51 @@
+         from coordinator_receipt_host_bridge import ManualReceiptV1HostBridge
+         from job_search_helper.repository import RepositoryError
+ 
++        label = self.scope.slug.upper()
+         if coordinator.stop.is_set():
+-            return {'state': 'HELD_EMBRAER_CONTROLS'}
++            return {'state': f'HELD_{label}_CONTROLS'}
+         if not coordinator.workspace_lock.acquire(blocking=False):
+             return {'state': 'HELD_WORKSPACE_BUSY'}
+         try:
+             with self.owner_scope() as (project, jobs, destination):
+                 if not self._sources_match(project):
+-                    return {'state': 'HELD_EMBRAER_SOURCE_BASELINE'}
++                    return {'state': f'HELD_{label}_SOURCE_BASELINE'}
+                 source = self._source(jobs, destination)
+                 if source is None:
+-                    return {'state': 'HELD_EMBRAER_OWNER'}
++                    return {'state': f'HELD_{label}_OWNER'}
+                 outcome_id = source['record']['outcome_id']
+                 if not source['acknowledged']:
+                     with closing(SQLiteRepository(jobs, destination)) as repository:
+                         result = ManualReceiptV1HostBridge(coordinator, lambda: repository,
+                                                          enabled=True).manual_drain(outcome_id=outcome_id)
+                     if result.get('results') != [{'outcome_id': outcome_id, 'disposition': 'ACCEPTED'}]:
+-                        return {'state': 'HELD_EMBRAER_DELIVERY'}
++                        return {'state': f'HELD_{label}_DELIVERY'}
+                 with coordinator.control_lock:
+                     fresh = self._source(jobs, destination)
+                     if (fresh is None or fresh['record'] != source['record'] or fresh['proof'] != source['proof']
+                             or not self._sources_match(project)):
+-                        return {'state': 'HELD_EMBRAER_OWNER'}
++                        return {'state': f'HELD_{label}_OWNER'}
+                     paired, successor_hold = self._successor_pair(coordinator.store, fresh)
+                     if successor_hold is not None:
+                         return {'state': successor_hold}
+                     if paired is None:
+-                        return {'state': 'HELD_EMBRAER_RECEIPTS'}
++                        return {'state': f'HELD_{label}_RECEIPTS'}
+                     held, task = paired
+                     proposal = self._proposal(held, fresh['company'])
+                     if proposal is None:
+-                        return {'state': 'HELD_EMBRAER_PROFILE'}
++                        return {'state': f'HELD_{label}_PROFILE'}
+                     if task is not None:
+                         if not self._task_matches(held, task, proposal):
+-                            return {'state': 'HELD_EMBRAER_TASK'}
++                            return {'state': f'HELD_{label}_TASK'}
+                         if not self._never_activated(coordinator.store, task):
+-                            return {'state': 'EMBRAER_PILOT_ALREADY_PREPARED', 'outcome_id': outcome_id, 'task_id': task['id']}
++                            return {'state': f'{label}_PILOT_ALREADY_PREPARED', 'outcome_id': outcome_id, 'task_id': task['id']}
+                     store = coordinator.store
+                     if (held['status'] != ('PROMOTED_PAUSED' if task is not None else 'HELD_FOR_REPAIR_TRIAGE')
+                             or coordinator.stop.is_set()
+                             or store.queue_enabled() or store.campaign_enabled() or store.autopilot_enabled()
+                             or store.pilot_task() is not None or store.unresolved_inferences()
+                             or any(t['status'] in ('RUNNING', 'QUEUED', 'PAUSING') for t in store.all())):
+-                        return {'state': 'HELD_EMBRAER_CONTROLS'}
++                        return {'state': f'HELD_{label}_CONTROLS'}
+                     generation = store.control_generation()
+                     if task is None:
+                         token = _PREPARATION.set((self, held['repair_key'], outcome_id, proposal))
+@@ -417,26 +433,26 @@
+                         finally:
+                             _PREPARATION.reset(token)
+                     else:
+-                        prepared = {'ok': True, 'profile_id': PROFILE}
++                        prepared = {'ok': True, 'profile_id': self.profile_id}
+                     fresh = self._source(jobs, destination)
+                     successor_key = (store._operator_successor_repair_key(self.successor.predecessor_repair_key)
+                                      if self.successor is not None else None)
+                     paired = (self._paired(store, fresh, exact_repair_key=successor_key)
+                               if fresh else None)
+-                    if (not paired or prepared.get('ok') is not True or prepared.get('profile_id') != PROFILE
++                    if (not paired or prepared.get('ok') is not True or prepared.get('profile_id') != self.profile_id
+                             or fresh['proof'] != source['proof'] or not self._sources_match(project)
+                             or coordinator.stop.is_set() or store.control_generation() != generation
+                             or not self._task_matches(*paired, proposal)
+                             or not self._never_activated(store, paired[1])):
+-                        return {'state': 'HELD_EMBRAER_PREPARATION'}
++                        return {'state': f'HELD_{label}_PREPARATION'}
+                     task_id = paired[1]['id']
+                     with self._pilot_source(project):
+                         started = coordinator.command({'action': 'pilot-start', 'id': task_id})
+                     if started.get('ok') is not True or store.pilot_task() != task_id:
+-                        return {'state': 'HELD_EMBRAER_ACTIVATION'}
+-                    return {'state': 'EMBRAER_PILOT_QUEUED', 'outcome_id': outcome_id, 'task_id': task_id}
++                        return {'state': f'HELD_{label}_ACTIVATION'}
++                    return {'state': f'{label}_PILOT_QUEUED', 'outcome_id': outcome_id, 'task_id': task_id}
+         except (AttributeError, ImportError, KeyError, OSError, TypeError, ValueError, RuntimeError,
+                 sqlite3.Error, RepositoryError):
+-            return {'state': 'HELD_EMBRAER_BOUNDARY'}
++            return {'state': f'HELD_{label}_BOUNDARY'}
+         finally:
+             coordinator.workspace_lock.release()
+--- a/dev/wrapper-coder/tools/host_server.py
++++ b/dev/wrapper-coder/tools/host_server.py
+@@ -550,7 +550,14 @@
+ def recipe_enrollment_from_process_environment(environ=None):
+     """Select exactly one default-off provenance; event and operator never mix."""
+     environ = os.environ if environ is None else environ
++    from crown_operator_pilot import ENV as CROWN_ENV, CrownOperatorEnrollment
+     from embraer_operator_pilot import ENV, EmbraerOperatorEnrollment
++    if environ.get(CROWN_ENV) is not None:
++        if any(environ.get(key) is not None for key in (
++                ENV, 'WRAPPER_AMPHENOL_RECIPE_ENROLLMENT', 'WRAPPER_AMPHENOL_OPERATOR_RECIPE_ENROLLMENT',
++                'WRAPPER_AMPHENOL_RETRY_APPROVAL', 'WRAPPER_AMPHENOL_ACTIVATE_APPROVED_RELEASE')):
++            raise ValueError('Crown pilot enrollment cannot mix with other pilot or release controls.')
++        return CrownOperatorEnrollment.from_process_environment(environ)
+     if environ.get(ENV) is not None:
+         if any(environ.get(key) is not None for key in (
+                 'WRAPPER_AMPHENOL_RECIPE_ENROLLMENT', 'WRAPPER_AMPHENOL_OPERATOR_RECIPE_ENROLLMENT',
+--- a/job-search-scraper
++++ b/job-search-scraper
+@@ -8,7 +8,7 @@
+ fi
+ export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+ case "${1:-}" in
+-  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|operator-embraer-partial|operator-scope-hold|continue-qualified-repair)
++  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|operator-embraer-partial|operator-crown-partial|operator-scope-hold|continue-qualified-repair)
+     exec "$PYTHON" -I -S "$ROOT/release_admission_bootstrap.py" "$@"
+     ;;
+   *)
+--- a/release_admission_bootstrap.py
++++ b/release_admission_bootstrap.py
+@@ -25,6 +25,7 @@
+ ORDINARY_EVENT_COMMAND = "ordinary-company-event"
+ OPERATOR_AMPHENOL_COMMAND = "operator-amphenol-partial"
+ OPERATOR_EMBRAER_COMMAND = "operator-embraer-partial"
++OPERATOR_CROWN_COMMAND = "operator-crown-partial"
+ OPERATOR_SCOPE_HOLD_COMMAND = "operator-scope-hold"
+ RETAINED_OPERATOR_LAYOUT_ENV = "JSH_RETAINED_OPERATOR_SQLITE_LAYOUT"
+ 
+@@ -244,7 +245,7 @@
+         raise RuntimeError("JOB_STORAGE_BACKEND must be sqlite or sheets")
+     operator = bool(arguments and arguments[0] in {
+         RETAINED_OPERATOR_COMMAND, ORDINARY_EVENT_COMMAND, OPERATOR_AMPHENOL_COMMAND,
+-        OPERATOR_EMBRAER_COMMAND, OPERATOR_SCOPE_HOLD_COMMAND,
++        OPERATOR_EMBRAER_COMMAND, OPERATOR_CROWN_COMMAND, OPERATOR_SCOPE_HOLD_COMMAND,
+     })
+     layout = _retained_operator_sqlite_layout(project, state, backend) if operator else None
+     if not operator and tuple(arguments) == ('start',) and backend == 'sqlite':
+--- a/src/job_search_helper/ats.py
++++ b/src/job_search_helper/ats.py
+@@ -115,10 +115,11 @@
+ ACQUIRETM_PAGINATION_CODE = 'acquiretm_updatepanel_premature_read'
+ ACQUIRETM_REFRESH_TIMEOUT_MS = 12_000
+ BREEZY_EMBRAER_HEADING_CODE = 'breezy_embraer_brand_heading'
++CROWN_LISTING_RANGE_CODE = 'successfactors_crown_listing_range_missing'
+ _OUTCOME_FAILURE_CODES = {
+     'access_denied': frozenset({'human_verification', 'public_access_denied'}),
+     'temporary_transport': frozenset({'network_retry_exhausted', 'retryable_http_status'}),
+-    'pagination_regression': frozenset({ACQUIRETM_PAGINATION_CODE}),
++    'pagination_regression': frozenset({ACQUIRETM_PAGINATION_CODE, CROWN_LISTING_RANGE_CODE}),
+     'full_description_regression': frozenset({BREEZY_EMBRAER_HEADING_CODE}),
+ }
+ 
+@@ -178,6 +179,18 @@
+         if evidence is None:
+             return None
+         envelope['evidence'] = evidence
++    if code == CROWN_LISTING_RANGE_CODE:
++        evidence = value.get('evidence')
++        if (type(evidence) is not dict
++                or set(evidence) != {'company_id', 'board', 'listing_count', 'listing_sha256'}
++                or evidence['company_id'] != 'COMP-0588'
++                or evidence['board'] != 'https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch='
++                or type(evidence['listing_count']) is not int
++                or not 1 <= evidence['listing_count'] <= 2500
++                or not isinstance(evidence['listing_sha256'], str)
++                or re.fullmatch(r'[0-9a-f]{64}', evidence['listing_sha256']) is None):
++            return None
++        envelope['evidence'] = dict(evidence)
+     if code == BREEZY_EMBRAER_HEADING_CODE:
+         evidence = _breezy_embraer_heading_evidence(value.get('evidence'))
+         if evidence is None:
+--- a/src/job_search_helper/operator_amphenol_fetch.py
++++ b/src/job_search_helper/operator_amphenol_fetch.py
+@@ -10,7 +10,7 @@
+ from .integration_release import assert_release_settled
+ from .ordinary_company_event_fetch import _scope_has_storage, _verify_workbook, capture_scoped_provider
+ from .ordinary_event_settlement import ordinary_no_publication_result
+-from .operator_partial_scope import AMPHENOL, EMBRAER, require_operator_partial_scope
++from .operator_partial_scope import AMPHENOL, CROWN, EMBRAER, require_operator_partial_scope
+ from .retained_work_runner import assert_normal_lifecycle_not_held
+ from .runner import _canonical_runtime_binding
+ from .scan_request import _cycle_views, _unfinished_from_views
+@@ -18,8 +18,9 @@
+ from .temporary_retry import _selected_sha, _sync_directory
+ 
+ 
+-def _embraer_source_files():
+-    paths = ('src/job_search_helper/shared_boards.py', 'src/job_search_helper/ats.py')
++def _operator_source_files(scope):
++    adapter = 'successfactors.py' if scope is CROWN else 'shared_boards.py'
++    paths = (f'src/job_search_helper/{adapter}', 'src/job_search_helper/ats.py')
+     return {name: sha256((PROJECT_ROOT / name).read_bytes()).hexdigest() for name in paths}
+ 
+ 
+@@ -37,8 +38,8 @@
+         'request_sha256': owner['request_sha256'], 'request_fingerprint': owner['request_fingerprint'],
+         'request_receipt_sha256': _selected_sha(owner['receipt']), 'runtime': _canonical_runtime_binding(runtime),
+     }
+-    if scope is EMBRAER:
+-        binding['source_files'] = _embraer_source_files()
++    if scope is EMBRAER or scope is CROWN:
++        binding['source_files'] = _operator_source_files(scope)
+     return path, binding
+ 
+ 
+@@ -57,6 +58,9 @@
+             or inventory.get('verified_zero') is not None):
+         return False
+     evidence = failure['evidence']
++    if scope is CROWN:
++        return (not inventory['jobs'] and evidence['company_id'] == scope.company_id
++                and evidence['board'] == scope.board_url)
+     return (evidence['company_id'] == scope.company_id and evidence['company'] == scope.company_name
+             and evidence['board'] == scope.board_url
+             and evidence['advertised_total'] == len(inventory['jobs']) + evidence['detail_failure_count'])
+--- a/src/job_search_helper/operator_company_request.py
++++ b/src/job_search_helper/operator_company_request.py
+@@ -11,6 +11,7 @@
+ 
+ from .company_events import canonical_company_fact, source_revision
+ from .cli import scraper_lock_name, writer_lock
++from .operator_partial_scope import CROWN, CROWN_REQUEST_ID, CROWN_REQUEST_PREFIX
+ from .scan_request import _enqueued_at
+ 
+ 
+@@ -69,6 +70,9 @@
+     request_id = str(request_id or "").strip()
+     if not company_id or not _REQUEST_ID.fullmatch(request_id):
+         raise ValueError("operator_company_request_identity_invalid")
++    if request_id.startswith(CROWN_REQUEST_PREFIX) and (
++            company_id != CROWN.company_id or CROWN_REQUEST_ID.fullmatch(request_id) is None):
++        raise ValueError("operator_crown_request_identity_invalid")
+     matches = repository.matches("Companies", {"Company ID": company_id})
+     if len(matches) != 1:
+         raise ValueError("operator_company_request_company_missing_or_ambiguous")
+--- a/src/job_search_helper/operator_embraer_settlement.py
++++ b/src/job_search_helper/operator_embraer_settlement.py
+@@ -12,7 +12,7 @@
+ from .operator_amphenol_settlement import (
+     execute_operator_partial, operator_partial_facts, read_operator_partial_settlement,
+ )
+-from .operator_partial_scope import EMBRAER
++from .operator_partial_scope import CROWN, EMBRAER
+ from .operator_selected_observation import _same_json_file, read_operator_selected_observation
+ from .ordinary_event_settlement import _has_publication_evidence
+ from .outcomes import classify_outcome, validate_public_outcome_record
+@@ -28,15 +28,21 @@
+ 
+ 
+ def read_operator_embraer_source(repository, record, request_sha256):
+-    """Reopen the original terminal request and its exact installed defect evidence."""
++    return read_operator_partial_source(repository, record, request_sha256, scope=EMBRAER)
++
++
++def read_operator_partial_source(repository, record, request_sha256, *, scope):
++    """Reopen one reviewed terminal request and its exact installed defect evidence."""
++    if scope is not EMBRAER and scope is not CROWN:
++        return None
+     if validate_public_outcome_record(record) is None:
+         return None
+     identity = record['identity']
+     if (set(identity) != {'company_id', 'source_revision', 'provider', 'adapter_version', 'request_id', 'cycle_id'}
+-            or identity['company_id'] != EMBRAER.company_id or identity['provider'] != EMBRAER.provider
++            or identity['company_id'] != scope.company_id or identity['provider'] != scope.provider
+             or identity['adapter_version'] != 'normal-scraper-v1'
+             or record.get('outcome') != 'QUALIFIED_INTEGRATION_REPAIR'
+-            or record.get('repair_category') != EMBRAER.failure_category
++            or record.get('repair_category') != scope.failure_category
+             or not isinstance(repository, SQLiteRepository) or not repository.is_local):
+         return None
+     try:
+@@ -45,12 +51,12 @@
+             return None
+         with (closing(State(str(root / 'state.db'), readonly=True)) as state,
+               closing(SQLiteRepository(repository.path, repository.spreadsheet_id, readonly=True)) as reader):
+-            return _read_source(reader, state, root, record, request_sha256)
++            return _read_source(reader, state, root, record, request_sha256, scope)
+     except (KeyError, OSError, TypeError, ValueError, sqlite3.Error, RepositoryError, RuntimeError):
+         return None
+ 
+ 
+-def _read_source(repository, state, root, record, request_sha256):
++def _read_source(repository, state, root, record, request_sha256, scope):
+     identity = record['identity']
+     cycle = state.cycle(identity['cycle_id'])
+     if cycle is None or cycle.get('status') != 'Complete with exceptions':
+@@ -64,7 +70,7 @@
+     elif runtime['state'] != 'NO_RELEASE' or assert_release_settled(root) is not None:
+         return None
+     owner = read_operator_selected_observation(repository, state, runtime, request_sha256=request_sha256,
+-                                              scope=EMBRAER)
++                                              scope=scope)
+     archived = root / 'last-scan-request.json'
+     company = owner['company']
+     if (owner['state'] != 'ADMITTED' or owner['cycle'] != cycle or owner['source_revision'] != identity['source_revision']
+@@ -76,7 +82,7 @@
+     rows = repository._outcome_delivery_rows('repair-coordinator', outcome_id=record['outcome_id'])
+     if len(rows) != 1 or OutcomeDelivery(repository, None)._preflight(rows[0])[0] != record:
+         return None
+-    settlement = read_operator_partial_settlement(repository, identity['cycle_id'], identity['request_id'], scope=EMBRAER)
++    settlement = read_operator_partial_settlement(repository, identity['cycle_id'], identity['request_id'], scope=scope)
+     if settlement is None or settlement['outcome'] != record:
+         return None
+     inbox = root / 'inventories.sqlite3'
+@@ -85,22 +91,22 @@
+     with closing(sqlite3.connect(inbox.as_uri() + '?mode=ro', uri=True)) as connection:
+         if _has_publication_evidence(connection, repository, identity['cycle_id'], identity['request_id']):
+             return None
+-    observation = load_operator_partial(owner, state, runtime, scope=EMBRAER)
++    observation = load_operator_partial(owner, state, runtime, scope=scope)
+     binding = {
+         **{key: identity[key] for key in ('cycle_id', 'request_id', 'company_id', 'source_revision')},
+         'request_sha256': request_sha256, 'request_fingerprint': owner['request_fingerprint'],
+         'observation_sha256': observation['sha256'], 'provider_inventory_sha256': observation['inventory_sha256'],
+     }
+     if (settlement['binding'] != binding
+-            or record != classify_outcome(operator_partial_facts(EMBRAER, binding, observation))
+-            or cycle.get(EMBRAER.observation_field) != observation['sha256']
++            or record != classify_outcome(operator_partial_facts(scope, binding, observation))
++            or cycle.get(scope.observation_field) != observation['sha256']
+             or settlement['terminal_state_sha256'] != _selected_sha(cycle)
+             or settlement['terminal_mirror_sha256'] != _selected_sha(owner['mirror'])):
+         return None
+     return {
+         'request_id': identity['request_id'], 'outcome_id': record['outcome_id'],
+         'source_revision': identity['source_revision'], 'request_sha256': request_sha256,
+-        'evidence_code': EMBRAER.failure_code, 'source_files': observation['binding']['source_files'],
++        'evidence_code': scope.failure_code, 'source_files': observation['binding']['source_files'],
+         'observation_sha256': observation['sha256'], 'settlement_sha256': _selected_sha(settlement),
+         'runtime': runtime,
+     }
+--- a/src/job_search_helper/operator_partial_scope.py
++++ b/src/job_search_helper/operator_partial_scope.py
+@@ -1,8 +1,10 @@
+-"""The two explicit company-only operator partial paths."""
++"""The explicit company-only operator partial paths."""
+ 
+ from dataclasses import dataclass
++import re
+ 
+-from .ats import ACQUIRETM_PAGINATION_CODE, BREEZY_EMBRAER_HEADING_CODE
++from .ats import ACQUIRETM_PAGINATION_CODE, BREEZY_EMBRAER_HEADING_CODE, CROWN_LISTING_RANGE_CODE
++from .successfactors import CROWN_SOURCE
+ 
+ 
+ @dataclass(frozen=True)
+@@ -39,7 +41,15 @@
+     'https://embraer.breezy.hr/', 'full_description_regression', BREEZY_EMBRAER_HEADING_CODE,
+ )
+ 
++CROWN = OperatorPartialScope(
++    'crown', 'COMP-0588', 'Crown Equipment', 'SuccessFactors', 'https://us-careers.crown.com/',
++    CROWN_SOURCE, 'pagination_regression', CROWN_LISTING_RANGE_CODE,
++)
++
++CROWN_REQUEST_PREFIX = 'operator-crown-'
++CROWN_REQUEST_ID = re.compile(r'operator-crown-[A-Za-z0-9][A-Za-z0-9._-]{0,105}')
++
+ 
+ def require_operator_partial_scope(scope):
+-    if scope is not AMPHENOL and scope is not EMBRAER:
++    if all(scope is not allowed for allowed in (AMPHENOL, EMBRAER, CROWN)):
+         raise ValueError('Unsupported operator partial scope.')
+--- a/src/job_search_helper/operator_selected_observation.py
++++ b/src/job_search_helper/operator_selected_observation.py
+@@ -13,7 +13,7 @@
+ from .company_events import canonical_company_fact, source_revision
+ from .engine import Engine, State
+ from .operator_company_request import SCHEMA, _digest
+-from .operator_partial_scope import AMPHENOL, require_operator_partial_scope
++from .operator_partial_scope import AMPHENOL, CROWN, CROWN_REQUEST_ID, require_operator_partial_scope
+ from .scan_request import _read_request, cycle_metadata, request_fingerprint
+ from .sqlite_repository import SQLiteRepository
+ 
+@@ -128,6 +128,7 @@
+                 "source_revision": request.get("source_revision") if isinstance(request, dict) else None}
+     if (not isinstance(request, dict) or request.get("mode") != "company-only"
+             or request.get("company_ids") != [scope.company_id] or request.get("start_last") != []
++            or (scope is CROWN and CROWN_REQUEST_ID.fullmatch(str(expected['request_id'])) is None)
+             or operator != expected or any(request.get(key) is not None for key in (
+                 "company_event", "repair_retry", "temporary_retry"))
+             or request_fingerprint(request, [scope.company_id]) is None):
+--- a/src/job_search_helper/runner.py
++++ b/src/job_search_helper/runner.py
+@@ -1577,7 +1577,7 @@
+         except (ValueError, RuntimeError, OSError, sqlite3.Error) as exc:
+             print(f'ERROR: {exc}', file=sys.stderr)
+             return 1
+-    if argv[0] in {'operator-amphenol-partial', 'operator-embraer-partial'}:
++    if argv[0] in {'operator-amphenol-partial', 'operator-embraer-partial', 'operator-crown-partial'}:
+         command = argv[0]
+         parser = argparse.ArgumentParser(prog=f'./job-search-scraper {command}', allow_abbrev=False)
+         parser.add_argument('--request-sha256', action='append', required=True)
+@@ -1585,20 +1585,24 @@
+         try:
+             from .ats import fetch_inventory
+             from .ordinary_company_event_command import _digest_text
+-            from .operator_amphenol_settlement import execute_operator_amphenol
+-            from .operator_embraer_settlement import execute_operator_embraer
++            from .operator_amphenol_settlement import execute_operator_partial
++            from .operator_partial_scope import AMPHENOL, CROWN, EMBRAER
+             from .sheet_profile import COMPACT_SCHEMAS
+ 
+             if len(args.request_sha256) != 1 or not _digest_text(args.request_sha256[0]):
+                 raise ValueError('Supply one exact lowercase request SHA-256.')
+-            execute = execute_operator_amphenol if command == 'operator-amphenol-partial' else execute_operator_embraer
++            scope = {
++                'operator-amphenol-partial': AMPHENOL,
++                'operator-embraer-partial': EMBRAER,
++                'operator-crown-partial': CROWN,
++            }[command]
+             with _retained_operator_admission() as admission:
+-                result = execute(
+-                    admission, request_sha256=args.request_sha256[0], fetcher=fetch_inventory,
++                result = execute_operator_partial(
++                    admission, request_sha256=args.request_sha256[0], fetcher=fetch_inventory, scope=scope,
+                     remote_reader=lambda: helper_cli.get_remote_repository(
+                         write=False, interactive=False, schemas=COMPACT_SCHEMAS, evidence_archives=False),
+                 )
+-            label = 'Operator Amphenol partial' if command == 'operator-amphenol-partial' else 'Operator Embraer partial'
++            label = f'Operator {scope.slug.capitalize()} partial'
+             print(label + ': ' + json.dumps(result, sort_keys=True))
+             return 0 if result['state'] == 'FETCH_REPAIR_QUALIFIED' else 1
+         except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+--- a/src/job_search_helper/successfactors.py
++++ b/src/job_search_helper/successfactors.py
+@@ -4,11 +4,12 @@
+ import re
+ import time
+ from concurrent.futures import ThreadPoolExecutor
++from hashlib import sha256
+ from html.parser import HTMLParser
+ import xml.etree.ElementTree as ET
+ from urllib.parse import urljoin, urlsplit, urlunsplit
+ 
+-from .ats import FetchError, Inventory, _base, text
++from .ats import CROWN_LISTING_RANGE_CODE, FetchError, Inventory, _base, outcome_failure, text
+ from .discovery import CareersTransport
+ 
+ ABACO_SOURCE = "https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc"
+@@ -101,7 +102,30 @@
+         time.sleep(0.5 * (attempt + 1))
+ 
+ 
+-def _listing(client, source, start):
++def _crown_range_failure(page):
++    jobs = {}
++    for href, title in page.links:
++        url = urljoin(CROWN_SOURCE, href)
++        parsed = urlsplit(url)
++        match = re.fullmatch(r'/(?:(?:TheGoods|17West)/)?job/[^/]+/(\d{4,24})/', parsed.path)
++        if (parsed.scheme != 'https' or parsed.netloc != 'us-careers.crown.com'
++                or parsed.query or parsed.fragment or not match or not title):
++            return None
++        posting_id = match.group(1)
++        if jobs.setdefault(posting_id, (url, title)) != (url, title):
++            return None
++    if not 1 <= len(jobs) <= 2500:
++        return None
++    identity = '\n'.join(sorted(url for url, _ in jobs.values()))
++    return outcome_failure('pagination_regression', CROWN_LISTING_RANGE_CODE, evidence={
++        'company_id': 'COMP-0588',
++        'board': CROWN_SOURCE,
++        'listing_count': len(jobs),
++        'listing_sha256': sha256(identity.encode()).hexdigest(),
++    })
++
++
++def _listing(client, source, start, *, qualify_crown=False):
+     # Jobs2Web boards are not uniform.  Leonardo DRS publishes its offset as
+     # a path segment (``.../8131200/25/``), not as a ``startrow`` query
+     # parameter.  Sending that parameter is silently ignored and would make
+@@ -124,7 +148,10 @@
+         sep="&" if "?" in source else "?"; url=source + ("" if start == 0 else sep + "q=&sortColumn=referencedate&sortDirection=desc&startrow=" + str(start))
+     body=_get(client,url); page=_Page(body)
+     ranges=re.findall(r"Results\s*<b>\s*(\d+)\s*[–-]\s*(\d+)\s*</b>\s*of\s*<b>\s*(\d+)\s*</b>",body,re.I)
+-    if not ranges or len(set(ranges)) != 1: raise FetchError("partial", "SuccessFactors listing did not expose one consistent published result range.")
++    if not ranges or len(set(ranges)) != 1:
++        failure = _crown_range_failure(page) if qualify_crown and not ranges else None
++        raise FetchError("partial", "SuccessFactors listing did not expose one consistent published result range.",
++                         outcome_failure=failure)
+     first,last,total=map(int,ranges[0])
+     if first != start + 1 or first > last or last > total: raise FetchError("partial", "SuccessFactors listing published an invalid result range.")
+     entries=[]; seen=set()
+@@ -189,7 +216,8 @@
+     if not host: return Inventory("unsupported",reason="SuccessFactors adapter requires a verified employer board.",source_url=url,ats="SuccessFactors")
+     client=transport or CareersTransport(); jobs=[]; seen=set(); entries_all=[]
+     try:
+-        total,first,_next=_listing(client,url,0)
++        qualify_crown = url == CROWN_SOURCE and company_id == 'COMP-0588' and company == 'Crown Equipment'
++        total,first,_next=_listing(client,url,0,qualify_crown=qualify_crown)
+         if url == "https://careers.leonardodrs.com/go/All-Jobs/8131200/":
+             # A temporarily stale published total must not suppress hundreds
+             # of individually verifiable job pages. Keep membership partial.
+@@ -276,5 +304,7 @@
+             check_total,check,_check_next=_listing(client,url,0)
+             if check_total != total or check != first: raise FetchError("partial","SuccessFactors inventory changed during scan.")
+         return Inventory("complete",jobs,f"SuccessFactors: retrieved {len(jobs)} complete postings and rechecked the public inventory.",url,"SuccessFactors")
+-    except FetchError as e: return Inventory(e.status if not jobs else "partial",jobs,e.reason,url,"SuccessFactors")
++    except FetchError as e:
++        return Inventory(e.status if not jobs else "partial", jobs, e.reason, url, "SuccessFactors",
++                         outcome_failure=e.outcome_failure)
+     except (ValueError,TypeError,AttributeError): return Inventory("partial",jobs,"SuccessFactors public schema validation failed.",url,"SuccessFactors")

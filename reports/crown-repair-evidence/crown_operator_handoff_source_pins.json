@@ -1,0 +1,54 @@
+{
+  "dev/wrapper-coder/tools/crown_operator_pilot.py": {
+    "before_sha256": null,
+    "staged_sha256": "3324901e4cd4f477dcd1d24a9eae10b5643a7210f9b4532a1a43b6751ff97b1c"
+  },
+  "dev/wrapper-coder/tools/embraer_operator_pilot.py": {
+    "before_sha256": "355a0beb0e81074ed27d79d5a8ef4c87b1bb07607f9004c6782262c916798fb0",
+    "staged_sha256": "fc10e697a318e08b2aebae212ecf9feaca4679f920d90f55d6ebcff7a1e8e258"
+  },
+  "dev/wrapper-coder/tools/host_server.py": {
+    "before_sha256": "36128559fc44dbaaffb9edaab6891d49904f2cde36b69b17ac5eff1b12d9aa73",
+    "staged_sha256": "1a0d30d109fc40e816154a7c1d21492b409fc020ea4925348d3201207ac85617"
+  },
+  "job-search-scraper": {
+    "before_sha256": "3acc74cad6c1c8c1103e49d3ade337fb21417b8f0ef832481aa5daa0670f2357",
+    "staged_sha256": "4db292b17eac25cbe334e6eb4245e3872f829afc57c4c903ca36138494462dba"
+  },
+  "release_admission_bootstrap.py": {
+    "before_sha256": "0a1eca6877ef7b78cd851d2e5de15528c166bf31da96ca361f705cd48b7b4a00",
+    "staged_sha256": "689f644523b1fa1f691eeaf863e84acfc8a39fd8974bb05721d0246b144330f9"
+  },
+  "src/job_search_helper/ats.py": {
+    "before_sha256": "a580747f5067f4177e6d698792f576dc757136fadaa1eb03aa0368872b77f481",
+    "staged_sha256": "53ba6b9cfef29e69c56265e502a0d1f4c2fe96a454e4dc201e24e033e22d29b3"
+  },
+  "src/job_search_helper/operator_amphenol_fetch.py": {
+    "before_sha256": "d2be344938365304f14757fd43f53e6b53758ea65491fa625cdacf013aee4112",
+    "staged_sha256": "74642de9788b750c5f609ecaea1caed1cc59cfccb343d6577991c1721321451a"
+  },
+  "src/job_search_helper/operator_company_request.py": {
+    "before_sha256": "aa2ad170b8707489f532c2ac52d08a9cb421d7067b14244e40f7e58732e35f5b",
+    "staged_sha256": "a7ada8f8a6ce5532067aa1bd26dfd38f0f5ef81f6d354cd4ad23975e2338a1ad"
+  },
+  "src/job_search_helper/operator_embraer_settlement.py": {
+    "before_sha256": "8428b18431e4b4cfc3a1fb63187e0cd77a07bb175bc0fed2fca901336422ce84",
+    "staged_sha256": "8d83e4a67f389819cda953da048dced828a62269cd7cb1e700edaf976bea0d5e"
+  },
+  "src/job_search_helper/operator_partial_scope.py": {
+    "before_sha256": "b2cfb9308db717318ca493b72c6444e86ba80b7e1998220398361e963db044c2",
+    "staged_sha256": "21f7e08382fd1e4ab1973683b355bda404581bc5077e6aac801c00c03c509b71"
+  },
+  "src/job_search_helper/operator_selected_observation.py": {
+    "before_sha256": "4937f2408e48b5fa4bce92d9693d0cd39f6ee0df3cb2f69fbf7ef270a2012542",
+    "staged_sha256": "006a5d0237d297c3f9b01777dbb5895a31c93aa7bbbe4e769876ab6110723ef2"
+  },
+  "src/job_search_helper/runner.py": {
+    "before_sha256": "c6ecacde9f186a38e10ed32406e93624ecb5552583e806295e7efd68e1f1d624",
+    "staged_sha256": "abe07e1ea00ed3510bf84cef29f4b43848a912a97535d1e0b73f09b6b8756bde"
+  },
+  "src/job_search_helper/successfactors.py": {
+    "before_sha256": "8fe76b18428fc092fb8808456576a8a1fe587468d8ae68e5c43208566124db12",
+    "staged_sha256": "cd87c27f6b692b818226c85d92e5ca9c31d0bcbfb8f6ed94e0befdb81b66acf1"
+  }
+}
