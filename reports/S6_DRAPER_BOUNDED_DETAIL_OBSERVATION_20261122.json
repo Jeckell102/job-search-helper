@@ -1,0 +1,12 @@
+{
+  "company_id": "COMP-0024",
+  "description_chars": 5832,
+  "http_status": 200,
+  "observed_at": "2026-11-22T22:43:19.007788+00:00",
+  "official_listing_source": "https://www.draper.com/careers/job-categories/detail/28027",
+  "posting_id_sha256": "a0bf03f44fe290630e00ec091194577d04f3178b7a0c834132b02e7fdb2ddc2c",
+  "public_posting_url": "https://draper.wd5.myworkdayjobs.com/Draper_Careers/job/Cambridge-MA/Production-Planner-Scheduler_JR002509",
+  "scope": "one ordinary installed-route CXS detail request; no redirects, retry, inventory or writes",
+  "status": "ONE_PUBLIC_DETAIL_PARSED",
+  "workday_adapter_sha256": "e9e23c9e2d120becd1bfd964dc1c8b96652b9dd34089b7beeaefa10ddf4bfa99"
+}
