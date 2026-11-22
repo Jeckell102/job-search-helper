@@ -906,6 +906,14 @@ Keep the result as an engineering hold until a reviewed bounded continuation
 or separately qualifying case is available. No acceptance credit changes.
 [Settled worker evidence](S6_EMBRAER_CORRECTED_ATTEMPT_BUDGET_HOLD_20261122.json).
 
+November 22 isolated continuation. Independent QA confirmed restart recovery
+with the exact saved parent and one simulated reservation under the original
+120000-token cap. The live parent and five source preimages independently
+remain current in read-only inspection. The guarded wrapper-only source
+forward and exact child approval are open. No new live acceptance credit.
+[Isolated QA](S6_EMBRAER_03_ISOLATED_QA_20261122.md)
+· [Live readiness](S6_EMBRAER_03_CONTINUATION_LIVE_READINESS_20261122.md).
+
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 
 The November 21 effective reconciliation covers all six milestones,

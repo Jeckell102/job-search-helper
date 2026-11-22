@@ -5,6 +5,17 @@ scope and version limits from earlier reports, along with the current
 intake and public availability observation. Historical findings and
 acceptance criteria remain in their original records.
 
+At 16:45 Eastern, the latest added evidence covers the isolated Embraer
+continuation and pre-release check for M6, F4, F8 and demonstration 5.
+Independent QA confirmed one simulated reservation across restart with
+the 15 original receipts preserved. Current live inspection verified
+the original pilot remains held and the five preinstallation tool files
+still match. Carry this evidence forward only for the measured isolated
+boundary. The native source-forward, real Jetson response, company retry,
+three fresh completions and final independent QA remain open.
+[Isolated QA](S6_EMBRAER_03_ISOLATED_QA_20261122.md)
+· [Live readiness](S6_EMBRAER_03_CONTINUATION_LIVE_READINESS_20261122.md).
+
 ## Coordinator reset and current execution plan
 
 November 22, 11:22 Eastern. Finish the remaining Sprint 6 evidence before
