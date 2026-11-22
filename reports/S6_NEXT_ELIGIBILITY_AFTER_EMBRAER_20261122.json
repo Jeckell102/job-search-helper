@@ -1,0 +1,14 @@
+{
+  "controls": {
+    "autopilot_enabled": false,
+    "campaign_enabled": false,
+    "pilot_task": "WRAP-ceeb46b120",
+    "queue_enabled": false
+  },
+  "eligible_workbook_company_present": false,
+  "genuine_local_event_pending": false,
+  "observed_at": "2026-11-22T22:39:50.268546+00:00",
+  "pending_inference_calls": 0,
+  "read_only": true,
+  "unassigned_held_reports": []
+}
