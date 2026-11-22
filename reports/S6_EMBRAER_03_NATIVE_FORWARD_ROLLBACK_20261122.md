@@ -29,7 +29,7 @@ The terminal receipt was atomically appended as `ROLLED_BACK` with the
 restored wrapper PID 779138. No third restart or source change was needed.
 
 - Terminal receipt SHA-256 `8e87ab3e79f0ca9dbfbdde5fe44a9d6feba32d5f8aaf11a6c00704633c4cd743`.
-- Original intent SHA-256 `f872a32e44783c7cacec37dbdeffa5879d23331d8a9c71b4f4adc61453f580`.
+- Original intent SHA-256 `f872a32e44783c7cacec37dbdeffa5879d23331d8a9a8c71b4f4adc61453f580`.
 - Measured restoration SHA-256 `a8f71f9b81c9e13f8e436abc48021f182d2674a2a467e6f583b06d9bda858fe9`.
 
 The immutable intent and sealed receipt remain in the private transaction
