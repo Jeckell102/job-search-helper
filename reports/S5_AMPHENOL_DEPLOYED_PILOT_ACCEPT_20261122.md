@@ -1,0 +1,11 @@
+# Sprint 5 deployed Amphenol pilot acceptance
+
+November 22, 2026, Eastern. **Accept the bounded Amphenol pilot.** Genuine incomplete scrape evidence triggered one request to the Jetson. MuleLab built the selected repair, qualified the exact install, and ran one fresh Amphenol-only retry. The locally saved inventory contained 39 unique postings with full descriptions. Continued publication used the same retry and its saved records. The provider, model and installer were not replayed.
+
+The -08 continuation exited successfully at 09:26:20 with `OPERATOR_RELEASE_CONFIRMED`. It used attempt `RTRY-8d1210858e4e26f325312a89`, cycle `CYC-4650772EEE1E`, and release `REL-f509ed362bf8781ea8840adc`. The coordinator receipt names outcome `OUT-6bec67b537df7292dd5904ea`. Independent immutable QA verified one matching `VALIDATED_COMPLETE` event and the 11 protected local facts. The selected application `ELA-b0734c17794364f4dd8637e62ca45a06` and both plan archives remain intact. The installed status command reports `SYNC_CONFIRMED`.
+
+A fresh read-only check of Google Sheets matched **all 24** acknowledged originals, covering 22 Job History records, one Company and one Opportunity. All four review-note appends matched. No original fingerprint was missing. The local and worksheet receipt ID is `fa1d4c38976ad0cc06dd0a308540a61328036f7b6f8d3fef2d8771cf4e183d70`; acknowledgement ID is `ac959fd7034f7d9ee0511154785efdd40924ff84f27f85bce1a40dabe7d1af0e`. The exact read-only verifier needed the normal checkout working directory to locate its existing credential. No new grant was needed.
+
+The native, quiet and checkout exchange journals completed restoration. A fresh system read confirmed wrapper and assistant bridge active and enabled, with scheduled sync and its timer inactive and disabled. The temporary pilot enrollment and the broad release controls remain outside this acceptance. The permanent generic publisher correction remains staged source work. This successful named demonstration carries no sequential completion credit for Sprint 6.
+
+[Automatic build](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md) · [Qualified production adapter](S5_AMPHENOL_PRODUCTION_PACED_LIVE_QUALIFICATION_20261121.md) · [Independent local and coordinator QA](S5_AMPHENOL_DEPLOYED_PILOT_LOCAL_QA_20261122.md)

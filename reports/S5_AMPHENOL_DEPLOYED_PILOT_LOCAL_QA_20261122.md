@@ -1,0 +1,11 @@
+# Amphenol -08 independent local terminal readback
+
+**ACCEPT for deployed local archive and paired receipts.** The separately synchronized native window and live workbook readback are covered by the coordinator's lane.
+
+The approved readback ran after the native handle exited zero at 09:26:20. Captured stdout SHA-256 `a384d5362b24db255f68baa5ed028e4a04fb76e9e79d0be118a7c7d3e7590e16` records `OPERATOR_RELEASE_CONFIRMED`, cycle `CYC-4650772EEE1E`, attempt `RTRY-8d1210858e4e26f325312a89`, and outcome `OUT-6bec67b537df7292dd5904ea`. Immutable, stable reads of the exact State, Jobs, Inbox, and coordinator stores reproduced that terminal scope under installed release `REL-f509ed362bf8781ea8840adc` and the original activation receipt `3a9f760382dcf85b57a241882dd38ed446418b0377ca8bdfcaf655b775367dbe`.
+
+- The archived rejected plan, original cursor and local state, saved inventory, and approved successor matched their exact archive pins. The four Source Hash guards reproduced their approved archived evidence. The original 39 unique postings still had all 39 saved descriptions.
+- The sole consumed retry matched the complete State cycle and Jobs mirror. Its verified exact application matched the archived successor and the Inbox's `SYNC_CONFIRMED` receipt `fa1d4c38976ad0cc06dd0a308540a61328036f7b6f8d3fef2d8771cf4e183d70`, with the same Jobs acknowledgement `ac959fd7034f7d9ee0511154785efdd40924ff84f27f85bce1a40dabe7d1af0e`. The receipt covers 24 records across 22 Job History rows, one Company and one Opportunity. The 22 histories include four historical note updates. Each scoped history had same-source, nonempty, untruncated Job Evidence.
+- Sender and receiver matched both the original held operator outcome and the new `VALIDATED_COMPLETE` retry. Exactly one durable receiver lifecycle and one complete retry event matched the approved attempt. All 11 protected local comparisons matched the pre-apply readback.
+
+Sanitized local result [EXACT_08_LOCAL_TERMINAL.json](/tmp/jsh-authoritative-planner-independent.qa/native-terminal-08/EXACT_08_LOCAL_TERMINAL.json), SHA-256 `31fb737ad2a24ff97e45912cc4cc9dd9e8c39cd709842d456b2e584cf7253bff`, mode 0600. No provider, OAuth, Sheets, service, or Jetson calls were made during this readback.

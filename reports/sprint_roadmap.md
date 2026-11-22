@@ -14,8 +14,8 @@ Only mark the persistent goal complete when every applicable roadmap exit gate
 and every final acceptance demonstration has current, version-bound evidence.
 Source tests alone are not deployment or live-operation acceptance.
 
-Current overall completion estimate: approximately 40% by acceptance gates.
-This estimate changes only when a gate gains or loses verified evidence.
+Current overall completion estimate: approximately 45% by acceptance gates.
+This increased after independent acceptance of the deployed Amphenol pilot.
 
 ## Current operating priorities
 
@@ -35,6 +35,13 @@ handles retrieval, validation, storage, and release. Use a fresh company-only
 retry after the exact qualified release. Keep the single Jetson inference
 lane and the existing release gates. Automation that speeds up the initial
 Company intake must not delay the wrapper-generation path.
+
+Keep pilot QA proportional to the single-operator workflow. Reuse accepted
+evidence on unchanged paths. Run one representative end-to-end check for
+each outstanding pilot and verify the requested local and workbook result
+independently. Repeat a check only for a concrete defect, a change that
+affects the result, or a named unproven roadmap requirement. Leave speculative
+edge cases and optional hardening outside the pilot's critical path.
 
 ## Mandatory context-reset and restart protocol
 
@@ -396,6 +403,14 @@ plan and pending receipt. It awaits the fresh administrator observer,
 live publication and independent deployed acceptance.
 [Locally saved and held](S5_AMPHENOL_NATIVE_07_PUBLICATION_HOLD_20261121.md)
 · [Verified -08 readiness checkpoint](S5_AMPHENOL_NATIVE_08_PUBLICATION_READY_20261122.md).
+
+On November 22 the bounded Amphenol pilot passed deployed acceptance.
+The saved retry completed one real workbook publication, an independent
+read matched all 24 original record fingerprints, and local/Inbox and
+coordinator receipts matched the same retry. The wrapper and bridge were
+restored. The permanent canonical publisher correction and the separate
+Sprint 6 sequential claims retain their own scope.
+[Deployed Amphenol pilot acceptance](S5_AMPHENOL_DEPLOYED_PILOT_ACCEPT_20261122.md).
 
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
