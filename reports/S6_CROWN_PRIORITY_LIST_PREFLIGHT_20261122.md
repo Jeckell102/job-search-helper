@@ -34,3 +34,41 @@ classified before claiming coverage. Crown is a promising repair candidate
 using the existing SuccessFactors sitemap approach, with exact Crown-only
 scope. The sitemap count is evidence of a larger published set, not proof
 of complete inventory or of valid full descriptions for all postings.
+
+## Source-only admission checkpoint
+
+The 535 distinct sitemap URLs are all on the same exact Crown host.
+They consist of 530 standard job URLs and five job URLs under the
+`/TheGoods/job/` and `/17West/job/` sections. The alternate visible job is
+one of the sitemap's five. One separately sampled detail from each section
+returned HTTP 200, an exact canonical URL, one title, and one full
+description. The listing yielded 100 distinct jobs and no pagination
+markers. This supports an exact Crown-only candidate. The fixture
+describes the proposed sitemap behavior and still requires independent
+live proof of full inventory and stable membership before publication.
+
+Independent review confirmed the installed queue cannot accept Crown:
+operator partial supports only Amphenol and Embraer. The ordinary Company
+event route requires actual event provenance and its repair path is not
+generic. The current SuccessFactors partial has no typed failure.
+Use a real company-only operator request and reuse the existing guarded
+partial settlement. Then bind that exact settlement and runtime to a
+single coordinator task. No invented Company event. Crown remains outside
+the frozen Sprint 6 completion matrix pending independent review.
+
+The source-only two-file patch captures a distinct typed Crown failure
+when the exact board and Company identity match, the first page lacks a
+published range, and its job URLs have valid first-party identities.
+An isolated normal dispatcher read returned a typed partial immediately
+from the official board (100 IDs; listing digest
+`6709919bce6d11cf80569e179b6015059dca3980a8e9f21ff54b4b5ad0eb965d`).
+It did not save jobs or start an inference. Three focused witness checks
+and 29 existing Crown and SuccessFactors checks passed. Two proposed
+repair regressions fail on the production baseline as expected. The
+patch deliberately leaves the actual repair for the Jetson.
+
+Staged patch and fixtures are in `/tmp/jsh-crown-repair-evidence/`.
+Production source, queue and workbook are unchanged. Next wire and
+independently review one exact operator settlement and coordinator
+handoff using this typed failure, then check the required current
+production Company facts and scoped request before opening a release.

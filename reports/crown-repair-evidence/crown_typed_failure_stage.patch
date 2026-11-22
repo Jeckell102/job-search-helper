@@ -1,0 +1,113 @@
+--- a/src/job_search_helper/ats.py
++++ b/src/job_search_helper/ats.py
+@@ -115,10 +115,11 @@
+ ACQUIRETM_PAGINATION_CODE = 'acquiretm_updatepanel_premature_read'
+ ACQUIRETM_REFRESH_TIMEOUT_MS = 12_000
+ BREEZY_EMBRAER_HEADING_CODE = 'breezy_embraer_brand_heading'
++CROWN_LISTING_RANGE_CODE = 'successfactors_crown_listing_range_missing'
+ _OUTCOME_FAILURE_CODES = {
+     'access_denied': frozenset({'human_verification', 'public_access_denied'}),
+     'temporary_transport': frozenset({'network_retry_exhausted', 'retryable_http_status'}),
+-    'pagination_regression': frozenset({ACQUIRETM_PAGINATION_CODE}),
++    'pagination_regression': frozenset({ACQUIRETM_PAGINATION_CODE, CROWN_LISTING_RANGE_CODE}),
+     'full_description_regression': frozenset({BREEZY_EMBRAER_HEADING_CODE}),
+ }
+ 
+@@ -178,6 +179,18 @@
+         if evidence is None:
+             return None
+         envelope['evidence'] = evidence
++    if code == CROWN_LISTING_RANGE_CODE:
++        evidence = value.get('evidence')
++        if (type(evidence) is not dict
++                or set(evidence) != {'company_id', 'board', 'listing_count', 'listing_sha256'}
++                or evidence['company_id'] != 'COMP-0588'
++                or evidence['board'] != 'https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch='
++                or type(evidence['listing_count']) is not int
++                or not 1 <= evidence['listing_count'] <= 2500
++                or not isinstance(evidence['listing_sha256'], str)
++                or re.fullmatch(r'[0-9a-f]{64}', evidence['listing_sha256']) is None):
++            return None
++        envelope['evidence'] = dict(evidence)
+     if code == BREEZY_EMBRAER_HEADING_CODE:
+         evidence = _breezy_embraer_heading_evidence(value.get('evidence'))
+         if evidence is None:
+--- a/src/job_search_helper/successfactors.py
++++ b/src/job_search_helper/successfactors.py
+@@ -4,11 +4,12 @@
+ import re
+ import time
+ from concurrent.futures import ThreadPoolExecutor
++from hashlib import sha256
+ from html.parser import HTMLParser
+ import xml.etree.ElementTree as ET
+ from urllib.parse import urljoin, urlsplit, urlunsplit
+ 
+-from .ats import FetchError, Inventory, _base, text
++from .ats import CROWN_LISTING_RANGE_CODE, FetchError, Inventory, _base, outcome_failure, text
+ from .discovery import CareersTransport
+ 
+ ABACO_SOURCE = "https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc"
+@@ -101,7 +102,30 @@
+         time.sleep(0.5 * (attempt + 1))
+ 
+ 
+-def _listing(client, source, start):
++def _crown_range_failure(page):
++    jobs = {}
++    for href, title in page.links:
++        url = urljoin(CROWN_SOURCE, href)
++        parsed = urlsplit(url)
++        match = re.fullmatch(r'/(?:(?:TheGoods|17West)/)?job/[^/]+/(\d{4,24})/', parsed.path)
++        if (parsed.scheme != 'https' or parsed.netloc != 'us-careers.crown.com'
++                or parsed.query or parsed.fragment or not match or not title):
++            return None
++        posting_id = match.group(1)
++        if jobs.setdefault(posting_id, (url, title)) != (url, title):
++            return None
++    if not 1 <= len(jobs) <= 2500:
++        return None
++    identity = '\n'.join(sorted(url for url, _ in jobs.values()))
++    return outcome_failure('pagination_regression', CROWN_LISTING_RANGE_CODE, evidence={
++        'company_id': 'COMP-0588',
++        'board': CROWN_SOURCE,
++        'listing_count': len(jobs),
++        'listing_sha256': sha256(identity.encode()).hexdigest(),
++    })
++
++
++def _listing(client, source, start, *, qualify_crown=False):
+     # Jobs2Web boards are not uniform.  Leonardo DRS publishes its offset as
+     # a path segment (``.../8131200/25/``), not as a ``startrow`` query
+     # parameter.  Sending that parameter is silently ignored and would make
+@@ -124,7 +148,10 @@
+         sep="&" if "?" in source else "?"; url=source + ("" if start == 0 else sep + "q=&sortColumn=referencedate&sortDirection=desc&startrow=" + str(start))
+     body=_get(client,url); page=_Page(body)
+     ranges=re.findall(r"Results\s*<b>\s*(\d+)\s*[–-]\s*(\d+)\s*</b>\s*of\s*<b>\s*(\d+)\s*</b>",body,re.I)
+-    if not ranges or len(set(ranges)) != 1: raise FetchError("partial", "SuccessFactors listing did not expose one consistent published result range.")
++    if not ranges or len(set(ranges)) != 1:
++        failure = _crown_range_failure(page) if qualify_crown and not ranges else None
++        raise FetchError("partial", "SuccessFactors listing did not expose one consistent published result range.",
++                         outcome_failure=failure)
+     first,last,total=map(int,ranges[0])
+     if first != start + 1 or first > last or last > total: raise FetchError("partial", "SuccessFactors listing published an invalid result range.")
+     entries=[]; seen=set()
+@@ -189,7 +216,8 @@
+     if not host: return Inventory("unsupported",reason="SuccessFactors adapter requires a verified employer board.",source_url=url,ats="SuccessFactors")
+     client=transport or CareersTransport(); jobs=[]; seen=set(); entries_all=[]
+     try:
+-        total,first,_next=_listing(client,url,0)
++        qualify_crown = url == CROWN_SOURCE and company_id == 'COMP-0588' and company == 'Crown Equipment'
++        total,first,_next=_listing(client,url,0,qualify_crown=qualify_crown)
+         if url == "https://careers.leonardodrs.com/go/All-Jobs/8131200/":
+             # A temporarily stale published total must not suppress hundreds
+             # of individually verifiable job pages. Keep membership partial.
+@@ -276,5 +304,7 @@
+             check_total,check,_check_next=_listing(client,url,0)
+             if check_total != total or check != first: raise FetchError("partial","SuccessFactors inventory changed during scan.")
+         return Inventory("complete",jobs,f"SuccessFactors: retrieved {len(jobs)} complete postings and rechecked the public inventory.",url,"SuccessFactors")
+-    except FetchError as e: return Inventory(e.status if not jobs else "partial",jobs,e.reason,url,"SuccessFactors")
++    except FetchError as e:
++        return Inventory(e.status if not jobs else "partial", jobs, e.reason, url, "SuccessFactors",
++                         outcome_failure=e.outcome_failure)
+     except (ValueError,TypeError,AttributeError): return Inventory("partial",jobs,"SuccessFactors public schema validation failed.",url,"SuccessFactors")
