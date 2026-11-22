@@ -1,0 +1,17 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "58e4dce70d67f1c115bd6c7fd8dd14a8824ffec1",
+  "matched_files": {
+    "reports/S6_EMBRAER_ACTUAL_JETSON_HANDOFF_20261122.md": "375c399698ef3790fa55570c389e27d4d9cc3a02680b387560fcb860fa25410f",
+    "reports/S6_EMBRAER_ACTUAL_JETSON_HANDOFF_READBACK_20261122.json": "679f7dcee492fbd253a7960eb817db2353c7a41b01b316f941abeaeb455919f2",
+    "reports/S6_EMBRAER_INSPECTION_GATE_READBACK_20261122.json": "3d405dbd5deb3459efc2c98fa08c863663c1512e764a0ef3821996423d074cb5",
+    "reports/S6_EMBRAER_INSPECTION_STALL_20261122.md": "c075c02f1c039b3517f988d67f631ad35a7dacace171b6ce0fbe2ce4271f2a61",
+    "reports/S6_EMBRAER_NATIVE_ARMER_INSPECT_HOLD_20261122.md": "1c49a5e371b86957438e0d8bf889ab84c31e4cb860703d5bf1804a69af43d0f0",
+    "reports/embraer-pilot-enrollment-20261122/embraer_operator_enrollment_input.py": "16c4c672a205881e25d2a6ea2dc9bc50b9a7d1d27eac326851907a5662c15b18",
+    "reports/embraer-pilot-enrollment-20261122/embraer_pilot_arming.py": "bb1dc2ed88e2107fa8b2de21676ac4a2a7c61e4109a78712dabab285a1d91ba5",
+    "reports/embraer-pilot-enrollment-20261122/embraer_pilot_environment.py": "2f69088e899d637759bdbe9f0984ef87259c2c2e1fc3f7e4d2ce0b7be35c87d6",
+    "reports/embraer-pilot-enrollment-20261122/native_embraer_enrollment_entry.py": "211e71de4fb93a3132f8eaa63c3cd4e9a9e2f8626f00c3bc8a2233da4b33496c",
+    "reports/embraer-pilot-enrollment-20261122/test_embraer_pilot_environment.py": "835415824aefe03408df021125f2229c11699ed1ea5c8c4ffd6816f058e75dcb"
+  },
+  "repository": "Jeckell102/job-search-helper"
+}

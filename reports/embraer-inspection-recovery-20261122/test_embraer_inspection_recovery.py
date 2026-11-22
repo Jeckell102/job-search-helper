@@ -1,0 +1,92 @@
+import coordinator
+from types import SimpleNamespace
+
+
+def _state(**changes):
+    value = {
+        'workflow_version': 2, 'mode': 'develop', 'phase': 'inspect',
+        'integration': {'work_order': 'breezy-embraer-brand-heading-v1'},
+        'workflow': {'stall_turns': coordinator.workflow.MAX_STALL_TURNS},
+    }
+    value.update(changes)
+    return value
+
+
+def test_exact_stalled_embraer_offer_requires_fresh_complete_evidence(monkeypatch, tmp_path):
+    observed = []
+    monkeypatch.setattr(coordinator.workflow, 'plan', lambda *args: observed.append(args) or {'next': None})
+    monkeypatch.setattr(coordinator, 'phase_evidence', lambda *args: (True, ''))
+    assert coordinator.embraer_inspection_checkpoint_offer(_state(), [], {'x': 'y'}, tmp_path)
+    assert len(observed) == 1
+
+
+def test_offer_excludes_other_phase_work_order_stall_and_stale_evidence(monkeypatch, tmp_path):
+    monkeypatch.setattr(coordinator.workflow, 'plan', lambda *args: {'next': None})
+    monkeypatch.setattr(coordinator, 'phase_evidence', lambda *args: (True, ''))
+    assert not coordinator.embraer_inspection_checkpoint_offer(_state(phase='implement'), [], {}, tmp_path)
+    assert not coordinator.embraer_inspection_checkpoint_offer(
+        _state(integration={'work_order': 'other'}), [], {}, tmp_path)
+    assert not coordinator.embraer_inspection_checkpoint_offer(
+        _state(workflow={'stall_turns': coordinator.workflow.MAX_STALL_TURNS - 1}), [], {}, tmp_path)
+    monkeypatch.setattr(coordinator, 'phase_evidence', lambda *args: (False, 'stale evidence'))
+    assert not coordinator.embraer_inspection_checkpoint_offer(_state(), [], {}, tmp_path)
+
+
+def test_offer_rejects_a_refreshed_plan_with_real_remaining_work(monkeypatch, tmp_path):
+    monkeypatch.setattr(coordinator.workflow, 'plan', lambda *args: {'next': {'name': 'code_read'}})
+    monkeypatch.setattr(coordinator, 'phase_evidence', lambda *args: (True, ''))
+    assert not coordinator.embraer_inspection_checkpoint_offer(_state(), [], {}, tmp_path)
+
+
+def test_checkpoint_only_session_dispatches_one_instruction_without_resetting_budget_or_receipts(monkeypatch):
+    state = _state(
+        id='WRAP-0000000001', inference_session_id='session', calls=5, tokens=99, sessions=2,
+        no_progress=2, evidence_requirements={'version': 1, 'required_files': ['src/x.py']},
+        checkpoint={}, manifest={}, result_control_generation=0,
+    )
+    dispatched, published = [], []
+
+    class Store:
+        def get(self, task_id):
+            assert task_id == state['id']
+            return state
+
+        def control_generation(self):
+            return 7
+
+        def publish_result(self, task_id, current, **changes):
+            assert task_id == state['id']
+            published.append(changes)
+            return {**state, **changes}
+
+    instance = coordinator.Coordinator.__new__(coordinator.Coordinator)
+    instance.store = Store()
+    instance.paused = lambda task_id: False
+    instance.check_deadline = lambda task_id: state
+    instance.evidence_receipts = lambda task_id: []
+    instance.messages = lambda active, protocol: [{'role': 'system', 'content': 'fresh-guided-history'}]
+    instance.budget = lambda history, schemas: SimpleNamespace(available_generation_tokens=4000, prompt_tokens=10)
+
+    def dispatch(current, session_id, history, offered, output, prompt, generation):
+        dispatched.append((history, offered))
+        checkpoint = {'summary': 'Evidence supports the named repair.',
+                      'next_action': 'Implement the bounded fix.', 'outcome': 'phase_done'}
+        answer = {'usage': {}, 'message': {'tool_calls': [
+            {'function': {'name': 'worker_checkpoint', 'arguments': checkpoint}}]}}
+        return answer, {'tools_allowed': True}
+
+    instance._dispatch_session_inference = dispatch
+    monkeypatch.setattr(coordinator, 'manifest', lambda: {'src/x.py': 'current'})
+    monkeypatch.setattr(coordinator.code, 'root', lambda: '/fixture')
+    monkeypatch.setattr(coordinator.workflow, 'plan', lambda *args: {'next': None})
+    monkeypatch.setattr(coordinator.workflow, 'progress_key', lambda *args: 'unchanged')
+    monkeypatch.setattr(coordinator, 'phase_evidence', lambda *args: (True, ''))
+
+    instance._session_body(state, {'text': 'protocol'})
+    assert len(dispatched) == 1
+    history, offered = dispatched[0]
+    assert [schema['function']['name'] for schema in offered] == ['worker_checkpoint']
+    assert any('refreshed work plan has no next tool' in message['content'] for message in history)
+    final = published[-1]
+    assert final['phase'] == 'implement' and final['status'] == 'QUEUED'
+    assert all(not ({'calls', 'tokens', 'sessions'} & set(change)) for change in published)
