@@ -1,0 +1,10 @@
+{
+  "acceptance_baseline_unchanged": true,
+  "corrected_baseline_sha256": "81d33e14f5bdfe508d6533c0f5aff546a6cf1cf02df3b56730cbf635d35c183d",
+  "files": 749,
+  "normal_protocol_read_passed": true,
+  "old_baseline_sha256": "3cddf0386aa4547bf36d05bd0cecb0aeea62c3bdc2db7dce54ee113808d30e1d",
+  "only_new_file": "docs/wrapper-development-test-protocol.md",
+  "production_source_unchanged": true,
+  "protocol_sha256": "4c95994b3124f4c8b45cc4a7ba64b3f9777d6fce16d3403689b69a945a59a3c6"
+}
