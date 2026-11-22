@@ -1,0 +1,28 @@
+{
+  "before_journal_sha256": "22da0b905498584bd4327289f12be912d962bff8d1c18281e467b037247f6c6f",
+  "files": {
+    "src/job_search_helper/manual_company_start.py": {
+      "before": "bb1e010e6e14d0e7fe1df1bc91d5f633d37ed726fcc2ce2ee074f2252f0f6c5e",
+      "staged": "186d1203f35de96f75b0c0fc1a739cce37220d8899655dd86afbfad2a5d43277"
+    },
+    "src/job_search_helper/runner.py": {
+      "before": "496a3f598ea754458cbb55f33d98bccf17279777fdd731f74d65722d6a04a9b8",
+      "staged": "3f6ebd8c0ffcf2b08213837564b589eca64b7819667a7816f91cb030571df116"
+    },
+    "src/job_search_helper/sheets_sync.py": {
+      "before": "8202aa448b01b98af90a2ea3a088dc9f9cc1e3f47fa05a3c273afd9e1150ea9f",
+      "staged": "f3de38a8e59a384e38009ba6b114869ffc94b4dd508bbc7fb657b47b2ffcb60d"
+    },
+    "src/job_search_helper/source_configuration_manifest.json": {
+      "before": "d3a2cac80f3bf5f056bfc94045c298cae0263c563fd5abce849754278152f09e",
+      "staged": "d8698148851f64dba3a97b4c07cbcffca5c253dab5b6584e1caaa96000afd41e"
+    },
+    "src/job_search_helper/sqlite_repository.py": {
+      "before": "a5a22c4d683ff58925370915aa63c8c58c5aa7e7f8ecefacb60b8af9d3dade3f",
+      "staged": "48cc7b1dc2c6c54ef7be085f2c082358d275bf2ae84e2c8001f23cbe25b0cb31"
+    }
+  },
+  "live_source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+  "scope": "first manual Start plus previously staged status and descriptor corrections, preparation only",
+  "staged_source_sha256": "e196329d4687da91e42f49446423caecac3dc3854d25bc0ccc7b39f43eb7e954"
+}

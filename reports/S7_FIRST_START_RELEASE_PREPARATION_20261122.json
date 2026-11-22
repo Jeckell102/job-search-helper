@@ -1,0 +1,52 @@
+{
+  "combined_source_sha256": "e196329d4687da91e42f49446423caecac3dc3854d25bc0ccc7b39f43eb7e954",
+  "copied_shell_proof": {
+    "no_addition": {
+      "local_event_count": 0,
+      "provider_calls": 0,
+      "source_sha256": "e196329d4687da91e42f49446423caecac3dc3854d25bc0ccc7b39f43eb7e954",
+      "state": "PRESERVED_NORMAL_START",
+      "workbook_fixture_reads": 1
+    },
+    "sheets_only_jobs": {
+      "company_count": 1,
+      "cycle_id": "CYC-D1E492355621",
+      "event_first_discovered_from_workbook": true,
+      "event_id": "CEV-a6c37ce6a1094781b83dadff0755f2d7",
+      "launcher_sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+      "manual_start_elapsed_seconds": 0.912,
+      "manual_start_status": "SYNC_CONFIRMED",
+      "outcome_id": "OUT-8ec04c9760de9495b515fd62",
+      "provider_fixture_calls": 1,
+      "saved_job_count": 1,
+      "source_sha256": "e196329d4687da91e42f49446423caecac3dc3854d25bc0ccc7b39f43eb7e954",
+      "workbook_fixture_reads": 3,
+      "workbook_fixture_writes": 1
+    }
+  },
+  "corrected_measured_shell_result_sha256": "e658da473d1f06ab105d05599d37fdcd98ee7045a9018dd8a81dcf681be82bf7",
+  "count": 5,
+  "forterra_descriptor_mode": "0644",
+  "inherited_native_baseline": {
+    "bootstrap_sha256": "9e15bf97ef9af0db88a48ff7632fdb826320f50463a0b64ef11f6aa07e9df6e5",
+    "ga_and_allen_installed_endpoints_verified": 12,
+    "launcher_sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+    "successor_before_endpoints_verified": 5
+  },
+  "installer_test_sha256": "064eb026e7b094a406c0ad991e6341f2a73d1cc9d6d95eca6d48d08267350a25",
+  "native_deployment": "NOT_PERFORMED",
+  "preparation_script_sha256": "2c166126a16cf3b67ab5cb9cd1de304084bded75268130bdd2786a35907190f8",
+  "prepared_package_sha256": "17b5874f20bc65e2ddeb8063d5b2000deb8b9a9324b61058af1c69457bac67ea",
+  "private_capsule_manifest_mode": "0600",
+  "private_installer_rehearsal": "PASS_LOCKED_INSTALL_INTERRUPTION_HOLD_ROLLBACK",
+  "read_only_successor_measurement": {
+    "manifest_sha256": "ec5230b68f9edd88cfd15d8c4e65919932685115a5d4a9e1d8b0e68bcedf2d40",
+    "phase": "BEFORE",
+    "release_id": "REL-ec5230b68f9edd88cfd15d8c"
+  },
+  "source_entry_sha256": "d103633e80608b07f731d0dd2c392e2fe58cf216363b4e2bbe8962ec446b9865",
+  "source_installer_sha256": "3d2953b34f484b01fa21a4ed64f229f3d5ebf510c62a761d124445f6f5a449b8",
+  "source_owner_sha256": "155f63b7f7048f26bf3acbefe1b899e51433e514ec216a4d4907dada93cd72ed",
+  "source_qa": "ACCEPT_STAGED_SOURCE_CAPSULE",
+  "source_scope_sha256": "6fa7fb41d2bd8e7886c311ba0689d9680241b0d0a0db29467306b393e9f8ea4e"
+}
