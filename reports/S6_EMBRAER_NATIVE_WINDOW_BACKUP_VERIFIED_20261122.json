@@ -1,0 +1,18 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "fetched_commit": "901cfe00f983ad4f12da88482cd6af34de2af603",
+  "files": {
+    "reports/S6_EMBRAER_NATIVE_PREPARATION_20261122.md": "8d226f36315a0812c8ed2170a7beffde1a8b54647e22eb0e7c846e522b48d474",
+    "reports/S6_EMBRAER_NATIVE_WINDOW_READY_20261122.md": "4316407799785cd3a800beb75ecaa010aae5cd157ffe2aac82b8a320b25ee58e",
+    "reports/embraer-native-window-20261122/deployment/PREPARED_PACKAGE.json": "847e43bca8e209b2624bbf8ce71ec842d4c8f59b6ab6daf1369fcd2be5bef3e0",
+    "reports/embraer-native-window-20261122/deployment/maintenance_source_owner.py": "155f63b7f7048f26bf3acbefe1b899e51433e514ec216a4d4907dada93cd72ed",
+    "reports/embraer-native-window-20261122/deployment/native_source_advance.py": "780248da17908df40bf3bcebc892d7df01b4b1b2274bf7a2b2f0571240d0a4fc",
+    "reports/embraer-native-window-20261122/deployment/native_source_release_entry.py": "fb12dc6e357baea45224114b02db0ac6f65ae660fd77675d94d659d438274e11",
+    "reports/embraer-native-window-20261122/deployment/test_native_source_advance.py": "66d874adbf7195e1c41e787c8fd34b6f79c072a1d3db360dbe456f0e85ef7ef2",
+    "reports/embraer-native-window-20261122/native-window/native_window.py": "c096f5d0696bf047477555abab42840d84334670e950205a56e344fcf0d25e54",
+    "reports/embraer-native-window-20261122/native-window/start_observer.sh": "17ffc464259ec22043badef4868380591f5c177f7f62df7b725df6e36465b541",
+    "reports/embraer-native-window-20261122/native-window/test_native_window.py": "82b3b4def89efd9b78d8618ec8133bd9d2bd0c4601e334acc69e7a4f3cac7c71"
+  },
+  "repository": "Jeckell102/job-search-helper",
+  "verified_at": "2026-11-22T18:31:27.394564+00:00"
+}

@@ -867,6 +867,45 @@ ordinary source-change flow. The current required qualified repair runs
 and three sequential completion proofs remain open.
 [Deployed Allen ordinary result](S6_ALLEN_DEPLOYED_ORDINARY_SYNC_20261122.md).
 
+November 22 Embraer candidate. The original integration priority list
+supplied a documented incomplete pull. Its verified US board exposed
+all three historically skipped details. Current public evidence and an
+isolated parser reference demonstrate a fixable failure. Independently
+reviewed staging now binds that exact typed partial to the normal
+company-only operator request, one isolated coordinator development
+task, and a pinned private source baseline. An interruption before
+first activation was reproduced, repaired, and independently retested.
+The prepared maintenance moves the launcher/application and wrapper
+groups under one continuous host hold. Its read-only production check
+reached the administrator observer requirement. One scoped production
+activation, Jetson candidate, independent qualification and actual
+retry remain open. No new sequential completion credit has been earned.
+
+[Embraer staging evidence](S6_EMBRAER_OWNED_ADMISSION_STAGED_QA_20261122.md)
+· [Native readiness and owner action](S6_EMBRAER_NATIVE_WINDOW_READY_20261122.md)
+· [Verified maintenance backup](S6_EMBRAER_NATIVE_WINDOW_BACKUP_VERIFIED_20261122.json).
+
+November 22 Embraer progression. The exact source deployment was
+independently verified. A single normal company request returned a stable
+53-posting list and four incomplete descriptions. The incomplete pull
+was saved locally and held from publication. MuleLab sent that exact
+failure to the single Jetson worker, which stopped in inspection after
+five completed requests and no unresolved inference. A narrow private
+recovery passed independent source review. The next live step is a
+guarded coordinator-only restart and supported resume of the same task
+inside its original budget. Candidate, qualification and actual retry
+remain pending. [Current hold](S6_EMBRAER_COORDINATOR_FORWARD_READY_20261122.md).
+
+November 22 corrected-baseline result. The frozen baseline now expects the
+valid Embraer branded posting to pass, and preserves separate malformed and
+foreign-employer checks. The new live attempt confirmed the real defect and
+reached editing. The Jetson made no source change before its token allowance
+could no longer fit another turn. All 15 inference calls are settled. The
+installed coordinator has no compatible retry for this noncampaign repair.
+Keep the result as an engineering hold until a reviewed bounded continuation
+or separately qualifying case is available. No acceptance credit changes.
+[Settled worker evidence](S6_EMBRAER_CORRECTED_ATTEMPT_BUDGET_HOLD_20261122.json).
+
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 
 The November 21 effective reconciliation covers all six milestones,
