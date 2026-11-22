@@ -1,0 +1,16 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "6d5cb5fd157ecb02e5254066aa6f8a36dddb7925",
+  "matched_files": {
+    "reports/S6_EMBRAER_EXPIRED_WITHDRAWAL_DEPLOYED_20261122.json": "b669ff10d76a0bdb274e0b664d221ac89f60ce0a29a5cea1c451f105b449eb93",
+    "reports/S6_EMBRAER_FRESH_SUCCESSOR_OUTCOME_20261122.json": "73f84066e84b035116f4837e5523c621de6978ab02c4889f7452d1c560fc75a3",
+    "reports/S6_EMBRAER_RESUMED_INSPECTION_BACKUP_VERIFIED_20261122.json": "5c0b4f5e47c13bf9445be5caaf489237a9b1e1151a9238e62612448f1c1b2dc9",
+    "reports/embraer-inspection-recovery-20261122/expired-post-forward/HANDOFF.md": "690bb038937188d1e4b10e990e2e643ae40775d50231a569bb0c74b44b68559f",
+    "reports/embraer-inspection-recovery-20261122/expired-post-forward/native_expired_post_forward.py": "ff6aa8e3d59138c256962cbcddd3f2e70fac693534f57bff1d0ae3547453cce5",
+    "reports/embraer-inspection-recovery-20261122/expired-post-forward/test_expired_post_forward.py": "c2f79f436cde29176c8377e5285f32df7708791120060fc7e2503bf7b8724979",
+    "reports/embraer-inspection-recovery-20261122/successor-evidence/SUCCESSOR_BASELINE_PROJECTION.json": "e8e890d2564343cc7e2963e1dbea1de2c552688a3de57e220cf9fd81a75e829e",
+    "reports/embraer-inspection-recovery-20261122/successor-evidence/close_original_after_deadline.sh": "5bc0f1533df235f31008e8e176b8cbe8461823c50de509bbe104a5a8c0d91f98",
+    "reports/embraer-inspection-recovery-20261122/successor-evidence/settle_expired_pilot.py": "cada0b8d03ce61dc507707865aeb611facc429871ebdd81206fd7e02ea62c9ce"
+  },
+  "repository": "Jeckell102/job-search-helper"
+}
