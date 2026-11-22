@@ -1,0 +1,429 @@
+{
+  "bell_public_sample": {
+    "company_id": "COMP-0631",
+    "detail_samples": [],
+    "listing_pages": [],
+    "observed_at": "2026-11-22T17:49:18.376022+00:00",
+    "official_board": "https://textron.taleo.net/careersection/bell/jobsearch.ftl?lang=en",
+    "reason": "HTTP 500; inventory unavailable, not evidence of closure.",
+    "status": "failed"
+  },
+  "embraer_detail_shape": {
+    "company_id": "COMP-0634",
+    "historical_ids_present": 3,
+    "listed": 53,
+    "observed_at": "2026-11-22T17:53:21.278056+00:00",
+    "reason": "Breezy visible detail identity or description missing.",
+    "responses": [
+      {
+        "body_sha256": "7be9495b8d7204f63106080c12baff3a1c3895c594ed5cfd56f08c7abd28ec85",
+        "status": 200
+      },
+      {
+        "body_sha256": "a58009ec6ae46f799f325ecd92c1804a07eb05b81230685d383ac2dac0542f0b",
+        "status": 200
+      }
+    ],
+    "shape": {
+      "canonical_differs_only_case": true,
+      "canonical_differs_only_trailing_slash": true,
+      "canonical_urls": 1,
+      "description_sizes": [
+        4739
+      ],
+      "exact_matching_heading_count": 1,
+      "exact_matching_url_count": 1,
+      "heading_count": 2,
+      "listing_title_sha256": "07eb1e854143ab768a0eb15ba5fc220fcd252766a8ac59322c03bf9121f8c0e8",
+      "public_detail_url": "https://embraer.breezy.hr/p/8e79ba4b1faa-a-p-technician-weekend-shift",
+      "structured_items": 0
+    },
+    "status": "partial"
+  },
+  "embraer_heading_containment": {
+    "body_sha256": "628e731f55a16e908274c4d5f57bfa187f07e002a6633682b0fb5d7a9b3cca9a",
+    "headings": [
+      {
+        "ancestors": [
+          [
+            "html",
+            []
+          ],
+          [
+            "body",
+            [
+              "breezy-portal",
+              "undefined",
+              "breezy-portal-bold"
+            ]
+          ],
+          [
+            "div",
+            [
+              "body-wrapper",
+              "landing",
+              "position"
+            ]
+          ],
+          [
+            "div",
+            [
+              "header",
+              "headerStyle"
+            ]
+          ],
+          [
+            "div",
+            [
+              "container-wrapper"
+            ]
+          ],
+          [
+            "a",
+            [
+              "brand"
+            ]
+          ]
+        ],
+        "heading_classes": [],
+        "inside_description": false,
+        "matches_listed_title": false
+      },
+      {
+        "ancestors": [
+          [
+            "html",
+            []
+          ],
+          [
+            "body",
+            [
+              "breezy-portal",
+              "undefined",
+              "breezy-portal-bold"
+            ]
+          ],
+          [
+            "div",
+            [
+              "body-wrapper",
+              "landing",
+              "position"
+            ]
+          ],
+          [
+            "div",
+            [
+              "hero"
+            ]
+          ],
+          [
+            "div",
+            [
+              "hero-background-color"
+            ]
+          ],
+          [
+            "div",
+            [
+              "banner"
+            ]
+          ]
+        ],
+        "heading_classes": [],
+        "inside_description": false,
+        "matches_listed_title": true
+      }
+    ],
+    "observed_at": "2026-11-22T17:53:58.595373+00:00"
+  },
+  "embraer_initial_sample": {
+    "company_id": "COMP-0634",
+    "historical_ids_present": 3,
+    "listed": 53,
+    "observed_at": "2026-11-22T17:52:44.041210+00:00",
+    "reason": "Breezy visible detail identity or description missing.",
+    "responses": [
+      {
+        "body_sha256": "7be9495b8d7204f63106080c12baff3a1c3895c594ed5cfd56f08c7abd28ec85",
+        "status": 200
+      },
+      {
+        "body_sha256": "b2b89b480224b7ac325fd23272243ffb6c9d37add8ee7fe65e088ab520827e34",
+        "status": 200
+      }
+    ],
+    "status": "partial"
+  },
+  "embraer_reference_replay": {
+    "company_id": "COMP-0634",
+    "details": [
+      {
+        "id": "8e79ba4b1faa",
+        "installed": {
+          "reason": "Breezy visible detail identity or description missing.",
+          "status": "partial"
+        },
+        "reference": {
+          "description_length": 4739,
+          "exact_identity": true,
+          "status": "complete"
+        }
+      },
+      {
+        "id": "a4f881e9a075",
+        "installed": {
+          "reason": "Breezy visible detail identity or description missing.",
+          "status": "partial"
+        },
+        "reference": {
+          "description_length": 4117,
+          "exact_identity": true,
+          "status": "complete"
+        }
+      },
+      {
+        "id": "fb98e09081a0",
+        "installed": {
+          "reason": "Breezy visible detail identity or description missing.",
+          "status": "partial"
+        },
+        "reference": {
+          "description_length": 4989,
+          "exact_identity": true,
+          "status": "complete"
+        }
+      }
+    ],
+    "installed_source_sha256": "a9ffabefcb8cf0504ebd847306261e7347162f9d08adfc8c7d162ed3711d147e",
+    "listed": 53,
+    "observed_at": "2026-11-22T17:55:39.890813+00:00",
+    "public_requests": [
+      {
+        "body_sha256": "7be9495b8d7204f63106080c12baff3a1c3895c594ed5cfd56f08c7abd28ec85",
+        "status": 200
+      },
+      {
+        "body_sha256": "f833e9271feb8eb90da9e795d6d24875ffd7b71ca3bc4f6467aca095ba3ea43f",
+        "status": 200
+      },
+      {
+        "body_sha256": "a9ff668c0802021088799dfe2bda66089498fdb05e0deff0981666927e78f7fb",
+        "status": 200
+      },
+      {
+        "body_sha256": "d3e09c642b83a7a72c2359b6d9ef38bf870f4fae10d46e96d32f1b430f6c6f6b",
+        "status": 200
+      }
+    ],
+    "reference_source_sha256": "f345265def4d27e02fe32ba9bfd6e9fb7f1c24beee45c49a5c993e4620586c45"
+  },
+  "field_ai_normal_dispatch": {
+    "all_returned_descriptions_present": true,
+    "bounded_reason": "Verified company source repair: https://api.lever.co/v0/postings/field-ai. One or more malformed/incomplete postings were skipped. Skipped postings: 1; diagnostic details printed for the first 1.",
+    "company_id": "COMP-0217",
+    "ids_sha256": "59612156fbab66215658290e34cb648facd6311faf8b8527fd0648c7572e956b",
+    "normalized_postings": 82,
+    "observed_at": "2026-11-22T17:45:14.024230+00:00",
+    "provider_status": "partial",
+    "requests": [
+      {
+        "body_sha256": "a363606665f8010e072d193e7261ba8b28f20beda0b80f517ea7f77ff1ebe53b",
+        "http_status": 200,
+        "offset": 0,
+        "records": 83
+      },
+      {
+        "body_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "http_status": 200,
+        "offset": 83,
+        "records": 0
+      }
+    ],
+    "scope": "server public Lever page zero and exact terminating tail, no retries or detail calls",
+    "skip_diagnostic_count": 1,
+    "unique_posting_ids": 82
+  },
+  "field_ai_public_detail": {
+    "body_sha256": "73e8cd98742205524dcd684f070cb48bc768c2ef327eb3ab4a72882a4e057b3c",
+    "company_id": "COMP-0217",
+    "description_present": false,
+    "exact_posting_identity": true,
+    "exact_public_detail_route": "https://api.lever.co/v0/postings/field-ai/4d6e794b-1fcb-472f-babb-9b482eb02edf?mode=json",
+    "observed_at": "2026-11-22T17:47:58.335861+00:00",
+    "provider_http_status": 200,
+    "required_description_missing": true
+  },
+  "field_ai_skipped_posting_shape": {
+    "company_id": "COMP-0217",
+    "field_ai_listing_sha256": "a363606665f8010e072d193e7261ba8b28f20beda0b80f517ea7f77ff1ebe53b",
+    "listing_size": 83,
+    "observed_at": "2026-11-22T17:47:32.215138+00:00",
+    "skips": [
+      {
+        "category_keys": [
+          "allLocations",
+          "department",
+          "location",
+          "team"
+        ],
+        "field_shapes": {
+          "additional": {
+            "nonempty": false,
+            "type": "str"
+          },
+          "additionalPlain": {
+            "nonempty": false,
+            "type": "str"
+          },
+          "applyUrl": {
+            "nonempty": true,
+            "type": "str"
+          },
+          "categories": {
+            "nonempty": true,
+            "type": "dict"
+          },
+          "description": {
+            "nonempty": false,
+            "type": "str"
+          },
+          "descriptionBody": {
+            "nonempty": false,
+            "type": "str"
+          },
+          "descriptionBodyPlain": {
+            "nonempty": false,
+            "type": "str"
+          },
+          "descriptionPlain": {
+            "nonempty": false,
+            "type": "str"
+          },
+          "hostedUrl": {
+            "nonempty": true,
+            "type": "str"
+          },
+          "id": {
+            "nonempty": true,
+            "type": "str"
+          },
+          "lists": {
+            "nonempty": false,
+            "type": "list"
+          },
+          "opening": {
+            "nonempty": false,
+            "type": "str"
+          },
+          "openingPlain": {
+            "nonempty": false,
+            "type": "str"
+          },
+          "text": {
+            "nonempty": true,
+            "type": "str"
+          }
+        },
+        "index": 47,
+        "public_detail_routes": {
+          "applyUrl": "https://jobs.lever.co/field-ai/4d6e794b-1fcb-472f-babb-9b482eb02edf/apply",
+          "hostedUrl": "https://jobs.lever.co/field-ai/4d6e794b-1fcb-472f-babb-9b482eb02edf"
+        },
+        "public_id": "4d6e794b-1fcb-472f-babb-9b482eb02edf",
+        "reason": "Missing required normalized fields: description"
+      }
+    ]
+  },
+  "scythe_dover_observed_at": "2026-11-22T17:44:16.016443+00:00",
+  "scythe_dover_readback": {
+    "scythe_configured": {
+      "exact_redirect": "https://jobs.dover.com/scytherobotics?src=app",
+      "http_status": 301
+    },
+    "scythe_redirect_target": {
+      "body_length": 4466,
+      "body_sha256": "ea986033d065b01d02446e326032c057877ce05c9806061491de03ae6b2475d3",
+      "explicit_zero_phrase_present": false,
+      "framework_shell_markers": true,
+      "http_status": 200,
+      "media_type": "text/html"
+    }
+  },
+  "scythe_rendered_board": {
+    "challenge_observed": false,
+    "company_id": "COMP-0506",
+    "employer_named": true,
+    "explicit_empty_statement": false,
+    "job_link_set_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "observed_at": "2026-11-22T17:52:43.812838+00:00",
+    "public_board": {
+      "collections": [
+        {
+          "count": 1,
+          "path": "careers_page_display_stats"
+        },
+        {
+          "count": 4,
+          "path": "careers_page_social_links"
+        }
+      ],
+      "identity_paths": [
+        "slug",
+        "name"
+      ],
+      "keys": [
+        "bias_audit_link",
+        "can_embed",
+        "careers_page_accent_color",
+        "careers_page_background_color",
+        "careers_page_display_stats",
+        "careers_page_font",
+        "careers_page_font_family",
+        "careers_page_google_font_url",
+        "careers_page_image",
+        "careers_page_info",
+        "careers_page_logo_height",
+        "careers_page_logo_redirect_url",
+        "careers_page_social_links",
+        "dover_plan",
+        "enable_talent_network",
+        "id",
+        "logo",
+        "name",
+        "primary_domain",
+        "slug"
+      ]
+    },
+    "public_board_sha256": "38ae51718608bfd42e91da2ddfaf077871096b8a5705bbed25647277eb3e331a",
+    "responses": [
+      {
+        "host": "jobs.dover.com",
+        "path": "/scytherobotics",
+        "status": 200,
+        "type": "document"
+      },
+      {
+        "host": "jobs.dover.com",
+        "path": "/api/v1/users/auth_context",
+        "status": 401,
+        "type": "fetch"
+      },
+      {
+        "host": "jobs.dover.com",
+        "path": "/api/v1/careers-page-slug/scytherobotics",
+        "status": 200,
+        "type": "fetch"
+      },
+      {
+        "host": "jobs.dover.com",
+        "path": "/api/v1/clients/get_requesting_users_client",
+        "status": 401,
+        "type": "fetch"
+      }
+    ],
+    "unavailable_statement": false,
+    "unique_qualifying_job_links": 0,
+    "visible_length": 1664
+  }
+}

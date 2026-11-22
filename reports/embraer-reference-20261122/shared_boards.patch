@@ -1,0 +1,75 @@
+--- a/src/job_search_helper/shared_boards.py
++++ b/src/job_search_helper/shared_boards.py
+@@ -365,6 +365,59 @@
+         return [j for a,s in self.scripts if a.get('type')=='application/ld+json' for j in walk(json.loads(s))]
+ 
+ 
++
++class _BreezyHeadings(HTMLParser):
++    _void = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
++             'link', 'meta', 'param', 'source', 'track', 'wbr'}
++
++    def __init__(self):
++        super().__init__()
++        self.stack = []
++        self.headings = []
++        self.heading = None
++
++    def handle_starttag(self, tag, attrs):
++        if tag in self._void:
++            return
++        classes = dict(attrs).get('class', '').split()
++        if tag == 'h1':
++            parent = self.stack[-1] if self.stack else None
++            self.heading = (parent, [])
++        self.stack.append((tag, classes))
++
++    def handle_data(self, data):
++        if self.heading is not None:
++            self.heading[1].append(data)
++
++    def handle_endtag(self, tag):
++        if tag == 'h1' and self.heading is not None:
++            parent, parts = self.heading
++            scope = ''
++            if parent:
++                parent_tag, classes = parent
++                if parent_tag == 'a' and 'brand' in classes:
++                    scope = 'brand'
++                if parent_tag == 'div' and 'banner' in classes:
++                    scope = 'banner'
++            self.headings.append((scope, text(''.join(parts))))
++            self.heading = None
++        for index in range(len(self.stack) - 1, -1, -1):
++            if self.stack[index][0] == tag:
++                del self.stack[index:]
++                break
++
++
++def _embraer_detail_heading(body, title):
++    # Some public Embraer details put an employer h1 above the job's banner.
++    parser = _BreezyHeadings()
++    parser.feed(body)
++    parser.close()
++    if len(parser.headings) != 2:
++        return False
++    (brand_scope, brand), banner = parser.headings
++    return brand_scope == 'brand' and bool(brand) and brand != title and banner == ('banner', title)
++
++
+ def js(t,url,payload=None):return json.loads(checked(t.get(url) if payload is None else t.post(url,payload)))
+ def unique(items):
+     if any(e.get('id') is None or isinstance(e.get('id'),bool) for e in items):raise FetchError('partial','Public posting ID is missing or invalid.')
+@@ -522,7 +575,11 @@
+             descriptions=Elements(body,{'description'}).values
+             headings=[text(v) for v in re.findall(r'<h1(?:\s[^>]*)?>(.*?)</h1>',body,re.S|re.I)]
+             meta=PublicMetadata();meta.feed(body)
+-            if len(descriptions)!=1 or not descriptions[0] or headings!=[text(e['name'])] or meta.urls!=[url]:
++            title = text(e['name'])
++            title_confirmed = headings == [title]
++            if not title_confirmed and cid == 'COMP-0634' and b.root == 'https://embraer.breezy.hr':
++                title_confirmed = _embraer_detail_heading(body, title)
++            if len(descriptions) != 1 or not descriptions[0] or not title_confirmed or meta.urls != [url]:
+                 raise FetchError('partial','Breezy visible detail identity or description missing.')
+             description=descriptions[0]
+         else:
