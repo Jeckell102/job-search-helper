@@ -252,7 +252,8 @@ def main(argv=None):
     @contextmanager
     def approved_guard():
         with guard() as predecessor:
-            require(predecessor == evidence['predecessor'] and snapshot() == evidence['snapshot'],
+            require(five.digest(predecessor) == five.digest(evidence['predecessor'])
+                    and five.digest(snapshot()) == five.digest(evidence['snapshot']),
                     'Native custody changed after inspection')
             five.install_custody_projection(window, projection, new_authority, PROJECT, reference)
             yield predecessor
