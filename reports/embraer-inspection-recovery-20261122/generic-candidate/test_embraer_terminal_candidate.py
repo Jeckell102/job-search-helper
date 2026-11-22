@@ -3,7 +3,7 @@ import types
 import hashlib
 import json
 
-from embraer_terminal_candidate import read_embraer_terminal_candidate
+from embraer_terminal_candidate import derive_embraer_final_diff, read_embraer_terminal_candidate
 
 
 MANIFEST = {'src/job_search_helper/shared_boards.py': 'a' * 64}
@@ -100,3 +100,31 @@ def test_unsettled_ordinary_tool_row_holds_without_invented_status(monkeypatch):
                                             current_acceptance_source_manifest=MANIFEST,
                                             final_diff={'paths': ['src/job_search_helper/shared_boards.py'],
                                                         'source_manifest': MANIFEST}) is None
+
+
+def test_derives_only_scoped_changed_source_from_physical_pilot_baseline(tmp_path):
+    from coordinator_baseline import binding, files
+
+    baseline = tmp_path / 'pilot-base'
+    workspace = tmp_path / 'tasks' / 'WRAP-fbb9ff24d3' / 'repo'
+    for root in (baseline, workspace):
+        (root / 'src/job_search_helper').mkdir(parents=True)
+        (root / 'tests').mkdir()
+        (root / 'src/job_search_helper/shared_boards.py').write_text('before = 1\n')
+        (root / 'src/job_search_helper/off_scope.py').write_text('stable = 1\n')
+        (root / 'tests/test_embraer_typed_defect.py').write_text('assert True\n')
+    (workspace / 'src/job_search_helper/shared_boards.py').write_text('after = 2\n')
+    task = {'id': 'WRAP-fbb9ff24d3', 'assignment_baseline': binding(files(baseline)),
+            'edit_scope': {'paths': ['src/job_search_helper/shared_boards.py', 'tests/test_embraer_typed_defect.py']},
+            'integration_identity': {'source_targets': ['src/job_search_helper/shared_boards.py']},
+            'manifest': files(workspace)}
+    projection = derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline)
+    assert projection['paths'] == ['src/job_search_helper/shared_boards.py']
+    assert projection['before'] != projection['after']
+    (workspace / 'src/job_search_helper/off_scope.py').write_text('drift = 1\n')
+    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline) is None
+    (workspace / 'src/job_search_helper/off_scope.py').write_text('stable = 1\n')
+    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline)['paths'] == [
+        'src/job_search_helper/shared_boards.py']
+    (workspace / 'src/job_search_helper/shared_boards.py').unlink()
+    assert derive_embraer_final_diff(task, types.SimpleNamespace(base=tmp_path / 'tasks'), pilot_baseline=baseline) is None

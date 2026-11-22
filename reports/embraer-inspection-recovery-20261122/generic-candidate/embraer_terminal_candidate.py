@@ -3,6 +3,47 @@
 WORK_ORDER = 'breezy-embraer-brand-heading-v1'
 
 
+def derive_embraer_final_diff(task, store, *, pilot_baseline):
+    """Read the exact isolated workspace against its saved pilot baseline.
+
+    It returns only content digests and manifests.  The baseline and workspace
+    remain unopened for writing, and a caller cannot substitute a shared tree.
+    """
+    try:
+        from pathlib import Path
+        from coordinator_baseline import binding, files
+        from coordinator_acceptance import files as acceptance_files
+
+        task_id = task.get('id')
+        workspace = Path(store.base) / task_id / 'repo'
+        baseline = Path(pilot_baseline)
+        if (task_id != 'WRAP-fbb9ff24d3' or not workspace.is_absolute() or not baseline.is_absolute()
+                or workspace.is_symlink() or baseline.is_symlink()
+                or workspace.resolve(strict=True) != workspace or baseline.resolve(strict=True) != baseline
+                or not workspace.is_dir() or not baseline.is_dir()):
+            return None
+        before, after = files(baseline), files(workspace)
+        if task.get('assignment_baseline') != binding(before) or task.get('manifest') != after:
+            return None
+        scope = task.get('edit_scope', {}).get('paths')
+        required_sources = (task.get('integration_identity') or {}).get('source_targets')
+        if (not isinstance(scope, list) or not isinstance(required_sources, list)
+                or not required_sources or any(not isinstance(path, str) or not path.startswith('src/') for path in required_sources)
+                or any(path not in before or path not in after for path in scope)
+                or any(path not in before or path not in after for path in required_sources)):
+            return None
+        paths = sorted(path for path in set(before) | set(after) if before.get(path) != after.get(path))
+        if any(path not in scope for path in paths):
+            return None
+        if not paths or not any(path in required_sources for path in paths):
+            return None
+        return {'paths': paths, 'before': {path: before[path] for path in paths},
+                'after': {path: after[path] for path in paths}, 'source_manifest': after,
+                'acceptance_source_manifest': acceptance_files(workspace, ('src',), False)}
+    except (AttributeError, KeyError, OSError, TypeError, ValueError):
+        return None
+
+
 def _verified_receipts(receipts, source_manifest, acceptance_source_manifest, scope, bundle):
     """Require the final normal verify receipts; do not infer completion from status."""
     from coordinator_acceptance import digest as acceptance_digest
