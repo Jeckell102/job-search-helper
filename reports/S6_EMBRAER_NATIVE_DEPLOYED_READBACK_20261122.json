@@ -1,0 +1,21 @@
+{
+  "activation_receipt_sha256": "e652841c669138c7b92a78135dd3735b49d27f534d4eb2ce3ca9c29c1b69da50",
+  "active_journal_sha256": "c47b1e8036d3145b4c016e9d398f20ca5e34a7f98bc07459ef213ad6601aa576",
+  "phase": "COMPLETE",
+  "private_native_phases": {
+    "exchange-private/exchange.json": {
+      "phase": "restored",
+      "sha256": "4fe057dab5d0f15c35e102d73c776151469a59fb442067a1b3313aa36b5f83ca"
+    },
+    "native-window.json": {
+      "phase": "RESTORED",
+      "sha256": "492e8d056870dac4004d01dbb39fd179ae0ac3f008aace9e5d69a0941e0d4e72"
+    },
+    "operator-quiet-window.json": {
+      "phase": "RESTORED",
+      "sha256": "5ed9e6f5e9a09ac5862015977ea2affa278d205ade47c337af3ca523390ca34f"
+    }
+  },
+  "release_id": "REL-2a5c7bb2ad922f73cf868d15",
+  "verified_installed_file_count": 13
+}

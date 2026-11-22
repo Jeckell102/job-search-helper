@@ -1,0 +1,50 @@
+{
+  "acknowledged": false,
+  "advertised_jobs": 53,
+  "application_proof": {
+    "evidence_code": "breezy_embraer_brand_heading",
+    "observation_sha256": "399afce0bc247263f1501fff7466dc23a2aeb4a005185f54f4c6186a897ca1d6",
+    "outcome_id": "OUT-719882e9ec8b8ad044885426",
+    "request_id": "operator-embraer-20261122-01",
+    "request_sha256": "19e7af99bd90d243f9b9f7465d5b6c38455ef99208cade05b7e1cfe5ca7536d2",
+    "runtime": {
+      "config_sha256": "fdb4049997bddf85ec7f421283951ca2121cba2fab3be2e21082d32bc5eaaa03",
+      "dependency_manifest_sha256": "98079522053bb0643717e2afc5a2cf7890566729bd951a96e4d1a18487e3c7fb",
+      "release_id": "REL-2a5c7bb2ad922f73cf868d15",
+      "source_manifest_sha256": "58846137ad688768ca93016de6f9432163c0ca849d3cbcfae9564eb3e907495d",
+      "state": "COMPLETE"
+    },
+    "settlement_sha256": "5b187dd0b8413bd413c3c211a1b41dbadbeb335abc6e0832666b43af6d0bb816",
+    "source_files": {
+      "src/job_search_helper/ats.py": "a580747f5067f4177e6d698792f576dc757136fadaa1eb03aa0368872b77f481",
+      "src/job_search_helper/shared_boards.py": "a9500064f69b5bb4f5d9320abc08496559b171aa1c45b724877a4f10e46547d7"
+    },
+    "source_revision": "c8e81ca1767c26d84912314b189c0387d855eaf64ee0fc1ae945020e6bcced95"
+  },
+  "complete_details_held": 49,
+  "exact_failed_details": 4,
+  "observed_at": "2026-11-22T18:40:03.592463+00:00",
+  "outcome": {
+    "action": "upsert_qualified_repair",
+    "failure_fingerprint": "54fa33466785019727081b24a415767a6d352d5b55209c1fbb348de1607e8430",
+    "identity": {
+      "adapter_version": "normal-scraper-v1",
+      "company_id": "COMP-0634",
+      "cycle_id": "CYC-26DF04280563",
+      "provider": "Breezy HR",
+      "request_id": "operator-embraer-20261122-01",
+      "source_revision": "c8e81ca1767c26d84912314b189c0387d855eaf64ee0fc1ae945020e6bcced95"
+    },
+    "outcome": "QUALIFIED_INTEGRATION_REPAIR",
+    "outcome_id": "OUT-719882e9ec8b8ad044885426",
+    "repair_category": "full_description_regression"
+  },
+  "outcome_sha256": "c1e010c361085b6f15e5c621800a042e527a3429fc732fb95173eb53d65c222a",
+  "publication": "HELD_NO_JOB_PUBLICATION",
+  "request": {
+    "request_id": "operator-embraer-20261122-01",
+    "request_sha256": "19e7af99bd90d243f9b9f7465d5b6c38455ef99208cade05b7e1cfe5ca7536d2",
+    "source_revision": "c8e81ca1767c26d84912314b189c0387d855eaf64ee0fc1ae945020e6bcced95"
+  },
+  "stable_listing": true
+}
