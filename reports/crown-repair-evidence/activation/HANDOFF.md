@@ -38,3 +38,14 @@ The exact read-only extractor was exercised through real disposable
 SQLite settlement, host environment parsing, and coordinator restart
 readback. A wrong baseline pin failed. In production it held before
 accessing application records while the old release was active.
+
+When the Jetson returns a tested, frozen Crown candidate, the independent
+qualification entry is `../qualification/qualify_crown.py`. Use the exact
+candidate source manifest and adapter/dispatcher hashes. Its baseline
+description parser comes from the pinned admission source. It serializes
+official-board calls, enforces first and final sitemap membership around
+all details, requires exact employer, URL and description coverage, and
+keeps only summary fingerprints. Three local fixture checks passed.
+No candidate exists and no live qualification has run. Before using the
+entry, independently verify the full model-to-edit-to-candidate
+provenance and exact edit scope as planned.
