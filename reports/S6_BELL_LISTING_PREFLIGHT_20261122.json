@@ -1,0 +1,14 @@
+{
+  "adapter_disposition": "failed",
+  "company_id": "COMP-0631",
+  "http_statuses": [
+    200,
+    500
+  ],
+  "observed_at": "2026-11-22T22:45:51.236110+00:00",
+  "official_board": "https://textron.taleo.net/careersection/bell/jobsearch.ftl?lang=en",
+  "official_site": "https://www.bellflight.com/company/careers",
+  "reason": "HTTP 500; inventory unavailable, not evidence of closure.",
+  "scope": "one current landing page and first public listing search only; no detail or retry",
+  "status": "PUBLIC_LISTING_UNVERIFIED"
+}
