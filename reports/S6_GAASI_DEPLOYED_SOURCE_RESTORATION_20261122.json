@@ -1,0 +1,13 @@
+{
+  "activation_receipt_sha256": "bdd41f15bf7b241406a5fa0565f3a3028316fcf75b8c930fbb776f7633ac8a81",
+  "exact_endpoints": 9,
+  "exchange_journal_sha256": "db3373c5c6ed4d822618fbe1a4ec0d1ac73f9d74622224d527a7a03374d7a23f",
+  "independent_mount_ids": "namespace-specific; coordinator owns native mount confirmation",
+  "journal_sha256": "de1c2a8445b810574c626eef4f9fb0d60e3561bc7208584028193da95e30738c",
+  "native_journal_sha256": "247419a3c8a90e35691ad85ffb1788878fb7dba59d29324424d3c01e3afd066f",
+  "physical_pairs": 3,
+  "quiet_journal_sha256": "09c0f917b8d8a12f54686dde94b81b831d28c1dd579faecdc278b1bdb4288df0",
+  "release_id": "REL-bc64482443373843f2f93cb5",
+  "restoration_sha256": "af6fd94206cbe6137468748440221e8b907f1ae4a19fa1591c7691a5ddd5d4d7",
+  "source_sha256": "7f0c0f77620304725fbcf36584a7d1f84e1ad6c4ca8017a2121e03dede5c0dd5"
+}

@@ -1,0 +1,19 @@
+{
+  "active_journal_sha256": "de1c2a8445b810574c626eef4f9fb0d60e3561bc7208584028193da95e30738c",
+  "cycle_count": 0,
+  "local_proof_sha256": "aed88017ce6a6b739911f5a2abb84aa6b7c27bc0bc5208cfdb290c1d0ab65af9",
+  "outcome": "BLOCKED",
+  "outcome_id": "OUT-9cea60b9d3b2cb0c215ec478",
+  "paired_receipt_sha256": "b5597370222e179f02b7dc29af18e13d9d08020831d97952a0e2a9f207ac3cb5",
+  "pending_queue": false,
+  "permanent_reservation_sha256": "f8b234311001ff348398cb24d10c49ff6ecc0674757fe4bc73a7ed2cc8be84d7",
+  "record_sha256": "53e64b8a73fd6e9f3c8ff31032a5104a457326d0cb3bd5546027945e70ba4d49",
+  "release_id": "REL-bc64482443373843f2f93cb5",
+  "repair_or_task_for_outcome": false,
+  "request_archive_sha256": "54790c0172ddd9042dada3eac31a6bfbe6233ecc2af89a13059ef8faa430c7e1",
+  "request_id": "operator-scope-hold:gaasi-sprint6-20261122",
+  "request_sha256": "7b818ae9d05feb7b261147ccfc7f456f0c05c0f4b44e0e5044a8038573e57227",
+  "sink_receipt_id": "ODR-658dfc495203858575aeabbd",
+  "sink_status": "RECORDED_NO_REPAIR",
+  "source_revision": "668f73d2ea7e31a1307b04a2a3c873df6555d8089a5fe5826e325e3afc0fb525"
+}

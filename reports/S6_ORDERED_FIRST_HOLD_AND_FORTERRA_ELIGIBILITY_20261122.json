@@ -1,0 +1,33 @@
+{
+  "active_release_id": "REL-bc64482443373843f2f93cb5",
+  "conditional_regression": {
+    "company_id": "COMP-0178",
+    "disposition": "NOT_TRIGGERED",
+    "reason": "No qualified Forterra change was applied."
+  },
+  "first_case": {
+    "company_id": "COMP-0072",
+    "disposition": "DEPLOYED_SCOPE_HOLD_ACCEPTED",
+    "independent_readback_sha256": "0a07ba6c1ce8f0e76add17911ba7cde85614144931e0fae4c7378c12b1043934",
+    "outcome_id": "OUT-9cea60b9d3b2cb0c215ec478",
+    "receipt_id": "ODR-658dfc495203858575aeabbd",
+    "sink_status": "RECORDED_NO_REPAIR"
+  },
+  "kind": "ordered-coordinator-disposition-v1",
+  "measured_eastern": "2026-11-22 10:36",
+  "next_named_case": "COMP-0164",
+  "second_case": {
+    "application_hold_receipt_created": false,
+    "claimed": false,
+    "company_id": "COMP-0066",
+    "current_revision_outcome_count": 0,
+    "current_source_revision": "017ff3ba04284922e13691781c0150f48a2b733b93a4923aa444eb2c82e38670",
+    "disposition": "HELD_NO_CURRENT_QUALIFYING_DISPATCH_OR_DEFECT",
+    "older_revision_outcome_count": 0,
+    "provider_called": false,
+    "registry_sha256": "8c7cbbb998be771dd8387b010af34afb32f88071baa71f3f459ad6b436ab7f80",
+    "resolved_provider": "Rippling",
+    "resolved_source": "https://ats.rippling.com/forterra/jobs"
+  },
+  "sequential_completion_credit": 0
+}
