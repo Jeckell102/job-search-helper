@@ -1,0 +1,630 @@
+diff --git a/job-search-scraper b/job-search-scraper
+--- a/job-search-scraper
++++ b/job-search-scraper
+@@ -8,7 +8,7 @@
+ fi
+ export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+ case "${1:-}" in
+-  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|continue-qualified-repair)
++  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|operator-scope-hold|continue-qualified-repair)
+     exec "$PYTHON" -I -S "$ROOT/release_admission_bootstrap.py" "$@"
+     ;;
+   *)
+diff --git a/release_admission_bootstrap.py b/release_admission_bootstrap.py
+--- a/release_admission_bootstrap.py
++++ b/release_admission_bootstrap.py
+@@ -24,6 +24,7 @@
+ RETAINED_OPERATOR_COMMAND = "run-retained-operator-company"
+ ORDINARY_EVENT_COMMAND = "ordinary-company-event"
+ OPERATOR_AMPHENOL_COMMAND = "operator-amphenol-partial"
++OPERATOR_SCOPE_HOLD_COMMAND = "operator-scope-hold"
+ RETAINED_OPERATOR_LAYOUT_ENV = "JSH_RETAINED_OPERATOR_SQLITE_LAYOUT"
+ 
+ 
+@@ -241,17 +242,24 @@
+     if backend not in {"sqlite", "sheets"}:
+         raise RuntimeError("JOB_STORAGE_BACKEND must be sqlite or sheets")
+     operator = bool(arguments and arguments[0] in {
+-        RETAINED_OPERATOR_COMMAND, ORDINARY_EVENT_COMMAND, OPERATOR_AMPHENOL_COMMAND,
++        RETAINED_OPERATOR_COMMAND, ORDINARY_EVENT_COMMAND, OPERATOR_AMPHENOL_COMMAND, OPERATOR_SCOPE_HOLD_COMMAND,
+     })
+     layout = _retained_operator_sqlite_layout(project, state, backend) if operator else None
++    if not operator and tuple(arguments) == ('start',) and backend == 'sqlite':
++        # A compatible bare start may route one ordinary event. Preserve the
++        # existing workflow for noncanonical or not-yet-initialized stores.
++        try:
++            layout = _retained_operator_sqlite_layout(project, state, backend)
++        except (OSError, RuntimeError, ValueError):
++            pass
+     lock_path = state.parent / ("scraper.lock" if backend == "sqlite" else "writer.lock")
+     lock_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+     flags = os.O_RDWR | os.O_CREAT
+-    if operator:
++    if operator or layout is not None:
+         flags |= os.O_NOFOLLOW | os.O_NONBLOCK
+     descriptor = os.open(lock_path, flags, 0o600)
+     try:
+-        if operator:
++        if operator or layout is not None:
+             lock_stat = os.fstat(descriptor)
+             if not stat.S_ISREG(lock_stat.st_mode) or lock_stat.st_nlink != 1:
+                 raise RuntimeError("Retained operator admission requires the ordinary scraper lock")
+@@ -261,7 +269,7 @@
+         except BlockingIOError as exc:
+             raise RuntimeError(f"Another scraper or release owns admission: {lock_path}") from exc
+         runtime = _validate_runtime(project, state.parent)
+-        if operator:
++        if operator or layout is not None:
+             if not os.path.samestat(lock_stat, lock_path.stat(follow_symlinks=False)):
+                 raise RuntimeError("Retained operator scraper lock identity changed")
+             if layout != _retained_operator_sqlite_layout(project, state, backend):
+diff --git a/src/job_search_helper/exact_cycle_planner.py b/src/job_search_helper/exact_cycle_planner.py
+--- a/src/job_search_helper/exact_cycle_planner.py
++++ b/src/job_search_helper/exact_cycle_planner.py
+@@ -472,7 +472,11 @@
+         expected = operation.get('expected', {})
+         for number, row in planner.indexes['Job History'].matches(operation['identity']):
+             prior = originals.get(('Job History', number), {})
+-            manual = expected.get('Added to Opportunities?', prior.get('Added to Opportunities?', ''))
++            # A compact planning row materializes omitted protected fields as
++            # blanks.  Once targeted hydration found a real row, that blank is
++            # never a trustworthy manual-choice guard.
++            manual = (prior.get('Added to Opportunities?', '') if ('Job History', number) in originals
++                      else expected.get('Added to Opportunities?', ''))
+             # Keep every source/review/decision guard emitted by Engine.  The
+             # retained planner has no ordinary lifecycle checkpoint to repair
+             # a lost race later, so narrowing this set would silently weaken
+@@ -482,8 +486,110 @@
+                 for field, value in expected.items()
+             }
+             operation['expected']['Added to Opportunities?'] = manual
++            # A note-only absence/reconciliation operation has no Source Hash
++            # mutation to carry into the later exact row scope.  Keep the
++            # authoritative pre-local value as a local-only expected guard;
++            # after the exact local commit, ``_row_scope`` seals that same
++            # (or a simultaneously updated) value as the required current
++            # Source Hash guard.  Compact publication removes this field from
++            # the remote projection, so this never widens a Sheets write.
++            if ('Job History', number) in originals:
++                source_hash = prior.get('Source Hash', '')
++                if str(source_hash).strip():
++                    operation['expected']['Source Hash'] = source_hash
+             if 'Job Key' in expected:
+                 operation['expected']['Job Key'] = expected['Job Key']
++
++
++def _hydrate_authoritative_operation_scope(planner, operation, originals):
++    """Replace only an operation's partial cache rows with full local values.
++
++    ``PlanningRepository`` intentionally begins with compact rows.  That is
++    sufficient to choose an identity, but it is not sufficient to decide a
++    no-op or preserve a manual/salary field.  SQLite's targeted ``matches``
++    gives the full record for precisely that identity without enumerating a
++    whole tab.  The replacement happens before simulated commit so later
++    operations retain the same full user-owned values.
++    """
++    from .repository import _equivalent
++
++    tab, identity = operation.get('tab'), operation.get('identity')
++    if tab not in planner.rows or not isinstance(identity, Mapping) or not identity:
++        raise ValueError('planner_operation_scope_invalid')
++    cached = planner.indexes[tab].matches(identity)
++    matcher = getattr(planner.base, 'matches', None)
++    if not callable(matcher):
++        # In-memory fixtures use full rows from PlanningRepository's fallback
++        # loader.  A compact cache without targeted lookup must fail closed.
++        if hasattr(planner.base, 'read_cached_columns'):
++            raise ValueError('authoritative_operation_scope_unavailable')
++        for number, row in cached:
++            originals.setdefault((tab, number), copy.deepcopy(row))
++        return
++    authoritative = matcher(tab, identity)
++    if len(authoritative) != len(cached):
++        raise ValueError('authoritative_operation_scope_changed')
++    pairs = list(zip(cached, authoritative))
++    if len(cached) > 1:
++        # Local Opportunities may deliberately fan one Company/URL operation
++        # out by stable Opportunity ID.  Do not pair two otherwise-identical
++        # compact rows by incidental repository order.
++        cached_ids = {str(row.get('Opportunity ID') or ''): (number, row)
++                      for number, row in cached}
++        full_ids = {str(row.get('Opportunity ID') or ''): row for _, row in authoritative}
++        if (tab != 'Opportunities' or '' in cached_ids or '' in full_ids
++                or len(cached_ids) != len(cached) or set(cached_ids) != set(full_ids)):
++            raise ValueError('authoritative_operation_scope_ambiguous')
++        pairs = [(cached_ids[key], (key, full_ids[key])) for key in sorted(cached_ids)]
++    compact_fields = {
++        'Job History': {
++            'Company', 'Job Key', 'Official Job URL', 'Requisition ID', 'Job Title',
++            'Current Snapshot', 'Added to Opportunities?', 'Review Status', 'Review Started At',
++            'Decision', 'Reconsideration Count', 'Description Hash', 'Source Hash',
++            'Rejection Reason', 'Review Notes', 'Job Status', 'Consecutive Missing Scans', 'Prior Job Key',
++        },
++        'Job Evidence': {'Job Key', 'Source Hash'},
++        'Opportunities': {'Company', 'Job URL'},
++        'Scan Cycles': {'Cycle ID'},
++    }
++    # A full snapshot already observed every field; a compact snapshot observed
++    # only PlanningRepository's selected columns.  In both cases a visible
++    # change is a stale planning guard, not a missing field to hydrate.
++    # Companies is deliberately loaded by full ``read('Companies')`` even in
++    # a compact planning repository.  It is therefore never an omitted-field
++    # hydration target.
++    visible = (set(planner.schemas[tab]) if tab == 'Companies' or not hasattr(planner.base, 'read_cached_columns')
++               else compact_fields.get(tab, set()))
++    if tab == 'Opportunities' and 'Opportunity ID' in planner.schemas[tab]:
++        visible.add('Opportunity ID')
++    for (number, partial), (_row_id, full) in pairs:
++        if not isinstance(full, Mapping) or not all(
++                _equivalent(header, full.get(header, ''), value)
++                for header, value in identity.items()):
++            raise ValueError('authoritative_operation_scope_identity_changed')
++        # The compact identity must still refer to the exact authoritative
++        # record; a mismatch is not an invitation to guess a replacement.
++        if not all(_equivalent(header, partial.get(header, ''), value)
++                   for header, value in identity.items()):
++            raise ValueError('planning_operation_scope_identity_changed')
++        if any(not _equivalent(header, partial.get(header, ''), full.get(header, ''))
++               for header in visible):
++            raise ValueError('authoritative_operation_scope_visible_drift')
++        expected = operation.get('expected')
++        if isinstance(expected, dict):
++            for header, value in tuple(expected.items()):
++                # Replace only a guard that exactly reflects the compact cache
++                # placeholder.  A deliberately different guard remains a
++                # guard and is never rewritten by hydration.
++                if header not in visible and _equivalent(header, value, partial.get(header, '')):
++                    expected[header] = copy.deepcopy(full.get(header, ''))
++        hydrated = copy.deepcopy(dict(full))
++        planner.rows[tab][number] = hydrated
++        # ``IdentityIndex.put`` updates only columns already materialized by
++        # prior exact matches.  It avoids rebuilding every column/index for
++        # the user's whole Jobs cache after each selected operation.
++        planner.indexes[tab].put(number, hydrated)
++        originals.setdefault((tab, number), copy.deepcopy(hydrated))
+ 
+ 
+ def _company_from(planner, company_id):
+@@ -654,6 +760,7 @@
+                 for operation in operations
+             ]
+         for operation in operations:
++            _hydrate_authoritative_operation_scope(planner, operation, originals)
+             existing = (_check_membership_posting_operation(operation, planner, company, current_posting)
+                         if membership_only else None)
+             tab = operation['tab']
+diff --git a/src/job_search_helper/manual_company_start.py b/src/job_search_helper/manual_company_start.py
+new file mode 100644
+--- /dev/null
++++ b/src/job_search_helper/manual_company_start.py
+@@ -0,0 +1,60 @@
++"""Route one ordinary Company event from a manual bare start."""
++
++from contextlib import ExitStack, closing
++import os
++
++from . import cli
++from .company_events import (BRIDGE_CONSUMER, CompanyEventBridge, _json_digest,
++                             has_pending_eligible_company_event, read_verified_queued_event)
++from .integration_release import assert_release_settled
++from .ordinary_company_event_command import (
++    _has_event_provenance, _open_readers, _request_file, execute_ordinary_event,
++)
++from .retained_work_runner import assert_normal_lifecycle_not_held
++from .sqlite_repository import SQLiteRepository
++
++
++def manual_company_start_pending(database):
++    """Check for work without consuming the startup lease or opening a workbook."""
++    request = _request_file(database.parent)
++    if request is not None:
++        return 'manual_retained' not in request and _has_event_provenance(request, request_field='request_id')
++    jobs = cli.job_database_path()
++    if (cli.storage_backend() != 'sqlite' or jobs != database.with_name('jobs.sqlite3')
++            or jobs.resolve(strict=True) != jobs):
++        raise ValueError('Manual Company selection requires the admitted local SQLite layout')
++    with closing(SQLiteRepository(jobs, os.environ.get('SPREADSHEET_ID', ''), readonly=True)) as repository:
++        return has_pending_eligible_company_event(repository)
++
++
++def run_manual_company_start(admission):
++    """Under inherited scraper admission, bridge and run only the exact event."""
++    database, jobs, _ = admission
++    root = database.parent
++    with cli.writer_lock(root / 'writer.lock'), ExitStack() as readers:
++        assert_release_settled(root)
++        local, _ = _open_readers(readers, database, jobs, root / 'inventories.sqlite3')
++        request = _request_file(root)
++        if request is None:
++            with closing(SQLiteRepository(jobs, local.spreadsheet_id)) as repository:
++                bridge = CompanyEventBridge(repository, root, state_database=database)
++                events = repository.pending_latest_company_events(BRIDGE_CONSUMER, limit=2)
++                if len(events) != 1 or events[0]['kind'] != 'company.eligible':
++                    return {'state': 'HELD_MANUAL_EVENT_NOT_UNIQUE'}
++                [observed] = bridge.observe_pending()['events']
++                if observed['state'] != 'PROPOSED_COMPANY_ONLY_SCRAPE':
++                    return {'state': 'HELD_MANUAL_EVENT_STALE'}
++                assert_normal_lifecycle_not_held(root, jobs)
++                [delivery] = bridge.process_pending(limit=1, writer_lock_held=True)
++                if delivery['state'] != 'REQUEST_WRITTEN' or delivery['event_id'] != events[0]['event_id']:
++                    return {'state': 'HELD_MANUAL_EVENT_BRIDGE', 'bridge': delivery}
++                _, request = read_verified_queued_event(repository, root)
++        else:
++            _, request = read_verified_queued_event(local, root)
++        request_digest = _json_digest(request)
++
++    result = execute_ordinary_event('admit-fetch', admission, request_sha256=request_digest)
++    if result['state'] != 'INVENTORY_FROZEN':
++        return result
++    scope = {'request_sha256': request_digest, 'cycle_id': result['cycle_id']}
++    return {**scope, **execute_ordinary_event('publish', admission, **scope)}
+diff --git a/src/job_search_helper/operator_company_scope_hold.py b/src/job_search_helper/operator_company_scope_hold.py
+new file mode 100644
+--- /dev/null
++++ b/src/job_search_helper/operator_company_scope_hold.py
+@@ -0,0 +1,169 @@
++"""Settle the explicit GA-ASI scope refusal before any provider is opened."""
++
++from contextlib import closing
++from hashlib import sha256
++import json
++import os
++import re
++
++from .cli import writer_lock
++from .company_events import canonical_company_fact, source_revision
++from .company_sources import repair_source
++from .engine import State
++from .inbox import InventoryInbox
++from .integration_release import assert_release_settled
++from .operator_company_request import _digest
++from .operator_selected_observation import _find_receipt
++from .outcomes import classify_outcome
++from .retained_work_runner import assert_normal_lifecycle_not_held
++from .scan_request import _cycle_views, _read_request, _unfinished_from_views
++from .sqlite_repository import SQLiteRepository
++from .temporary_retry import _sync_directory
++
++
++COMPANY = 'COMP-0072'
++PREFIX = 'operator-scope-hold:'
++POLICY = 'employer_scope_not_authorized'
++PARENT = ('BrassRing (shared parent board)', 'https://www.ga.com/careers/', '')
++
++
++def is_scope_hold_request(request):
++    request_id = request.get('request_id') if request is not None else None
++    return isinstance(request_id, str) and request_id.startswith(PREFIX)
++
++
++def _request(path, request_sha256):
++    if path.is_symlink() or not path.is_file():
++        raise ValueError('The exact scope-hold request is missing.')
++    raw = path.read_bytes()
++    request, companies = _read_request(path)
++    operator = request.get('operator_request')
++    if (request != json.loads(raw) or _digest(request) != request_sha256
++            or companies != [COMPANY] or operator is None or not is_scope_hold_request(request)
++            or request.get('start_last') != []):
++        raise ValueError('The queue does not contain the approved GA-ASI scope-hold request.')
++    return raw, request, operator
++
++
++def _facts(operator):
++    return {'request_id': operator['request_id'], 'company_id': COMPANY,
++            'source_revision': operator['source_revision'], 'provider': PARENT[0],
++            'source_current': True, 'inventory_status': 'not_fetched', 'storage_status': 'not_attempted',
++            'failure': {'category': 'uncertain_employer', 'provider_code': POLICY}}
++
++
++def _settled(repository, operator, binding, facts):
++    table = repository.db.execute(
++        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='operator_company_scope_holds'"
++    ).fetchone()
++    if not table:
++        return None
++    row = repository.db.execute(
++        'SELECT proof, outcome_id FROM operator_company_scope_holds WHERE request_id=?',
++        (operator['request_id'],),
++    ).fetchone()
++    if row is None:
++        return None
++    proof = json.loads(row[0])
++    if any(proof.get(key) != value for key, value in binding.items()):
++        raise ValueError('The saved scope hold belongs to different request evidence.')
++    expected = classify_outcome(facts)
++    outcome = repository.db.execute('SELECT payload FROM scrape_outcomes WHERE outcome_id=?', (row[1],)).fetchone()
++    if (row[1] != expected['outcome_id'] or outcome is None or json.loads(outcome[0]) != {
++            key: expected[key] for key in ('outcome_id', 'identity', 'action', 'outcome', 'failure_fingerprint')}):
++        raise ValueError('The saved scope hold does not have its exact outcome.')
++    return proof, row[1]
++
++
++def _record(jobs, destination, state, runtime, root, operator, binding, facts):
++    from .runner import active_inbox_cycles
++
++    assert_normal_lifecycle_not_held(root, jobs)
++    with (closing(SQLiteRepository(jobs, destination)) as repository,
++          closing(InventoryInbox(root / 'inventories.sqlite3', destination, readonly=True)) as inbox,
++          repository.transaction()):
++        if (_unfinished_from_views(*_cycle_views(repository, state)) or active_inbox_cycles(inbox, state)
++                or any(cycle.get('start_request_id') == operator['request_id'] for cycle in state.cycles())):
++            raise ValueError('An existing scrape owns this application or request.')
++        matches = repository.matches('Companies', {'Company ID': COMPANY})
++        if len(matches) != 1:
++            raise ValueError('The scoped Company is missing or ambiguous.')
++        company = matches[0][1]
++        fact = canonical_company_fact(company)
++        if (not fact['eligible'] or source_revision(company) != operator['source_revision']
++                or fact['company_status'] != 'active'
++                or any(str(company.get(key) or '').strip() for key in ('Claimed By', 'Claim Token'))
++                or repair_source(company['ATS / Source'], company['Official Careers URL'],
++                                 COMPANY, company['Company']) != PARENT):
++            raise ValueError('Current GA-ASI evidence does not authorize the shared-board scope hold.')
++        repository.db.execute('''CREATE TABLE IF NOT EXISTS operator_company_scope_holds (
++            request_id TEXT PRIMARY KEY, request_sha256 TEXT NOT NULL UNIQUE,
++            proof TEXT NOT NULL, outcome_id TEXT NOT NULL REFERENCES scrape_outcomes(outcome_id))''')
++        if repository.db.execute('SELECT 1 FROM scrape_outcomes WHERE request_id=?',
++                                 (operator['request_id'],)).fetchone():
++            raise ValueError('The request already has an outcome without this scope-hold proof.')
++        outcome = repository._record_scrape_outcome_in_transaction(facts)
++        proof = {**binding, 'company': fact, 'runtime': runtime, 'resolved_source': list(PARENT)}
++        repository.db.execute('INSERT INTO operator_company_scope_holds VALUES (?,?,?,?)',
++                              (operator['request_id'], binding['request_sha256'], json.dumps(proof, sort_keys=True),
++                               outcome['outcome_id']))
++        return outcome['outcome_id']
++
++
++def _archive(queue, archived, raw):
++    archived.parent.mkdir(mode=0o700, exist_ok=True)
++    if not archived.exists() and not archived.is_symlink():
++        # Link without replacing any prior archive, sync it, then remove the
++        # queue name. An interruption between names leaves both replayable.
++        if queue.is_symlink() or queue.read_bytes() != raw:
++            raise ValueError('The scope-hold queue changed before archival.')
++        os.link(queue, archived, follow_symlinks=False)
++    if archived.is_symlink() or archived.read_bytes() != raw:
++        raise ValueError('The saved scope-hold request archive differs.')
++    _sync_directory(archived.parent)
++    _sync_directory(archived.parent.parent)
++    if _queue_matches(queue, raw):
++        queue.unlink()
++        _sync_directory(queue.parent)
++
++
++def _queue_matches(queue, raw):
++    return not queue.is_symlink() and queue.is_file() and queue.read_bytes() == raw
++
++
++def execute_scope_hold(admission, *, request_sha256):
++    """Under inherited scraper admission, settle and archive one exact request."""
++    if re.fullmatch(r'[0-9a-f]{64}', request_sha256 or '') is None:
++        raise ValueError('Supply one exact lowercase request SHA-256.')
++    database, jobs, runtime = admission
++    root = database.parent
++    queue = root / 'next-scan.json'
++    archives = root / 'operator-company-requests' / 'held'
++    archived = archives / (request_sha256 + '.json')
++    with writer_lock(root / 'writer.lock'), closing(State(str(database), readonly=True)) as state:
++        assert_release_settled(root)
++        if archives.resolve() != archives:
++            raise ValueError('The scope-hold archive must use the canonical request directory.')
++        is_archived = archived.exists() or archived.is_symlink()
++        raw, request, operator = _request(archived if is_archived else queue, request_sha256)
++        receipt = _find_receipt(root, request, request_sha256)
++        if receipt not in ({**operator, 'state': 'REQUEST_WRITTEN', 'request_sha256': request_sha256},
++                           {**operator, 'state': 'REQUEST_ALREADY_DURABLE', 'request_sha256': request_sha256}):
++            raise ValueError('The operator receipt does not bind this scope-hold request.')
++        binding = {'request_sha256': request_sha256, 'request_bytes_sha256': sha256(raw).hexdigest(),
++                   'reservation_sha256': _digest(receipt), 'policy': POLICY}
++        destination = InventoryInbox.destination_id(root / 'inventories.sqlite3')
++        facts = _facts(operator)
++        with closing(SQLiteRepository(jobs, destination, readonly=True)) as local:
++            prior = _settled(local, operator, binding, facts)
++        if prior is None:
++            if is_archived:
++                raise ValueError('The scope-hold archive has no matching committed result.')
++            outcome_id = _record(jobs, destination, state, runtime, root, operator, binding, facts)
++        else:
++            proof, outcome_id = prior
++            if proof['runtime'] != runtime and _queue_matches(queue, raw):
++                raise ValueError('Original runtime ownership is required to settle the saved request.')
++        _archive(queue, archived, raw)
++        return {'state': 'COMPANY_SCOPE_HELD', 'company_id': COMPANY, 'reason': POLICY,
++                'request_sha256': request_sha256, 'outcome_id': outcome_id}
+diff --git a/src/job_search_helper/ordinary_company_event_command.py b/src/job_search_helper/ordinary_company_event_command.py
+--- a/src/job_search_helper/ordinary_company_event_command.py
++++ b/src/job_search_helper/ordinary_company_event_command.py
+@@ -55,10 +55,15 @@
+ 
+ def guard_generic_ordinary_event(database, *, allow_queued=False, fresh=False, selected_cycle_id=None):
+     """Hold generic scraper routes before a queued or adopted event can enter them."""
++    database = Path(database)
++    request = _request_file(database.parent)
++    if request is not None:
++        from .operator_company_scope_hold import is_scope_hold_request
++
++        if is_scope_hold_request(request):
++            raise OrdinaryEventLifecycleHold('The queued scope hold requires operator-scope-hold.')
+     if cli.storage_backend() != 'sqlite':
+         return
+-    database = Path(database)
+-    request = _request_file(database.parent)
+     if (request is not None and _has_event_provenance(request, request_field='request_id')
+             and 'manual_retained' not in request and not allow_queued):
+         raise OrdinaryEventLifecycleHold('An ordinary Company-event request is waiting in the queue. ' + _HELP)
+diff --git a/src/job_search_helper/runner.py b/src/job_search_helper/runner.py
+--- a/src/job_search_helper/runner.py
++++ b/src/job_search_helper/runner.py
+@@ -165,6 +165,8 @@
+ 
+ Commands:
+   start        Start a fresh scan of all currently active companies.
++               - A bare start with one verified Company event handles that
++                 event through the scoped Company path first.
+                - After completed scraping and verified Sheets sync, automatically
+                  read AI Prompt in Google Drive and run FIRST PASS through Codex
+                  using GPT-5.6 Luna with medium reasoning.
+@@ -217,6 +219,9 @@
+   ordinary-company-event
+                Explicitly admit/fetch one verified request digest or publish its
+                exact saved cycle. See ordinary-company-event --help.
++  operator-scope-hold
++               Record the GA-ASI shared-board scope hold for one exact queued
++               operator request without opening the provider or workbook.
+   retained-exception-preview
+                Read and print the exact claims that an external signer must
+                authorize for one retained historical cycle. `--output DIR`
+@@ -1463,7 +1468,12 @@
+             return 2
+         repo = None
+         try:
++            from .operator_company_scope_hold import COMPANY, PREFIX
++
+             _load_environment()
++            if queue_args.request_id.strip().startswith(PREFIX) and (
++                    queue_args.company_id.strip() != COMPANY or storage_backend() != 'sqlite'):
++                raise ValueError('The operator-scope-hold request namespace requires local GA-ASI storage.')
+             repo = get_repository(write=False, interactive=False)
+             from .operator_company_request import queue_operator_company_request
+             result = queue_operator_company_request(
+@@ -1547,6 +1557,24 @@
+         except KeyboardInterrupt:
+             return 130
+         except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
++            print(f'ERROR: {exc}', file=sys.stderr)
++            return 1
++    if argv[0] == 'operator-scope-hold':
++        from .operator_company_scope_hold import execute_scope_hold
++
++        parser = argparse.ArgumentParser(prog='./job-search-scraper operator-scope-hold', allow_abbrev=False)
++        parser.add_argument('--request-sha256', required=True, action='append')
++        args = parser.parse_args(argv[1:])
++        try:
++            if len(args.request_sha256) != 1:
++                raise ValueError('Supply one exact lowercase request SHA-256.')
++            with _retained_operator_admission() as admission:
++                result = execute_scope_hold(admission, request_sha256=args.request_sha256[0])
++            print(json.dumps(result, sort_keys=True))
++            return 0
++        except KeyboardInterrupt:
++            return 130
++        except (ValueError, RuntimeError, OSError, sqlite3.Error) as exc:
+             print(f'ERROR: {exc}', file=sys.stderr)
+             return 1
+     if argv[0] == 'operator-amphenol-partial':
+@@ -1791,6 +1819,28 @@
+         if forbidden is not None:
+             print(f'ERROR: {forbidden} applies to sync only.', file=sys.stderr)
+             return 2
++    if arguments == ['start']:
++        try:
++            from release_admission_bootstrap import RETAINED_OPERATOR_LAYOUT_ENV
++
++            if os.environ.get(RETAINED_OPERATOR_LAYOUT_ENV):
++                from .manual_company_start import manual_company_start_pending, run_manual_company_start
++
++                _load_environment()
++                if manual_company_start_pending(state_path()):
++                    with _retained_operator_admission() as admission:
++                        result = run_manual_company_start(admission)
++                    print('Ordinary Company event: ' + json.dumps(result, sort_keys=True))
++                    return 0 if result['state'] in {
++                        'SYNC_CONFIRMED', 'VERIFIED_ZERO', 'FETCH_TEMPORARY', 'FETCH_BLOCKED',
++                        'FETCH_REPAIR_QUALIFIED',
++                    } else 1
++                os.environ.pop(RETAINED_OPERATOR_LAYOUT_ENV)
++        except KeyboardInterrupt:
++            return 130
++        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
++            print(f'ERROR: {exc}', file=sys.stderr)
++            return 1
+     if arguments and arguments[0] in {'start', '--admitted-workflow'}:
+         pipeline_args = (
+             ['run', '--scraper-args', *arguments[1:]] if arguments[0] == 'start' else arguments[1:]
+diff --git a/src/job_search_helper/scan_request.py b/src/job_search_helper/scan_request.py
+--- a/src/job_search_helper/scan_request.py
++++ b/src/job_search_helper/scan_request.py
+@@ -54,6 +54,10 @@
+             raise ValueError("Company event is held in the outbox behind unfinished work; resume only the exact prior cycle.")
+         return None
+     request, company_ids = _read_request(path)
++    from .operator_company_scope_hold import is_scope_hold_request
++
++    if is_scope_hold_request(request):
++        raise ValueError('The queued scope hold requires operator-scope-hold.')
+     if expected_repair_retry is not None:
+         from .company_events import current_company_source_revision
+         from .repair_retry import canonical_retry_binding, retry_request
+diff --git a/src/job_search_helper/sheets_sync.py b/src/job_search_helper/sheets_sync.py
+--- a/src/job_search_helper/sheets_sync.py
++++ b/src/job_search_helper/sheets_sync.py
+@@ -740,6 +740,26 @@
+         values = {header: current.get(header, '') for header in value_fields
+                   if frozen_operation is not None or header not in identity}
+         notes = {}
++        # A locally applied Job History review note is materialized in the
++        # current row, while its sealed remote projection is append-only.
++        # Reconstitute only that explicitly sealed existing-row operation.
++        if (frozen_operation is not None and tab == 'Job History'
++                and frozen_operation.get('append_if_missing') is False
++                and set(frozen_operation.get('append_notes', {})) == {'Review Notes'}):
++            suffix = frozen_operation['append_notes']['Review Notes']
++            frozen_expected = frozen_operation.get('expected', {})
++            if (not isinstance(suffix, str) or not suffix.strip()
++                    or not isinstance(frozen_expected, Mapping)
++                    or 'Review Notes' not in frozen_expected
++                    or 'Review Notes' in frozen_operation.get('values', {})
++                    or 'Review Notes' in frozen_operation.get('on_insert', {})):
++                raise ValueError('Exact Sheets sealed Job History note is invalid.')
++            prefix = str(frozen_expected['Review Notes'] or '')
++            target = prefix if suffix in prefix else prefix + ('\n\n' if prefix else '') + suffix
++            if values.get('Review Notes') != target:
++                raise ValueError('Exact Sheets sealed Job History note differs from local value.')
++            values.pop('Review Notes')
++            notes['Review Notes'] = suffix
+         if base and tab == 'Opportunities':
+             forbidden = set(values) & set(USER_FIELDS)
+             if forbidden:
+@@ -1404,8 +1424,19 @@
+                         identity[key] = values[key]
+             return identity
+ 
++        def scope_key(tab, identity):
++            return tab, tuple(sorted((header, _identity_key(header, value))
++                                     for header, value in identity.items()))
++        by_identity = {scope_key(item['tab'], item['identity']): item
++                       for item in normalized}
++        projected = [scope_key(operation['tab'], final_identity(operation))
++                     for operation in projection]
++        if (len(by_identity) != len(normalized) or len(set(projected)) != len(projected)
++                or set(by_identity) != set(projected)):
++            raise ValueError('Exact Sheets durable scope/projection identities differ.')
+         rows = []
+-        for item, operation in zip(normalized, projection):
++        for operation, selected in zip(projection, projected):
++            item = by_identity[selected]
+             candidates = [candidate for candidate in plan['local_operations']
+                           if candidate.get('tab') == item['tab']
+                           and final_identity(candidate) == item['identity']]
+@@ -1415,6 +1446,20 @@
+             frozen_values = dict(local_operation.get('expected', {}))
+             frozen_values.update(local_operation.get('on_insert', {}))
+             frozen_values.update(local_operation.get('values', {}))
++            if (operation.get('tab') == 'Job History'
++                    and operation.get('append_if_missing') is False
++                    and set(operation.get('append_notes', {})) == {'Review Notes'}):
++                suffix = operation['append_notes']['Review Notes']
++                expected = local_operation.get('expected', {})
++                if (local_operation.get('append_notes') != operation['append_notes']
++                        or not isinstance(suffix, str) or not suffix.strip()
++                        or 'Review Notes' not in expected
++                        or expected['Review Notes'] != operation.get('expected', {}).get('Review Notes')
++                        or 'Review Notes' in local_operation.get('values', {})
++                        or 'Review Notes' in local_operation.get('on_insert', {})):
++                    raise ValueError('Exact Sheets durable Job History note differs from sealed append.')
++                prefix = str(expected['Review Notes'] or '')
++                frozen_values['Review Notes'] = prefix if suffix in prefix else prefix + ('\n\n' if prefix else '') + suffix
+             if any(header not in frozen_values for header in item['fields']):
+                 raise ValueError('Exact Sheets durable row evidence is incomplete.')
+             rows.append({**copy.deepcopy(item),

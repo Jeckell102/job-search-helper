@@ -1,0 +1,45 @@
+{
+  "current_ats_adapter_changed": false,
+  "files": {
+    "job-search-scraper": {
+      "before": "8fb9939560f004a213ca94724cdada7734996072c31194679017fea492841f72",
+      "staged": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca"
+    },
+    "release_admission_bootstrap.py": {
+      "before": "1258ac47b647d61361fa84ccdda14816a184e6c15cd4c6e7c78e6b27cd228d45",
+      "staged": "9e15bf97ef9af0db88a48ff7632fdb826320f50463a0b64ef11f6aa07e9df6e5"
+    },
+    "src/job_search_helper/exact_cycle_planner.py": {
+      "before": "0932566520c9807e7e5066bf4f7787c3a88b057f011f68167eed0bcb1425063b",
+      "staged": "ddea425474e8559a3bbe95b96876c407eb21cc174086ec6f89815b1a1026df02"
+    },
+    "src/job_search_helper/manual_company_start.py": {
+      "before": null,
+      "staged": "bb1e010e6e14d0e7fe1df1bc91d5f633d37ed726fcc2ce2ee074f2252f0f6c5e"
+    },
+    "src/job_search_helper/operator_company_scope_hold.py": {
+      "before": null,
+      "staged": "a5ab427a9c9b8f2e939b49584a9bb5dc4878be460876d2bbd05de8720df07d4e"
+    },
+    "src/job_search_helper/ordinary_company_event_command.py": {
+      "before": "f8765638f4a437a1a619bfe20161987f63b3f42bf508169850140ef9de0a1d9d",
+      "staged": "a224af180302e4a69951a9cd7995585931e4ab2195612c8bfdb3740250687d38"
+    },
+    "src/job_search_helper/runner.py": {
+      "before": "de3c0f5045e1ad07d0b1e2e8b1da8b8dbce2acd3767182ddf9d1c7dbbaefb87b",
+      "staged": "496a3f598ea754458cbb55f33d98bccf17279777fdd731f74d65722d6a04a9b8"
+    },
+    "src/job_search_helper/scan_request.py": {
+      "before": "bff962b532c444448255ca81315ad5812ef9591050d62e1914f0174dd893d2e5",
+      "staged": "a26a8b80ca52305a098f52b59bb5056d09075448f78c1996187195ce06b14b92"
+    },
+    "src/job_search_helper/sheets_sync.py": {
+      "before": "305c59767cf679b3d757f65c1d3e7eee2080e17c2df55ce8774cc6e62822d5fa",
+      "staged": "52845a8c0b59ce59e22840abc21748785dd35ad6c74db30f76be74b5697d2589"
+    }
+  },
+  "focused_scope_hold_test_sha256": "48c977147b432f98f3c50ebe1943fedc4c91d5656625ba2bef60124332900e48",
+  "live_source_sha256": "bfab80ca6a455671c1956f18bfce1e1d7ff7b77e6ec1bd52b08e06be0a52e82c",
+  "scope": "exact candidate; source and fixture only, no live installation authorization",
+  "staged_source_sha256": "7f0c0f77620304725fbcf36584a7d1f84e1ad6c4ca8017a2121e03dede5c0dd5"
+}
