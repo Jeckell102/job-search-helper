@@ -1,0 +1,9 @@
+{
+  "commit": "88c30b167daccbea1c31addbd85b5ca37176e549",
+  "matched_files": {
+    "reports/S6_EMBRAER_CONFLICTING_TASK_STOPPED_20261122.json": "5ba36e6bf9f7739a6af638c3ec254359d404f9fa651e91f60e22ca80e1070bf0",
+    "reports/S6_EMBRAER_FROZEN_REGRESSION_HOLD_20261122.md": "eae5c33cff3ff086be7a823f381b921c4805698c4952e2fadc70d4a479867340",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/acceptance/BASELINE_PROJECTION.json": "e6234ad28babd9094b7e604e5a9eabb52302d052eb8d2feff0a3888212eb1d72",
+    "reports/embraer-inspection-recovery-20261122/implementation-recovery/acceptance/test_embraer_typed_defect.py": "c029561b133971409ba0285d90e5f4ed51f26246ac0984026ffdbfe4f299cc9d"
+  }
+}
