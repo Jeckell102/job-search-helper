@@ -1,0 +1,13 @@
+{
+  "before_journal_sha256": "22da0b905498584bd4327289f12be912d962bff8d1c18281e467b037247f6c6f",
+  "files": {
+    "src/job_search_helper/sheets_sync.py": {
+      "before": "8202aa448b01b98af90a2ea3a088dc9f9cc1e3f47fa05a3c273afd9e1150ea9f",
+      "staged": "f3de38a8e59a384e38009ba6b114869ffc94b4dd508bbc7fb657b47b2ffcb60d"
+    }
+  },
+  "focused_test_sha256": "eacb986cea7049f80d33bea5819352e58c0a97ca2480cdb7c259f5b9fe3c59f8",
+  "live_source_sha256": "5433ca39278030cc7c77bc30ae8e9d6431df57b4eb9cfa6a82be6fcea0a188d5",
+  "scope": "permanent exact Company status-field fix; source preparation only",
+  "staged_source_sha256": "cbb6198272c412791bda26c5ad24efeee35f73a30208d9ec8ba8b8ccf2604098"
+}

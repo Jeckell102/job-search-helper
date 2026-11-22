@@ -2,6 +2,29 @@
 
 Prepared 2026-11-22 from saved contracts/evidence; **NOT FINAL ACCEPTANCE**. Root's current live Allen attempt is outside this lane. No production state, process, provider, workbook, service, Jetson, GitHub or network check was run. This extends S7_EFFECTIVE_ACCEPTANCE_20261121.md and S6_S7_ACCEPTANCE_GAP_MAP_20261120.md; it replaces neither historical report nor any gate.
 
+## Coordinator reset and current execution plan
+
+November 22, 11:22 Eastern. Finish the remaining Sprint 6 evidence before
+requesting final Sprint 7 sign-off. Start from the existing evidence index
+and tag each of the seven demonstrations as carried forward, changed, or
+still missing live proof. Match unchanged proofs to the final installed
+version. Recheck only a changed boundary, actual failure, or required live
+case, and reuse the same live receipt where it proves more than one check.
+Ask independent QA to review that evidence once. After acceptance, verify
+that the expected controls remain off, document what is supported and held,
+and fetch and check the final private backup. A failed check gets one narrow
+repair and recheck of the affected boundary. The original gates remain.
+
+The Allen source migration and exact ordinary sync are now independently
+accepted. The run retained all 19 full descriptions and delivered five
+filtered job rows plus the Allen row. The paired coordinator outcome used
+no repair. [Allen independent result](S6_ALLEN_DEPLOYED_ORDINARY_INDEPENDENT_20261122.md).
+Amphenol's current listing-only check passed, Forterra remains held, and the
+required repair/sequence evidence is still open. The permanent scan-status
+fix is staged for the next justified deployment. No repeat probe or
+standalone maintenance window is planned for it now.
+[Current evidence and holds](S6_CURRENT_ELIGIBILITY_AND_STATUS_FIX_20261122.md).
+
 ## Current accepted evidence to reuse
 
 - M1: bounded deployed Samtec normal filtering/local evidence/exact real synchronization and terminal replay remain accepted at their recorded version. Do not rerun to inflate counts.
