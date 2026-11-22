@@ -28,3 +28,13 @@ receipt. Both broad scheduling controls remain disabled. Observe the
 same inference until settled and then inspect its resulting
 model-to-edit evidence. No repair candidate or Sprint 6 result is
 claimed yet.
+
+The first inspection session completed three inference calls and paused
+without edits. Its saved checkpoint asked for evidence MuleLab had
+already collected. The trusted operator guidance field did not contain
+the live sitemap witness, even though the coordinator's frozen profile
+described the strategy. Root supplied the measured Crown-only witness
+through the existing guidance field on the exact settled task. The
+task identity, source, receipts, original clock, budget, and scheduler
+settings were unchanged. Ordinary resume accepted the same task.
+No second scrape was launched.
