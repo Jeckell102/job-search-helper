@@ -1,0 +1,14 @@
+{
+  "calls": 10,
+  "changed_files": [],
+  "context_fix_receipt": "97c83a0eacab6d960ae3e5e12507394d0bd4b2da1cedb0351b483a68377eb0a9",
+  "implementation_actions": {
+    "code_read": 3
+  },
+  "observed_at": "2026-11-22T20:29:45.485765+00:00",
+  "phase": "implement",
+  "sessions": 5,
+  "status": "PAUSED_BLOCKED",
+  "task": "WRAP-289593fcc0",
+  "unsettled": 0
+}
