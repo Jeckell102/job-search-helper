@@ -1,0 +1,12 @@
+{
+  "changed_paths": {
+    "docs/backlog/COMP-0634.md": {
+      "after": "441dce96d66f64c22b22016eb709f68ef2d5f34d71fd6b903ce7ea3320089025",
+      "before": "71a888ed132801c6012c29010fb50b120f5eda534dd373cc58b8e2e7e0c06cdf"
+    }
+  },
+  "member_count": 700,
+  "original_baseline_sha256": "dc4b353766486a305a742ec10ada5494885f42967b60adb269db610f01b6063d",
+  "state": "PROJECTED_ONLY",
+  "successor_baseline_sha256": "df0a9c5461e0a46965757499a4f20abadc46f74d99313b9c018977cfe6868369"
+}

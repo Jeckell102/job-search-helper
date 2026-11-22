@@ -1,0 +1,26 @@
+{
+  "baseline_changed_paths": {
+    "docs/backlog/COMP-0634.md": {
+      "after": "441dce96d66f64c22b22016eb709f68ef2d5f34d71fd6b903ce7ea3320089025",
+      "before": "71a888ed132801c6012c29010fb50b120f5eda534dd373cc58b8e2e7e0c06cdf"
+    }
+  },
+  "baseline_member_count": 700,
+  "canonical_worker_reads_note": true,
+  "native_receipt_sha256": "14cae5ff186edbb98cfb16e2055334d364a80099cefb4fb9b84fbcfdfd761186",
+  "outcome_id": "OUT-719882e9ec8b8ad044885426",
+  "private_successor_baseline_sha256": "df0a9c5461e0a46965757499a4f20abadc46f74d99313b9c018977cfe6868369",
+  "state": "EMBRAER_PILOT_WITHDRAWN",
+  "task_id": "WRAP-fbb9ff24d3",
+  "task_settlement": {
+    "activated_at": 1795373201.1956606,
+    "calls": 6,
+    "pilot_task": null,
+    "receipt_rows_sha256": "e8519b862c5dd62fbd909a288f59d5af27b71da97423743a866de85f9f3f6f9b",
+    "sessions": 3,
+    "status": "PAUSED",
+    "stop_requested": true,
+    "task": "WRAP-fbb9ff24d3"
+  },
+  "wrapper_pid": 761358
+}

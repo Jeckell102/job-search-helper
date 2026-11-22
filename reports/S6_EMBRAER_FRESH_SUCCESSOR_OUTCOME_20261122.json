@@ -1,0 +1,15 @@
+{
+  "company_id": "COMP-0634",
+  "cycle_id": "CYC-39C32650E7BA",
+  "failure_fingerprint": "54fa33466785019727081b24a415767a6d352d5b55209c1fbb348de1607e8430",
+  "new_outcome_delivered_to_coordinator": false,
+  "outcome_id": "OUT-f5084fdec013f314e5353c0c",
+  "predecessor_preserved_and_withdrawn": true,
+  "predecessor_task_id": "WRAP-fbb9ff24d3",
+  "request_id": "operator-embraer-20261122-02",
+  "request_sha256": "bea920fe5fbea9382a180bbffd4534dd4ac7dc7608b5a0c7a4021eec11dd4e4b",
+  "settlement_sha256": "b1e0ba3c4a70a8e9ab30ea8406b861b72f0bc9e4839c63db25c88f5f93c07ff8",
+  "source_revision": "c8e81ca1767c26d84912314b189c0387d855eaf64ee0fc1ae945020e6bcced95",
+  "state": "FETCH_REPAIR_QUALIFIED",
+  "successor_baseline_sha256": "df0a9c5461e0a46965757499a4f20abadc46f74d99313b9c018977cfe6868369"
+}
