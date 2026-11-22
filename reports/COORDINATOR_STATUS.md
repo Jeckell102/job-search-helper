@@ -43,7 +43,46 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
-## ACTIVE — Sprint 5 paced production candidate staged
+## ACTIVE — Sprint 5 live qualification passed, native retry next
+
+### November 21 at 19:59 Eastern
+
+Root is coordinator and release owner for goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. Independent public QA owns no
+remaining active run. Its sole actual run returned all 39 full descriptions
+and two identical two-page listing passes. All detail HTTP responses were
+200. Minimum detail gap was 12.008542242 seconds and final reread gap
+12.010672163 seconds. Root verified the captured bytes and counts.
+The normal production candidate's public qualification is accepted.
+
+The exact candidate and native entry are
+`/tmp/jsh-amphenol-production-pacing.q7WLuQwO`. Release is
+`REL-f509ed362bf8781ea8840adc`; manifest digest
+`0b3cdefdc414cd70716cb66d8f375389d91f3f1092489c3432202fec95f4eda0`.
+Root verified the independent evidence and issued the exact owner record
+`release-approval.json` (SHA `7d980d20d3688339c509ae1ce727ad0c83719f98bba1b6cf353217354ca5880d`).
+The guarded application entry's read-only `ready` reached the actual
+listener but stopped because `/run/jsh-s5-amphenol-release-06` is absent.
+No installation, process stop, workbook write or new scan occurred.
+The owner has the exact 30-minute observer command. Root must verify
+readiness after the socket is live. Do not re-run public qualification or
+start another inference for this release.
+
+Native inputs: `release_entry.py` SHA
+`5247f191d02598f760c49e13f6b7e61aef62762b9f74459078d1778ed5f91ca7`;
+native window SHA `9e51c5197f4682fe653685a690481f98645f056d0229d4dfde4ad7ec36494b91`;
+real wrapper scope SHA `43a043c7e33e34c2c25730fa5344bf8441c5c9a4e5323341f821ab506bb6c0f1`;
+durable native directory
+`/home/chris/.local/state/job-search-helper-maintenance/s5-amphenol-qualified-release-20261121-06`.
+Recheck the native ready gate before applying once. If interrupted,
+inspect the exact durable window and app journals and use explicit same
+binding recovery. Do not replay a provider read, installation or publish.
+Independent deployed QA must verify the installed source, scoped fresh
+attempt, exact local and Sheets rows and coordinator confirmation, and the
+restored native services/routes. M5 remains open. Broad backlog and
+unqualified automatic releases remain off.
+[Independent live qualification](S5_AMPHENOL_PRODUCTION_PACED_LIVE_QUALIFICATION_20261121.md)
+· [Observed results](S5_AMPHENOL_PRODUCTION_PACED_LIVE_EVIDENCE_20261121.json).
 
 ### November 21 at 19:40 Eastern
 
@@ -123,6 +162,18 @@ The private durable start is `PUBLIC_RUN_STARTED.json`. The lane owns
 exec handle 40943 and must observe it through terminal. Root may inspect
 its logs and may not run it again. No production approval, installation,
 workbook access, or native service change was requested.
+
+The same private GitHub branch was fetched at `398c377cc1909199ad1e644ba8b80bfcefdb308d`.
+All 15 release tools, tests, and evidence files matched the local copies.
+[Release-gate backup verification](S5_AMPHENOL_PACED_RELEASE_GATES_BACKUP_VERIFIED_20261121.json).
+
+The real original operator request is still acknowledged and current.
+Read-only reopening of the real coordinator task, inference receipt and
+build verified the exact staged paced binding. Current installed intake
+has zero pending events. The separate readiness worker saved the
+frozen sequence dependencies for Forterra and Allen, with no credit
+assigned to the current Sprint 5 Amphenol validation.
+[Sprint 6 dependency handoff](S6_FORTERRA_ALLEN_NEXT_BOUNDED_GATE_20261121.md).
 
 ## Earlier Sprint 5 release preparation and public evidence
 

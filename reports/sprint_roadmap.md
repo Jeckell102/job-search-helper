@@ -353,6 +353,14 @@ package/observer verification and exact public production-behavior
 qualification remain open.
 [Production adapter offline QA](S5_AMPHENOL_PRODUCTION_PACING_INDEPENDENT_QA_20261121.md).
 
+At 19:57 Eastern the actual staged production candidate independently passed
+one observation-only public check. It returned 39 complete descriptions,
+stable two-page listings, and verified its own twelve-second spacing.
+The exact native readiness check is waiting for the current administrator
+observer. Installation, the scoped live retry and deployed independent QA
+remain open. This Sprint 5 run earns no Sprint 6 sequential credit.
+[Production live qualification](S5_AMPHENOL_PRODUCTION_PACED_LIVE_QUALIFICATION_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,

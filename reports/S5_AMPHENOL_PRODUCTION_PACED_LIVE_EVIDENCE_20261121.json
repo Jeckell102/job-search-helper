@@ -1,0 +1,38 @@
+{
+  "audit_sha256": {
+    "PUBLIC_RUN_STARTED.json": "9da0ceb75693ef0b8239a9910135626ff3b91de6b159eb900cf32707a6cb8d01",
+    "PUBLIC_RUN_TERMINAL.json": "7227fbe0cc61c444a54697eeff89a132d4dd7b7ec4b802ede99652f1fa407e9f",
+    "PUBLIC_STDERR.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "PUBLIC_STDOUT.log": "4c12bf6a12788f1ec34f66eb60fef618acb045526258d05f016e9c72e9bb14d5"
+  },
+  "detail_http_status_counts": {
+    "200": 39
+  },
+  "ended_at_utc": "2026-11-22T00:57:22.218273+00:00",
+  "evaluator_sha256": "f8ca04f9ec6e9c0b53bc4398595a0c57edb6e248e725216dbf73f35ca002b38b",
+  "final_listing_gap_seconds": 12.010672163,
+  "launch_terminal": "EVALUATOR_EXITED",
+  "launcher_sha256": "87b55d4577c1b4a82c518cdd6dd60c576b2e1565645967759f7d43e4906b5f2b",
+  "listing_pages": [
+    2,
+    2
+  ],
+  "manifest_sha256": "0b3cdefdc414cd70716cb66d8f375389d91f3f1092489c3432202fec95f4eda0",
+  "membership_sha256": "ff45144db9475e3978bd06cf64ec00669f43eaa03da13088849230494e2c6877",
+  "minimum_detail_gap_seconds": 12.008542242,
+  "preparation_sha256": "7e0ca2034fc3be3003edce8bf77375ce0f6d74ce8754ab8822dd770b1378fa0c",
+  "returncode": 0,
+  "source_manifest_sha256": "bfab80ca6a455671c1956f18bfce1e1d7ff7b77e6ec1bd52b08e06be0a52e82c",
+  "stable_listing_passes": 2,
+  "started_at_utc": "2026-11-22T00:49:17.011892+00:00",
+  "stderr_bytes": 0,
+  "stdout_stage_counts": {
+    "detail_complete": 39,
+    "detail_start": 39,
+    "listing_complete": 2,
+    "listing_start": 2,
+    "observation_candidate_confirmation_passed": 1
+  },
+  "stdout_terminal": "observation_candidate_confirmation_passed",
+  "verified_details": 39
+}
