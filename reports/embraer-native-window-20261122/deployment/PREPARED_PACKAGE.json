@@ -1,0 +1,236 @@
+{
+  "approval": "PREPARATION_ONLY",
+  "groups": {
+    "app_and_launchers": [
+      "job-search-scraper",
+      "release_admission_bootstrap.py",
+      "src/job_search_helper/ats.py",
+      "src/job_search_helper/operator_amphenol_fetch.py",
+      "src/job_search_helper/operator_amphenol_settlement.py",
+      "src/job_search_helper/operator_embraer_settlement.py",
+      "src/job_search_helper/operator_partial_scope.py",
+      "src/job_search_helper/operator_selected_observation.py",
+      "src/job_search_helper/runner.py",
+      "src/job_search_helper/shared_boards.py"
+    ],
+    "wrapper_tools": [
+      "dev/wrapper-coder/tools/coordinator_workspace.py",
+      "dev/wrapper-coder/tools/embraer_operator_pilot.py",
+      "dev/wrapper-coder/tools/host_server.py"
+    ]
+  },
+  "live_journal_sha256": "9b44f5b7dbccf45bc898d053b087eec17986812513d1d6eee8141c00c8ee6dc4",
+  "live_runtime": {
+    "config_sha256": "fdb4049997bddf85ec7f421283951ca2121cba2fab3be2e21082d32bc5eaaa03",
+    "dependency_manifest_sha256": "98079522053bb0643717e2afc5a2cf7890566729bd951a96e4d1a18487e3c7fb",
+    "release_id": "REL-ec5230b68f9edd88cfd15d8c",
+    "source_manifest_sha256": "e196329d4687da91e42f49446423caecac3dc3854d25bc0ccc7b39f43eb7e954",
+    "state": "COMPLETE"
+  },
+  "package_files": {
+    "dev/wrapper-coder/tools/coordinator_workspace.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "c8b56ea7aedd7c9af5bcae87ff072ddf286f45cd7cb46fa58ee1e03c3be6f107",
+        "size": 2779
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "bd51a1434f629191eb14252fed7d6c4acf2a2a5060c0c27d93f8679d53fa30e1",
+        "size": 2993
+      }
+    },
+    "dev/wrapper-coder/tools/embraer_operator_pilot.py": {
+      "before": null,
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 420,
+        "sha256": "28894e55d6c367fdda5813694c30efc3974c7844be6963dcd33fac88f60cad2e",
+        "size": 17949
+      }
+    },
+    "dev/wrapper-coder/tools/host_server.py": {
+      "before": {
+        "mode": 384,
+        "sha256": "a1cafe60d2025116bcaa43dd8dd1b4099a9c2845c35353f3f25dec98a8df5567",
+        "size": 39452
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 384,
+        "sha256": "36128559fc44dbaaffb9edaab6891d49904f2cde36b69b17ac5eff1b12d9aa73",
+        "size": 40195
+      }
+    },
+    "job-search-scraper": {
+      "before": {
+        "mode": 493,
+        "sha256": "429fd628e682e74549687452345aa0d440b9bb27eb2afe19e108fa4818ec1aca",
+        "size": 564
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 493,
+        "sha256": "3acc74cad6c1c8c1103e49d3ade337fb21417b8f0ef832481aa5daa0670f2357",
+        "size": 589
+      }
+    },
+    "release_admission_bootstrap.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "9e15bf97ef9af0db88a48ff7632fdb826320f50463a0b64ef11f6aa07e9df6e5",
+        "size": 14849
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "0a1eca6877ef7b78cd851d2e5de15528c166bf31da96ca361f705cd48b7b4a00",
+        "size": 14937
+      }
+    },
+    "src/job_search_helper/ats.py": {
+      "before": {
+        "mode": 420,
+        "sha256": "111ccb9067402832ad96b798100dfca293668cf24830409874c1ab4d6eaac07e",
+        "size": 95646
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 420,
+        "sha256": "a580747f5067f4177e6d698792f576dc757136fadaa1eb03aa0368872b77f481",
+        "size": 96931
+      }
+    },
+    "src/job_search_helper/operator_amphenol_fetch.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "c1a9c970a9d8095043139a31c007b335deea8a6e9af784b13f8f5c790fff34e9",
+        "size": 4574
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "d2be344938365304f14757fd43f53e6b53758ea65491fa625cdacf013aee4112",
+        "size": 6737
+      }
+    },
+    "src/job_search_helper/operator_amphenol_settlement.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "b3d57c0f8037b184ca0c133fc08bd45ef9465a338bce3b0bfb9add9a0138b77c",
+        "size": 10603
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "24cb2f80cf22752de62c5577096b5606000bc38909d5cc1666d0466a273fea59",
+        "size": 11603
+      }
+    },
+    "src/job_search_helper/operator_embraer_settlement.py": {
+      "before": null,
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 420,
+        "sha256": "8428b18431e4b4cfc3a1fb63187e0cd77a07bb175bc0fed2fca901336422ce84",
+        "size": 5903
+      }
+    },
+    "src/job_search_helper/operator_partial_scope.py": {
+      "before": null,
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 420,
+        "sha256": "b2cfb9308db717318ca493b72c6444e86ba80b7e1998220398361e963db044c2",
+        "size": 1333
+      }
+    },
+    "src/job_search_helper/operator_selected_observation.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "1688c8a195b7e55a95b1c7917b9d4eca51e9f489beeac10f38c6d4511e6e2223",
+        "size": 10125
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "4937f2408e48b5fa4bce92d9693d0cd39f6ee0df3cb2f69fbf7ef270a2012542",
+        "size": 10425
+      }
+    },
+    "src/job_search_helper/runner.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "3f6ebd8c0ffcf2b08213837564b589eca64b7819667a7816f91cb030571df116",
+        "size": 99082
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "c6ecacde9f186a38e10ed32406e93624ecb5552583e806295e7efd68e1f1d624",
+        "size": 99408
+      }
+    },
+    "src/job_search_helper/shared_boards.py": {
+      "before": {
+        "mode": 420,
+        "sha256": "a9ffabefcb8cf0504ebd847306261e7347162f9d08adfc8c7d162ed3711d147e",
+        "size": 70822
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 420,
+        "sha256": "a9500064f69b5bb4f5d9320abc08496559b171aa1c45b724877a4f10e46547d7",
+        "size": 74253
+      }
+    }
+  },
+  "pilot_baseline": {
+    "file_count": 700,
+    "relative_path": "pilot-bases/embraer-dc4b353766486a305a742ec10ada5494885f42967b60adb269db610f01b6063d",
+    "sha256": "dc4b353766486a305a742ec10ada5494885f42967b60adb269db610f01b6063d"
+  },
+  "schema": "embraer-owned-native-prepared-package-v1",
+  "scope_sha256": "026080ce1b5a8eb9471145cfab86271367c4ce59eff9b3077523d9fbc8cd7fd4",
+  "staged_source_sha256": "58846137ad688768ca93016de6f9432163c0ca849d3cbcfae9564eb3e907495d"
+}
