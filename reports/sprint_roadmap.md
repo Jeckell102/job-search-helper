@@ -377,6 +377,15 @@ before-images and determine the supported measured recovery before
 claiming saved Job History, workbook or coordinator acceptance.
 [Preserved live failure](S5_AMPHENOL_DEPLOYED_PUBLICATION_HOLD_20261121.md).
 
+At 23:32 Eastern independent QA accepted the corrected planner and the
+transaction that preserves the original plan while selecting one corrected
+successor. The same saved 39-posting inventory passed disposable local and
+test-workbook recovery, cleanup and replay. The exact live proposal is
+readable and held pending the fresh guarded native window. No further
+provider request, inference, or adapter installation is required for this
+retry. Actual workbook and coordinator terminal evidence remain open.
+[Saved retry recovery](S5_AMPHENOL_SAVED_RETRY_RECOVERY_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,
