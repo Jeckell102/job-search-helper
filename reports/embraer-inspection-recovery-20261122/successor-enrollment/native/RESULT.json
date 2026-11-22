@@ -1,0 +1,19 @@
+{
+  "elapsed_seconds": 0.04,
+  "input_sha256": "f71c9ce417967b1cb27f083ae3f95577d5b88c41bc69087f4bb2bf5283f4165b",
+  "native_actions": 0,
+  "observer_id": "s6-embraer-successor-20261122-14",
+  "observer_socket": "/run/jsh-s6-embraer-successor-14/observer.sock",
+  "source_pins": {
+    "embraer_operator_pilot.py": "9669ae6860acff34c24af4164f4fe7e5b859da53dd8187045befb97a85d1e41a",
+    "native_projection.py": "64f4a0372603faf4ae2b9c5c33950a4bf836979cae774749d79c430e21fecd12",
+    "native_runtime.py": "05377be0ff3124e2fb641b378443251f63ec415d9de3dddc11e7bb12913f7521",
+    "native_successor_entry.py": "94cd3d90b049820896ae8a73830b744a597ae5e9bb75d3ca1790174517aecb3a",
+    "start_observer.sh": "4023c96df5e3530edfd940e9cba9e1cd9ae34825166063f2ab8e8392f81a935e",
+    "successor_environment.py": "f86bb7e48d0c36f2fe5edb47baba1544b91ed7ec9df4be46a65018b188f610fc",
+    "successor_tool_forward.py": "a91aa6f7c67948415a346215ca5e51fd6a652dd23b697662ccafb3a6ae8d287a",
+    "test_native_successor.py": "7966dec1971d5e1b40a14dce9d40cc95bde93dbb7bb6076d30abec72cd656a83"
+  },
+  "state": "SOURCE_AND_DISPOSABLE_FIXTURES_READY_NOT_DEPLOYED",
+  "tests_passed": 2
+}

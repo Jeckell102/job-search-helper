@@ -1,0 +1,31 @@
+# Single guarded Embraer successor window
+
+Status: source and two disposable fixtures passed; no native execution, service change, provider call, model call, workbook write or deployment by this lane. Independent source review and actual guarded native observation are still required. Root owns all actions. `PINS.json` freezes the runtime files; the initial source generator and DEBUG_INITIAL_TEST_FAILURE.txt are construction/debug records only and must not be executed as release tools.
+
+Dedicated administrator observer: ID s6-embraer-successor-20261122-14; socket /run/jsh-s6-embraer-successor-14/observer.sock. `start_observer.sh` is mode0700 and uses the unchanged pinned observer source, exact helpers1249/4467, existing route list, listener18789 and existing900-second policy. This lane did not run it or ask the user to run it.
+
+The application stays REL-2a5c7bb2ad922f73cf868d15. Historical source window and coordinator receipt9d3798a6... are unchanged. Only actual helper28894e55...→9669ae68... is replaced. The new df0a9c54... source baseline is copied into a fresh immutable pilot-bases directory; old baselines, task workspace and queue-base are untouched. Fresh enrollment uses the corrected inputf71c9ce4..., exact new request/operator outcome and original stopped task/withdrawal receipts.
+
+`native_projection.py` measures the actual physical helper, ownership/mode, exact allowed hash and owned transition/terminal reference before projecting the original staged0644 archive into old guards. Both original MaintenanceSourceOwner.status code and the direct NativeWindow._lineage endpoint read run unchanged against this one-path projected view; all other paths remain live. The prior coordinator projection stays intact. The current tool is never silently excluded. Terminal checks require the new receipt's exact current physical reference. This preserves the original app/source/config/dependency/route checks and never rewrites old records.
+
+The entry exposes these ordered operations in one valid observer window:
+
+1. `prepare-baseline`: existing full native/source/route/process exclusion, actual stopped predecessor and six completed inference receipts; exact frozen private baseline copy and directory synchronization; then full corrected input reread. No environment/queue change. Existing exact destination replays; differing destination holds. This separate explicit preparation is necessary because the unchanged accepted input refuses a missing canonical baseline. It is not an install trial.
+2. `inspect`: requires canonical baseline and complete input. Returns a sanitized exact stopped snapshot and digest for independent readback. No new writes.
+3. `apply-and-arm --approved-snapshot-sha256 <verified digest>`: performs the exact source transaction and default-off healthy restart first, publishes its terminal receipt, then reenters the same full guard, compares terminal snapshot/predecessor, records the exact fresh enrollment owner and enables only that scope with a targeted restart. The wrapper's application owner waits on the held scraper/writer leases, so normal catch-up starts only after the entry releases them. Existing scheduler/campaign/autopilot stay off.
+
+`arm` with the same approved snapshot is the crash-after-source-completion continuation; it verifies terminal INSTALLED source and accepts either empty or the exact already-set environment. It never invokes the installer. If any worker is active, the full input/control read holds before source or manager writes. `rollback` is available only for an unfinished source transaction before terminal receipt; normal atomic rollback remains scoped to the one tool. There is no source rollback handler around arming and no rollback after a worker can start. An arm error leaves the accepted source transaction intact for exact readback.
+
+Exact command prefix (replace only the action and, for apply/arm/rollback, append the independently observed snapshot pin):
+
+```sh
+/home/chris/job-search-helper_old/.venv/bin/python -I -B -X pycache_prefix=/dev/null /tmp/jsh-embraer-owned-pilot.xXaXrqW0/successor-enrollment/native/native_successor_entry.py prepare-baseline --entry-sha256 94cd3d90b049820896ae8a73830b744a597ae5e9bb75d3ca1790174517aecb3a
+```
+
+Use `inspect` next, then `apply-and-arm --approved-snapshot-sha256 <64-hex digest>`. The pre-observer no-effect readback should use prepare-baseline: its guard must refuse the absent observer before the copy. Inspect already requires the baseline to exist. `native_runtime.load_runtime` receives its own pinned module SHA; argv entry SHA is checked separately.
+
+Evidence paths after authorized execution: native/transaction/intent.json, embraer_operator_pilot.py.before, receipt.json, and armed.json. Source receipt is published before arming. armed.json writes the intended EMBRAER_SUCCESSOR_ARMED state after merging the environment result, and an exact existing arm receipt replays rather than overwriting it. If a restart response is lost but the new process is already correctly scoped and idle, arm reconciliation can finish without a second restart. A genuinely inactive wrapper still requires the existing explicit guarded restoration route; do not silently start arbitrary services.
+
+Tests: exactly two offline cases passed in0.04s with socket/DNS/subprocess/shell denied. They used the real accepted before/after helper bytes and actual atomic file/lock implementation on disposable paths. One tests both original owner-status and direct-lineage read projection, rejecting no-intent after image, unrelated-path drift and metadata change. The other completes a real disposable source transaction, then loses an enrollment restart response and proves source/receipt remain installed and exact while environment replay finishes. Native systemd, observer, /proc and app stores were substituted/not invoked. These component tests do not claim an actual whole-entry/native pass. Original fixture naming errors are preserved; only helper naming changed to make pytest collect normally.
+
+Remaining acceptance: independent source review, bounded genuine no-effect native readback, then root-authorized one-window prepare/inspect/apply-and-arm and actual single-task observation. No final project acceptance is claimed.
