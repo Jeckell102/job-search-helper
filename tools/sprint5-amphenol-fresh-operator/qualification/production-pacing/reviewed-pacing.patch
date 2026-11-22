@@ -1,0 +1,164 @@
+--- a/src/job_search_helper/acquiretm.py
++++ b/src/job_search_helper/acquiretm.py
+@@ -5,8 +5,9 @@
+ import json
+ import re
+ import time
+-from datetime import datetime, timezone
++from datetime import datetime, timedelta, timezone
+ from email.utils import parsedate_to_datetime
++from math import isfinite
+ from urllib.parse import parse_qs, urljoin, urlsplit
+ 
+ from .ats import (ACQUIRETM_PAGINATION_CODE, ACQUIRETM_REFRESH_TIMEOUT_MS, FetchError,
+@@ -19,6 +20,7 @@
+ MAX_LISTINGS = 10_000
+ MAX_PAGES = 400
+ MIN_DESCRIPTION = 120
++DETAIL_GAP_SECONDS = 12.0
+ RATE_MARKERS = ("too many requests", "rate limit", "rate-limit", "temporarily blocked", "request limit", "try again later", "service unavailable")
+ EMPLOYER_LABELS = {"amphenol aerospace", "amphenol aerospace operations"}
+ 
+@@ -195,55 +197,77 @@
+ 
+ 
+ class _DetailClient:
+-    """Bounded detail client with a per-scan cache of validated response bodies."""
+-    def __init__(self, request, *, interval: float = 0.8, max_attempts: int = 3, sleep=time.sleep):
+-        self.request, self.interval, self.max_attempts, self.sleep = request, interval, max_attempts, sleep
+-        self.last_request = 0.0
++    """Leave a quiet interval after each detail response or failed attempt."""
++    def __init__(self, request, *, clock=time.monotonic, sleep=time.sleep):
++        self.request = request
++        self.clock = clock
++        self.sleep = sleep
++        self.last_finished = None
+         self.bodies: dict[str, str] = {}
+ 
+-    def _cooldown(self, headers, attempt: int) -> None:
+-        elapsed = time.monotonic() - self.last_request
+-        if elapsed < self.interval:
+-            self.sleep(self.interval - elapsed)
++    def wait(self) -> None:
++        if self.last_finished is None:
++            return
++        remaining = DETAIL_GAP_SECONDS - (self.clock() - self.last_finished)
++        while remaining > 0:
++            self.sleep(remaining)
++            remaining = DETAIL_GAP_SECONDS - (self.clock() - self.last_finished)
++
++    def _hold_if_restricted(self, headers, *, limited: bool) -> None:
++        now = datetime.now(timezone.utc)
+         value = next((v for k, v in headers.items() if k.casefold() == "retry-after"), "")
+         try:
+             delay = float(value)
+-        except (TypeError, ValueError):
++        except (TypeError, ValueError, OverflowError):
+             try:
+                 stamp = parsedate_to_datetime(value)
+                 if stamp.tzinfo is None:
+                     stamp = stamp.replace(tzinfo=timezone.utc)
+-                delay = (stamp - datetime.now(timezone.utc)).total_seconds()
++                delay = (stamp - now).total_seconds()
+             except (TypeError, ValueError, OverflowError):
+-                delay = 2 ** attempt
+-        self.sleep(max(0.0, min(8.0, delay)))
++                delay = None
++        if not limited and (delay is None or not delay > DETAIL_GAP_SECONDS):
++            return
++
++        reason = ("AcquireTM detail was rate-limited." if limited
++                  else "AcquireTM detail requested a provider cooldown.")
++        if delay is not None and delay >= 0:
++            try:
++                if not isfinite(delay):
++                    raise OverflowError
++                deadline = now + timedelta(seconds=delay)
++            except OverflowError:
++                reason += " Retry-After exceeds the supported deadline range."
++            else:
++                reason += f" Retry-After until {deadline.isoformat()}."
++        # A partial status would allow a whole-company retry during the hold.
++        raise FetchError("blocked", reason)
+ 
+     def get_body(self, url: str) -> str:
+         if url in self.bodies:
+             return self.bodies[url]
+-        for attempt in range(self.max_attempts):
+-            self._cooldown({}, attempt)
+-            self.last_request = time.monotonic()
++        for attempt in range(3):
++            self.wait()
+             try:
+                 response = self.request.get(url, max_redirects=0, timeout=30_000)
+-                body = response.body() if callable(getattr(response, "body", None)) else response.body
+                 status, headers = response.status, response.headers
++                retryable = status in {408, 429, 500, 502, 503, 504}
++                if not retryable:
++                    body = response.body() if callable(getattr(response, "body", None)) else response.body
+             except Exception as exc:
+-                if attempt + 1 == self.max_attempts:
++                if attempt == 2:
+                     raise FetchError("partial", "AcquireTM detail request timed out after bounded retries.") from exc
+                 continue
+-            if status == 429 or status in {408, 500, 502, 503, 504}:
+-                if attempt + 1 == self.max_attempts:
+-                    status_name = "blocked" if status == 429 else "partial"
+-                    raise FetchError(status_name, "AcquireTM detail request remained rate-limited or unavailable.")
+-                self._cooldown(headers, attempt)
++            finally:
++                self.last_finished = self.clock()
++            if retryable:
++                self._hold_if_restricted(headers, limited=status == 429)
++                if attempt == 2:
++                    raise FetchError("partial", "AcquireTM detail remained unavailable after bounded retries.")
+                 continue
+             decoded = checked(HTTPResponse(status, body, headers), True)
+             if _rate_limited(body):
+-                if attempt + 1 == self.max_attempts:
+-                    raise FetchError("blocked", "AcquireTM detail returned a rate-limit page after bounded retries.")
+-                self._cooldown(headers, attempt)
+-                continue
++                self._hold_if_restricted(headers, limited=True)
+             self.bodies[url] = decoded
+             return decoded
+         raise FetchError("partial", "AcquireTM detail request failed.")
+@@ -253,6 +277,8 @@
+     if url != SOURCE:
+         return Inventory("unsupported", reason="AcquireTM requires the verified unfiltered employer board.", source_url=url, ats="AcquireTM")
+     jobs: list[dict] = []
++    client = None
++    failure = None
+     try:
+         from playwright.sync_api import sync_playwright
+         with sync_playwright() as playwright:
+@@ -266,12 +292,25 @@
+                 client = _DetailClient(request_factory or context.request)
+                 for entry in entries.values():
+                     jobs.append(posting(client.get_body(entry["url"]), entry, cid, company))
++                client.wait()
+                 if inventory(page) != entries:
+                     raise FetchError("partial", "AcquireTM listing changed during detail scan.")
++            except FetchError as exc:
++                if exc.status == "blocked":
++                    # A browser shutdown error must not turn a provider hold into a retry.
++                    failure = exc
++                raise
+             finally:
+                 browser.close()
++    except Exception as exc:
++        if failure is None:
++            failure = exc
++    if failure is None:
+         return Inventory("complete", jobs, f"AcquireTM: verified all {len(jobs)} full postings and rechecked the complete scoped listing.", url, "AcquireTM")
+-    except FetchError as exc:
+-        return Inventory(exc.status, jobs, str(exc), url, "AcquireTM", outcome_failure=exc.outcome_failure)
+-    except Exception as exc:
+-        return Inventory("partial", jobs, f"AcquireTM public scan failed ({type(exc).__name__}).", url, "AcquireTM")
++    if isinstance(failure, FetchError):
++        if client is not None and failure.status == "partial":
++            client.wait()
++        return Inventory(failure.status, jobs, str(failure), url, "AcquireTM", outcome_failure=failure.outcome_failure)
++    if client is not None:
++        client.wait()
++    return Inventory("partial", jobs, f"AcquireTM public scan failed ({type(failure).__name__}).", url, "AcquireTM")

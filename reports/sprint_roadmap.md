@@ -339,6 +339,20 @@ evaluator, with a twelve-second minimum gap and the original coverage
 checks. A single user-requested run is waiting out the provider cooldown.
 [Paced preparation](S5_AMPHENOL_PACED_PREPARATION_20261121.md).
 
+At 19:30 Eastern, the single paced public run passed with 39 of 39 full
+descriptions, stable listing membership, and no 429. Carry the same pacing
+into the exact production runtime. Installation, the scoped retry with
+storage and workbook confirmation, and independent deployed QA are open.
+[Verified paced outcome](S5_AMPHENOL_PACED_PUBLIC_RESULT_20261121.md).
+
+At 19:40 Eastern independent offline QA accepted the exact composed
+production adapter after 18 tests. The one-file proposal
+`REL-f509ed362bf8781ea8840adc` preserves the owned build and separately
+binds the reviewed pacing change. Package inspection passed. Independent
+package/observer verification and exact public production-behavior
+qualification remain open.
+[Production adapter offline QA](S5_AMPHENOL_PRODUCTION_PACING_INDEPENDENT_QA_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,

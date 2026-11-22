@@ -1,0 +1,10 @@
+{
+  "ended_at_utc": "2026-11-22T00:30:54.130939+00:00",
+  "log_sha256": {
+    "QA_STDERR.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "QA_STDOUT.log": "fdb1529fa0c336537a95a45e467fba63e4a3538976e783fb28109b40e2b1b96c"
+  },
+  "preparation_sha256": "b9819940888d60398a2f36e98ab51f4d7bb0baeed242879484772172ab0ad992",
+  "returncode": 0,
+  "state": "EVALUATOR_EXITED"
+}

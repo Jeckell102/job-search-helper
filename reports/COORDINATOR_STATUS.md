@@ -43,7 +43,45 @@ design in chat `01a1f97d-cebd-7910-8d31-a5f3e0dcd264`. See
 [the saved decision](S4_SELECTED_RETRY_TERMINAL_DESIGN_20261120.md). The
 coordinator owns implementation. Independent QA owns acceptance.
 
-## ACTIVE — Sprint 5 fresh build accepted, public qualification next
+## ACTIVE — Sprint 5 paced production candidate staged
+
+### November 21 at 19:40 Eastern
+
+Root is coordinator and release owner for active six-milestone goal
+`01a1f11f-e014-7493-8441-2f66502e23a9`. The timed Amphenol pilot returned
+all 39 descriptions in one externally paced run, with no new provider hold.
+The one-time timer is removed; keep the recurring progress timer. The public
+result qualifies the external pace only. Root staged a separate, exact
+production transport change over the untouched fresh automatic build.
+The actual normal Company retry no longer defeats pacing on partial errors
+or retries an observed 429 if browser shutdown fails. Independent offline
+QA accepted the corrected one-file adapter after 18 checks. No production
+source, jobs, workbook, or service changed.
+
+The current proposal is `REL-f509ed362bf8781ea8840adc` in
+`/tmp/jsh-amphenol-production-pacing.q7WLuQwO`. Digest of its canonical
+manifest is `0b3cdefdc414cd70716cb66d8f375389d91f3f1092489c3432202fec95f4eda0`.
+Default package inspection verified seven tool origins and the exact before
+and after source projection. Root owns the application source and release
+package. `/root/listener_ownership_qa` owns independent composition and
+held-entry verification in its own private directory.
+`/root/adapter_dependency_reconcile` owns the observation-only public
+qualification evaluator and offline tests in a separate private directory.
+`/root/architecture_publication_review` owns read-only native prerequisites
+and observer timing evidence. Only the coordinator dispatches provider work
+or chooses release. No provider calls are currently running.
+
+Next verify the composed package and observation-only evaluator, then run
+one bounded independent public qualification on the exact composed bytes.
+Only a matching live PASS may supply the fresh owner-bound receipt. Later
+run the guarded, fresh company-only retry, compare job storage, workbook
+and terminal receipts, and obtain independent deployed QA. Broader backlog
+and unqualified releases remain off. Overall acceptance is about 40%;
+the three-case Sprint 6 acceptance remains open.
+[Public qualification at tested pace](S5_AMPHENOL_PACED_PUBLIC_RESULT_20261121.md)
+· [Production transport offline QA](S5_AMPHENOL_PRODUCTION_PACING_INDEPENDENT_QA_20261121.md).
+
+## Earlier Sprint 5 release preparation and public evidence
 
 ### November 21 at 16:51 Eastern — exact candidate prepared, provider hold
 
@@ -242,6 +280,46 @@ Root owns monitoring, cancellation and any later release decision. Do
 not start a second process on tool timeout. No provider contact yet.
 [Paced preparation](S5_AMPHENOL_PACED_PREPARATION_20261121.md).
 
+At 18:36 Eastern the existing private branch verified all ten staged
+files at `f547857de9e4424062d653e3c20abd5ddaf4bd6f`. The one live waiter
+is still owned by `/root/adapter_dependency_reconcile`. Wait on its
+existing handle to actual evaluation completion.
+[Backup verification](S5_AMPHENOL_PACED_PREPARATION_BACKUP_VERIFIED_20261121.json).
+
+### November 21 at 18:58 Eastern — one-time 19:22 timer
+
+Chris asked to set a one-time attempt for exactly 19:22:00 Eastern.
+Root canceled the previous 19:21:55 waiter. Its independent owner
+confirmed exit 130 before provider dispatch and no start marker. Root
+configured the active one-occurrence app timer
+`one-time-paced-amphenol-retry-at-7-22-p-m` on this thread and read back
+its single 19:22:00 Eastern start. The replacement private stage
+`/tmp/jsh-amphenol-paced-192200.bkpRR9Zu` has preparation SHA
+`b9819940888d60398a2f36e98ab51f4d7bb0baeed242879484772172ab0ad992`.
+Its read-only inspector confirms the same exact UTC floor and twelve
+second detail gap. The observer and candidate bytes remain pinned. Root
+owns the release gate and the timer owns the single paced read at its
+scheduled time. No provider contact is authorized beforehand. The timer
+will report the actual terminal result and remove itself. No second
+native waiter or additional app timer was started.
+
+At 19:22 Eastern the one-time app timer fired and launched the exact
+paced evaluator once after verifying the preparation and empty start
+slot. Its durable start is 19:22:50.453360 Eastern. The execution handle
+is 40779 (launcher PID 668548). Root owns observation of this handle and
+will report its actual terminal result. The first listing and detail
+records are present. The evaluator remains scoped to public reads.
+
+At 19:30 Eastern the same handle exited successfully after one scoped
+run. The coordinator verified 39 of 39 full descriptions, matching first
+and final 39-job listings, 39 HTTP 200 detail responses, and measured
+twelve-second pacing. No rate limit or Retry-After was received. The
+goal remains active. Root owns the release gate and the next action is
+to carry the verified pacing into the exact production runtime before
+release QA. The live paced read is finished. No provider replay or
+additional Jetson inference was needed.
+[Verified paced outcome](S5_AMPHENOL_PACED_PUBLIC_RESULT_20261121.md).
+
 ### November 21 at 16:39 Eastern — current coordinator checkpoint
 
 Root remains coordinator and release owner for the active persistent goal
@@ -282,7 +360,7 @@ only the row affected by a new verified checkpoint.
 | Production and canonical build input | `/home/chris/job-search-helper_old`; `src/job_search_helper/acquiretm.py` SHA `a95953af…`. The isolated task checkout is a historical snapshot. |
 | Actual generated candidate | `dev/wrapper-coder/tasks/WRAP-11dc97a3dd/recipe-candidate` under production, adapter SHA `895ec36e…`. Private full candidate and proposal `REL-53592bb86b62492840c58267` are in `/tmp/jsh-fresh-amphenol-qualification.FdVVPAdT`. [Qualification status](S5_AMPHENOL_FRESH_PUBLIC_HOLD_20261121.md). |
 | Current request and tool receipt | `operator-amphenol-20261121-05` / `f8c53183…`; local -05 maintenance receipt SHA `60b29ffc…`. See [exact identifiers and hashes](S5_AMPHENOL_FRESH_AUTOMATIC_BUILD_LIVE_20261121.md). |
-| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `ea20fdf2c382dbb7373d9542c511e6d5b3795604`. All eight scoped files matched the fetched copy. [Verification](S5_AMPHENOL_POST_COOLDOWN_BACKUP_VERIFIED_20261121.json). |
+| GitHub checkpoint | Existing private branch `backup/integration-automation-m1-operator-20261120`, commit `f547857de9e4424062d653e3c20abd5ddaf4bd6f`. All ten scoped files matched the fetched copy. [Verification](S5_AMPHENOL_PACED_PREPARATION_BACKUP_VERIFIED_20261121.json). |
 
 ## Prior Sprint 5 preparation checkpoints
 

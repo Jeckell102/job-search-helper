@@ -1,0 +1,25 @@
+{
+  "build_artifacts": {
+    "build-receipt.json": "aa12f5a86dbd13094f1473c79b1ca14840e1821bb3bbb2194dd9fee1e01578a5",
+    "reviewed.patch": "ce042dffa0addfdbb04e14e450d6e5ae3979d2c881bd1ff9bf9c8173ce749abc",
+    "src/job_search_helper/acquiretm.py": "895ec36e443eea5a1c49c622d99b505d5ed49d5ff6c22d37e71eb5a610bb3c9d"
+  },
+  "candidate_root": "/tmp/jsh-amphenol-production-pacing.q7WLuQwO/candidate",
+  "candidate_vector_count": 256,
+  "candidate_vector_sha256": "fd354144281cbc5d5878a9ac99173e996498ce3ddae749be1f334790ba7a221f",
+  "company_id": "COMP-0490",
+  "dispatcher_sha256": "111ccb9067402832ad96b798100dfca293668cf24830409874c1ab4d6eaac07e",
+  "failed_request_id": "operator-amphenol-20261121-05",
+  "inference_request_id": "d73599ddd718448bb9fa1297af268a08",
+  "manifest_sha256": "0b3cdefdc414cd70716cb66d8f375389d91f3f1092489c3432202fec95f4eda0",
+  "outcome_id": "OUT-1dc536eeadea2d283052b05d",
+  "paced_adapter_sha256": "ac1b1e62ca139fcef47cae368ac25ebc56043a6d3133428ec2e97f22fdbc9e7c",
+  "paced_patch_sha256": "a6833199c738174cec0ce3015863a22bdaf59f5d5c45fb00c371f45a0b3193c4",
+  "qualification": "pending",
+  "release_id": "REL-f509ed362bf8781ea8840adc",
+  "request_sha256": "f8c53183ae54bb8b66f79f92edc68d1e0a9d136ed8d2e21a07d7ff497fde7feb",
+  "source_manifest_sha256": "bfab80ca6a455671c1956f18bfce1e1d7ff7b77e6ec1bd52b08e06be0a52e82c",
+  "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501",
+  "state": "HELD_PROPOSED_MANIFEST",
+  "task_id": "WRAP-11dc97a3dd"
+}

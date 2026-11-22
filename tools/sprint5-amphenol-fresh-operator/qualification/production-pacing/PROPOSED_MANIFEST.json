@@ -1,0 +1,27 @@
+{
+  "before_config_sha256": "fdb4049997bddf85ec7f421283951ca2121cba2fab3be2e21082d32bc5eaaa03",
+  "before_source_manifest_sha256": "aae173eaf94a553d51cd280a5e9ba7915bffdb7244f3b5a5ab8b9cfa87922813",
+  "company_id": "COMP-0490",
+  "config_sha256": "fdb4049997bddf85ec7f421283951ca2121cba2fab3be2e21082d32bc5eaaa03",
+  "dependency_manifest_sha256": "98079522053bb0643717e2afc5a2cf7890566729bd951a96e4d1a18487e3c7fb",
+  "failed_request_id": "operator-amphenol-20261121-05",
+  "files": {
+    "src/job_search_helper/acquiretm.py": {
+      "after": {
+        "mode": 436,
+        "sha256": "ac1b1e62ca139fcef47cae368ac25ebc56043a6d3133428ec2e97f22fdbc9e7c",
+        "size": 14893
+      },
+      "before": {
+        "mode": 436,
+        "sha256": "a95953afe2bc10138714f6b11af22572b17ab344bf61d78b834647895025aa61",
+        "size": 13122
+      }
+    }
+  },
+  "release_id": "REL-f509ed362bf8781ea8840adc",
+  "schema": "integration-release-manifest-v1",
+  "source_manifest_sha256": "bfab80ca6a455671c1956f18bfce1e1d7ff7b77e6ec1bd52b08e06be0a52e82c",
+  "source_revision": "b7a94094c57cb879e25db5aef9de565437f8ec5a855ad7b1275958e944f6a501",
+  "validation_receipt_sha256": "cec7fd30983ee3dea629e5063cbcbb243555c8cd1fdfd2c3287bb8b2704ed8f4"
+}

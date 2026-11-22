@@ -1,0 +1,20 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "f547857de9e4424062d653e3c20abd5ddaf4bd6f",
+  "exact_file_count": 10,
+  "repository": "Jeckell102/job-search-helper",
+  "sha256_by_path": {
+    "reports/COORDINATOR_STATUS.md": "cd6ba2408240ca932243f566a16875ed6a8941d9c08c43735cd3822c56678ba1",
+    "reports/S5_AMPHENOL_PACED_INITIAL_QA_20261121.md": "48a4fa1b01650202fbbac969a47829fae46370d64f89aca59676db8b0752c5a0",
+    "reports/S5_AMPHENOL_PACED_PREPARATION_20261121.md": "be93ceb81aa6493bf4742ea03c6649241fa26c988ad0f5df541a5ff6f42211b8",
+    "reports/S5_AMPHENOL_PACED_SOURCE_QA_20261121.md": "ac62ec9d82f577af8a0d35d93f26ce402362a0b62475db8c62dcac7b44967c93",
+    "reports/S5_AMPHENOL_POST_COOLDOWN_BACKUP_VERIFIED_20261121.json": "bf1e02d02b01d5b739fd7bf02de6bfde9146cfc8c295497b76ab564086821e2a",
+    "reports/sprint_roadmap.md": "f44a04ac7a1e8b0041aa48e4929e51084c3e9f2f81fc87932044cc77f258189f",
+    "tools/sprint5-amphenol-fresh-operator/qualification/paced/CAPTURE_PREPARATION.json": "4bc50bce70139a0f0d15fb41d6ff7cd0915440ad7e4aa2cd779e1b07a2c9db4d",
+    "tools/sprint5-amphenol-fresh-operator/qualification/paced/confirm_recipe_candidate.py": "ab1b3c5813b59d9c82a8413342beff17d3e658b2d037344d61e8b05365870bd0",
+    "tools/sprint5-amphenol-fresh-operator/qualification/paced/run_once.py": "26be04f43b0586361cb08c31e35b0a4afb64e11d14ca127ae64b08fb98598246",
+    "tools/sprint5-amphenol-fresh-operator/qualification/paced/tests/test_confirmation_observer.py": "f3b4bbbce1a7914d8afde01a1e5586b56b705712cf124d4677a7b116b4b35a6f"
+  },
+  "status": "VERIFIED",
+  "verified_at": "2026-11-21T18:36:46-05:00"
+}
