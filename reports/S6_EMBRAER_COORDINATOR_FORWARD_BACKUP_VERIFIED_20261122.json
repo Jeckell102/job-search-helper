@@ -1,0 +1,13 @@
+{
+  "branch": "backup/integration-automation-m1-operator-20261120",
+  "commit": "c95c695033af8ca0a021b602046e2deab54b7caf",
+  "matched_files": {
+    "reports/S6_EMBRAER_COORDINATOR_FORWARD_READY_20261122.md": "2558a78c5c761568c31b1c35f7b65b8e38605a4707940730fd3d6dfcde23e388",
+    "reports/S6_EMBRAER_INSPECTION_RECOVERY_BACKUP_VERIFIED_20261122.json": "e76c1b0607d7d3c675284158b40569f0f7aa3cfc25e39253c429454f3f4da1e0",
+    "reports/embraer-inspection-recovery-20261122/forward/coordinator_forward.py": "d96d3da055571ebd7528adb6bb61a0b3e82387bef5eef4c96838826aa63e8437",
+    "reports/embraer-inspection-recovery-20261122/forward/native_forward.py": "971c5a0469ad650fcd0d4640a73812c4d8806c1008ed21b03ac6cfc10e048261",
+    "reports/embraer-inspection-recovery-20261122/forward/start_observer.sh": "3e4c1970cb6e4a4c9a13623a839b506dc10976a74e2374157eb3916066183373",
+    "reports/embraer-inspection-recovery-20261122/forward/test_forward.py": "4bf30b6e8cbb5597cb085ec739c132a7ac01dad991db830be73775af4e483944"
+  },
+  "repository": "Jeckell102/job-search-helper"
+}
