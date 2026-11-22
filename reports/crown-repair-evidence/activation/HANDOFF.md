@@ -49,3 +49,9 @@ keeps only summary fingerprints. Three local fixture checks passed.
 No candidate exists and no live qualification has run. Before using the
 entry, independently verify the full model-to-edit-to-candidate
 provenance and exact edit scope as planned.
+
+The activation directory also contains the tested scope-swap helper. It
+recognizes an already-armed exact wrapper process if restart completed
+with a lost control reply. An unconfirmed mixed manager/process state
+holds for readback with no restart replay. It only runs under the external
+guarded activation and after real application ownership verification.
