@@ -1225,9 +1225,9 @@ class Coordinator:
                 else:
                     offered = [CHECKPOINT_SCHEMA] if closing else schemas
                 offered_names = {s['function']['name'] for s in offered}
-                if closing:
+                if closing and not checkpoint_only:
                     history.append({'role': 'user', 'content': 'Checkpoint now using worker_checkpoint. Describe completed work and the exact next action. No more source tools this session. If the next action is a permitted tool read or edit for the next session, use outcome continue; session closing is not a blocker. Use blocked only for unavailable external access or a required operator decision, and name that obstacle.'})
-                elif context_pressure and develop_without_diff:
+                elif not closing and context_pressure and develop_without_diff:
                     history.append({'role': 'user', 'content': 'Context is tight and the current diff is empty. Return exactly one guarded code_edit or code_create now; do not checkpoint work that has not happened.'})
                 budget = self.budget(history, offered)
                 if budget.available_generation_tokens < 900:
@@ -1343,6 +1343,14 @@ class Coordinator:
                     self.store.publish_result(task_id, state, workflow=dict(active['workflow'], finish_requested=False, stall_turns=0, last_action=None, progress_instruction=None))
             else:
                 checkpoint['next_action'] = missing
+        if checkpoint_only and phase == state['phase'] and outcome != 'blocked':
+            checkpoint = {
+                'summary': 'The inspection recovery turn did not produce a usable repair plan.',
+                'next_action': checkpoint['next_action'] if outcome == 'phase_done' else
+                               'Review the saved model response before any further repair work.',
+                'outcome': 'blocked',
+            }
+            outcome = 'blocked'
         status = 'PAUSED_BLOCKED' if outcome == 'blocked' else 'PAUSED_NO_PROGRESS' if no_progress >= 3 else 'QUEUED'
         self.store.publish_result(task_id, state, checkpoint=checkpoint, phase=phase, status=status,
                           no_progress=no_progress, errors=0, reason=('Worker blocked: ' + str(checkpoint.get('summary', ''))[:500] + '; next: ' + str(checkpoint.get('next_action', ''))[:500]) if outcome == 'blocked' else 'Worker checkpoint saved on MuleLab.')

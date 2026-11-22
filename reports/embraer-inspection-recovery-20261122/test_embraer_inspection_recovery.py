@@ -1,5 +1,7 @@
-import coordinator
 from types import SimpleNamespace
+
+import coordinator
+import pytest
 
 
 def _state(**changes):
@@ -38,7 +40,8 @@ def test_offer_rejects_a_refreshed_plan_with_real_remaining_work(monkeypatch, tm
     assert not coordinator.embraer_inspection_checkpoint_offer(_state(), [], {}, tmp_path)
 
 
-def test_checkpoint_only_session_dispatches_one_instruction_without_resetting_budget_or_receipts(monkeypatch):
+@pytest.mark.parametrize('model_result', ['phase_done', 'continue', 'plain_text'])
+def test_checkpoint_only_session_advances_or_holds_after_one_call(monkeypatch, model_result):
     state = _state(
         id='WRAP-0000000001', inference_session_id='session', calls=5, tokens=99, sessions=2,
         no_progress=2, evidence_requirements={'version': 1, 'required_files': ['src/x.py']},
@@ -68,12 +71,13 @@ def test_checkpoint_only_session_dispatches_one_instruction_without_resetting_bu
     instance.budget = lambda history, schemas: SimpleNamespace(available_generation_tokens=4000, prompt_tokens=10)
 
     def dispatch(current, session_id, history, offered, output, prompt, generation):
-        dispatched.append((history, offered))
+        dispatched.append((list(history), offered))
         checkpoint = {'summary': 'Evidence supports the named repair.',
-                      'next_action': 'Implement the bounded fix.', 'outcome': 'phase_done'}
-        answer = {'usage': {}, 'message': {'tool_calls': [
-            {'function': {'name': 'worker_checkpoint', 'arguments': checkpoint}}]}}
-        return answer, {'tools_allowed': True}
+                      'next_action': 'Implement the bounded fix.', 'outcome': model_result}
+        message = {'tool_calls': [{'function': {'name': 'worker_checkpoint', 'arguments': checkpoint}}]}
+        if model_result == 'plain_text':
+            message = {'content': 'I will read the file again.'}
+        return {'usage': {}, 'message': message}, {'tools_allowed': True}
 
     instance._dispatch_session_inference = dispatch
     monkeypatch.setattr(coordinator, 'manifest', lambda: {'src/x.py': 'current'})
@@ -87,6 +91,11 @@ def test_checkpoint_only_session_dispatches_one_instruction_without_resetting_bu
     history, offered = dispatched[0]
     assert [schema['function']['name'] for schema in offered] == ['worker_checkpoint']
     assert any('refreshed work plan has no next tool' in message['content'] for message in history)
+    assert not any('session closing is not a blocker' in message['content'] for message in history)
     final = published[-1]
-    assert final['phase'] == 'implement' and final['status'] == 'QUEUED'
+    if model_result == 'phase_done':
+        assert final['phase'] == 'implement' and final['status'] == 'QUEUED'
+    else:
+        assert final['phase'] == 'inspect' and final['status'] == 'PAUSED_BLOCKED'
+        assert final['checkpoint']['outcome'] == 'blocked'
     assert all(not ({'calls', 'tokens', 'sessions'} & set(change)) for change in published)

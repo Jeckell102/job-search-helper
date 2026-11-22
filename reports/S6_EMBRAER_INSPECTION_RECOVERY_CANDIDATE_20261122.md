@@ -7,14 +7,18 @@ evidence satisfies the original inspection gate and the plan has no work
 remaining. Normal checkpoint validation still decides whether work advances.
 
 Independent source QA accepted coordinator SHA-256
-`2934791258a15c3c45ad6f90fd5bd3af604f1981b7a5a278727cc2c3f8751fab`.
+`3d5d42249f4e8b277e3d86de57658c2275214629b78aff9cd61fbcb8d65680d4`.
 The test file SHA-256 is
-`ab7865b9978eb29fda1da8f53a70ee14d955b95af508460be20dff56183946c4`.
-All four focused tests passed. The direct session fixture verified one
+`54ca14e8878a8218e47035aef5cc84924de7e1813bf0dc4351fde59264184615`.
+All six focused tests passed. The direct session fixture verified one
 inference request, the checkpoint-only schema and instruction, the
 existing phase transition, and preservation of counters. The first draft
 lost the instruction when rebuilding history. The accepted version appends
-the instruction after the rebuild.
+the instruction after the rebuild. Root then reproduced the potential
+requeue on a plain-text or continue result and changed the recovery path
+to hold after that one offer. Independent QA verified both responses hold
+without another call. The supported same-task resume keeps the existing
+pilot slot and authoritatively rechecks the task budget and identity.
 
 At about 14:00 Eastern, a read-only test against the actual task
 `WRAP-fbb9ff24d3` returned true for the checkpoint offer. The workspace
