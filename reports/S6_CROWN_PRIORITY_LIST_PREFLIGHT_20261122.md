@@ -24,3 +24,13 @@ outcome. Keep Embraer held.
 
 No scrape request, queue write, inference, release or workbook action was
 performed. No Sprint 6 credit was earned.
+
+A follow-up read found 100 distinct numeric IDs behind the 300 repeated
+anchors, with no visible result range or next-page link. The same official
+host's sitemap returned 530 unique canonical job IDs. All 99 strict
+same-host HTTPS IDs in the search response were present. The remaining
+listing link form and five noncanonical sitemap entries need to be
+classified before claiming coverage. Crown is a promising repair candidate
+using the existing SuccessFactors sitemap approach, with exact Crown-only
+scope. The sitemap count is evidence of a larger published set, not proof
+of complete inventory or of valid full descriptions for all postings.
