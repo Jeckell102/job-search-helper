@@ -1,0 +1,64 @@
+{
+  "activation_journal_file_sha256": "3de8cc28d94e02b650b1915e1c8c1955328434312bfbe7478aba8a5afaca683f",
+  "activation_receipt_sha256": "3a9f760382dcf85b57a241882dd38ed446418b0377ca8bdfcaf655b775367dbe",
+  "held": {
+    "attempt": "RTRY-8d1210858e4e26f325312a89",
+    "company_stage": "inventory",
+    "coordinator_lifecycle_count": 0,
+    "coordinator_retry_events": 0,
+    "cycle": "CYC-4650772EEE1E",
+    "cycle_status": "In Progress",
+    "inventory": {
+      "blocked": false,
+      "distinct_posting_ids": 39,
+      "full_description_at_least_120_chars": 39,
+      "full_description_nonempty": 39,
+      "raw_listed_postings": 39,
+      "saved_inventory_sha256": "dc13c026d4da5424f8bbec006135b27149b5261a83d551099ca00e96126bedef",
+      "saved_inventory_status": "complete"
+    },
+    "inventory_and_evidence": {
+      "durable_cycle_listed_postings": null,
+      "exact_source_evidence_rows": 0,
+      "job_history_rows": 0,
+      "nonempty_evidence_descriptions": 0,
+      "same_cycle_company_inventory_count": 0,
+      "snapshot_full_description_verified": 0,
+      "state_inventory_status": "complete",
+      "untruncated_evidence_descriptions": 0
+    },
+    "local": {
+      "local_apply_id": null,
+      "local_cursor": null,
+      "plan_digest": "04c05d9c789a415161b9af3ca08eb66f94b672db04493c2d2ca5c8a091a892e7",
+      "state": "FROZEN",
+      "verified_local_cursor": null
+    },
+    "local_message": "Inventory is saved. Jobs and Sheets are still pending.",
+    "local_operations": 42,
+    "local_status": "INVENTORY_SAVED",
+    "origin_pair": {
+      "receipt_sha256": "1167c2ad6df3851b5c3546d24dfc669771e1f83e313b4542dc43b5e35580404b",
+      "record_sha256": "698dcd962b9f91294878bdae2fe87cf25b3d941e2112ee5eeffaad14eb506e29",
+      "sink_status": "HELD_FOR_REPAIR_TRIAGE"
+    },
+    "plan_cursor": 0,
+    "plan_exists": true,
+    "plan_sha256": "04c05d9c789a415161b9af3ca08eb66f94b672db04493c2d2ca5c8a091a892e7",
+    "protected": {
+      "mismatches": [],
+      "protected_local_fields_matched": 11,
+      "protected_neighbor_id": "COMP-0164"
+    },
+    "receipt": null,
+    "remote": null,
+    "remote_projection_count": 24,
+    "retry_outcome_count": 0,
+    "verified_Jobs_apply_count": 0
+  },
+  "installed": {
+    "config_sha256": "fdb4049997bddf85ec7f421283951ca2121cba2fab3be2e21082d32bc5eaaa03",
+    "dependency_manifest_sha256": "98079522053bb0643717e2afc5a2cf7890566729bd951a96e4d1a18487e3c7fb",
+    "source_manifest_sha256": "bfab80ca6a455671c1956f18bfce1e1d7ff7b77e6ec1bd52b08e06be0a52e82c"
+  }
+}

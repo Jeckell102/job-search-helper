@@ -368,6 +368,15 @@ observer. Installation, the scoped live retry and deployed independent QA
 remain open. This Sprint 5 run earns no Sprint 6 sequential credit.
 [Production live qualification](S5_AMPHENOL_PRODUCTION_PACED_LIVE_QUALIFICATION_20261121.md).
 
+At 23:06 Eastern, the actual guarded installation and 39-description
+Amphenol-only retry completed fetching. Independent QA proved the installed
+version and restored services/routes. Publication held before local or
+remote mutations because a projected planning row supplied blank guards.
+The original inventory and frozen plan are retained. Correct authoritative
+before-images and determine the supported measured recovery before
+claiming saved Job History, workbook or coordinator acceptance.
+[Preserved live failure](S5_AMPHENOL_DEPLOYED_PUBLICATION_HOLD_20261121.md).
+
 Objective: run one minimal automatic wrapper generation loop for a qualified
 failed or partial integration. Start from real failure evidence and produce
 the wrapper with the Jetson, then validate, release, make a fresh scoped retry,
