@@ -39,6 +39,21 @@ fix is staged for the next justified deployment. No repeat probe or
 standalone maintenance window is planned for it now.
 [Current evidence and holds](S6_CURRENT_ELIGIBILITY_AND_STATUS_FIX_20261122.md).
 
+At 20:19 Eastern the latest installed ATS release passed a targeted
+copy-of-installed launcher recheck for stale or paused queued Company
+requests. A separate read-only proof matched all preexisting task, tool
+and inference records after the actual ATS wrapper restarts. Independent QA accepted these bounded results for demonstrations 5 and 6
+at the current installed source.
+They establish neither a publication-interruption cut nor a successful
+repair from either ATS attempt.
+[Current scope and restart evidence](S7_CURRENT_SCOPE_AND_SETTLED_RESTART_20261122.md).
+
+The separate ATS exhaustion proof used the real coordinator's prior
+receipt rows in a disposable copy. Duplicate delivery and both successor
+routes preserved the failed tasks and allowed no third repair after
+process restart. It advances M4/M6 hold and receipt-preservation evidence.
+[Repeated failure proof](S6_ATS_EXHAUSTION_RESTART_PROOF_20261122.md).
+
 ## Current evidence index
 
 The linked reports preserve the full version pins, receipt identities and

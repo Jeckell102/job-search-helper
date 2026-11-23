@@ -1,0 +1,44 @@
+{
+  "coordinator_store_sha256": "d65f1e0a37ba49cf6dcf721bd20cfe9f72017d028347f61130c22de25724ea4b",
+  "copy_removed": true,
+  "distinct_company_prior_report": "/tmp/job-search-helper-integration-automation/temp/integration-coordinator/S6_OWNED_REPAIR_BUDGET_RESTART_QA_20261121.md",
+  "distinct_company_prior_result_sha256": "f32ff18643fa7102fe39bde25f4feafd8dca4478c1660e2be16f13b105ceb382",
+  "fresh_process_reopen": true,
+  "model_calls": 0,
+  "new_inference_requests": 0,
+  "new_repairs": 0,
+  "new_tasks": 0,
+  "pilot_stop": "terminal slot cleared; control generation advanced once",
+  "pinned_tasks": {
+    "WRAP-9546a1473a": {
+      "inference": "861893b1e84599435ab7171cd70b9a88eef0f765dccb025ba624e25035355932",
+      "request": "4ca2e279ef434046b627d1c4c956235f",
+      "state": "392db850644639308928460383fe673f1c124f3d634b9fac1cabbac373522f3e",
+      "tools": "2445818013fe04f9f0ed7ae6237c6392fc4d309cc7f1f4baab5b5014f8f4ff13"
+    },
+    "WRAP-9db6388719": {
+      "inference": "3c4d4736fb2ae7b0e4bafb5465c747807f4dfe0c171b5f618056188130b4a76e",
+      "request": "22a2ecf17cf744298a39f10418af7f5c",
+      "state": "64d4ef964e53ea88bdd907d35b22532fceef7512a949217b5380d04382b8d96f",
+      "tools": "33bd00f7e69c7b3372aa2ae6de7a0afeb2eb01564ef053b93a5d633b45b85769"
+    }
+  },
+  "production_open": "mode=ro&immutable=1",
+  "production_writes": 0,
+  "protected_ledger_sha256": "d65a347c464525146cedd21b91cc3a7f66ae6350037ba388f660c2b51a8dcd08",
+  "provider_calls": 0,
+  "reservation_refusals": {
+    "WRAP-9546a1473a": "Predecessor task is not the exact stopped counted owner.",
+    "WRAP-9db6388719": "A different operator successor already owns this predecessor repair."
+  },
+  "state": "ACCEPT_DISPOSABLE_ATS_TERMINAL_EXHAUSTION",
+  "synthetic_delivery": {
+    "added_rows": {
+      "repair_intake_evidence": 1,
+      "scrape_outcome_delivery_receipts": 1,
+      "scrape_outcome_intake": 1
+    },
+    "identical_duplicate": true,
+    "receipt_sha256": "40a8091002dc781257bd891e3c0dbcc3b370b1d53b5784cb898b695b6819ce8d"
+  }
+}
