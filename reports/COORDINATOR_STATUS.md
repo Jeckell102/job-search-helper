@@ -7520,3 +7520,27 @@ deployed review. The optional request for a real Company is still
 pending. Pursue source-mapping evidence as such and reserve model calls
 for enrolled, qualified failures. Broad processing and unqualified
 automatic releases remain off.
+
+### Festo source mapping qualified off production
+
+Root owns the mapping candidate and release decision. The separate scope
+lane accepted the existing Festo Company-group coverage, including the
+identified branded listing whose official employer is Festo India.
+Independent source QA initially rejected the unbound exact search route,
+then accepted the owner guard. The three scoped tests pass. One paced
+normal-dispatch provider qualification completed 126 distinct full
+descriptions and exact canonical URLs. All six pages matched on reread.
+No live workbook or production write and no Jetson call. Both lanes have
+finished source/scope review; the provider process is terminal.
+[Qualification](S6_FESTO_SOURCE_QUALIFICATION_20261122.md) and
+[initial QA rejection](S6_FESTO_SOURCE_OWNER_QA_REJECT_20261122.md).
+
+The exact mapping patch is ready for guarded release preparation under
+current controls. Evaluate it as a source-link correction and a potential
+later eligible progress case after the existing provider hold. Require
+one company-only run and matched durable storage, live workbook, and
+coordinator completion before offering that credit. Frozen Sprint 6 stays
+0/3 and the Sprint 7 genuine new-Company and live lost-ack gates are
+open. The user has already been asked once for a genuine Company if
+available. Preserve broad controls off and use the single Jetson lane
+only for independently eligible repairs.

@@ -1,0 +1,122 @@
+--- a/src/job_search_helper/ats.py
++++ b/src/job_search_helper/ats.py
+@@ -1223,7 +1223,7 @@
+     if careers_url == 'https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch=':
+         from .successfactors import fetch_successfactors
+         return fetch_successfactors(careers_url, company_id, company, discovery_transport)
+-    if careers_url in {'https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=', 'https://careers.belden.com/search/?q=', 'https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.leonardodrs.com/go/All-Jobs/8131200/', 'https://careers.thalesdsi.com/search/?q=', 'https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.qorvo.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.danfoss.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.festo.com/viewalljobs/', 'https://jobs.deere.com/successfactors/search/?q=&locationsearch=', 'https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://komatsu.jobs/viewalljobs/', ATS_CORPORATION_SOURCE}:
++    if careers_url in {'https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=', 'https://careers.belden.com/search/?q=', 'https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.leonardodrs.com/go/All-Jobs/8131200/', 'https://careers.thalesdsi.com/search/?q=', 'https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.qorvo.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.danfoss.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.festo.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.deere.com/successfactors/search/?q=&locationsearch=', 'https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://komatsu.jobs/viewalljobs/', ATS_CORPORATION_SOURCE}:
+         if company_id == 'COMP-0080' and company.casefold() == 'hii mission technologies':
+             from .hii import fetch_hii
+             return fetch_hii(careers_url, company_id, company, discovery_transport)
+--- a/src/job_search_helper/company_sources.py
++++ b/src/job_search_helper/company_sources.py
+@@ -2065,9 +2065,12 @@
+     'company': 'Festo',
+     'ats': 'SuccessFactors',
+     'expected_url': 'https://jobs.festo.com/viewalljobs/',
+-    'expected_urls': ['https://jobs.festo.com/viewalljobs'],
+-    'url': 'https://jobs.festo.com/viewalljobs/',
+-    'evidence': 'Festo\'s official jobs.festo.com viewalljobs page is its unfiltered SuccessFactors Jobs2Web inventory and publishes one result range.',
++    'expected_urls': ['https://jobs.festo.com/viewalljobs', 'https://jobs.festo.com/search/'],
++    'url': 'https://jobs.festo.com/search/?q=&sortColumn=referencedate&sortDirection=desc',
++    'evidence': (
++        "Festo's category directory links its official unfiltered jobs search. "
++        "Reference-date sorting is explicit from the first page onward."
++    ),
+ }})
+
+ REPAIRS.update({'COMP-0588': {
+--- a/src/job_search_helper/successfactors.py
++++ b/src/job_search_helper/successfactors.py
+@@ -19,7 +19,7 @@
+ KOMATSU_SOURCE = "https://komatsu.jobs/viewalljobs/"
+ QORVO_SOURCE = "https://careers.qorvo.com/search/?q=&sortColumn=referencedate&sortDirection=desc"
+ DANFOSS_SOURCE = "https://jobs.danfoss.com/search/?q=&sortColumn=referencedate&sortDirection=desc"
+-FESTO_SOURCE = "https://jobs.festo.com/viewalljobs/"
++FESTO_SOURCE = "https://jobs.festo.com/search/?q=&sortColumn=referencedate&sortDirection=desc"
+ CROWN_SOURCE = "https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch="
+ SITES = {
+     ABACO_SOURCE: "jobs.ametek.com",
+@@ -162,7 +162,7 @@
+         url = source + ("" if start == 0 else str(start) + "/") + "?q=&sortColumn=referencedate&sortDirection=desc"
+     elif source == "https://careers.thalesdsi.com/search/?q=":
+         url = source + "&sortColumn=referencedate&sortDirection=desc" + ("&startrow=" + str(start) if start else "")
+-    elif source == QORVO_SOURCE:
++    elif source in {QORVO_SOURCE, FESTO_SOURCE}:
+         url = source + ("&startrow=" + str(start) if start else "")
+     elif source == "https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc":
+         url = source + ("&startrow=" + str(start) if start else "")
+@@ -238,6 +238,15 @@
+
+
+ def fetch_successfactors(url, company_id, company, transport=None):
++    if url == FESTO_SOURCE and (
++        company_id != "COMP-0560"
++        or not isinstance(company, str)
++        or company.strip().casefold() != "festo"
++    ):
++        return Inventory(
++            "unsupported", reason="Festo's careers board belongs to the Festo company record.",
++            source_url=url, ats="SuccessFactors",
++        )
+     host=SITES.get(url)
+     if not host: return Inventory("unsupported",reason="SuccessFactors adapter requires a verified employer board.",source_url=url,ats="SuccessFactors")
+     client=transport or CareersTransport(); jobs=[]; seen=set(); entries_all=[]
+@@ -334,7 +343,7 @@
+                                            or job_titles.get(ident) != title
+                                            for ident, title, detail_url in check_first):
+                 raise FetchError("partial", "Leonardo DRS first listing page changed during the scan.")
+-        elif url in {"https://careers.thalesdsi.com/search/?q=", ABACO_SOURCE, KOMATSU_SOURCE, QORVO_SOURCE}:
++        elif url in {"https://careers.thalesdsi.com/search/?q=", ABACO_SOURCE, KOMATSU_SOURCE, QORVO_SOURCE, FESTO_SOURCE}:
+             for page_start, (saved_total, saved_entries, saved_next) in page_snapshots.items():
+                 check_total, check_entries, check_next = _listing(client, url, page_start)
+                 if (check_total, check_entries, check_next) != (saved_total, saved_entries, saved_next):
+--- a/tests/test_festo.py
++++ b/tests/test_festo.py
+@@ -1,12 +1,18 @@
+ import unittest
++from unittest.mock import Mock
+
++from job_search_helper.ats import fetch_inventory
+ from job_search_helper.company_sources import repair_source
+ from job_search_helper.successfactors import FESTO_SOURCE, SITES
+
+
+ class FestoSourceTests(unittest.TestCase):
+     def test_official_festo_source_routes_to_unfiltered_successfactors_board(self):
+-        for source in (FESTO_SOURCE, 'https://jobs.festo.com/viewalljobs'):
++        for source in (
++            'https://jobs.festo.com/viewalljobs/',
++            'https://jobs.festo.com/viewalljobs',
++            'https://jobs.festo.com/search/',
++        ):
+             with self.subTest(source=source):
+                 ats, board, note = repair_source('', source, 'COMP-0560', 'Festo')
+                 self.assertEqual((ats, board), ('SuccessFactors', FESTO_SOURCE))
+@@ -14,9 +20,24 @@
+         self.assertEqual(SITES[FESTO_SOURCE], 'jobs.festo.com')
+
+     def test_repair_does_not_override_changed_source(self):
+-        changed = FESTO_SOURCE + '?manual=1'
++        changed = 'https://jobs.festo.com/search/?locationsearch=Boston'
+         self.assertEqual(repair_source('', changed, 'COMP-0560', 'Festo'), ('', changed, ''))
+
++    def test_festo_search_refuses_other_company_before_provider_access(self):
++        transport = Mock()
++        for company_id, company in (
++            ("COMP-9999", "Festo"),
++            ("COMP-0560", "Another Company"),
++        ):
++            with self.subTest(company_id=company_id, company=company):
++                result = fetch_inventory(
++                    "Official careers", FESTO_SOURCE, company_id, company,
++                    discovery_transport=transport,
++                )
++                self.assertEqual(result.status, "unsupported")
++                self.assertEqual(result.jobs, [])
++        transport.get.assert_not_called()
++
+
+ if __name__ == '__main__':
+     unittest.main()
