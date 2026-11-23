@@ -7544,3 +7544,23 @@ coordinator completion before offering that credit. Frozen Sprint 6 stays
 open. The user has already been asked once for a genuine Company if
 available. Preserve broad controls off and use the single Jetson lane
 only for independently eligible repairs.
+
+### Festo mapping deployed and independently verified
+
+Root owns release and exact pilot. The independent release lane approved
+the repaired raw ATS #02 custody pin and exact deployed Festo readback.
+The three app files are installed as COMPLETE REL-e91024875ba7d854b83c33f8.
+The native window, services and physical routes restored. Wrapper PID
+812120 and bridge PID 812166 were verified after the release. Scheduled
+sync and broad controls remained off. No provider, Sheet, queue or Jetson
+action occurred during release. QA's approval is source-only.
+[Live source release evidence](S7_FESTO_SOURCE_DEPLOYED_20261122.md).
+
+The intake lane owns a read-only check of existing exact positive operator
+routes for Festo. Root retains authority for live execution. Next use a
+genuine owned request and the guarded company-only path. Generic Start
+can fall through to broad processing and does not serve this pilot.
+The grounded source mapping release advances the current version but
+does not change the Sprint 6 frozen 0/3 matrix or close first-Start and
+publication-interruption gates. Reconcile the final evidence index
+against the latest version before final QA.

@@ -115,3 +115,13 @@ Keep one compact row linking Company ID + source revision -> event/operator requ
 Final acceptance requires all six original milestone gates, verified F1–F8 closures, seven actual-path demonstrations, deployed independent acceptance, usable operator documentation and fetched scoped backup. Keep broad backlog and unqualified automatic releases disabled until their own gates pass. Current Sprint7 is preparation only; this report adds no completion percentage or release authority.
 
 Sources: AUTOMATION_ROADMAP.md (complete contract and six gates), ACCEPTANCE_MATRIX.md and QA_FINDINGS_LEDGER.md in /home/chris/job-search-helper_old/temp/integration-automation-roadmap-20261118; current COORDINATOR_STATUS.md through November22 10:55, sprint_roadmap.md Sprint7, S7_EFFECTIVE_ACCEPTANCE_20261121.md, INTEGRATION_AUTOMATION_OPERATOR_RUNBOOK.md, S6_GAASI_DEPLOYED_INDEPENDENT_20261122.md, S6_ORDERED_FIRST_HOLD_AND_FORTERRA_ELIGIBILITY_20261122.json as referenced by the card, S6_FORTERRA_ORDERED_ELIGIBILITY_20261122.md and S5_AMPHENOL_DEPLOYED_PILOT_ACCEPT_20261122.md under /tmp/job-search-helper-integration-automation/temp/integration-coordinator/. No display/transport failure occurred.
+
+## Festo deployed mapping checkpoint
+
+The three-file Festo source correction is installed and independently
+verified as REL-e91024875ba7d854b83c33f8. It preserves the prior roadmap
+controls. The previous release evidence remains version-bound to its
+recorded versions. A live Festo-only run with local, workbook and
+coordinator readback is still required before countable later-company
+progress. This source mapping contributes zero named-sequence repairs.
+[Current deployed source evidence](S7_FESTO_SOURCE_DEPLOYED_20261122.md).
