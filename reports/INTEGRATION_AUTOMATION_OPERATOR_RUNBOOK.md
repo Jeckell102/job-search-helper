@@ -35,23 +35,18 @@ before another model request. The reviewed scoped pilot is resumed using
 the recorded ownership and recovery steps in the current checkpoint.
 Leave broad queue resume and autopilot controls off during pilot work.
 
-## Start the administrator observer when requested
+## Guarded maintenance on MuleLab
 
-The administrator observer verifies process and listener ownership during
-a short MuleLab maintenance window. Use the exact command the coordinator
-provides for that window in a regular MuleLab Terminal. Leave the terminal
-open and report `Administrator process observer ready.`
+MuleLab has a standing administrator observer. The coordinator uses it
+to verify process and listener ownership before a guarded release and
+checks that the services and checkout locations are restored afterwards.
+A working observer requires no Terminal setup from you. If its check
+fails, the coordinator will tell you which prerequisite needs attention.
 
-The GA-ASI `-09` and Allen `-10` windows have both restored the services.
-Each later maintenance window has its own observer command. If the script
-reports an existing observer directory, send the message to the coordinator
-so it can check ownership. Close the terminal when restoration is confirmed.
-
-The coordinator first runs the native preflight. If it passes, the exact
-tool update can stop and restart the wrapper host. The live result must
-verify the installed bytes, new wrapper process, prior sync controls and
-historical receipts before the coordinator uses that version for a pilot.
-The actual company run starts later under its own exact request.
+A guarded update may briefly restart the wrapper host or assistant
+bridge. The coordinator verifies the installed files, restored services,
+sync settings and existing receipts before starting any new company run.
+A company run uses its own exact request.
 
 ## Read the result before moving on
 
@@ -59,6 +54,7 @@ The actual company run starts later under its own exact request.
 | --- | --- |
 | Waiting or held | A request or repair may be saved. Use the reported reason and keep its evidence. |
 | Building or validating | A scoped candidate is under review. A fresh scrape or deployment still awaits qualification and approval. |
+| `PAUSED_TEST_FAILURE` | The edit failed verification. Keep its saved evidence. Another report of the same defect does not automatically restart an exhausted repair. |
 | Installed and retrying | The released version and the new request have separate receipts. Check the named retry for progress. |
 | `LOCAL_COMMITTED` | The company result and exact job records were durably saved locally. |
 | `SYNC_PENDING` | Workbook publication or confirmation is pending. Reconcile the saved records for the same request. |
@@ -95,7 +91,10 @@ The bounded Amphenol repair and scoped retry passed independent deployed
 verification. Sprint 6 intake can be observed locally. The GA-ASI case
 demonstrated a deployed employer-scope hold without launching a scrape or
 repair. Allen has a verified source correction and saved Ashby inventory.
-Read the active checkpoint for its current publication status.
+The two exact ATS attempts failed offline and their edits never reached
+production. The installed coordinator preserved both attempts and
+refused a third owner in a disposable replay. Read the active checkpoint
+for the current company, repair and publication status.
 
 Broad backlog processing and unqualified automatic releases remain disabled.
 Sites outside the approved capability scope go to engineering review. Sprint 7
