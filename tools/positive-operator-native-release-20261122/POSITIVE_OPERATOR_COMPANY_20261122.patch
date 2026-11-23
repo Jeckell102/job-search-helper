@@ -1,0 +1,1188 @@
+--- a/job-search-scraper
++++ b/job-search-scraper
+@@ -8,7 +8,7 @@
+ fi
+ export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+ case "${1:-}" in
+-  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|operator-embraer-partial|operator-crown-partial|operator-ats-partial|operator-scope-hold|continue-qualified-repair)
++  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|operator-embraer-partial|operator-crown-partial|operator-ats-partial|operator-company|operator-scope-hold|continue-qualified-repair)
+     exec "$PYTHON" -I -S "$ROOT/release_admission_bootstrap.py" "$@"
+     ;;
+   *)
+--- a/release_admission_bootstrap.py
++++ b/release_admission_bootstrap.py
+@@ -28,6 +28,7 @@
+ OPERATOR_CROWN_COMMAND = "operator-crown-partial"
+ OPERATOR_ATS_COMMAND = "operator-ats-partial"
+ OPERATOR_SCOPE_HOLD_COMMAND = "operator-scope-hold"
++POSITIVE_OPERATOR_COMMAND = "operator-company"
+ RETAINED_OPERATOR_LAYOUT_ENV = "JSH_RETAINED_OPERATOR_SQLITE_LAYOUT"
+
+
+@@ -246,7 +247,8 @@
+         raise RuntimeError("JOB_STORAGE_BACKEND must be sqlite or sheets")
+     operator = bool(arguments and arguments[0] in {
+         RETAINED_OPERATOR_COMMAND, ORDINARY_EVENT_COMMAND, OPERATOR_AMPHENOL_COMMAND,
+-        OPERATOR_EMBRAER_COMMAND, OPERATOR_CROWN_COMMAND, OPERATOR_ATS_COMMAND, OPERATOR_SCOPE_HOLD_COMMAND,
++        OPERATOR_EMBRAER_COMMAND, OPERATOR_CROWN_COMMAND, OPERATOR_ATS_COMMAND,
++        OPERATOR_SCOPE_HOLD_COMMAND, POSITIVE_OPERATOR_COMMAND,
+     })
+     layout = _retained_operator_sqlite_layout(project, state, backend) if operator else None
+     if not operator and tuple(arguments) == ('start',) and backend == 'sqlite':
+--- a/src/job_search_helper/exact_cycle_planner.py
++++ b/src/job_search_helper/exact_cycle_planner.py
+@@ -22,7 +22,8 @@
+ from .core import job_key, material_hash
+ from .engine import now
+ from .exact_cycle_receipt import (
+-    ORDINARY_EVENT_PLAN_BINDING, REPAIR_RETRY_PLAN_BINDING, derive_receipt, has_ordinary_event_scope,
++    ORDINARY_EVENT_PLAN_BINDING, POSITIVE_OPERATOR_PLAN_BINDING, REPAIR_RETRY_PLAN_BINDING, derive_receipt,
++    has_ordinary_event_scope, has_positive_operator_scope, positive_operator_admitted_request, require_current_positive_operator,
+     has_repair_retry_scope, ordinary_event_receipt_binding, require_current_repair_retry,
+     require_unambiguous_repair_retry_receipt,
+ )
+@@ -690,7 +691,7 @@
+ })
+
+
+-def _ordinary_company_operation(operation, company):
++def _ordinary_company_operation(operation, company, *, observed_operator_ats=None):
+     """Omit equivalent source values and reject changes to the admitted Company."""
+     from .repository import _equivalent
+
+@@ -703,6 +704,13 @@
+         values = operation.get(stream, {})
+         for field in _ORDINARY_COMPANY_SOURCE_FIELDS.intersection(values):
+             prior, proposed = company.get(field, ''), values[field]
++            # The finisher normally enriches an unclassified board with its
++            # observed adapter. An explicit positive scan retains the tracker
++            # source that authorized the request.
++            if (stream == 'values' and field == 'ATS / Source' and observed_operator_ats
++                    and proposed == observed_operator_ats):
++                del values[field]
++                continue
+             if field in {'Company Status', 'ATS / Source'}:
+                 same = str(prior).strip().casefold() == str(proposed).strip().casefold()
+             elif field == 'Official Careers URL':
+@@ -737,6 +745,7 @@
+     engine._verify_same_board({'Official Careers URL': payload['requested_url']}, company)
+     local_cycle = copy.deepcopy(cycle)
+     local_item = local_cycle['companies'][company_id]
++    observed_ats = payload.get('ats') if has_positive_operator_scope(cycle) else None
+     local_item.update(payload, stage='inventory', staging_complete=True, next_job_index=0)
+
+     before_rows = copy.deepcopy(planner.rows)
+@@ -756,7 +765,8 @@
+             return {'staged': 0}
+         if protect_ordinary_source:
+             operations = [
+-                _ordinary_company_operation(operation, company) if operation.get('tab') == 'Companies' else operation
++                _ordinary_company_operation(operation, company, observed_operator_ats=observed_ats)
++                if operation.get('tab') == 'Companies' else operation
+                 for operation in operations
+             ]
+         for operation in operations:
+@@ -926,6 +936,13 @@
+     cycle_id, cycle = _validate_cycle(engine, cycle_id)
+     ordinary_event = has_ordinary_event_scope(cycle)
+     repair_retry = has_repair_retry_scope(cycle)
++    positive_operator = has_positive_operator_scope(cycle)
++    if positive_operator and (ordinary_event or repair_retry or ordinary_event_context is not None
++                              or bind_selected_retry or len(requested) != 1):
++        raise ValueError('Positive operator exact planning requires its sole Company and no alternate lineage.')
++    owned_key = POSITIVE_OPERATOR_PLAN_BINDING if positive_operator else REPAIR_RETRY_PLAN_BINDING
++    other_key = REPAIR_RETRY_PLAN_BINDING if positive_operator else POSITIVE_OPERATOR_PLAN_BINDING
++    current_owned = require_current_positive_operator if positive_operator else require_current_repair_retry
+     if ordinary_event_context is not None and not ordinary_event:
+         raise ValueError('Ordinary Company-event plan context requires an admitted event cycle.')
+     if ordinary_event and (len(requested) != 1 or bind_selected_retry):
+@@ -954,17 +971,22 @@
+             local_company = _company_from(planner, company_id)
+             engine._verify_same_board({'Official Careers URL': payload['requested_url']}, local_company)
+             event_binding = None
+-            retry_binding = None
++            owned_binding = None
+             existing = engine.inbox.plan(cycle_id, company_id)
+-            if repair_retry:
++            if existing is not None and isinstance(existing[0], Mapping) and other_key in existing[0]:
++                raise ValueError('Existing frozen plan belongs to a different publication authority.')
++            if positive_operator and (payload.get('inventory_status') != 'complete' or not payload.get('jobs')
++                                      or payload.get('browser_pending_urls') or payload.get('browser_discovery_incomplete')):
++                raise ValueError('Positive operator publication requires complete nonempty inventory.')
++            if repair_retry or positive_operator:
+                 engine.assert_runtime_binding(cycle_id, sync_only=True)
+-                retry_binding = require_current_repair_retry(
++                owned_binding = current_owned(
+                     cycle, company_id, engine.repo, Path(engine.state.path).parent)
+                 if existing is not None and (
+                         not isinstance(existing[0], Mapping)
+-                        or existing[0].get(REPAIR_RETRY_PLAN_BINDING) != retry_binding):
++                        or existing[0].get(owned_key) != owned_binding):
+                     raise ValueError('Repair retry existing plan is missing its exact frozen receipt binding.')
+-            elif existing is not None and isinstance(existing[0], Mapping) and REPAIR_RETRY_PLAN_BINDING in existing[0]:
++            elif existing is not None and isinstance(existing[0], Mapping) and owned_key in existing[0]:
+                 raise ValueError('Repair retry frozen plan has no matching admitted cycle.')
+             if ordinary_event:
+                 event_binding = _ordinary_event_plan_binding(
+@@ -982,8 +1004,8 @@
+                 company_guard(company_id, payload['requested_url']), company_id, payload['requested_url'])
+             if event_binding is not None:
+                 _require_current_ordinary_event(engine, cycle, company_id, event_binding)
+-            if retry_binding is not None and require_current_repair_retry(
+-                    engine.state.cycle(cycle_id), company_id, engine.repo, Path(engine.state.path).parent) != retry_binding:
++            if owned_binding is not None and current_owned(
++                    engine.state.cycle(cycle_id), company_id, engine.repo, Path(engine.state.path).parent) != owned_binding:
+                 raise ValueError('Repair retry receipt binding changed during exact planning.')
+             binding = None
+             if bind_selected_retry:
+@@ -993,12 +1015,12 @@
+                 profile, _publication = _publication_schema(engine.repo)
+                 if binding is not None and profile == 'full':
+                     raise ValueError('selected_retry_publication_requires_compact_profile')
+-                if retry_binding is not None and profile == 'full':
++                if owned_binding is not None and profile == 'full':
+                     raise ValueError('Repair retry publication requires the compact-v2 plan.')
+                 plan = _freeze(
+                     engine, planner, cycle, company_id, payload,
+                     drop_noops=profile != 'full',
+-                    protect_ordinary_source=event_binding is not None or retry_binding is not None)
++                    protect_ordinary_source=event_binding is not None or owned_binding is not None)
+                 plan['control_evidence'] = evidence
+                 plan['control_evidence_version'] = CONTROL_EVIDENCE_VERSION
+                 plan['control_evidence_digest'] = evidence_digest
+@@ -1017,8 +1039,11 @@
+                         plan['plan_digest'] = _exact_plan_digest(plan)
+                         derive_receipt(cycle, company_id, payload, plan, stamp,
+                                        ordinary_event_context=ordinary_event_context)
+-                    if retry_binding is not None:
+-                        plan[REPAIR_RETRY_PLAN_BINDING] = retry_binding
++                    if owned_binding is not None:
++                        plan[owned_key] = owned_binding
++                        if positive_operator:
++                            request = positive_operator_admitted_request(cycle, company_id, Path(engine.state.path).parent)
++                            plan['operator_enqueued_at'] = request['enqueued_at']
+                         plan['plan_digest'] = _exact_plan_digest(plan)
+                         receipt = derive_receipt(cycle, company_id, payload, plan, stamp)
+                         require_unambiguous_repair_retry_receipt(engine.inbox, cycle_id, receipt)
+@@ -1043,7 +1068,7 @@
+                     if event_binding is not None:
+                         derive_receipt(cycle, company_id, payload, plan, stamp,
+                                        ordinary_event_context=ordinary_event_context)
+-                    if retry_binding is not None:
++                    if owned_binding is not None:
+                         receipt = derive_receipt(cycle, company_id, payload, plan, stamp)
+                         require_unambiguous_repair_retry_receipt(engine.inbox, cycle_id, receipt)
+                 else:
+--- a/src/job_search_helper/exact_cycle_receipt.py
++++ b/src/job_search_helper/exact_cycle_receipt.py
+@@ -22,6 +22,9 @@
+ ORDINARY_EVENT_PLAN_BINDING = 'ordinary_company_event'
+ ORDINARY_EVENT_AUTHORITY = 'ordinary-company-event-exact-v2'
+ REPAIR_RETRY_PLAN_BINDING = 'repair_retry_receipt_binding'
++POSITIVE_OPERATOR_PLAN_BINDING = 'positive_operator_receipt_binding'
++POSITIVE_OPERATOR_PREFIX = 'operator-company:'
++POSITIVE_OPERATOR_REQUEST_ID = re.compile(r'operator-company:[A-Za-z0-9][A-Za-z0-9._-]{0,95}')
+
+
+ @dataclass(frozen=True)
+@@ -185,6 +188,88 @@
+     }
+
+
++def has_positive_operator_scope(cycle, request_id=None):
++    operator = cycle.get('operator_request')
++    return any(isinstance(value, str) and value.startswith(POSITIVE_OPERATOR_PREFIX) for value in (
++        cycle.get('start_request_id'), operator.get('request_id') if isinstance(operator, dict) else None,
++        request_id,
++    ))
++
++
++def _operator_release(cycle):
++    from .repair_retry import RELEASE_BINDING_SCHEMA, canonical_release_binding
++    from .runner import _canonical_runtime_binding
++
++    runtime = _canonical_runtime_binding(cycle.get('runtime_binding'))
++    if runtime.pop('state') != 'COMPLETE':
++        raise ValueError('Positive operator publication requires a complete admitted release.')
++    return canonical_release_binding({'schema': RELEASE_BINDING_SCHEMA, **runtime})
++
++
++def positive_operator_receipt_binding(cycle, company_id):
++    from .repair_retry import release_binding_sha256
++    from .scan_request import _operator_request
++
++    companies = cycle.get('companies')
++    request_id = cycle.get('start_request_id')
++    if (cycle.get('all') is not False or not isinstance(companies, dict) or set(companies) != {company_id}
++            or not isinstance(request_id, str) or not POSITIVE_OPERATOR_REQUEST_ID.fullmatch(request_id)
++            or any(cycle.get(key) is not None for key in (
++                'company_event', 'repair_retry', 'temporary_retry', 'selected_retry_reservation_sha256',
++                'retained_work_exception', 'recovery_pause',
++            ))):
++        raise ValueError('Positive operator publication requires its sole admitted Company.')
++    item = companies[company_id]
++    fact = item.get('outcome_source_fact') if isinstance(item, dict) else None
++    if (not isinstance(fact, dict) or fact.get('company_id') != company_id or fact.get('eligible') is not True
++            or _digest(fact) != item.get('outcome_source_revision')):
++        raise ValueError('Positive operator publication requires its frozen Company source.')
++    source = item['outcome_source_revision']
++    operator = _operator_request({
++        'operator_request': cycle.get('operator_request'), 'request_id': request_id, 'source_revision': source,
++    }, [company_id])
++    if operator is None:
++        raise ValueError('Positive operator publication requires its stored operator request.')
++    release = _operator_release(cycle)
++    return {
++        'request_id': request_id, 'company_id': company_id, 'source_revision': source,
++        'release_id': release['release_id'], 'release_binding_sha256': release_binding_sha256(release),
++    }
++
++
++def positive_operator_admitted_request(cycle, company_id, state_directory):
++    from .operator_company_request import _digest as queue_digest
++    from .operator_selected_observation import _find_receipt
++    from .scan_request import _read_request, request_fingerprint
++
++    root = Path(state_directory)
++    request_path = root / 'last-scan-request.json'
++    if request_path.is_symlink() or not request_path.is_file():
++        raise ValueError('Positive operator queue evidence is missing.')
++    request, selected = _read_request(request_path)
++    digest = queue_digest(request)
++    receipt = _find_receipt(root, request, digest)
++    if (set(request) != {'request_id', 'company_ids', 'mode', 'source_revision', 'enqueued_at', 'start_last', 'operator_request'}
++            or request['start_last'] != [] or receipt.get('state') not in {'REQUEST_WRITTEN', 'REQUEST_ALREADY_DURABLE'}
++            or receipt != {**cycle['operator_request'], 'state': receipt['state'], 'request_sha256': digest}
++            or request.get('operator_request') != cycle['operator_request'] or selected != [company_id]
++            or request_fingerprint(request, selected) != cycle.get('request_fingerprint')):
++        raise ValueError('Positive operator queue evidence disagrees with its admission.')
++    return request
++
++
++def require_current_positive_operator(cycle, company_id, repository, state_directory):
++    from .company_events import current_company_source_revision
++    from .integration_release import assert_active_release_binding
++
++    binding = positive_operator_receipt_binding(cycle, company_id)
++    assert_active_release_binding(state_directory, _operator_release(cycle))
++    if current_company_source_revision(repository, company_id) != binding['source_revision']:
++        raise ValueError('Positive operator Company source has changed.')
++    positive_operator_admitted_request(cycle, company_id, state_directory)
++    return binding
++
++
+ def has_repair_retry_scope(cycle, request_id=None):
+     """Recognize repair provenance even when a retry checkpoint is malformed."""
+     return cycle.get('repair_retry') is not None or any(
+@@ -314,21 +399,24 @@
+     return True
+
+
+-def _sealed_repair_retry_binding(cycle, company_id, payload, plan, request_id):
++def _sealed_owned_binding(cycle, company_id, payload, plan, request_id, key):
+     from .exact_cycle_planner import _exact_plan_digest, _require_ordinary_event_source_unchanged
+     from .sheet_profile import COMPACT_PROFILE
+
+-    binding = repair_retry_receipt_binding(cycle, company_id)
++    positive = key == POSITIVE_OPERATOR_PLAN_BINDING
++    binding = (positive_operator_receipt_binding if positive else repair_retry_receipt_binding)(cycle, company_id)
++    other = REPAIR_RETRY_PLAN_BINDING if positive else POSITIVE_OPERATOR_PLAN_BINDING
+     if (plan.get('exact_plan_version') != 2 or plan.get('publication_profile') != COMPACT_PROFILE
+             or plan.get('cycle_id') != cycle['id'] or plan.get('company_id') != company_id
+             or plan.get('requested_url') != payload.get('requested_url')
+             or plan.get('inventory_payload_digest') != _digest(payload)
+-            or plan.get(REPAIR_RETRY_PLAN_BINDING) != binding
++            or plan.get(key) != binding or other in plan
+             or plan.get('plan_digest') != _exact_plan_digest(plan)
+             or any(key in plan for key in (ORDINARY_EVENT_PLAN_BINDING, 'selected_retry_receipt_binding',
+                                           'retained_membership_only', 'selected_legacy_control_before_prefix_recovery'))
+             or (request_id is not None and request_id != binding['request_id'])):
+-        raise ValueError('Repair retry publication requires its exact compact-v2 frozen binding.')
++        raise ValueError('Positive operator publication requires its exact compact-v2 frozen binding.' if positive else
++                         'Repair retry publication requires its exact compact-v2 frozen binding.')
+     _require_ordinary_event_source_unchanged(plan, company_id)
+     return binding
+
+@@ -341,6 +429,11 @@
+     the immutable schedule, so interrupted plans with incomplete date fields
+     remain recoverable under every exact-cycle consumer.
+     """
++    operator = has_positive_operator_scope(cycle, request_id) or POSITIVE_OPERATOR_PLAN_BINDING in plan
++    repair = has_repair_retry_scope(cycle, request_id) or REPAIR_RETRY_PLAN_BINDING in plan
++    if operator and (repair or has_ordinary_event_scope(cycle, request_id) or ORDINARY_EVENT_PLAN_BINDING in plan
++                     or ordinary_event_context is not None):
++        raise ValueError('Positive operator publication cannot reuse an alternate scope.')
+     if (has_ordinary_event_scope(cycle, request_id) or ORDINARY_EVENT_PLAN_BINDING in plan
+             or ordinary_event_context is not None):
+         if has_repair_retry_scope(cycle, request_id) or REPAIR_RETRY_PLAN_BINDING in plan:
+@@ -348,10 +441,8 @@
+         return _ordinary_event_receipt(
+             cycle, company_id, payload, plan, timestamp, request_id, ordinary_event_context,
+         )
+-    repair_binding = (
+-        _sealed_repair_retry_binding(cycle, company_id, payload, plan, request_id)
+-        if has_repair_retry_scope(cycle, request_id) or REPAIR_RETRY_PLAN_BINDING in plan else None
+-    )
++    key = POSITIVE_OPERATOR_PLAN_BINDING if operator else REPAIR_RETRY_PLAN_BINDING
++    owned_binding = _sealed_owned_binding(cycle, company_id, payload, plan, request_id, key) if operator or repair else None
+     if request_id is not None and not str(request_id).strip():
+         raise ValueError('Exact receipt request ID override is invalid.')
+     operations = (plan.get('remote_projection')
+@@ -364,14 +455,21 @@
+         raise ValueError('Exact receipt fingerprint version is invalid.')
+     records = record_fingerprints(
+         operations, include_guard_only=fingerprint_version == 2)
+-    if repair_binding is not None:
++    if owned_binding is not None:
++        if operator:
++            from .scan_request import _enqueued_at, request_fingerprint
++            request = {'mode': 'company-only', 'source_revision': owned_binding['source_revision'],
++                       'operator_request': cycle['operator_request'], 'enqueued_at': plan.get('operator_enqueued_at')}
++            _enqueued_at(request)
++            if request_fingerprint(request, [company_id]) != cycle.get('request_fingerprint'):
++                raise ValueError('Positive operator schedule differs from its admitted request.')
+         if (plan.get('remote_projection_digest') != _digest(operations)
+                 or plan.get('remote_records') != records or plan.get('remote_records_digest') != _digest(records)):
+             raise ValueError('Repair retry publication disagrees with its frozen record fingerprints.')
+         return {
+-            'binding': repair_binding,
++            'binding': owned_binding,
+             'records': records,
+-            'schedule': {'boundary': 'idle', 'enqueued_at': cycle['repair_retry']['activated_at']},
++            'schedule': {'boundary': 'idle', 'enqueued_at': (plan['operator_enqueued_at'] if operator else cycle['repair_retry']['activated_at'])},
+             'timestamp': timestamp,
+         }
+     item = cycle['companies'][company_id]
+--- a/src/job_search_helper/exact_cycle_recovery.py
++++ b/src/job_search_helper/exact_cycle_recovery.py
+@@ -385,7 +385,7 @@
+
+ def _recover_exact_cycle_locked(engine, remote, cycle_id, selected, *,
+                                 require_frozen_plans=False, bind_selected_retry=False,
+-                                ordinary_event_context=None, ordinary_event_guard=None):
++                                ordinary_event_context=None, ordinary_event_guard=None, positive_operator_guard=None):
+     from .retained_cycle_retirement_control import assert_cycle_not_retired
+     assert_cycle_not_retired(engine.state, cycle_id)
+     cycle = engine.state.cycle(cycle_id)
+@@ -395,6 +395,17 @@
+         engine.assert_runtime_binding(cycle_id, sync_only=True)
+     if cycle.get('status') in {'Complete', 'Complete with exceptions'}:
+         raise ValueError('exact_recovery_cycle_finished')
++    from .exact_cycle_receipt import (
++        POSITIVE_OPERATOR_PLAN_BINDING, derive_receipt, has_positive_operator_scope, require_current_positive_operator,
++        require_unambiguous_repair_retry_receipt,
++    )
++    positive = has_positive_operator_scope(cycle)
++    if positive != (positive_operator_guard is not None) or (positive and (
++            not callable(positive_operator_guard) or len(selected) != 1 or bind_selected_retry
++            or ordinary_event_guard is not None or ordinary_event_context is not None)):
++        raise ValueError('Positive operator recovery requires its one Company and dedicated guard.')
++    if positive:
++        require_current_positive_operator(cycle, selected[0], engine.repo, Path(engine.state.path).parent)
+     if bind_selected_retry and len(selected) != 1:
+         raise ValueError('selected_retry_publication_requires_one_company')
+     if ordinary_event_context is not None and (
+@@ -419,6 +430,8 @@
+         stage = item.get('stage')
+         existing = engine.inbox.plan(cycle_id, company_id)
+         has_plan = existing is not None
++        if has_plan and positive != (POSITIVE_OPERATOR_PLAN_BINDING in existing[0]):
++            raise ValueError('Positive operator recovery has a different frozen plan authority.')
+         if has_plan and 'selected_retry_receipt_binding' in existing[0] and not bind_selected_retry:
+             raise ValueError('selected_retry_needs_dedicated_publisher')
+         if has_plan and 'ordinary_company_event' in existing[0] and ordinary_event_context is None:
+@@ -447,6 +460,8 @@
+         # Claims/manual holds are local-only under compact-v1.  This fresh
+         # composite read occurs under the normal scraper lock and compares the
+         # three shared controls to Google's compact projection.
++        if positive:
++            return positive_operator_guard(company_id, requested_url)
+         if ordinary_event_context is not None:
+             return ordinary_event_guard(company_id, requested_url)
+         if bind_selected_retry:
+@@ -486,6 +501,18 @@
+             if planned['held']:
+                 continue
+         plan_state = engine.inbox.plan(cycle_id, company_id)
++        if positive:
++            from .exact_cycle_sync import _validate_controls
++            if plan_state is None or POSITIVE_OPERATOR_PLAN_BINDING not in plan_state[0]:
++                raise ValueError('Positive operator recovery requires its sealed exact plan.')
++            plan = plan_state[0]
++            payload = engine.inbox.get(cycle_id, company_id)[0]
++            current = engine.state.cycle(cycle_id)
++            receipt = derive_receipt(current, company_id, payload, plan, current['started_at'])
++            if require_current_positive_operator(current, company_id, engine.repo, Path(engine.state.path).parent) != receipt['binding']:
++                raise ValueError('Positive operator source changed before local apply.')
++            require_unambiguous_repair_retry_receipt(engine.inbox, cycle_id, receipt)
++            _validate_controls(plan, guard(company_id, plan['requested_url']))
+         if ordinary_event_context is not None:
+             if plan_state is None or 'ordinary_company_event' not in plan_state[0]:
+                 raise ValueError('ordinary_event_frozen_plan_required')
+@@ -519,6 +546,7 @@
+             engine.inbox, cycle_id, remote, company_ids=[company_id],
+             retry_blocked=False, state=engine.state, company_guard=guard,
+             local=getattr(engine, 'repo', None),
++            **({'positive_operator_guard': positive_operator_guard} if positive else {}),
+             **event_options,
+             **({'bind_selected_retry': True} if bind_selected_retry else {}),
+         )
+--- a/src/job_search_helper/exact_cycle_sync.py
++++ b/src/job_search_helper/exact_cycle_sync.py
+@@ -19,7 +19,8 @@
+ from .repository import UncertainWriteError, _equivalent
+ from .sqlite_repository import timestamp
+ from .exact_cycle_receipt import (
+-    ORDINARY_EVENT_PLAN_BINDING, REPAIR_RETRY_PLAN_BINDING, derive_receipt,
++    ORDINARY_EVENT_PLAN_BINDING, POSITIVE_OPERATOR_PLAN_BINDING, REPAIR_RETRY_PLAN_BINDING, derive_receipt,
++    has_positive_operator_scope, require_current_positive_operator,
+     has_repair_retry_scope, require_current_repair_retry,
+     require_unambiguous_repair_retry_receipt,
+ )
+@@ -43,6 +44,7 @@
+         and 'ordinary_company_event' not in plan
+         and REPAIR_RETRY_PLAN_BINDING not in plan
+         and not has_repair_retry_scope(cycle)
++        and POSITIVE_OPERATOR_PLAN_BINDING not in plan and not has_positive_operator_scope(cycle)
+     ) else None
+     return derive_receipt(
+         cycle, company_id, payload, plan, timestamp(), request_id=request_id,
+@@ -466,7 +468,7 @@
+
+
+ def _publish_exact_v2(inbox, cycle_id, company_id, plan, cursor, payload, remote,
+-                      state, company_guard, local, synchronizer, ordinary_event_context=None):
++                      state, company_guard, local, synchronizer, ordinary_event_context=None, positive_operator_guard=None):
+     """Publish one v2 plan through only accepted exact-scope primitives."""
+     from .retained_cycle_retirement_control import assert_cycle_not_retired
+     assert_cycle_not_retired(state, cycle_id)
+@@ -505,15 +507,22 @@
+         cycle_id, company_id, plan)
+     cycle = state.cycle(cycle_id)
+     repair_retry = has_repair_retry_scope(cycle) or REPAIR_RETRY_PLAN_BINDING in plan
+-    if repair_retry:
++    positive = has_positive_operator_scope(cycle) or POSITIVE_OPERATOR_PLAN_BINDING in plan
++    if positive != (positive_operator_guard is not None) or (positive and not callable(positive_operator_guard)):
++        raise ValueError('Positive operator publication requires its dedicated guard.')
++    if positive:
++        company_guard = positive_operator_guard
++    owned = repair_retry or positive
++    current_owned = require_current_positive_operator if positive else require_current_repair_retry
++    if owned:
+         _fallback_receipt(cycle, company_id, plan, payload, ordinary_event_context)
+     controls = company_guard(company_id, plan.get('requested_url'))
+     _validate_controls(plan, controls)
+     cycle = state.cycle(cycle_id)
+     receipt = _fallback_receipt(cycle, company_id, plan, payload, ordinary_event_context)
+     remote_state = inbox.exact_remote_state(cycle_id, company_id)
+-    if repair_retry:
+-        if require_current_repair_retry(
++    if owned:
++        if current_owned(
+                 cycle, company_id, local, Path(state.path).parent) != receipt['binding']:
+             raise ValueError('Repair retry receipt binding changed before publication.')
+         require_unambiguous_repair_retry_receipt(inbox, cycle_id, receipt)
+@@ -547,13 +556,13 @@
+     def refreshed_company_guard():
+         refreshed_controls = company_guard(company_id, plan.get('requested_url'))
+         _validate_controls(plan, refreshed_controls)
+-        if repair_retry and require_current_repair_retry(
++        if owned and current_owned(
+                 state.cycle(cycle_id), company_id, local, Path(state.path).parent) != receipt['binding']:
+             raise ValueError('Repair retry receipt binding changed during publication.')
+
+     post_observation_read_guard = refreshed_company_guard if delivery_mode == 'observation_only' else None
+     pre_commit_guard = (
+-        refreshed_company_guard if (repair_retry or 'selected_retry_receipt_binding' in plan
++        refreshed_company_guard if (owned or 'selected_retry_receipt_binding' in plan
+                                     or ORDINARY_EVENT_PLAN_BINDING in plan)
+         else None
+     )
+@@ -599,7 +608,7 @@
+             remote_cursor = start + len(chunk['operations'])
+         if remote_cursor != len(exact_plan['operations']):
+             raise ValueError('exact_plan_v2_remote_cursor_incomplete')
+-    if repair_retry:
++    if owned:
+         refreshed_company_guard()
+     acknowledged = sync.confirm_and_acknowledge_exact_scope(
+         inbox=inbox, cycle_id=cycle_id, company_id=company_id,
+@@ -620,7 +629,7 @@
+
+ def publish_exact_cycle(inbox, cycle_id, remote, *, company_ids, retry_blocked=False, state,
+                         company_guard=None, local=None, synchronizer=None, bind_selected_retry=False,
+-                        ordinary_event_context=None):
++                        ordinary_event_context=None, positive_operator_guard=None):
+     """Deliver only the frozen plans for ``cycle_id``.
+
+     Failures are intentionally contained per company.  No failure clears a
+@@ -673,6 +682,12 @@
+         plan, cursor = plan_state
+         selected_retry = isinstance(plan, Mapping) and 'selected_retry_receipt_binding' in plan
+         ordinary_event = isinstance(plan, Mapping) and 'ordinary_company_event' in plan
++        positive = has_positive_operator_scope(cycle) or (isinstance(plan, Mapping) and POSITIVE_OPERATOR_PLAN_BINDING in plan)
++        if positive != (positive_operator_guard is not None) or (positive and (
++                not callable(positive_operator_guard) or selected_retry or ordinary_event
++                or plan.get('exact_plan_version') != 2 or selected != [company_id])):
++            report['held'].append({'company_id': company_id, 'reason': 'positive_operator_requires_dedicated_publisher'})
++            continue
+         if selected_retry != bind_selected_retry:
+             report['held'].append({'company_id': company_id, 'reason': 'selected_retry_publication_scope_required'})
+             continue
+@@ -683,7 +698,8 @@
+             try:
+                 result = _publish_exact_v2(
+                     inbox, cycle_id, company_id, plan, cursor, payload, remote,
+-                    state, company_guard, local, synchronizer, ordinary_event_context)
++                    state, company_guard, local, synchronizer, ordinary_event_context,
++                    positive_operator_guard=positive_operator_guard)
+                 if result['confirmed']:
+                     report['confirmed'].append(company_id)
+             except UncertainWriteError:
+--- a/src/job_search_helper/inbox.py
++++ b/src/job_search_helper/inbox.py
+@@ -1903,7 +1903,10 @@
+                                  delivery_mode='write_once'):
+         """Bind an immutable Sheets projection to its receipt and intent."""
+         from .exact_cycle_planner import _digest
+-        from .exact_cycle_receipt import REPAIR_RETRY_PLAN_BINDING
++        from .exact_cycle_receipt import (
++            POSITIVE_OPERATOR_PLAN_BINDING, POSITIVE_OPERATOR_PREFIX, POSITIVE_OPERATOR_REQUEST_ID,
++            REPAIR_RETRY_PLAN_BINDING,
++        )
+         values = tuple(str(value).strip() for value in (
+             local_plan_digest, projection_digest, receipt_id, intent_id, timestamp))
+         if (not all(values) or not isinstance(projection, list)
+@@ -1930,17 +1933,24 @@
+             plan = json.loads(local[3])
+             retry_binding = plan.get('selected_retry_receipt_binding')
+             event_binding = plan.get('ordinary_company_event')
+-            if REPAIR_RETRY_PLAN_BINDING in plan:
++            positive = POSITIVE_OPERATOR_PLAN_BINDING in plan
++            if positive != str(receipt_binding.get('request_id', '')).startswith(POSITIVE_OPERATOR_PREFIX):
++                raise ValueError('Exact remote receipt has no matching positive operator plan.')
++            if positive or REPAIR_RETRY_PLAN_BINDING in plan:
+                 from .exact_cycle_planner import _exact_plan_digest
+                 from .sheet_profile import COMPACT_PROFILE
+
+-                binding = plan[REPAIR_RETRY_PLAN_BINDING]
++                key = POSITIVE_OPERATOR_PLAN_BINDING if positive else REPAIR_RETRY_PLAN_BINDING
++                other = REPAIR_RETRY_PLAN_BINDING if positive else POSITIVE_OPERATOR_PLAN_BINDING
++                request_pattern = POSITIVE_OPERATOR_REQUEST_ID if positive else re.compile(r'company-retry:RTRY-[0-9a-f]{24}')
++                binding = plan[key]
+                 fields = {'request_id', 'company_id', 'source_revision',
+                           'release_id', 'release_binding_sha256'}
+                 if (not isinstance(binding, dict) or set(binding) != fields
+                         or not all(isinstance(value, str) and value == value.strip() and value
+                                    for value in binding.values())
+-                        or re.fullmatch(r'company-retry:RTRY-[0-9a-f]{24}', binding['request_id']) is None
++                        or other in plan or request_pattern.fullmatch(binding['request_id']) is None
++                        or (positive and not binding['release_id'].startswith('REL-'))
+                         or re.fullmatch(r'[0-9a-f]{64}', binding['source_revision']) is None
+                         or binding['company_id'] != company or receipt_binding != binding
+                         or plan.get('exact_plan_version') != 2
+@@ -1951,6 +1961,8 @@
+                                                        'retained_membership_only', 'selected_legacy_control_before_prefix_recovery'))
+                         or publication_receipts._receipt_id(binding) != values[2]
+                         or delivery_mode != 'write_once'):
++                    if positive:
++                        raise ValueError('Exact remote receipt does not match the positive operator plan.')
+                     raise ValueError('Exact remote receipt does not match the repair retry plan.')
+             elif event_binding is not None:
+                 from .exact_cycle_planner import _exact_plan_digest
+--- a/src/job_search_helper/ordinary_company_event_command.py
++++ b/src/job_search_helper/ordinary_company_event_command.py
+@@ -62,6 +62,9 @@
+
+         if is_scope_hold_request(request):
+             raise OrdinaryEventLifecycleHold('The queued scope hold requires operator-scope-hold.')
++    if request is not None and str(request.get('request_id', '')).startswith('operator-company:'):
++        if not selected_cycle_id:
++            raise OrdinaryEventLifecycleHold('The queued operator Company requires operator-company admit-fetch.')
+     if cli.storage_backend() != 'sqlite':
+         return
+     if (request is not None and _has_event_provenance(request, request_field='request_id')
+@@ -73,6 +76,10 @@
+                    and (cycle.get('status') not in _TERMINAL or cycle['id'] == selected_cycle_id)
+                    for cycle in state.cycles()):
+                 raise OrdinaryEventLifecycleHold('An unsettled ordinary Company event requires its exact cycle. ' + _HELP)
++            if any(str(cycle.get('start_request_id', '')).startswith('operator-company:')
++                   and (cycle.get('status') not in _TERMINAL or cycle['id'] == selected_cycle_id)
++                   for cycle in state.cycles()):
++                raise OrdinaryEventLifecycleHold('The operator Company cycle requires operator-company publish.')
+     # An explicit manual/full request retains its existing behavior. An
+     # unselected outbox event cannot implicitly turn a bare start into intake.
+     jobs = cli.job_database_path()
+--- /dev/null
++++ b/src/job_search_helper/positive_operator.py
+@@ -0,0 +1,323 @@
++"""Run one operator-owned Company through existing exact storage/publication."""
++
++import argparse
++from contextlib import ExitStack
++from datetime import datetime, timezone
++import re
++
++from . import cli, publication_receipts
++from .company_events import canonical_company_fact, source_revision
++from .company_sources import repair_source
++from .engine import Engine
++from .exact_cycle_recovery import _recover_exact_cycle_locked
++from .exact_cycle_receipt import positive_operator_receipt_binding
++from .exact_cycle_sync import _company_guard
++from .integration_release import assert_active_release_binding
++from .operator_company_request import SCHEMA, _digest
++from .operator_selected_observation import _find_receipt
++from .ordinary_company_event_command import _open_engine, _open_readers, _request_file
++from .ordinary_company_event_fetch import _scope_has_storage, capture_scoped_provider
++from .retained_work_runner import assert_normal_lifecycle_not_held
++from .scan_request import _cycle_views, _unfinished_from_views, request_fingerprint, requested_scan
++from .scoped_provider_observation import provider_identity, read_observation
++from .sheet_profile import COMPACT_SCHEMAS
++
++
++PREFIX = 'operator-company:'
++REQUEST_ID = re.compile(r'operator-company:[A-Za-z0-9][A-Za-z0-9._-]{0,95}')
++CYCLE_ID = re.compile(r'CYC-[0-9A-F]{12}')
++DIRECTORY = 'positive-operator-inventory'
++
++
++def _request(root, request_id):
++    queued = _request_file(root)
++    request = queued if queued is not None and queued.get('request_id') == request_id else None
++    matching_queue = request is not None
++    if request is None:
++        last = root / 'last-scan-request.json'
++        if last.is_symlink() or not last.is_file():
++            raise ValueError('The selected operator request has no durable admission.')
++        from .scan_request import _read_request
++        request, _ = _read_request(last)
++    ids = request.get('company_ids')
++    revision = request.get('source_revision')
++    if (set(request) != {'mode', 'request_id', 'company_ids', 'source_revision',
++                         'enqueued_at', 'start_last', 'operator_request'}
++            or request['request_id'] != request_id or request['mode'] != 'company-only'
++            or not isinstance(ids, list) or len(ids) != 1
++            or not isinstance(ids[0], str) or not ids[0].strip()
++            or not isinstance(revision, str) or not re.fullmatch('[0-9a-f]{64}', revision)
++            or request['start_last'] != []):
++        raise ValueError('Expected one exact operator Company request.')
++    identity = {'schema': SCHEMA, 'request_id': request_id, 'company_id': ids[0],
++                'source_revision': revision}
++    from .scan_request import _enqueued_at
++    _enqueued_at(request)
++    digest = _digest(request)
++    receipt = _find_receipt(root, request, digest)
++    if (request['operator_request'] != identity
++            or receipt != {**identity, 'state': receipt.get('state'), 'request_sha256': digest}
++            or receipt['state'] not in {'REQUEST_WRITTEN', 'REQUEST_ALREADY_DURABLE'}):
++        raise ValueError('Operator request disagrees with its immutable receipt.')
++    return request, digest, matching_queue
++
++
++def _current_company(local, request, cycle=None):
++    company_id = request['company_ids'][0]
++    matches = local.matches('Companies', {'Company ID': company_id})
++    row = matches[0][1] if len(matches) == 1 else {}
++    if (not row.get('Company') or not canonical_company_fact(row)['eligible']
++            or source_revision(row) != request['source_revision']
++            or any(str(row.get(key) or '').strip() for key in ('Claimed By', 'Claim Token'))
++            or row.get('Scan State') == 'Blocked / Manual Review'
++            or (cycle is not None and (row.get('Active Cycle ID') != cycle['id']
++                                        or row['Company'] != cycle['companies'][company_id]['company']))):
++        raise ValueError('The selected Company source or controls changed.')
++    return row
++
++
++def _cycle(local, state, request, runtime, cycle_id=None, *, pending=False):
++    request_id = request['request_id']
++    company_id = request['company_ids'][0]
++    local_cycles, mirrors = _cycle_views(local, state)
++    cycles = [row for row in local_cycles if row.get('start_request_id') == request_id]
++    from .scan_request import cycle_metadata
++    reflected = [
++        (row, cycle_metadata(row)) for row in mirrors
++        if (row.get('Cycle ID') in {c['id'] for c in cycles}
++            or cycle_metadata(row).get('start_request_id') == request_id)
++    ]
++    blockers = _unfinished_from_views(local_cycles, mirrors)
++    if not cycles and not reflected and not blockers and cycle_id is None:
++        return None
++    if len(cycles) != 1 or len(reflected) > 1 or (not pending and len(reflected) != 1):
++        raise ValueError('The operator request is held behind unfinished or unverified work.')
++    cycle = cycles[0]
++    item = cycle.get('companies', {}).get(company_id, {})
++    if (not CYCLE_ID.fullmatch(cycle.get('id', ''))
++            or (cycle_id is not None and cycle['id'] != cycle_id)
++            or cycle['status'] not in {'In Progress', 'Complete'}
++            or (pending and (cycle['status'] != 'In Progress' or item.get('stage') != 'queued'))
++            or blockers - {cycle['id']}
++            or set(cycle['companies']) != {company_id} or cycle.get('all') is not False
++            or cycle.get('request_fingerprint') != request_fingerprint(request, [company_id])
++            or cycle.get('operator_request') != request['operator_request']
++            or item.get('outcome_source_fact', {}).get('company_id') != company_id
++            or item.get('outcome_source_revision') != request['source_revision']):
++        raise ValueError('Saved operator cycle does not own this exact request.')
++    if reflected:
++        mirror, notes = reflected[0]
++        # The local mirror can lead State only at the final, receipt-backed settlement.
++        if (mirror['Cycle ID'] != cycle['id'] or notes.get('company_ids') != [company_id]
++                or notes.get('all') is not False
++                or (pending and mirror.get('Cycle Status') != 'In Progress')
++                or any(notes.get(key) != cycle.get(key) for key in (
++                    'start_request_id', 'operator_request', 'request_fingerprint', 'runtime_binding',
++                ))):
++            raise ValueError('Saved operator cycle mirror differs from its exact request.')
++    Engine.validate_cycle_runtime_binding(cycle, runtime)
++    return cycle
++
++
++def _observation_binding(cycle, request, digest):
++    cid = request['company_ids'][0]
++    item = cycle['companies'][cid]
++    return {'schema': 'positive-operator-inventory-v1', 'cycle_id': cycle['id'], 'company_id': cid,
++            'request': request, 'request_sha256': digest,
++            'request_fingerprint': cycle['request_fingerprint'], 'runtime': cycle['runtime_binding'],
++            'company_name': item['company'], 'source_fact': item['outcome_source_fact']}
++
++
++def _finish(engine, cycle, company, payload, binding):
++    from .exact_cycle_planner import _digest as plan_digest
++    from .inbox import InventoryInbox
++    from .scrape_outcome_producer import normal_cycle_outcome_facts
++
++    cid = binding['company_id']
++    item = cycle['companies'][cid]
++    if item.get('stage') != 'complete' or item.get('inventory_status') != 'complete':
++        return None
++    receipt = publication_receipts.receipt(engine.inbox.connection, binding)
++    if receipt is None or receipt['state'] != publication_receipts.SYNC_CONFIRMED:
++        raise ValueError('Operator completion requires its exact workbook confirmation.')
++    parents = engine.repo.db.execute(
++        'SELECT apply_id,plan_digest,inventory_payload_digest FROM exact_local_applications '
++        'WHERE cycle=? AND company=?', (cycle['id'], cid),
++    ).fetchall()
++    if len(parents) != 1 or parents[0][2] != plan_digest(payload):
++        raise ValueError('Operator completion requires the matching applied inventory.')
++    InventoryInbox._verify_exact_local_acknowledgement(
++        engine.inbox.connection, engine.repo, cycle['id'], cid, parents[0][1],
++        receipt['receipt_id'], receipt['acknowledgement_id'], expected_apply_id=parents[0][0],
++    )
++    facts = normal_cycle_outcome_facts(cycle, company, item, storage_confirmed=True)
++    outcome = engine.repo.record_scrape_outcome(facts)['outcome']
++    if cycle['status'] != 'Complete':
++        engine._sync_cycle(cycle)
++    return {'state': 'SYNC_CONFIRMED', 'cycle_id': cycle['id'], 'company_id': cid,
++            'receipt_id': receipt['receipt_id'], 'outcome_id': outcome['outcome_id']}
++
++
++def execute_positive_operator(action, admission, *, request_id, cycle_id=None,
++                              fetcher=None, remote_factory=None):
++    """Execute one exact action while the bootstrap holds scraper admission."""
++    if (action not in {'admit-fetch', 'publish'} or not REQUEST_ID.fullmatch(request_id)
++            or (cycle_id is not None and not CYCLE_ID.fullmatch(cycle_id))
++            or (action == 'publish' and cycle_id is None)):
++        raise ValueError('Expected one named operator request and exact action.')
++    database, jobs, runtime = admission
++    if runtime['state'] != 'COMPLETE':
++        raise ValueError('Operator publication requires an installed release.')
++    if fetcher is None:
++        from .ats import fetch_inventory
++        fetcher = fetch_inventory
++    if remote_factory is None:
++        def remote_factory(write):
++            return cli.get_remote_repository(
++                write=write, interactive=False, schemas=COMPACT_SCHEMAS, evidence_archives=False,
++            )
++
++    root = database.parent
++    inbox_path = root / 'inventories.sqlite3'
++
++    def workbook(write):
++        remote = remote_factory(write)
++        if remote.spreadsheet_id != local.spreadsheet_id or remote.schemas != COMPACT_SCHEMAS:
++            raise ValueError('Operator execution requires the configured compact workbook.')
++        remote.validate_schema()
++        return remote
++
++    with cli.writer_lock(root / 'writer.lock'), ExitStack() as stack:
++        assert_active_release_binding(root, {
++            'schema': 'integration-release-binding-v1',
++            **{key: value for key, value in runtime.items() if key != 'state'},
++        })
++        local, state = _open_readers(stack, database, jobs, inbox_path)
++        request, digest, queued = _request(root, request_id)
++        cid = request['company_ids'][0]
++        cycle = _cycle(local, state, request, runtime, cycle_id, pending=queued)
++        assert_normal_lifecycle_not_held(root, jobs)
++        company = _current_company(local, request, None if queued else cycle)
++        if queued:
++            if action != 'admit-fetch':
++                raise ValueError('Admit the exact request before publication.')
++            _company_guard(local, workbook(False), cid, company['Official Careers URL'],
++                           additional_fields=('Company', 'ATS / Source'))
++            if _request(root, request_id) != (request, digest, True):
++                raise ValueError('The selected operator request changed during admission.')
++            engine = _open_engine(stack, database, jobs, local.spreadsheet_id, runtime)
++            if cycle is not None:
++                item = cycle['companies'][cid]
++                observation = root / DIRECTORY / (cycle['id'] + '.json')
++                if (item.get('company') != company['Company']
++                        or item.get('outcome_source_fact') != canonical_company_fact(company)
++                        or observation.exists() or observation.is_symlink()
++                        or _scope_has_storage(local, root, cycle['id'])):
++                    raise ValueError('Interrupted operator admission has competing work.')
++                # requested_scan restores its mirror before consuming the queue.
++                # Restore the sole Company membership if start_cycle stopped
++                # after saving State and before applying that membership.
++                if (company.get('Active Cycle ID') != cycle['id']
++                        or company.get('Scan State') != 'Queued'):
++                    engine.repo.commit([{
++                        'tab': 'Companies', 'identity': {'Company ID': cid},
++                        'expected': {
++                            field: company.get(field, '') for field in (
++                                'Company', 'Company Status', 'ATS / Source', 'Official Careers URL',
++                                'Scan State', 'Active Cycle ID', 'Claimed By', 'Claim Token',
++                            )
++                        },
++                        'values': {'Active Cycle ID': cycle['id'], 'Scan State': 'Queued'},
++                        'append_if_missing': False,
++                    }])
++            selected = requested_scan(engine, engine.state, database)
++            if not selected or (cycle is not None and selected != cycle['id']):
++                raise ValueError('Operator request admission returned a different cycle.')
++            cycle = _cycle(local, state, request, runtime, selected)
++            company = _current_company(local, request, cycle)
++        if cycle is None:
++            raise ValueError('No cycle owns the exact operator request.')
++
++        binding = _observation_binding(cycle, request, digest)
++        company_url = company['Official Careers URL']
++        ats, board, _ = repair_source(company.get('ATS / Source', ''), company_url, cid, company['Company'])
++        provider = provider_identity(ats, board)
++        if not provider:
++            raise ValueError('The operator Company provider is unverified.')
++        path = root / DIRECTORY / (cycle['id'] + '.json')
++        record = read_observation(path, binding)
++        result = {'cycle_id': cycle['id'], 'company_id': cid, 'request_sha256': digest}
++        if action == 'admit-fetch':
++            if record is None:
++                if (cycle['status'] != 'In Progress' or cycle['companies'][cid]['stage'] != 'queued'
++                        or _scope_has_storage(local, root, cycle['id'])):
++                    raise ValueError('The operator cycle already contains saved work.')
++                if not queued:
++                    _company_guard(local, workbook(False), cid, company_url,
++                                   additional_fields=('Company', 'ATS / Source'))
++                if _current_company(local, request, cycle) != company:
++                    raise ValueError('The operator Company changed before provider access.')
++                record = capture_scoped_provider(
++                    path, binding, company, provider, fetcher, lambda: datetime.now(timezone.utc),
++                )
++                _current_company(local, request, cycle)
++            if record['state'] != 'FROZEN':
++                return {'state': 'HELD_FETCH_UNCERTAIN', **result}
++            return {'state': 'INVENTORY_FROZEN', **result, 'inventory_sha256': record['inventory_sha256'],
++                    'inventory_status': record['inventory']['status'], 'job_count': len(record['inventory']['jobs'])}
++
++        if record is None or record['state'] != 'FROZEN':
++            return {'state': 'HELD_NO_FROZEN_INVENTORY', **result}
++        inventory = record['inventory']
++        if (inventory['status'] != 'complete' or not inventory['jobs']
++                or inventory['browser_pending_urls'] or inventory['browser_discovery_incomplete']
++                or inventory.get('verified_zero') is not None or inventory['outcome_failure'] is not None
++                or inventory['requested_url'] != company_url
++                or provider_identity(inventory['ats'], inventory['source_url']) != provider):
++            return {'state': 'HELD_NONPOSITIVE_INVENTORY', **result}
++        payload = {key: value for key, value in inventory.items()
++                   if key not in {'status', 'verified_zero', 'outcome_failure'}}
++        payload['inventory_status'] = 'complete'
++        publication = positive_operator_receipt_binding(cycle, cid)
++        engine = _open_engine(stack, database, jobs, local.spreadsheet_id, runtime, publication=True)
++        saved = engine.inbox.get(cycle['id'], cid)
++        if saved is None and cycle['companies'][cid]['stage'] == 'complete':
++            return _finish(engine, cycle, company, payload, publication)
++        remote = workbook(True)
++
++        def guard(company_id, url):
++            if company_id != cid or url != company_url:
++                raise ValueError('The operator publication requested a foreign Company or URL.')
++            _current_company(local, request, cycle)
++            if read_observation(path, binding) != record:
++                raise ValueError('The frozen operator inventory changed.')
++            return _company_guard(local, remote, cid, url,
++                                  additional_fields=('Company', 'ATS / Source'))
++
++        if saved is None:
++            guard(cid, company_url)
++            if (cycle['companies'][cid]['stage'] != 'queued'
++                    or engine.inbox.plan(cycle['id'], cid) is not None):
++                raise ValueError('The saved operator inventory disappeared after planning.')
++            engine.inbox.save(cycle['id'], cid, payload)
++        if engine.inbox.get(cycle['id'], cid) != (payload, False):
++            raise ValueError('The operator Inbox contains a conflicting inventory.')
++
++        report = _recover_exact_cycle_locked(
++            engine, remote, cycle['id'], [cid], positive_operator_guard=guard,
++        )
++        if report['held'] or report['skipped'] or report['confirmed'] != [cid]:
++            return {'state': 'PUBLICATION_HELD', **report}
++        return _finish(engine, engine.state.cycle(cycle['id']),
++                       _current_company(local, request, cycle), payload, publication)
++
++
++def positive_operator_command(argv, admission):
++    parser = argparse.ArgumentParser(prog='./job-search-scraper operator-company', allow_abbrev=False)
++    parser.add_argument('action', choices=('admit-fetch', 'publish'))
++    parser.add_argument('--request-id', required=True)
++    parser.add_argument('--cycle-id')
++    args = parser.parse_args(argv)
++    return execute_positive_operator(
++        args.action, admission, request_id=args.request_id, cycle_id=args.cycle_id,
++    )
+--- a/src/job_search_helper/runner.py
++++ b/src/job_search_helper/runner.py
+@@ -216,6 +216,9 @@
+                Persist one explicit Company ID for the next normal start.
+                Requires --company-id and a stable --request-id; does not fetch,
+                create a cycle, change Sheets, or replace another pending request.
++  operator-company
++               Run one reserved operator-company: request. Use admit-fetch first,
++               then publish with the exact saved cycle ID.
+   ordinary-company-event
+                Explicitly admit/fetch one verified request digest or publish its
+                exact saved cycle. See ordinary-company-event --help.
+@@ -1609,6 +1612,19 @@
+         except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
+             print(f'ERROR: {exc}', file=sys.stderr)
+             return 1
++    if argv[0] == 'operator-company':
++        try:
++            with _retained_operator_admission() as admission:
++                from .positive_operator import positive_operator_command
++
++                result = positive_operator_command(argv[1:], admission)
++            print('Operator Company: ' + json.dumps(result, sort_keys=True))
++            return 0 if result['state'] in {'INVENTORY_FROZEN', 'SYNC_CONFIRMED'} else 1
++        except SystemExit as exc:
++            return int(exc.code)
++        except (ValueError, RuntimeError, OSError, sqlite3.Error, ImportError) as exc:
++            print(f'ERROR: {exc}', file=sys.stderr)
++            return 1
+     if argv[0] == 'run-retained-operator-company':
+         try:
+             with _retained_operator_admission() as admission:
+--- /dev/null
++++ b/tests/test_positive_operator.py
+@@ -0,0 +1,212 @@
++from contextlib import closing
++import json
++import os
++from pathlib import Path
++from tempfile import TemporaryDirectory
++import unittest
++from unittest.mock import patch
++
++from job_search_helper import runner
++from job_search_helper.ats import Inventory
++from job_search_helper.engine import Engine, State
++from job_search_helper.inbox import InventoryInbox
++from job_search_helper.operator_company_request import queue_operator_company_request
++from job_search_helper.ordinary_company_event_command import guard_generic_ordinary_event
++from job_search_helper.positive_operator import execute_positive_operator
++from job_search_helper.repository import SCHEMAS, UncertainWriteError
++from job_search_helper.sheet_profile import COMPACT_PROFILE, COMPACT_SCHEMAS
++from job_search_helper.sqlite_repository import SQLiteRepository
++from test_exact_cycle_recovery import RecordingRemote
++import release_admission_bootstrap as bootstrap
++
++
++FESTO = 'COMP-0560'
++REQUEST = 'operator-company:festo-proof'
++URL = 'https://jobs.festo.com/viewalljobs/'
++RUNTIME = {
++    'state': 'COMPLETE', 'release_id': 'REL-' + '1' * 24,
++    'source_manifest_sha256': 'a' * 64, 'config_sha256': 'b' * 64,
++    'dependency_manifest_sha256': 'c' * 64,
++}
++
++
++class PositiveOperatorTests(unittest.TestCase):
++    def setUp(self):
++        directory = TemporaryDirectory()
++        self.addCleanup(directory.cleanup)
++        self.root = Path(directory.name)
++        self.database = self.root / 'state.db'
++        self.jobs = self.root / 'jobs.sqlite3'
++        self.inbox_path = self.root / 'inventories.sqlite3'
++        self.admission = self.database, self.jobs, RUNTIME
++        journal = self.root / 'integration-release-journal.json'
++        journal.write_text(json.dumps({
++            'schema': 'integration-release-journal-v1', 'state': 'COMPLETE',
++            'release_id': RUNTIME['release_id'],
++            'release': {'schema': 'integration-release-binding-v1',
++                        **{key: value for key, value in RUNTIME.items() if key != 'state'}},
++        }))
++        self.company = {
++            'Company ID': FESTO, 'Company': 'Festo', 'Company Status': 'Active',
++            'Official Careers URL': URL, 'ATS / Source': 'Official careers',
++            'Automatic Retry?': 'No', 'Scan State': 'Queued',
++        }
++        self.neighbor = {
++            'Company ID': 'COMP-OTHER', 'Company': 'Other', 'Company Status': 'Active',
++            'Official Careers URL': 'https://boards.greenhouse.io/other',
++            'ATS / Source': 'Greenhouse', 'Notes': 'original',
++        }
++        self.remote = RecordingRemote([self.company, self.neighbor], schemas=COMPACT_SCHEMAS)
++        self.remote_modes = []
++        self.fetches = []
++        with closing(State(self.database)), closing(InventoryInbox(self.inbox_path, 'fixture')):
++            pass
++        with self.local(initialize=True) as repo:
++            repo.ensure_columns('Opportunities', ['Opportunity ID'])
++            for tab in SCHEMAS:
++                rows = [self.company, self.neighbor] if tab == 'Companies' else []
++                repo.import_rows(tab, list(enumerate(rows, 2)))
++            repo.set_meta('ready', 'yes')
++            repo.set_meta('sheets_profile', COMPACT_PROFILE)
++            repo.commit([{'tab': 'Companies', 'identity': {'Company ID': 'COMP-OTHER'},
++                          'values': {'Notes': 'local only'}}])
++            queue_operator_company_request(repo, self.root, FESTO, REQUEST)
++            self.original_neighbor = repo.matches('Companies', {'Company ID': 'COMP-OTHER'})
++        self.original_remote_neighbor = self.remote.snapshot('Companies')[1]
++        env = patch.dict('os.environ', {
++            'SPREADSHEET_ID': 'fixture', 'JOB_STORAGE_BACKEND': 'sqlite',
++            'JOB_DB_FILE': str(self.jobs), 'STATE_DB_FILE': str(self.database),
++        })
++        env.start()
++        self.addCleanup(env.stop)
++
++    def local(self, **kwargs):
++        return closing(SQLiteRepository(self.jobs, 'fixture', **kwargs))
++
++    def workbook(self, write):
++        self.remote_modes.append(write)
++        return self.remote
++
++    def provider(self, ats_name, url, company_id, name):
++        self.fetches.append((ats_name, url, company_id, name))
++        posting = {
++            'posting_id': '12345', 'title': 'Technical Program Manager',
++            'url': 'https://jobs.festo.com/job/Fixture-Engineer/12345/',
++            'description': 'Design automation equipment, lead product development, and analyze prototypes.',
++            'company_id': company_id, 'company': name, 'ats': 'SuccessFactors',
++            'location': 'Mason, OH, United States', 'is_listed': True,
++        }
++        rejected = {**posting, 'posting_id': '12346', 'title': 'Receptionist',
++                    'url': 'https://jobs.festo.com/job/Fixture-Receptionist/12346/'}
++        return Inventory(
++            'complete', [posting, rejected],
++            source_url='https://jobs.festo.com/search/?q=&sortColumn=referencedate&sortDirection=desc',
++            ats='SuccessFactors',
++        )
++
++    def run_exact(self, action, cycle_id=None, request_id=REQUEST):
++        return execute_positive_operator(
++            action, self.admission, request_id=request_id, cycle_id=cycle_id,
++            fetcher=self.provider, remote_factory=self.workbook,
++        )
++
++    def test_reopen_same_request_recovers_lost_ack_without_refetch_or_replay(self):
++        with self.assertRaisesRegex(ValueError, 'operator Company'):
++            guard_generic_ordinary_event(self.database, fresh=True)
++        admitted = self.run_exact('admit-fetch')
++        self.assertEqual(admitted['state'], 'INVENTORY_FROZEN', admitted)
++        self.assertEqual(admitted['job_count'], 2)
++        cycle_id = admitted['cycle_id']
++        self.assertEqual(self.run_exact('admit-fetch'), admitted)
++        self.assertEqual(len(self.fetches), 1)
++        self.assertEqual(self.remote_modes, [False])
++        self.assertEqual(self.remote.commits, [])
++
++        actual_commit = self.remote.commit
++
++        def lost_ack(operations):
++            actual_commit(operations)
++            raise UncertainWriteError('fixture committed before losing the response')
++
++        with patch.object(self.remote, 'commit', side_effect=lost_ack):
++            pending = self.run_exact('publish', cycle_id)
++        self.assertEqual(pending['state'], 'PUBLICATION_HELD', pending)
++        self.assertEqual(len(self.remote.commits), 1, pending)
++        with closing(InventoryInbox(self.inbox_path, 'fixture')) as inbox:
++            plan = inbox.exact_remote_state(cycle_id, FESTO)
++            self.assertEqual(plan['state'], 'SYNC_PENDING')
++
++        with patch.object(self.remote, 'commit', side_effect=AssertionError('replayed write')):
++            confirmed = self.run_exact('publish', cycle_id)
++            self.assertEqual(confirmed['state'], 'SYNC_CONFIRMED', confirmed)
++            self.assertEqual(self.run_exact('publish', cycle_id), confirmed)
++        self.assertEqual(len(self.fetches), 1)
++        self.assertEqual(len(self.remote.commits), 1)
++        self.assertEqual(self.remote.snapshot('Companies')[1], self.original_remote_neighbor)
++        [published] = self.remote.snapshot('Job History')
++        self.assertEqual(published['Job Title'], 'Technical Program Manager')
++        self.assertEqual(self.remote.snapshot('Companies')[0]['ATS / Source'], 'Official careers')
++        with self.local(readonly=True) as repo:
++            self.assertEqual(repo.matches('Companies', {'Company ID': 'COMP-OTHER'}), self.original_neighbor)
++            self.assertEqual(len(repo.read('Job History')), 1)
++            self.assertEqual(repo.db.execute(
++                'SELECT request_id,company_id FROM scrape_outcomes'
++            ).fetchall(), [(REQUEST, FESTO)])
++        with closing(State(self.database, readonly=True)) as state:
++            cycle = state.cycle(cycle_id)
++            self.assertEqual(cycle['status'], 'Complete')
++            self.assertEqual(cycle['operator_request']['company_id'], FESTO)
++            self.assertNotIn('company_event', cycle)
++
++    def test_different_request_and_workbook_source_stop_before_provider(self):
++        with self.assertRaises(ValueError):
++            self.run_exact('admit-fetch', request_id='operator-company:other')
++        self.assertEqual(self.remote_modes, [])
++        self.remote.commit([{'tab': 'Companies', 'identity': {'Company ID': FESTO},
++                             'values': {'ATS / Source': 'Different source'}}])
++        with self.assertRaisesRegex(ValueError, 'controls_changed'):
++            self.run_exact('admit-fetch')
++        self.assertEqual(self.fetches, [])
++        self.assertTrue((self.root / 'next-scan.json').is_file())
++        with closing(State(self.database, readonly=True)) as state:
++            self.assertEqual(state.cycles(), [])
++
++    def test_admission_recovers_one_checkpoint_before_mirror_and_membership(self):
++        with patch.object(Engine, '_sync_cycle', side_effect=OSError('fixture admission interruption')):
++            with self.assertRaisesRegex(OSError, 'admission interruption'):
++                self.run_exact('admit-fetch')
++        self.assertEqual(self.fetches, [])
++        self.assertTrue((self.root / 'next-scan.json').is_file())
++        with closing(State(self.database, readonly=True)) as state:
++            [saved] = state.cycles()
++        result = self.run_exact('admit-fetch')
++        self.assertEqual(result['cycle_id'], saved['id'])
++        self.assertEqual(result['state'], 'INVENTORY_FROZEN')
++        self.assertEqual(len(self.fetches), 1)
++        self.assertFalse((self.root / 'next-scan.json').exists())
++        self.assertEqual(self.remote.commits, [])
++
++
++    def test_public_command_dispatches_through_bootstrap_lease(self):
++        arguments = ['operator-company', 'admit-fetch', '--request-id', REQUEST]
++        statuses = []
++
++        def execute(_executable, child_argv, environment):
++            self.assertEqual(child_argv[-4:], arguments)
++            fd = os.dup(int(environment['JSH_SCRAPER_ADMISSION_FD']))
++            with patch.dict(os.environ, {
++                'JSH_SCRAPER_ADMISSION_FD': str(fd),
++            }):
++                statuses.append(runner.main(arguments))
++
++        with (patch.object(bootstrap, '_validate_runtime', return_value=RUNTIME),
++              patch.object(bootstrap.os, 'execve', side_effect=execute),
++              patch.object(runner, 'PROJECT_ROOT', self.root),
++              patch.object(runner, '_load_environment'),
++              patch('job_search_helper.ats.fetch_inventory', side_effect=self.provider),
++              patch('job_search_helper.cli.get_remote_repository',
++                    side_effect=lambda *, write, **_: self.workbook(write)),
++              patch.dict(os.environ)):
++            bootstrap.admit_and_exec(self.root, arguments)
++        self.assertEqual(statuses, [0])
++        self.assertEqual(len(self.fetches), 1)

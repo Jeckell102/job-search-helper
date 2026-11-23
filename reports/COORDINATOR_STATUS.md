@@ -7564,3 +7564,49 @@ The grounded source mapping release advances the current version but
 does not change the Sprint 6 frozen 0/3 matrix or close first-Start and
 publication-interruption gates. Reconcile the final evidence index
 against the latest version before final QA.
+
+### Positive operator company-only path in development
+
+Root owns the dedicated operator-company entry and focused end-to-end
+fixture in `/tmp/jsh-positive-operator-candidate`. The exact publication
+lane owns the existing planner, receipt, recovery, publisher and Inbox
+joins. Independent QA owns a read-only source review. Stable bootstrap
+and normal writer leases bind one reserved `operator-company:` request
+and current Company source. The path reuses scoped provider claim,
+normal filtering, exact plan, and confirmed Sheets publication. It
+does not label the request as a genuine workbook Company event.
+
+The first composed test proved exact admission, one frozen provider
+observation and no refetch on reopen. Foreign request and workbook
+source changes stopped before access. The first publication attempt
+held before a workbook write because Inbox expected a cycle-only
+receipt rather than the actual request. The exact publication lane
+is repairing that specific join. No production source, queue, provider,
+workbook or Jetson changes this turn. Active production remains
+REL-e91024875ba7d854b83c33f8. Next verify the lost-ack end to end and
+affected existing tests, then independent source approval and plan
+guarded deployment. Frozen Sprint 6 remains 0/3.
+
+The exact receipt join was fixed. Independent QA also required recovery
+of the early queued admission and pinning the admitted Company name.
+The repaired candidate passed four focused tests including one durable
+fetch, verified filtering, and one successful write recovered by
+readback after a simulated lost response. Eight targeted existing
+tests passed. The existing exact suite had the same six fixture
+errors on both unchanged and candidate source.
+
+Ten approved runtime endpoints are deployed and independently
+verified on COMPLETE REL-03cc531d6c60113584d57722. Native and quiet
+windows restored all routes and the wrapper and bridge. Scheduled
+sync, broad controls and unqualified releases stay off. The existing
+Jetson lane and task history were preserved. Both workers have finished
+their source/release assignments. Root owns the actual Festo pilot.
+[Source QA](S7_POSITIVE_OPERATOR_SOURCE_QA_20261122.md)
+and [live deployment evidence](S7_POSITIVE_OPERATOR_DEPLOYED_20261122.md).
+
+The exact operator request `operator-company:festo-20261122-01`
+was queued for COMP-0560 and matched the reviewed source revision.
+Check the same live fetch session before proceeding. Publish only a
+complete positive frozen result with the reported cycle ID, then join
+the exact local, workbook and receiver receipts. No Sprint 6 sequence
+credit accrues for the source-link correction or this runtime release.
