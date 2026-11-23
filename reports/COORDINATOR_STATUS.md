@@ -7498,3 +7498,25 @@ safe company-only run until an exact guarded recovery is owner-reviewed.
   Jetson state changed. Next is a current-baseline journal/receipt adapter and
   independent staged QA. Evidence:
   `SELECTED_RECOVERY_CURRENT_BASELINE_ADAPTER_20261119.md`.
+### Lean QA reset and Festo source-link preflight
+
+Root is coordinating original goal `01a1f11f-e014-7493-8441-2f66502e23a9`.
+Carry forward accepted evidence for unchanged behavior. Run one
+decisive check for each remaining acceptance question and stop when
+it is answered. Keep independent QA for deployed acceptance.
+
+The local authority lane confirmed Festo has auto-retry off, no
+current-revision outcome and no enrolled repair recipe. Root completed
+two bounded public listing reads. The configured category page
+reported 12 entries with zero posting anchors. Its linked official
+search parsed 25 distinct job links on the first page and advertised
+126 total. No workbook, production, or Jetson change. The local
+authority lane is finished. Root owns any future Festo mapping
+qualification. [Preflight evidence](S6_FESTO_SOURCE_PREFLIGHT_20261122.md).
+
+Sprint 6 remains 0/3. Sprint 7 remains open for a genuine first-Start
+Company, the remaining required live evidence, and independent final
+deployed review. The optional request for a real Company is still
+pending. Pursue source-mapping evidence as such and reserve model calls
+for enrolled, qualified failures. Broad processing and unqualified
+automatic releases remain off.
