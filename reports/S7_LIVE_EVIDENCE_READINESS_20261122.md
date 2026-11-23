@@ -54,6 +54,15 @@ routes preserved the failed tasks and allowed no third repair after
 process restart. It advances M4/M6 hold and receipt-preservation evidence.
 [Repeated failure proof](S6_ATS_EXHAUSTION_RESTART_PROOF_20261122.md).
 
+At 20:32 Eastern the read-only deployed outcome audit matched all 12
+production sender and receiver records. Current-source controlled evidence joins ordinary verified zero,
+temporary, denied, and storage-pending behavior with the real receiver.
+The unqualified-capability receipt came from a saved older offline sender
+fixture and was accepted by the current receiver. The real workbook read-only first-Start check found no new
+eligible Company. Keep the controlled evidence separate from the live
+sequence and live lost-write-acknowledgement cut.
+[Current outcome evidence](S7_CURRENT_OUTCOME_EVIDENCE_20261122.md).
+
 ## Current evidence index
 
 The linked reports preserve the full version pins, receipt identities and

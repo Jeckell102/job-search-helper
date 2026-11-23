@@ -1,0 +1,38 @@
+{
+  "final_outcome": {
+    "classification": "COMPLETE",
+    "duplicate_drained": 0,
+    "matching_sender_receiver_receipt_sha256": "4f7ee24f233124066843000961b017f90fd7eab490dded3d357a29c8a8e301cb",
+    "new_inference": 0,
+    "new_repairs": 0,
+    "new_tasks": 0,
+    "receiver_disposition": "RECORDED_NO_REPAIR"
+  },
+  "fixture": "one ordinary non-event company, one saved posting",
+  "limits": "Preseeded synthetic saved inventory and company; real installed SQLite producer, receiver and exact publisher; in-memory workbook.",
+  "pending": {
+    "local_state": "LOCAL_VERIFIED",
+    "producer_outcomes": [],
+    "publication": "SYNC_PENDING",
+    "receiver_calls": 0,
+    "state_stage": "inventory"
+  },
+  "provider_dispatches": 0,
+  "recovery": {
+    "acknowledgement_id": "f4896a301422e12e775d56c1c2d1f13ede9945ad94600508e1fc232500e9d701",
+    "inventory_sha256": "7a40635e244c868056a9b8fc88cd06fe5c074713b27243bfd0e1fc603faef28d",
+    "plan_digest": "cc59927c72872c4a61342f334d74ad5b9eb85f52468e66726699c84edf155ce8",
+    "receipt_id": "53dc2578d470225776c9b1d2da4f539542062a2f9cfd514c55ccc91029b3d000",
+    "remote_write_batches": 1,
+    "replanned": false,
+    "state": "SYNC_CONFIRMED",
+    "unchanged_logical_rows": {
+      "Companies": 1,
+      "Job Evidence": 1,
+      "Job History": 1,
+      "Opportunities": 0
+    },
+    "verified_selected_fields_sha256": "adf1683e10462abe44ddd76c8b36867a9a693d16a1f593c8f75d08e3a6051f9d"
+  },
+  "state": "HOLD_MISSING_PENDING_STORAGE_OUTCOME"
+}
