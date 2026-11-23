@@ -125,3 +125,16 @@ recorded versions. A live Festo-only run with local, workbook and
 coordinator readback is still required before countable later-company
 progress. This source mapping contributes zero named-sequence repairs.
 [Current deployed source evidence](S7_FESTO_SOURCE_DEPLOYED_20261122.md).
+
+## Live positive operator checkpoint
+
+REL-03cc531d6c60113584d57722 is the independently verified deployed
+runtime. One authentic Festo operator request used the corrected source,
+froze 126 full listings, applied normal filters, confirmed 73 Job History
+records and one Company status record in Sheets, and delivered a paired
+RECORDED_NO_REPAIR coordinator outcome. The earlier held GA-ASI case
+remains as separate scope-hold evidence. This advances the later
+company-progress portion of M3 and confirms the selected operator route.
+The frozen named repair sequence, genuine new-Company first Start,
+live lost write acknowledgement and final overall acceptance remain open.
+[Live Festo proof](S7_FESTO_COMPANY_ONLY_LIVE_20261122.md).

@@ -20,6 +20,27 @@ For the current model task, use `/wrapper status WRAP-…` in the wrapper
 interface with the exact task ID from the coordinator. The persistent
 project goal and the live wrapper task have separate status.
 
+## Run one existing Company explicitly
+
+For a reviewed existing Company, use one stable request ID beginning
+with `operator-company:`. Run these commands from the production folder
+only when that name and source have been selected for the pilot.
+
+```bash
+./job-search-scraper queue-company --company-id COMPANY-ID --request-id operator-company:stable-request
+./job-search-scraper operator-company admit-fetch --request-id operator-company:stable-request
+./job-search-scraper operator-company publish --request-id operator-company:stable-request --cycle-id CYC-EXACT
+```
+
+Replace the Company, request suffix and cycle placeholders with their
+exact values. Use publish only when the named fetch reports a complete
+frozen inventory. If publication is interrupted, repeat the same
+publish command for the same request and cycle. It uses saved jobs and
+checks the existing write before allowing another action. Keep a
+held fetch or incomplete inventory for reconciliation. The positive
+operator command leaves broad Start, automatic repair and the separate
+new-Company event path under their existing controls.
+
 ## Pause and resume
 
 Ask the coordinator to pause the integration project when you need the

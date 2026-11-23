@@ -7610,3 +7610,37 @@ Check the same live fetch session before proceeding. Publish only a
 complete positive frozen result with the reported cycle ID, then join
 the exact local, workbook and receiver receipts. No Sprint 6 sequence
 credit accrues for the source-link correction or this runtime release.
+
+Private deployment-and-test backup `01823904a574a6223efb302d345e42e5f2977d43`
+was fetched and all thirteen changed files matched byte-for-byte.
+Festo fetch finished COMPLETE with 126 descriptions, frozen inventory
+`06d08732ed88236d92ff6c6785c4cc3a3b995b31c0264f9cfd0d54351e318c2f`
+for CYC-570964386014, request digest
+`c7ea41b3c1fa975e87babd00435dbfe4eef794a82ecb631fbf3ae496b2e1b3fe`.
+The one real exact publication process is running in exec session
+3256, PID 816558 as of 21:22 Eastern. Poll that handle, never start
+a parallel or replacement attempt. The local cursor applied 147
+operations, and the frozen remote projection contained 73 Job History
+records and one Company status record. Last remote journal state was
+SYNC_PENDING. Do not report workbook completion from the local plan.
+The prepared scoped completion-delivery helper is
+`/tmp/jsh-positive-operator-native-release/settle_festo_outcome.py`.
+It requires a terminal SYNC_CONFIRMED report before touching the one
+coordinator outcome and uses the established local receipt bridge.
+
+Festo publication now terminal SYNC_CONFIRMED on
+REL-03cc531d6c60113584d57722. Independent QA verified all 126 full
+descriptions, normal filters, 73 exact local Job History records with
+matching evidence, one Company row and the matching workbook receipt.
+Both coordinator stores match on OUT-377dd7f3b0e6ab2e2b6bfcb0 and
+ODR-76f8e38ea95d08d1be42a104, RECORDED_NO_REPAIR. Prior GA hold and
+protected task/inference/repair rows stayed intact. Both pilot tool
+sessions are terminal. No model call, no broad processing, and no
+unqualified release. [Festo outcome](S7_FESTO_COMPANY_ONLY_LIVE_20261122.md).
+
+Root and both delegated lanes completed the selected operator case.
+Next reserve effort for a genuinely qualifying, distinct named repair
+or the new-Company first-Start/live lost-response evidence. The frozen
+repair sequence remains 0/3. The real first-Start Company is still
+optional user input already requested once. Keep broad controls off,
+and do not refetch the now-completed Festo request for QA.
