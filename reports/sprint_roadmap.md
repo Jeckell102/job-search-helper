@@ -914,6 +914,15 @@ forward and exact child approval are open. No new live acceptance credit.
 [Isolated QA](S6_EMBRAER_03_ISOLATED_QA_20261122.md)
 · [Live readiness](S6_EMBRAER_03_CONTINUATION_LIVE_READINESS_20261122.md).
 
+November 22 ATS Corporation follow-up: one dedicated parser assignment
+was independently reviewed. The source-only admission release
+`REL-aa0e7a762a8e741c03b99692` passed deployed readback with the parser
+still disabled. A real ATS-only request reproduced the qualifying
+pagination failure and saved the exact enrollment for a bounded
+Jetson repair. This is a separate case and earns no credit toward the
+current frozen sequence. Broad controls and ATS automatic retry stay off.
+[Scoped source deployment](S6_ATS_SCOPED_SOURCE_DEPLOYMENT_20261122.md).
+
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 
 The November 21 effective reconciliation covers all six milestones,
