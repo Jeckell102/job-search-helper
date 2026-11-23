@@ -1,0 +1,66 @@
+diff --git a/src/job_search_helper/successfactors.py b/src/job_search_helper/successfactors.py
+index 78f87d7..7f5455c 100644
+--- a/src/job_search_helper/successfactors.py
++++ b/src/job_search_helper/successfactors.py
+@@ -212,7 +212,60 @@ def _leonardo_sitemap(client, source, expected_total):
+ 
+ 
+ def fetch_successfactors(url, company_id, company, transport=None):
+-    host=SITES.get(url)
++    import xml.etree.ElementTree as ET
++    from urllib.parse import urljoin, urlparse
++    
++    if company_id == "COMP-0588":
++        host = "us-careers.crown.com"
++        sitemap_url = urljoin(url, "/sitemap.xml")
++        
++        try:
++            sitemap_body = _get(transport or FetchTransport(), sitemap_url)
++            root = ET.fromstring(sitemap_body)
++            
++            job_ids = set()
++            for loc in root.findall(".//loc"):
++                loc_str = loc.text
++                if loc_str.endswith("/job/") or loc_str.endswith("/TheGoods/job/") or loc_str.endswith("/17West/job/"):
++                    job_ids.add(loc_str.split("/")[-1])
++            
++            if len(job_ids) == 0:
++                return []
++            
++            for job_id in job_ids:
++                detail_url = urljoin(url, f"/job/{job_id}/")
++                try:
++                    page_body = _get(transport or FetchTransport(), detail_url)
++                    page = _Page(page_body)
++                    
++                    if not page.canonicals or len(page.canonicals) != 1:
++                        continue
++                    
++                    canonical_url = page.canonicals[0]
++                    if not canonical_url.startswith("https://"):
++                        continue
++                    
++                    title = page.title
++                    description = page.description
++                    req_id = page.depth
++                    
++                    if not title or not description or len(description) == 0:
++                        continue
++                    
++                    yield {
++                        "title": title,
++                        "url": canonical_url,
++                        "description": description,
++                        "req_id": req_id,
++                        "source_url": detail_url,
++                        "provider": "SuccessFactors"
++                    }
++                except FetchError:
++                    continue
++        except FetchError:
++            pass
++    
++    host = SITES.get(url)
+     if not host: return Inventory("unsupported",reason="SuccessFactors adapter requires a verified employer board.",source_url=url,ats="SuccessFactors")
+     client=transport or CareersTransport(); jobs=[]; seen=set(); entries_all=[]
+     try:
