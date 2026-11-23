@@ -923,6 +923,15 @@ Jetson repair. This is a separate case and earns no credit toward the
 current frozen sequence. Broad controls and ATS automatic retry stay off.
 [Scoped source deployment](S6_ATS_SCOPED_SOURCE_DEPLOYMENT_20261122.md).
 
+The revised ATS classifier successor used a distinct fresh failure and
+preserved the first task. Both required verification runs rejected the
+single new edit. The shared test-runner problem is resolved and deployed.
+Installed local observation is empty and the named frozen cases still
+have no current unassigned eligible repair. Resume from genuinely eligible
+evidence or work on an independent remaining acceptance gate. The
+frozen sequence remains zero of three.
+[ATS outcome and eligibility](S6_ATS_CLASSIFIER_SUCCESSOR_FAILURE_20261122.md).
+
 ## Sprint 7 — Final acceptance, deployed independent QA and backup
 
 The November 21 effective reconciliation covers all six milestones,
