@@ -7644,3 +7644,18 @@ or the new-Company first-Start/live lost-response evidence. The frozen
 repair sequence remains 0/3. The real first-Start Company is still
 optional user input already requested once. Keep broad controls off,
 and do not refetch the now-completed Festo request for QA.
+
+### Garrett checked and held
+
+Root measured 87 current Oracle listing IDs and seven exact historical
+failures still present. All seven public details matched title and ID
+but supplied no role-specific text. Two public static route samples
+advertised no alternate. Independent QA accepted the provider-data hold.
+No Garrett queue, workbook, deployment, or Jetson action occurred.
+The staged attribution-only Oracle fix passed 19 tests and independent
+QA for the next justified Oracle release. The current release is still
+REL-03cc531d6c60113584d57722; broad coordinator controls are off, the
+planned queue is empty and there is no unresolved inference. Root's
+next action uses the original list for a credible different owned
+repair with current public evidence, or the genuine first-Start
+Company if supplied. [Garrett evidence](S6_GARRETT_CURRENT_DETAIL_HOLD_20261122.md).
