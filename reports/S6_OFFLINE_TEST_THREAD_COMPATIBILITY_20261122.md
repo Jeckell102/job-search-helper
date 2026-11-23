@@ -25,3 +25,12 @@ Independent QA accepted the exact staged helper SHA-256
 The unmodified coding-tools runner and shared test bytes match the
 installed versions. The existing denial of clone3 and the other
 sandbox restrictions are preserved.
+
+Deployed on MuleLab at approximately 19:59 Eastern. The wrapper-only
+install used the standing observer and one guarded restart, PID 802045,
+under application release `REL-aa0e7a762a8e741c03b99692`. The exact
+ATS terminal task, settled inference, and logical table digests matched
+before and after the restart. Only the expected control generation
+changed from 631 to 632. Independent deployed QA confirmed the installed
+helper SHA, active service, unchanged COMPLETE application release,
+and disabled broad controls. [Local installation receipt](/tmp/jsh-ats-thread-runner/LIVE_RECEIPT.json).

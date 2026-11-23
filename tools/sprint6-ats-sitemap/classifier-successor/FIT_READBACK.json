@@ -1,0 +1,18 @@
+{
+  "stage": "source-only contract fit",
+  "work_order": "successfactors-ats-job-path-v1",
+  "patch_sha256": "224b8ed379c2eee6f5938153a66bcf0abbb85f325f0b1ce126849a45c0d08cab",
+  "editable_target": "src/job_search_helper/ats_job_path.py",
+  "target_sha256": "1259f8ca5f0129667c723d17da1f39fa7387e1c1889582871f7ad8c2656c8f34",
+  "examples_sha256": "a7cffb6c8bc0295cfe98f178d197224c10e7b080d57ba22fd597ef765c9c878c",
+  "unchanged_business_test_sha256": "5020eb066ed85a86de51e2781ccc4de011d42e2bcfc4f3797bdf3e0350db27f0",
+  "unchanged_shared_test_sha256": "c6981e7ed170a8ed29f01f686267628e283068238507c6779c95ff8032612e91",
+  "checks": [
+    "rendered packet examples equal the frozen executable examples",
+    "edit guard rejected a top-level import and a generator",
+    "offline temporary host-written reference fit: four unchanged business tests and one path-contract test passed",
+    "editable target still unimplemented in source stage"
+  ],
+  "model_inferences": 0,
+  "live_provider_requests": 0
+}

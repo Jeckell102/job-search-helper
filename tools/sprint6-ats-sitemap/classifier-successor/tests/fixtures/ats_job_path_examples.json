@@ -1,0 +1,10 @@
+[
+  {"path":"/job/Test-Engineering/10001/","returns":"10001"},
+  {"path":"/PA/job/Test-Process-Role/10002/","returns":"10002"},
+  {"path":"/Comecer/job/Test-Technical-Role/001003/","returns":"001003"},
+  {"path":"/Other/job/Outside/10004/","raises":"ValueError"},
+  {"path":"/job//10001/","raises":"ValueError"},
+  {"path":"/Comecer/job/Test/AB10001/","raises":"ValueError"},
+  {"path":"/PA/job/Test/10002","raises":"ValueError"},
+  {"path":"/job/Test/10001/extra/","raises":"ValueError"}
+]

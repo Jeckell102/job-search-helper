@@ -1,0 +1,158 @@
+{
+  "approval": "PREPARATION_ONLY",
+  "groups": {
+    "app_and_launchers": [
+      "src/job_search_helper/ats_job_path.py",
+      "src/job_search_helper/ats_sitemap_parser.py",
+      "src/job_search_helper/operator_amphenol_fetch.py",
+      "src/job_search_helper/successfactors_sitemap.py"
+    ],
+    "wrapper_tools": [
+      "dev/wrapper-coder/tools/ats_operator_pilot.py",
+      "dev/wrapper-coder/tools/ats_parser_assignment.py",
+      "dev/wrapper-coder/tools/coordinator_store.py",
+      "dev/wrapper-coder/tools/embraer_operator_pilot.py"
+    ]
+  },
+  "live_journal_sha256": "13f67754018fe37594b547a04f81f27a95ca6f7358b3a77c58411606db2a9668",
+  "live_runtime": {
+    "config_sha256": "fdb4049997bddf85ec7f421283951ca2121cba2fab3be2e21082d32bc5eaaa03",
+    "dependency_manifest_sha256": "98079522053bb0643717e2afc5a2cf7890566729bd951a96e4d1a18487e3c7fb",
+    "release_id": "REL-aa0e7a762a8e741c03b99692",
+    "source_manifest_sha256": "03b74b559a6276d16e804ddfd0273d4e06d5ac059de90ec1e02d7178b6496ee0",
+    "state": "COMPLETE"
+  },
+  "package_files": {
+    "dev/wrapper-coder/tools/ats_operator_pilot.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "5256a6f60129f96adbc19d6a06b1dd89158e9bc1992946391573a9b8bf037e4f",
+        "size": 4024
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "5edf7ec5e18675543830059ae101c1df7c136e8a9a9ff2bf05485d99beb83cd2",
+        "size": 4907
+      }
+    },
+    "dev/wrapper-coder/tools/ats_parser_assignment.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "79daad901a4e178c7d63b3cecbb1ae303c5fc08c41a2bb502dca4a2d8662ed9f",
+        "size": 4813
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "8408bb4d914a5232d06de4da991a92908a5b5bcac40a8f185293920de66d88fb",
+        "size": 5059
+      }
+    },
+    "dev/wrapper-coder/tools/coordinator_store.py": {
+      "before": {
+        "mode": 420,
+        "sha256": "e8d56f641b3f4ae5a4b5cd8aa3729b4ef27fdff3489ab615faf8b18416a4a9ee",
+        "size": 120548
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 420,
+        "sha256": "d65f1e0a37ba49cf6dcf721bd20cfe9f72017d028347f61130c22de25724ea4b",
+        "size": 122018
+      }
+    },
+    "dev/wrapper-coder/tools/embraer_operator_pilot.py": {
+      "before": {
+        "mode": 420,
+        "sha256": "3ed2d247d2ade667f4fa903b57bc18c6dccda69ee554c692b50c6a5431f8d9b0",
+        "size": 28529
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 420,
+        "sha256": "1f3bf083bb73099af5ac7e051f9e128baffffda9aac67799cff8f56a69abe2a6",
+        "size": 28583
+      }
+    },
+    "src/job_search_helper/ats_job_path.py": {
+      "before": null,
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "1259f8ca5f0129667c723d17da1f39fa7387e1c1889582871f7ad8c2656c8f34",
+        "size": 159
+      }
+    },
+    "src/job_search_helper/ats_sitemap_parser.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "035f2fde8dfbb84f5808debb4fe0aa4137330bbbdb951c835f088e6998e6bc13",
+        "size": 294
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "a54786afd359f7bee2d99fd119b72be0e9b21f53b33be10ed57fc04404342e81",
+        "size": 580
+      }
+    },
+    "src/job_search_helper/operator_amphenol_fetch.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "aceaaace780c2f2acfa93bda2fbec57097b217f772db0f6c8c7a4be98ec7de72",
+        "size": 7260
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "d1ce242658a27c7fc2b8b4b2ea6e8ea365c8dfa355f2c260614302936bd3bc53",
+        "size": 7348
+      }
+    },
+    "src/job_search_helper/successfactors_sitemap.py": {
+      "before": {
+        "mode": 436,
+        "sha256": "38f8051800670a049fb66495e0b61ad575a3ecd19f9072f5672b0e23db41570a",
+        "size": 5953
+      },
+      "owner": [
+        1000,
+        1000
+      ],
+      "staged": {
+        "mode": 436,
+        "sha256": "765ed0bb40b7f6c3b8d268f602518361677438b6979007eb2b2f18b3d123fbd1",
+        "size": 6303
+      }
+    }
+  },
+  "pilot_baseline": {
+    "file_count": 754,
+    "relative_path": "pilot-bases/ats-23df31abf76869b7df3517511418bba7b721a0abb6732de1d0ee55b22f1eb7c6",
+    "sha256": "23df31abf76869b7df3517511418bba7b721a0abb6732de1d0ee55b22f1eb7c6"
+  },
+  "schema": "ats-owned-native-prepared-package-v1",
+  "staged_source_sha256": "2c9aecf5382fc6d17b749f978ae0950baf2259ffc9c088bcbf6b664305d8f588"
+}

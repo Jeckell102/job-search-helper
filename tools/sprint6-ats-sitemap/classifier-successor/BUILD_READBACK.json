@@ -1,0 +1,23 @@
+{
+  "baseline": {
+    "file_count": 754,
+    "relative_path": "pilot-bases/ats-23df31abf76869b7df3517511418bba7b721a0abb6732de1d0ee55b22f1eb7c6",
+    "sha256": "23df31abf76869b7df3517511418bba7b721a0abb6732de1d0ee55b22f1eb7c6"
+  },
+  "groups": {
+    "app_and_launchers": 4,
+    "wrapper_tools": 4
+  },
+  "package_sha256": "28b6f49a46dac2896b68501542630cf47a42c0bf68dcc4ea38ea6a88bd2f209e",
+  "patch_sha256": "8011563ede4e298b7da47d9f6f88f03d89822ba0193ec993d9cc04648db16107",
+  "predecessor_release": "REL-aa0e7a762a8e741c03b99692",
+  "private_inputs": {
+    "docs/wrapper-development-test-protocol.md": "4c95994b3124f4c8b45cc4a7ba64b3f9777d6fce16d3403689b69a945a59a3c6",
+    "tests/fixtures/ats_job_path_examples.json": "a7cffb6c8bc0295cfe98f178d197224c10e7b080d57ba22fd597ef765c9c878c",
+    "tests/test_ats_job_path_examples.py": "40a4f7bb7fc15cef5cba8886e4ebfa15312dc143685944db0d4ed05e25a23dd2",
+    "tests/test_ats_sitemap_parser.py": "5020eb066ed85a86de51e2781ccc4de011d42e2bcfc4f3797bdf3e0350db27f0"
+  },
+  "rollback_images": 7,
+  "source_pins_sha256": "d96ca16017457c27916bd1119b7bb1a4a041c54f74d2a053371bbb8d090aa566",
+  "source_sha256": "2c9aecf5382fc6d17b749f978ae0950baf2259ffc9c088bcbf6b664305d8f588"
+}
