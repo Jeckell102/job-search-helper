@@ -27,3 +27,14 @@ remain saved. No additional Crown inference is authorized on this
 attempt. The next engineering strategy needs to change the model's
 actual work shape before another pilot. Do not repeat the same edit
 request or relax the acceptance fixtures.
+
+Independent QA reconstructed the accepted Jetson edit byte-for-byte,
+confirmed both tests match the parent's originals, and found 26
+failures in each saved suite. The disposition is REJECT. For a case
+with a reviewed repair recipe, reuse the established host-compiled
+choice path. For a genuinely model-authored wrapper, ask the model
+for one pure helper, such as parsing namespaced sitemap bytes into
+posting IDs and exact URLs. Keep shared dispatch, inventory type,
+partial detail handling and final membership on MuleLab. This makes
+the observed generator regression structurally unavailable to a
+model edit while retaining the same offline, live and retry gates.
