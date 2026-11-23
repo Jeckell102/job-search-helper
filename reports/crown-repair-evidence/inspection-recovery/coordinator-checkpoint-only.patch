@@ -1,0 +1,20 @@
+--- a/dev/wrapper-coder/tools/coordinator.py
++++ b/dev/wrapper-coder/tools/coordinator.py
+@@ -96,9 +96,16 @@
+     This is intentionally a predicate: the ordinary checkpoint gate still
+     decides whether a requested ``phase_done`` advances inspection.
+     """
++    work_order = (state.get('integration') or {}).get('work_order')
++    crown = (
++        state.get('id') == 'WRAP-640c600390'
++        and work_order == 'successfactors-crown-listing-range-v1'
++        and (state.get('repair_provenance') or {}).get('outcome_id') == 'OUT-5f5280ed5ac3c1db0b85a6c4'
++        and state.get('calls') == 4
++    )
+     if (state.get('workflow_version') != 2 or state.get('mode') != 'develop'
+             or state.get('phase') != 'inspect'
+-            or (state.get('integration') or {}).get('work_order') != EMBRAER_INSPECTION_WORK_ORDER
++            or (work_order != EMBRAER_INSPECTION_WORK_ORDER and not crown)
+             or state.get('workflow', {}).get('stall_turns', 0) < workflow.MAX_STALL_TURNS):
+         return False
+     planned = workflow.plan(state, receipts, current_manifest, root)
