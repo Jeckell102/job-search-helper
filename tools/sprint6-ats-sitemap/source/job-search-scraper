@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PYTHON="$ROOT/.venv/bin/python"
+else
+  PYTHON="${PYTHON:-python3}"
+fi
+export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+case "${1:-}" in
+  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|operator-embraer-partial|operator-crown-partial|operator-ats-partial|operator-scope-hold|continue-qualified-repair)
+    exec "$PYTHON" -I -S "$ROOT/release_admission_bootstrap.py" "$@"
+    ;;
+  *)
+    exec "$PYTHON" -m job_search_helper.runner "$@"
+    ;;
+esac

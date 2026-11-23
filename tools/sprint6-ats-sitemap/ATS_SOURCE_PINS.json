@@ -1,0 +1,87 @@
+{
+  "dev/wrapper-coder/tools/ats_operator_pilot.py": {
+    "before_sha256": null,
+    "source": "tools/ats_operator_pilot.py",
+    "staged_sha256": "5256a6f60129f96adbc19d6a06b1dd89158e9bc1992946391573a9b8bf037e4f"
+  },
+  "dev/wrapper-coder/tools/ats_parser_assignment.py": {
+    "before_sha256": null,
+    "source": "tools/ats_parser_assignment.py",
+    "staged_sha256": "79daad901a4e178c7d63b3cecbb1ae303c5fc08c41a2bb502dca4a2d8662ed9f"
+  },
+  "dev/wrapper-coder/tools/coordinator.py": {
+    "before_sha256": "bb68a7fc9a547b89327ab3c0c16c67da8c7804750cf129b4ba132e58a71beed0",
+    "source": "tools/coordinator.py",
+    "staged_sha256": "2d77bc80e6591c4c489cd1006ab0fff58141f6024d876029d6a12a0a02984216"
+  },
+  "dev/wrapper-coder/tools/coordinator_inference.py": {
+    "before_sha256": "81f56de79535371995040d06b74bcd40925faa4ab07e033d821f029b5946c559",
+    "source": "tools/coordinator_inference.py",
+    "staged_sha256": "a9b8008306720d7c89eb7781c383dcac96cb999aa653af61ec5681a007d5848c"
+  },
+  "dev/wrapper-coder/tools/host_server.py": {
+    "before_sha256": "1a0d30d109fc40e816154a7c1d21492b409fc020ea4925348d3201207ac85617",
+    "source": "tools/host_server.py",
+    "staged_sha256": "a235e814a794af95fad5773f8688c877d4ba0e04a12c1ec1405f026a3fa406aa"
+  },
+  "job-search-scraper": {
+    "before_sha256": "4db292b17eac25cbe334e6eb4245e3872f829afc57c4c903ca36138494462dba",
+    "source": "job-search-scraper",
+    "staged_sha256": "ac03267e12ca080db98f176ee5d082d9c899ebe71e142ac378a116339975cd51"
+  },
+  "release_admission_bootstrap.py": {
+    "before_sha256": "689f644523b1fa1f691eeaf863e84acfc8a39fd8974bb05721d0246b144330f9",
+    "source": "release_admission_bootstrap.py",
+    "staged_sha256": "05f1e8f994d90a1f0d46cd880e425a596de98444af36bc73afa641f999bfa14e"
+  },
+  "src/job_search_helper/ats.py": {
+    "before_sha256": "53ba6b9cfef29e69c56265e502a0d1f4c2fe96a454e4dc201e24e033e22d29b3",
+    "source": "src/job_search_helper/ats.py",
+    "staged_sha256": "cbb8e20d990ecc60780934c94e57c92b97e0cdab649cadd7c55eaba57673f1b3"
+  },
+  "src/job_search_helper/ats_sitemap_parser.py": {
+    "before_sha256": null,
+    "source": "src/job_search_helper/ats_sitemap_parser.py",
+    "staged_sha256": "035f2fde8dfbb84f5808debb4fe0aa4137330bbbdb951c835f088e6998e6bc13"
+  },
+  "src/job_search_helper/operator_amphenol_fetch.py": {
+    "before_sha256": "74642de9788b750c5f609ecaea1caed1cc59cfccb343d6577991c1721321451a",
+    "source": "src/job_search_helper/operator_amphenol_fetch.py",
+    "staged_sha256": "aceaaace780c2f2acfa93bda2fbec57097b217f772db0f6c8c7a4be98ec7de72"
+  },
+  "src/job_search_helper/operator_company_request.py": {
+    "before_sha256": "a7ada8f8a6ce5532067aa1bd26dfd38f0f5ef81f6d354cd4ad23975e2338a1ad",
+    "source": "src/job_search_helper/operator_company_request.py",
+    "staged_sha256": "cddfae5c878c97e1706d12f7673c42f7564dc7ff6016bf6d9c7c128a9f67cb0d"
+  },
+  "src/job_search_helper/operator_embraer_settlement.py": {
+    "before_sha256": "8d83e4a67f389819cda953da048dced828a62269cd7cb1e700edaf976bea0d5e",
+    "source": "src/job_search_helper/operator_embraer_settlement.py",
+    "staged_sha256": "943cff363b7b8db62f34c1772e8001e8dfc783c74f24b378b38acf1ce5552e73"
+  },
+  "src/job_search_helper/operator_partial_scope.py": {
+    "before_sha256": "21f7e08382fd1e4ab1973683b355bda404581bc5077e6aac801c00c03c509b71",
+    "source": "src/job_search_helper/operator_partial_scope.py",
+    "staged_sha256": "04c12572840777c0faffabaac57808734f8e297a38b93a9687aef214d6fc1de8"
+  },
+  "src/job_search_helper/operator_selected_observation.py": {
+    "before_sha256": "006a5d0237d297c3f9b01777dbb5895a31c93aa7bbbe4e769876ab6110723ef2",
+    "source": "src/job_search_helper/operator_selected_observation.py",
+    "staged_sha256": "8961f08581b7429d898ba7f3ba1131127e94e73b61210e0acd0800493d30f51b"
+  },
+  "src/job_search_helper/runner.py": {
+    "before_sha256": "abe07e1ea00ed3510bf84cef29f4b43848a912a97535d1e0b73f09b6b8756bde",
+    "source": "src/job_search_helper/runner.py",
+    "staged_sha256": "afa9a01270888d155d705846f64be9bee1efa9ac4198ffb3a472086db91a756a"
+  },
+  "src/job_search_helper/successfactors.py": {
+    "before_sha256": "cd87c27f6b692b818226c85d92e5ca9c31d0bcbfb8f6ed94e0befdb81b66acf1",
+    "source": "src/job_search_helper/successfactors.py",
+    "staged_sha256": "85e7e060243dbdbc95b4e6db48979a7f7ac26dd17458d26e173cffbcbaf3cf2a"
+  },
+  "src/job_search_helper/successfactors_sitemap.py": {
+    "before_sha256": null,
+    "source": "src/job_search_helper/successfactors_sitemap.py",
+    "staged_sha256": "38f8051800670a049fb66495e0b61ad575a3ecd19f9072f5672b0e23db41570a"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "baseline": {
+    "file_count": 751,
+    "relative_path": "pilot-bases/ats-6a49ceb6ca3786c78d4b1606276390f6011c629e2157de38935fedebd13a6e58",
+    "sha256": "6a49ceb6ca3786c78d4b1606276390f6011c629e2157de38935fedebd13a6e58"
+  },
+  "groups": {
+    "app_and_launchers": 12,
+    "wrapper_tools": 5
+  },
+  "package_sha256": "6a4f6239837ae33b309d51334d834fd0b611c2b37b0628afdb0b910b67b9ffa2",
+  "patch_sha256": "f726689e74f7498c6618dad29b9e983fb96fc575ac840f794b4cc6d4593545be",
+  "predecessor_release": "REL-ede347339c8faf1806583810",
+  "private_inputs": {
+    "docs/wrapper-development-test-protocol.md": "4c95994b3124f4c8b45cc4a7ba64b3f9777d6fce16d3403689b69a945a59a3c6",
+    "tests/test_ats_sitemap_parser.py": "5020eb066ed85a86de51e2781ccc4de011d42e2bcfc4f3797bdf3e0350db27f0"
+  },
+  "rollback_images": 13,
+  "source_pins_sha256": "66aaaed58acb26a7a79818c576d79f593230f62e977a7006f8a5a85b0038bb45",
+  "source_sha256": "03b74b559a6276d16e804ddfd0273d4e06d5ac059de90ec1e02d7178b6496ee0"
+}

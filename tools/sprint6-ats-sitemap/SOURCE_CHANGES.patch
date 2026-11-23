@@ -1,0 +1,884 @@
+--- /dev/null
++++ b/dev/wrapper-coder/tools/ats_operator_pilot.py
+@@ -0,0 +1,84 @@
++"""Default-off, receipt-owned ATS Corporation parser pilot."""
++
++from dataclasses import dataclass, field
++import json
++import os
++import re
++
++from ats_parser_assignment import TARGET, TEST, WORK_ORDER, is_assignment
++from embraer_operator_pilot import EmbraerOperatorEnrollment
++from job_search_helper.operator_partial_scope import ATS_CORPORATION
++
++
++ENV = 'WRAPPER_ATS_OPERATOR_PILOT_ENROLLMENT'
++SOURCE_FILES = frozenset({
++    'src/job_search_helper/ats.py',
++    'src/job_search_helper/successfactors.py',
++    'src/job_search_helper/successfactors_sitemap.py',
++    TARGET,
++})
++
++
++@dataclass(frozen=True)
++class ATSOperatorEnrollment(EmbraerOperatorEnrollment):
++    input_pins: dict = field(default_factory=dict)
++    scope = ATS_CORPORATION
++    target = TARGET
++    profile_id = WORK_ORDER
++    test_paths = (TEST, 'tests/test_successfactors.py')
++    max_sessions = 1
++    repair_instructions = ' Implement only the assigned pure ATS sitemap parser. MuleLab owns the shared dispatcher.'
++
++    @property
++    def source_files(self):
++        return dict(self.input_pins)
++
++    def _read_settlement_source(self, repository, record):
++        from job_search_helper.operator_embraer_settlement import read_operator_partial_source
++
++        return read_operator_partial_source(repository, record, self.request_sha256, scope=self.scope)
++
++    def approved_edit_owner(self, coordinator, state):
++        if not is_assignment(state) or state['repair_provenance']['source_revision'] != self.source_revision:
++            return None
++        try:
++            with self.owner_scope() as (project, jobs, destination):
++                source = self._source(jobs, destination)
++                if source is None or not source['acknowledged'] or not self._sources_match(project):
++                    return None
++                pair = self.resolve_owned_pair(coordinator.store, source)
++                if (pair is None or pair[1] is None or pair[1]['id'] != state['id']
++                        or not self._task_matches(*pair, self._proposal(pair[0], source['company']))):
++                    return None
++                return source['record']['outcome_id']
++        except (KeyError, OSError, TypeError, ValueError, RuntimeError):
++            return None
++
++    @classmethod
++    def from_process_environment(cls, environ=None):
++        value = (os.environ if environ is None else environ).get(ENV)
++        if value is None:
++            return None
++        keys = {'request_id', 'source_revision', 'request_sha256', 'baseline_sha256', 'source_files'}
++        try:
++            pairs = json.loads(value, object_pairs_hook=tuple) if isinstance(value, str) and len(value) <= 2000 else None
++            if not isinstance(pairs, tuple) or len(pairs) != len(dict(pairs)):
++                raise ValueError('Invalid ATS enrollment.')
++            data = dict(pairs)
++            pin_pairs = data.get('source_files')
++            if not isinstance(pin_pairs, tuple) or len(pin_pairs) != len(dict(pin_pairs)):
++                raise ValueError('Invalid ATS source pins.')
++            pins = dict(pin_pairs)
++            hashes = [data[key] for key in ('source_revision', 'request_sha256', 'baseline_sha256')] + list(pins.values())
++            if (set(data) != keys or set(pins) != SOURCE_FILES
++                    or not isinstance(data['request_id'], str)
++                    or re.fullmatch(r'operator-ats-[A-Za-z0-9][A-Za-z0-9._-]{0,105}', data['request_id']) is None
++                    or not all(isinstance(item, str) and re.fullmatch(r'[0-9a-f]{64}', item) for item in hashes)):
++                raise ValueError('Invalid ATS enrollment.')
++            return cls(
++                data['request_id'], data['source_revision'], data['request_sha256'],
++                pins['src/job_search_helper/successfactors.py'], pins['src/job_search_helper/ats.py'],
++                data['baseline_sha256'], input_pins=pins,
++            )
++        except (KeyError, TypeError, ValueError):
++            raise ValueError('Invalid exact ATS Corporation operator pilot enrollment.') from None
+--- /dev/null
++++ b/dev/wrapper-coder/tools/ats_parser_assignment.py
+@@ -0,0 +1,105 @@
++"""Exact one-function ATS parser assignment and returned edit guard."""
++
++from hashlib import sha256
++import json
++
++from coordinator_evidence import _safe_existing
++
++
++TARGET = 'src/job_search_helper/ats_sitemap_parser.py'
++TEST = 'tests/test_ats_sitemap_parser.py'
++WORK_ORDER = 'successfactors-ats-sitemap-parser-v1'
++COMPANY_ID = 'COMP-0573'
++SOURCE = 'https://jobs.atsautomation.com/'
++NAMESPACE = 'http://www.sitemaps.org/schemas/sitemap/0.9'
++PREFIXES = ('/job/', '/PA/job/', '/Comecer/job/')
++
++
++def render(root, baseline, schema):
++    if schema.get('function', {}).get('name') != 'code_edit':
++        raise ValueError('The ATS parser assignment offers one scoped source edit.')
++    target = _safe_existing(root, TARGET)
++    test = _safe_existing(root, TEST)
++    if target is None or test is None:
++        raise ValueError('The pinned ATS parser assignment files are absent.')
++    before = target.read_bytes()
++    source_pin = sha256(before).hexdigest()
++    if source_pin != baseline.get(TARGET) or sha256(test.read_bytes()).hexdigest() != baseline.get(TEST):
++        raise ValueError('The ATS parser or acceptance fixture differs from its reviewed baseline.')
++    packet = {
++        'path': TARGET,
++        'sha256': source_pin,
++        'old': before.decode(),
++        'authority': {
++            'host': 'jobs.atsautomation.com',
++            'namespace': NAMESPACE,
++            'job_path_prefixes': PREFIXES,
++        },
++        'instructions': [
++            'Return a single code_edit replacing the entire supplied small file.',
++            'Set PARSER_READY = True and implement parse_job_sitemap(xml: str) -> dict[str, str]. '
++            'Do not add network calls, file reads, a generator, or dependencies beyond Python standard XML and URL parsing.',
++            'Input is a standard namespaced urlset. Accept only exact HTTPS same-host canonical posting paths '
++            'with a slug and numeric ID. Preserve the entire URL and map from its ID. '
++            'Allow same-host non-job navigation links but reject foreign hosts, unsupported job path forms, duplicate '
++            'IDs, invalid XML and empty job inventories by raising ValueError. Reject any DOCTYPE or ENTITY.',
++            'The approved job prefixes are /job/, /PA/job/ and /Comecer/job/. '
++            'MuleLab fetches source and details, checks canonical membership and runs all tests.',
++        ],
++        'examples': {
++            'https://jobs.atsautomation.com/job/Engineering/10001/': '10001',
++            'https://jobs.atsautomation.com/PA/job/Process-Engineering/10002/': '10002',
++            'https://jobs.atsautomation.com/Comecer/job/Technician/10003/': '10003',
++        },
++    }
++    return [
++        {'role': 'system', 'content': 'Return exactly one guarded code_edit to the supplied path. Use the supplied file text as old and produce working code.'},
++        {'role': 'user', 'content': json.dumps(packet, separators=(',', ':'))},
++    ]
++
++
++def edit_arguments(response, expected):
++    """Resolve the only acceptable model-returned mutation before execution."""
++    message = response.get('message') if isinstance(response, dict) else None
++    calls = message.get('tool_calls') if isinstance(message, dict) else None
++    function = calls[0].get('function') if isinstance(calls, list) and len(calls) == 1 and isinstance(calls[0], dict) else None
++    args = function.get('arguments') if isinstance(function, dict) and function.get('name') == 'code_edit' else None
++    if (
++        not isinstance(args, dict) or set(args) != {'path', 'sha256', 'old', 'new'}
++        or not all(isinstance(value, str) for value in args.values())
++        or args['path'] != TARGET or args['sha256'] != expected.get(TARGET)
++        or not args['old'] or not args['new'] or args['old'] == args['new']
++    ):
++        raise ValueError('The ATS worker did not return one exact guarded edit.')
++    return args
++
++
++MAX_CALLS = 1
++MAX_TOKENS = 4000
++MAX_OUTPUT = 1600
++
++
++def is_assignment(state):
++    integration = state.get('integration') or {}
++    owner = state.get('repair_provenance') or {}
++    return (
++        integration.get('work_order') == WORK_ORDER
++        and integration.get('company_id') == COMPANY_ID
++        and integration.get('configured_url') == SOURCE
++        and integration.get('source_targets') == [TARGET]
++        and owner.get('company_id') == COMPANY_ID
++        and bool(owner.get('outcome_id'))
++        and state.get('max_sessions') == 1
++        and state.get('authorization_version') == 1
++        and state.get('mode') == 'develop'
++        and state.get('isolated_workspace') is True
++    )
++
++
++def has_edit_authority(state):
++    return (
++        is_assignment(state)
++        and state.get('phase') == 'implement'
++        and state.get('workflow', {}).get('approved_parser_outcome')
++        == state['repair_provenance']['outcome_id']
++    )
+--- a/dev/wrapper-coder/tools/coordinator.py
++++ b/dev/wrapper-coder/tools/coordinator.py
+@@ -17,6 +17,7 @@
+ import coding_tools as code
+ import public_tools as web
+ from coordinator_store import (DEFAULT_CAMPAIGN_ID, SELECTED, Store, reached_operator_gate, task_state_digest)
++import ats_parser_assignment
+ from coordinator_identity import canonical_identity, worker_assignment, canonical_requirements, validate_bound_identity
+ from coordinator_permissions import resolve_mode
+ from coordinator_evidence import build_requirements, phase_evidence, evidence_fingerprint, manifest_digest
+@@ -230,7 +231,7 @@
+ 
+ class Coordinator:
+     def __init__(self, base=None, model=infer, budget=estimate, *, company_revision_resolver=None,
+-                 repair_profile_selector=None, owned_recipe_reader=None, owned_recipe_builder=None):
++                 repair_profile_selector=None, owned_recipe_reader=None, owned_recipe_builder=None, owned_parser_reader=None):
+         self.store = Store(base or code.BASE / 'tasks', company_revision_resolver=company_revision_resolver)
+         self.model, self.budget = model, budget
+         self.workflow_version = 2
+@@ -250,6 +251,7 @@
+         self.repair_profile_selector = repair_profile_selector
+         self.owned_recipe_reader = owned_recipe_reader
+         self.owned_recipe_builder = owned_recipe_builder
++        self.owned_parser_reader = owned_parser_reader
+ 
+     def reconcile_inference(self, receipt):
+         """Use the persisted binding to settle only a retained terminal turn."""
+@@ -903,6 +905,8 @@
+             passed = self.tests(state)
+             self.store.publish_result(task_id, state, baseline_passed=bool(passed), phase='inspect', status='QUEUED',
+                 reason='Baseline passed.' if passed else 'Baseline failed; worker must diagnose the recorded failures.')
++        elif (state.get('integration') or {}).get('work_order') == ats_parser_assignment.WORK_ORDER and state['phase'] in ('inspect', 'implement'):
++            self._step_ats_parser(state)
+         elif (state.get('integration') or {}).get('work_order') == AMPHENOL_RECIPE_WORK_ORDER:
+             self._step_owned_recipe_choice(state)
+         elif state['phase'] == 'verify':
+@@ -1055,6 +1059,70 @@
+                     if r['result'] and r['result'].get('ok') and 'path' in r['arguments']))[-25:]}
+         return [{'role': 'system', 'content': system}, {'role': 'user', 'content': json.dumps(data)}]
+ 
++    def _step_ats_parser(self, state):
++        task_id = state['id']
++        proof = self.owned_parser_reader(state) if callable(self.owned_parser_reader) else None
++        if (not ats_parser_assignment.is_assignment(state)
++                or proof != state['repair_provenance']['outcome_id']
++                or state['calls'] != 0 or state['sessions'] != 0):
++            self.store.publish_result(task_id, state, status='PAUSED_BLOCKED',
++                                      reason='The exact ATS parser assignment is missing or its single call is spent.')
++            return
++        if state['phase'] == 'inspect':
++            self.store.publish_result(
++                task_id, state, phase='implement', status='QUEUED',
++                workflow={**state['workflow'], 'approved_parser_outcome': proof},
++                reason='MuleLab verified the owned ATS sitemap failure. Only the parser can be edited.',
++            )
++            return
++        if not ats_parser_assignment.has_edit_authority(state):
++            self.store.publish_result(task_id, state, status='PAUSED_BLOCKED', reason='ATS edit authority is absent.')
++            return
++        protocol = code.execute('code_read', {'path': 'docs/wrapper-development-test-protocol.md'}, {'code_read'})
++        protocol_value = protocol.get('result', {})
++        if (not protocol.get('ok') or protocol_value.get('truncated', True)
++                or '# Required wrapper development and test protocol' not in protocol_value.get('text', '')):
++            raise ValueError('Required protocol missing or incomplete; worker not started.')
++        schema = next(item for item in code.SCHEMAS if item['function']['name'] == 'code_edit')
++        history = ats_parser_assignment.render(code.root(), state['assignment_baseline']['manifest'], schema)
++        budget = self.budget(history, [schema])
++        output_tokens = min(ats_parser_assignment.MAX_OUTPUT, budget.available_generation_tokens,
++                            ats_parser_assignment.MAX_TOKENS - budget.prompt_tokens)
++        if output_tokens < MIN_OUTPUT_TOKENS:
++            raise ValueError('ATS parser prompt does not fit the single-call budget.')
++        session = self.store.start_inference_session(
++            task_id, max_calls=ats_parser_assignment.MAX_CALLS,
++            max_tokens=ats_parser_assignment.MAX_TOKENS, max_seconds=MAX_SECONDS,
++        )
++        if session is None:
++            return
++        try:
++            state = self.store.result_snapshot(task_id)
++            turn = self._dispatch_session_inference(
++                state, session['inference_session_id'], history, [schema], output_tokens,
++                budget.prompt_tokens, state['result_control_generation'], ats_parser_only=True,
++            )
++            if turn is None:
++                return
++            if not turn[1]['tools_allowed']:
++                if turn[1]['receipt']['status'] == 'RESPONSE_DROPPED':
++                    self.store.publish_result(task_id, state, status='PAUSED_BLOCKED',
++                                              reason='The single ATS response did not contain an authorized parser edit.')
++                return
++            arguments = ats_parser_assignment.edit_arguments(turn[0], state['assignment_baseline']['manifest'])
++            accepted = turn[1]['receipt'].get('accepted_ats_parser_edit') or {}
++            if accepted.get('arguments_sha256') != inference_digest(arguments):
++                raise ValueError('The ATS parser edit lacks its settled inference receipt.')
++            result = self.execute(state, 'code_edit', arguments, {'code_edit'})
++            changed = result.get('ok') and result.get('result', {}).get('updated')
++            self.store.publish_result(
++                task_id, state, phase='verify' if changed else state['phase'],
++                status='QUEUED' if changed else 'PAUSED_BLOCKED',
++                reason='One ATS parser edit saved; run unchanged tests.' if changed else 'The single ATS parser edit was rejected.',
++            )
++        finally:
++            self.store.end_inference_session(task_id, session['inference_session_id'])
++
+     def session(self, state):
+         task_id = state['id']
+         continuation = self._embraer_03_continuation(state)
+@@ -1074,10 +1142,12 @@
+ 
+     def _dispatch_session_inference(self, state, session_id, history, offered,
+                                     output_tokens, prompt_tokens, control_generation, *,
+-                                    max_calls=MAX_CALLS, record_owned_recipe_choice=False):
++                                    max_calls=MAX_CALLS, record_owned_recipe_choice=False, ats_parser_only=False):
+         task_id = state['id']
+         continuation = self._embraer_03_continuation(state)
+         limits = continuation['limits'] if continuation else {'calls': max_calls, 'tokens': MAX_TOKENS}
++        if ats_parser_only:
++            limits = {'calls': ats_parser_assignment.MAX_CALLS, 'tokens': ats_parser_assignment.MAX_TOKENS}
+         reservation = self.store.reserve_inference(
+             task_id, phase=state['phase'], prompt_digest=inference_digest(history),
+             tools_digest=inference_digest(offered), prompt_tokens=prompt_tokens,
+@@ -1129,6 +1199,8 @@
+                     and isinstance(args.get('sha256'), str)):
+                 choice_option['accepted_continuation_edit'] = {
+                     'path': args['path'], 'sha256': args['sha256'], 'arguments_sha256': inference_digest(args)}
++        if ats_parser_only:
++            choice_option['record_ats_parser_edit'] = True
+         finalized = self.store.finalize_inference(reservation['request_id'], answer, **choice_option)
+         return answer, finalized
+ 
+--- a/dev/wrapper-coder/tools/coordinator_inference.py
++++ b/dev/wrapper-coder/tools/coordinator_inference.py
+@@ -250,7 +250,7 @@
+             return dict(receipt=receipt, state=state, settled=True)
+ 
+     def finalize_inference(self, request_id, response=None, *, terminal_error=None, record_owned_recipe_choice=False,
+-                           accepted_continuation_edit=None):
++                           accepted_continuation_edit=None, record_ats_parser_edit=False):
+         """Settle a delivered response and optionally seal its one reviewed choice."""
+         with self.connect() as db:
+             db.execute('BEGIN IMMEDIATE')
+@@ -323,6 +323,23 @@
+                         tools_allowed = False
+                     else:
+                         receipt['accepted_continuation_edit'] = accepted_continuation_edit
++                if record_ats_parser_edit:
++                    from ats_parser_assignment import edit_arguments, has_edit_authority
++                    if (not tools_allowed or not has_edit_authority(state)
++                            or receipt.get('pre_counters') != {'sessions': 1, 'calls': 0, 'tokens': 0}
++                            or not valid_inference_binding(receipt.get('control_binding'), request_id)
++                            or not valid_inference_usage(usage) or usage['done_reason'] not in {'stop', 'tool_calls'}):
++                        tools_allowed = False
++                    else:
++                        try:
++                            arguments = edit_arguments(response, state['assignment_baseline']['manifest'])
++                        except ValueError:
++                            tools_allowed = False
++                        else:
++                            receipt['accepted_ats_parser_edit'] = {
++                                'path': arguments['path'], 'sha256': arguments['sha256'],
++                                'arguments_sha256': digest(arguments),
++                            }
+                 receipt.update(status='COMPLETED' if tools_allowed else 'RESPONSE_DROPPED',
+                                terminal_reason=None if tools_allowed else 'Control loss or invalid/over-reservation usage.')
+                 if (record_owned_recipe_choice is True and tools_allowed
+--- a/dev/wrapper-coder/tools/host_server.py
++++ b/dev/wrapper-coder/tools/host_server.py
+@@ -550,8 +550,15 @@
+ def recipe_enrollment_from_process_environment(environ=None):
+     """Select exactly one default-off provenance; event and operator never mix."""
+     environ = os.environ if environ is None else environ
++    from ats_operator_pilot import ENV as ATS_ENV, ATSOperatorEnrollment
+     from crown_operator_pilot import ENV as CROWN_ENV, CrownOperatorEnrollment
+     from embraer_operator_pilot import ENV, EmbraerOperatorEnrollment
++    if environ.get(ATS_ENV) is not None:
++        if any(environ.get(key) is not None for key in (
++                ENV, CROWN_ENV, 'WRAPPER_AMPHENOL_RECIPE_ENROLLMENT', 'WRAPPER_AMPHENOL_OPERATOR_RECIPE_ENROLLMENT',
++                'WRAPPER_AMPHENOL_RETRY_APPROVAL', 'WRAPPER_AMPHENOL_ACTIVATE_APPROVED_RELEASE')):
++            raise ValueError('ATS pilot enrollment cannot mix with other pilot or release controls.')
++        return ATSOperatorEnrollment.from_process_environment(environ)
+     if environ.get(CROWN_ENV) is not None:
+         if any(environ.get(key) is not None for key in (
+                 ENV, 'WRAPPER_AMPHENOL_RECIPE_ENROLLMENT', 'WRAPPER_AMPHENOL_OPERATOR_RECIPE_ENROLLMENT',
+@@ -580,6 +587,13 @@
+     if recipe is None:
+         return Coordinator(company_revision_resolver=current_company_revision,
+                            repair_profile_selector=select_repair_profile)
++    from ats_operator_pilot import ATSOperatorEnrollment
++    if isinstance(recipe, ATSOperatorEnrollment):
++        coordinator = Coordinator(
++            company_revision_resolver=current_company_revision, repair_profile_selector=recipe.profile,
++            owned_parser_reader=lambda state: recipe.approved_edit_owner(coordinator, state),
++        )
++        return coordinator
+     if getattr(recipe, 'uses_generic_develop', False):
+         return Coordinator(company_revision_resolver=current_company_revision,
+                            repair_profile_selector=recipe.profile)
+--- a/job-search-scraper
++++ b/job-search-scraper
+@@ -8,7 +8,7 @@
+ fi
+ export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+ case "${1:-}" in
+-  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|operator-embraer-partial|operator-crown-partial|operator-scope-hold|continue-qualified-repair)
++  start|sync|run-retained-operator-company|ordinary-company-event|operator-amphenol-partial|operator-embraer-partial|operator-crown-partial|operator-ats-partial|operator-scope-hold|continue-qualified-repair)
+     exec "$PYTHON" -I -S "$ROOT/release_admission_bootstrap.py" "$@"
+     ;;
+   *)
+--- a/release_admission_bootstrap.py
++++ b/release_admission_bootstrap.py
+@@ -26,6 +26,7 @@
+ OPERATOR_AMPHENOL_COMMAND = "operator-amphenol-partial"
+ OPERATOR_EMBRAER_COMMAND = "operator-embraer-partial"
+ OPERATOR_CROWN_COMMAND = "operator-crown-partial"
++OPERATOR_ATS_COMMAND = "operator-ats-partial"
+ OPERATOR_SCOPE_HOLD_COMMAND = "operator-scope-hold"
+ RETAINED_OPERATOR_LAYOUT_ENV = "JSH_RETAINED_OPERATOR_SQLITE_LAYOUT"
+ 
+@@ -245,7 +246,7 @@
+         raise RuntimeError("JOB_STORAGE_BACKEND must be sqlite or sheets")
+     operator = bool(arguments and arguments[0] in {
+         RETAINED_OPERATOR_COMMAND, ORDINARY_EVENT_COMMAND, OPERATOR_AMPHENOL_COMMAND,
+-        OPERATOR_EMBRAER_COMMAND, OPERATOR_CROWN_COMMAND, OPERATOR_SCOPE_HOLD_COMMAND,
++        OPERATOR_EMBRAER_COMMAND, OPERATOR_CROWN_COMMAND, OPERATOR_ATS_COMMAND, OPERATOR_SCOPE_HOLD_COMMAND,
+     })
+     layout = _retained_operator_sqlite_layout(project, state, backend) if operator else None
+     if not operator and tuple(arguments) == ('start',) and backend == 'sqlite':
+--- a/src/job_search_helper/ats.py
++++ b/src/job_search_helper/ats.py
+@@ -116,10 +116,12 @@
+ ACQUIRETM_REFRESH_TIMEOUT_MS = 12_000
+ BREEZY_EMBRAER_HEADING_CODE = 'breezy_embraer_brand_heading'
+ CROWN_LISTING_RANGE_CODE = 'successfactors_crown_listing_range_missing'
++ATS_LISTING_RANGE_CODE = 'successfactors_ats_listing_range_missing'
++ATS_CORPORATION_SOURCE = 'https://jobs.atsautomation.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_brand=&optionsFacetsDD_country=&optionsFacetsDD_location=&optionsFacetsDD_lang='
+ _OUTCOME_FAILURE_CODES = {
+     'access_denied': frozenset({'human_verification', 'public_access_denied'}),
+     'temporary_transport': frozenset({'network_retry_exhausted', 'retryable_http_status'}),
+-    'pagination_regression': frozenset({ACQUIRETM_PAGINATION_CODE, CROWN_LISTING_RANGE_CODE}),
++    'pagination_regression': frozenset({ACQUIRETM_PAGINATION_CODE, CROWN_LISTING_RANGE_CODE, ATS_LISTING_RANGE_CODE}),
+     'full_description_regression': frozenset({BREEZY_EMBRAER_HEADING_CODE}),
+ }
+ 
+@@ -179,12 +181,16 @@
+         if evidence is None:
+             return None
+         envelope['evidence'] = evidence
+-    if code == CROWN_LISTING_RANGE_CODE:
++    if code in (CROWN_LISTING_RANGE_CODE, ATS_LISTING_RANGE_CODE):
++        if code == ATS_LISTING_RANGE_CODE:
++            company_id, board = 'COMP-0573', ATS_CORPORATION_SOURCE
++        else:
++            company_id = 'COMP-0588'
++            board = 'https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch='
+         evidence = value.get('evidence')
+         if (type(evidence) is not dict
+                 or set(evidence) != {'company_id', 'board', 'listing_count', 'listing_sha256'}
+-                or evidence['company_id'] != 'COMP-0588'
+-                or evidence['board'] != 'https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch='
++                or evidence['company_id'] != company_id or evidence['board'] != board
+                 or type(evidence['listing_count']) is not int
+                 or not 1 <= evidence['listing_count'] <= 2500
+                 or not isinstance(evidence['listing_sha256'], str)
+@@ -1217,7 +1223,7 @@
+     if careers_url == 'https://us-careers.crown.com/search/?createNewAlert=false&q=&locationsearch=':
+         from .successfactors import fetch_successfactors
+         return fetch_successfactors(careers_url, company_id, company, discovery_transport)
+-    if careers_url in {'https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=', 'https://careers.belden.com/search/?q=', 'https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.leonardodrs.com/go/All-Jobs/8131200/', 'https://careers.thalesdsi.com/search/?q=', 'https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.qorvo.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.danfoss.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.festo.com/viewalljobs/', 'https://jobs.deere.com/successfactors/search/?q=&locationsearch=', 'https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://komatsu.jobs/viewalljobs/', 'https://jobs.atsautomation.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_brand=&optionsFacetsDD_country=&optionsFacetsDD_location=&optionsFacetsDD_lang='}:
++    if careers_url in {'https://careers.ses.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield3=&optionsFacetsDD_customfield5=', 'https://careers.belden.com/search/?q=', 'https://jobs.hii-tsd.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.leonardodrs.com/go/All-Jobs/8131200/', 'https://careers.thalesdsi.com/search/?q=', 'https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc', 'https://careers.qorvo.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.danfoss.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.festo.com/viewalljobs/', 'https://jobs.deere.com/successfactors/search/?q=&locationsearch=', 'https://jobs.deere.com/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc', 'https://komatsu.jobs/viewalljobs/', ATS_CORPORATION_SOURCE}:
+         if company_id == 'COMP-0080' and company.casefold() == 'hii mission technologies':
+             from .hii import fetch_hii
+             return fetch_hii(careers_url, company_id, company, discovery_transport)
+--- /dev/null
++++ b/src/job_search_helper/ats_sitemap_parser.py
+@@ -0,0 +1,8 @@
++"""Candidate edit target for the exact ATS Corporation sitemap."""
++
++PARSER_READY = False
++
++
++def parse_job_sitemap(xml: str) -> dict[str, str]:
++    """Map approved ATS canonical URLs to their unique posting IDs."""
++    raise ValueError('No reviewed ATS Corporation sitemap parser is installed.')
+--- a/src/job_search_helper/operator_amphenol_fetch.py
++++ b/src/job_search_helper/operator_amphenol_fetch.py
+@@ -10,7 +10,7 @@
+ from .integration_release import assert_release_settled
+ from .ordinary_company_event_fetch import _scope_has_storage, _verify_workbook, capture_scoped_provider
+ from .ordinary_event_settlement import ordinary_no_publication_result
+-from .operator_partial_scope import AMPHENOL, CROWN, EMBRAER, require_operator_partial_scope
++from .operator_partial_scope import AMPHENOL, ATS_CORPORATION, CROWN, EMBRAER, require_operator_partial_scope
+ from .retained_work_runner import assert_normal_lifecycle_not_held
+ from .runner import _canonical_runtime_binding
+ from .scan_request import _cycle_views, _unfinished_from_views
+@@ -19,8 +19,10 @@
+ 
+ 
+ def _operator_source_files(scope):
+-    adapter = 'successfactors.py' if scope is CROWN else 'shared_boards.py'
++    adapter = 'successfactors.py' if scope is CROWN or scope is ATS_CORPORATION else 'shared_boards.py'
+     paths = (f'src/job_search_helper/{adapter}', 'src/job_search_helper/ats.py')
++    if scope is ATS_CORPORATION:
++        paths += ('src/job_search_helper/successfactors_sitemap.py', 'src/job_search_helper/ats_sitemap_parser.py')
+     return {name: sha256((PROJECT_ROOT / name).read_bytes()).hexdigest() for name in paths}
+ 
+ 
+@@ -38,7 +40,7 @@
+         'request_sha256': owner['request_sha256'], 'request_fingerprint': owner['request_fingerprint'],
+         'request_receipt_sha256': _selected_sha(owner['receipt']), 'runtime': _canonical_runtime_binding(runtime),
+     }
+-    if scope is EMBRAER or scope is CROWN:
++    if scope is EMBRAER or scope is CROWN or scope is ATS_CORPORATION:
+         binding['source_files'] = _operator_source_files(scope)
+     return path, binding
+ 
+@@ -58,7 +60,7 @@
+             or inventory.get('verified_zero') is not None):
+         return False
+     evidence = failure['evidence']
+-    if scope is CROWN:
++    if scope is CROWN or scope is ATS_CORPORATION:
+         return (not inventory['jobs'] and evidence['company_id'] == scope.company_id
+                 and evidence['board'] == scope.board_url)
+     return (evidence['company_id'] == scope.company_id and evidence['company'] == scope.company_name
+--- a/src/job_search_helper/operator_company_request.py
++++ b/src/job_search_helper/operator_company_request.py
+@@ -11,7 +11,9 @@
+ 
+ from .company_events import canonical_company_fact, source_revision
+ from .cli import scraper_lock_name, writer_lock
+-from .operator_partial_scope import CROWN, CROWN_REQUEST_ID, CROWN_REQUEST_PREFIX
++from .operator_partial_scope import (
++    ATS_CORPORATION, ATS_REQUEST_ID, ATS_REQUEST_PREFIX, CROWN, CROWN_REQUEST_ID, CROWN_REQUEST_PREFIX,
++)
+ from .scan_request import _enqueued_at
+ 
+ 
+@@ -73,6 +75,9 @@
+     if request_id.startswith(CROWN_REQUEST_PREFIX) and (
+             company_id != CROWN.company_id or CROWN_REQUEST_ID.fullmatch(request_id) is None):
+         raise ValueError("operator_crown_request_identity_invalid")
++    if request_id.startswith(ATS_REQUEST_PREFIX) and (
++            company_id != ATS_CORPORATION.company_id or ATS_REQUEST_ID.fullmatch(request_id) is None):
++        raise ValueError("operator_ats_request_identity_invalid")
+     matches = repository.matches("Companies", {"Company ID": company_id})
+     if len(matches) != 1:
+         raise ValueError("operator_company_request_company_missing_or_ambiguous")
+--- a/src/job_search_helper/operator_embraer_settlement.py
++++ b/src/job_search_helper/operator_embraer_settlement.py
+@@ -12,7 +12,7 @@
+ from .operator_amphenol_settlement import (
+     execute_operator_partial, operator_partial_facts, read_operator_partial_settlement,
+ )
+-from .operator_partial_scope import CROWN, EMBRAER
++from .operator_partial_scope import ATS_CORPORATION, CROWN, EMBRAER
+ from .operator_selected_observation import _same_json_file, read_operator_selected_observation
+ from .ordinary_event_settlement import _has_publication_evidence
+ from .outcomes import classify_outcome, validate_public_outcome_record
+@@ -33,7 +33,7 @@
+ 
+ def read_operator_partial_source(repository, record, request_sha256, *, scope):
+     """Reopen one reviewed terminal request and its exact installed defect evidence."""
+-    if scope is not EMBRAER and scope is not CROWN:
++    if scope is not EMBRAER and scope is not CROWN and scope is not ATS_CORPORATION:
+         return None
+     if validate_public_outcome_record(record) is None:
+         return None
+--- a/src/job_search_helper/operator_partial_scope.py
++++ b/src/job_search_helper/operator_partial_scope.py
+@@ -3,7 +3,10 @@
+ from dataclasses import dataclass
+ import re
+ 
+-from .ats import ACQUIRETM_PAGINATION_CODE, BREEZY_EMBRAER_HEADING_CODE, CROWN_LISTING_RANGE_CODE
++from .ats import (
++    ACQUIRETM_PAGINATION_CODE, ATS_CORPORATION_SOURCE, ATS_LISTING_RANGE_CODE,
++    BREEZY_EMBRAER_HEADING_CODE, CROWN_LISTING_RANGE_CODE,
++)
+ from .successfactors import CROWN_SOURCE
+ 
+ 
+@@ -50,6 +53,14 @@
+ CROWN_REQUEST_ID = re.compile(r'operator-crown-[A-Za-z0-9][A-Za-z0-9._-]{0,105}')
+ 
+ 
++ATS_CORPORATION = OperatorPartialScope(
++    'ats', 'COMP-0573', 'ATS Corporation', 'SuccessFactors', 'https://jobs.atsautomation.com/',
++    ATS_CORPORATION_SOURCE, 'pagination_regression', ATS_LISTING_RANGE_CODE,
++)
++ATS_REQUEST_PREFIX = 'operator-ats-'
++ATS_REQUEST_ID = re.compile(r'operator-ats-[A-Za-z0-9][A-Za-z0-9._-]{0,105}')
++
++
+ def require_operator_partial_scope(scope):
+-    if all(scope is not allowed for allowed in (AMPHENOL, EMBRAER, CROWN)):
++    if all(scope is not allowed for allowed in (AMPHENOL, EMBRAER, CROWN, ATS_CORPORATION)):
+         raise ValueError('Unsupported operator partial scope.')
+--- a/src/job_search_helper/operator_selected_observation.py
++++ b/src/job_search_helper/operator_selected_observation.py
+@@ -13,7 +13,9 @@
+ from .company_events import canonical_company_fact, source_revision
+ from .engine import Engine, State
+ from .operator_company_request import SCHEMA, _digest
+-from .operator_partial_scope import AMPHENOL, CROWN, CROWN_REQUEST_ID, require_operator_partial_scope
++from .operator_partial_scope import (
++    AMPHENOL, ATS_CORPORATION, ATS_REQUEST_ID, CROWN, CROWN_REQUEST_ID, require_operator_partial_scope,
++)
+ from .scan_request import _read_request, cycle_metadata, request_fingerprint
+ from .sqlite_repository import SQLiteRepository
+ 
+@@ -129,6 +131,7 @@
+     if (not isinstance(request, dict) or request.get("mode") != "company-only"
+             or request.get("company_ids") != [scope.company_id] or request.get("start_last") != []
+             or (scope is CROWN and CROWN_REQUEST_ID.fullmatch(str(expected['request_id'])) is None)
++            or (scope is ATS_CORPORATION and ATS_REQUEST_ID.fullmatch(str(expected['request_id'])) is None)
+             or operator != expected or any(request.get(key) is not None for key in (
+                 "company_event", "repair_retry", "temporary_retry"))
+             or request_fingerprint(request, [scope.company_id]) is None):
+--- a/src/job_search_helper/runner.py
++++ b/src/job_search_helper/runner.py
+@@ -1577,7 +1577,7 @@
+         except (ValueError, RuntimeError, OSError, sqlite3.Error) as exc:
+             print(f'ERROR: {exc}', file=sys.stderr)
+             return 1
+-    if argv[0] in {'operator-amphenol-partial', 'operator-embraer-partial', 'operator-crown-partial'}:
++    if argv[0] in {'operator-amphenol-partial', 'operator-embraer-partial', 'operator-crown-partial', 'operator-ats-partial'}:
+         command = argv[0]
+         parser = argparse.ArgumentParser(prog=f'./job-search-scraper {command}', allow_abbrev=False)
+         parser.add_argument('--request-sha256', action='append', required=True)
+@@ -1586,7 +1586,7 @@
+             from .ats import fetch_inventory
+             from .ordinary_company_event_command import _digest_text
+             from .operator_amphenol_settlement import execute_operator_partial
+-            from .operator_partial_scope import AMPHENOL, CROWN, EMBRAER
++            from .operator_partial_scope import AMPHENOL, ATS_CORPORATION, CROWN, EMBRAER
+             from .sheet_profile import COMPACT_SCHEMAS
+ 
+             if len(args.request_sha256) != 1 or not _digest_text(args.request_sha256[0]):
+@@ -1595,6 +1595,7 @@
+                 'operator-amphenol-partial': AMPHENOL,
+                 'operator-embraer-partial': EMBRAER,
+                 'operator-crown-partial': CROWN,
++                'operator-ats-partial': ATS_CORPORATION,
+             }[command]
+             with _retained_operator_admission() as admission:
+                 result = execute_operator_partial(
+--- a/src/job_search_helper/successfactors.py
++++ b/src/job_search_helper/successfactors.py
+@@ -7,9 +7,12 @@
+ from hashlib import sha256
+ from html.parser import HTMLParser
+ import xml.etree.ElementTree as ET
+-from urllib.parse import urljoin, urlsplit, urlunsplit
+-
+-from .ats import CROWN_LISTING_RANGE_CODE, FetchError, Inventory, _base, outcome_failure, text
++from urllib.parse import unquote, urljoin, urlsplit, urlunsplit
++
++from .ats import (
++    ATS_CORPORATION_SOURCE, ATS_LISTING_RANGE_CODE, CROWN_LISTING_RANGE_CODE,
++    FetchError, Inventory, _base, outcome_failure, text,
++)
+ from .discovery import CareersTransport
+ 
+ ABACO_SOURCE = "https://jobs.ametek.com/go/Abaco/8908500/?q=&sortColumn=referencedate&sortDirection=desc"
+@@ -34,7 +37,7 @@
+     "https://jobs.teradyne.com/Universal-Robots/search/?q=&sortColumn=referencedate&sortDirection=desc": "jobs.teradyne.com",
+     KOMATSU_SOURCE: "komatsu.jobs",
+     "https://jobs.sick.com/usa?locale=en_US": "jobs.sick.com",
+-    "https://jobs.atsautomation.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_brand=&optionsFacetsDD_country=&optionsFacetsDD_location=&optionsFacetsDD_lang=": "jobs.atsautomation.com",
++    ATS_CORPORATION_SOURCE: "jobs.atsautomation.com",
+ }
+ PAGE_SIZE, MAX_PAGES = 25, 100
+ KOMATSU_PAGE_SIZE = 50
+@@ -102,13 +105,32 @@
+         time.sleep(0.5 * (attempt + 1))
+ 
+ 
+-def _crown_range_failure(page):
++def _listing_range_failure(page, source):
++    if source == ATS_CORPORATION_SOURCE:
++        host, company_id, code = 'jobs.atsautomation.com', 'COMP-0573', ATS_LISTING_RANGE_CODE
++        path_pattern = r'/(?:(?:PA|Comecer)/)?job/[^/]+/([0-9]{4,24})/'
++    elif source == CROWN_SOURCE:
++        host, company_id, code = 'us-careers.crown.com', 'COMP-0588', CROWN_LISTING_RANGE_CODE
++        path_pattern = r'/(?:(?:TheGoods|17West)/)?job/[^/]+/(\d{4,24})/'
++    else:
++        return None
+     jobs = {}
+     for href, title in page.links:
+-        url = urljoin(CROWN_SOURCE, href)
++        if source == ATS_CORPORATION_SOURCE:
++            if not isinstance(href, str) or not href.startswith(('/', 'https://')):
++                return None
++            raw_path = urlsplit(href).path
++            if (not re.fullmatch(path_pattern, raw_path)
++                    or any(c.isspace() or c in '?#\\' or ord(c) < 32 for c in href)
++                    or href.startswith('//') or re.search(r'%(?![0-9a-fA-F]{2})', href)):
++                return None
++            slug = unquote(raw_path.split('/')[-3])
++            if slug in ('.', '..') or any(c in '/\\%?#' or ord(c) < 32 for c in slug):
++                return None
++        url = urljoin(source, href)
+         parsed = urlsplit(url)
+-        match = re.fullmatch(r'/(?:(?:TheGoods|17West)/)?job/[^/]+/(\d{4,24})/', parsed.path)
+-        if (parsed.scheme != 'https' or parsed.netloc != 'us-careers.crown.com'
++        match = re.fullmatch(path_pattern, parsed.path)
++        if (parsed.scheme != 'https' or parsed.netloc != host
+                 or parsed.query or parsed.fragment or not match or not title):
+             return None
+         posting_id = match.group(1)
+@@ -117,15 +139,15 @@
+     if not 1 <= len(jobs) <= 2500:
+         return None
+     identity = '\n'.join(sorted(url for url, _ in jobs.values()))
+-    return outcome_failure('pagination_regression', CROWN_LISTING_RANGE_CODE, evidence={
+-        'company_id': 'COMP-0588',
+-        'board': CROWN_SOURCE,
++    return outcome_failure('pagination_regression', code, evidence={
++        'company_id': company_id,
++        'board': source,
+         'listing_count': len(jobs),
+         'listing_sha256': sha256(identity.encode()).hexdigest(),
+     })
+ 
+ 
+-def _listing(client, source, start, *, qualify_crown=False):
++def _listing(client, source, start, *, qualify_range=False):
+     # Jobs2Web boards are not uniform.  Leonardo DRS publishes its offset as
+     # a path segment (``.../8131200/25/``), not as a ``startrow`` query
+     # parameter.  Sending that parameter is silently ignored and would make
+@@ -149,7 +171,11 @@
+     body=_get(client,url); page=_Page(body)
+     ranges=re.findall(r"Results\s*<b>\s*(\d+)\s*[–-]\s*(\d+)\s*</b>\s*of\s*<b>\s*(\d+)\s*</b>",body,re.I)
+     if not ranges or len(set(ranges)) != 1:
+-        failure = _crown_range_failure(page) if qualify_crown and not ranges else None
++        failure = None
++        if qualify_range and not ranges:
++            # A present but malformed ATS range is a different defect.
++            if source != ATS_CORPORATION_SOURCE or not re.search(r'Results\s*[0-9]', text(body), re.I):
++                failure = _listing_range_failure(page, source)
+         raise FetchError("partial", "SuccessFactors listing did not expose one consistent published result range.",
+                          outcome_failure=failure)
+     first,last,total=map(int,ranges[0])
+@@ -215,9 +241,22 @@
+     host=SITES.get(url)
+     if not host: return Inventory("unsupported",reason="SuccessFactors adapter requires a verified employer board.",source_url=url,ats="SuccessFactors")
+     client=transport or CareersTransport(); jobs=[]; seen=set(); entries_all=[]
++    if (url, company_id, company) == (ATS_CORPORATION_SOURCE, 'COMP-0573', 'ATS Corporation'):
++        from . import ats_sitemap_parser
++
++        if ats_sitemap_parser.PARSER_READY is True:
++            from .successfactors_sitemap import fetch_from_sitemap
++
++            return fetch_from_sitemap(
++                url, company_id, company, client, job_prefixes=('/job/', '/PA/job/', '/Comecer/job/'),
++                parse=ats_sitemap_parser.parse_job_sitemap,
++            )
+     try:
+-        qualify_crown = url == CROWN_SOURCE and company_id == 'COMP-0588' and company == 'Crown Equipment'
+-        total,first,_next=_listing(client,url,0,qualify_crown=qualify_crown)
++        qualify_range = (url, company_id, company) in (
++            (CROWN_SOURCE, 'COMP-0588', 'Crown Equipment'),
++            (ATS_CORPORATION_SOURCE, 'COMP-0573', 'ATS Corporation'),
++        )
++        total,first,_next=_listing(client,url,0,qualify_range=qualify_range)
+         if url == "https://careers.leonardodrs.com/go/All-Jobs/8131200/":
+             # A temporarily stale published total must not suppress hundreds
+             # of individually verifiable job pages. Keep membership partial.
+--- /dev/null
++++ b/src/job_search_helper/successfactors_sitemap.py
+@@ -0,0 +1,118 @@
++"""Host-owned SuccessFactors inventory for a reviewed sitemap parser."""
++
++from collections.abc import Callable
++import re
++from urllib.parse import urljoin, urlsplit
++from xml.etree import ElementTree
++
++from .ats import FetchError, Inventory, _base, text
++from .successfactors import _Page, _get
++
++
++MAX_SITEMAP_BYTES = 2 * 1024 * 1024
++MAX_POSTINGS = 2500
++SITEMAP_NAMESPACE = '{http://www.sitemaps.org/schemas/sitemap/0.9}'
++
++
++def fetch_from_sitemap(
++    board: str,
++    company_id: str,
++    company: str,
++    transport,
++    *,
++    job_prefixes: tuple[str, ...],
++    parse: Callable[[str], dict[str, str]],
++) -> Inventory:
++    """Keep network, company identity and completion outside candidate code.
++
++    The dispatcher selects the exact company, board, prefixes and parser
++    together. The parser receives XML text and returns only ID-to-URL data.
++    """
++    if not job_prefixes or any(not prefix.startswith('/') or not prefix.endswith('/job/') for prefix in job_prefixes):
++        raise ValueError('SuccessFactors sitemap requires reviewed job path prefixes.')
++    source = urlsplit(board)
++    host = source.netloc
++    pattern = re.compile(
++        '(?:' + '|'.join(map(re.escape, job_prefixes)) + r')[^/]+/(\d{4,24})/'
++    )
++    sitemap_url = urljoin(board, '/sitemap.xml')
++    jobs = []
++
++    def posting_id(url):
++        try:
++            parts = urlsplit(url)
++        except ValueError as exc:
++            raise FetchError('partial', 'SuccessFactors sitemap posting URL is malformed.') from exc
++        match = pattern.fullmatch(parts.path)
++        if parts.scheme == 'https' and parts.netloc == host and not parts.query and not parts.fragment and match:
++            return match.group(1)
++        raise FetchError('partial', 'SuccessFactors sitemap posting is outside the reviewed board scope.')
++
++    def membership():
++        xml = _get(transport, sitemap_url)
++        if len(xml.encode()) > MAX_SITEMAP_BYTES or re.search(r'<!\s*(?:DOCTYPE|ENTITY)', xml, re.IGNORECASE):
++            raise FetchError('partial', 'SuccessFactors sitemap response exceeds the reviewed XML boundary.')
++        try:
++            document = ElementTree.fromstring(xml)
++            entries = parse(xml)
++        except (ValueError, ElementTree.ParseError) as exc:
++            raise FetchError('partial', 'SuccessFactors sitemap parser rejected the response.') from exc
++        if type(entries) is not dict or not 1 <= len(entries) <= MAX_POSTINGS:
++            raise FetchError('partial', 'SuccessFactors sitemap did not provide a bounded positive inventory.')
++        for identity, url in entries.items():
++            if not isinstance(url, str) or posting_id(url) != identity:
++                raise FetchError('partial', 'SuccessFactors sitemap identity disagrees with its exact job URL.')
++        if document.tag != SITEMAP_NAMESPACE + 'urlset':
++            raise FetchError('partial', 'SuccessFactors sitemap has an unexpected root.')
++        official_job_urls = set()
++        for location in document.iterfind(f'{SITEMAP_NAMESPACE}url/{SITEMAP_NAMESPACE}loc'):
++            url = (location.text or '').strip()
++            try:
++                parts = urlsplit(url)
++            except ValueError as exc:
++                raise FetchError('partial', 'SuccessFactors sitemap contains a malformed location.') from exc
++            if parts.scheme != 'https' or parts.netloc != host:
++                raise FetchError('partial', 'SuccessFactors sitemap contains a location outside the board.')
++            if 'job' in parts.path.split('/'):
++                posting_id(url)
++                if url in official_job_urls:
++                    raise FetchError('partial', 'SuccessFactors sitemap repeats a posting URL.')
++                official_job_urls.add(url)
++        if set(entries.values()) != official_job_urls:
++            raise FetchError('partial', 'SuccessFactors parser did not preserve exact official posting membership.')
++        return entries
++
++    try:
++        first = _Page(_get(transport, board))
++        visible = {}
++        for href, title in first.links:
++            url = urljoin(board, href)
++            identity = posting_id(url)
++            if not title or visible.setdefault(identity, (url, title)) != (url, title):
++                raise FetchError('partial', 'SuccessFactors visible listing repeats a conflicting job identity.')
++        entries = membership()
++        if not visible or any(entries.get(i) != url for i, (url, _) in visible.items()):
++            raise FetchError('partial', 'SuccessFactors sitemap does not cover the known visible listings.')
++        for identity, url in entries.items():
++            try:
++                detail = _Page(_get(transport, url))
++            except FetchError as error:
++                if error.status == 'blocked':
++                    raise
++                continue
++            title = text(''.join(detail.title))
++            description = text(''.join(detail.description))
++            if (detail.canonicals != [url] or len(detail.title) != 1 or detail.description_count != 1
++                    or detail.depth or detail.title_depth or not title or not description
++                    or (identity in visible and title != visible[identity][1])):
++                continue
++            row = _base({'id': identity}, 'SuccessFactors', company_id, company)
++            row.update(title=title, url=url, description=description, req_id='')
++            jobs.append(row)
++        if len(jobs) != len(entries):
++            raise FetchError('partial', f'SuccessFactors verified {len(jobs)} of {len(entries)} sitemap details.')
++        if membership() != entries:
++            raise FetchError('partial', 'SuccessFactors sitemap membership changed during the scan.')
++        return Inventory('complete', jobs, 'SuccessFactors completed the stable reviewed sitemap.', board, 'SuccessFactors')
++    except FetchError as error:
++        return Inventory('partial' if jobs else error.status, jobs, error.reason, board, 'SuccessFactors')
